@@ -1,21 +1,25 @@
 <?php
 
-/** 
+/**
  * Plugin Name: Location Wise Products for WooCommerce
- * Description: Filter WooCommerce products by store locations with location selector for customers.
+ * Plugin URI: https://plugincy.com/
+ * Description: Filter WooCommerce products by store locations with a location selector for customers.
  * Version: 1.0.0
- * Author: Your Name
- * Text Domain: location-wise-products
+ * Author: plugincy
+ * Author URI: https://plugincy.com/
+ * Text Domain: location-wise-product
  * Requires at least: 5.0
  * Requires PHP: 7.2
  * WC requires at least: 4.0
+ * License: GPL2
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 if (!defined('ABSPATH')) exit;
 
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     add_action('admin_notices', function () {
-        echo '<div class="error"><p>' . __('Location Wise Products requires WooCommerce to be installed and active.', 'location-wise-product') . '</p></div>';
+        echo '<div class="error"><p>' . esc_html_e('Location Wise Products requires WooCommerce to be installed and active.', 'location-wise-product') . '</p></div>';
     });
     return;
 }
@@ -100,7 +104,7 @@ class Plugincylwp_Location_Wise_Products
 
     private function get_current_location()
     {
-        return isset($_COOKIE['store_location']) ? sanitize_text_field($_COOKIE['store_location']) : '';
+        return isset($_COOKIE['store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['store_location'])) : '';
     }
 
     public function filter_shortcode_products($query_args)
@@ -110,9 +114,9 @@ class Plugincylwp_Location_Wise_Products
             return $query_args;
         }
 
-        if (!isset($query_args['tax_query'])) {
-            $query_args['tax_query'] = [];
-        }
+        // if (!isset($query_args['tax_query'])) {
+        //     $query_args['tax_query'] = [];
+        // }
 
         $query_args['tax_query'][] = [
             'taxonomy' => 'store_location',
@@ -135,6 +139,9 @@ class Plugincylwp_Location_Wise_Products
 
     public function clear_cart_on_location_change()
     {
+        if (!isset($_POST['plugincylwp_shortcode_selector_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['plugincylwp_shortcode_selector_nonce'])), 'plugincylwp_shortcode_selector')) {
+            return;
+        }
         if (isset($_POST['clear_cart_on_store_change']) && $_POST['clear_cart_on_store_change'] == '1') {
             if (function_exists('WC')) {
                 WC()->cart->empty_cart();
@@ -212,8 +219,8 @@ class Plugincylwp_Location_Wise_Products
 
     public function register_settings()
     {
-        register_setting('location_wise_products_settings', 'lwp_display_options', [$this, 'sanitize_settings']);
-        register_setting('location_wise_products_settings', 'lwp_filter_options', [$this, 'sanitize_filter_settings']);
+        register_setting('location_wise_products_settings', 'lwp_display_options', array($this, 'sanitize_settings'));
+        register_setting('location_wise_products_settings', 'lwp_filter_options', array($this, 'sanitize_settings')); // Changed from 'sanitize_filter_settings' to 'sanitize_settings'
 
         add_settings_section(
             'lwp_display_settings_section',
@@ -270,36 +277,45 @@ class Plugincylwp_Location_Wise_Products
         );
     }
 
-    public function sanitize_settings($input)
-    {
+    public function sanitize_settings($input) {
         $sanitized = [];
-        $sanitized['display_format'] = sanitize_text_field($input['display_format']);
-        $sanitized['separator'] = sanitize_text_field($input['separator']);
-
+        
+        // Handle display options
+        if (isset($input['display_format'])) {
+            $sanitized['display_format'] = sanitize_text_field($input['display_format']);
+        }
+        
+        if (isset($input['separator'])) {
+            $sanitized['separator'] = sanitize_text_field($input['separator']);
+        }
+        
+        // Handle enabled_pages
         $sanitized['enabled_pages'] = [];
         if (isset($input['enabled_pages']) && is_array($input['enabled_pages'])) {
             foreach ($input['enabled_pages'] as $page) {
                 $sanitized['enabled_pages'][] = sanitize_text_field($page);
             }
         }
-
+        
+        // Handle strict_filtering option
         if (isset($input['strict_filtering'])) {
             $sanitized['strict_filtering'] = sanitize_text_field($input['strict_filtering']);
         }
-
+        
+        // Handle filtered_sections
         $sanitized['filtered_sections'] = [];
         if (isset($input['filtered_sections']) && is_array($input['filtered_sections'])) {
             foreach ($input['filtered_sections'] as $section) {
                 $sanitized['filtered_sections'][] = sanitize_text_field($section);
             }
         }
-
+        
         return $sanitized;
     }
 
     public function settings_section_callback()
     {
-        echo '<p>' . __('Configure how store locations appear with product titles.', 'location-wise-product') . '</p>';
+        echo '<p>' . esc_html_e('Configure how store locations appear with product titles.', 'location-wise-product') . '</p>';
     }
 
     public function display_format_field_callback()
@@ -308,9 +324,9 @@ class Plugincylwp_Location_Wise_Products
         $format = isset($options['display_format']) ? $options['display_format'] : 'append';
 ?>
         <select name="lwp_display_options[display_format]">
-            <option value="append" <?php selected($format, 'append'); ?>><?php _e('Append to title (Title - Location)', 'location-wise-product'); ?></option>
-            <option value="prepend" <?php selected($format, 'prepend'); ?>><?php _e('Prepend to title (Location - Title)', 'location-wise-product'); ?></option>
-            <option value="brackets" <?php selected($format, 'brackets'); ?>><?php _e('In brackets (Title [Location])', 'location-wise-product'); ?></option>
+            <option value="append" <?php selected($format, 'append'); ?>><?php esc_html_e('Append to title (Title - Location)', 'location-wise-product'); ?></option>
+            <option value="prepend" <?php selected($format, 'prepend'); ?>><?php esc_html_e('Prepend to title (Location - Title)', 'location-wise-product'); ?></option>
+            <option value="brackets" <?php selected($format, 'brackets'); ?>><?php esc_html_e('In brackets (Title [Location])', 'location-wise-product'); ?></option>
         </select>
     <?php
     }
@@ -321,7 +337,7 @@ class Plugincylwp_Location_Wise_Products
         $separator = isset($options['separator']) ? $options['separator'] : ' - ';
     ?>
         <input type="text" name="lwp_display_options[separator]" value="<?php echo esc_attr($separator); ?>" class="regular-text">
-        <p class="description"><?php _e('The character(s) used to separate the title and location.', 'location-wise-product'); ?></p>
+        <p class="description"><?php esc_html_e('The character(s) used to separate the title and location.', 'location-wise-product'); ?></p>
     <?php
     }
 
@@ -340,7 +356,7 @@ class Plugincylwp_Location_Wise_Products
 
         foreach ($pages as $value => $label) {
             $checked = in_array($value, $enabled_pages) ? 'checked' : '';
-            echo "<label><input type='checkbox' name='lwp_display_options[enabled_pages][]' value='{$value}' {$checked}> {$label}</label><br>";
+            echo "<label><input type='checkbox' name='lwp_display_options[enabled_pages][]' value='" . esc_attr($value) . "' " . checked($checked, true, false) . "> " . esc_html($label) . "</label><br>";
         }
     }
 
@@ -357,12 +373,13 @@ class Plugincylwp_Location_Wise_Products
                 ?>
             </form>
             <form method="post" action="options.php">
-            <?php
-            settings_fields('location_stock_settings');
-            do_settings_sections('location-stock-settings');
-            submit_button();
-            ?>
-        </form>
+                <?php wp_nonce_field('plugincylwp_general_settings', 'plugincylwp_general_settings_nonce'); ?>
+                <?php
+                settings_fields('location_stock_settings');
+                do_settings_sections('location-stock-settings');
+                submit_button();
+                ?>
+            </form>
         </div>
     <?php
     }
@@ -470,9 +487,9 @@ class Plugincylwp_Location_Wise_Products
             return $args;
         }
 
-        if (!isset($args['tax_query'])) {
-            $args['tax_query'] = [];
-        }
+        // if (!isset($args['tax_query'])) {
+        //     $args['tax_query'] = [];
+        // }
 
         $args['tax_query'][] = [
             'taxonomy' => 'store_location',
@@ -518,7 +535,7 @@ class Plugincylwp_Location_Wise_Products
             return;
         }
 
-        $viewed_products = isset($_COOKIE['woocommerce_recently_viewed']) ? (array) explode('|', $_COOKIE['woocommerce_recently_viewed']) : [];
+        $viewed_products = isset($_COOKIE['woocommerce_recently_viewed']) ? (array) explode('|', sanitize_text_field(wp_unslash($_COOKIE['woocommerce_recently_viewed']))) : [];
 
         if (empty($viewed_products)) {
             return;
@@ -539,7 +556,7 @@ class Plugincylwp_Location_Wise_Products
 
     public function filter_settings_section_callback()
     {
-        echo '<p>' . __('Configure how strictly products are filtered by location throughout your store.', 'location-wise-product') . '</p>';
+        echo '<p>' . esc_html_e('Configure how strictly products are filtered by location throughout your store.', 'location-wise-product') . '</p>';
     }
 
     public function strict_filtering_field_callback()
@@ -548,10 +565,10 @@ class Plugincylwp_Location_Wise_Products
         $strict = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
     ?>
         <select name="lwp_filter_options[strict_filtering]">
-            <option value="enabled" <?php selected($strict, 'enabled'); ?>><?php _e('Enabled (Only show products from selected location)', 'location-wise-product'); ?></option>
-            <option value="disabled" <?php selected($strict, 'disabled'); ?>><?php _e('Disabled (Show all products regardless of location)', 'location-wise-product'); ?></option>
+            <option value="enabled" <?php selected($strict, 'enabled'); ?>><?php esc_html_e('Enabled (Only show products from selected location)', 'location-wise-product'); ?></option>
+            <option value="disabled" <?php selected($strict, 'disabled'); ?>><?php esc_html_e('Disabled (Show all products regardless of location)', 'location-wise-product'); ?></option>
         </select>
-        <p class="description"><?php _e('When enabled, users will only see products from their selected location. When disabled, all products will be visible.', 'location-wise-product'); ?></p>
+        <p class="description"><?php esc_html_e('When enabled, users will only see products from their selected location. When disabled, all products will be visible.', 'location-wise-product'); ?></p>
     <?php
     }
 
@@ -581,10 +598,10 @@ class Plugincylwp_Location_Wise_Products
 
         foreach ($all_sections as $value => $label) {
             $checked = in_array($value, $sections) ? 'checked' : '';
-            echo "<label><input type='checkbox' name='lwp_filter_options[filtered_sections][]' value='{$value}' {$checked}> {$label}</label><br>";
+            echo "<label><input type='checkbox' name='lwp_filter_options[filtered_sections][]' value='" . esc_attr($value) . "' " . checked($checked, true, false) . "> " . esc_html($label) . "</label><br>";
         }
     ?>
-        <p class="description"><?php _e('Select which parts of your store should have location-based filtering applied.', 'location-wise-product'); ?></p>
+        <p class="description"><?php esc_html_e('Select which parts of your store should have location-based filtering applied.', 'location-wise-product'); ?></p>
 <?php
     }
 
@@ -694,9 +711,9 @@ class Plugincylwp_Location_Wise_Products
             return $query_args;
         }
 
-        if (!isset($query_args['tax_query'])) {
-            $query_args['tax_query'] = [];
-        }
+        // if (!isset($query_args['tax_query'])) {
+        //     $query_args['tax_query'] = [];
+        // }
 
         $query_args['tax_query'][] = [
             'taxonomy' => 'store_location',
@@ -733,8 +750,9 @@ class Plugincylwp_Location_Wise_Products
         // Return response
         wp_send_json_success(array('cartHasProducts' => $cart_has_products));
     }
-    function custom_admin_styles() {
-        wp_enqueue_style('custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css');
+    function custom_admin_styles()
+    {
+        wp_enqueue_style('custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.0");
     }
 }
 
@@ -744,6 +762,3 @@ function Plugincylwp_location_wise_products_init()
 }
 
 add_action('plugins_loaded', 'Plugincylwp_location_wise_products_init');
-
-
-
