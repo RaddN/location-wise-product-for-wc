@@ -1,0 +1,220 @@
+
+/* Modal Styles */
+#lwp-store-selector-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.lwp-store-selector-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 90%;
+}
+
+.lwp-store-selector-content h2 {
+    margin-bottom: 20px;
+}
+
+#lwp-store-selector-modal-dropdown {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+#lwp-store-selector-submit {
+    background: #0071a1;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#lwp-store-selector-submit:hover {
+    background: #005f87;
+}
+
+/* Header Dropdown */
+#lwp-header-store-selector {
+    display: inline-block;
+    margin-left: 20px;
+}
+
+#lwp-store-selector-header {
+    padding: 5px;
+}
+
+
+/* Add this to your assets/css/style.css file */
+
+/* Shortcode Styles */
+.lwp-shortcode-store-selector {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.lwp-shortcode-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.lwp-selector-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.lwp-location-dropdown {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.lwp-shortcode-submit {
+    padding: 8px 15px;
+    background-color: #0071a1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.lwp-shortcode-submit:hover {
+    background-color: #005f87;
+}
+
+@media (max-width: 480px) {
+    .lwp-selector-form {
+        flex-direction: column;
+    }
+    
+    .lwp-location-dropdown,
+    .lwp-shortcode-submit {
+        width: 100%;
+    }
+}
+
+.location-loop-details {
+    margin: 8px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stock-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.stock-badge.in-stock {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.stock-badge.out-of-stock {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.stock-badge.on-backorder {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.location-price-loop {
+    font-size: 14px;
+}
+
+.location-price-loop small {
+    opacity: 0.7;
+}
+
+.location-specific-info {
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.location-specific-info h4 {
+    margin-top: 0;
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.location-stock, .location-price {
+    margin-bottom: 8px;
+}
+
+.in-stock {
+    color: #7cb342;
+    font-weight: bold;
+}
+
+.out-of-stock {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.on-backorder {
+    color: #ff9800;
+    font-weight: bold;
+}
+
+.location-specific-info-loop {
+    font-size: 13px;
+    margin: 5px 0;
+}
+
+.location-stock-loop {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background-color: #f8f8f8;
+}
+
+.product-location-unavailable {
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #f8d7da;
+    border-left: 5px solid #dc3545;
+    color: #721c24;
+    font-weight: bold;
+}
+.unavailable-notice {
+    margin: 0;
+    font-size: 16px;
+}
+.button.unavailable-product {
+    background-color: #f5f5f5 !important;
+    color: #888 !important;
+    cursor: not-allowed;
+    border: 1px solid #ddd !important;
+}

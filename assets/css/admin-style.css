@@ -1,0 +1,52 @@
+.fixed .column-date {
+    width: 6%;
+}
+
+.location_variation_table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+.location_variation_table th,
+.location_variation_table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.location_variation_table th {
+    background-color: #f8f8f8;
+    font-weight: bold;
+}
+
+.location_variation_data {
+    margin: 10px 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#location_stock_price_options table {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+#location_stock_price_options table input[type="number"],
+#location_stock_price_options table input[type="text"] {
+    width: 100%;
+}
+
+.fixed .column-locations div {
+    margin-bottom: 5px; /* Space between location entries */
+}
+.outofstock {
+    background: #f8d7da;
+    color: #721c24;
+}
+.instock {
+    background: #c6e1c6;
+    color: #5b841b;
+}
+.na {
+    color: #999;
+}

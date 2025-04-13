@@ -1,0 +1,1149 @@
+<?php
+if (!defined('ABSPATH')) exit;
+
+
+// stock manage, price manage, backorder manage
+
+// Add a new product data tab for location-specific settings
+add_filter('woocommerce_product_data_tabs', function($tabs) {
+    $tabs['location_stock_price'] = array(
+        'label'    => __('Location Settings', 'location-wise-products'),
+        'target'   => 'location_stock_price_options',
+        'class'    => array('show_if_simple', 'hide_if_variable','show_if_external'),
+        'priority' => 21
+    );
+    return $tabs;
+});
+
+// Add location-specific fields to the product data panel
+add_action('woocommerce_product_data_panels', function() {
+    global $post;
+    $product = wc_get_product($post->ID);
+    $locations = get_terms(array(
+        'taxonomy' => 'store_location',
+        'hide_empty' => false,
+    ));
+    
+    ?>
+    <div id="location_stock_price_options" class="panel woocommerce_options_panel">
+        <div class="options_group">
+            <h3><?php _e('Location Specific Stock & Price Settings', 'location-wise-products'); ?></h3>
+            
+            <?php if (!empty($locations) && !is_wp_error($locations)) : ?>
+                <table class="widefat">
+                    <thead>
+                        <tr>
+                            <th><?php _e('Location', 'location-wise-products'); ?></th>
+                            <th><?php _e('Stock Quantity', 'location-wise-products'); ?></th>
+                            <th><?php _e('Regular Price', 'location-wise-products'); ?></th>
+                            <th><?php _e('Sale Price', 'location-wise-products'); ?></th>
+                            <th><?php _e('Backorders', 'location-wise-products'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($locations as $location) : 
+                            $location_stock = get_post_meta($post->ID, '_location_stock_' . $location->term_id, true);
+                            $location_regular_price = get_post_meta($post->ID, '_location_regular_price_' . $location->term_id, true);
+                            $location_sale_price = get_post_meta($post->ID, '_location_sale_price_' . $location->term_id, true);
+                            $location_backorders = get_post_meta($post->ID, '_location_backorders_' . $location->term_id, true);
+                        ?>
+                            <tr>
+                                <td><?php echo esc_html($location->name); ?></td>
+                                <td>
+                                    <input type="number" name="location_stock[<?php echo $location->term_id; ?>]" 
+                                           value="<?php echo esc_attr($location_stock); ?>" step="1" min="0">
+                                </td>
+                                <td>
+                                    <input type="text" name="location_regular_price[<?php echo $location->term_id; ?>]" 
+                                           value="<?php echo esc_attr($location_regular_price); ?>" class="wc_input_price">
+                                </td>
+                                <td>
+                                    <input type="text" name="location_sale_price[<?php echo $location->term_id; ?>]" 
+                                           value="<?php echo esc_attr($location_sale_price); ?>" class="wc_input_price">
+                                </td>
+                                <td>
+                                    <select name="location_backorders[<?php echo $location->term_id; ?>]">
+                                        <option value="no" <?php selected($location_backorders, 'no'); ?>><?php _e('No backorders', 'location-wise-products'); ?></option>
+                                        <option value="notify" <?php selected($location_backorders, 'notify'); ?>><?php _e('Allow, but notify customer', 'location-wise-products'); ?></option>
+                                        <option value="yes" <?php selected($location_backorders, 'yes'); ?>><?php _e('Allow', 'location-wise-products'); ?></option>
+                                    </select>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else : ?>
+                <p><?php _e('No store locations found. Please add locations first.', 'location-wise-products'); ?></p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+});
+
+
+// Save location-specific data for simple products
+add_action('woocommerce_process_product_meta', function($post_id) {
+    // Save location stock
+    if (isset($_POST['location_stock'])) {
+        foreach ($_POST['location_stock'] as $location_id => $stock) {
+            update_post_meta($post_id, '_location_stock_' . $location_id, wc_clean($stock));
+        }
+    }
+    
+    // Save location regular prices
+    if (isset($_POST['location_regular_price'])) {
+        foreach ($_POST['location_regular_price'] as $location_id => $price) {
+            update_post_meta($post_id, '_location_regular_price_' . $location_id, wc_format_decimal($price));
+        }
+    }
+    
+    // Save location sale prices
+    if (isset($_POST['location_sale_price'])) {
+        foreach ($_POST['location_sale_price'] as $location_id => $price) {
+            update_post_meta($post_id, '_location_sale_price_' . $location_id, wc_format_decimal($price));
+        }
+    }
+    
+    // Save location backorder settings
+    if (isset($_POST['location_backorders'])) {
+        foreach ($_POST['location_backorders'] as $location_id => $backorders) {
+            update_post_meta($post_id, '_location_backorders_' . $location_id, wc_clean($backorders));
+        }
+    }
+});
+
+
+
+// Add location fields to each variation
+add_action('woocommerce_product_after_variable_attributes', function($loop, $variation_data, $variation) {
+    $locations = get_terms(array(
+        'taxonomy' => 'store_location',
+        'hide_empty' => false,
+    ));
+    
+    if (empty($locations) || is_wp_error($locations)) {
+        return;
+    }
+    
+    ?>
+    <div class="variable_location_pricing">
+        <p class="form-row form-row-full"><strong><?php _e('Location Specific Settings', 'location-wise-products'); ?></strong></p>
+        
+        <div class="location_variation_data">
+            <table class="location_variation_table">
+                <thead>
+                    <tr>
+                        <th><?php _e('Location', 'location-wise-products'); ?></th>
+                        <th><?php _e('Stock', 'location-wise-products'); ?></th>
+                        <th><?php _e('Regular Price', 'location-wise-products'); ?></th>
+                        <th><?php _e('Sale Price', 'location-wise-products'); ?></th>
+                        <th><?php _e('Backorders', 'location-wise-products'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($locations as $location) : 
+                        $location_stock = get_post_meta($variation->ID, '_location_stock_' . $location->term_id, true);
+                        $location_regular_price = get_post_meta($variation->ID, '_location_regular_price_' . $location->term_id, true);
+                        $location_sale_price = get_post_meta($variation->ID, '_location_sale_price_' . $location->term_id, true);
+                        $location_backorders = get_post_meta($variation->ID, '_location_backorders_' . $location->term_id, true);
+                    ?>
+                        <tr>
+                            <td><?php echo esc_html($location->name); ?></td>
+                            <td>
+                                <input type="number" 
+                                       name="variation_location_stock[<?php echo $loop; ?>][<?php echo $location->term_id; ?>]" 
+                                       value="<?php echo esc_attr($location_stock); ?>" 
+                                       class="short" step="1" min="0">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="variation_location_regular_price[<?php echo $loop; ?>][<?php echo $location->term_id; ?>]" 
+                                       value="<?php echo esc_attr($location_regular_price); ?>" 
+                                       class="wc_input_price short">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="variation_location_sale_price[<?php echo $loop; ?>][<?php echo $location->term_id; ?>]" 
+                                       value="<?php echo esc_attr($location_sale_price); ?>" 
+                                       class="wc_input_price short">
+                            </td>
+                            <td>
+                                <select name="variation_location_backorders[<?php echo $loop; ?>][<?php echo $location->term_id; ?>]">
+                                    <option value="no" <?php selected($location_backorders, 'no'); ?>><?php _e('No backorders', 'location-wise-products'); ?></option>
+                                    <option value="notify" <?php selected($location_backorders, 'notify'); ?>><?php _e('Allow, but notify customer', 'location-wise-products'); ?></option>
+                                    <option value="yes" <?php selected($location_backorders, 'yes'); ?>><?php _e('Allow', 'location-wise-products'); ?></option>
+                                </select>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php
+}, 10, 3);
+
+// Save location data for variations
+add_action('woocommerce_save_product_variation', function($variation_id, $loop) {
+    // Save variation location stock
+    if (isset($_POST['variation_location_stock'][$loop])) {
+        foreach ($_POST['variation_location_stock'][$loop] as $location_id => $stock) {
+            update_post_meta($variation_id, '_location_stock_' . $location_id, wc_clean($stock));
+        }
+    }
+    
+    // Save variation location regular prices
+    if (isset($_POST['variation_location_regular_price'][$loop])) {
+        foreach ($_POST['variation_location_regular_price'][$loop] as $location_id => $price) {
+            update_post_meta($variation_id, '_location_regular_price_' . $location_id, wc_format_decimal($price));
+        }
+    }
+    
+    // Save variation location sale prices
+    if (isset($_POST['variation_location_sale_price'][$loop])) {
+        foreach ($_POST['variation_location_sale_price'][$loop] as $location_id => $price) {
+            update_post_meta($variation_id, '_location_sale_price_' . $location_id, wc_format_decimal($price));
+        }
+    }
+    
+    // Save variation location backorder settings
+    if (isset($_POST['variation_location_backorders'][$loop])) {
+        foreach ($_POST['variation_location_backorders'][$loop] as $location_id => $backorders) {
+            update_post_meta($variation_id, '_location_backorders_' . $location_id, wc_clean($backorders));
+        }
+    }
+}, 10, 2);
+
+
+// Get current location
+function get_current_store_location() {
+    return isset($_COOKIE['store_location']) ? sanitize_text_field($_COOKIE['store_location']) : '';
+}
+
+// Get location term ID from slug
+function get_location_term_id($location_slug) {
+    if (empty($location_slug)) {
+        return false;
+    }
+    
+    $location = get_term_by('slug', $location_slug, 'store_location');
+    return $location ? $location->term_id : false;
+}
+
+if(get_option('location_stock_options', ['enable_location_price' => 'yes'])['enable_location_price'] === 'yes'){
+// Override regular price for simple products
+add_filter('woocommerce_product_get_regular_price', function($price, $product) {
+    if ($product->is_type('variation')) {
+        return $price; // Handle variations separately
+    }
+    
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $price;
+    }
+    
+    $location_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location_id, true);
+    
+    return !empty($location_price) ? $location_price : $price;
+}, 10, 2);
+// Override sale price for simple products
+add_filter('woocommerce_product_get_sale_price', function($price, $product) {
+    if ($product->is_type('variation')) {
+        return $price; // Handle variations separately
+    }
+    
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $price;
+    }
+    
+    $location_price = get_post_meta($product->get_id(), '_location_sale_price_' . $location_id, true);
+    
+    return !empty($location_price) ? $location_price : $price;
+}, 10, 2);
+}
+
+if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+// Override stock quantity for simple products
+add_filter('woocommerce_product_get_stock_quantity', function($quantity, $product) {
+    if ($product->is_type('variation')) {
+        return $quantity; // Handle variations separately
+    }
+    
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $quantity;
+    }
+    
+    $location_stock = get_post_meta($product->get_id(), '_location_stock_' . $location_id, true);
+    
+    return $location_stock !== '' ? $location_stock : $quantity;
+}, 10, 2);
+}
+// Override backorder setting for simple products
+add_filter('woocommerce_product_get_backorders', function($backorders, $product) {
+    if ($product->is_type('variation')) {
+        return $backorders; // Handle variations separately
+    }
+    
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $backorders;
+    }
+    
+    $location_backorders = get_post_meta($product->get_id(), '_location_backorders_' . $location_id, true);
+    
+    return !empty($location_backorders) ? $location_backorders : $backorders;
+}, 10, 2);
+
+if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+// Override product stock status based on location stock
+add_filter('woocommerce_product_get_stock_status', function($status, $product) {
+    if ($product->is_type('variation')) {
+        return $status; // Handle variations separately
+    }
+    
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $status;
+    }
+    
+    $location_stock = get_post_meta($product->get_id(), '_location_stock_' . $location_id, true);
+    
+    if ($location_stock === '') {
+        return $status;
+    }
+    
+    // Get backorder setting
+    $backorders = wc_get_product_stock_status_options();
+    $location_backorders = get_post_meta($product->get_id(), '_location_backorders_' . $location_id, true);
+    
+    // Determine stock status based on quantity and backorder setting
+    if ($location_stock <= 0 && $location_backorders === 'no') {
+        return 'outofstock';
+    } elseif ($location_stock <= 0 && $location_backorders !== 'no') {
+        return 'onbackorder';
+    } else {
+        return 'instock';
+    }
+}, 10, 2);
+}
+
+if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+
+// Override variation stock
+add_filter('woocommerce_product_variation_get_stock_quantity', function($quantity, $variation) {
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $quantity;
+    }
+    
+    $location_stock = get_post_meta($variation->get_id(), '_location_stock_' . $location_id, true);
+    
+    return $location_stock !== '' ? $location_stock : $quantity;
+}, 10, 2);
+}
+// Override variation backorders
+add_filter('woocommerce_product_variation_get_backorders', function($backorders, $variation) {
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $backorders;
+    }
+    
+    $location_backorders = get_post_meta($variation->get_id(), '_location_backorders_' . $location_id, true);
+    
+    return !empty($location_backorders) ? $location_backorders : $backorders;
+}, 10, 2);
+
+if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+// Handle stock reduction when order is placed
+add_action('woocommerce_reduce_order_stock', function($order) {
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return;
+    }
+    
+    foreach ($order->get_items() as $item) {
+        $product_id = $item->get_product_id();
+        $variation_id = $item->get_variation_id();
+        $quantity = $item->get_quantity();
+        
+        $target_id = $variation_id ? $variation_id : $product_id;
+        
+        $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+        
+        if ($current_stock !== '') {
+            $new_stock = max(0, (int)$current_stock - $quantity);
+            update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
+        }
+    }
+});
+
+// Handle stock restoration when order is canceled
+add_action('woocommerce_restore_order_stock', function($order) {
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return;
+    }
+    
+    foreach ($order->get_items() as $item) {
+        $product_id = $item->get_product_id();
+        $variation_id = $item->get_variation_id();
+        $quantity = $item->get_quantity();
+        
+        $target_id = $variation_id ? $variation_id : $product_id;
+        
+        $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+        
+        if ($current_stock !== '') {
+            $new_stock = (int)$current_stock + $quantity;
+            update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
+        }
+    }
+});
+}
+
+// Validate cart items against location stock
+add_filter('woocommerce_add_to_cart_validation', function($passed, $product_id, $quantity, $variation_id = 0, $variations = array()) {
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $passed;
+    }
+    
+    $target_id = $variation_id ? $variation_id : $product_id;
+    $product = wc_get_product($target_id);
+    
+    // Get location specific stock
+    $location_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+    
+    if ($location_stock === '') {
+        return $passed; // Use default WooCommerce stock checking
+    }
+    
+    // Get backorder setting
+    $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_id, true);
+    
+    // Check if we have enough stock
+    $qty_in_cart = 0;
+    
+    foreach (WC()->cart->get_cart() as $cart_item) {
+        if (($variation_id && $variation_id == $cart_item['variation_id']) || 
+            (!$variation_id && $product_id == $cart_item['product_id'])) {
+            $qty_in_cart += $cart_item['quantity'];
+        }
+    }
+    
+    $total_required = $qty_in_cart + $quantity;
+    
+    // If backorders are not allowed and we don't have enough stock
+    if ($location_backorders === 'no' && $location_stock < $total_required) {
+        wc_add_notice(
+            sprintf(
+                __('Sorry, "%s" has only %d left in stock at your selected location. Please adjust your quantity.', 'location-wise-products'), 
+                $product->get_name(), 
+                $location_stock
+            ), 
+            'error'
+        );
+        return false;
+    }
+    
+    return $passed;
+}, 10, 5);
+
+// Register settings
+add_action('admin_init', function() {
+    register_setting(
+        'location_stock_settings',
+        'location_stock_options'
+    );
+    
+    add_settings_section(
+        'location_stock_general_section',
+        __('General Settings', 'location-wise-products'),
+        function() {
+            echo '<p>' . __('Configure general settings for location-based stock and price management.', 'location-wise-products') . '</p>';
+        },
+        'location-stock-settings'
+    );
+    
+    add_settings_field(
+        'enable_location_stock',
+        __('Enable Location Stock', 'location-wise-products'),
+        function() {
+            $options = get_option('location_stock_options', ['enable_location_stock' => 'yes']);
+            $value = isset($options['enable_location_stock']) ? $options['enable_location_stock'] : 'yes';
+            ?>
+            <select name="location_stock_options[enable_location_stock]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php _e('Yes', 'location-wise-products'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php _e('No', 'location-wise-products'); ?></option>
+            </select>
+            <p class="description"><?php _e('Enable or disable location-specific stock management.', 'location-wise-products'); ?></p>
+            <?php
+        },
+        'location-stock-settings',
+        'location_stock_general_section'
+    );
+    
+    add_settings_field(
+        'enable_location_price',
+        __('Enable Location Pricing', 'location-wise-products'),
+        function() {
+            $options = get_option('location_stock_options', ['enable_location_price' => 'yes']);
+            $value = isset($options['enable_location_price']) ? $options['enable_location_price'] : 'yes';
+            ?>
+            <select name="location_stock_options[enable_location_price]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php _e('Yes', 'location-wise-products'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php _e('No', 'location-wise-products'); ?></option>
+            </select>
+            <p class="description"><?php _e('Enable or disable location-specific pricing.', 'location-wise-products'); ?></p>
+            <?php
+        },
+        'location-stock-settings',
+        'location_stock_general_section'
+    );
+});
+
+if(get_option('location_stock_options', ['enable_location_price' => 'yes'])['enable_location_price'] === 'yes'){
+// Override the final price for simple products
+add_filter('woocommerce_product_get_price', function($price, $product) {
+    if ($product->is_type('variation')) {
+        return $price; // Handle variations separately
+    }
+    
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $price;
+    }
+    
+    // First check if there's a location-specific sale price
+    $location_sale_price = get_post_meta($product->get_id(), '_location_sale_price_' . $location_id, true);
+    
+    // If there's a valid sale price and it's not empty, use it
+    if (!empty($location_sale_price)) {
+        return $location_sale_price;
+    }
+    
+    // Otherwise, check for location-specific regular price
+    $location_regular_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location_id, true);
+    
+    // If there's a location-specific regular price, use it
+    if (!empty($location_regular_price)) {
+        return $location_regular_price;
+    }
+    
+    // If no location-specific prices, return the original price
+    return $price;
+}, 10, 2);
+
+// Override the final price for variation products
+add_filter('woocommerce_product_variation_get_price', function($price, $variation) {
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $price;
+    }
+    
+    // First check if there's a location-specific sale price
+    $location_sale_price = get_post_meta($variation->get_id(), '_location_sale_price_' . $location_id, true);
+    
+    // If there's a valid sale price and it's not empty, use it
+    if (!empty($location_sale_price)) {
+        return $location_sale_price;
+    }
+    
+    // Otherwise, check for location-specific regular price
+    $location_regular_price = get_post_meta($variation->get_id(), '_location_regular_price_' . $location_id, true);
+    
+    // If there's a location-specific regular price, use it
+    if (!empty($location_regular_price)) {
+        return $location_regular_price;
+    }
+    
+    // If no location-specific prices, return the original price
+    return $price;
+}, 10, 2);
+
+// We also need to ensure variation price sync works correctly
+add_filter('woocommerce_variation_prices', function($prices, $product, $for_display) {
+    $location_slug = get_current_store_location();
+    $location_id = get_location_term_id($location_slug);
+    
+    if (!$location_id) {
+        return $prices;
+    }
+    
+    if (!empty($prices['regular_price']) && !empty($prices['sale_price']) && !empty($prices['price'])) {
+        $variation_ids = array_keys($prices['regular_price']);
+        
+        foreach ($variation_ids as $variation_id) {
+            // Update regular price
+            $location_regular_price = get_post_meta($variation_id, '_location_regular_price_' . $location_id, true);
+            if (!empty($location_regular_price)) {
+                $prices['regular_price'][$variation_id] = $location_regular_price;
+            }
+            
+            // Update sale price
+            $location_sale_price = get_post_meta($variation_id, '_location_sale_price_' . $location_id, true);
+            if (!empty($location_sale_price)) {
+                $prices['sale_price'][$variation_id] = $location_sale_price;
+                // Also update the final price when sale price exists
+                $prices['price'][$variation_id] = $location_sale_price;
+            } elseif (!empty($location_regular_price)) {
+                // If no sale price but has location regular price, update the final price
+                $prices['price'][$variation_id] = $location_regular_price;
+            }
+        }
+    }
+    
+    return $prices;
+}, 10, 3);
+}
+
+// show prevent message for current location
+
+// Add a more prominent notice on the single product page
+add_action('woocommerce_single_product_summary', function() {
+    global $product;
+    
+    if (!is_object($product)) {
+        $product = wc_get_product(get_the_ID());
+    }
+    
+    if (!$product) {
+        return;
+    }
+    
+    $location_slug = get_current_store_location();
+    
+    // If no location is selected or "all products" is selected, don't show the notice
+    if (!$location_slug || $location_slug === 'all-products') {
+        return;
+    }
+    
+    // Check if the product belongs to the current location
+    $terms = wp_get_object_terms($product->get_id(), 'store_location', ['fields' => 'slugs']);
+    
+    if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
+        // Product is not available in the current location - display a prominent notice
+        echo '<div class="product-location-unavailable">';
+        echo '<p class="unavailable-notice">' . __('This product isn\'t available for your current location.', 'location-wise-product') . '</p>';
+        echo '</div>';
+    }
+}, 5); // Priority 5 to show it near the top
+
+// disable purchase
+
+// Disable purchasing for products not available in current location
+add_filter('woocommerce_is_purchasable', function($is_purchasable, $product) {
+    $location_slug = get_current_store_location();
+    
+    // If no location is selected or "all products" is selected, keep default purchasability
+    if (!$location_slug || $location_slug === 'all-products') {
+        return $is_purchasable;
+    }
+    
+    // Get the product ID (handles both simple and variable products)
+    $product_id = $product->get_id();
+    
+    // Check if the product belongs to the current location
+    $terms = wp_get_object_terms($product_id, 'store_location', ['fields' => 'slugs']);
+    
+    if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
+        // Product is not available in the current location, so it's not purchasable
+        return false;
+    }
+    
+    return $is_purchasable;
+}, 10, 2);
+
+// Also prevent adding to cart through direct URLs or AJAX
+add_filter('woocommerce_add_to_cart_validation', function($valid, $product_id, $quantity) {
+    $location_slug = get_current_store_location();
+    
+    // If no location is selected or "all products" is selected, keep default validation
+    if (!$location_slug || $location_slug === 'all-products') {
+        return $valid;
+    }
+    
+    // Check if the product belongs to the current location
+    $terms = wp_get_object_terms($product_id, 'store_location', ['fields' => 'slugs']);
+    
+    if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
+        // Product is not available in the current location
+        wc_add_notice(__('This product isn\'t available for your current location and cannot be purchased.', 'location-wise-product'), 'error');
+        return false;
+    }
+    
+    return $valid;
+}, 10, 3);
+
+// Hide add to cart button on shop/archive pages for unavailable products
+add_filter('woocommerce_loop_add_to_cart_link', function($html, $product) {
+    $location_slug = get_current_store_location();
+    
+    // If no location is selected or "all products" is selected, show normal button
+    if (!$location_slug || $location_slug === 'all-products') {
+        return $html;
+    }
+    
+    // Check if the product belongs to the current location
+    $terms = wp_get_object_terms($product->get_id(), 'store_location', ['fields' => 'slugs']);
+    
+    if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
+        // Replace add to cart button with unavailable text
+        return '<span class="button unavailable-product">' . __('Unavailable at your location', 'location-wise-product') . '</span>';
+    }
+    
+    return $html;
+}, 10, 2);
+
+
+
+// add stock & price details in product pages
+
+// Add location-specific stock and price display on product pages
+add_action('woocommerce_single_product_summary', 'display_location_specific_stock_info', 25);
+add_action('woocommerce_shop_loop_item_title', 'display_location_specific_stock_info_loop', 15);
+
+/**
+ * Display location-specific stock and price information on single product pages
+ */
+function display_location_specific_stock_info() {
+    global $product;
+    
+    // Get current location
+    $location_slug = get_current_store_location();
+    if (empty($location_slug) || $location_slug === 'all-products') {
+        return; // No specific location selected
+    }
+    
+    // Get location term
+    $location = get_term_by('slug', $location_slug, 'store_location');
+    if (!$location) {
+        return;
+    }
+    
+    $product_id = $product->get_id();
+    $variation_id = 0;
+    
+    // If this is a variation, get its ID
+    if ($product->is_type('variation')) {
+        $variation_id = $product_id;
+        $product_id = $product->get_parent_id();
+    }
+    
+    $target_id = $variation_id ? $variation_id : $product_id;
+    
+    // Get location-specific stock
+    $location_stock = get_post_meta($target_id, '_location_stock_' . $location->term_id, true);
+    
+    // Get location-specific prices
+    $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $location->term_id, true);
+    $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $location->term_id, true);
+    
+    // Get backorder setting
+    $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location->term_id, true);
+    
+    echo '<div class="location-specific-info">';
+    echo '<h4>' . sprintf(__('Information for %s location', 'location-wise-products'), $location->name) . '</h4>';
+    
+    // Display stock status
+    if ($location_stock !== '') {
+        echo '<p class="location-stock">';
+        echo '<strong>' . __('Stock:', 'location-wise-products') . '</strong> ';
+        
+        if ($location_stock > 0) {
+            echo '<span class="in-stock">' . sprintf(_n('%d item in stock', '%d items in stock', $location_stock, 'location-wise-products'), $location_stock) . '</span>';
+        } else {
+            if ($location_backorders === 'no') {
+                echo '<span class="out-of-stock">' . __('Out of stock', 'location-wise-products') . '</span>';
+            } else {
+                echo '<span class="on-backorder">' . __('Available on backorder', 'location-wise-products') . '</span>';
+            }
+        }
+        echo '</p>';
+    }
+    
+    // Display location-specific prices if they exist
+    if (!empty($location_regular_price)) {
+        echo '<p class="location-price">';
+        echo '<strong>' . __('Price at this location:', 'location-wise-products') . '</strong> ';
+        
+        if (!empty($location_sale_price)) {
+            echo '<del>' . wc_price($location_regular_price) . '</del> <ins>' . wc_price($location_sale_price) . '</ins>';
+        } else {
+            echo wc_price($location_regular_price);
+        }
+        echo '</p>';
+    }
+    
+    echo '</div>';
+}
+
+/**
+ * Display simplified location-specific stock and price information on product loops (shop pages)
+ */
+function display_location_specific_stock_info_loop() {
+    global $product;
+    
+    // Get current location
+    $location_slug = get_current_store_location();
+    if (empty($location_slug) || $location_slug === 'all-products') {
+        return; // No specific location selected
+    }
+    
+    // Get location term
+    $location = get_term_by('slug', $location_slug, 'store_location');
+    if (!$location) {
+        return;
+    }
+    
+    $product_id = $product->get_id();
+    
+    // Get location-specific stock
+    $location_stock = get_post_meta($product_id, '_location_stock_' . $location->term_id, true);
+    
+    // Get backorder setting
+    $location_backorders = get_post_meta($product_id, '_location_backorders_' . $location->term_id, true);
+    
+    echo '<div class="location-specific-info-loop">';
+    
+    // Display stock status in a simplified format for shop pages
+    if ($location_stock !== '') {
+        echo '<span class="location-stock-loop">';
+        
+        if ($location_stock > 0) {
+            echo '<span class="in-stock">' . sprintf(__('%d in stock', 'location-wise-products'), $location_stock) . '</span>';
+        } else {
+            if ($location_backorders === 'no') {
+                echo '<span class="out-of-stock">' . __('Out of stock', 'location-wise-products') . '</span>';
+            } else {
+                echo '<span class="on-backorder">' . __('Backorder', 'location-wise-products') . '</span>';
+            }
+        }
+        echo '</span>';
+    }
+    
+    echo '</div>';
+}
+
+/**
+ * Handle variable products - show location info for the selected variation
+ */
+add_action('woocommerce_available_variation', 'add_location_data_to_variations', 10, 3);
+function add_location_data_to_variations($variation_data, $product, $variation) {
+    // Get current location
+    $location_slug = get_current_store_location();
+    if (empty($location_slug) || $location_slug === 'all-products') {
+        return $variation_data; // No specific location selected
+    }
+    
+    // Get location term
+    $location = get_term_by('slug', $location_slug, 'store_location');
+    if (!$location) {
+        return $variation_data;
+    }
+    
+    $variation_id = $variation->get_id();
+    
+    // Get location-specific stock
+    $location_stock = get_post_meta($variation_id, '_location_stock_' . $location->term_id, true);
+    
+    // Get location-specific prices
+    $location_regular_price = get_post_meta($variation_id, '_location_regular_price_' . $location->term_id, true);
+    $location_sale_price = get_post_meta($variation_id, '_location_sale_price_' . $location->term_id, true);
+    
+    // Get backorder setting
+    $location_backorders = get_post_meta($variation_id, '_location_backorders_' . $location->term_id, true);
+    
+    // Add location data to variation data
+    $variation_data['location_data'] = [
+        'location_name' => $location->name,
+        'location_stock' => $location_stock,
+        'location_regular_price' => $location_regular_price,
+        'location_sale_price' => $location_sale_price,
+        'location_backorders' => $location_backorders
+    ];
+    
+    // Add this as data attributes for JavaScript
+    $variation_data['variation_description'] .= '<div class="location-variation-info" 
+        data-location-name="' . esc_attr($location->name) . '"
+        data-location-stock="' . esc_attr($location_stock) . '"
+        data-location-backorders="' . esc_attr($location_backorders) . '"
+        data-location-regular-price="' . esc_attr($location_regular_price) . '"
+        data-location-sale-price="' . esc_attr($location_sale_price) . '">
+    </div>';
+    
+    return $variation_data;
+}
+
+/**
+ * Add JavaScript to handle variable product location info updates
+ */
+add_action('wp_footer', 'add_variation_location_script');
+function add_variation_location_script() {
+    // Only add script on product pages
+    if (!is_product()) {
+        return;
+    }
+    ?>
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        // Listen for variation change events
+        $('.variations_form').on('show_variation', function(event, variation) {
+            if (variation.location_data) {
+                var location_data = variation.location_data;
+                var location_info_html = '<div class="location-specific-info">';
+                
+                location_info_html += '<h4>' + wp.i18n.sprintf(
+                    /* translators: %s: location name */
+                    '<?php echo esc_js(__('Information for %s location', 'location-wise-products')); ?>', 
+                    location_data.location_name
+                ) + '</h4>';
+                
+                // Stock info
+                if (location_data.location_stock !== '') {
+                    location_info_html += '<p class="location-stock"><strong><?php echo esc_js(__('Stock:', 'location-wise-products')); ?></strong> ';
+                    
+                    if (parseInt(location_data.location_stock) > 0) {
+                        location_info_html += '<span class="in-stock">' + location_data.location_stock + ' <?php echo esc_js(__('in stock', 'location-wise-products')); ?></span>';
+                    } else {
+                        if (location_data.location_backorders === 'no') {
+                            location_info_html += '<span class="out-of-stock"><?php echo esc_js(__('Out of stock', 'location-wise-products')); ?></span>';
+                        } else {
+                            location_info_html += '<span class="on-backorder"><?php echo esc_js(__('Available on backorder', 'location-wise-products')); ?></span>';
+                        }
+                    }
+                    location_info_html += '</p>';
+                }
+                
+                // Price info
+                if (location_data.location_regular_price) {
+                    location_info_html += '<p class="location-price"><strong><?php echo esc_js(__('Price at this location:', 'location-wise-products')); ?></strong> ';
+                    
+                    if (location_data.location_sale_price) {
+                        location_info_html += '<del>' + accounting.formatMoney(location_data.location_regular_price, {
+                            symbol: woocommerce_params.currency_symbol,
+                            decimal: woocommerce_params.decimal_point,
+                            thousand: woocommerce_params.thousand_separator,
+                            precision: woocommerce_params.currency_format_num_decimals,
+                            format: woocommerce_params.currency_format
+                        }) + '</del> <ins>' + accounting.formatMoney(location_data.location_sale_price, {
+                            symbol: woocommerce_params.currency_symbol,
+                            decimal: woocommerce_params.decimal_point,
+                            thousand: woocommerce_params.thousand_separator,
+                            precision: woocommerce_params.currency_format_num_decimals,
+                            format: woocommerce_params.currency_format
+                        }) + '</ins>';
+                    } else {
+                        location_info_html += accounting.formatMoney(location_data.location_regular_price, {
+                            symbol: woocommerce_params.currency_symbol,
+                            decimal: woocommerce_params.decimal_point,
+                            thousand: woocommerce_params.thousand_separator,
+                            precision: woocommerce_params.currency_format_num_decimals,
+                            format: woocommerce_params.currency_format
+                        });
+                    }
+                    location_info_html += '</p>';
+                }
+                
+                location_info_html += '</div>';
+                
+                // Remove previous location info and add new
+                $('.location-specific-info').remove();
+                $('.woocommerce-variation-description').after(location_info_html);
+            }
+        });
+        
+        // Hide location info when variation is hidden
+        $('.variations_form').on('hide_variation', function() {
+            $('.location-specific-info').remove();
+        });
+    });
+    </script>
+    <?php
+}
+
+/**
+ * Add stock status to product category/archive pages
+ */
+add_action('woocommerce_after_shop_loop_item', 'display_location_stock_status_in_loop', 9);
+function display_location_stock_status_in_loop() {
+    global $product;
+    
+    // Get current location
+    $location_slug = get_current_store_location();
+    if (empty($location_slug) || $location_slug === 'all-products') {
+        return; // No specific location selected
+    }
+    
+    // Get location term
+    $location = get_term_by('slug', $location_slug, 'store_location');
+    if (!$location) {
+        return;
+    }
+    
+    $product_id = $product->get_id();
+    
+    // Get location-specific stock and prices
+    $location_stock = get_post_meta($product_id, '_location_stock_' . $location->term_id, true);
+    $location_regular_price = get_post_meta($product_id, '_location_regular_price_' . $location->term_id, true);
+    $location_sale_price = get_post_meta($product_id, '_location_sale_price_' . $location->term_id, true);
+    $location_backorders = get_post_meta($product_id, '_location_backorders_' . $location->term_id, true);
+    
+    echo '<div class="location-loop-details">';
+    
+    // Display stock status badge
+    if ($location_stock !== '') {
+        echo '<div class="location-stock-badge">';
+        
+        if (intval($location_stock) > 0) {
+            echo '<span class="stock-badge in-stock">' . __('In Stock', 'location-wise-products') . '</span>';
+        } else {
+            if ($location_backorders === 'no') {
+                echo '<span class="stock-badge out-of-stock">' . __('Out of Stock', 'location-wise-products') . '</span>';
+            } else {
+                echo '<span class="stock-badge on-backorder">' . __('Backorder', 'location-wise-products') . '</span>';
+            }
+        }
+        
+        echo '</div>';
+    }
+    
+    // Display location-specific price if available
+    if (!empty($location_regular_price)) {
+        echo '<div class="location-price-loop">';
+        echo '<small>' . sprintf(__('%s price:', 'location-wise-products'), $location->name) . '</small> ';
+        
+        if (!empty($location_sale_price)) {
+            echo '<del>' . wc_price($location_regular_price) . '</del> <ins>' . wc_price($location_sale_price) . '</ins>';
+        } else {
+            echo wc_price($location_regular_price);
+        }
+        
+        echo '</div>';
+    }
+    
+    echo '</div>';
+}
+// add product stock & price status in all product page admin
+
+add_filter('manage_product_posts_columns', 'add_location_column_to_product_list', 20);
+function add_location_column_to_product_list($columns) {
+    $new_columns = array();
+    
+    // Insert columns before the Locations column
+    foreach ($columns as $key => $value) {
+        $new_columns[$key] = $value;
+        
+        // Insert the Locations column after the Name column
+        if ($key === 'name') {
+            $new_columns['locations'] = __('Stock & Price', 'location-wise-product');
+        }
+    }
+    
+    return $new_columns;
+}
+add_action('manage_product_posts_custom_column', 'populate_locations_column_in_product_list', 10, 2);
+function populate_locations_column_in_product_list($column, $post_id) {
+    if ($column === 'locations') {
+        $product = wc_get_product($post_id);
+        if (!$product) {
+            echo '—';
+            return;
+        }
+
+        // Get all store locations
+        $locations = get_terms(array(
+            'taxonomy' => 'store_location',
+            'hide_empty' => false,
+        ));
+
+        if (!is_wp_error($locations) && !empty($locations)) {
+            $output = '';
+
+            // Handle variable products
+            if ($product->is_type('variable')) {
+                $variation_ids = $product->get_children();
+                foreach ($variation_ids as $variation_id) {
+                    $variation = new WC_Product_Variation($variation_id);
+                    $variation_title = $variation->get_attributes(); // Get variation attributes
+                    $variation_name = implode(', ', $variation_title); // Format variation name
+
+                    $output .= '<b>'. esc_html($variation_name) . '</b>'; // Display variation name
+
+                    foreach ($locations as $location) {
+                        $location_price = get_post_meta($variation_id, '_location_regular_price_' . $location->term_id, true);
+                        $location_stock = get_post_meta($variation_id, '_location_stock_' . $location->term_id, true);
+                        
+                        // Build output for this location
+                        if ($location_stock !== '') {
+                            $output .= '<div>' . esc_html($location->name) . ': ';
+                            $output .= ($location_stock > 0) ? 
+                        '<mark class="instock">' . __('In stock', 'location-wise-product') . ' (' . $location_stock . ')</mark>' : 
+                        '<mark class="outofstock">' . __('Out of stock', 'location-wise-product') . '</mark>';
+
+                            if ($location_price) {
+                                $output .= ' - ' . wc_price($location_price);
+                            }
+                            $output .= '</div>'; // New line for each location
+                        }
+                    }
+                }
+            } else {
+                // For simple products
+                foreach ($locations as $location) {
+                    $location_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location->term_id, true);
+                    $location_stock = get_post_meta($product->get_id(), '_location_stock_' . $location->term_id, true);
+
+                    if ($location_stock !== '') {
+                        $output .= '<div>' . esc_html($location->name) . ': ';
+                        $output .= ($location_stock > 0) ? 
+                        '<mark class="instock">' . __('In stock', 'location-wise-product') . ' (' . $location_stock . ')</mark>' : 
+                        '<mark class="outofstock">' . __('Out of stock', 'location-wise-product') . '</mark>';
+
+                        if ($location_price) {
+                            $output .= ' - ' . wc_price($location_price);
+                        }
+                        $output .= '</div>';
+                    }
+                }
+            }
+
+            echo $output ?: '<span class="na">—</span>';
+        }
+    }
+}
+
+// hide stock & price column
+add_filter('manage_edit-product_columns', 'remove_default_product_columns', 20);
+function remove_default_product_columns($columns) {
+    // Unset the default stock and price columns
+    unset($columns['is_in_stock']);
+    unset($columns['price']);
+    return $columns;
+}
