@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: Location Wise Products for WooCommerce
- * Plugin URI: https://plugincy.com/
+ * Plugin URI: https://plugincy.com/location-wise-product
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
  * Version: 1.0.0
  * Author: plugincy
@@ -65,7 +65,24 @@ class Plugincylwp_Location_Wise_Products
 
         add_action('admin_enqueue_scripts', [$this, 'custom_admin_styles']);
 
+        // add settings button after deactivate button in plugins page
+
+        add_action('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'add_settings_link']);
+        add_action('admin_init', [$this, 'add_settings_link']);
         require_once plugin_dir_path(__FILE__) . 'includes/stock-price-backorder-manage.php';
+    }
+
+    // add_settings_link
+    public function add_settings_link($links)
+    {
+        if (!is_array($links)) {
+            $links = [];
+        }
+        $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=location-wise-product')) . '">' . esc_html__('Settings', 'location-wise-product') . '</a>';
+        $pro_link = '<a href="https://plugincy.com/location-wise-product" style="color: #ff5722; font-weight: bold;" target="_blank">' . esc_html__('Get Pro', 'location-wise-product') . '</a>';
+        $links[] = $settings_link;
+        $links[] = $pro_link;
+        return $links;
     }
 
     public function register_store_location_taxonomy()
@@ -219,8 +236,7 @@ class Plugincylwp_Location_Wise_Products
 
     public function register_settings()
     {
-        register_setting('location_wise_products_settings', 'lwp_display_options', array($this, 'sanitize_settings'));
-        register_setting('location_wise_products_settings', 'lwp_filter_options', array($this, 'sanitize_settings')); // Changed from 'sanitize_filter_settings' to 'sanitize_settings'
+        register_setting('location_wise_products_settings', 'lwp_display_options', 'sanitize_settings');
 
         add_settings_section(
             'lwp_display_settings_section',
@@ -275,6 +291,98 @@ class Plugincylwp_Location_Wise_Products
             'location-wise-product',
             'lwp_filter_settings_section'
         );
+
+        // register_setting(
+        //     'location_stock_settings',
+        //     'lwp_display_options',
+        //     'sanitize_location_stock_options' // Add sanitization callback
+        // );
+        
+        // Add settings section
+        add_settings_section(
+            'location_stock_general_section',
+            __('General Settings', 'location-wise-product'),
+            function() {
+                echo '<p>' . esc_html_e('Configure general settings for location-based stock and price management.', 'location-wise-product') . '</p>';
+            },
+            'location-stock-settings'
+        );
+        
+        // Add "Enable Location Stock" field
+        add_settings_field(
+            'enable_location_stock',
+            __('Enable Location Stock', 'location-wise-product'),
+            function() {
+                $options = get_option('lwp_display_options', ['enable_location_stock' => 'yes']);
+                $value = isset($options['enable_location_stock']) ? $options['enable_location_stock'] : 'yes';
+                ?>
+                <select name="lwp_display_options[enable_location_stock]">
+                    <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
+                    <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e('Enable or disable location-specific stock management.', 'location-wise-product'); ?></p>
+                <?php
+            },
+            'location-stock-settings',
+            'location_stock_general_section'
+        );
+        
+        // Add "Enable Location Pricing" field
+        add_settings_field(
+            'enable_location_price',
+            __('Enable Location Pricing', 'location-wise-product'),
+            function() {
+                $options = get_option('lwp_display_options', ['enable_location_price' => 'yes']);
+                $value = isset($options['enable_location_price']) ? $options['enable_location_price'] : 'yes';
+                ?>
+                <select name="lwp_display_options[enable_location_price]">
+                    <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
+                    <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e('Enable or disable location-specific pricing.', 'location-wise-product'); ?></p>
+                <?php
+            },
+            'location-stock-settings',
+            'location_stock_general_section'
+        );
+
+        // Add "Enable Location Backorder" field
+        add_settings_field(
+            'enable_location_backorder',
+            __('Enable Location Backorder', 'location-wise-product'),
+            function() {
+                $options = get_option('lwp_display_options', ['enable_location_backorder' => 'yes']);
+                $value = isset($options['enable_location_backorder']) ? $options['enable_location_backorder'] : 'yes';
+                ?>
+                <select name="lwp_display_options[enable_location_backorder]">
+                    <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
+                    <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e('Enable or disable location-specific backorder management.', 'location-wise-product'); ?></p>
+                <?php
+            },
+            'location-stock-settings',
+            'location_stock_general_section'
+        );
+
+        // add "Enable Information for location"
+        add_settings_field(
+            'enable_location_information',
+            __('Enable Location Information', 'location-wise-product'),
+            function() {
+                $options = get_option('lwp_display_options', ['enable_location_information' => 'yes']);
+                $value = isset($options['enable_location_information']) ? $options['enable_location_information'] : 'yes';
+                ?>
+                <select name="lwp_display_options[enable_location_information]">
+                    <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
+                    <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e('Enable or disable location-specific information management.', 'location-wise-product'); ?></p>
+                <?php
+            },
+            'location-stock-settings',
+            'location_stock_general_section'
+        );
     }
 
     public function sanitize_settings($input) {
@@ -309,8 +417,29 @@ class Plugincylwp_Location_Wise_Products
                 $sanitized['filtered_sections'][] = sanitize_text_field($section);
             }
         }
+        // Handle enable_location_stock option
+        if (isset($input['enable_location_stock'])) {
+            $sanitized['enable_location_stock'] = sanitize_text_field($input['enable_location_stock']);
+        }
+
+        // Handle enable_location_price option
+        if (isset($input['enable_location_price'])) {
+            $sanitized['enable_location_price'] = sanitize_text_field($input['enable_location_price']);
+        }
+
+        // Handle enable_location_backorder option
+        if (isset($input['enable_location_backorder'])) {
+            $sanitized['enable_location_backorder'] = sanitize_text_field($input['enable_location_backorder']);
+        }
+        // Handle enable_location_information option
+        if (isset($input['enable_location_information'])) {
+            $sanitized['enable_location_information'] = sanitize_text_field($input['enable_location_information']);
+        }
+
         
         return $sanitized;
+
+        
     }
 
     public function settings_section_callback()
@@ -356,7 +485,7 @@ class Plugincylwp_Location_Wise_Products
 
         foreach ($pages as $value => $label) {
             $checked = in_array($value, $enabled_pages) ? 'checked' : '';
-            echo "<label><input type='checkbox' name='lwp_display_options[enabled_pages][]' value='" . esc_attr($value) . "' " . checked($checked, true, false) . "> " . esc_html($label) . "</label><br>";
+            echo "<label><input type='checkbox' name='lwp_display_options[enabled_pages][]' value='" . esc_attr($value) . "' " . esc_attr($checked) . "> " . esc_html($label) . "</label><br>";
         }
     }
 
@@ -369,13 +498,6 @@ class Plugincylwp_Location_Wise_Products
                 <?php
                 settings_fields('location_wise_products_settings');
                 do_settings_sections('location-wise-product');
-                submit_button();
-                ?>
-            </form>
-            <form method="post" action="options.php">
-                <?php wp_nonce_field('plugincylwp_general_settings', 'plugincylwp_general_settings_nonce'); ?>
-                <?php
-                settings_fields('location_stock_settings');
                 do_settings_sections('location-stock-settings');
                 submit_button();
                 ?>
@@ -564,7 +686,7 @@ class Plugincylwp_Location_Wise_Products
         $options = $this->get_filter_options();
         $strict = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
     ?>
-        <select name="lwp_filter_options[strict_filtering]">
+        <select name="lwp_display_options[strict_filtering]">
             <option value="enabled" <?php selected($strict, 'enabled'); ?>><?php esc_html_e('Enabled (Only show products from selected location)', 'location-wise-product'); ?></option>
             <option value="disabled" <?php selected($strict, 'disabled'); ?>><?php esc_html_e('Disabled (Show all products regardless of location)', 'location-wise-product'); ?></option>
         </select>
@@ -598,7 +720,7 @@ class Plugincylwp_Location_Wise_Products
 
         foreach ($all_sections as $value => $label) {
             $checked = in_array($value, $sections) ? 'checked' : '';
-            echo "<label><input type='checkbox' name='lwp_filter_options[filtered_sections][]' value='" . esc_attr($value) . "' " . checked($checked, true, false) . "> " . esc_html($label) . "</label><br>";
+            echo "<label><input type='checkbox' name='lwp_display_options[filtered_sections][]' value='" . esc_attr($value) . "' " . esc_attr($checked) . "> " . esc_html($label) . "</label><br>";
         }
     ?>
         <p class="description"><?php esc_html_e('Select which parts of your store should have location-based filtering applied.', 'location-wise-product'); ?></p>
@@ -611,7 +733,7 @@ class Plugincylwp_Location_Wise_Products
             'strict_filtering' => 'enabled',
             'filtered_sections' => ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells']
         ];
-        $options = get_option('lwp_filter_options', []);
+        $options = get_option('lwp_display_options', []);
         return wp_parse_args($options, $defaults);
     }
 

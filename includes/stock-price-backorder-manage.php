@@ -240,7 +240,7 @@ function get_location_term_id($location_slug) {
     return $location ? $location->term_id : false;
 }
 
-if(get_option('location_stock_options', ['enable_location_price' => 'yes'])['enable_location_price'] === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_price' => 'yes'])['enable_location_price'] ?? 'yes') === 'yes'){
 // Override regular price for simple products
 add_filter('woocommerce_product_get_regular_price', function($price, $product) {
     if ($product->is_type('variation')) {
@@ -277,7 +277,7 @@ add_filter('woocommerce_product_get_sale_price', function($price, $product) {
 }, 10, 2);
 }
 
-if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
 // Override stock quantity for simple products
 add_filter('woocommerce_product_get_stock_quantity', function($quantity, $product) {
     if ($product->is_type('variation')) {
@@ -296,6 +296,9 @@ add_filter('woocommerce_product_get_stock_quantity', function($quantity, $produc
     return $location_stock !== '' ? $location_stock : $quantity;
 }, 10, 2);
 }
+
+if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['enable_location_backorder'] ?? 'yes') === 'yes'){
+
 // Override backorder setting for simple products
 add_filter('woocommerce_product_get_backorders', function($backorders, $product) {
     if ($product->is_type('variation')) {
@@ -313,8 +316,8 @@ add_filter('woocommerce_product_get_backorders', function($backorders, $product)
     
     return !empty($location_backorders) ? $location_backorders : $backorders;
 }, 10, 2);
-
-if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+}
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
 // Override product stock status based on location stock
 add_filter('woocommerce_product_get_stock_status', function($status, $product) {
     if ($product->is_type('variation')) {
@@ -349,7 +352,7 @@ add_filter('woocommerce_product_get_stock_status', function($status, $product) {
 }, 10, 2);
 }
 
-if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
 
 // Override variation stock
 add_filter('woocommerce_product_variation_get_stock_quantity', function($quantity, $variation) {
@@ -365,6 +368,8 @@ add_filter('woocommerce_product_variation_get_stock_quantity', function($quantit
     return $location_stock !== '' ? $location_stock : $quantity;
 }, 10, 2);
 }
+
+if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['enable_location_backorder'] ?? 'yes') === 'yes'){
 // Override variation backorders
 add_filter('woocommerce_product_variation_get_backorders', function($backorders, $variation) {
     $location_slug = get_current_store_location();
@@ -378,8 +383,9 @@ add_filter('woocommerce_product_variation_get_backorders', function($backorders,
     
     return !empty($location_backorders) ? $location_backorders : $backorders;
 }, 10, 2);
+}
 
-if(get_option('location_stock_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
 // Handle stock reduction when order is placed
 add_action('woocommerce_reduce_order_stock', function($order) {
     $location_slug = get_current_store_location();
@@ -481,75 +487,7 @@ add_filter('woocommerce_add_to_cart_validation', function($passed, $product_id, 
     return $passed;
 }, 10, 5);
 
-// Register settings
-add_action('admin_init', function() {
-    // Register the setting with a sanitization callback
-    register_setting(
-        'location_stock_settings',
-        'location_stock_options',
-        'sanitize_location_stock_options' // Add sanitization callback
-    );
-    
-    // Add settings section
-    add_settings_section(
-        'location_stock_general_section',
-        __('General Settings', 'location-wise-product'),
-        function() {
-            echo '<p>' . esc_html_e('Configure general settings for location-based stock and price management.', 'location-wise-product') . '</p>';
-        },
-        'location-stock-settings'
-    );
-    
-    // Add "Enable Location Stock" field
-    add_settings_field(
-        'enable_location_stock',
-        __('Enable Location Stock', 'location-wise-product'),
-        function() {
-            $options = get_option('location_stock_options', ['enable_location_stock' => 'yes']);
-            $value = isset($options['enable_location_stock']) ? $options['enable_location_stock'] : 'yes';
-            ?>
-            <select name="location_stock_options[enable_location_stock]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
-            </select>
-            <p class="description"><?php esc_html_e('Enable or disable location-specific stock management.', 'location-wise-product'); ?></p>
-            <?php
-        },
-        'location-stock-settings',
-        'location_stock_general_section'
-    );
-    
-    // Add "Enable Location Pricing" field
-    add_settings_field(
-        'enable_location_price',
-        __('Enable Location Pricing', 'location-wise-product'),
-        function() {
-            $options = get_option('location_stock_options', ['enable_location_price' => 'yes']);
-            $value = isset($options['enable_location_price']) ? $options['enable_location_price'] : 'yes';
-            ?>
-            <select name="location_stock_options[enable_location_price]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
-            </select>
-            <p class="description"><?php esc_html_e('Enable or disable location-specific pricing.', 'location-wise-product'); ?></p>
-            <?php
-        },
-        'location-stock-settings',
-        'location_stock_general_section'
-    );
-});
-
-// Sanitization callback for the settings
-function sanitize_location_stock_options($input) {
-    // Sanitize the options
-    $output = [];
-    $output['enable_location_stock'] = isset($input['enable_location_stock']) && in_array($input['enable_location_stock'], ['yes', 'no']) ? $input['enable_location_stock'] : 'yes';
-    $output['enable_location_price'] = isset($input['enable_location_price']) && in_array($input['enable_location_price'], ['yes', 'no']) ? $input['enable_location_price'] : 'yes';
-    
-    return $output;
-}
-
-if(get_option('location_stock_options', ['enable_location_price' => 'yes'])['enable_location_price'] === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_price' => 'yes'])['enable_location_price'] ?? 'yes') === 'yes'){
 // Override the final price for simple products
 add_filter('woocommerce_product_get_price', function($price, $product) {
     if ($product->is_type('variation')) {
@@ -749,11 +687,13 @@ add_filter('woocommerce_loop_add_to_cart_link', function($html, $product) {
 
 
 // add stock & price details in product pages
+if((get_option('lwp_display_options', ['enable_location_information' => 'yes'])['enable_location_information'] ?? 'yes') === 'yes'){
 
 // Add location-specific stock and price display on product pages
 add_action('woocommerce_single_product_summary', 'display_location_specific_stock_info', 25);
 add_action('woocommerce_shop_loop_item_title', 'display_location_specific_stock_info_loop', 15);
 
+}
 /**
  * Display location-specific stock and price information on single product pages
  */
@@ -1013,10 +953,14 @@ function add_variation_location_script() {
     <?php
 }
 
+if((get_option('lwp_display_options', ['enable_location_information' => 'yes'])['enable_location_information'] ?? 'yes') === 'yes'){
+
 /**
  * Add stock status to product category/archive pages
  */
 add_action('woocommerce_after_shop_loop_item', 'display_location_stock_status_in_loop', 9);
+
+}
 function display_location_stock_status_in_loop() {
     global $product;
     
