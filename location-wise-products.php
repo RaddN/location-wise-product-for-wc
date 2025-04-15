@@ -370,15 +370,34 @@ class Plugincylwp_Location_Wise_Products
             'enable_location_information',
             __('Enable Location Information', 'location-wise-product'),
             function() {
-                $options = get_option('lwp_display_options', ['enable_location_information' => 'yes']);
-                $value = isset($options['enable_location_information']) ? $options['enable_location_information'] : 'yes';
-                ?>
-                <select name="lwp_display_options[enable_location_information]">
-                    <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                    <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
-                </select>
-                <p class="description"><?php esc_html_e('Enable or disable location-specific information management.', 'location-wise-product'); ?></p>
-                <?php
+            $options = get_option('lwp_display_options', ['enable_location_information' => 'yes']);
+            $value = isset($options['enable_location_information']) ? $options['enable_location_information'] : 'yes';
+            ?>
+            <select name="lwp_display_options[enable_location_information]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+            </select>
+            <p class="description"><?php esc_html_e('Enable or disable location-specific information management.', 'location-wise-product'); ?></p>
+            <?php
+            },
+            'location-stock-settings',
+            'location_stock_general_section'
+        );
+
+        add_settings_field(
+            'enable_location_by_user_role',
+            __('Enable Location by User Role', 'location-wise-product'),
+            function() {
+            $roles = wp_roles()->roles;
+            $options = get_option('lwp_display_options', ['enable_location_by_user_role' => []]);
+            $selected_roles = isset($options['enable_location_by_user_role']) ? $options['enable_location_by_user_role'] : [];
+            foreach ($roles as $role_key => $role) {
+                $checked = in_array($role_key, $selected_roles) ? 'checked' : '';
+                echo "<label><input type='checkbox' name='lwp_display_options[enable_location_by_user_role][]' value='" . esc_attr($role_key) . "' " . esc_attr($checked) . "> " . esc_html($role['name']) . "</label><br>";
+            }
+            ?>
+            <p class="description"><?php esc_html_e('Select user roles for which location-specific information is enabled.', 'location-wise-product'); ?></p>
+            <?php
             },
             'location-stock-settings',
             'location_stock_general_section'
@@ -503,6 +522,7 @@ class Plugincylwp_Location_Wise_Products
                 ?>
             </form>
         </div>
+        <p><?php esc_html_e('Use this shortcode to show location selector on any page', 'location-wise-product'); ?> <strong>[store_location_selector]</strong></p>
     <?php
     }
 
