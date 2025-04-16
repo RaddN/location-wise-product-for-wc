@@ -34,8 +34,10 @@ class Plugincylwp_Location_Wise_Products
         add_filter('woocommerce_shortcode_products_query', [$this, 'filter_shortcode_products']);
         add_filter('woocommerce_products_widget_query_args', [$this, 'filter_widget_products']);
         add_filter('woocommerce_related_products_args', [$this, 'filter_related_products']);
-
-        add_action('wp_footer', [$this, 'location_selector_modal']);
+        $options = get_option('lwp_display_options', ['enable_popup' => 'yes']);
+        if (isset($options['enable_popup']) && $options['enable_popup'] === 'yes') {
+            add_action('wp_footer', [$this, 'location_selector_modal']);
+        }
         add_action('init', [$this, 'clear_cart_on_location_change']);
 
         add_shortcode('store_location_selector', [$this, 'location_selector_shortcode']);
@@ -600,6 +602,23 @@ class Plugincylwp_Location_Wise_Products
                 }
         ?>
             <p class="description"><?php esc_html_e('Select user roles for which location-specific information is enabled.', 'location-wise-product'); ?></p>
+        <?php
+            },
+            'location-stock-settings',
+            'location_stock_general_section'
+        );
+        add_settings_field(
+            'enable_popup',
+            __('Enable Popup', 'location-wise-product'),
+            function () {
+                $options = get_option('lwp_display_options', ['enable_popup' => 'yes']);
+                $value = isset($options['enable_popup']) ? $options['enable_popup'] : 'yes';
+        ?>
+            <select name="lwp_display_options[enable_popup]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+            </select>
+            <p class="description"><?php esc_html_e('Enable or disable popup management.', 'location-wise-product'); ?></p>
         <?php
             },
             'location-stock-settings',
