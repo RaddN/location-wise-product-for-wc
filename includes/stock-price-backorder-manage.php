@@ -712,6 +712,23 @@ add_action( 'wp_footer', function() {
                 wp_enqueue_style('custom-woocommerce-style');
                 wp_add_inline_style('custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
+        }else{
+            $location_slug = get_current_store_location();
+
+            // If no location is selected or "all products" is selected, show normal button
+            if ( ! $location_slug || 'all-products' === $location_slug ) {
+                return;
+            }
+
+            // Check if the product belongs to the current location
+            $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
+
+            if ( is_wp_error( $terms ) || ! in_array( $location_slug, $terms, true ) ) {
+                // Register a dummy stylesheet to attach inline styles
+                wp_register_style('custom-woocommerce-style', false, array(), '1.0.0');
+                wp_enqueue_style('custom-woocommerce-style');
+                wp_add_inline_style('custom-woocommerce-style', 'form.cart { display: none; }');
+            }
         }
     }
 } );

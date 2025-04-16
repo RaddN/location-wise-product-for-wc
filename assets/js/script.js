@@ -10,7 +10,6 @@ jQuery(document).ready(function($) {
             method: 'POST',
             data: { action: 'check_cart_products' },
             success: function(response) {
-                console.log(response); // Log the entire response
                 callback(response.success ? response.data.cartHasProducts : false);
             },
             error: function() {
@@ -26,7 +25,7 @@ jQuery(document).ready(function($) {
             method: 'POST',
             data: { action: 'clear_cart' },
             success: function() {
-                window.location.reload();
+                window.location.href = window.location.href.split('?')[0];
             },
             error: function() {
                 alert('Failed to clear the cart. Please try again.');
