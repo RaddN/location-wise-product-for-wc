@@ -262,6 +262,12 @@ add_filter('woocommerce_product_get_regular_price', function($price, $product) {
     if ($product->is_type('variation')) {
         return $price; // Handle variations separately
     }
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
+    $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return $price; // Use default WooCommerce price
+    }
     
     $location_slug = get_current_store_location();
     $location_id = get_location_term_id($location_slug);
@@ -278,6 +284,15 @@ add_filter('woocommerce_product_get_regular_price', function($price, $product) {
 add_filter('woocommerce_product_get_sale_price', function($price, $product) {
     if ($product->is_type('variation')) {
         return $price; // Handle variations separately
+    }
+
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
+
+    $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
+
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return $price; // Use default WooCommerce price
     }
     
     $location_slug = get_current_store_location();
@@ -343,6 +358,8 @@ add_filter('woocommerce_product_get_stock_status', function($status, $product) {
     $location_slug = get_current_store_location();
     $location_id = get_location_term_id($location_slug);
     $product_id = $product->get_id();
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     
     if (!$location_id) {
         return $status;
@@ -355,8 +372,13 @@ add_filter('woocommerce_product_get_stock_status', function($status, $product) {
     }
     $terms = wp_get_object_terms($product_id, 'store_location', ['fields' => 'slugs']);
 
+
     // if all products is selected
     if ($location_slug === 'all-products') {
+        return $status; // Use default WooCommerce stock status
+    }
+
+    if ($enable_all_locations === 'yes' && empty($terms)) {
         return $status; // Use default WooCommerce stock status
     }
     
@@ -620,7 +642,8 @@ add_filter('woocommerce_variation_prices', function($prices, $product, $for_disp
 // Add a more prominent notice on the single product page
 add_action('woocommerce_single_product_summary', function() {
     global $product;
-    
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     if (!is_object($product)) {
         $product = wc_get_product(get_the_ID());
     }
@@ -638,6 +661,10 @@ add_action('woocommerce_single_product_summary', function() {
     
     // Check if the product belongs to the current location
     $terms = wp_get_object_terms($product->get_id(), 'store_location', ['fields' => 'slugs']);
+
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return; // Show default WooCommerce notice
+    }
     
     if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
         // Product is not available in the current location - display a prominent notice
@@ -694,6 +721,8 @@ add_action('woocommerce_single_product_summary', function() {
 add_action( 'wp_footer', function() {
     if ( is_product() ) {
         global $product;
+        $options = get_option('lwp_display_options', []);
+        $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
 
         if ( $product->is_type( 'variable' ) ) {
             $location_slug = get_current_store_location();
@@ -705,6 +734,10 @@ add_action( 'wp_footer', function() {
 
             // Check if the product belongs to the current location
             $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
+
+            if ( $enable_all_locations === 'yes' && empty( $terms ) ) {
+                return; // Show default WooCommerce notice
+            }
 
             if ( is_wp_error( $terms ) || ! in_array( $location_slug, $terms, true ) ) {
                 // Register a dummy stylesheet to attach inline styles
@@ -723,6 +756,9 @@ add_action( 'wp_footer', function() {
             // Check if the product belongs to the current location
             $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
 
+            if ( $enable_all_locations === 'yes' && empty( $terms ) ) {
+                return; // Show default WooCommerce notice
+            }
             if ( is_wp_error( $terms ) || ! in_array( $location_slug, $terms, true ) ) {
                 // Register a dummy stylesheet to attach inline styles
                 wp_register_style('custom-woocommerce-style', false, array(), '1.0.0');
@@ -753,7 +789,8 @@ if (array_intersect($user_roles, $selected_roles)) {
  */
 function display_location_specific_stock_info() {
     global $product;
-    
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     // Get current location
     $location_slug = get_current_store_location();
     if (empty($location_slug) || $location_slug === 'all-products') {
@@ -764,6 +801,11 @@ function display_location_specific_stock_info() {
     $location = get_term_by('slug', $location_slug, 'store_location');
     if (!$location) {
         return;
+    }
+
+    $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return; // Show default WooCommerce notice
     }
     
     $product_id = $product->get_id();
@@ -828,7 +870,8 @@ function display_location_specific_stock_info() {
  */
 function display_location_specific_stock_info_loop() {
     global $product;
-    
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     // Get current location
     $location_slug = get_current_store_location();
     if (empty($location_slug) || $location_slug === 'all-products') {
@@ -839,6 +882,13 @@ function display_location_specific_stock_info_loop() {
     $location = get_term_by('slug', $location_slug, 'store_location');
     if (!$location) {
         return;
+    }
+    
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
+    $terms = wp_get_object_terms($product->get_id(), 'store_location', ['fields' => 'slugs']);
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return; // Show default WooCommerce notice
     }
     
     $product_id = $product->get_id();
@@ -879,7 +929,12 @@ function add_location_data_to_variations($variation_data, $product, $variation) 
     if (empty($location_slug) || $location_slug === 'all-products') {
         return $variation_data; // No specific location selected
     }
-    
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
+    $terms = wp_get_object_terms($product->get_id(), 'store_location', ['fields' => 'slugs']);
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return $variation_data;
+    }
     // Get location term
     $location = get_term_by('slug', $location_slug, 'store_location');
     if (!$location) {
@@ -922,11 +977,17 @@ add_action('woocommerce_after_shop_loop_item', 'display_location_stock_status_in
 }
 function display_location_stock_status_in_loop() {
     global $product;
-    
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     // Get current location
     $location_slug = get_current_store_location();
     if (empty($location_slug) || $location_slug === 'all-products') {
         return; // No specific location selected
+    }
+
+    $terms = wp_get_object_terms($product->get_id(), 'store_location', ['fields' => 'slugs']);
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return; // Show default WooCommerce notice
     }
     
     // Get location term

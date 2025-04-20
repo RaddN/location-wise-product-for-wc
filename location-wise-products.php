@@ -90,6 +90,7 @@ class Plugincylwp_Location_Wise_Products
         require_once plugin_dir_path(__FILE__) . 'includes/stock-price-backorder-manage.php';
     }
 
+
     /**
      * Save location from cookie to order meta
      *
@@ -624,6 +625,26 @@ class Plugincylwp_Location_Wise_Products
             'location-stock-settings',
             'location_stock_general_section'
         );
+
+        // Add settings for if no location is selected for a product available in all locations or not
+        add_settings_field(
+            'enable_all_locations',
+            __('No Location Product Enable for All', 'location-wise-product'),
+            function () {
+                $options = get_option('lwp_display_options', ['enable_all_locations' => 'yes']);
+                $value = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
+        ?>
+            <select name="lwp_display_options[enable_all_locations]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+            </select>
+            <p class="description"><?php esc_html_e('if no location is selected for a product available in all locations or not', 'location-wise-product'); ?></p>
+
+        <?php
+            },
+            'location-stock-settings',
+            'location_stock_general_section'
+        );
     }
 
     public function sanitize_settings($input)
@@ -696,6 +717,7 @@ class Plugincylwp_Location_Wise_Products
             <option value="append" <?php selected($format, 'append'); ?>><?php esc_html_e('Append to title (Title - Location)', 'location-wise-product'); ?></option>
             <option value="prepend" <?php selected($format, 'prepend'); ?>><?php esc_html_e('Prepend to title (Location - Title)', 'location-wise-product'); ?></option>
             <option value="brackets" <?php selected($format, 'brackets'); ?>><?php esc_html_e('In brackets (Title [Location])', 'location-wise-product'); ?></option>
+            <option value="none" <?php selected($format, 'none'); ?>><?php esc_html_e('Do not display location', 'location-wise-product'); ?></option>
         </select>
     <?php
     }
@@ -799,6 +821,8 @@ class Plugincylwp_Location_Wise_Products
                 return $location_text . $separator . $title;
             case 'brackets':
                 return $title . ' [' . $location_text . ']';
+            case 'none':
+                return $title;
             case 'append':
             default:
                 return $title . $separator . $location_text;
@@ -808,12 +832,18 @@ class Plugincylwp_Location_Wise_Products
     private function product_belongs_to_location($product_id)
     {
         $location = $this->get_current_location();
+        $options = get_option('lwp_display_options', []);
+        $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
 
         if (!$location || $location === 'all-products') {
             return true;
         }
 
         $terms = wp_get_object_terms($product_id, 'store_location', ['fields' => 'slugs']);
+        if (empty($terms) && $enable_all_locations === 'yes') {
+            return true; // Product is available in all locations
+        }
+        error_log(print_r($terms, true)); // Debugging line to check the terms
         return (!is_wp_error($terms) && in_array($location, $terms));
     }
 
@@ -828,6 +858,8 @@ class Plugincylwp_Location_Wise_Products
     public function filter_ajax_searched_products($products)
     {
         $location = $this->get_current_location();
+        $options = get_option('lwp_display_options', []);
+        $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
 
         if (!$location || $location === 'all-products') {
             return $products;
