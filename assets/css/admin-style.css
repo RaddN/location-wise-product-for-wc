@@ -50,3 +50,26 @@
 .na {
     color: #999;
 }
+
+
+.location-stock-container, .location-price-container, .location-actions {
+    margin-bottom: 10px;
+}
+.location-stock-item, .location-price-item, .location-action-item {
+    margin-bottom: 5px;
+}
+.location-name {
+    font-weight: bold;
+}
+.location-tag {
+    display: inline-block;
+    background: #f0f0f0;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+.product-thumbnail {
+    width: 50px;
+    height: auto;
+}

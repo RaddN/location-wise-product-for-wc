@@ -314,6 +314,14 @@ add_filter('woocommerce_product_get_stock_quantity', function($quantity, $produc
     if ($product->is_type('variation')) {
         return $quantity; // Handle variations separately
     }
+
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
+
+    $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return $quantity; // Use default WooCommerce stock quantity
+    }
     
     $location_slug = get_current_store_location();
     $location_id = get_location_term_id($location_slug);
@@ -334,6 +342,13 @@ if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['e
 add_filter('woocommerce_product_get_backorders', function($backorders, $product) {
     if ($product->is_type('variation')) {
         return $backorders; // Handle variations separately
+    }
+    $options = get_option('lwp_display_options', []);
+    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
+
+    $terms = wp_get_object_terms( $product->get_id(), 'store_location', array( 'fields' => 'slugs' ) );
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return $backorders; // Use default WooCommerce backorder setting
     }
     
     $location_slug = get_current_store_location();
@@ -372,6 +387,9 @@ add_filter('woocommerce_product_get_stock_status', function($status, $product) {
     }
     $terms = wp_get_object_terms($product_id, 'store_location', ['fields' => 'slugs']);
 
+    if ($enable_all_locations === 'yes' && empty($terms)) {
+        return $status; // Use default WooCommerce price
+    }
 
     // if all products is selected
     if ($location_slug === 'all-products') {

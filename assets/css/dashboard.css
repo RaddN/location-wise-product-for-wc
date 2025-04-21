@@ -1,0 +1,100 @@
+/**
+ * Location Wise Products Dashboard Styles
+ */
+
+ .lwp-dashboard {
+    margin-top: 20px;
+}
+
+/* Grid layout */
+.lwp-row {
+    display: flex;
+    margin: 0 -15px;
+    flex-wrap: wrap;
+}
+
+.lwp-col {
+    padding: 0 15px;
+    flex: 1;
+    min-width: 48%;
+    margin-bottom: 20px;
+}
+
+/* Card styling */
+.lwp-card {
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.lwp-card h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    font-size: 18px;
+}
+
+/* Chart containers */
+.lwp-chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* Stats grid */
+.lwp-stats-grid {
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+}
+
+.lwp-stat-item {
+    padding: 15px;
+    flex: 1;
+}
+
+.lwp-stat-value {
+    display: block;
+    font-size: 32px;
+    font-weight: bold;
+    color: #2271b1;
+}
+
+.lwp-stat-label {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+}
+
+/* Low stock table */
+.lwp-low-stock-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.lwp-low-stock-table th,
+.lwp-low-stock-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.lwp-low-stock-table th {
+    font-weight: 600;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 782px) {
+    .lwp-col {
+        min-width: 100%;
+    }
+    
+    .lwp-stats-grid {
+        flex-direction: column;
+    }
+    
+    .lwp-stat-item {
+        margin-bottom: 15px;
+    }
+}

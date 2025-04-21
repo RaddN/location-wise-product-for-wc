@@ -88,8 +88,156 @@ class Plugincylwp_Location_Wise_Products
 
 
         require_once plugin_dir_path(__FILE__) . 'includes/stock-price-backorder-manage.php';
+
+        add_action('wp_ajax_update_product_location_status', [$this, 'cylwp_update_product_location_status']);
+        add_action('wp_ajax_get_available_locations', [$this, 'cylwp_get_available_locations']);
+        add_action('wp_ajax_save_product_locations', [$this, 'cylwp_save_product_locations']);
+
+        add_action('admin_enqueue_scripts', [$this, 'cylwp_enqueue_admin_scripts']);
     }
 
+    /**
+     * Get available locations for a product via AJAX
+     */
+    public function cylwp_get_available_locations()
+    {
+        // Check nonce
+        check_ajax_referer('location_wise_products_nonce', 'security');
+
+        // Check permissions
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-product')]);
+        }
+
+        // Get product ID
+        $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+        if (!$product_id) {
+            wp_send_json_error(['message' => __('Invalid product ID.', 'location-wise-product')]);
+        }
+
+        // Get all locations
+        $locations = get_terms([
+            'taxonomy' => 'store_location',
+            'hide_empty' => false,
+        ]);
+
+        if (is_wp_error($locations)) {
+            wp_send_json_error(['message' => $locations->get_error_message()]);
+        }
+
+        // Format locations for output
+        $location_data = [];
+        foreach ($locations as $location) {
+            $location_data[] = [
+                'id' => $location->term_id,
+                'name' => $location->name,
+            ];
+        }
+
+        wp_send_json_success(['locations' => $location_data]);
+    }
+
+    /**
+     * Save product locations via AJAX
+     */
+    public function cylwp_save_product_locations()
+    {
+        // Check nonce
+        check_ajax_referer('location_wise_products_nonce', 'security');
+
+        // Check permissions
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-product')]);
+        }
+
+        // Get product ID and location IDs
+        $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+        $location_ids = isset($_POST['location_ids']) ? array_map('intval', (array) $_POST['location_ids']) : [];
+
+        if (!$product_id) {
+            wp_send_json_error(['message' => __('Invalid product ID.', 'location-wise-product')]);
+        }
+
+        // Set product locations
+        wp_set_object_terms($product_id, $location_ids, 'store_location');
+
+        wp_send_json_success([
+            'message' => __('Product locations saved successfully.', 'location-wise-product'),
+        ]);
+    }
+
+    /**
+     * Update product location status via AJAX
+     */
+    public function cylwp_update_product_location_status()
+    {
+        // Check nonce
+        check_ajax_referer('location_wise_products_nonce', 'security');
+
+        // Check permissions
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-product')]);
+        }
+
+        // Get parameters
+        $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+        $location_id = isset($_POST['location_id']) ? intval($_POST['location_id']) : 0;
+        $action = isset($_POST['status_action']) ? sanitize_text_field($_POST['status_action']) : '';
+
+        if (!$product_id || !$location_id || !in_array($action, ['activate', 'deactivate'])) {
+            wp_send_json_error(['message' => __('Invalid parameters.', 'location-wise-product')]);
+        }
+
+        // Update location status
+        if ($action === 'activate') {
+            // Activate location - remove disabled meta
+            delete_post_meta($product_id, '_location_disabled_' . $location_id);
+            $message = __('Location activated successfully.', 'location-wise-product');
+        } else {
+            // Deactivate location - add disabled meta
+            update_post_meta($product_id, '_location_disabled_' . $location_id, 1);
+            $message = __('Location deactivated successfully.', 'location-wise-product');
+        }
+
+        wp_send_json_success(['message' => $message]);
+    }
+    /**
+     * Enqueue admin scripts
+     */
+    public function cylwp_enqueue_admin_scripts($hook)
+    {
+        // Only on product location page
+        // if ($hook !== 'woocommerce_page_product-locations') {
+        //     return;
+        // }
+
+        wp_enqueue_script(
+            'location-wise-products-admin',
+            plugin_dir_url(__FILE__) . 'assets/js/admin.js',
+            ['jquery'],
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script('location-wise-products-admin', 'locationWiseProducts', [
+            'nonce' => wp_create_nonce('location_wise_products_nonce'),
+            'i18n' => [
+                'activate' => __('Activate', 'location-wise-product'),
+                'deactivate' => __('Deactivate', 'location-wise-product'),
+                'selectLocations' => __('Select Locations', 'location-wise-product'),
+                'saveLocations' => __('Save Locations', 'location-wise-product'),
+                'ajaxError' => __('An error occurred. Please try again.', 'location-wise-product'),
+            ],
+        ]);
+
+        // Add modal styles
+        wp_enqueue_style(
+            'location-wise-products-admin',
+            plugin_dir_url(__FILE__) . 'assets/css/admin.css',
+            [],
+            '1.0.0'
+        );
+    }
 
     /**
      * Save location from cookie to order meta
@@ -235,7 +383,7 @@ class Plugincylwp_Location_Wise_Products
 
         if (!isset($_GET['store_location_filter_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['store_location_filter_nonce'])), 'store_location_filter_nonce')) {
             $selected_location = '';
-        }else{
+        } else {
             $selected_location = isset($_GET['store_location']) ? sanitize_text_field(wp_unslash($_GET['store_location'])) : '';
         }
 
@@ -263,7 +411,7 @@ class Plugincylwp_Location_Wise_Products
     {
         if (!isset($_GET['store_location_filter_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['store_location_filter_nonce'])), 'store_location_filter_nonce')) {
             $selected_location = '';
-        }else{
+        } else {
             $selected_location = isset($_GET['store_location']) ? sanitize_text_field(wp_unslash($_GET['store_location'])) : '';
         }
 
@@ -430,15 +578,421 @@ class Plugincylwp_Location_Wise_Products
 
     public function add_settings_page()
     {
-        add_submenu_page(
-            'woocommerce',
-            __('Location Wise Products Settings', 'location-wise-product'),
-            __('Store Locations Settings', 'location-wise-product'),
+        // Add main menu page
+        add_menu_page(
+            __('Location Manage', 'location-wise-product'),
+            __('Location Manage', 'location-wise-product'),
             'manage_options',
             'location-wise-product',
+            [$this, 'dashboard_page_content'],
+            'dashicons-location-alt',
+            56
+        );
+
+        // Add Dashboard submenu
+        add_submenu_page(
+            'location-wise-product',
+            __('Dashboard', 'location-wise-product'),
+            __('Dashboard', 'location-wise-product'),
+            'manage_options',
+            'location-wise-product',
+            [$this, 'dashboard_page_content']
+        );
+
+        // Add Locations submenu
+        add_submenu_page(
+            'location-wise-product',
+            __('Locations', 'location-wise-product'),
+            __('Locations', 'location-wise-product'),
+            'manage_options',
+            'edit-tags.php?taxonomy=store_location&post_type=product',
+            null,
+            56
+        );
+
+        // Ensure the menu is expanded and active when this page is active
+        add_filter('parent_file', function ($parent_file) {
+            global $pagenow, $taxonomy;
+
+            if ($pagenow === 'edit-tags.php' && $taxonomy === 'store_location') {
+                $parent_file = 'location-wise-product';
+            }
+
+            return $parent_file;
+        });
+
+        // Add current class to the active menu item
+        add_filter('submenu_file', function ($submenu_file) {
+            global $pagenow, $taxonomy;
+
+            if ($pagenow === 'edit-tags.php' && $taxonomy === 'store_location') {
+                $submenu_file = 'edit-tags.php?taxonomy=store_location&post_type=product';
+            }
+
+            return $submenu_file;
+        });
+
+        // add stock management submenu
+        add_submenu_page(
+            'location-wise-product',
+            __('Stock Management', 'location-wise-product'),
+            __('Stock Management', 'location-wise-product'),
+            'manage_options',
+            'location-stock-management',
+            [$this, 'location_stock_page_content']
+        );
+
+        // Add Settings submenu
+        add_submenu_page(
+            'location-wise-product',
+            __('Settings', 'location-wise-product'),
+            __('Settings', 'location-wise-product'),
+            'manage_options',
+            'location-wise-product-settings',
             [$this, 'settings_page_content']
         );
     }
+
+
+    public function location_stock_page_content()
+    {
+        // Include required file for WP_List_Table
+        if (!class_exists('WP_List_Table')) {
+            require_once(ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
+        }
+
+        // Include our custom table class
+        require_once plugin_dir_path(__FILE__) . 'includes/class-product-location-table.php';
+
+        // Create an instance of our table class
+        $product_table = new Plugincylwp_Product_Location_Table();
+
+        // Prepare the items to display in the table
+        $product_table->prepare_items();
+
+?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Location Wise Products Stock Management', 'location-wise-product'); ?></h1>
+            <p><?php esc_html_e('Manage stock levels and prices for each product by location.', 'location-wise-product'); ?></p>
+
+            <form method="post">
+                <?php $product_table->search_box('Search Products', 'search_products'); ?>
+                <?php $product_table->display(); ?>
+            </form>
+        </div>
+    <?php
+    }
+
+ /**
+ * Render the dashboard page content
+ * 
+ * @return void
+ */
+public function dashboard_page_content() {
+    // Enqueue necessary scripts and styles
+    wp_enqueue_script('chart-js', 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js', array(), '3.9.1', true);
+    wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . 'assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.0", true);
+    wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . 'assets/css/dashboard.css', array(), "1.0.0");
+    
+    // Get all locations
+    $locations = get_terms([
+        'taxonomy' => 'store_location',
+        'hide_empty' => false,
+    ]);
+
+    // Product counts by location
+    $product_counts = [];
+    $stock_levels = [];
+    $location_colors = [];
+    $location_border_colors = [];
+    
+    // Generate random colors for each location
+    foreach ($locations as $index => $location) {
+        // Generate pastel colors
+        $hue = ($index * 47) % 360; // Spread colors evenly
+        $location_colors[$location->name] = "hsla({$hue}, 70%, 70%, 0.7)";
+        $location_border_colors[$location->name] = "hsla({$hue}, 70%, 60%, 1.0)";
+        
+        // Get products in this location
+        $products_in_location = new WP_Query([
+            'post_type' => 'product',
+            'posts_per_page' => -1,
+            'tax_query' => [
+                [
+                    'taxonomy' => 'store_location',
+                    'field' => 'term_id',
+                    'terms' => $location->term_id,
+                ]
+            ]
+        ]);
+        
+        $product_counts[$location->name] = $products_in_location->found_posts;
+        
+        // Calculate total stock for this location
+        $total_stock = 0;
+        if ($products_in_location->have_posts()) {
+            while ($products_in_location->have_posts()) {
+                $products_in_location->the_post();
+                $product_id = get_the_ID();
+                $location_stock = get_post_meta($product_id, '_location_stock_' . $location->term_id, true);
+                $total_stock += !empty($location_stock) ? intval($location_stock) : 0;
+            }
+        }
+        $stock_levels[$location->name] = $total_stock;
+        
+        wp_reset_postdata();
+    }
+    
+    // Get orders by location data
+    $orders_by_location = [];
+    $location_revenue = [];
+    $location_slugs = [];
+    
+    // Add default location
+    $orders_by_location['Default'] = 0;
+    $location_revenue['Default'] = 0;
+    $location_slugs['Default'] = 'default';
+    
+    // Get slugs for all locations
+    foreach ($locations as $location) {
+        $location_slugs[$location->name] = $location->slug;
+        $orders_by_location[$location->name] = 0;
+        $location_revenue[$location->name] = 0;
+    }
+    
+    // Query orders for the last 30 days
+    $args = array(
+        'status' => ['completed', 'pending','processing'], // You can change this to any order status you need
+        'date_created' => '>' . date('Y-m-d', strtotime('-30 days')), // Orders from the last 30 days
+    );
+    
+    $orders = wc_get_orders($args);
+
+    error_log('Orders Query: ' . print_r($orders, true)); // Debugging line
+    error_log('Orders Found: ' . count($orders)); // Updated to count the number of orders
+    
+    if (!empty($orders)) {
+        foreach ($orders as $order) {
+            $order_id = $order->get_id();
+            $order = wc_get_order($order_id);
+
+            error_log('Order ID: ' . $order_id); // Debugging line
+            error_log('Order Object: ' . print_r($order, true)); // Debugging line
+            
+            if (!$order) continue;
+            
+            // Get store location from order meta
+            $order_location = $order->get_meta('_store_location');
+            $order_total = $order->get_total();
+            
+            // Find location name from slug
+            $location_name = 'Default';
+            foreach ($location_slugs as $name => $slug) {
+                if ($slug === $order_location) {
+                    $location_name = $name;
+                    break;
+                }
+            }
+            
+            // Increment count and revenue for this location
+            if (isset($orders_by_location[$location_name])) {
+                $orders_by_location[$location_name]++;
+                $location_revenue[$location_name] += $order_total;
+            } else {
+                $orders_by_location['Default']++;
+                $location_revenue['Default'] += $order_total;
+            }
+        }
+    }
+    wp_reset_postdata();
+    
+    // Get low stock products (less than 5 in stock) across locations
+    $low_stock_query = new WP_Query([
+        'post_type' => 'product',
+        'posts_per_page' => 10,
+        'meta_query' => [
+            [
+                'key' => '_stock',
+                'value' => 5,
+                'compare' => '<=',
+                'type' => 'NUMERIC'
+            ]
+        ]
+    ]);
+    
+    // Prepare data for recent products chart (last 30 days)
+    $days = 30;
+    $date_counts = [];
+    $labels = [];
+    
+    for ($i = $days - 1; $i >= 0; $i--) {
+        $date = date('Y-m-d', strtotime("-$i days"));
+        $labels[] = date('M d', strtotime("-$i days"));
+        
+        $args = [
+            'post_type' => 'product',
+            'posts_per_page' => -1,
+            'date_query' => [
+                [
+                    'year'  => date('Y', strtotime($date)),
+                    'month' => date('m', strtotime($date)),
+                    'day'   => date('d', strtotime($date)),
+                ]
+            ]
+        ];
+        
+        $daily_query = new WP_Query($args);
+        $date_counts[] = $daily_query->found_posts;
+    }
+    
+    // Pass data to JavaScript
+    wp_localize_script('lwp-dashboard-js', 'lwpDashboardData', [
+        'productCounts' => $product_counts,
+        'stockLevels' => $stock_levels,
+        'locationColors' => $location_colors,
+        'locationBorderColors' => $location_border_colors,
+        'dateLabels' => $labels,
+        'dateCounts' => $date_counts,
+        'ordersByLocation' => $orders_by_location,
+        'revenueByLocation' => $location_revenue,
+        'i18n' => [
+            'totalStock' => __('Total Stock', 'location-wise-product'),
+            'newProducts' => __('New Products', 'location-wise-product'),
+            'orders' => __('Orders', 'location-wise-product'),
+            'revenue' => __('Revenue', 'location-wise-product')
+        ]
+    ]);
+    
+    ?>
+    <div class="wrap lwp-dashboard">
+        <h1><?php _e('Location Wise Products Dashboard', 'location-wise-product'); ?></h1>
+        
+        <div class="lwp-dashboard-overview">
+            <div class="lwp-card lwp-card-stats">
+                <h2><?php _e('Quick Stats', 'location-wise-product'); ?></h2>
+                <div class="lwp-stats-grid">
+                    <div class="lwp-stat-item">
+                        <span class="lwp-stat-value"><?php echo wp_count_posts('product')->publish; ?></span>
+                        <span class="lwp-stat-label"><?php _e('Total Products', 'location-wise-product'); ?></span>
+                    </div>
+                    <div class="lwp-stat-item">
+                        <span class="lwp-stat-value"><?php echo count($locations); ?></span>
+                        <span class="lwp-stat-label"><?php _e('Locations', 'location-wise-product'); ?></span>
+                    </div>
+                    <div class="lwp-stat-item">
+                        <span class="lwp-stat-value"><?php echo array_sum($orders_by_location); ?></span>
+                        <span class="lwp-stat-label"><?php _e('Orders (30 days)', 'location-wise-product'); ?></span>
+                    </div>
+                    <div class="lwp-stat-item">
+                        <span class="lwp-stat-value"><?php echo wc_price(array_sum($location_revenue)); ?></span>
+                        <span class="lwp-stat-label"><?php _e('Revenue (30 days)', 'location-wise-product'); ?></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="lwp-dashboard-charts">
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php _e('Products by Location', 'location-wise-product'); ?></h2>
+                        <div class="lwp-chart-container">
+                            <canvas id="locationProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php _e('Stock Levels by Location', 'location-wise-product'); ?></h2>
+                        <div class="lwp-chart-container">
+                            <canvas id="locationStockChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php _e('Orders by Location (30 days)', 'location-wise-product'); ?></h2>
+                        <div class="lwp-chart-container">
+                            <canvas id="ordersByLocationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php _e('Revenue by Location (30 days)', 'location-wise-product'); ?></h2>
+                        <div class="lwp-chart-container">
+                            <canvas id="revenueByLocationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php _e('New Products (Last 30 Days)', 'location-wise-product'); ?></h2>
+                        <div class="lwp-chart-container">
+                            <canvas id="newProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php _e('Low Stock Products', 'location-wise-product'); ?></h2>
+                        <?php if ($low_stock_query->have_posts()) : ?>
+                            <table class="lwp-low-stock-table">
+                                <thead>
+                                    <tr>
+                                        <th><?php _e('Product', 'location-wise-product'); ?></th>
+                                        <th><?php _e('Stock', 'location-wise-product'); ?></th>
+                                        <th><?php _e('Location', 'location-wise-product'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php while ($low_stock_query->have_posts()) : $low_stock_query->the_post(); 
+                                        $product_id = get_the_ID();
+                                        $product = wc_get_product($product_id);
+                                        $product_locations = wp_get_object_terms($product_id, 'store_location');
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <a href="<?php echo get_edit_post_link($product_id); ?>">
+                                                <?php echo get_the_title(); ?>
+                                            </a>
+                                        </td>
+                                        <td><?php echo $product->get_stock_quantity(); ?></td>
+                                        <td>
+                                            <?php 
+                                            if (!empty($product_locations) && !is_wp_error($product_locations)) {
+                                                $location_names = array_map(function($term) {
+                                                    return $term->name;
+                                                }, $product_locations);
+                                                echo implode(', ', $location_names);
+                                            } else {
+                                                _e('Default', 'location-wise-product');
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p><?php _e('No low stock products found.', 'location-wise-product'); ?></p>
+                        <?php endif; wp_reset_postdata(); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+}
 
     public function register_settings()
     {
@@ -521,7 +1075,7 @@ class Plugincylwp_Location_Wise_Products
             function () {
                 $options = get_option('lwp_display_options', ['enable_location_stock' => 'yes']);
                 $value = isset($options['enable_location_stock']) ? $options['enable_location_stock'] : 'yes';
-?>
+        ?>
             <select name="lwp_display_options[enable_location_stock]">
                 <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
                 <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
