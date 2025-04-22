@@ -182,7 +182,7 @@ class Plugincylwp_Location_Wise_Products
         // Get parameters
         $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
         $location_id = isset($_POST['location_id']) ? intval($_POST['location_id']) : 0;
-        $action = isset($_POST['status_action']) ? sanitize_text_field($_POST['status_action']) : '';
+        $action = isset($_POST['status_action']) ? sanitize_text_field(wp_unslash($_POST['status_action'])) : '';
 
         if (!$product_id || !$location_id || !in_array($action, ['activate', 'deactivate'])) {
             wp_send_json_error(['message' => __('Invalid parameters.', 'location-wise-product')]);
@@ -690,7 +690,7 @@ class Plugincylwp_Location_Wise_Products
  */
 public function dashboard_page_content() {
     // Enqueue necessary scripts and styles
-    wp_enqueue_script('chart-js', 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js', array(), '3.9.1', true);
+    wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . 'assets/js/chart.min.js', array(), '3.9.1', true);
     wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . 'assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.0", true);
     wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . 'assets/css/dashboard.css', array(), "1.0.0");
     
@@ -763,21 +763,15 @@ public function dashboard_page_content() {
     // Query orders for the last 30 days
     $args = array(
         'status' => ['completed', 'pending','processing'], // You can change this to any order status you need
-        'date_created' => '>' . date('Y-m-d', strtotime('-30 days')), // Orders from the last 30 days
+        'date_created' => '>' . gmdate('Y-m-d', strtotime('-30 days')), // Orders from the last 30 days
     );
     
     $orders = wc_get_orders($args);
-
-    error_log('Orders Query: ' . print_r($orders, true)); // Debugging line
-    error_log('Orders Found: ' . count($orders)); // Updated to count the number of orders
     
     if (!empty($orders)) {
         foreach ($orders as $order) {
             $order_id = $order->get_id();
             $order = wc_get_order($order_id);
-
-            error_log('Order ID: ' . $order_id); // Debugging line
-            error_log('Order Object: ' . print_r($order, true)); // Debugging line
             
             if (!$order) continue;
             
@@ -826,17 +820,17 @@ public function dashboard_page_content() {
     $labels = [];
     
     for ($i = $days - 1; $i >= 0; $i--) {
-        $date = date('Y-m-d', strtotime("-$i days"));
-        $labels[] = date('M d', strtotime("-$i days"));
+        $date = gmdate('Y-m-d', strtotime("-$i days"));
+        $labels[] = gmdate('M d', strtotime("-$i days"));
         
         $args = [
             'post_type' => 'product',
             'posts_per_page' => -1,
             'date_query' => [
                 [
-                    'year'  => date('Y', strtotime($date)),
-                    'month' => date('m', strtotime($date)),
-                    'day'   => date('d', strtotime($date)),
+                    'year'  => gmdate('Y', strtotime($date)),
+                    'month' => gmdate('m', strtotime($date)),
+                    'day'   => gmdate('d', strtotime($date)),
                 ]
             ]
         ];
@@ -865,27 +859,27 @@ public function dashboard_page_content() {
     
     ?>
     <div class="wrap lwp-dashboard">
-        <h1><?php _e('Location Wise Products Dashboard', 'location-wise-product'); ?></h1>
+        <h1><?php esc_attr_e('Location Wise Products Dashboard', 'location-wise-product'); ?></h1>
         
         <div class="lwp-dashboard-overview">
             <div class="lwp-card lwp-card-stats">
-                <h2><?php _e('Quick Stats', 'location-wise-product'); ?></h2>
+                <h2><?php esc_html_e('Quick Stats', 'location-wise-product'); ?></h2>
                 <div class="lwp-stats-grid">
                     <div class="lwp-stat-item">
-                        <span class="lwp-stat-value"><?php echo wp_count_posts('product')->publish; ?></span>
-                        <span class="lwp-stat-label"><?php _e('Total Products', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-value"><?php echo esc_html(wp_count_posts('product')->publish); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Total Products', 'location-wise-product'); ?></span>
                     </div>
                     <div class="lwp-stat-item">
                         <span class="lwp-stat-value"><?php echo count($locations); ?></span>
-                        <span class="lwp-stat-label"><?php _e('Locations', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Locations', 'location-wise-product'); ?></span>
                     </div>
                     <div class="lwp-stat-item">
-                        <span class="lwp-stat-value"><?php echo array_sum($orders_by_location); ?></span>
-                        <span class="lwp-stat-label"><?php _e('Orders (30 days)', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-value"><?php echo esc_html(array_sum($orders_by_location)); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Orders (30 days)', 'location-wise-product'); ?></span>
                     </div>
                     <div class="lwp-stat-item">
-                        <span class="lwp-stat-value"><?php echo wc_price(array_sum($location_revenue)); ?></span>
-                        <span class="lwp-stat-label"><?php _e('Revenue (30 days)', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-value"><?php echo wp_kses_post(wc_price(array_sum($location_revenue))); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Revenue (30 days)', 'location-wise-product'); ?></span>
                     </div>
                 </div>
             </div>
@@ -895,7 +889,7 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php _e('Products by Location', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Products by Location', 'location-wise-product'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="locationProductsChart"></canvas>
                         </div>
@@ -903,7 +897,7 @@ public function dashboard_page_content() {
                 </div>
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php _e('Stock Levels by Location', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Stock Levels by Location', 'location-wise-product'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="locationStockChart"></canvas>
                         </div>
@@ -914,7 +908,7 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php _e('Orders by Location (30 days)', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Orders by Location (30 days)', 'location-wise-product'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="ordersByLocationChart"></canvas>
                         </div>
@@ -922,7 +916,7 @@ public function dashboard_page_content() {
                 </div>
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php _e('Revenue by Location (30 days)', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Revenue by Location (30 days)', 'location-wise-product'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="revenueByLocationChart"></canvas>
                         </div>
@@ -933,7 +927,7 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php _e('New Products (Last 30 Days)', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('New Products (Last 30 Days)', 'location-wise-product'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="newProductsChart"></canvas>
                         </div>
@@ -944,14 +938,14 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php _e('Low Stock Products', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Low Stock Products', 'location-wise-product'); ?></h2>
                         <?php if ($low_stock_query->have_posts()) : ?>
                             <table class="lwp-low-stock-table">
                                 <thead>
                                     <tr>
-                                        <th><?php _e('Product', 'location-wise-product'); ?></th>
-                                        <th><?php _e('Stock', 'location-wise-product'); ?></th>
-                                        <th><?php _e('Location', 'location-wise-product'); ?></th>
+                                        <th><?php esc_html_e('Product', 'location-wise-product'); ?></th>
+                                        <th><?php esc_html_e('Stock', 'location-wise-product'); ?></th>
+                                        <th><?php esc_html_e('Location', 'location-wise-product'); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -962,20 +956,20 @@ public function dashboard_page_content() {
                                     ?>
                                     <tr>
                                         <td>
-                                            <a href="<?php echo get_edit_post_link($product_id); ?>">
-                                                <?php echo get_the_title(); ?>
+                                            <a href="<?php echo esc_url(get_edit_post_link($product_id)); ?>">
+                                                <?php echo esc_html(get_the_title()); ?>
                                             </a>
                                         </td>
-                                        <td><?php echo $product->get_stock_quantity(); ?></td>
+                                        <td><?php echo esc_html($product->get_stock_quantity()); ?></td>
                                         <td>
                                             <?php 
                                             if (!empty($product_locations) && !is_wp_error($product_locations)) {
                                                 $location_names = array_map(function($term) {
                                                     return $term->name;
                                                 }, $product_locations);
-                                                echo implode(', ', $location_names);
+                                                echo esc_html(implode(', ', $location_names));
                                             } else {
-                                                _e('Default', 'location-wise-product');
+                                                esc_html_e('Default', 'location-wise-product');
                                             }
                                             ?>
                                         </td>
@@ -984,7 +978,7 @@ public function dashboard_page_content() {
                                 </tbody>
                             </table>
                         <?php else: ?>
-                            <p><?php _e('No low stock products found.', 'location-wise-product'); ?></p>
+                            <p><?php esc_html_e('No low stock products found.', 'location-wise-product'); ?></p>
                         <?php endif; wp_reset_postdata(); ?>
                     </div>
                 </div>
@@ -1397,7 +1391,6 @@ public function dashboard_page_content() {
         if (empty($terms) && $enable_all_locations === 'yes') {
             return true; // Product is available in all locations
         }
-        error_log(print_r($terms, true)); // Debugging line to check the terms
         return (!is_wp_error($terms) && in_array($location, $terms));
     }
 
@@ -1711,3 +1704,4 @@ function Plugincylwp_location_wise_products_init()
 }
 
 add_action('plugins_loaded', 'Plugincylwp_location_wise_products_init');
+

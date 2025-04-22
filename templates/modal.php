@@ -1,5 +1,5 @@
 <?php 
-
+if (!defined('ABSPATH')) exit;
 ?>
 <div id="lwp-store-selector-modal" style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-store-selector-content">

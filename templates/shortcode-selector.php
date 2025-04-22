@@ -1,4 +1,6 @@
 <?php 
+
+if (!defined('ABSPATH')) exit;
 // Template for the store location selector shortcode
 ?>
 <div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>">

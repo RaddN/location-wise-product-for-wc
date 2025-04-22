@@ -3,7 +3,7 @@ Contributors: plugincy
 Tags: woocommerce, products, location, filter, store
 Requires at least: 5.0
 Requires PHP: 7.2
-Tested up to: 6.7
+Tested up to: 6.8
 WC requires at least: 4.0
 Stable tag: 1.0.0
 License: GPL2

@@ -242,12 +242,12 @@ add_action('woocommerce_save_product_variation', function($variation_id, $loop) 
 
 
 // Get current location
-function get_current_store_location() {
+function Plugincylwp_get_current_store_location() {
     return isset($_COOKIE['store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['store_location'])) : '';
 }
 
 // Get location term ID from slug
-function get_location_term_id($location_slug) {
+function Plugincylwp_get_location_term_id($location_slug) {
     if (empty($location_slug)) {
         return false;
     }
@@ -269,8 +269,8 @@ add_filter('woocommerce_product_get_regular_price', function($price, $product) {
         return $price; // Use default WooCommerce price
     }
     
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $price;
@@ -295,8 +295,8 @@ add_filter('woocommerce_product_get_sale_price', function($price, $product) {
         return $price; // Use default WooCommerce price
     }
     
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $price;
@@ -323,8 +323,8 @@ add_filter('woocommerce_product_get_stock_quantity', function($quantity, $produc
         return $quantity; // Use default WooCommerce stock quantity
     }
     
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $quantity;
@@ -351,8 +351,8 @@ add_filter('woocommerce_product_get_backorders', function($backorders, $product)
         return $backorders; // Use default WooCommerce backorder setting
     }
     
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $backorders;
@@ -370,8 +370,8 @@ add_filter('woocommerce_product_get_stock_status', function($status, $product) {
         return $status; // Handle variations separately
     }
     
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     $product_id = $product->get_id();
     $options = get_option('lwp_display_options', []);
     $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
@@ -425,8 +425,8 @@ if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enabl
 
 // Override variation stock
 add_filter('woocommerce_product_variation_get_stock_quantity', function($quantity, $variation) {
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $quantity;
@@ -441,8 +441,8 @@ add_filter('woocommerce_product_variation_get_stock_quantity', function($quantit
 if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['enable_location_backorder'] ?? 'yes') === 'yes'){
 // Override variation backorders
 add_filter('woocommerce_product_variation_get_backorders', function($backorders, $variation) {
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $backorders;
@@ -457,8 +457,8 @@ add_filter('woocommerce_product_variation_get_backorders', function($backorders,
 if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
 // Handle stock reduction when order is placed
 add_action('woocommerce_reduce_order_stock', function($order) {
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return;
@@ -482,8 +482,8 @@ add_action('woocommerce_reduce_order_stock', function($order) {
 
 // Handle stock restoration when order is canceled
 add_action('woocommerce_restore_order_stock', function($order) {
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return;
@@ -508,8 +508,8 @@ add_action('woocommerce_restore_order_stock', function($order) {
 
 // Validate cart items against location stock
 add_filter('woocommerce_add_to_cart_validation', function($passed, $product_id, $quantity, $variation_id = 0, $variations = array()) {
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $passed;
@@ -563,8 +563,8 @@ add_filter('woocommerce_product_get_price', function($price, $product) {
         return $price; // Handle variations separately
     }
     
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $price;
@@ -592,8 +592,8 @@ add_filter('woocommerce_product_get_price', function($price, $product) {
 
 // Override the final price for variation products
 add_filter('woocommerce_product_variation_get_price', function($price, $variation) {
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $price;
@@ -621,8 +621,8 @@ add_filter('woocommerce_product_variation_get_price', function($price, $variatio
 
 // We also need to ensure variation price sync works correctly
 add_filter('woocommerce_variation_prices', function($prices, $product, $for_display) {
-    $location_slug = get_current_store_location();
-    $location_id = get_location_term_id($location_slug);
+    $location_slug = Plugincylwp_get_current_store_location();
+    $location_id = Plugincylwp_get_location_term_id($location_slug);
     
     if (!$location_id) {
         return $prices;
@@ -670,7 +670,7 @@ add_action('woocommerce_single_product_summary', function() {
         return;
     }
     
-    $location_slug = get_current_store_location();
+    $location_slug = Plugincylwp_get_current_store_location();
     
     // If no location is selected or "all products" is selected, don't show the notice
     if (!$location_slug || $location_slug === 'all-products') {
@@ -696,7 +696,7 @@ add_action('woocommerce_single_product_summary', function() {
 
 // Also prevent adding to cart through direct URLs or AJAX
 // add_filter('woocommerce_add_to_cart_validation', function($valid, $product_id, $quantity) {
-//     $location_slug = get_current_store_location();
+//     $location_slug = Plugincylwp_get_current_store_location();
     
 //     // If no location is selected or "all products" is selected, keep default validation
 //     if (!$location_slug || $location_slug === 'all-products') {
@@ -717,7 +717,7 @@ add_action('woocommerce_single_product_summary', function() {
 
 // Hide add to cart button on shop/archive pages for unavailable products
 // add_filter('woocommerce_loop_add_to_cart_link', function($html, $product) {
-//     $location_slug = get_current_store_location();
+//     $location_slug = Plugincylwp_get_current_store_location();
     
 //     // If no location is selected or "all products" is selected, show normal button
 //     if (!$location_slug || $location_slug === 'all-products') {
@@ -743,7 +743,7 @@ add_action( 'wp_footer', function() {
         $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
 
         if ( $product->is_type( 'variable' ) ) {
-            $location_slug = get_current_store_location();
+            $location_slug = Plugincylwp_get_current_store_location();
 
             // If no location is selected or "all products" is selected, show normal button
             if ( ! $location_slug || 'all-products' === $location_slug ) {
@@ -764,7 +764,7 @@ add_action( 'wp_footer', function() {
                 wp_add_inline_style('custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
         }else{
-            $location_slug = get_current_store_location();
+            $location_slug = Plugincylwp_get_current_store_location();
 
             // If no location is selected or "all products" is selected, show normal button
             if ( ! $location_slug || 'all-products' === $location_slug ) {
@@ -798,19 +798,19 @@ $user_roles = $current_user->roles;
 if (array_intersect($user_roles, $selected_roles)) {
     if ((get_option('lwp_display_options', ['enable_location_information' => 'yes'])['enable_location_information'] ?? 'yes') === 'yes') {
         // Add location-specific stock and price display on product pages
-        add_action('woocommerce_single_product_summary', 'display_location_specific_stock_info', 25);
-        add_action('woocommerce_shop_loop_item_title', 'display_location_specific_stock_info_loop', 15);
+        add_action('woocommerce_single_product_summary', 'Plugincylwp_display_location_specific_stock_info', 25);
+        add_action('woocommerce_shop_loop_item_title', 'Plugincylwp_display_location_specific_stock_info_loop', 15);
     }
 }
 /**
  * Display location-specific stock and price information on single product pages
  */
-function display_location_specific_stock_info() {
+function Plugincylwp_display_location_specific_stock_info() {
     global $product;
     $options = get_option('lwp_display_options', []);
     $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     // Get current location
-    $location_slug = get_current_store_location();
+    $location_slug = Plugincylwp_get_current_store_location();
     if (empty($location_slug) || $location_slug === 'all-products') {
         return; // No specific location selected
     }
@@ -886,12 +886,12 @@ function display_location_specific_stock_info() {
 /**
  * Display simplified location-specific stock and price information on product loops (shop pages)
  */
-function display_location_specific_stock_info_loop() {
+function Plugincylwp_display_location_specific_stock_info_loop() {
     global $product;
     $options = get_option('lwp_display_options', []);
     $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     // Get current location
-    $location_slug = get_current_store_location();
+    $location_slug = Plugincylwp_get_current_store_location();
     if (empty($location_slug) || $location_slug === 'all-products') {
         return; // No specific location selected
     }
@@ -940,10 +940,10 @@ function display_location_specific_stock_info_loop() {
 /**
  * Handle variable products - show location info for the selected variation
  */
-add_action('woocommerce_available_variation', 'add_location_data_to_variations', 10, 3);
-function add_location_data_to_variations($variation_data, $product, $variation) {
+add_action('woocommerce_available_variation', 'Plugincylwp_add_location_data_to_variations', 10, 3);
+function Plugincylwp_add_location_data_to_variations($variation_data, $product, $variation) {
     // Get current location
-    $location_slug = get_current_store_location();
+    $location_slug = Plugincylwp_get_current_store_location();
     if (empty($location_slug) || $location_slug === 'all-products') {
         return $variation_data; // No specific location selected
     }
@@ -990,15 +990,15 @@ if (array_intersect($user_roles, $selected_roles) && (get_option('lwp_display_op
 /**
  * Add stock status to product category/archive pages
  */
-add_action('woocommerce_after_shop_loop_item', 'display_location_stock_status_in_loop', 9);
+add_action('woocommerce_after_shop_loop_item', 'Plugincylwp_display_location_stock_status_in_loop', 9);
 
 }
-function display_location_stock_status_in_loop() {
+function Plugincylwp_display_location_stock_status_in_loop() {
     global $product;
     $options = get_option('lwp_display_options', []);
     $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
     // Get current location
-    $location_slug = get_current_store_location();
+    $location_slug = Plugincylwp_get_current_store_location();
     if (empty($location_slug) || $location_slug === 'all-products') {
         return; // No specific location selected
     }
@@ -1059,8 +1059,8 @@ function display_location_stock_status_in_loop() {
 }
 // add product stock & price status in all product page admin
 
-add_filter('manage_product_posts_columns', 'add_location_column_to_product_list', 20);
-function add_location_column_to_product_list($columns) {
+add_filter('manage_product_posts_columns', 'Plugincylwp_add_location_column_to_product_list', 20);
+function Plugincylwp_add_location_column_to_product_list($columns) {
     $new_columns = array();
     
     // Insert columns before the Locations column
@@ -1075,8 +1075,8 @@ function add_location_column_to_product_list($columns) {
     
     return $new_columns;
 }
-add_action('manage_product_posts_custom_column', 'populate_locations_column_in_product_list', 10, 2);
-function populate_locations_column_in_product_list($column, $post_id) {
+add_action('manage_product_posts_custom_column', 'Plugincylwp_populate_locations_column_in_product_list', 10, 2);
+function Plugincylwp_populate_locations_column_in_product_list($column, $post_id) {
     if ($column === 'locations') {
         $product = wc_get_product($post_id);
         if (!$product) {
@@ -1147,8 +1147,8 @@ function populate_locations_column_in_product_list($column, $post_id) {
 }
 
 // hide stock & price column
-add_filter('manage_edit-product_columns', 'remove_default_product_columns', 20);
-function remove_default_product_columns($columns) {
+add_filter('manage_edit-product_columns', 'Plugincylwp_remove_default_product_columns', 20);
+function Plugincylwp_remove_default_product_columns($columns) {
     // Unset the default stock and price columns
     unset($columns['is_in_stock']);
     unset($columns['price']);
