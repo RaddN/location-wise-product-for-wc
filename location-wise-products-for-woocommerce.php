@@ -2,12 +2,12 @@
 
 /**
  * Plugin Name: Location Wise Products for WooCommerce
- * Plugin URI: https://plugincy.com/location-wise-product
+ * Plugin URI: https://plugincy.com/location-wise-products-for-woocommerce
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
  * Version: 1.0.0
  * Author: plugincy
  * Author URI: https://plugincy.com/
- * Text Domain: location-wise-product
+ * Text Domain: location-wise-products-for-woocommerce
  * Requires at least: 5.0
  * Requires PHP: 7.2
  * WC requires at least: 4.0
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) exit;
 
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     add_action('admin_notices', function () {
-        echo '<div class="error"><p>' . esc_html_e('Location Wise Products requires WooCommerce to be installed and active.', 'location-wise-product') . '</p></div>';
+        echo '<div class="error"><p>' . esc_html_e('Location Wise Products requires WooCommerce to be installed and active.', 'location-wise-products-for-woocommerce') . '</p></div>';
     });
     return;
 }
@@ -106,13 +106,13 @@ class Plugincylwp_Location_Wise_Products
 
         // Check permissions
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-product')]);
+            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-products-for-woocommerce')]);
         }
 
         // Get product ID
         $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
         if (!$product_id) {
-            wp_send_json_error(['message' => __('Invalid product ID.', 'location-wise-product')]);
+            wp_send_json_error(['message' => __('Invalid product ID.', 'location-wise-products-for-woocommerce')]);
         }
 
         // Get all locations
@@ -147,7 +147,7 @@ class Plugincylwp_Location_Wise_Products
 
         // Check permissions
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-product')]);
+            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-products-for-woocommerce')]);
         }
 
         // Get product ID and location IDs
@@ -155,14 +155,14 @@ class Plugincylwp_Location_Wise_Products
         $location_ids = isset($_POST['location_ids']) ? array_map('intval', (array) $_POST['location_ids']) : [];
 
         if (!$product_id) {
-            wp_send_json_error(['message' => __('Invalid product ID.', 'location-wise-product')]);
+            wp_send_json_error(['message' => __('Invalid product ID.', 'location-wise-products-for-woocommerce')]);
         }
 
         // Set product locations
         wp_set_object_terms($product_id, $location_ids, 'store_location');
 
         wp_send_json_success([
-            'message' => __('Product locations saved successfully.', 'location-wise-product'),
+            'message' => __('Product locations saved successfully.', 'location-wise-products-for-woocommerce'),
         ]);
     }
 
@@ -176,7 +176,7 @@ class Plugincylwp_Location_Wise_Products
 
         // Check permissions
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-product')]);
+            wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'location-wise-products-for-woocommerce')]);
         }
 
         // Get parameters
@@ -185,18 +185,18 @@ class Plugincylwp_Location_Wise_Products
         $action = isset($_POST['status_action']) ? sanitize_text_field(wp_unslash($_POST['status_action'])) : '';
 
         if (!$product_id || !$location_id || !in_array($action, ['activate', 'deactivate'])) {
-            wp_send_json_error(['message' => __('Invalid parameters.', 'location-wise-product')]);
+            wp_send_json_error(['message' => __('Invalid parameters.', 'location-wise-products-for-woocommerce')]);
         }
 
         // Update location status
         if ($action === 'activate') {
             // Activate location - remove disabled meta
             delete_post_meta($product_id, '_location_disabled_' . $location_id);
-            $message = __('Location activated successfully.', 'location-wise-product');
+            $message = __('Location activated successfully.', 'location-wise-products-for-woocommerce');
         } else {
             // Deactivate location - add disabled meta
             update_post_meta($product_id, '_location_disabled_' . $location_id, 1);
-            $message = __('Location deactivated successfully.', 'location-wise-product');
+            $message = __('Location deactivated successfully.', 'location-wise-products-for-woocommerce');
         }
 
         wp_send_json_success(['message' => $message]);
@@ -212,27 +212,27 @@ class Plugincylwp_Location_Wise_Products
         // }
 
         wp_enqueue_script(
-            'location-wise-products-admin',
+            'location-wise-products-for-woocommerces-admin',
             plugin_dir_url(__FILE__) . 'assets/js/admin.js',
             ['jquery'],
             '1.0.0',
             true
         );
 
-        wp_localize_script('location-wise-products-admin', 'locationWiseProducts', [
+        wp_localize_script('location-wise-products-for-woocommerces-admin', 'locationWiseProducts', [
             'nonce' => wp_create_nonce('location_wise_products_nonce'),
             'i18n' => [
-                'activate' => __('Activate', 'location-wise-product'),
-                'deactivate' => __('Deactivate', 'location-wise-product'),
-                'selectLocations' => __('Select Locations', 'location-wise-product'),
-                'saveLocations' => __('Save Locations', 'location-wise-product'),
-                'ajaxError' => __('An error occurred. Please try again.', 'location-wise-product'),
+                'activate' => __('Activate', 'location-wise-products-for-woocommerce'),
+                'deactivate' => __('Deactivate', 'location-wise-products-for-woocommerce'),
+                'selectLocations' => __('Select Locations', 'location-wise-products-for-woocommerce'),
+                'saveLocations' => __('Save Locations', 'location-wise-products-for-woocommerce'),
+                'ajaxError' => __('An error occurred. Please try again.', 'location-wise-products-for-woocommerce'),
             ],
         ]);
 
         // Add modal styles
         wp_enqueue_style(
-            'location-wise-products-admin',
+            'location-wise-products-for-woocommerces-admin',
             plugin_dir_url(__FILE__) . 'assets/css/admin.css',
             [],
             '1.0.0'
@@ -272,7 +272,7 @@ class Plugincylwp_Location_Wise_Products
             $new_columns[$column_name] = $column_info;
 
             if ('order_status' === $column_name) {
-                $new_columns['store_location'] = __('Store Location', 'location-wise-product');
+                $new_columns['store_location'] = __('Store Location', 'location-wise-products-for-woocommerce');
             }
         }
 
@@ -302,7 +302,7 @@ class Plugincylwp_Location_Wise_Products
 
         add_meta_box(
             'wc_store_location_metabox',
-            __('Store Location', 'location-wise-product'),
+            __('Store Location', 'location-wise-products-for-woocommerce'),
             array($this, 'render_location_metabox'),
             $screen,
             'side',
@@ -353,7 +353,7 @@ class Plugincylwp_Location_Wise_Products
         if (!empty($location)) {
             echo '<p>' . esc_html(ucfirst(strtolower($location))) . '</p>';
         } else {
-            echo '<p>' . esc_html__('No location data available', 'location-wise-product') . '</p>';
+            echo '<p>' . esc_html__('No location data available', 'location-wise-products-for-woocommerce') . '</p>';
         }
 
         echo '</div>';
@@ -391,7 +391,7 @@ class Plugincylwp_Location_Wise_Products
         wp_nonce_field('store_location_filter_nonce', 'store_location_filter_nonce');
 
         echo '<select name="store_location" id="store_location">';
-        echo '<option value="">' . esc_html__('All Locations', 'location-wise-product') . '</option>';
+        echo '<option value="">' . esc_html__('All Locations', 'location-wise-products-for-woocommerce') . '</option>';
 
         foreach ($locations as $location) {
             $selected = ($location === $selected_location) ? 'selected' : '';
@@ -432,8 +432,8 @@ class Plugincylwp_Location_Wise_Products
         if (!is_array($links)) {
             $links = [];
         }
-        $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=location-wise-product')) . '">' . esc_html__('Settings', 'location-wise-product') . '</a>';
-        $pro_link = '<a href="https://plugincy.com/location-wise-product" style="color: #ff5722; font-weight: bold;" target="_blank">' . esc_html__('Get Pro', 'location-wise-product') . '</a>';
+        $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=location-wise-products-for-woocommerce')) . '">' . esc_html__('Settings', 'location-wise-products-for-woocommerce') . '</a>';
+        $pro_link = '<a href="https://plugincy.com/location-wise-products-for-woocommerce" style="color: #ff5722; font-weight: bold;" target="_blank">' . esc_html__('Get Pro', 'location-wise-products-for-woocommerce') . '</a>';
         $links[] = $settings_link;
         $links[] = $pro_link;
         return $links;
@@ -443,15 +443,15 @@ class Plugincylwp_Location_Wise_Products
     {
         register_taxonomy('store_location', 'product', [
             'labels' => [
-                'name' => __('locations', 'location-wise-product'),
-                'singular_name' => __('Store Location', 'location-wise-product'),
-                'search_items' => __('Search Store Locations', 'location-wise-product'),
-                'all_items' => __('All Store Locations', 'location-wise-product'),
-                'edit_item' => __('Edit Store Location', 'location-wise-product'),
-                'update_item' => __('Update Store Location', 'location-wise-product'),
-                'add_new_item' => __('Add New Store Location', 'location-wise-product'),
-                'new_item_name' => __('New Store Location Name', 'location-wise-product'),
-                'menu_name' => __('Store Locations', 'location-wise-product'),
+                'name' => __('locations', 'location-wise-products-for-woocommerce'),
+                'singular_name' => __('Store Location', 'location-wise-products-for-woocommerce'),
+                'search_items' => __('Search Store Locations', 'location-wise-products-for-woocommerce'),
+                'all_items' => __('All Store Locations', 'location-wise-products-for-woocommerce'),
+                'edit_item' => __('Edit Store Location', 'location-wise-products-for-woocommerce'),
+                'update_item' => __('Update Store Location', 'location-wise-products-for-woocommerce'),
+                'add_new_item' => __('Add New Store Location', 'location-wise-products-for-woocommerce'),
+                'new_item_name' => __('New Store Location Name', 'location-wise-products-for-woocommerce'),
+                'menu_name' => __('Store Locations', 'location-wise-products-for-woocommerce'),
             ],
             'hierarchical' => true,
             'show_ui' => true,
@@ -463,13 +463,13 @@ class Plugincylwp_Location_Wise_Products
 
     public function enqueue_scripts()
     {
-        wp_enqueue_style('location-wise-product', plugins_url('assets/css/style.css', __FILE__), [], '1.0.0');
-        wp_enqueue_script('location-wise-product', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.0', true);
+        wp_enqueue_style('location-wise-products-for-woocommerce', plugins_url('assets/css/style.css', __FILE__), [], '1.0.0');
+        wp_enqueue_script('location-wise-products-for-woocommerce', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.0', true);
 
-        wp_localize_script('location-wise-product', 'locationWiseProducts', [
+        wp_localize_script('location-wise-products-for-woocommerce', 'locationWiseProducts', [
             'cartHasProducts' => !WC()->cart->is_empty(),
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('location-wise-product')
+            'nonce' => wp_create_nonce('location-wise-products-for-woocommerce')
         ]);
     }
 
@@ -540,7 +540,7 @@ class Plugincylwp_Location_Wise_Products
     public function location_selector_shortcode($atts)
     {
         $atts = shortcode_atts([
-            'title' => __('Select Store Location', 'location-wise-product'),
+            'title' => __('Select Store Location', 'location-wise-products-for-woocommerce'),
             'show_title' => 'yes',
             'class' => '',
         ], $atts);
@@ -580,10 +580,10 @@ class Plugincylwp_Location_Wise_Products
     {
         // Add main menu page
         add_menu_page(
-            __('Location Manage', 'location-wise-product'),
-            __('Location Manage', 'location-wise-product'),
+            __('Location Manage', 'location-wise-products-for-woocommerce'),
+            __('Location Manage', 'location-wise-products-for-woocommerce'),
             'manage_options',
-            'location-wise-product',
+            'location-wise-products-for-woocommerce',
             [$this, 'dashboard_page_content'],
             'dashicons-location-alt',
             56
@@ -591,19 +591,19 @@ class Plugincylwp_Location_Wise_Products
 
         // Add Dashboard submenu
         add_submenu_page(
-            'location-wise-product',
-            __('Dashboard', 'location-wise-product'),
-            __('Dashboard', 'location-wise-product'),
+            'location-wise-products-for-woocommerce',
+            __('Dashboard', 'location-wise-products-for-woocommerce'),
+            __('Dashboard', 'location-wise-products-for-woocommerce'),
             'manage_options',
-            'location-wise-product',
+            'location-wise-products-for-woocommerce',
             [$this, 'dashboard_page_content']
         );
 
         // Add Locations submenu
         add_submenu_page(
-            'location-wise-product',
-            __('Locations', 'location-wise-product'),
-            __('Locations', 'location-wise-product'),
+            'location-wise-products-for-woocommerce',
+            __('Locations', 'location-wise-products-for-woocommerce'),
+            __('Locations', 'location-wise-products-for-woocommerce'),
             'manage_options',
             'edit-tags.php?taxonomy=store_location&post_type=product',
             null,
@@ -615,7 +615,7 @@ class Plugincylwp_Location_Wise_Products
             global $pagenow, $taxonomy;
 
             if ($pagenow === 'edit-tags.php' && $taxonomy === 'store_location') {
-                $parent_file = 'location-wise-product';
+                $parent_file = 'location-wise-products-for-woocommerce';
             }
 
             return $parent_file;
@@ -634,9 +634,9 @@ class Plugincylwp_Location_Wise_Products
 
         // add stock management submenu
         add_submenu_page(
-            'location-wise-product',
-            __('Stock Management', 'location-wise-product'),
-            __('Stock Management', 'location-wise-product'),
+            'location-wise-products-for-woocommerce',
+            __('Stock Management', 'location-wise-products-for-woocommerce'),
+            __('Stock Management', 'location-wise-products-for-woocommerce'),
             'manage_options',
             'location-stock-management',
             [$this, 'location_stock_page_content']
@@ -644,11 +644,11 @@ class Plugincylwp_Location_Wise_Products
 
         // Add Settings submenu
         add_submenu_page(
-            'location-wise-product',
-            __('Settings', 'location-wise-product'),
-            __('Settings', 'location-wise-product'),
+            'location-wise-products-for-woocommerce',
+            __('Settings', 'location-wise-products-for-woocommerce'),
+            __('Settings', 'location-wise-products-for-woocommerce'),
             'manage_options',
-            'location-wise-product-settings',
+            'location-wise-products-for-woocommerce-settings',
             [$this, 'settings_page_content']
         );
     }
@@ -672,8 +672,8 @@ class Plugincylwp_Location_Wise_Products
 
 ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Location Wise Products Stock Management', 'location-wise-product'); ?></h1>
-            <p><?php esc_html_e('Manage stock levels and prices for each product by location.', 'location-wise-product'); ?></p>
+            <h1><?php esc_html_e('Location Wise Products Stock Management', 'location-wise-products-for-woocommerce'); ?></h1>
+            <p><?php esc_html_e('Manage stock levels and prices for each product by location.', 'location-wise-products-for-woocommerce'); ?></p>
 
             <form method="post">
                 <?php $product_table->search_box('Search Products', 'search_products'); ?>
@@ -850,36 +850,36 @@ public function dashboard_page_content() {
         'ordersByLocation' => $orders_by_location,
         'revenueByLocation' => $location_revenue,
         'i18n' => [
-            'totalStock' => __('Total Stock', 'location-wise-product'),
-            'newProducts' => __('New Products', 'location-wise-product'),
-            'orders' => __('Orders', 'location-wise-product'),
-            'revenue' => __('Revenue', 'location-wise-product')
+            'totalStock' => __('Total Stock', 'location-wise-products-for-woocommerce'),
+            'newProducts' => __('New Products', 'location-wise-products-for-woocommerce'),
+            'orders' => __('Orders', 'location-wise-products-for-woocommerce'),
+            'revenue' => __('Revenue', 'location-wise-products-for-woocommerce')
         ]
     ]);
     
     ?>
     <div class="wrap lwp-dashboard">
-        <h1><?php esc_attr_e('Location Wise Products Dashboard', 'location-wise-product'); ?></h1>
+        <h1><?php esc_attr_e('Location Wise Products Dashboard', 'location-wise-products-for-woocommerce'); ?></h1>
         
         <div class="lwp-dashboard-overview">
             <div class="lwp-card lwp-card-stats">
-                <h2><?php esc_html_e('Quick Stats', 'location-wise-product'); ?></h2>
+                <h2><?php esc_html_e('Quick Stats', 'location-wise-products-for-woocommerce'); ?></h2>
                 <div class="lwp-stats-grid">
                     <div class="lwp-stat-item">
                         <span class="lwp-stat-value"><?php echo esc_html(wp_count_posts('product')->publish); ?></span>
-                        <span class="lwp-stat-label"><?php esc_html_e('Total Products', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Total Products', 'location-wise-products-for-woocommerce'); ?></span>
                     </div>
                     <div class="lwp-stat-item">
                         <span class="lwp-stat-value"><?php echo count($locations); ?></span>
-                        <span class="lwp-stat-label"><?php esc_html_e('Locations', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Locations', 'location-wise-products-for-woocommerce'); ?></span>
                     </div>
                     <div class="lwp-stat-item">
                         <span class="lwp-stat-value"><?php echo esc_html(array_sum($orders_by_location)); ?></span>
-                        <span class="lwp-stat-label"><?php esc_html_e('Orders (30 days)', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Orders (30 days)', 'location-wise-products-for-woocommerce'); ?></span>
                     </div>
                     <div class="lwp-stat-item">
                         <span class="lwp-stat-value"><?php echo wp_kses_post(wc_price(array_sum($location_revenue))); ?></span>
-                        <span class="lwp-stat-label"><?php esc_html_e('Revenue (30 days)', 'location-wise-product'); ?></span>
+                        <span class="lwp-stat-label"><?php esc_html_e('Revenue (30 days)', 'location-wise-products-for-woocommerce'); ?></span>
                     </div>
                 </div>
             </div>
@@ -889,7 +889,7 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php esc_html_e('Products by Location', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Products by Location', 'location-wise-products-for-woocommerce'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="locationProductsChart"></canvas>
                         </div>
@@ -897,7 +897,7 @@ public function dashboard_page_content() {
                 </div>
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php esc_html_e('Stock Levels by Location', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Stock Levels by Location', 'location-wise-products-for-woocommerce'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="locationStockChart"></canvas>
                         </div>
@@ -908,7 +908,7 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php esc_html_e('Orders by Location (30 days)', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Orders by Location (30 days)', 'location-wise-products-for-woocommerce'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="ordersByLocationChart"></canvas>
                         </div>
@@ -916,7 +916,7 @@ public function dashboard_page_content() {
                 </div>
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php esc_html_e('Revenue by Location (30 days)', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Revenue by Location (30 days)', 'location-wise-products-for-woocommerce'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="revenueByLocationChart"></canvas>
                         </div>
@@ -927,7 +927,7 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php esc_html_e('New Products (Last 30 Days)', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('New Products (Last 30 Days)', 'location-wise-products-for-woocommerce'); ?></h2>
                         <div class="lwp-chart-container">
                             <canvas id="newProductsChart"></canvas>
                         </div>
@@ -938,14 +938,14 @@ public function dashboard_page_content() {
             <div class="lwp-row">
                 <div class="lwp-col">
                     <div class="lwp-card">
-                        <h2><?php esc_html_e('Low Stock Products', 'location-wise-product'); ?></h2>
+                        <h2><?php esc_html_e('Low Stock Products', 'location-wise-products-for-woocommerce'); ?></h2>
                         <?php if ($low_stock_query->have_posts()) : ?>
                             <table class="lwp-low-stock-table">
                                 <thead>
                                     <tr>
-                                        <th><?php esc_html_e('Product', 'location-wise-product'); ?></th>
-                                        <th><?php esc_html_e('Stock', 'location-wise-product'); ?></th>
-                                        <th><?php esc_html_e('Location', 'location-wise-product'); ?></th>
+                                        <th><?php esc_html_e('Product', 'location-wise-products-for-woocommerce'); ?></th>
+                                        <th><?php esc_html_e('Stock', 'location-wise-products-for-woocommerce'); ?></th>
+                                        <th><?php esc_html_e('Location', 'location-wise-products-for-woocommerce'); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -969,7 +969,7 @@ public function dashboard_page_content() {
                                                 }, $product_locations);
                                                 echo esc_html(implode(', ', $location_names));
                                             } else {
-                                                esc_html_e('Default', 'location-wise-product');
+                                                esc_html_e('Default', 'location-wise-products-for-woocommerce');
                                             }
                                             ?>
                                         </td>
@@ -978,7 +978,7 @@ public function dashboard_page_content() {
                                 </tbody>
                             </table>
                         <?php else: ?>
-                            <p><?php esc_html_e('No low stock products found.', 'location-wise-product'); ?></p>
+                            <p><?php esc_html_e('No low stock products found.', 'location-wise-products-for-woocommerce'); ?></p>
                         <?php endif; wp_reset_postdata(); ?>
                     </div>
                 </div>
@@ -994,55 +994,55 @@ public function dashboard_page_content() {
 
         add_settings_section(
             'lwp_display_settings_section',
-            __('Product Title Display Settings', 'location-wise-product'),
+            __('Product Title Display Settings', 'location-wise-products-for-woocommerce'),
             [$this, 'settings_section_callback'],
-            'location-wise-product'
+            'location-wise-products-for-woocommerce'
         );
 
         add_settings_field(
             'lwp_display_format',
-            __('Location Display Format', 'location-wise-product'),
+            __('Location Display Format', 'location-wise-products-for-woocommerce'),
             [$this, 'display_format_field_callback'],
-            'location-wise-product',
+            'location-wise-products-for-woocommerce',
             'lwp_display_settings_section'
         );
 
         add_settings_field(
             'lwp_separator',
-            __('Title-Location Separator', 'location-wise-product'),
+            __('Title-Location Separator', 'location-wise-products-for-woocommerce'),
             [$this, 'separator_field_callback'],
-            'location-wise-product',
+            'location-wise-products-for-woocommerce',
             'lwp_display_settings_section'
         );
 
         add_settings_field(
             'lwp_enabled_pages',
-            __('Show Location On', 'location-wise-product'),
+            __('Show Location On', 'location-wise-products-for-woocommerce'),
             [$this, 'enabled_pages_field_callback'],
-            'location-wise-product',
+            'location-wise-products-for-woocommerce',
             'lwp_display_settings_section'
         );
 
         add_settings_section(
             'lwp_filter_settings_section',
-            __('Location Filtering Settings', 'location-wise-product'),
+            __('Location Filtering Settings', 'location-wise-products-for-woocommerce'),
             [$this, 'filter_settings_section_callback'],
-            'location-wise-product'
+            'location-wise-products-for-woocommerce'
         );
 
         add_settings_field(
             'lwp_strict_filtering',
-            __('Strict Location Filtering', 'location-wise-product'),
+            __('Strict Location Filtering', 'location-wise-products-for-woocommerce'),
             [$this, 'strict_filtering_field_callback'],
-            'location-wise-product',
+            'location-wise-products-for-woocommerce',
             'lwp_filter_settings_section'
         );
 
         add_settings_field(
             'lwp_filtered_sections',
-            __('Apply Location Filtering To', 'location-wise-product'),
+            __('Apply Location Filtering To', 'location-wise-products-for-woocommerce'),
             [$this, 'filtered_sections_field_callback'],
-            'location-wise-product',
+            'location-wise-products-for-woocommerce',
             'lwp_filter_settings_section'
         );
 
@@ -1055,9 +1055,9 @@ public function dashboard_page_content() {
         // Add settings section
         add_settings_section(
             'location_stock_general_section',
-            __('General Settings', 'location-wise-product'),
+            __('General Settings', 'location-wise-products-for-woocommerce'),
             function () {
-                echo '<p>' . esc_html_e('Configure general settings for location-based stock and price management.', 'location-wise-product') . '</p>';
+                echo '<p>' . esc_html_e('Configure general settings for location-based stock and price management.', 'location-wise-products-for-woocommerce') . '</p>';
             },
             'location-stock-settings'
         );
@@ -1065,16 +1065,16 @@ public function dashboard_page_content() {
         // Add "Enable Location Stock" field
         add_settings_field(
             'enable_location_stock',
-            __('Enable Location Stock', 'location-wise-product'),
+            __('Enable Location Stock', 'location-wise-products-for-woocommerce'),
             function () {
                 $options = get_option('lwp_display_options', ['enable_location_stock' => 'yes']);
                 $value = isset($options['enable_location_stock']) ? $options['enable_location_stock'] : 'yes';
         ?>
             <select name="lwp_display_options[enable_location_stock]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
             </select>
-            <p class="description"><?php esc_html_e('Enable or disable location-specific stock management.', 'location-wise-product'); ?></p>
+            <p class="description"><?php esc_html_e('Enable or disable location-specific stock management.', 'location-wise-products-for-woocommerce'); ?></p>
         <?php
             },
             'location-stock-settings',
@@ -1084,16 +1084,16 @@ public function dashboard_page_content() {
         // Add "Enable Location Pricing" field
         add_settings_field(
             'enable_location_price',
-            __('Enable Location Pricing', 'location-wise-product'),
+            __('Enable Location Pricing', 'location-wise-products-for-woocommerce'),
             function () {
                 $options = get_option('lwp_display_options', ['enable_location_price' => 'yes']);
                 $value = isset($options['enable_location_price']) ? $options['enable_location_price'] : 'yes';
         ?>
             <select name="lwp_display_options[enable_location_price]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
             </select>
-            <p class="description"><?php esc_html_e('Enable or disable location-specific pricing.', 'location-wise-product'); ?></p>
+            <p class="description"><?php esc_html_e('Enable or disable location-specific pricing.', 'location-wise-products-for-woocommerce'); ?></p>
         <?php
             },
             'location-stock-settings',
@@ -1103,16 +1103,16 @@ public function dashboard_page_content() {
         // Add "Enable Location Backorder" field
         add_settings_field(
             'enable_location_backorder',
-            __('Enable Location Backorder', 'location-wise-product'),
+            __('Enable Location Backorder', 'location-wise-products-for-woocommerce'),
             function () {
                 $options = get_option('lwp_display_options', ['enable_location_backorder' => 'yes']);
                 $value = isset($options['enable_location_backorder']) ? $options['enable_location_backorder'] : 'yes';
         ?>
             <select name="lwp_display_options[enable_location_backorder]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
             </select>
-            <p class="description"><?php esc_html_e('Enable or disable location-specific backorder management.', 'location-wise-product'); ?></p>
+            <p class="description"><?php esc_html_e('Enable or disable location-specific backorder management.', 'location-wise-products-for-woocommerce'); ?></p>
         <?php
             },
             'location-stock-settings',
@@ -1122,16 +1122,16 @@ public function dashboard_page_content() {
         // add "Enable Information for location"
         add_settings_field(
             'enable_location_information',
-            __('Enable Location Information', 'location-wise-product'),
+            __('Enable Location Information', 'location-wise-products-for-woocommerce'),
             function () {
                 $options = get_option('lwp_display_options', ['enable_location_information' => 'yes']);
                 $value = isset($options['enable_location_information']) ? $options['enable_location_information'] : 'yes';
         ?>
             <select name="lwp_display_options[enable_location_information]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
             </select>
-            <p class="description"><?php esc_html_e('Enable or disable location-specific information management.', 'location-wise-product'); ?></p>
+            <p class="description"><?php esc_html_e('Enable or disable location-specific information management.', 'location-wise-products-for-woocommerce'); ?></p>
         <?php
             },
             'location-stock-settings',
@@ -1140,7 +1140,7 @@ public function dashboard_page_content() {
 
         add_settings_field(
             'enable_location_by_user_role',
-            __('Enable Location by User Role', 'location-wise-product'),
+            __('Enable Location by User Role', 'location-wise-products-for-woocommerce'),
             function () {
                 $roles = wp_roles()->roles;
                 $options = get_option('lwp_display_options', ['enable_location_by_user_role' => []]);
@@ -1150,7 +1150,7 @@ public function dashboard_page_content() {
                     echo "<label><input type='checkbox' name='lwp_display_options[enable_location_by_user_role][]' value='" . esc_attr($role_key) . "' " . esc_attr($checked) . "> " . esc_html($role['name']) . "</label><br>";
                 }
         ?>
-            <p class="description"><?php esc_html_e('Select user roles for which location-specific information is enabled.', 'location-wise-product'); ?></p>
+            <p class="description"><?php esc_html_e('Select user roles for which location-specific information is enabled.', 'location-wise-products-for-woocommerce'); ?></p>
         <?php
             },
             'location-stock-settings',
@@ -1158,16 +1158,16 @@ public function dashboard_page_content() {
         );
         add_settings_field(
             'enable_popup',
-            __('Enable Popup', 'location-wise-product'),
+            __('Enable Popup', 'location-wise-products-for-woocommerce'),
             function () {
                 $options = get_option('lwp_display_options', ['enable_popup' => 'yes']);
                 $value = isset($options['enable_popup']) ? $options['enable_popup'] : 'yes';
         ?>
             <select name="lwp_display_options[enable_popup]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
             </select>
-            <p class="description"><?php esc_html_e('Enable or disable popup management.', 'location-wise-product'); ?></p>
+            <p class="description"><?php esc_html_e('Enable or disable popup management.', 'location-wise-products-for-woocommerce'); ?></p>
         <?php
             },
             'location-stock-settings',
@@ -1177,16 +1177,16 @@ public function dashboard_page_content() {
         // Add settings for if no location is selected for a product available in all locations or not
         add_settings_field(
             'enable_all_locations',
-            __('No Location Product Enable for All', 'location-wise-product'),
+            __('No Location Product Enable for All', 'location-wise-products-for-woocommerce'),
             function () {
                 $options = get_option('lwp_display_options', ['enable_all_locations' => 'yes']);
                 $value = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
         ?>
             <select name="lwp_display_options[enable_all_locations]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-product'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-product'); ?></option>
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
             </select>
-            <p class="description"><?php esc_html_e('if no location is selected for a product available in all locations or not', 'location-wise-product'); ?></p>
+            <p class="description"><?php esc_html_e('if no location is selected for a product available in all locations or not', 'location-wise-products-for-woocommerce'); ?></p>
 
         <?php
             },
@@ -1253,7 +1253,7 @@ public function dashboard_page_content() {
 
     public function settings_section_callback()
     {
-        echo '<p>' . esc_html_e('Configure how store locations appear with product titles.', 'location-wise-product') . '</p>';
+        echo '<p>' . esc_html_e('Configure how store locations appear with product titles.', 'location-wise-products-for-woocommerce') . '</p>';
     }
 
     public function display_format_field_callback()
@@ -1262,10 +1262,10 @@ public function dashboard_page_content() {
         $format = isset($options['display_format']) ? $options['display_format'] : 'append';
         ?>
         <select name="lwp_display_options[display_format]">
-            <option value="append" <?php selected($format, 'append'); ?>><?php esc_html_e('Append to title (Title - Location)', 'location-wise-product'); ?></option>
-            <option value="prepend" <?php selected($format, 'prepend'); ?>><?php esc_html_e('Prepend to title (Location - Title)', 'location-wise-product'); ?></option>
-            <option value="brackets" <?php selected($format, 'brackets'); ?>><?php esc_html_e('In brackets (Title [Location])', 'location-wise-product'); ?></option>
-            <option value="none" <?php selected($format, 'none'); ?>><?php esc_html_e('Do not display location', 'location-wise-product'); ?></option>
+            <option value="append" <?php selected($format, 'append'); ?>><?php esc_html_e('Append to title (Title - Location)', 'location-wise-products-for-woocommerce'); ?></option>
+            <option value="prepend" <?php selected($format, 'prepend'); ?>><?php esc_html_e('Prepend to title (Location - Title)', 'location-wise-products-for-woocommerce'); ?></option>
+            <option value="brackets" <?php selected($format, 'brackets'); ?>><?php esc_html_e('In brackets (Title [Location])', 'location-wise-products-for-woocommerce'); ?></option>
+            <option value="none" <?php selected($format, 'none'); ?>><?php esc_html_e('Do not display location', 'location-wise-products-for-woocommerce'); ?></option>
         </select>
     <?php
     }
@@ -1276,7 +1276,7 @@ public function dashboard_page_content() {
         $separator = isset($options['separator']) ? $options['separator'] : ' - ';
     ?>
         <input type="text" name="lwp_display_options[separator]" value="<?php echo esc_attr($separator); ?>" class="regular-text">
-        <p class="description"><?php esc_html_e('The character(s) used to separate the title and location.', 'location-wise-product'); ?></p>
+        <p class="description"><?php esc_html_e('The character(s) used to separate the title and location.', 'location-wise-products-for-woocommerce'); ?></p>
     <?php
     }
 
@@ -1285,12 +1285,12 @@ public function dashboard_page_content() {
         $options = $this->get_display_options();
         $enabled_pages = isset($options['enabled_pages']) ? $options['enabled_pages'] : ['shop', 'single', 'cart'];
         $pages = [
-            'shop' => __('Shop/Archive Pages', 'location-wise-product'),
-            'single' => __('Single Product Pages', 'location-wise-product'),
-            'cart' => __('Cart & Checkout', 'location-wise-product'),
-            'related' => __('Related Products', 'location-wise-product'),
-            'search' => __('Search Results', 'location-wise-product'),
-            'widgets' => __('Widgets', 'location-wise-product')
+            'shop' => __('Shop/Archive Pages', 'location-wise-products-for-woocommerce'),
+            'single' => __('Single Product Pages', 'location-wise-products-for-woocommerce'),
+            'cart' => __('Cart & Checkout', 'location-wise-products-for-woocommerce'),
+            'related' => __('Related Products', 'location-wise-products-for-woocommerce'),
+            'search' => __('Search Results', 'location-wise-products-for-woocommerce'),
+            'widgets' => __('Widgets', 'location-wise-products-for-woocommerce')
         ];
 
         foreach ($pages as $value => $label) {
@@ -1307,13 +1307,13 @@ public function dashboard_page_content() {
             <form method="post" action="options.php">
                 <?php
                 settings_fields('location_wise_products_settings');
-                do_settings_sections('location-wise-product');
+                do_settings_sections('location-wise-products-for-woocommerce');
                 do_settings_sections('location-stock-settings');
                 submit_button();
                 ?>
             </form>
         </div>
-        <p><?php esc_html_e('Use this shortcode to show location selector on any page', 'location-wise-product'); ?> <strong>[store_location_selector]</strong></p>
+        <p><?php esc_html_e('Use this shortcode to show location selector on any page', 'location-wise-products-for-woocommerce'); ?> <strong>[store_location_selector]</strong></p>
     <?php
     }
 
@@ -1498,7 +1498,7 @@ public function dashboard_page_content() {
 
     public function filter_settings_section_callback()
     {
-        echo '<p>' . esc_html_e('Configure how strictly products are filtered by location throughout your store.', 'location-wise-product') . '</p>';
+        echo '<p>' . esc_html_e('Configure how strictly products are filtered by location throughout your store.', 'location-wise-products-for-woocommerce') . '</p>';
     }
 
     public function strict_filtering_field_callback()
@@ -1507,10 +1507,10 @@ public function dashboard_page_content() {
         $strict = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
     ?>
         <select name="lwp_display_options[strict_filtering]">
-            <option value="enabled" <?php selected($strict, 'enabled'); ?>><?php esc_html_e('Enabled (Only show products from selected location)', 'location-wise-product'); ?></option>
-            <option value="disabled" <?php selected($strict, 'disabled'); ?>><?php esc_html_e('Disabled (Show all products regardless of location)', 'location-wise-product'); ?></option>
+            <option value="enabled" <?php selected($strict, 'enabled'); ?>><?php esc_html_e('Enabled (Only show products from selected location)', 'location-wise-products-for-woocommerce'); ?></option>
+            <option value="disabled" <?php selected($strict, 'disabled'); ?>><?php esc_html_e('Disabled (Show all products regardless of location)', 'location-wise-products-for-woocommerce'); ?></option>
         </select>
-        <p class="description"><?php esc_html_e('When enabled, users will only see products from their selected location. When disabled, all products will be visible.', 'location-wise-product'); ?></p>
+        <p class="description"><?php esc_html_e('When enabled, users will only see products from their selected location. When disabled, all products will be visible.', 'location-wise-products-for-woocommerce'); ?></p>
     <?php
     }
 
@@ -1527,15 +1527,15 @@ public function dashboard_page_content() {
         ];
 
         $all_sections = [
-            'shop' => __('Main Shop & Category Pages', 'location-wise-product'),
-            'search' => __('Search Results', 'location-wise-product'),
-            'related' => __('Related Products', 'location-wise-product'),
-            'recently_viewed' => __('Recently Viewed Products', 'location-wise-product'),
-            'cross_sells' => __('Cross-Sells', 'location-wise-product'),
-            'upsells' => __('Upsells', 'location-wise-product'),
-            'widgets' => __('Product Widgets', 'location-wise-product'),
-            'blocks' => __('Product Blocks (Gutenberg)', 'location-wise-product'),
-            'rest_api' => __('REST API & AJAX Responses', 'location-wise-product'),
+            'shop' => __('Main Shop & Category Pages', 'location-wise-products-for-woocommerce'),
+            'search' => __('Search Results', 'location-wise-products-for-woocommerce'),
+            'related' => __('Related Products', 'location-wise-products-for-woocommerce'),
+            'recently_viewed' => __('Recently Viewed Products', 'location-wise-products-for-woocommerce'),
+            'cross_sells' => __('Cross-Sells', 'location-wise-products-for-woocommerce'),
+            'upsells' => __('Upsells', 'location-wise-products-for-woocommerce'),
+            'widgets' => __('Product Widgets', 'location-wise-products-for-woocommerce'),
+            'blocks' => __('Product Blocks (Gutenberg)', 'location-wise-products-for-woocommerce'),
+            'rest_api' => __('REST API & AJAX Responses', 'location-wise-products-for-woocommerce'),
         ];
 
         foreach ($all_sections as $value => $label) {
@@ -1543,7 +1543,7 @@ public function dashboard_page_content() {
             echo "<label><input type='checkbox' name='lwp_display_options[filtered_sections][]' value='" . esc_attr($value) . "' " . esc_attr($checked) . "> " . esc_html($label) . "</label><br>";
         }
     ?>
-        <p class="description"><?php esc_html_e('Select which parts of your store should have location-based filtering applied.', 'location-wise-product'); ?></p>
+        <p class="description"><?php esc_html_e('Select which parts of your store should have location-based filtering applied.', 'location-wise-products-for-woocommerce'); ?></p>
 <?php
     }
 

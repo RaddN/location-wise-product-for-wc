@@ -35,12 +35,12 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
     public function get_columns() {
         return [
             'cb'        => '<input type="checkbox" />',
-            'image'     => __('Image', 'location-wise-product'),
-            'title'     => __('Product', 'location-wise-product'),
-            'stock'     => __('Stock by Location', 'location-wise-product'),
-            'price'     => __('Price by Location', 'location-wise-product'),
-            'locations' => __('Locations', 'location-wise-product'),
-            'actions'   => __('Actions', 'location-wise-product'),
+            'image'     => __('Image', 'location-wise-products-for-woocommerce'),
+            'title'     => __('Product', 'location-wise-products-for-woocommerce'),
+            'stock'     => __('Stock by Location', 'location-wise-products-for-woocommerce'),
+            'price'     => __('Price by Location', 'location-wise-products-for-woocommerce'),
+            'locations' => __('Locations', 'location-wise-products-for-woocommerce'),
+            'actions'   => __('Actions', 'location-wise-products-for-woocommerce'),
         ];
     }
 
@@ -97,8 +97,8 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
     public function column_title($item) {
         $title = '<strong><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . esc_html($item['title']) . '</a></strong>';
         $title .= '<div class="row-actions">';
-        $title .= '<span class="edit"><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . __('Edit', 'location-wise-product') . '</a> | </span>';
-        $title .= '<span class="view"><a href="' . esc_url(get_permalink($item['id'])) . '">' . __('View', 'location-wise-product') . '</a></span>';
+        $title .= '<span class="edit"><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . __('Edit', 'location-wise-products-for-woocommerce') . '</a> | </span>';
+        $title .= '<span class="view"><a href="' . esc_url(get_permalink($item['id'])) . '">' . __('View', 'location-wise-products-for-woocommerce') . '</a></span>';
         $title .= '</div>';
         return $title;
     }
@@ -119,15 +119,15 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
                 $output .= '<div class="variation-stock-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="location-stock-item">';
-                $output .= '<span class="location-name">' . __('Default', 'location-wise-product') . ':</span> ';
-                $output .= '<span class="stock-value">' . __('In stock', 'location-wise-product') . ' (' . esc_html($variation['stock']) . ')</span>';
+                $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
+                $output .= '<span class="stock-value">' . __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($variation['stock']) . ')</span>';
                 $output .= '</div>';
                 if (!empty($item['location_terms'])) {
                     foreach ($item['location_terms'] as $location) {
                         $stock = get_post_meta($variation['id'], '_location_stock_' . $location->term_id, true);
                         $output .= '<div class="location-stock-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                        $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'location-wise-product') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'location-wise-product')) . '</span>';
+                        $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'location-wise-products-for-woocommerce')) . '</span>';
                         $output .= '</div>';
                     }
                 }
@@ -136,15 +136,15 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
         } else {
             $default_stock = get_post_meta($item['id'], "_stock", true);
             $output .= '<div class="location-stock-item">';
-            $output .= '<span class="location-name">' . __('Default', 'location-wise-product') . ':</span> ';
-            $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'location-wise-product') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'location-wise-product')) . '</span>';
+            $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
+            $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'location-wise-products-for-woocommerce')) . '</span>';
             $output .= '</div>';
             if (!empty($item['location_terms'])) {
                 foreach ($item['location_terms'] as $location) {
                     $stock = get_post_meta($item['id'], '_location_stock_' . $location->term_id, true);
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                    $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'location-wise-product') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'location-wise-product')) . '</span>';
+                    $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'location-wise-products-for-woocommerce')) . '</span>';
                     $output .= '</div>';
                 }
             }
@@ -169,7 +169,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
                 $output .= '<div class="variation-price-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="location-price-item">';
-                $output .= '<span class="location-name">' . __('Default', 'location-wise-product') . ':</span> ';
+                $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
                 $output .= '<span class="price-value">' . wc_price($variation['price']) . '</span>';
                 $output .= '</div>';
                 if (!empty($item['location_terms'])) {
@@ -186,7 +186,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
         } else {
             $default_price = get_post_meta($item['id'], "_price", true);
             $output .= '<div class="location-price-item">';
-            $output .= '<span class="location-name">' . __('Default', 'location-wise-product') . ':</span> ';
+            $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
             $output .= '<span class="price-value">' . wc_price($default_price) . '</span>';
             $output .= '</div>';
             if (!empty($item['location_terms'])) {
@@ -212,7 +212,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
     private function get_locations_display($item) {
         $locations = $item['location_terms'];
         if (empty($locations)) {
-            return '<span class="no-locations">' . __('N/A', 'location-wise-product') . '</span>';
+            return '<span class="no-locations">' . __('N/A', 'location-wise-products-for-woocommerce') . '</span>';
         }
         $output = '<div class="product-locations">';
         foreach ($locations as $location) {
@@ -234,14 +234,14 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
         
         $locations = $item['location_terms'];
         if (empty($locations)) {
-            return '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Add to Location', 'location-wise-product') . '</a>';
+            return '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Add to Location', 'location-wise-products-for-woocommerce') . '</a>';
         }
         
         $output = '<div class="location-actions">';
         foreach ($locations as $location) {
             $is_active = !get_post_meta($item['id'], '_location_disabled_' . $location->term_id, true);
             $action_class = $is_active ? 'deactivate-location' : 'activate-location';
-            $action_text = $is_active ? __('Deactivate', 'location-wise-product') : __('Activate', 'location-wise-product');
+            $action_text = $is_active ? __('Deactivate', 'location-wise-products-for-woocommerce') : __('Activate', 'location-wise-products-for-woocommerce');
             $button_class = $is_active ? 'button-secondary' : 'button-primary';
             
             $output .= '<div class="location-action-item">';
@@ -283,7 +283,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
         }
 
         // Add location filter if set - verify nonce first if filter action is being submitted
-        if (isset($_REQUEST['filter_action']) && $_REQUEST['filter_action'] == __('Filter', 'location-wise-product')) {
+        if (isset($_REQUEST['filter_action']) && $_REQUEST['filter_action'] == __('Filter', 'location-wise-products-for-woocommerce')) {
             // Verify the nonce
             if (
                 isset($_REQUEST['_wpnonce']) && 
@@ -392,7 +392,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
             if (!is_wp_error($locations) && !empty($locations)) {
                 echo '<div class="alignleft actions">';
                 echo '<select name="filter-by-location">';
-                echo '<option value="">' . esc_html__('All Locations', 'location-wise-product') . '</option>';
+                echo '<option value="">' . esc_html__('All Locations', 'location-wise-products-for-woocommerce') . '</option>';
                 
                 foreach ($locations as $location) {
                     if(isset($_REQUEST['_wpnonce']) && 
@@ -409,7 +409,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table {
                 // Add nonce field for the filter form - using the built-in WP_List_Table nonce
                 wp_nonce_field('bulk-' . $this->_args['plural']);
                 
-                echo '<input type="submit" name="filter_action" id="filter-by-location-submit" class="button" value="' . esc_attr__('Filter', 'location-wise-product') . '">';
+                echo '<input type="submit" name="filter_action" id="filter-by-location-submit" class="button" value="' . esc_attr__('Filter', 'location-wise-products-for-woocommerce') . '">';
                 echo '</div>';
             }
         }

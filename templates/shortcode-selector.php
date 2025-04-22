@@ -13,11 +13,11 @@ if (!defined('ABSPATH')) exit;
                 wp_nonce_field('plugincylwp_shortcode_selector', 'plugincylwp_shortcode_selector_nonce');
             ?>
         <select id="lwp-shortcode-selector" class="lwp-location-dropdown">
-            <option value=""><?php esc_html_e('-- Select a Store --', 'location-wise-product'); ?></option>
+            <option value=""><?php esc_html_e('-- Select a Store --', 'location-wise-products-for-woocommerce'); ?></option>
             
             <?php if ($is_admin_or_manager): ?>
                 <?php $selected = ($selected_location === 'all-products') ? 'selected' : ''; ?>
-                <option value="all-products" <?php echo esc_attr($selected); ?>><?php esc_html_e('All Products', 'location-wise-product'); ?></option>
+                <option value="all-products" <?php echo esc_attr($selected); ?>><?php esc_html_e('All Products', 'location-wise-products-for-woocommerce'); ?></option>
             <?php endif; ?>
             
             <?php if (!empty($locations) && !is_wp_error($locations)): ?>
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) exit;
         
         <!-- <button type="button" class="button lwp-shortcode-submit">
             <?php 
-            // esc_html_e('Change Location', 'location-wise-product');
+            // esc_html_e('Change Location', 'location-wise-products-for-woocommerce');
              ?>
         </button> -->
     </form>

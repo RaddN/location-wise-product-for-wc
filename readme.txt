@@ -17,7 +17,7 @@ Filter WooCommerce products by store locations with a location selector for cust
 
 == Installation ==
 
-1. Upload the `location-wise-products` folder to the `/wp-content/plugins/` directory.
+1. Upload the `location-wise-products-for-woocommerces` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Configure the plugin settings under WooCommerce -> Store Locations Settings.
 

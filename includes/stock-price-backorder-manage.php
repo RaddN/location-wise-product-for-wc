@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) exit;
 // Add a new product data tab for location-specific settings
 add_filter('woocommerce_product_data_tabs', function($tabs) {
     $tabs['location_stock_price'] = array(
-        'label'    => __('Location Settings', 'location-wise-product'),
+        'label'    => __('Location Settings', 'location-wise-products-for-woocommerce'),
         'target'   => 'location_stock_price_options',
         'class'    => array('show_if_simple', 'hide_if_variable','show_if_external'),
         'priority' => 21
@@ -27,18 +27,18 @@ add_action('woocommerce_product_data_panels', function() {
     ?>
     <div id="location_stock_price_options" class="panel woocommerce_options_panel">
         <div class="options_group">
-            <h3><?php esc_html_e('Location Specific Stock & Price Settings', 'location-wise-product'); ?></h3>
+            <h3><?php esc_html_e('Location Specific Stock & Price Settings', 'location-wise-products-for-woocommerce'); ?></h3>
             <?php wp_nonce_field('location_stock_price_nonce_action', 'location_stock_price_nonce'); ?>
             <?php if (!empty($locations) && !is_wp_error($locations)) : ?>
                 <table class="widefat">
 
                     <thead>
                         <tr>
-                            <th><?php esc_html_e('Location', 'location-wise-product'); ?></th>
-                            <th><?php esc_html_e('Stock Quantity', 'location-wise-product'); ?></th>
-                            <th><?php esc_html_e('Regular Price', 'location-wise-product'); ?></th>
-                            <th><?php esc_html_e('Sale Price', 'location-wise-product'); ?></th>
-                            <th><?php esc_html_e('Backorders', 'location-wise-product'); ?></th>
+                            <th><?php esc_html_e('Location', 'location-wise-products-for-woocommerce'); ?></th>
+                            <th><?php esc_html_e('Stock Quantity', 'location-wise-products-for-woocommerce'); ?></th>
+                            <th><?php esc_html_e('Regular Price', 'location-wise-products-for-woocommerce'); ?></th>
+                            <th><?php esc_html_e('Sale Price', 'location-wise-products-for-woocommerce'); ?></th>
+                            <th><?php esc_html_e('Backorders', 'location-wise-products-for-woocommerce'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,9 +64,9 @@ add_action('woocommerce_product_data_panels', function() {
                                 </td>
                                 <td>
                                     <select name="location_backorders[<?php echo esc_attr($location->term_id); ?>]">
-                                        <option value="no" <?php selected($location_backorders, 'no'); ?>><?php esc_html_e('No backorders', 'location-wise-product'); ?></option>
-                                        <option value="notify" <?php selected($location_backorders, 'notify'); ?>><?php esc_html_e('Allow, but notify customer', 'location-wise-product'); ?></option>
-                                        <option value="yes" <?php selected($location_backorders, 'yes'); ?>><?php esc_html_e('Allow', 'location-wise-product'); ?></option>
+                                        <option value="no" <?php selected($location_backorders, 'no'); ?>><?php esc_html_e('No backorders', 'location-wise-products-for-woocommerce'); ?></option>
+                                        <option value="notify" <?php selected($location_backorders, 'notify'); ?>><?php esc_html_e('Allow, but notify customer', 'location-wise-products-for-woocommerce'); ?></option>
+                                        <option value="yes" <?php selected($location_backorders, 'yes'); ?>><?php esc_html_e('Allow', 'location-wise-products-for-woocommerce'); ?></option>
                                     </select>
                                 </td>
                             </tr>
@@ -74,7 +74,7 @@ add_action('woocommerce_product_data_panels', function() {
                     </tbody>
                 </table>
             <?php else : ?>
-                <p><?php esc_html_e('No store locations found. Please add locations first.', 'location-wise-product'); ?></p>
+                <p><?php esc_html_e('No store locations found. Please add locations first.', 'location-wise-products-for-woocommerce'); ?></p>
             <?php endif; ?>
         </div>
     </div>
@@ -141,17 +141,17 @@ add_action('woocommerce_product_after_variable_attributes', function($loop, $var
     
     ?>
     <div class="variable_location_pricing">
-        <p class="form-row form-row-full"><strong><?php esc_html_e('Location Specific Settings', 'location-wise-product'); ?></strong></p>
+        <p class="form-row form-row-full"><strong><?php esc_html_e('Location Specific Settings', 'location-wise-products-for-woocommerce'); ?></strong></p>
         <?php wp_nonce_field('location_stock_price_nonce_action', 'location_stock_price_nonce'); ?>
         <div class="location_variation_data">
             <table class="location_variation_table">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e('Location', 'location-wise-product'); ?></th>
-                        <th><?php esc_html_e('Stock', 'location-wise-product'); ?></th>
-                        <th><?php esc_html_e('Regular Price', 'location-wise-product'); ?></th>
-                        <th><?php esc_html_e('Sale Price', 'location-wise-product'); ?></th>
-                        <th><?php esc_html_e('Backorders', 'location-wise-product'); ?></th>
+                        <th><?php esc_html_e('Location', 'location-wise-products-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Stock', 'location-wise-products-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Regular Price', 'location-wise-products-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Sale Price', 'location-wise-products-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Backorders', 'location-wise-products-for-woocommerce'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -183,9 +183,9 @@ add_action('woocommerce_product_after_variable_attributes', function($loop, $var
                             </td>
                             <td>
                                 <select name="variation_location_backorders[<?php echo esc_attr($loop); ?>][<?php echo esc_attr($location->term_id); ?>]">
-                                    <option value="no" <?php selected($location_backorders, 'no'); ?>><?php esc_html_e('No backorders', 'location-wise-product'); ?></option>
-                                    <option value="notify" <?php selected($location_backorders, 'notify'); ?>><?php esc_html_e('Allow, but notify customer', 'location-wise-product'); ?></option>
-                                    <option value="yes" <?php selected($location_backorders, 'yes'); ?>><?php esc_html_e('Allow', 'location-wise-product'); ?></option>
+                                    <option value="no" <?php selected($location_backorders, 'no'); ?>><?php esc_html_e('No backorders', 'location-wise-products-for-woocommerce'); ?></option>
+                                    <option value="notify" <?php selected($location_backorders, 'notify'); ?>><?php esc_html_e('Allow, but notify customer', 'location-wise-products-for-woocommerce'); ?></option>
+                                    <option value="yes" <?php selected($location_backorders, 'yes'); ?>><?php esc_html_e('Allow', 'location-wise-products-for-woocommerce'); ?></option>
                                 </select>
                             </td>
                         </tr>
@@ -544,7 +544,7 @@ add_filter('woocommerce_add_to_cart_validation', function($passed, $product_id, 
     if ($location_backorders === 'no' && $location_stock < $total_required) {
         wc_add_notice(
             sprintf(
-                esc_html('Sorry, "%s" has only %d left in stock at your selected location. Please adjust your quantity.', 'location-wise-product'), 
+                esc_html('Sorry, "%s" has only %d left in stock at your selected location. Please adjust your quantity.', 'location-wise-products-for-woocommerce'), 
                 $product->get_name(), 
                 $location_stock
             ), 
@@ -687,7 +687,7 @@ add_action('woocommerce_single_product_summary', function() {
     if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
         // Product is not available in the current location - display a prominent notice
         echo '<div class="product-location-unavailable">';
-        echo '<p class="unavailable-notice">' . esc_html_e('This product isn\'t available for your current location.', 'location-wise-product') . '</p>';
+        echo '<p class="unavailable-notice">' . esc_html_e('This product isn\'t available for your current location.', 'location-wise-products-for-woocommerce') . '</p>';
         echo '</div>';
     }
 }, 5); // Priority 5 to show it near the top
@@ -708,7 +708,7 @@ add_action('woocommerce_single_product_summary', function() {
     
 //     if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
 //         // Product is not available in the current location
-//         wc_add_notice(__('This product isn\'t available for your current location and cannot be purchased.', 'location-wise-product'), 'error');
+//         wc_add_notice(__('This product isn\'t available for your current location and cannot be purchased.', 'location-wise-products-for-woocommerce'), 'error');
 //         return false;
 //     }
     
@@ -729,7 +729,7 @@ add_action('woocommerce_single_product_summary', function() {
     
 //     if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
 //         // Replace add to cart button with unavailable text
-//         return '<span class="button unavailable-product">' . __('Unavailable at your location', 'location-wise-product') . '</span>';
+//         return '<span class="button unavailable-product">' . __('Unavailable at your location', 'location-wise-products-for-woocommerce') . '</span>';
 //     }
     
 //     return $html;
@@ -848,20 +848,20 @@ function Plugincylwp_display_location_specific_stock_info() {
     $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location->term_id, true);
     
     echo '<div class="location-specific-info">';
-    echo '<h4>' . sprintf(esc_html('Information for %s location', 'location-wise-product'), esc_attr($location->name)) . '</h4>';
+    echo '<h4>' . sprintf(esc_html('Information for %s location', 'location-wise-products-for-woocommerce'), esc_attr($location->name)) . '</h4>';
     
     // Display stock status
     if ($location_stock !== '') {
         echo '<p class="location-stock">';
-        echo '<strong>' . esc_html_e('Stock:', 'location-wise-product') . '</strong> ';
+        echo '<strong>' . esc_html_e('Stock:', 'location-wise-products-for-woocommerce') . '</strong> ';
         
         if ($location_stock > 0) {
-            echo '<span class="in-stock">' . sprintf(esc_html('%d item in stock', '%d items in stock', $location_stock, 'location-wise-product'), esc_attr($location_stock)) . '</span>';
+            echo '<span class="in-stock">' . sprintf(esc_html('%d item in stock', '%d items in stock', $location_stock, 'location-wise-products-for-woocommerce'), esc_attr($location_stock)) . '</span>';
         } else {
             if ($location_backorders === 'no') {
-                echo '<span class="out-of-stock">' . esc_html('Out of stock', 'location-wise-product') . '</span>';
+                echo '<span class="out-of-stock">' . esc_html('Out of stock', 'location-wise-products-for-woocommerce') . '</span>';
             } else {
-                echo '<span class="on-backorder">' . esc_html('Available on backorder', 'location-wise-product') . '</span>';
+                echo '<span class="on-backorder">' . esc_html('Available on backorder', 'location-wise-products-for-woocommerce') . '</span>';
             }
         }
         echo '</p>';
@@ -870,7 +870,7 @@ function Plugincylwp_display_location_specific_stock_info() {
     // Display location-specific prices if they exist
     if (!empty($location_regular_price)) {
         echo '<p class="location-price">';
-        echo '<strong>' . esc_html_e('Price at this location:', 'location-wise-product') . '</strong> ';
+        echo '<strong>' . esc_html_e('Price at this location:', 'location-wise-products-for-woocommerce') . '</strong> ';
         
         if (!empty($location_sale_price)) {
             echo '<del>' . wp_kses_post(wc_price($location_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($location_sale_price)) . '</ins>';
@@ -924,12 +924,12 @@ function Plugincylwp_display_location_specific_stock_info_loop() {
         echo '<span class="location-stock-loop">';
         
         if ($location_stock > 0) {
-            echo '<span class="in-stock">' . sprintf(esc_html('%d in stock', 'location-wise-product'), esc_attr($location_stock)) . '</span>';
+            echo '<span class="in-stock">' . sprintf(esc_html('%d in stock', 'location-wise-products-for-woocommerce'), esc_attr($location_stock)) . '</span>';
         } else {
             if ($location_backorders === 'no') {
-                echo '<span class="out-of-stock">' . esc_html('Out of stock', 'location-wise-product') . '</span>';
+                echo '<span class="out-of-stock">' . esc_html('Out of stock', 'location-wise-products-for-woocommerce') . '</span>';
             } else {
-                echo '<span class="on-backorder">' . esc_html('Backorder', 'location-wise-product') . '</span>';
+                echo '<span class="on-backorder">' . esc_html('Backorder', 'location-wise-products-for-woocommerce') . '</span>';
             }
         }
         echo '</span>';
@@ -1029,12 +1029,12 @@ function Plugincylwp_display_location_stock_status_in_loop() {
         echo '<div class="location-stock-badge">';
         
         if (intval($location_stock) > 0) {
-            echo '<span class="stock-badge in-stock">' . esc_html_e('In Stock', 'location-wise-product') . '</span>';
+            echo '<span class="stock-badge in-stock">' . esc_html_e('In Stock', 'location-wise-products-for-woocommerce') . '</span>';
         } else {
             if ($location_backorders === 'no') {
-                echo '<span class="stock-badge out-of-stock">' . esc_html_e('Out of Stock', 'location-wise-product') . '</span>';
+                echo '<span class="stock-badge out-of-stock">' . esc_html_e('Out of Stock', 'location-wise-products-for-woocommerce') . '</span>';
             } else {
-                echo '<span class="stock-badge on-backorder">' . esc_html_e('Backorder', 'location-wise-product') . '</span>';
+                echo '<span class="stock-badge on-backorder">' . esc_html_e('Backorder', 'location-wise-products-for-woocommerce') . '</span>';
             }
         }
         
@@ -1044,7 +1044,7 @@ function Plugincylwp_display_location_stock_status_in_loop() {
     // Display location-specific price if available
     if (!empty($location_regular_price)) {
         echo '<div class="location-price-loop">';
-        echo '<small>' . sprintf(esc_html('%s price:', 'location-wise-product'), esc_attr($location->name)) . '</small> ';
+        echo '<small>' . sprintf(esc_html('%s price:', 'location-wise-products-for-woocommerce'), esc_attr($location->name)) . '</small> ';
         
         if (!empty($location_sale_price)) {
             echo '<del>' . wp_kses_post(wc_price($location_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($location_sale_price)) . '</ins>';
@@ -1069,7 +1069,7 @@ function Plugincylwp_add_location_column_to_product_list($columns) {
         
         // Insert the Locations column after the Name column
         if ($key === 'name') {
-            $new_columns['locations'] = __('Stock & Price', 'location-wise-product');
+            $new_columns['locations'] = __('Stock & Price', 'location-wise-products-for-woocommerce');
         }
     }
     
@@ -1111,8 +1111,8 @@ function Plugincylwp_populate_locations_column_in_product_list($column, $post_id
                         if ($location_stock !== '') {
                             $output .= '<div>' . esc_html($location->name) . ': ';
                             $output .= ($location_stock > 0) ? 
-                        '<mark class="instock">' . __('In stock', 'location-wise-product') . ' (' . $location_stock . ')</mark>' : 
-                        '<mark class="outofstock">' . __('Out of stock', 'location-wise-product') . '</mark>';
+                        '<mark class="instock">' . __('In stock', 'location-wise-products-for-woocommerce') . ' (' . $location_stock . ')</mark>' : 
+                        '<mark class="outofstock">' . __('Out of stock', 'location-wise-products-for-woocommerce') . '</mark>';
 
                             if ($location_price) {
                                 $output .= ' - ' . wc_price($location_price);
@@ -1130,8 +1130,8 @@ function Plugincylwp_populate_locations_column_in_product_list($column, $post_id
                     if ($location_stock !== '') {
                         $output .= '<div>' . esc_html($location->name) . ': ';
                         $output .= ($location_stock > 0) ? 
-                        '<mark class="instock">' . __('In stock', 'location-wise-product') . ' (' . $location_stock . ')</mark>' : 
-                        '<mark class="outofstock">' . __('Out of stock', 'location-wise-product') . '</mark>';
+                        '<mark class="instock">' . __('In stock', 'location-wise-products-for-woocommerce') . ' (' . $location_stock . ')</mark>' : 
+                        '<mark class="outofstock">' . __('Out of stock', 'location-wise-products-for-woocommerce') . '</mark>';
 
                         if ($location_price) {
                             $output .= ' - ' . wc_price($location_price);
