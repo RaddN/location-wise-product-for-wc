@@ -82,3 +82,59 @@
     border-radius: 3px;
     font-size: 0.9em;
 }
+
+.lwp-admin-notice {
+    background: #fff;
+    border-left: 4px solid #2271b1;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    margin: 20px 0;
+    padding: 12px 15px;
+}
+
+.lwp-admin-notice code {
+    background: #f0f0f1;
+    padding: 3px 5px;
+    border-radius: 3px;
+}
+
+.lwp-nav-tabs {
+    margin-bottom: 20px;
+}
+
+.lwp-tab-content {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+    padding: 20px;
+    margin-top: -1px;
+}
+
+.lwp-settings-box {
+    background: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.lwp-settings-box h2 {
+    margin-top: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-table th {
+    width: 250px;
+}
+
+.lwp-footer {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    color: #666;
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 782px) {
+    .form-table th {
+        width: 100%;
+    }
+}

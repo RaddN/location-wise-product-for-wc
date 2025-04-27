@@ -73,3 +73,19 @@
     width: 50px;
     height: auto;
 }
+
+.location-gross-profit-item,span.gross-profit-value.positive-profit {
+    display: flex;
+}
+.positive-profit {
+    color: #28a745;
+}
+
+.negative-profit {
+    color: #dc3545;
+}
+
+.zero-profit {
+    color: #6c757d;
+}
+

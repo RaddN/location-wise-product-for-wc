@@ -1,45 +1,46 @@
 /**
  * Location Wise Products Dashboard JavaScript
  */
-(function($) {
+(function ($) {
     'use strict';
-    
-    $(document).ready(function() {
+
+    $(document).ready(function () {
         initDashboardCharts();
     });
-    
+
     /**
      * Initialize all dashboard charts
      */
     function initDashboardCharts() {
         // Get data from the localized script
         const data = window.lwpDashboardData;
-        
+
         if (!data) {
             console.error('Dashboard data not available');
             return;
         }
-        
+
         initProductsChart();
         initStockChart();
         initNewProductsChart();
+        initInvestmentChart();
         initOrdersChart();
         initRevenueChart();
     }
-    
+
     /**
      * Initialize Products by Location Chart
      */
     function initProductsChart() {
         const ctx = document.getElementById('locationProductsChart');
-        
+
         if (!ctx) return;
-        
+
         const labels = Object.keys(lwpDashboardData.productCounts);
         const values = Object.values(lwpDashboardData.productCounts);
         const bgColors = labels.map(label => lwpDashboardData.locationColors[label]);
         const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label]);
-        
+
         new Chart(ctx, {
             type: 'pie',
             data: {
@@ -63,7 +64,7 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const value = context.raw;
                                 const percentage = Math.round((value / total) * 100);
@@ -83,20 +84,20 @@
             }
         });
     }
-    
+
     /**
      * Initialize Stock Levels by Location Chart
      */
     function initStockChart() {
         const ctx = document.getElementById('locationStockChart');
-        
+
         if (!ctx) return;
-        
+
         const labels = Object.keys(lwpDashboardData.stockLevels);
         const values = Object.values(lwpDashboardData.stockLevels);
         const bgColors = labels.map(label => lwpDashboardData.locationColors[label]);
         const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label]);
-        
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -129,15 +130,15 @@
             }
         });
     }
-    
+
     /**
      * Initialize New Products Chart
      */
     function initNewProductsChart() {
         const ctx = document.getElementById('newProductsChart');
-        
+
         if (!ctx) return;
-        
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -183,20 +184,97 @@
             }
         });
     }
-    
+
+
+    /**
+  * Initialize the monthly investment chart
+  */
+    function initInvestmentChart() {
+        const ctx = document.getElementById('investment-30day');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: lwpDashboardData.monthlyInvestmentLabels,
+                datasets: [{
+                    label: lwpDashboardData.i18n.investment,
+                    data: lwpDashboardData.monthlyInvestmentData,
+                    fill: {
+                        target: 'origin',
+                        above: 'rgba(78, 84, 200, 0.1)'
+                    },
+                    borderColor: '#4e54c8',
+                    tension: 0.4,
+                    pointBackgroundColor: '#4e54c8',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            // Use currency format
+                            callback: function (value, index, values) {
+                                return new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                    minimumFractionDigits: 0
+                                }).format(value);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 10,
+                        cornerRadius: 6,
+                        callbacks: {
+                            label: function (context) {
+                                return context.dataset.label + ': ' +
+                                    new Intl.NumberFormat('en-US', {
+                                        style: 'currency',
+                                        currency: 'USD'
+                                    }).format(context.raw);
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Monthly Investment Report'
+                    }
+                }
+            }
+        });
+    }
+
     /**
      * Initialize Orders by Location Chart
      */
     function initOrdersChart() {
         const ctx = document.getElementById('ordersByLocationChart');
-        
+
         if (!ctx) return;
-        
+
         const labels = Object.keys(lwpDashboardData.ordersByLocation);
         const values = Object.values(lwpDashboardData.ordersByLocation);
         const bgColors = labels.map(label => lwpDashboardData.locationColors[label] || 'rgba(153, 102, 255, 0.7)');
         const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label] || 'rgba(153, 102, 255, 1)');
-        
+
         new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -222,7 +300,7 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const value = context.raw;
                                 const percentage = Math.round((value / total) * 100);
@@ -237,20 +315,20 @@
             }
         });
     }
-    
+
     /**
      * Initialize Revenue by Location Chart
      */
     function initRevenueChart() {
         const ctx = document.getElementById('revenueByLocationChart');
-        
+
         if (!ctx) return;
-        
+
         const labels = Object.keys(lwpDashboardData.revenueByLocation);
         const values = Object.values(lwpDashboardData.revenueByLocation);
         const bgColors = labels.map(label => lwpDashboardData.locationColors[label] || 'rgba(75, 192, 192, 0.7)');
         const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label] || 'rgba(75, 192, 192, 1)');
-        
+
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -271,7 +349,7 @@
                         beginAtZero: true,
                         ticks: {
                             // Format as currency - assumes USD, update as needed
-                            callback: function(value) {
+                            callback: function (value) {
                                 return new Intl.NumberFormat('en-US', {
                                     style: 'currency',
                                     currency: 'USD',
@@ -285,8 +363,8 @@
                 plugins: {
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                return lwpDashboardData.i18n.revenue + ': ' + 
+                            label: function (context) {
+                                return lwpDashboardData.i18n.revenue + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
                                         currency: 'USD'
@@ -301,5 +379,5 @@
             }
         });
     }
-    
+
 })(jQuery);

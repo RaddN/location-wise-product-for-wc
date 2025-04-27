@@ -2,6 +2,81 @@
 if (!defined('ABSPATH')) exit;
 
 
+
+/**
+ * Add Purchase Price field to WooCommerce product general tab
+ */
+
+// Add the Purchase Price field to the General tab
+add_action('woocommerce_product_options_general_product_data', 'add_purchase_price_field');
+
+function add_purchase_price_field() {
+    global $woocommerce, $post;
+    
+    echo '<div class="options_group pricing">';
+    
+    woocommerce_wp_text_input(
+        array(
+            'id'          => '_purchase_price',
+            'label'       => __('Purchase Price', 'location-wise-products-for-woocommerce') . ' (' . get_woocommerce_currency_symbol() . ')',
+            'desc_tip'    => true,
+            'description' => __('Enter the purchase price for this product.', 'location-wise-products-for-woocommerce'),
+            'type'        => 'number',
+            'custom_attributes' => array(
+                'step' => 'any',
+                'min'  => '0'
+            )
+        )
+    );
+    
+    echo '</div>';
+}
+
+// Save the Purchase Price field value
+add_action('woocommerce_process_product_meta', 'save_purchase_price_field');
+
+function save_purchase_price_field($post_id) {
+    // Verify nonce
+    if (!isset($_POST['location_stock_price_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['location_stock_price_nonce'])), 'location_stock_price_nonce_action')) {
+        return;
+    }
+    $purchase_price = isset($_POST['_purchase_price']) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_price']))) : '';
+    update_post_meta($post_id, '_purchase_price', $purchase_price);
+}
+
+// Add Purchase Price to variable products (if needed)
+add_action('woocommerce_variation_options_pricing', 'add_variation_purchase_price_field', 10, 3);
+
+function add_variation_purchase_price_field($loop, $variation_data, $variation) {
+    woocommerce_wp_text_input(
+        array(
+            'id'            => '_purchase_price[' . $loop . ']',
+            'label'         => __('Purchase Price', 'location-wise-products-for-woocommerce') . ' (' . get_woocommerce_currency_symbol() . ')',
+            'desc_tip'      => true,
+            'description'   => __('Enter the purchase price for this variation.', 'location-wise-products-for-woocommerce'),
+            'value'         => get_post_meta($variation->ID, '_purchase_price', true),
+            'type'          => 'number',
+            'custom_attributes' => array(
+                'step' => 'any',
+                'min'  => '0'
+            ),
+            'wrapper_class' => 'form-row form-row-first'
+        )
+    );
+}
+
+// Save the Purchase Price field value for variable products
+add_action('woocommerce_save_product_variation', 'save_variation_purchase_price_field', 10, 2);
+
+function save_variation_purchase_price_field($variation_id, $loop) {
+    // Verify nonce
+    if (!isset($_POST['location_stock_price_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['location_stock_price_nonce'])), 'location_stock_price_nonce_action')) {
+        return;
+    }
+    $purchase_price = isset($_POST['_purchase_price'][$loop]) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_price'][$loop]))) : '';
+    update_post_meta($variation_id, '_purchase_price', $purchase_price);
+}
+
 // stock manage, price manage, backorder manage
 
 // Add a new product data tab for location-specific settings
@@ -39,13 +114,18 @@ add_action('woocommerce_product_data_panels', function() {
                             <th><?php esc_html_e('Regular Price', 'location-wise-products-for-woocommerce'); ?></th>
                             <th><?php esc_html_e('Sale Price', 'location-wise-products-for-woocommerce'); ?></th>
                             <th><?php esc_html_e('Backorders', 'location-wise-products-for-woocommerce'); ?></th>
+                            
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($locations as $location) : 
+                        <?php 
+                        $regular_price = $product->get_regular_price();
+                        $sale_price = $product->get_sale_price();
+                        foreach ($locations as $location) : 
                             $location_stock = get_post_meta($post->ID, '_location_stock_' . $location->term_id, true);
                             $location_regular_price = get_post_meta($post->ID, '_location_regular_price_' . $location->term_id, true);
                             $location_sale_price = get_post_meta($post->ID, '_location_sale_price_' . $location->term_id, true);
+                            
                             $location_backorders = get_post_meta($post->ID, '_location_backorders_' . $location->term_id, true);
                         ?>
                             <tr>
@@ -56,12 +136,13 @@ add_action('woocommerce_product_data_panels', function() {
                                 </td>
                                 <td>
                                     <input type="text" name="location_regular_price[<?php echo esc_attr($location->term_id); ?>]" 
-                                           value="<?php echo esc_attr($location_regular_price); ?>" class="wc_input_price">
+                                           value="<?php echo esc_attr($location_regular_price?$location_regular_price:($location_regular_price===''?$regular_price:'')); ?>" class="wc_input_price">
                                 </td>
                                 <td>
                                     <input type="text" name="location_sale_price[<?php echo esc_attr($location->term_id); ?>]" 
-                                           value="<?php echo esc_attr($location_sale_price); ?>" class="wc_input_price">
+                                           value="<?php echo esc_attr($location_sale_price?$location_sale_price:($location_sale_price===''?$sale_price:'')); ?>" class="wc_input_price">
                                 </td>
+                                
                                 <td>
                                     <select name="location_backorders[<?php echo esc_attr($location->term_id); ?>]">
                                         <option value="no" <?php selected($location_backorders, 'no'); ?>><?php esc_html_e('No backorders', 'location-wise-products-for-woocommerce'); ?></option>
@@ -256,7 +337,7 @@ function Plugincylwp_get_location_term_id($location_slug) {
     return $location ? $location->term_id : false;
 }
 
-if((get_option('lwp_display_options', ['enable_location_price' => 'yes'])['enable_location_price'] ?? 'yes') === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_price' => 'yes'])['enable_location_price'] ?? 'yes') === 'yes' && !is_admin( )){
 // Override regular price for simple products
 add_filter('woocommerce_product_get_regular_price', function($price, $product) {
     if ($product->is_type('variation')) {
@@ -308,7 +389,7 @@ add_filter('woocommerce_product_get_sale_price', function($price, $product) {
 }, 10, 2);
 }
 
-if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes' && !is_admin( )){
 // Override stock quantity for simple products
 add_filter('woocommerce_product_get_stock_quantity', function($quantity, $product) {
     if ($product->is_type('variation')) {
@@ -336,7 +417,7 @@ add_filter('woocommerce_product_get_stock_quantity', function($quantity, $produc
 }, 10, 2);
 }
 
-if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['enable_location_backorder'] ?? 'yes') === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['enable_location_backorder'] ?? 'yes') === 'yes' && !is_admin( )){
 
 // Override backorder setting for simple products
 add_filter('woocommerce_product_get_backorders', function($backorders, $product) {
@@ -363,7 +444,7 @@ add_filter('woocommerce_product_get_backorders', function($backorders, $product)
     return !empty($location_backorders) ? $location_backorders : $backorders;
 }, 10, 2);
 }
-if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes' && !is_admin( )){
 // Override product stock status based on location stock
 add_filter('woocommerce_product_get_stock_status', function($status, $product) {
     if ($product->is_type('variation')) {
@@ -421,7 +502,7 @@ add_filter('woocommerce_product_get_stock_status', function($status, $product) {
 
 }
 
-if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes' && !is_admin( )){
 
 // Override variation stock
 add_filter('woocommerce_product_variation_get_stock_quantity', function($quantity, $variation) {
@@ -438,7 +519,7 @@ add_filter('woocommerce_product_variation_get_stock_quantity', function($quantit
 }, 10, 2);
 }
 
-if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['enable_location_backorder'] ?? 'yes') === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_backorder' => 'yes'])['enable_location_backorder'] ?? 'yes') === 'yes' && !is_admin( )){
 // Override variation backorders
 add_filter('woocommerce_product_variation_get_backorders', function($backorders, $variation) {
     $location_slug = Plugincylwp_get_current_store_location();
@@ -454,7 +535,7 @@ add_filter('woocommerce_product_variation_get_backorders', function($backorders,
 }, 10, 2);
 }
 
-if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes'){
+if((get_option('lwp_display_options', ['enable_location_stock' => 'yes'])['enable_location_stock'] ?? 'yes') === 'yes' && !is_admin( )){
 // Handle stock reduction when order is placed
 add_action('woocommerce_reduce_order_stock', function($order) {
     $location_slug = Plugincylwp_get_current_store_location();
