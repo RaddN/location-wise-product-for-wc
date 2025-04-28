@@ -218,3 +218,16 @@
     cursor: not-allowed;
     border: 1px solid #ddd !important;
 }
+
+.select2-container--open {
+    z-index: 99999;
+}
+.select2-selection__rendered{
+    text-align: left;
+}
+form#lwp-store-selector-form-modal>div, form#lwp-store-selector-form-modal>select,form#lwp-store-selector-form-modal>.select2 {
+    margin-bottom: 1rem;
+}
+form#lwp-store-selector-form-modal>div * {
+ width: 100% !important;
+}

@@ -545,6 +545,10 @@ class Plugincylwp_Location_Wise_Products
             'title' => __('Select Store Location', 'location-wise-products-for-woocommerce'),
             'show_title' => 'yes',
             'class' => '',
+            'show_button' => '',
+            'use_select2' => '',
+            'herichical' => '',
+            'show_count' => '',
         ], $atts);
 
         $is_user_logged_in = is_user_logged_in();
@@ -1141,12 +1145,6 @@ class Plugincylwp_Location_Wise_Products
             'lwp_filter_settings_section'
         );
 
-        // register_setting(
-        //     'location_stock_settings',
-        //     'lwp_display_options',
-        //     'sanitize_location_stock_options' // Add sanitization callback
-        // );
-
         // Add settings section
         add_settings_section(
             'location_stock_general_section',
@@ -1251,23 +1249,6 @@ class Plugincylwp_Location_Wise_Products
             'location-stock-settings',
             'location_stock_general_section'
         );
-        add_settings_field(
-            'enable_popup',
-            __('Enable Popup', 'location-wise-products-for-woocommerce'),
-            function () {
-                $options = get_option('lwp_display_options', ['enable_popup' => 'yes']);
-                $value = isset($options['enable_popup']) ? $options['enable_popup'] : 'yes';
-        ?>
-            <select name="lwp_display_options[enable_popup]">
-                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
-                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
-            </select>
-            <p class="description"><?php esc_html_e('Enable or disable popup management.', 'location-wise-products-for-woocommerce'); ?></p>
-        <?php
-            },
-            'location-stock-settings',
-            'location_stock_general_section'
-        );
 
         // Add settings for if no location is selected for a product available in all locations or not
         add_settings_field(
@@ -1287,6 +1268,155 @@ class Plugincylwp_Location_Wise_Products
             },
             'location-stock-settings',
             'location_stock_general_section'
+        );
+
+        add_settings_section(
+            'popup_shortcode_manage_section',
+            __('Popup Settings', 'location-wise-products-for-woocommerce'),
+            function () {
+                echo '<p>' . esc_html_e('Configure Popup settings for location-based stock and price management.', 'location-wise-products-for-woocommerce') . '</p>';
+            },
+            'location-popup-shortcode-settings'
+        );
+
+        add_settings_field(
+            'enable_popup',
+            __('Enable Popup', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = get_option('lwp_display_options', ['enable_popup' => 'yes']);
+                $value = isset($options['enable_popup']) ? $options['enable_popup'] : 'yes';
+        ?>
+            <select id="enable_popup" name="lwp_display_options[enable_popup]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
+            </select>
+            <p class="description"><?php esc_html_e('Enable or disable popup management.', 'location-wise-products-for-woocommerce'); ?></p>
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+
+        add_settings_field(
+            'use_select2',
+            __('Use Select2', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = get_option('lwp_display_options', ['use_select2' => 'no']);
+                $value = isset($options['use_select2']) ? $options['use_select2'] : 'no';
+        ?>
+            <select name="lwp_display_options[use_select2]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
+            </select>
+            <p class="description"><?php esc_html_e('Use select2 instead of normal select', 'location-wise-products-for-woocommerce'); ?></p>
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+        add_settings_field(
+            'title_show_popup',
+            __('Title Show in Popup', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = $this->get_display_options();
+                $value = isset($options['title_show_popup']) ? $options['title_show_popup'] : 'yes';
+        ?>
+            <select name="lwp_display_options[title_show_popup]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
+            </select>
+            <p class="description"><?php esc_html_e('Show title in popup modal', 'location-wise-products-for-woocommerce'); ?></p>
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+        add_settings_field(
+            'lwp_popup_title',
+            __('Popup Title', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = $this->get_display_options();
+                $lwp_popup_title = isset($options['lwp_popup_title']) ? $options['lwp_popup_title'] : 'Select Your Store';
+        ?>
+            <input type="text" name="lwp_display_options[lwp_popup_title]" value="<?php echo esc_attr($lwp_popup_title); ?>" class="regular-text">
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+        add_settings_field(
+            'lwp_popup_placeholder',
+            __('Popup Placeholder', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = $this->get_display_options();
+                $lwp_popup_placeholder = isset($options['lwp_popup_placeholder']) ? $options['lwp_popup_placeholder'] : ' -- Select a Store -- ';
+        ?>
+            <input type="text" name="lwp_display_options[lwp_popup_placeholder]" value="<?php echo esc_attr($lwp_popup_placeholder); ?>" class="regular-text">
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+        add_settings_field(
+            'lwp_popup_btn_txt',
+            __('Popup Button Text', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = $this->get_display_options();
+                $lwp_popup_btn_txt = isset($options['lwp_popup_btn_txt']) ? $options['lwp_popup_btn_txt'] : ' ';
+        ?>
+            <input type="text" name="lwp_display_options[lwp_popup_btn_txt]" value="<?php echo esc_attr($lwp_popup_btn_txt); ?>" class="regular-text">
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+        add_settings_field(
+            'herichical',
+            __('Herichical Option', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = $this->get_display_options();
+                $value = isset($options['herichical']) ? $options['herichical'] : 'no';
+        ?>
+            <select id="herichical" name="lwp_display_options[herichical]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="seperately" <?php selected($value, 'seperately'); ?>><?php esc_html_e('Seperately', 'location-wise-products-for-woocommerce'); ?></option>
+            </select>
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+        add_settings_field(
+            'show_count',
+            __('Show Count', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = $this->get_display_options();
+                $value = isset($options['show_count']) ? $options['show_count'] : 'yes';
+        ?>
+            <select name="lwp_display_options[show_count]">
+                <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
+                <option value="no" <?php selected($value, 'no'); ?>><?php esc_html_e('No', 'location-wise-products-for-woocommerce'); ?></option>
+            </select>
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+        add_settings_field(
+            'lwp_popup_custom_css',
+            __('Popup Custom Css', 'location-wise-products-for-woocommerce'),
+            function () {
+                $options = $this->get_display_options();
+                $lwp_popup_custom_css = isset($options['lwp_popup_custom_css']) ? $options['lwp_popup_custom_css'] : null;
+        ?>
+            <textarea style="height: 10rem;"  name="lwp_display_options[lwp_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}">
+            <?php echo esc_attr($lwp_popup_custom_css??null); ?>
+            </textarea>
+        <?php
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
         );
     }
 
@@ -1402,12 +1532,13 @@ class Plugincylwp_Location_Wise_Products
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 
             <div class="lwp-admin-notice">
-                <p><?php esc_html_e('Use this shortcode to show location selector on any page', 'location-wise-products-for-woocommerce'); ?> <code>[store_location_selector title ="", show_title = 'yes', class = ""]</code></p>
+                <p><?php esc_html_e('Use this shortcode to show location selector on any page', 'location-wise-products-for-woocommerce'); ?> <code>[store_location_selector title ="Select Your Store" show_title = "yes" use_select2 = 'yes/no' herichical = 'yes/no/seperately' show_count = 'yes/no' class = ""]</code></p>
             </div>
 
             <div class="nav-tab-wrapper lwp-nav-tabs">
                 <a href="#lwp-display-settings" class="nav-tab nav-tab-active"><?php esc_html_e('Display Settings', 'location-wise-products-for-woocommerce'); ?></a>
                 <a href="#lwp-stock-settings" class="nav-tab"><?php esc_html_e('General', 'location-wise-products-for-woocommerce'); ?></a>
+                <a href="#popup-shortcode-settings" class="nav-tab"><?php esc_html_e('Popup Manage', 'location-wise-products-for-woocommerce'); ?></a>
             </div>
 
             <form method="post" action="options.php">
@@ -1430,6 +1561,14 @@ class Plugincylwp_Location_Wise_Products
                         </div>
                     </div>
                 </div>
+                <div id="popup-shortcode-settings" class="lwp-tab-content" style="display:none;">
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('location-popup-shortcode-settings'); ?>
+                        </div>
+                    </div>
+                </div>
+
 
                 <?php submit_button(); ?>
             </form>
@@ -1975,3 +2114,19 @@ function Plugincylwp_location_wise_products_init()
 }
 
 add_action('plugins_loaded', 'Plugincylwp_location_wise_products_init');
+
+
+
+register_uninstall_hook(__FILE__, 'lwp_settings_remove');
+
+register_activation_hook(__FILE__, 'lwp_settings_remove');
+
+function lwp_settings_remove() {
+    // Check if the option exists and delete it
+    if (get_option('lwp_display_options') !== false) {
+        delete_option('lwp_display_options');
+    }
+}
+
+
+

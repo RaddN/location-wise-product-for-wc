@@ -1,6 +1,6 @@
 jQuery(document).ready(function($) {
     const modal = document.getElementById('lwp-store-selector-modal');
-    const modalDropdown = document.getElementById('lwp-store-selector-modal-dropdown');
+    const modalDropdown = document.getElementById('lwp-selected-store');
     const modalSubmit = document.getElementById('lwp-store-selector-submit');
 
     // Function to check if the cart has products
@@ -48,7 +48,7 @@ jQuery(document).ready(function($) {
     }
 
     $('#lwp-shortcode-selector-form').on('change', function() {
-        const dropdown = $(this).find('.lwp-location-dropdown');
+        const dropdown = $(this).find('#lwp-selected-store-shortcode');
         const selectedStore = dropdown.val();
 
         if (!selectedStore) {

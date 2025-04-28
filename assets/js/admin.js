@@ -181,7 +181,10 @@ jQuery(document).ready(function ($) {
     const $locationintitletable = $('.lwp-location-show-title>table:first');
     const $strict_filtering = $('.lwp-location-show-title>table select#strict_filtering');
     const $strict_table = $('.lwp-location-show-title>table:eq(1)'); // Changed :second to :eq(1)
-
+    const $enable_popup = $('select#enable_popup');
+    const $popup_settings = $('#popup-shortcode-settings table tr:eq(2),#popup-shortcode-settings table tr:eq(3),#popup-shortcode-settings table tr:eq(4),#popup-shortcode-settings table tr:eq(5)');
+    const $herichical = $('#herichical');
+    $herichical_settings =  $('#popup-shortcode-settings table tr:eq(7)');
     function togglelocationintitlesettings($selectoption, $optionvalue, $selecttable) {
         if ($selectoption.val() == $optionvalue) {
             $selecttable.find('tr:not(:first)').hide();
@@ -222,6 +225,25 @@ jQuery(document).ready(function ($) {
     // Listen for changes to the dropdown
     $enableLocationInfo.on('change', toggleUserRoleRow);
 
+    function togglepopupsetting(){
+        if($enable_popup.val()==='no'){
+            $popup_settings.hide();
+        }else{
+            $popup_settings.show();
+        }
+    }
+    togglepopupsetting();
+    $enable_popup.on('change', togglepopupsetting);
+
+    function toggleherichicalsettings(){
+        if($herichical.val()==='no'){
+            $herichical_settings.hide();
+        }else{
+            $herichical_settings.show();
+        }
+    }
+    toggleherichicalsettings();
+    $herichical.on('change', toggleherichicalsettings);
 });
 
 
