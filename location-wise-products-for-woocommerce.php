@@ -4,7 +4,7 @@
  * Plugin Name: Location Wise Products for WooCommerce
  * Plugin URI: https://plugincy.com/location-wise-products-for-woocommerce
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.0
+ * Version: 2.0.0
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: location-wise-products-for-woocommerce
@@ -217,7 +217,7 @@ class Plugincylwp_Location_Wise_Products
             'location-wise-products-for-woocommerces-admin',
             plugin_dir_url(__FILE__) . 'assets/js/admin.js',
             ['jquery'],
-            '1.0.0',
+            '2.0.0',
             true
         );
 
@@ -237,7 +237,7 @@ class Plugincylwp_Location_Wise_Products
             'location-wise-products-for-woocommerces-admin',
             plugin_dir_url(__FILE__) . 'assets/css/admin.css',
             [],
-            '1.0.0'
+            '2.0.0'
         );
     }
 
@@ -465,8 +465,8 @@ class Plugincylwp_Location_Wise_Products
 
     public function enqueue_scripts()
     {
-        wp_enqueue_style('location-wise-products-for-woocommerce', plugins_url('assets/css/style.css', __FILE__), [], '1.0.0');
-        wp_enqueue_script('location-wise-products-for-woocommerce', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.0', true);
+        wp_enqueue_style('location-wise-products-for-woocommerce', plugins_url('assets/css/style.css', __FILE__), [], '2.0.0');
+        wp_enqueue_script('location-wise-products-for-woocommerce', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '2.0.0', true);
 
         wp_localize_script('location-wise-products-for-woocommerce', 'locationWiseProducts', [
             'cartHasProducts' => !WC()->cart->is_empty(),
@@ -698,8 +698,8 @@ class Plugincylwp_Location_Wise_Products
     {
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . 'assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . 'assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.0", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . 'assets/css/dashboard.css', array(), "1.0.0");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . 'assets/js/dashboard.js', array('jquery', 'chart-js'), "2.0.0", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . 'assets/css/dashboard.css', array(), "2.0.0");
 
         // Get all locations
         $locations = get_terms([
@@ -1217,8 +1217,8 @@ class Plugincylwp_Location_Wise_Products
             'enable_location_information',
             __('Enable Location Information', 'location-wise-products-for-woocommerce'),
             function () {
-                $options = get_option('lwp_display_options', ['enable_location_information' => 'yes']);
-                $value = isset($options['enable_location_information']) ? $options['enable_location_information'] : 'yes';
+                $options = get_option('lwp_display_options', ['enable_location_information' => 'no']);
+                $value = isset($options['enable_location_information']) ? $options['enable_location_information'] : 'no';
         ?>
             <select id="enable_location_information" name="lwp_display_options[enable_location_information]">
                 <option value="yes" <?php selected($value, 'yes'); ?>><?php esc_html_e('Yes', 'location-wise-products-for-woocommerce'); ?></option>
@@ -1484,7 +1484,7 @@ class Plugincylwp_Location_Wise_Products
     public function display_format_field_callback()
     {
         $options = $this->get_display_options();
-        $format = isset($options['display_format']) ? $options['display_format'] : 'append';
+        $format = isset($options['display_format']) ? $options['display_format'] : 'none';
         ?>
         <select id="lwp_display_title" name="lwp_display_options[display_format]">
             <option value="append" <?php selected($format, 'append'); ?>><?php esc_html_e('Append to title (Title - Location)', 'location-wise-products-for-woocommerce'); ?></option>
@@ -1583,9 +1583,17 @@ class Plugincylwp_Location_Wise_Products
     private function get_display_options()
     {
         $defaults = [
-            'display_format' => 'append',
+            'display_format' => 'none',
             'separator' => ' - ',
-            'enabled_pages' => ['shop', 'single', 'cart']
+            'enabled_pages' => [],
+            'strict_filtering' => "enabled",
+            'filtered_sections' => ['shop','search','related','recently_viewed','cross_sells','upsells','widgets','blocks','rest_api'],
+            'enable_location_stock' => 'yes',
+            'enable_location_price' => 'yes',
+            'enable_location_backorder' => 'yes',
+            'enable_all_locations' => 'yes',
+            'enable_popup' => 'yes',
+            'title_show_popup' => 'yes',
         ];
         $options = get_option('lwp_display_options', []);
         return wp_parse_args($options, $defaults);
@@ -1772,7 +1780,7 @@ class Plugincylwp_Location_Wise_Products
 
     public function strict_filtering_field_callback()
     {
-        $options = $this->get_filter_options();
+        $options = $this->get_display_options();
         $strict = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
     ?>
         <select id="strict_filtering" name="lwp_display_options[strict_filtering]">
@@ -1785,14 +1793,9 @@ class Plugincylwp_Location_Wise_Products
 
     public function filtered_sections_field_callback()
     {
-        $options = $this->get_filter_options();
+        $options = $this->get_display_options();
         $sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [
-            'shop',
-            'search',
-            'related',
-            'recently_viewed',
-            'cross_sells',
-            'upsells'
+            'shop','search','related','recently_viewed','cross_sells','upsells','widgets','blocks','rest_api'
         ];
 
         $all_sections = [
@@ -1816,19 +1819,9 @@ class Plugincylwp_Location_Wise_Products
 <?php
     }
 
-    private function get_filter_options()
-    {
-        $defaults = [
-            'strict_filtering' => 'enabled',
-            'filtered_sections' => ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells']
-        ];
-        $options = get_option('lwp_display_options', []);
-        return wp_parse_args($options, $defaults);
-    }
-
     private function should_apply_filtering($section)
     {
-        $options = $this->get_filter_options();
+        $options = $this->get_display_options();
         $location = $this->get_current_location();
         if (!$location || $location === 'all-products') {
             return false;
@@ -1963,7 +1956,7 @@ class Plugincylwp_Location_Wise_Products
     }
     function custom_admin_styles()
     {
-        wp_enqueue_style('custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.0");
+        wp_enqueue_style('custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "2.0.0");
     }
 
     /**

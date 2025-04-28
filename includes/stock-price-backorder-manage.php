@@ -840,7 +840,7 @@ add_action( 'wp_footer', function() {
 
             if ( is_wp_error( $terms ) || ! in_array( $location_slug, $terms, true ) ) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('custom-woocommerce-style', false, array(), '1.0.0');
+                wp_register_style('custom-woocommerce-style', false, array(), '2.0.0');
                 wp_enqueue_style('custom-woocommerce-style');
                 wp_add_inline_style('custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -860,7 +860,7 @@ add_action( 'wp_footer', function() {
             }
             if ( is_wp_error( $terms ) || ! in_array( $location_slug, $terms, true ) ) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('custom-woocommerce-style', false, array(), '1.0.0');
+                wp_register_style('custom-woocommerce-style', false, array(), '2.0.0');
                 wp_enqueue_style('custom-woocommerce-style');
                 wp_add_inline_style('custom-woocommerce-style', 'form.cart { display: none; }');
             }
