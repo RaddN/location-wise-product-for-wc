@@ -8,9 +8,9 @@ if (!defined('ABSPATH')) exit;
  */
 
 // Add the Purchase Price field to the General tab
-add_action('woocommerce_product_options_general_product_data', 'add_purchase_price_field');
+add_action('woocommerce_product_options_general_product_data', 'plugincylwp_add_purchase_price_field');
 
-function add_purchase_price_field()
+function plugincylwp_add_purchase_price_field()
 {
     global $woocommerce, $post;
 
@@ -34,9 +34,9 @@ function add_purchase_price_field()
 }
 
 // Save the Purchase Price field value
-add_action('woocommerce_process_product_meta', 'save_purchase_price_field');
+add_action('woocommerce_process_product_meta', 'plugincylwp_save_purchase_price_field');
 
-function save_purchase_price_field($post_id)
+function plugincylwp_save_purchase_price_field($post_id)
 {
     // Verify nonce
     if (!isset($_POST['location_stock_price_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['location_stock_price_nonce'])), 'location_stock_price_nonce_action')) {
@@ -47,9 +47,9 @@ function save_purchase_price_field($post_id)
 }
 
 // Add Purchase Price to variable products (if needed)
-add_action('woocommerce_variation_options_pricing', 'add_variation_purchase_price_field', 10, 3);
+add_action('woocommerce_variation_options_pricing', 'plugincylwp_add_variation_purchase_price_field', 10, 3);
 
-function add_variation_purchase_price_field($loop, $variation_data, $variation)
+function plugincylwp_add_variation_purchase_price_field($loop, $variation_data, $variation)
 {
     woocommerce_wp_text_input(
         array(
@@ -69,9 +69,9 @@ function add_variation_purchase_price_field($loop, $variation_data, $variation)
 }
 
 // Save the Purchase Price field value for variable products
-add_action('woocommerce_save_product_variation', 'save_variation_purchase_price_field', 10, 2);
+add_action('woocommerce_save_product_variation', 'plugincylwp_save_variation_purchase_price_field', 10, 2);
 
-function save_variation_purchase_price_field($variation_id, $loop)
+function plugincylwp_save_variation_purchase_price_field($variation_id, $loop)
 {
     // Verify nonce
     if (!isset($_POST['location_stock_price_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['location_stock_price_nonce'])), 'location_stock_price_nonce_action')) {
