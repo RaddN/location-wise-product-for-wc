@@ -1,7 +1,7 @@
 <?php
 if (!defined('ABSPATH')) exit;
 $options = $this->get_display_options();
-if($options["use_select2"]==="yes"){
+if(isset($options["use_select2"]) && $options["use_select2"]==="yes"){
 ?>
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -10,12 +10,12 @@ if($options["use_select2"]==="yes"){
 <?php } ?>
 <div id="lwp-store-selector-modal" style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-store-selector-content">
-    <?php if($options["title_show_popup"]==="yes"){?>
+    <?php if(isset($options["title_show_popup"]) && $options["title_show_popup"]==="yes"){?>
         <h2><?php esc_html_e($options["lwp_popup_title"] ?? 'Select Your Store', 'location-wise-products-for-woocommerce'); ?></h2><?php }?>
         <form id="lwp-store-selector-form-modal">
             <?php wp_nonce_field('plugincylwp_modal_selector', 'plugincylwp_modal_selector_nonce'); ?>
-            
-            <?php if ($options["herichical"] === "seperately"): ?>
+
+            <?php if (isset($options["herichical"]) && $options["herichical"] === "seperately"): ?>
                 <?php
                 // Organize locations into a hierarchical structure for separate selects
                 $location_hierarchy = array();
@@ -114,7 +114,7 @@ if($options["use_select2"]==="yes"){
                     <option value=""><?php esc_html_e($options["lwp_popup_placeholder"] ?? '-- Select a Store --', 'location-wise-products-for-woocommerce'); ?></option>
                     <?php
                     if (!empty($locations) && !is_wp_error($locations)) {
-                        if ($options["herichical"] === "yes") {
+                        if (isset($options["herichical"]) && $options["herichical"] === "yes") {
                             // Organize locations into a hierarchical structure
                             $parent_locations = array();
                             $child_locations = array();
@@ -172,7 +172,7 @@ if($options["use_select2"]==="yes"){
     </div>
 </div>
 
-<?php if($options["herichical"] === "seperately"): ?>
+<?php if(isset($options["herichical"]) && $options["herichical"] === "seperately"): ?>
 <script>
     jQuery(document).ready(function($) {
         // Store location data
@@ -221,7 +221,7 @@ if($options["use_select2"]==="yes"){
             }
         });
         
-        <?php if($options["use_select2"]==="yes"): ?>
+        <?php if(isset($options["use_select2"]) &&  $options["use_select2"]==="yes"): ?>
         // Initialize Select2 on all dropdowns
         $('.lwp-store-selector-dropdown').select2();
         <?php endif; ?>
@@ -230,7 +230,7 @@ if($options["use_select2"]==="yes"){
 <?php else: ?>
 <script>
     jQuery(document).ready(function($) {
-        <?php if($options["use_select2"]==="yes"): ?>
+        <?php if(isset($options["use_select2"]) && $options["use_select2"]==="yes"): ?>
         // Initialize Select2 on dropdown
         $('#lwp-store-selector-modal-dropdown').select2();
         <?php endif; ?>

@@ -268,3 +268,52 @@ jQuery(document).ready(function($) {
         $(this).toggleClass('closed');
     });
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    function updateLocationRows() {
+        const checkedLocations = Array.from(document.querySelectorAll('#store_locationchecklist input[type="checkbox"]:checked'))
+            .map(checkbox => checkbox.value);
+        
+        const allRows = document.querySelectorAll('tr[id^="location-"]');
+        allRows.forEach(row => {
+            row.style.display = 'none';
+        });
+
+        if (checkedLocations.length === 0) {
+            document.getElementById('plugincy_message').style.display = 'block';
+        } else {
+            document.getElementById('plugincy_message').style.display = 'none';
+            checkedLocations.forEach(locationId => {
+                const row = document.getElementById(`location-${locationId}`);
+                if (row) {
+                    row.style.display = '';
+                }
+            });
+        }
+    }
+
+    function highlightChecklist() {
+        const checklist = document.getElementById('store_locationdiv');
+        checklist.classList.toggle('highlight');
+        checklist.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Remove highlight from others if any checkbox is checked
+        const checkboxes = document.querySelectorAll('#store_locationchecklist input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                checklist.classList.remove('highlight');
+            });
+        });
+    }
+
+    updateLocationRows();
+
+    const checkboxes = document.querySelectorAll('#store_locationchecklist input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateLocationRows);
+    });
+
+    const highlightButton = document.getElementById('highlightButton');
+    highlightButton.addEventListener('click', highlightChecklist);
+});

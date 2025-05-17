@@ -1410,8 +1410,8 @@ class Plugincylwp_Location_Wise_Products
                 $options = $this->get_display_options();
                 $lwp_popup_custom_css = isset($options['lwp_popup_custom_css']) ? $options['lwp_popup_custom_css'] : null;
         ?>
-            <textarea style="height: 10rem;"  name="lwp_display_options[lwp_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}">
-            <?php echo esc_attr($lwp_popup_custom_css??null); ?>
+            <textarea style="height: 10rem;" name="lwp_display_options[lwp_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}">
+            <?php echo esc_attr($lwp_popup_custom_css ?? null); ?>
             </textarea>
         <?php
             },
@@ -1587,7 +1587,7 @@ class Plugincylwp_Location_Wise_Products
             'separator' => ' - ',
             'enabled_pages' => [],
             'strict_filtering' => "enabled",
-            'filtered_sections' => ['shop','search','related','recently_viewed','cross_sells','upsells','widgets','blocks','rest_api'],
+            'filtered_sections' => ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'],
             'enable_location_stock' => 'yes',
             'enable_location_price' => 'yes',
             'enable_location_backorder' => 'yes',
@@ -1795,7 +1795,15 @@ class Plugincylwp_Location_Wise_Products
     {
         $options = $this->get_display_options();
         $sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [
-            'shop','search','related','recently_viewed','cross_sells','upsells','widgets','blocks','rest_api'
+            'shop',
+            'search',
+            'related',
+            'recently_viewed',
+            'cross_sells',
+            'upsells',
+            'widgets',
+            'blocks',
+            'rest_api'
         ];
 
         $all_sections = [
@@ -2114,12 +2122,10 @@ register_uninstall_hook(__FILE__, 'lwp_settings_remove');
 
 register_activation_hook(__FILE__, 'lwp_settings_remove');
 
-function lwp_settings_remove() {
+function lwp_settings_remove()
+{
     // Check if the option exists and delete it
     if (get_option('lwp_display_options') !== false) {
         delete_option('lwp_display_options');
     }
 }
-
-
-
