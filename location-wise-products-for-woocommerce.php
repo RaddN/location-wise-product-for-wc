@@ -13,6 +13,7 @@
  * WC requires at least: 4.0
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Requires Plugins: woocommerce
  */
 
 if (!defined('ABSPATH')) exit;
