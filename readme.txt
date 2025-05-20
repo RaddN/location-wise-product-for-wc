@@ -5,7 +5,7 @@ Requires at least: 5.0
 Requires PHP: 7.2
 Tested up to: 6.8
 WC requires at least: 4.0
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,12 +52,12 @@ Yes, the plugin includes an option to clear the cart automatically when a user s
 
 == Changelog ==
 
-= 2.0.0 =
+= 2.0.1 =
 * Initial release of the Location Wise Products plugin.
 
 == Upgrade Notice ==
 
-= 2.0.0 =
+= 2.0.1 =
 Initial release. Please update to enjoy the latest features and improvements.
 
 == License ==
