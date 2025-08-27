@@ -92,3 +92,6 @@
 .highlight {
         border: 2px solid red; /* Highlight border */
     }
+a.lwp-subtab.lwp-subtab-active {
+    color: #008dff;
+}

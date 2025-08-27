@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) exit;
 
 
-class LWP_Dashboard
+class MULOPIMFWC_Dashboard
 {
     /**
      * Constructor
@@ -22,12 +22,12 @@ class LWP_Dashboard
     {
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "2.0.1", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "2.0.1");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "2.0.3", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "2.0.3");
 
         // Get all locations
         $locations = get_terms([
-            'taxonomy' => 'store_location',
+            'taxonomy' => 'mulopimfwc_store_location',
             'hide_empty' => false,
         ]);
 
@@ -50,7 +50,7 @@ class LWP_Dashboard
                 'posts_per_page' => -1,
                 'tax_query' => [
                     [
-                        'taxonomy' => 'store_location',
+                        'taxonomy' => 'mulopimfwc_store_location',
                         'field' => 'term_id',
                         'terms' => $location->term_id,
                     ]
@@ -173,7 +173,7 @@ class LWP_Dashboard
         // Get monthly investment data
         $monthly_investment_data = $this->get_monthly_investment_data();
 
-        wp_localize_script('lwp-dashboard-js', 'lwpDashboardData', [
+        wp_localize_script('lwp-dashboard-js', 'mulopimfwc_DashboardData', [
             'productCounts' => $product_counts,
             'stockLevels' => $stock_levels,
             'locationColors' => $location_colors,
@@ -185,41 +185,41 @@ class LWP_Dashboard
             'monthlyInvestmentLabels' => $monthly_investment_data['labels'],
             'monthlyInvestmentData' => $monthly_investment_data['data'],
             'i18n' => [
-                'totalStock' => __('Total Stock', 'location-wise-products-for-woocommerce'),
-                'newProducts' => __('New Products', 'location-wise-products-for-woocommerce'),
-                'investment' => __('Investment', 'location-wise-products-for-woocommerce'),
-                'orders' => __('Orders', 'location-wise-products-for-woocommerce'),
-                'revenue' => __('Revenue', 'location-wise-products-for-woocommerce')
+                'totalStock' => __('Total Stock', 'multi-location-product-and-inventory-management'),
+                'newProducts' => __('New Products', 'multi-location-product-and-inventory-management'),
+                'investment' => __('Investment', 'multi-location-product-and-inventory-management'),
+                'orders' => __('Orders', 'multi-location-product-and-inventory-management'),
+                'revenue' => __('Revenue', 'multi-location-product-and-inventory-management')
             ]
         ]);
 
     ?>
         <div class="wrap lwp-dashboard">
-            <h1><?php esc_attr_e('Location Wise Products Dashboard', 'location-wise-products-for-woocommerce'); ?></h1>
+            <h1><?php echo esc_attr_e('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
 
             <div class="lwp-dashboard-overview">
                 <div class="lwp-card lwp-card-stats">
-                    <h2><?php esc_html_e('Quick Stats', 'location-wise-products-for-woocommerce'); ?></h2>
+                    <h2><?php echo esc_html_e('Quick Stats', 'multi-location-product-and-inventory-management'); ?></h2>
                     <div class="lwp-stats-grid">
                         <div class="lwp-stat-item">
                             <span class="lwp-stat-value"><?php echo esc_html(wp_count_posts('product')->publish); ?></span>
-                            <span class="lwp-stat-label"><?php esc_html_e('Total Products', 'location-wise-products-for-woocommerce'); ?></span>
+                            <span class="lwp-stat-label"><?php echo esc_html_e('Total Products', 'multi-location-product-and-inventory-management'); ?></span>
                         </div>
                         <div class="lwp-stat-item">
                             <span class="lwp-stat-value"><?php echo count($locations); ?></span>
-                            <span class="lwp-stat-label"><?php esc_html_e('Locations', 'location-wise-products-for-woocommerce'); ?></span>
+                            <span class="lwp-stat-label"><?php echo esc_html_e('Locations', 'multi-location-product-and-inventory-management'); ?></span>
                         </div>
                         <div class="lwp-stat-item">
                             <span class="lwp-stat-value"><?php echo esc_html(array_sum($orders_by_location)); ?></span>
-                            <span class="lwp-stat-label"><?php esc_html_e('Orders (30 days)', 'location-wise-products-for-woocommerce'); ?></span>
+                            <span class="lwp-stat-label"><?php echo esc_html_e('Orders (30 days)', 'multi-location-product-and-inventory-management'); ?></span>
                         </div>
                         <div class="lwp-stat-item">
                             <span class="lwp-stat-value"><?php echo wp_kses_post(wc_price($this->calculate_total_purchase_value())); ?></span>
-                            <span class="lwp-stat-label"><?php esc_html_e('Total Investment', 'location-wise-products-for-woocommerce'); ?></span>
+                            <span class="lwp-stat-label"><?php echo esc_html_e('Total Investment', 'multi-location-product-and-inventory-management'); ?></span>
                         </div>
                         <div class="lwp-stat-item">
                             <span class="lwp-stat-value"><?php echo wp_kses_post(wc_price(array_sum($location_revenue))); ?></span>
-                            <span class="lwp-stat-label"><?php esc_html_e('Revenue (30 days)', 'location-wise-products-for-woocommerce'); ?></span>
+                            <span class="lwp-stat-label"><?php echo esc_html_e('Revenue (30 days)', 'multi-location-product-and-inventory-management'); ?></span>
                         </div>
                     </div>
                 </div>
@@ -229,7 +229,7 @@ class LWP_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Products by Location', 'location-wise-products-for-woocommerce'); ?></h2>
+                            <h2><?php echo esc_html_e('Products by Location', 'multi-location-product-and-inventory-management'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="locationProductsChart"></canvas>
                             </div>
@@ -237,7 +237,7 @@ class LWP_Dashboard
                     </div>
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Stock Levels by Location', 'location-wise-products-for-woocommerce'); ?></h2>
+                            <h2><?php echo esc_html_e('Stock Levels by Location', 'multi-location-product-and-inventory-management'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="locationStockChart"></canvas>
                             </div>
@@ -248,7 +248,7 @@ class LWP_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Orders by Location (30 days)', 'location-wise-products-for-woocommerce'); ?></h2>
+                            <h2><?php echo esc_html_e('Orders by Location (30 days)', 'multi-location-product-and-inventory-management'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="ordersByLocationChart"></canvas>
                             </div>
@@ -256,7 +256,7 @@ class LWP_Dashboard
                     </div>
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Revenue by Location (30 days)', 'location-wise-products-for-woocommerce'); ?></h2>
+                            <h2><?php echo esc_html_e('Revenue by Location (30 days)', 'multi-location-product-and-inventory-management'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="revenueByLocationChart"></canvas>
                             </div>
@@ -267,7 +267,7 @@ class LWP_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('New Products (Last 30 Days)', 'location-wise-products-for-woocommerce'); ?></h2>
+                            <h2><?php echo esc_html_e('New Products (Last 30 Days)', 'multi-location-product-and-inventory-management'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="newProductsChart"></canvas>
                             </div>
@@ -275,7 +275,7 @@ class LWP_Dashboard
                     </div>
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Investment', 'location-wise-products-for-woocommerce'); ?></h2>
+                            <h2><?php echo esc_html_e('Investment', 'multi-location-product-and-inventory-management'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="investment-30day"></canvas>
                             </div>
@@ -286,21 +286,21 @@ class LWP_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Low Stock Products', 'location-wise-products-for-woocommerce'); ?></h2>
+                            <h2><?php echo esc_html_e('Low Stock Products', 'multi-location-product-and-inventory-management'); ?></h2>
                             <?php if ($low_stock_query->have_posts()) : ?>
                                 <table class="lwp-low-stock-table">
                                     <thead>
                                         <tr>
-                                            <th><?php esc_html_e('Product', 'location-wise-products-for-woocommerce'); ?></th>
-                                            <th><?php esc_html_e('Stock', 'location-wise-products-for-woocommerce'); ?></th>
-                                            <th><?php esc_html_e('Location', 'location-wise-products-for-woocommerce'); ?></th>
+                                            <th><?php echo esc_html_e('Product', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php echo esc_html_e('Stock', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php echo esc_html_e('Location', 'multi-location-product-and-inventory-management'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php while ($low_stock_query->have_posts()) : $low_stock_query->the_post();
                                             $product_id = get_the_ID();
                                             $product = wc_get_product($product_id);
-                                            $product_locations = wp_get_object_terms($product_id, 'store_location');
+                                            $product_locations = wp_get_object_terms($product_id, 'mulopimfwc_store_location');
                                         ?>
                                             <tr>
                                                 <td>
@@ -317,7 +317,7 @@ class LWP_Dashboard
                                                         }, $product_locations);
                                                         echo esc_html(implode(', ', $location_names));
                                                     } else {
-                                                        esc_html_e('Default', 'location-wise-products-for-woocommerce');
+                                                        esc_html_e('Default', 'multi-location-product-and-inventory-management');
                                                     }
                                                     ?>
                                                 </td>
@@ -326,7 +326,7 @@ class LWP_Dashboard
                                     </tbody>
                                 </table>
                             <?php else: ?>
-                                <p><?php esc_html_e('No low stock products found.', 'location-wise-products-for-woocommerce'); ?></p>
+                                <p><?php echo esc_html_e('No low stock products found.', 'multi-location-product-and-inventory-management'); ?></p>
                             <?php endif;
                             wp_reset_postdata(); ?>
                         </div>

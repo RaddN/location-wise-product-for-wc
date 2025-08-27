@@ -2,7 +2,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-class Plugincylwp_Stock_Central
+class mulopimfwc_Stock_Central
 {
     public function __construct() {}
 
@@ -17,15 +17,15 @@ class Plugincylwp_Stock_Central
         require_once plugin_dir_path(__FILE__) . '../includes/class-product-location-table.php';
 
         // Create an instance of our table class
-        $product_table = new Plugincylwp_Product_Location_Table();
+        $product_table = new mulopimfwc_Product_Location_Table();
 
         // Prepare the items to display in the table
         $product_table->prepare_items();
 
 ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Location Wise Products Stock Management', 'location-wise-products-for-woocommerce'); ?></h1>
-            <p><?php esc_html_e('Manage stock levels and prices for each product by location.', 'location-wise-products-for-woocommerce'); ?></p>
+            <h1><?php echo esc_html_e('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management'); ?></h1>
+            <p><?php echo esc_html_e('Manage stock levels and prices for each product by location.', 'multi-location-product-and-inventory-management'); ?></p>
 
             <form method="post">
                 <?php $product_table->search_box('Search Products', 'search_products'); ?>

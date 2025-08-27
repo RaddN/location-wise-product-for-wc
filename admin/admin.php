@@ -2,7 +2,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-class LWP_Admin
+class MULOPIMFWC_Admin
 {
     public function __construct()
     {
@@ -20,32 +20,32 @@ class LWP_Admin
     {
         // Add main menu page
         add_menu_page(
-            __('Location Manage', 'location-wise-products-for-woocommerce'),
-            __('Location Manage', 'location-wise-products-for-woocommerce'),
+            __('Location Manage', 'multi-location-product-and-inventory-management'),
+            __('Location Manage', 'multi-location-product-and-inventory-management'),
             'manage_options',
-            'location-wise-products-for-woocommerce',
-            [new LWP_Dashboard(), 'dashboard_page_content'],
+            'multi-location-product-and-inventory-management',
+            [new MULOPIMFWC_Dashboard(), 'dashboard_page_content'],
             'dashicons-location-alt',
             56
         );
 
         // Add Dashboard submenu (just label, points to same page, no callback)
         add_submenu_page(
-            'location-wise-products-for-woocommerce',
-            __('Dashboard', 'location-wise-products-for-woocommerce'),
-            __('Dashboard', 'location-wise-products-for-woocommerce'),
+            'multi-location-product-and-inventory-management',
+            __('Dashboard', 'multi-location-product-and-inventory-management'),
+            __('Dashboard', 'multi-location-product-and-inventory-management'),
             'manage_options',
-            'location-wise-products-for-woocommerce'
+            'multi-location-product-and-inventory-management'
             // No callback here, so it won't render twice
         );
 
         // Add Locations submenu
         add_submenu_page(
-            'location-wise-products-for-woocommerce',
-            __('Locations', 'location-wise-products-for-woocommerce'),
-            __('Locations', 'location-wise-products-for-woocommerce'),
+            'multi-location-product-and-inventory-management',
+            __('Locations', 'multi-location-product-and-inventory-management'),
+            __('Locations', 'multi-location-product-and-inventory-management'),
             'manage_options',
-            'edit-tags.php?taxonomy=store_location&post_type=product',
+            'edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product',
             null,
             56
         );
@@ -54,8 +54,8 @@ class LWP_Admin
         add_filter('parent_file', function ($parent_file) {
             global $pagenow, $taxonomy;
 
-            if ($pagenow === 'edit-tags.php' && $taxonomy === 'store_location') {
-                $parent_file = 'location-wise-products-for-woocommerce';
+            if ($pagenow === 'edit-tags.php' && $taxonomy === 'mulopimfwc_store_location') {
+                $parent_file = 'multi-location-product-and-inventory-management';
             }
 
             return $parent_file;
@@ -65,8 +65,8 @@ class LWP_Admin
         add_filter('submenu_file', function ($submenu_file) {
             global $pagenow, $taxonomy;
 
-            if ($pagenow === 'edit-tags.php' && $taxonomy === 'store_location') {
-                $submenu_file = 'edit-tags.php?taxonomy=store_location&post_type=product';
+            if ($pagenow === 'edit-tags.php' && $taxonomy === 'mulopimfwc_store_location') {
+                $submenu_file = 'edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product';
             }
 
             return $submenu_file;
@@ -74,22 +74,22 @@ class LWP_Admin
 
         // add Stock Central submenu
         add_submenu_page(
-            'location-wise-products-for-woocommerce',
-            __('Stock Central', 'location-wise-products-for-woocommerce'),
-            __('Stock Central', 'location-wise-products-for-woocommerce'),
+            'multi-location-product-and-inventory-management',
+            __('Stock Central', 'multi-location-product-and-inventory-management'),
+            __('Stock Central', 'multi-location-product-and-inventory-management'),
             'manage_options',
             'location-stock-management',
-            [new Plugincylwp_Stock_Central(), 'location_stock_page_content']
+            [new mulopimfwc_Stock_Central(), 'location_stock_page_content']
         );
 
         // Add Settings submenu
         add_submenu_page(
-            'location-wise-products-for-woocommerce',
-            __('Settings', 'location-wise-products-for-woocommerce'),
-            __('Settings', 'location-wise-products-for-woocommerce'),
+            'multi-location-product-and-inventory-management',
+            __('Settings', 'multi-location-product-and-inventory-management'),
+            __('Settings', 'multi-location-product-and-inventory-management'),
             'manage_options',
-            'location-wise-products-for-woocommerce-settings',
-            [new Location_Wise_Products_Settings(), 'settings_page_content']
+            'multi-location-product-and-inventory-management-settings',
+            [new mulopimfwc_settings(), 'settings_page_content']
         );
     }
     /**
@@ -106,7 +106,7 @@ class LWP_Admin
             $new_columns[$column_name] = $column_info;
 
             if ('order_status' === $column_name) {
-                $new_columns['store_location'] = __('Store Location', 'location-wise-products-for-woocommerce');
+                $new_columns['mulopimfwc_store_location'] = __('Store Location', 'multi-location-product-and-inventory-management');
             }
         }
 
@@ -120,7 +120,7 @@ class LWP_Admin
      */
     public function display_location_column_content($column, $order)
     {
-        if ($column == 'store_location') {
+        if ($column == 'mulopimfwc_store_location') {
             $location = $order->get_meta('_store_location');
             echo esc_html($location ? ucfirst(strtolower($location)) : '—');
         }
@@ -134,7 +134,7 @@ class LWP_Admin
 
         add_meta_box(
             'wc_store_location_metabox',
-            __('Store Location', 'location-wise-products-for-woocommerce'),
+            __('Store Location', 'multi-location-product-and-inventory-management'),
             array($this, 'render_location_metabox'),
             $screen,
             'side',
@@ -184,24 +184,24 @@ class LWP_Admin
         if (!empty($location)) {
             echo '<p>' . esc_html(ucfirst(strtolower($location))) . '</p>';
         } else {
-            echo '<p>' . esc_html__('No location data available', 'location-wise-products-for-woocommerce') . '</p>';
+            echo '<p>' . esc_html__('No location data available', 'multi-location-product-and-inventory-management') . '</p>';
         }
 
         echo '</div>';
     }
     public function register_store_location_taxonomy()
     {
-        register_taxonomy('store_location', 'product', [
+        register_taxonomy('mulopimfwc_store_location', 'product', [
             'labels' => [
-                'name' => __('locations', 'location-wise-products-for-woocommerce'),
-                'singular_name' => __('Store Location', 'location-wise-products-for-woocommerce'),
-                'search_items' => __('Search Store Locations', 'location-wise-products-for-woocommerce'),
-                'all_items' => __('All Store Locations', 'location-wise-products-for-woocommerce'),
-                'edit_item' => __('Edit Store Location', 'location-wise-products-for-woocommerce'),
-                'update_item' => __('Update Store Location', 'location-wise-products-for-woocommerce'),
-                'add_new_item' => __('Add New Store Location', 'location-wise-products-for-woocommerce'),
-                'new_item_name' => __('New Store Location Name', 'location-wise-products-for-woocommerce'),
-                'menu_name' => __('Store Locations', 'location-wise-products-for-woocommerce'),
+                'name' => __('locations', 'multi-location-product-and-inventory-management'),
+                'singular_name' => __('Store Location', 'multi-location-product-and-inventory-management'),
+                'search_items' => __('Search Store Locations', 'multi-location-product-and-inventory-management'),
+                'all_items' => __('All Store Locations', 'multi-location-product-and-inventory-management'),
+                'edit_item' => __('Edit Store Location', 'multi-location-product-and-inventory-management'),
+                'update_item' => __('Update Store Location', 'multi-location-product-and-inventory-management'),
+                'add_new_item' => __('Add New Store Location', 'multi-location-product-and-inventory-management'),
+                'new_item_name' => __('New Store Location Name', 'multi-location-product-and-inventory-management'),
+                'menu_name' => __('Store Locations', 'multi-location-product-and-inventory-management'),
             ],
             'hierarchical' => true,
             'show_ui' => true,

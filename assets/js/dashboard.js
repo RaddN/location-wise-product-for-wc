@@ -13,7 +13,7 @@
      */
     function initDashboardCharts() {
         // Get data from the localized script
-        const data = window.lwpDashboardData;
+        const data = window.mulopimfwc_DashboardData;
 
         if (!data) {
             console.error('Dashboard data not available');
@@ -36,10 +36,10 @@
 
         if (!ctx) return;
 
-        const labels = Object.keys(lwpDashboardData.productCounts);
-        const values = Object.values(lwpDashboardData.productCounts);
-        const bgColors = labels.map(label => lwpDashboardData.locationColors[label]);
-        const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label]);
+        const labels = Object.keys(mulopimfwc_DashboardData.productCounts);
+        const values = Object.values(mulopimfwc_DashboardData.productCounts);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label]);
+        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label]);
 
         new Chart(ctx, {
             type: 'pie',
@@ -93,10 +93,10 @@
 
         if (!ctx) return;
 
-        const labels = Object.keys(lwpDashboardData.stockLevels);
-        const values = Object.values(lwpDashboardData.stockLevels);
-        const bgColors = labels.map(label => lwpDashboardData.locationColors[label]);
-        const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label]);
+        const labels = Object.keys(mulopimfwc_DashboardData.stockLevels);
+        const values = Object.values(mulopimfwc_DashboardData.stockLevels);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label]);
+        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label]);
 
         new Chart(ctx, {
             type: 'line',
@@ -104,7 +104,7 @@
                 labels: labels,
 
                 datasets: [{
-                    label: lwpDashboardData.i18n.totalStock,
+                    label: mulopimfwc_DashboardData.i18n.totalStock,
                     data: values,
                     backgroundColor: bgColors,
                     borderColor: borderColors,
@@ -142,10 +142,10 @@
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: lwpDashboardData.dateLabels,
+                labels: mulopimfwc_DashboardData.dateLabels,
                 datasets: [{
-                    label: lwpDashboardData.i18n.newProducts,
-                    data: lwpDashboardData.dateCounts,
+                    label: mulopimfwc_DashboardData.i18n.newProducts,
+                    data: mulopimfwc_DashboardData.dateCounts,
                     fill: {
                         target: 'origin',
                         above: 'rgba(78, 84, 200, 0.1)'
@@ -196,10 +196,10 @@
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: lwpDashboardData.monthlyInvestmentLabels,
+                labels: mulopimfwc_DashboardData.monthlyInvestmentLabels,
                 datasets: [{
-                    label: lwpDashboardData.i18n.investment,
-                    data: lwpDashboardData.monthlyInvestmentData,
+                    label: mulopimfwc_DashboardData.i18n.investment,
+                    data: mulopimfwc_DashboardData.monthlyInvestmentData,
                     fill: {
                         target: 'origin',
                         above: 'rgba(78, 84, 200, 0.1)'
@@ -270,10 +270,10 @@
 
         if (!ctx) return;
 
-        const labels = Object.keys(lwpDashboardData.ordersByLocation);
-        const values = Object.values(lwpDashboardData.ordersByLocation);
-        const bgColors = labels.map(label => lwpDashboardData.locationColors[label] || 'rgba(153, 102, 255, 0.7)');
-        const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label] || 'rgba(153, 102, 255, 1)');
+        const labels = Object.keys(mulopimfwc_DashboardData.ordersByLocation);
+        const values = Object.values(mulopimfwc_DashboardData.ordersByLocation);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(153, 102, 255, 0.7)');
+        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(153, 102, 255, 1)');
 
         new Chart(ctx, {
             type: 'doughnut',
@@ -304,7 +304,7 @@
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const value = context.raw;
                                 const percentage = Math.round((value / total) * 100);
-                                return `${context.label}: ${value} ${lwpDashboardData.i18n.orders} (${percentage}%)`;
+                                return `${context.label}: ${value} ${mulopimfwc_DashboardData.i18n.orders} (${percentage}%)`;
                             }
                         },
                         backgroundColor: 'rgba(0,0,0,0.8)',
@@ -324,17 +324,17 @@
 
         if (!ctx) return;
 
-        const labels = Object.keys(lwpDashboardData.revenueByLocation);
-        const values = Object.values(lwpDashboardData.revenueByLocation);
-        const bgColors = labels.map(label => lwpDashboardData.locationColors[label] || 'rgba(75, 192, 192, 0.7)');
-        const borderColors = labels.map(label => lwpDashboardData.locationBorderColors[label] || 'rgba(75, 192, 192, 1)');
+        const labels = Object.keys(mulopimfwc_DashboardData.revenueByLocation);
+        const values = Object.values(mulopimfwc_DashboardData.revenueByLocation);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(75, 192, 192, 0.7)');
+        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(75, 192, 192, 1)');
 
         new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: lwpDashboardData.i18n.revenue,
+                    label: mulopimfwc_DashboardData.i18n.revenue,
                     data: values,
                     backgroundColor: bgColors,
                     borderColor: borderColors,
@@ -364,7 +364,7 @@
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                return lwpDashboardData.i18n.revenue + ': ' +
+                                return mulopimfwc_DashboardData.i18n.revenue + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
                                         currency: 'USD'

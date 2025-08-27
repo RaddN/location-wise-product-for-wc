@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
  * Product Location Table Class
  * Extends the WP_List_Table class to create a custom table for showing products with location data
  */
-class Plugincylwp_Product_Location_Table extends WP_List_Table
+class mulopimfwc_Product_Location_Table extends WP_List_Table
 {
 
     /**
@@ -39,14 +39,14 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
     {
         return [
             'cb'            => '<input type="checkbox" />',
-            'image'         => __('Image', 'location-wise-products-for-woocommerce'),
-            'title'         => __('Product', 'location-wise-products-for-woocommerce'),
-            'stock'         => __('Stock by Location', 'location-wise-products-for-woocommerce'),
-            'price'         => __('Price by Location', 'location-wise-products-for-woocommerce'),
-            'purchase_price' => __('Purchase Price', 'location-wise-products-for-woocommerce'),
-            'gross_profit'   => __('Gross Profit', 'location-wise-products-for-woocommerce'),
-            'locations'     => __('Locations', 'location-wise-products-for-woocommerce'),
-            'actions'       => __('Actions', 'location-wise-products-for-woocommerce'),
+            'image'         => __('Image', 'multi-location-product-and-inventory-management'),
+            'title'         => __('Product', 'multi-location-product-and-inventory-management'),
+            'stock'         => __('Stock by Location', 'multi-location-product-and-inventory-management'),
+            'price'         => __('Price by Location', 'multi-location-product-and-inventory-management'),
+            'purchase_price' => __('Purchase Price', 'multi-location-product-and-inventory-management'),
+            'gross_profit'   => __('Gross Profit', 'multi-location-product-and-inventory-management'),
+            'locations'     => __('Locations', 'multi-location-product-and-inventory-management'),
+            'actions'       => __('Actions', 'multi-location-product-and-inventory-management'),
         ];
     }
 
@@ -111,8 +111,8 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
     {
         $title = '<strong><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . esc_html($item['title']) . '</a></strong>';
         $title .= '<div class="row-actions">';
-        $title .= '<span class="edit"><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . __('Edit', 'location-wise-products-for-woocommerce') . '</a> | </span>';
-        $title .= '<span class="view"><a href="' . esc_url(get_permalink($item['id'])) . '">' . __('View', 'location-wise-products-for-woocommerce') . '</a></span>';
+        $title .= '<span class="edit"><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . __('Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
+        $title .= '<span class="view"><a href="' . esc_url(get_permalink($item['id'])) . '">' . __('View', 'multi-location-product-and-inventory-management') . '</a></span>';
         $title .= '</div>';
         return $title;
     }
@@ -134,15 +134,15 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 $output .= '<div class="variation-stock-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="location-stock-item">';
-                $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
-                $output .= '<span class="stock-value">' . __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($variation['stock']) . ')</span>';
+                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                $output .= '<span class="stock-value">' . __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($variation['stock']) . ')</span>';
                 $output .= '</div>';
                 if (!empty($item['location_terms'])) {
                     foreach ($item['location_terms'] as $location) {
                         $stock = get_post_meta($variation['id'], '_location_stock_' . $location->term_id, true);
                         $output .= '<div class="location-stock-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                        $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'location-wise-products-for-woocommerce')) . '</span>';
+                        $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
                         $output .= '</div>';
                     }
                 }
@@ -151,15 +151,15 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
         } else {
             $default_stock = get_post_meta($item['id'], "_stock", true);
             $output .= '<div class="location-stock-item">';
-            $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
-            $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'location-wise-products-for-woocommerce')) . '</span>';
+            $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+            $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
             $output .= '</div>';
             if (!empty($item['location_terms'])) {
                 foreach ($item['location_terms'] as $location) {
                     $stock = get_post_meta($item['id'], '_location_stock_' . $location->term_id, true);
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                    $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'location-wise-products-for-woocommerce') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'location-wise-products-for-woocommerce')) . '</span>';
+                    $output .= '<span class="stock-value">' . (!empty($stock) ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
                     $output .= '</div>';
                 }
             }
@@ -185,7 +185,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 $output .= '<div class="variation-price-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="location-price-item">';
-                $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
+                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
                 $output .= '<span class="price-value">' . wc_price($variation['price']) . '</span>';
                 $output .= '</div>';
                 if (!empty($item['location_terms'])) {
@@ -202,7 +202,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
         } else {
             $default_price = get_post_meta($item['id'], "_price", true);
             $output .= '<div class="location-price-item">';
-            $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
+            $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
             $output .= '<span class="price-value">' . wc_price($default_price) . '</span>';
             $output .= '</div>';
             if (!empty($item['location_terms'])) {
@@ -240,14 +240,14 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 $output .= '<div class="variation-purchase-price-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="purchase-price-item">';
-                $output .= '<span class="purchase-price-value">' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'location-wise-products-for-woocommerce')) . '</span>';
+                $output .= '<span class="purchase-price-value">' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
                 $output .= '</div>';
                 $output .= '</div>';
             }
         } else {
             $purchase_price = get_post_meta($item['id'], '_purchase_price', true);
             $output .= '<div class="purchase-price-item">';
-            $output .= '<span class="purchase-price-value">' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'location-wise-products-for-woocommerce')) . '</span>';
+            $output .= '<span class="purchase-price-value">' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
             $output .= '</div>';
         }
 
@@ -279,7 +279,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
 
                 // Default gross profit
                 $output .= '<div class="location-gross-profit-item">';
-                $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
+                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
                 $output .= $this->calculate_profit_display($default_price, $purchase_price);
                 $output .= '</div>';
 
@@ -304,7 +304,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
 
             // Default gross profit
             $output .= '<div class="location-gross-profit-item">';
-            $output .= '<span class="location-name">' . __('Default', 'location-wise-products-for-woocommerce') . ':</span> ';
+            $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
             $output .= $this->calculate_profit_display($default_price, $purchase_price);
             $output .= '</div>';
 
@@ -350,7 +350,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 $gross_profit . ' <span class="profit-percentage">(' . $gross_profit_percentage . ')</span></span>';
         }
 
-        return '<span class="gross-profit-value no-data">' . __('N/A', 'location-wise-products-for-woocommerce') . '</span>';
+        return '<span class="gross-profit-value no-data">' . __('N/A', 'multi-location-product-and-inventory-management') . '</span>';
     }
 
     /**
@@ -363,7 +363,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
     {
         $locations = $item['location_terms'];
         if (empty($locations)) {
-            return '<span class="no-locations">' . __('N/A', 'location-wise-products-for-woocommerce') . '</span>';
+            return '<span class="no-locations">' . __('N/A', 'multi-location-product-and-inventory-management') . '</span>';
         }
         $output = '<div class="product-locations">';
         foreach ($locations as $location) {
@@ -386,13 +386,13 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
 
         $locations = $item['location_terms'];
         if (empty($locations)) {
-            return '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Add to Location', 'location-wise-products-for-woocommerce') . '</a>';
+            return '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Add to Location', 'multi-location-product-and-inventory-management') . '</a>';
         }
         $output = '<div class="location-actions">';
         foreach ($locations as $location) {
             $is_active = !get_post_meta($item['id'], '_location_disabled_' . $location->term_id, true);
             $action_class = $is_active ? 'deactivate-location' : 'activate-location';
-            $action_text = $is_active ? __('Deactivate', 'location-wise-products-for-woocommerce') : __('Activate', 'location-wise-products-for-woocommerce');
+            $action_text = $is_active ? __('Deactivate', 'multi-location-product-and-inventory-management') : __('Activate', 'multi-location-product-and-inventory-management');
             $button_class = $is_active ? 'button-secondary' : 'button-primary';
 
             $output .= '<div class="location-action-item">';
@@ -405,7 +405,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 esc_html($action_text) . '</a>';
             $output .= '</div>';
         }
-        $output .= '<a href="#" style="text-align: center; background: #2271b1; color: #fff;" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Edit Location', 'location-wise-products-for-woocommerce') . '</a>';
+        $output .= '<a href="#" style="text-align: center; background: #2271b1; color: #fff;" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Edit Location', 'multi-location-product-and-inventory-management') . '</a>';
         $output .= '</div>';
         return $output;
     }
@@ -436,7 +436,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
         }
 
         // Add location filter if set - verify nonce first if filter action is being submitted
-        if (isset($_REQUEST['filter_action']) && $_REQUEST['filter_action'] == __('Filter', 'location-wise-products-for-woocommerce')) {
+        if (isset($_REQUEST['filter_action']) && $_REQUEST['filter_action'] == __('Filter', 'multi-location-product-and-inventory-management')) {
             // Verify the nonce
             if (
                 isset($_REQUEST['_wpnonce']) &&
@@ -446,7 +446,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 if (isset($_REQUEST['filter-by-location']) && !empty($_REQUEST['filter-by-location'])) {
                     $args['tax_query'] = [
                         [
-                            'taxonomy' => 'store_location',
+                            'taxonomy' => 'mulopimfwc_store_location',
                             'field'    => 'slug',
                             'terms'    => sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])),
                         ],
@@ -457,7 +457,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
             // For direct URL access with filters
             $args['tax_query'] = [
                 [
-                    'taxonomy' => 'store_location',
+                    'taxonomy' => 'mulopimfwc_store_location',
                     'field'    => 'slug',
                     'terms'    => sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])),
                 ],
@@ -480,7 +480,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 $thumbnail = $product->get_image('thumbnail', ['class' => 'product-thumbnail']);
 
                 // Get product locations
-                $location_terms = wp_get_object_terms($product_id, 'store_location');
+                $location_terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location');
 
                 // Get product type
                 $product_type = $product->get_type();
@@ -541,14 +541,14 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
     {
         if ($which == 'top') {
             $locations = get_terms([
-                'taxonomy' => 'store_location',
+                'taxonomy' => 'mulopimfwc_store_location',
                 'hide_empty' => false,
             ]);
 
             if (!is_wp_error($locations) && !empty($locations)) {
                 echo '<div class="alignleft actions">';
                 echo '<select name="filter-by-location">';
-                echo '<option value="">' . esc_html__('All Locations', 'location-wise-products-for-woocommerce') . '</option>';
+                echo '<option value="">' . esc_html__('All Locations', 'multi-location-product-and-inventory-management') . '</option>';
 
                 foreach ($locations as $location) {
                     if (
@@ -567,7 +567,7 @@ class Plugincylwp_Product_Location_Table extends WP_List_Table
                 // Add nonce field for the filter form - using the built-in WP_List_Table nonce
                 wp_nonce_field('bulk-' . $this->_args['plural']);
 
-                echo '<input type="submit" name="filter_action" id="filter-by-location-submit" class="button" value="' . esc_attr__('Filter', 'location-wise-products-for-woocommerce') . '">';
+                echo '<input type="submit" name="filter_action" id="filter-by-location-submit" class="button" value="' . esc_attr__('Filter', 'multi-location-product-and-inventory-management') . '">';
                 echo '</div>';
             }
         }

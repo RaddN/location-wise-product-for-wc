@@ -1,11 +1,11 @@
-=== Location Wise Products for WooCommerce ===
+=== Multi Location Product & Inventory Management for WooCommerce Pro ===
 Contributors: plugincy
 Tags: woocommerce, products, location, filter, store
 Requires at least: 5.0
 Requires PHP: 7.2
 Tested up to: 6.8
 WC requires at least: 4.0
-Stable tag: 2.0.1
+Stable tag: 2.0.3
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ Filter WooCommerce products by store locations with a location selector for cust
 
 == Installation ==
 
-1. Upload the `location-wise-products-for-woocommerces` folder to the `/wp-content/plugins/` directory.
+1. Upload the `multi-location-product-and-inventory-managements` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Configure the plugin settings under WooCommerce -> Store Locations Settings.
 
@@ -52,12 +52,12 @@ Yes, the plugin includes an option to clear the cart automatically when a user s
 
 == Changelog ==
 
-= 2.0.1 =
+= 2.0.3 =
 * Initial release of the Location Wise Products plugin.
 
 == Upgrade Notice ==
 
-= 2.0.1 =
+= 2.0.3 =
 Initial release. Please update to enjoy the latest features and improvements.
 
 == License ==

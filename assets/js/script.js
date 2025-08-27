@@ -6,7 +6,7 @@ jQuery(document).ready(function($) {
     // Function to check if the cart has products
     function checkCartHasProducts(callback) {
         $.ajax({
-            url: '/wp-admin/admin-ajax.php',
+            url: mulopimfwc_locationWiseProducts.ajaxUrl,
             method: 'POST',
             data: { action: 'check_cart_products' },
             success: function(response) {
@@ -21,7 +21,7 @@ jQuery(document).ready(function($) {
     // Function to clear the cart and reload the page
     function clearCartAndReload() {
         $.ajax({
-            url: '/wp-admin/admin-ajax.php',
+            url: mulopimfwc_locationWiseProducts.ajaxUrl,
             method: 'POST',
             data: { action: 'clear_cart' },
             success: function() {
@@ -38,7 +38,7 @@ jQuery(document).ready(function($) {
         modalSubmit.addEventListener('click', function() {
             const selectedStore = modalDropdown.value;
             if (selectedStore) {
-                document.cookie = "store_location=" + selectedStore + "; path=/";
+                document.cookie = "mulopimfwc_store_location=" + selectedStore + "; path=/";
                 modal.style.display = 'none';
                 location.reload();
             } else {
@@ -57,7 +57,7 @@ jQuery(document).ready(function($) {
         }
 
         if (selectedStore === 'all-products') {
-            document.cookie = "store_location=all-products; path=/";
+            document.cookie = "mulopimfwc_store_location=all-products; path=/";
             location.reload();
             return;
         }
@@ -67,13 +67,13 @@ jQuery(document).ready(function($) {
             if (cartHasProducts) {
                 const confirmChange = confirm("Do you want to change the store location? Your cart will be emptied.");
                 if (!confirmChange) {
-                    dropdown.val(getCookie('store_location') || '');
+                    dropdown.val(getCookie('mulopimfwc_store_location') || '');
                     return;
                 }
             }
 
             // Set the cookie and clear the cart
-            document.cookie = "store_location=" + selectedStore + "; path=/";
+            document.cookie = "mulopimfwc_store_location=" + selectedStore + "; path=/";
             clearCartAndReload();
         });
     });

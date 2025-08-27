@@ -1,22 +1,17 @@
-<?php 
+<?php
 
 if (!defined('ABSPATH')) exit;
 // Template for the store location selector shortcode
 ?>
 
-<?php if($atts["use_select2"]==="yes"){ ?>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<?php } ?>
-
 <div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>">
     <?php if ($atts['show_title'] === 'yes'): ?>
         <h3 class="lwp-shortcode-title"><?php echo esc_html($atts['title']); ?></h3>
     <?php endif; ?>
-    
+
     <form id="lwp-shortcode-selector-form" class="lwp-selector-form">
-        <?php wp_nonce_field('plugincylwp_shortcode_selector', 'plugincylwp_shortcode_selector_nonce'); ?>
-        
+        <?php wp_nonce_field('mulopimfwc_shortcode_selector', 'mulopimfwc_shortcode_selector_nonce'); ?>
+
         <?php if ($atts["herichical"] === "seperately"): ?>
             <?php
             // Organize locations into a hierarchical structure for separate selects
@@ -45,7 +40,7 @@ if (!defined('ABSPATH')) exit;
             }
 
             // Calculate depth for each location
-            $calculate_depth = function($location_id, $current_depth = 0) use (&$calculate_depth, &$depth_map, &$parent_children_map, &$max_depth) {
+            $calculate_depth = function ($location_id, $current_depth = 0) use (&$calculate_depth, &$depth_map, &$parent_children_map, &$max_depth) {
                 $depth_map[$location_id] = $current_depth;
                 if ($current_depth > $max_depth) {
                     $max_depth = $current_depth;
@@ -77,28 +72,29 @@ if (!defined('ABSPATH')) exit;
             }
 
             // Convert locations to JSON for JavaScript
-            $locations_json = json_encode($locations);
-            $parent_children_json = json_encode($parent_children_map);
-            $child_counts_json = json_encode($child_counts);
+            $locations_json = wp_json_encode($locations);
+            $parent_children_json = wp_json_encode($parent_children_map);
+            $child_counts_json = wp_json_encode($child_counts);
 
             // Generate separate dropdowns for each level
             for ($level = 0; $level <= $max_depth; $level++):
                 $select_id = "lwp-shortcode-selector-level-{$level}";
-                $placeholder = $level == 0 ? ($atts['placeholder'] ?? '-- Select a Store --') : sprintf(__('-- Select %s --', 'location-wise-products-for-woocommerce'), ($level == 1 ? 'Area' : 'Sub-area'));
+                // translators: %s: The name of the location level (e.g., Area, Sub-area)
+                $placeholder = $level == 0 ? ($atts['placeholder'] ?? '-- Select a Store --') : sprintf(__('-- Select %s --', 'multi-location-product-and-inventory-management'), ($level == 1 ? 'Area' : 'Sub-area'));
             ?>
-                <div class="lwp-select-container level-<?php echo $level; ?>" <?php echo $level > 0 ? 'style="display:none;"' : ''; ?>>
-                    <select id="<?php echo $select_id; ?>" class="lwp-shortcode-selector-dropdown" data-level="<?php echo $level; ?>">
-                        <option value=""><?php esc_html_e($placeholder, 'location-wise-products-for-woocommerce'); ?></option>
-                        
-                        <?php if ($level == 0 && $is_admin_or_manager): ?>
+                <div class="lwp-select-container level-<?php echo esc_html($level); ?>" <?php echo $level > 0 ? 'style="display:none;"' : ''; ?>>
+                    <select id="<?php echo esc_html($select_id); ?>" class="lwp-shortcode-selector-dropdown" data-level="<?php echo esc_html($level); ?>">
+                        <option value=""><?php echo esc_html($placeholder); ?></option>
+
+                        <?php if ($level == 0 && $is_admin_or_manager && $show_all_products_admin === 'yes'): ?>
                             <option value="all-products" <?php echo ($selected_location === 'all-products') ? 'selected' : ''; ?>>
-                                <?php esc_html_e('All Products', 'location-wise-products-for-woocommerce'); ?>
+                                <?php echo esc_html_e('All Products', 'multi-location-product-and-inventory-management'); ?>
                             </option>
                         <?php endif; ?>
-                        
+
                         <?php if ($level == 0 && !empty($location_hierarchy[0])): ?>
                             <?php foreach ($location_hierarchy[0] as $location): ?>
-                                <?php 
+                                <?php
                                 $child_count = isset($child_counts[$location->term_id]) ? $child_counts[$location->term_id] : 0;
                                 $display_name = esc_html($location->name);
                                 if ($show_count && $child_count > 0) {
@@ -106,30 +102,30 @@ if (!defined('ABSPATH')) exit;
                                 }
                                 $selected = ($location->slug === $selected_location) ? 'selected' : '';
                                 ?>
-                                <option value="<?php echo esc_attr($location->slug); ?>" 
-                                        data-term-id="<?php echo esc_attr($location->term_id); ?>"
-                                        <?php echo $selected; ?>>
-                                    <?php echo $display_name; ?>
+                                <option value="<?php echo esc_attr($location->slug); ?>"
+                                    data-term-id="<?php echo esc_attr($location->term_id); ?>"
+                                    <?php echo esc_html($selected); ?>>
+                                    <?php echo esc_html($display_name); ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
                 </div>
             <?php endfor; ?>
-            <input type="hidden" id="lwp-selected-store-shortcode" name="lwp_selected_store" value="<?php echo esc_attr($selected_location); ?>">
-        
+            <input type="hidden" id="lwp-selected-store-shortcode" name="mulopimfwc_selected_store" value="<?php echo esc_attr($selected_location); ?>">
+
         <?php else: ?>
             <!-- Single dropdown implementation -->
             <select id="lwp-shortcode-selector" class="lwp-location-dropdown">
-                <option value=""><?php esc_html_e($atts['placeholder'] ?? '-- Select a Store --', 'location-wise-products-for-woocommerce'); ?></option>
-                
-                <?php if ($is_admin_or_manager): ?>
+                <option value=""><?php echo esc_html($atts['placeholder'] ?? '-- Select a Store --'); ?></option>
+
+                <?php if ($is_admin_or_manager && $show_all_products_admin === 'yes'): ?>
                     <?php $selected = ($selected_location === 'all-products') ? 'selected' : ''; ?>
-                    <option value="all-products" <?php echo esc_attr($selected); ?>><?php esc_html_e('All Products', 'location-wise-products-for-woocommerce'); ?></option>
+                    <option value="all-products" <?php echo esc_attr($selected); ?>><?php echo esc_html_e('All Products', 'multi-location-product-and-inventory-management'); ?></option>
                 <?php endif; ?>
-                
+
                 <?php if (!empty($locations) && !is_wp_error($locations)): ?>
-                    <?php 
+                    <?php
                     if ($atts["herichical"] === "yes") {
                         // Organize locations into a hierarchical structure
                         $parent_locations = array();
@@ -160,13 +156,13 @@ if (!defined('ABSPATH')) exit;
                                 $display_name .= ' (' . $child_count . ')';
                             }
                             $selected = ($parent->slug === $selected_location) ? 'selected' : '';
-                            echo '<option value="' . esc_attr($parent->slug) . '" ' . $selected . '>' . $display_name . '</option>';
+                            echo '<option value="' . esc_attr($parent->slug) . '" ' . esc_html($selected) . '>' . $display_name . '</option>';
 
                             // Check if this parent has children
                             if (isset($child_locations[$parent->term_id])) {
                                 foreach ($child_locations[$parent->term_id] as $child) {
                                     $selected = ($child->slug === $selected_location) ? 'selected' : '';
-                                    echo '<option value="' . esc_attr($child->slug) . '" ' . $selected . '>&nbsp;&nbsp;— ' . esc_html($child->name) . '</option>';
+                                    echo '<option value="' . esc_attr($child->slug) . '" ' . esc_html($selected) . '>&nbsp;&nbsp;— ' . esc_html($child->name) . '</option>';
                                 }
                             }
                         }
@@ -174,66 +170,65 @@ if (!defined('ABSPATH')) exit;
                         // Display locations in flat list
                         foreach ($locations as $location) {
                             $selected = ($location->slug === $selected_location) ? 'selected' : '';
-                            echo '<option value="' . esc_attr($location->slug) . '" ' . $selected . '>' . esc_html($location->name) . '</option>';
+                            echo '<option value="' . esc_attr($location->slug) . '" ' . esc_html($selected) . '>' . esc_html($location->name) . '</option>';
                         }
                     }
                     ?>
                 <?php endif; ?>
             </select>
-            <input type="hidden" id="lwp-selected-store-shortcode" name="lwp_selected_store" value="<?php echo esc_attr($selected_location); ?>">
+            <input type="hidden" id="lwp-selected-store-shortcode" name="mulopimfwc_selected_store" value="<?php echo esc_attr($selected_location); ?>">
         <?php endif; ?>
-        
+
         <?php if ($atts['show_button'] === 'yes'): ?>
             <button type="button" class="button lwp-shortcode-submit">
-                <?php esc_html_e($atts['button_text'] ?? 'Change Location', 'location-wise-products-for-woocommerce'); ?>
+                <?php echo esc_html($atts['button_text'] ?? 'Change Location'); ?>
             </button>
         <?php endif; ?>
     </form>
 </div>
 
-<?php if($atts["herichical"] === "seperately"): ?>
-<script>
+<?php if ($atts["herichical"] === "seperately"):
+    // Prepare JS variables for inline script
+    $locations_json = wp_json_encode($locations);
+    $parent_children_json = wp_json_encode($parent_children_map);
+    $child_counts_json = wp_json_encode($child_counts);
+    $show_count_js = $show_count ? 'true' : 'false';
+    $auto_submit_js = $atts['show_button'] === 'no' ? 'true' : 'false';
+    $max_depth_js = (int)$max_depth;
+    $use_select2 = $atts["use_select2"] === "yes";
+    $select2_init = $use_select2 ? "$('.lwp-shortcode-selector-dropdown').select2();" : "";
+
+    $inline_js = <<<JS
 jQuery(document).ready(function($) {
-    // Store location data
-    var locationsData = <?php echo $locations_json; ?>;
-    var parentChildrenMap = <?php echo $parent_children_json; ?>;
-    var childCounts = <?php echo $child_counts_json; ?>;
-    var showCount = <?php echo $show_count ? 'true' : 'false'; ?>;
-    
-    // Auto-submit on change if no button is shown
-    var autoSubmit = <?php echo $atts['show_button'] === 'no' ? 'true' : 'false'; ?>;
-    
-    // Handle dropdown changes
+    var locationsData = $locations_json;
+    var parentChildrenMap = $parent_children_json;
+    var childCounts = $child_counts_json;
+    var showCount = $show_count_js;
+    var autoSubmit = $auto_submit_js;
+
     $('.lwp-shortcode-selector-dropdown').on('change', function() {
         var selectedLevel = $(this).data('level');
         var selectedTermId = $(this).find(':selected').data('term-id');
         var selectedValue = $(this).val();
-        
-        // Store the final selected value
+
         if (selectedValue) {
             $('#lwp-selected-store-shortcode').val(selectedValue);
-            
-            // Auto-submit if enabled
             if (autoSubmit) {
                 $('#lwp-shortcode-selector-form').submit();
             }
         }
-        
-        // Hide all lower level dropdowns
-        for (var i = selectedLevel + 1; i <= <?php echo $max_depth; ?>; i++) {
+
+        for (var i = selectedLevel + 1; i <= $max_depth_js; i++) {
             $('.lwp-select-container.level-' + i).hide();
-            $('#lwp-shortcode-selector-level-' + i).empty().append('<option value=""><?php echo esc_js(__('-- Select --', 'location-wise-products-for-woocommerce')); ?></option>');
+            $('#lwp-shortcode-selector-level-' + i).empty().append('<option value="">' + mulopimfwc_selector_i18n.select + '</option>');
         }
-        
-        // If a valid option is selected and it has children, populate and show the next dropdown
+
         if (selectedValue && selectedTermId && parentChildrenMap[selectedTermId]) {
             var nextLevel = selectedLevel + 1;
             var nextDropdown = $('#lwp-shortcode-selector-level-' + nextLevel);
-            
-            // Clear and add default option
-            nextDropdown.empty().append('<option value=""><?php echo esc_js(__('-- Select --', 'location-wise-products-for-woocommerce')); ?></option>');
-            
-            // Add child options
+
+            nextDropdown.empty().append('<option value="">' + mulopimfwc_selector_i18n.select + '</option>');
+
             $.each(parentChildrenMap[selectedTermId], function(index, location) {
                 var childCount = childCounts[location.term_id] || 0;
                 var displayText = location.name;
@@ -242,53 +237,57 @@ jQuery(document).ready(function($) {
                 }
                 nextDropdown.append('<option value="' + location.slug + '" data-term-id="' + location.term_id + '">' + displayText + '</option>');
             });
-            
-            // Show the container
+
             $('.lwp-select-container.level-' + nextLevel).show();
         } else if (autoSubmit && selectedValue) {
-            // If no children and auto-submit is enabled, submit the form
             $('#lwp-shortcode-selector-form').submit();
         }
     });
-    
-    <?php if($atts["use_select2"]==="yes"): ?>
-    // Initialize Select2 on all dropdowns
-    $('.lwp-shortcode-selector-dropdown').select2();
-    <?php endif; ?>
-    
-    // Submit handler for the button if present
+
+    $select2_init
+
     $('.lwp-shortcode-submit').on('click', function() {
         $('#lwp-shortcode-selector-form').submit();
     });
 });
-</script>
+JS;
 
-<?php else: ?>
+    // Pass translation string for '-- Select --'
+    wp_localize_script('mulopimfwc_script', 'mulopimfwc_selector_i18n', array(
+        'select' => esc_html__('-- Select --', 'multi-location-product-and-inventory-management'),
+    ));
 
-<script>
+    // Output inline script
+    wp_add_inline_script('mulopimfwc_script', $inline_js);
+
+else:
+
+    $use_select2 = $atts["use_select2"] === "yes";
+    $show_button = $atts['show_button'] === 'yes';
+    $auto_submit_js = $atts['show_button'] === 'no' ? 'true' : 'false';
+
+    $inline_js = <<<JS
 jQuery(document).ready(function($) {
-    <?php if($atts["use_select2"]==="yes"): ?>
-    // Initialize Select2 on dropdown
-    $('#lwp-shortcode-selector').select2();
-    <?php endif; ?>
-    
-    // Update hidden field when selection changes
+    if ($use_select2) {
+        $('#lwp-shortcode-selector').select2();
+    }
+
     $('#lwp-shortcode-selector').on('change', function() {
         var selectedValue = $(this).val();
         if (selectedValue) {
             $('#lwp-selected-store-shortcode').val(selectedValue);
-            
-            // Auto-submit if no button is shown
-            <?php if ($atts['show_button'] === 'no'): ?>
-            $('#lwp-shortcode-selector-form').submit();
-            <?php endif; ?>
+            if ($auto_submit_js) {
+                $('#lwp-shortcode-selector-form').submit();
+            }
         }
     });
-    
-    // Submit handler for the button if present
+
     $('.lwp-shortcode-submit').on('click', function() {
         $('#lwp-shortcode-selector-form').submit();
     });
 });
-</script>
-<?php endif; ?>
+JS;
+
+    wp_add_inline_script('mulopimfwc_script', $inline_js);
+
+endif; ?>

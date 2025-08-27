@@ -30,18 +30,18 @@ jQuery(document).ready(function ($) {
                 product_id: productId,
                 location_id: locationId,
                 status_action: action,
-                security: locationWiseProducts.nonce
+                security: mulopimfwc_locationWiseProducts.nonce
             },
             success: function (response) {
                 if (response.success) {
                     // Update button text and classes
                     if (action === 'activate') {
-                        $button.text(locationWiseProducts.i18n.deactivate)
+                        $button.text(mulopimfwc_locationWiseProducts.i18n.deactivate)
                             .removeClass('button-primary activate-location')
                             .addClass('button-secondary deactivate-location')
                             .data('action', 'deactivate');
                     } else {
-                        $button.text(locationWiseProducts.i18n.activate)
+                        $button.text(mulopimfwc_locationWiseProducts.i18n.activate)
                             .removeClass('button-secondary deactivate-location')
                             .addClass('button-primary activate-location')
                             .data('action', 'activate');
@@ -55,7 +55,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
-                showNotice(locationWiseProducts.i18n.ajaxError, 'error');
+                showNotice(mulopimfwc_locationWiseProducts.i18n.ajaxError, 'error');
             },
             complete: function () {
                 // Remove loading state
@@ -73,7 +73,7 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'get_available_locations',
                 product_id: productId,
-                security: locationWiseProducts.nonce
+                security: mulopimfwc_locationWiseProducts.nonce
             },
             success: function (response) {
                 if (response.success) {
@@ -84,7 +84,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
-                showNotice(locationWiseProducts.i18n.ajaxError, 'error');
+                showNotice(mulopimfwc_locationWiseProducts.i18n.ajaxError, 'error');
             }
         });
     }
@@ -95,7 +95,7 @@ jQuery(document).ready(function ($) {
         var modalHtml = '<div id="location-selector-modal" class="location-modal">' +
             '<div class="location-modal-content">' +
             '<span class="location-modal-close">&times;</span>' +
-            '<h3>' + locationWiseProducts.i18n.selectLocations + '</h3>' +
+            '<h3>' + mulopimfwc_locationWiseProducts.i18n.selectLocations + '</h3>' +
             '<div class="location-checkboxes">';
 
         // Add location checkboxes
@@ -106,7 +106,7 @@ jQuery(document).ready(function ($) {
         // Add submit button
         modalHtml += '</div>' +
             '<button class="button button-primary save-product-locations" data-product-id="' + productId + '">' +
-            locationWiseProducts.i18n.saveLocations + '</button>' +
+            mulopimfwc_locationWiseProducts.i18n.saveLocations + '</button>' +
             '</div></div>';
 
         // Append modal to body and show it
@@ -138,7 +138,7 @@ jQuery(document).ready(function ($) {
                 action: 'save_product_locations',
                 product_id: productId,
                 location_ids: locationIds,
-                security: locationWiseProducts.nonce
+                security: mulopimfwc_locationWiseProducts.nonce
             },
             success: function (response) {
                 if (response.success) {
@@ -155,7 +155,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
-                showNotice(locationWiseProducts.i18n.ajaxError, 'error');
+                showNotice(mulopimfwc_locationWiseProducts.i18n.ajaxError, 'error');
             }
         });
     }
@@ -177,14 +177,14 @@ jQuery(document).ready(function ($) {
         }
     }
 
-    const $select = $('.lwp-location-show-title>table select#lwp_display_title');
+    const $select = $('.lwp-location-show-title>table select#mulopimfwc_display_title');
     const $locationintitletable = $('.lwp-location-show-title>table:first');
-    const $strict_filtering = $('.lwp-location-show-title>table select#strict_filtering');
-    const $strict_table = $('.lwp-location-show-title>table:eq(1)'); // Changed :second to :eq(1)
+    const $strict_filtering = $('#product-visibility-settings table select#strict_filtering');
+    const $strict_table = $('#product-visibility-settings table:eq(3)');
     const $enable_popup = $('select#enable_popup');
     const $popup_settings = $('#popup-shortcode-settings table tr:eq(2),#popup-shortcode-settings table tr:eq(3),#popup-shortcode-settings table tr:eq(4),#popup-shortcode-settings table tr:eq(5)');
     const $herichical = $('#herichical');
-    $herichical_settings =  $('#popup-shortcode-settings table tr:eq(7)');
+    $herichical_settings = $('#popup-shortcode-settings table tr:eq(7)');
     function togglelocationintitlesettings($selectoption, $optionvalue, $selecttable) {
         if ($selectoption.val() == $optionvalue) {
             $selecttable.find('tr:not(:first)').hide();
@@ -225,20 +225,20 @@ jQuery(document).ready(function ($) {
     // Listen for changes to the dropdown
     $enableLocationInfo.on('change', toggleUserRoleRow);
 
-    function togglepopupsetting(){
-        if($enable_popup.val()==='no'){
+    function togglepopupsetting() {
+        if ($enable_popup.val() === 'no') {
             $popup_settings.hide();
-        }else{
+        } else {
             $popup_settings.show();
         }
     }
     togglepopupsetting();
     $enable_popup.on('change', togglepopupsetting);
 
-    function toggleherichicalsettings(){
-        if($herichical.val()==='no'){
+    function toggleherichicalsettings() {
+        if ($herichical.val() === 'no') {
             $herichical_settings.hide();
-        }else{
+        } else {
             $herichical_settings.show();
         }
     }
@@ -247,9 +247,9 @@ jQuery(document).ready(function ($) {
 });
 
 
-jQuery(document).ready(function($) {
+jQuery(document).ready(function ($) {
     // Tab functionality
-    $('.lwp-nav-tabs a').click(function(e) {
+    $('.lwp-nav-tabs a').click(function (e) {
         e.preventDefault();
 
         // Update active tab
@@ -263,27 +263,33 @@ jQuery(document).ready(function($) {
 
     // Add toggle functionality for sections if needed
     $('.lwp-settings-box h2').addClass('lwp-section-toggle');
-    $('.lwp-section-toggle').click(function() {
+    $('.lwp-section-toggle').click(function () {
         $(this).next('.form-table').slideToggle();
         $(this).toggleClass('closed');
     });
 });
 
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     function updateLocationRows() {
         const checkedLocations = Array.from(document.querySelectorAll('#store_locationchecklist input[type="checkbox"]:checked'))
             .map(checkbox => checkbox.value);
-        
+
         const allRows = document.querySelectorAll('tr[id^="location-"]');
         allRows.forEach(row => {
             row.style.display = 'none';
         });
 
         if (checkedLocations.length === 0) {
-            document.getElementById('plugincy_message').style.display = 'block';
+            const plugincyMessage = document.getElementById('plugincy_message');
+            if (plugincyMessage) {
+                plugincyMessage.style.display = 'block';
+            }
         } else {
-            document.getElementById('plugincy_message').style.display = 'none';
+            const plugincyMessage = document.getElementById('plugincy_message');
+            if (plugincyMessage) {
+                plugincyMessage.style.display = 'none';
+            }
             checkedLocations.forEach(locationId => {
                 const row = document.getElementById(`location-${locationId}`);
                 if (row) {
@@ -315,5 +321,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const highlightButton = document.getElementById('highlightButton');
-    highlightButton.addEventListener('click', highlightChecklist);
+    if (highlightButton) {
+        highlightButton.addEventListener('click', highlightChecklist);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('.lwp-subtab');
+    const contents = document.querySelectorAll('.lwp-subtab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function (e) {
+            e.preventDefault();
+            tabs.forEach(t => t.classList.remove('lwp-subtab-active'));
+            tab.classList.add('lwp-subtab-active');
+            contents.forEach(c => c.style.display = 'none');
+            const target = document.querySelector(tab.getAttribute('href'));
+            if (target) target.style.display = 'block';
+        });
+    });
 });
