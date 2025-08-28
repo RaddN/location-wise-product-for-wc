@@ -539,18 +539,14 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     protected function extra_tablenav($which)
     {
+        global $mulopimfwc_locations;
         if ($which == 'top') {
-            $locations = get_terms([
-                'taxonomy' => 'mulopimfwc_store_location',
-                'hide_empty' => false,
-            ]);
-
-            if (!is_wp_error($locations) && !empty($locations)) {
+            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
                 echo '<div class="alignleft actions">';
                 echo '<select name="filter-by-location">';
                 echo '<option value="">' . esc_html__('All Locations', 'multi-location-product-and-inventory-management') . '</option>';
 
-                foreach ($locations as $location) {
+                foreach ($mulopimfwc_locations as $location) {
                     if (
                         isset($_REQUEST['_wpnonce']) &&
                         wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'bulk-' . $this->_args['plural'])

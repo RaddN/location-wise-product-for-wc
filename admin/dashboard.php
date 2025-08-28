@@ -8,10 +8,7 @@ class MULOPIMFWC_Dashboard
     /**
      * Constructor
      */
-    public function __construct()
-    {
-        
-    }
+    public function __construct() {}
 
     /**
      * Render the dashboard page content
@@ -20,16 +17,12 @@ class MULOPIMFWC_Dashboard
      */
     public function dashboard_page_content()
     {
+        global $mulopimfwc_locations;
+        
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "2.0.3", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "2.0.3");
-
-        // Get all locations
-        $locations = get_terms([
-            'taxonomy' => 'mulopimfwc_store_location',
-            'hide_empty' => false,
-        ]);
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.1", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.1");
 
         // Product counts by location
         $product_counts = [];
@@ -38,7 +31,7 @@ class MULOPIMFWC_Dashboard
         $location_border_colors = [];
 
         // Generate random colors for each location
-        foreach ($locations as $index => $location) {
+        foreach ($mulopimfwc_locations as $index => $location) {
             // Generate pastel colors
             $hue = ($index * 47) % 360; // Spread colors evenly
             $location_colors[$location->name] = "hsla({$hue}, 70%, 70%, 0.7)";
@@ -85,7 +78,7 @@ class MULOPIMFWC_Dashboard
         $location_slugs['Default'] = 'default';
 
         // Get slugs for all locations
-        foreach ($locations as $location) {
+        foreach ($mulopimfwc_locations as $location) {
             $location_slugs[$location->name] = $location->slug;
             $orders_by_location[$location->name] = 0;
             $location_revenue[$location->name] = 0;
@@ -131,19 +124,47 @@ class MULOPIMFWC_Dashboard
         }
         wp_reset_postdata();
 
-        // Get low stock products (less than 5 in stock) across locations
-        $low_stock_query = new WP_Query([
-            'post_type' => 'product',
-            'posts_per_page' => 10,
-            'meta_query' => [
-                [
-                    'key' => '_stock',
+        // Build meta query for all location stock keys
+        $location_meta_queries = [];
+        if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
+            foreach ($mulopimfwc_locations as $location) {
+                $location_meta_queries[] = [
+                    'key' => '_location_stock_' . $location->term_id,
                     'value' => 5,
                     'compare' => '<=',
                     'type' => 'NUMERIC'
+                ];
+            }
+        }
+
+        // If we have location queries, use them
+        if (!empty($location_meta_queries)) {
+            // Add relation OR to match any location with low stock
+            $meta_query = [
+                'relation' => 'OR',
+            ];
+            $meta_query = array_merge($meta_query, $location_meta_queries);
+
+            $low_stock_query = new WP_Query([
+                'post_type' => 'product',
+                'posts_per_page' => 50, // Increased since we might have more results
+                'meta_query' => $meta_query
+            ]);
+        } else {
+            // Fallback to original query if no locations found
+            $low_stock_query = new WP_Query([
+                'post_type' => 'product',
+                'posts_per_page' => 10,
+                'meta_query' => [
+                    [
+                        'key' => '_stock',
+                        'value' => 5,
+                        'compare' => '<=',
+                        'type' => 'NUMERIC'
+                    ]
                 ]
-            ]
-        ]);
+            ]);
+        }
 
         // Prepare data for recent products chart (last 30 days)
         $days = 30;
@@ -184,6 +205,8 @@ class MULOPIMFWC_Dashboard
             'revenueByLocation' => $location_revenue,
             'monthlyInvestmentLabels' => $monthly_investment_data['labels'],
             'monthlyInvestmentData' => $monthly_investment_data['data'],
+            'currency' => get_woocommerce_currency_symbol(),
+            'currency_code' => get_woocommerce_currency(),
             'i18n' => [
                 'totalStock' => __('Total Stock', 'multi-location-product-and-inventory-management'),
                 'newProducts' => __('New Products', 'multi-location-product-and-inventory-management'),
@@ -193,7 +216,7 @@ class MULOPIMFWC_Dashboard
             ]
         ]);
 
-    ?>
+?>
         <div class="wrap lwp-dashboard">
             <h1><?php echo esc_attr_e('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
 
@@ -206,7 +229,7 @@ class MULOPIMFWC_Dashboard
                             <span class="lwp-stat-label"><?php echo esc_html_e('Total Products', 'multi-location-product-and-inventory-management'); ?></span>
                         </div>
                         <div class="lwp-stat-item">
-                            <span class="lwp-stat-value"><?php echo count($locations); ?></span>
+                            <span class="lwp-stat-value"><?php echo count($mulopimfwc_locations); ?></span>
                             <span class="lwp-stat-label"><?php echo esc_html_e('Locations', 'multi-location-product-and-inventory-management'); ?></span>
                         </div>
                         <div class="lwp-stat-item">
@@ -286,47 +309,78 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php echo esc_html_e('Low Stock Products', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php esc_html_e('Low Stock Products by Location', 'multi-location-product-and-inventory-management'); ?></h2>
                             <?php if ($low_stock_query->have_posts()) : ?>
                                 <table class="lwp-low-stock-table">
                                     <thead>
                                         <tr>
-                                            <th><?php echo esc_html_e('Product', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th><?php echo esc_html_e('Stock', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th><?php echo esc_html_e('Location', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php esc_html_e('Stock', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php esc_html_e('Status', 'multi-location-product-and-inventory-management'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while ($low_stock_query->have_posts()) : $low_stock_query->the_post();
+                                        <?php
+                                        $displayed_combinations = []; // To avoid duplicate entries
+                                        while ($low_stock_query->have_posts()) :
+                                            $low_stock_query->the_post();
                                             $product_id = get_the_ID();
                                             $product = wc_get_product($product_id);
-                                            $product_locations = wp_get_object_terms($product_id, 'mulopimfwc_store_location');
+
+                                            // Check stock for each location for this product
+                                            if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
+                                                foreach ($mulopimfwc_locations as $location) {
+                                                    $location_stock_key = '_location_stock_' . $location->term_id;
+                                                    $location_stock = get_post_meta($product_id, $location_stock_key, true);
+
+                                                    // Only show if stock exists and is low (≤ 5)
+                                                    if ($location_stock !== '' && is_numeric($location_stock) && $location_stock <= 5) {
+                                                        $combination_key = $product_id . '_' . $location->term_id;
+
+                                                        // Avoid duplicate entries
+                                                        if (!in_array($combination_key, $displayed_combinations)) {
+                                                            $displayed_combinations[] = $combination_key;
                                         ?>
-                                            <tr>
-                                                <td>
-                                                    <a href="<?php echo esc_url(get_edit_post_link($product_id)); ?>">
-                                                        <?php echo esc_html(get_the_title()); ?>
-                                                    </a>
-                                                </td>
-                                                <td><?php echo esc_html($product->get_stock_quantity()); ?></td>
-                                                <td>
-                                                    <?php
-                                                    if (!empty($product_locations) && !is_wp_error($product_locations)) {
-                                                        $location_names = array_map(function ($term) {
-                                                            return $term->name;
-                                                        }, $product_locations);
-                                                        echo esc_html(implode(', ', $location_names));
-                                                    } else {
-                                                        esc_html_e('Default', 'multi-location-product-and-inventory-management');
+                                                            <tr>
+                                                                <td>
+                                                                    <a href="<?php echo esc_url(get_edit_post_link($product_id)); ?>">
+                                                                        <?php echo esc_html(get_the_title()); ?>
+                                                                    </a>
+                                                                </td>
+                                                                <td><?php echo esc_html($location->name); ?></td>
+                                                                <td>
+                                                                    <span class="stock-quantity <?php echo $location_stock == 0 ? 'out-of-stock' : 'low-stock'; ?>">
+                                                                        <?php echo esc_html($location_stock); ?>
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="stock-status <?php echo $location_stock == 0 ? 'out-of-stock' : 'low-stock'; ?>">
+                                                                        <?php
+                                                                        if ($location_stock == 0) {
+                                                                            esc_html_e('Out of Stock', 'multi-location-product-and-inventory-management');
+                                                                        } else {
+                                                                            esc_html_e('Low Stock', 'multi-location-product-and-inventory-management');
+                                                                        }
+                                                                        ?>
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                        <?php
+                                                        }
                                                     }
-                                                    ?>
-                                                </td>
-                                            </tr>
-                                        <?php endwhile; ?>
+                                                }
+                                            }
+                                        endwhile; ?>
                                     </tbody>
                                 </table>
+
+                                <?php if (empty($displayed_combinations)) : ?>
+                                    <p><?php esc_html_e('No low stock products found for any location.', 'multi-location-product-and-inventory-management'); ?></p>
+                                <?php endif; ?>
+
                             <?php else: ?>
-                                <p><?php echo esc_html_e('No low stock products found.', 'multi-location-product-and-inventory-management'); ?></p>
+                                <p><?php esc_html_e('No products found.', 'multi-location-product-and-inventory-management'); ?></p>
                             <?php endif;
                             wp_reset_postdata(); ?>
                         </div>
@@ -334,7 +388,7 @@ class MULOPIMFWC_Dashboard
                 </div>
             </div>
         </div>
-        <?php
+<?php
     }
     /**
      * Calculate monthly investment data for the past 12 months
@@ -476,7 +530,7 @@ class MULOPIMFWC_Dashboard
 
         return $order_count;
     }
-    
+
     /**
      * Calculate total purchase value of all products
      *
@@ -550,5 +604,4 @@ class MULOPIMFWC_Dashboard
         wp_reset_postdata();
         return $total_value;
     }
-
 }

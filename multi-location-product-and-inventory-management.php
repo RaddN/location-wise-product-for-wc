@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 2.0.3
+ * Version: 1.0.1
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -24,6 +24,27 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
     });
     return;
 }
+
+global $mulopimfwc_locations;
+
+function mulopimfwc_get_locations()
+{
+    global $mulopimfwc_locations;
+
+    // Check if taxonomy exists
+    if (!taxonomy_exists('mulopimfwc_store_location')) {
+        error_log('Taxonomy mulopimfwc_store_location does not exist');
+        return;
+    }
+
+    $mulopimfwc_locations = get_terms([
+        'taxonomy' => 'mulopimfwc_store_location',
+        'hide_empty' => false,
+    ]);
+
+}
+
+add_action('init', 'mulopimfwc_get_locations', 20);
 
 require_once plugin_dir_path(__FILE__) . 'admin/settings.php';
 require_once plugin_dir_path(__FILE__) . 'admin/dashboard.php';
@@ -97,6 +118,7 @@ class mulopimfwc_Location_Wise_Products
      */
     public function cymulopimfwc_get_available_locations()
     {
+        global $mulopimfwc_locations;
         // Check nonce
         check_ajax_referer('location_wise_products_nonce', 'security');
 
@@ -112,19 +134,13 @@ class mulopimfwc_Location_Wise_Products
             wp_send_json_error(['message' => __('Invalid product ID.', 'multi-location-product-and-inventory-management')]);
         }
 
-        // Get all locations
-        $locations = get_terms([
-            'taxonomy' => 'mulopimfwc_store_location',
-            'hide_empty' => false,
-        ]);
-
-        if (is_wp_error($locations)) {
-            wp_send_json_error(['message' => $locations->get_error_message()]);
+        if (is_wp_error($mulopimfwc_locations)) {
+            wp_send_json_error(['message' => $mulopimfwc_locations->get_error_message()]);
         }
 
         // Format locations for output
         $location_data = [];
-        foreach ($locations as $location) {
+        foreach ($mulopimfwc_locations as $location) {
             $location_data[] = [
                 'id' => $location->term_id,
                 'name' => $location->name,
@@ -213,7 +229,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/js/admin.js',
             ['jquery'],
-            '2.0.3',
+            '1.0.1',
             true
         );
 
@@ -233,7 +249,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/css/admin.css',
             [],
-            '2.0.3'
+            '1.0.1'
         );
     }
 
@@ -257,16 +273,13 @@ class mulopimfwc_Location_Wise_Products
     }
     private function get_all_store_locations()
     {
-        $locations = get_terms(array(
-            'taxonomy' => 'mulopimfwc_store_location',
-            'hide_empty' => false,
-        ));
+        global $mulopimfwc_locations;
 
-        if (is_wp_error($locations)) {
+        if (is_wp_error($mulopimfwc_locations)) {
             return array();
         }
 
-        return wp_list_pluck($locations, 'slug');
+        return wp_list_pluck($mulopimfwc_locations, 'slug');
     }
 
     /**
@@ -337,9 +350,9 @@ class mulopimfwc_Location_Wise_Products
 
     public function enqueue_scripts()
     {
-        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '2.0.3');
+        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.1');
         wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '2.0.3', true);
+        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.1', true);
         wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
         wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
@@ -399,6 +412,7 @@ class mulopimfwc_Location_Wise_Products
 
     public function location_selector_modal()
     {
+        global $mulopimfwc_locations;
         $is_user_logged_in = is_user_logged_in();
         $current_user = wp_get_current_user();
         $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles);
@@ -406,20 +420,18 @@ class mulopimfwc_Location_Wise_Products
         $options = get_option('mulopimfwc_display_options', []);
         $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'no';
         $selected_location = $this->get_current_location();
-        $show_modal = $show_popup_admin === 'yes' ? true : (empty($selected_location) && !$is_admin_or_manager) ;
+        $show_modal = $show_popup_admin === 'yes' ? true : (empty($selected_location) && !$is_admin_or_manager);
 
-        $locations = get_terms([
-            'taxonomy' => 'mulopimfwc_store_location',
-            'hide_empty' => false,
-        ]);
+        $locations = $mulopimfwc_locations;
 
-        
+
 
         include plugin_dir_path(__FILE__) . 'templates/modal.php';
     }
 
     public function location_selector_shortcode($atts)
     {
+        global $mulopimfwc_locations;
         $atts = shortcode_atts([
             'title' => __('Select Store Location', 'multi-location-product-and-inventory-management'),
             'show_title' => 'yes',
@@ -438,10 +450,7 @@ class mulopimfwc_Location_Wise_Products
         $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles);
         $selected_location = $this->get_current_location();
 
-        $locations = get_terms([
-            'taxonomy' => 'mulopimfwc_store_location',
-            'hide_empty' => false,
-        ]);
+        $locations = $mulopimfwc_locations;
 
         ob_start();
         include plugin_dir_path(__FILE__) . 'templates/shortcode-selector.php';
@@ -464,7 +473,7 @@ class mulopimfwc_Location_Wise_Products
         return $this->get_title_with_location($title, $product->get_id());
     }
 
-    
+
     private function get_display_options()
     {
         $defaults = [
@@ -658,11 +667,11 @@ class mulopimfwc_Location_Wise_Products
         }
     }
 
-    
 
-    
 
-    
+
+
+
 
     private function should_apply_filtering($section)
     {
@@ -820,10 +829,8 @@ class mulopimfwc_Location_Wise_Products
     }
     function custom_admin_styles()
     {
-        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "2.0.3");
+        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.1");
     }
-
-    
 }
 
 function mulopimfwc_location_wise_products_init()

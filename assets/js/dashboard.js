@@ -328,6 +328,7 @@
         const values = Object.values(mulopimfwc_DashboardData.revenueByLocation);
         const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(75, 192, 192, 0.7)');
         const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(75, 192, 192, 1)');
+        const currency_code = mulopimfwc_DashboardData.currency_code;
 
         new Chart(ctx, {
             type: 'bar',
@@ -352,7 +353,7 @@
                             callback: function (value) {
                                 return new Intl.NumberFormat('en-US', {
                                     style: 'currency',
-                                    currency: 'USD',
+                                    currency: currency_code,
                                     minimumFractionDigits: 0,
                                     maximumFractionDigits: 0
                                 }).format(value);
@@ -367,7 +368,7 @@
                                 return mulopimfwc_DashboardData.i18n.revenue + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
-                                        currency: 'USD'
+                                        currency: currency_code
                                     }).format(context.raw);
                             }
                         },

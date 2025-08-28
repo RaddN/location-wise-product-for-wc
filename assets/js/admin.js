@@ -272,7 +272,7 @@ jQuery(document).ready(function ($) {
 
 document.addEventListener('DOMContentLoaded', function () {
     function updateLocationRows() {
-        const checkedLocations = Array.from(document.querySelectorAll('#store_locationchecklist input[type="checkbox"]:checked'))
+        const checkedLocations = Array.from(document.querySelectorAll('#mulopimfwc_store_locationchecklist input[type="checkbox"]:checked'))
             .map(checkbox => checkbox.value);
 
         const allRows = document.querySelectorAll('tr[id^="location-"]');
@@ -300,12 +300,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function highlightChecklist() {
-        const checklist = document.getElementById('store_locationdiv');
+        const checklist = document.getElementById('mulopimfwc_store_locationdiv');
         checklist.classList.toggle('highlight');
         checklist.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         // Remove highlight from others if any checkbox is checked
-        const checkboxes = document.querySelectorAll('#store_locationchecklist input[type="checkbox"]');
+        const checkboxes = document.querySelectorAll('#mulopimfwc_store_locationchecklist input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
                 checklist.classList.remove('highlight');
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updateLocationRows();
 
-    const checkboxes = document.querySelectorAll('#store_locationchecklist input[type="checkbox"]');
+    const checkboxes = document.querySelectorAll('#mulopimfwc_store_locationchecklist input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', updateLocationRows);
     });

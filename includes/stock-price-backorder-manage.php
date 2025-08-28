@@ -95,18 +95,15 @@ add_filter('woocommerce_product_data_tabs', function ($tabs) {
 // Add location-specific fields to the product data panel
 add_action('woocommerce_product_data_panels', function () {
     global $post;
+    global $mulopimfwc_locations;
     $product = wc_get_product($post->ID);
-    $locations = get_terms(array(
-        'taxonomy' => 'mulopimfwc_store_location',
-        'hide_empty' => false,
-    ));
     $is_stock_management_enabled = get_option('woocommerce_manage_stock');
 ?>
     <div id="location_stock_price_options" class="panel woocommerce_options_panel" style="padding: 0 20px;">
         <div class="options_group">
             <h3><?php echo esc_html_e('Location Specific Stock & Price Settings', 'multi-location-product-and-inventory-management'); ?></h3>
             <?php wp_nonce_field('location_stock_price_nonce_action', 'location_stock_price_nonce'); ?>
-            <?php if (!empty($locations) && !is_wp_error($locations)) : ?>
+            <?php if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) : ?>
                 <table class="widefat">
 
                     <thead>
@@ -130,7 +127,7 @@ add_action('woocommerce_product_data_panels', function () {
                         <?php
                         $regular_price = $product->get_regular_price();
                         $sale_price = $product->get_sale_price();
-                        foreach ($locations as $location) :
+                        foreach ($mulopimfwc_locations as $location) :
                             $location_stock = get_post_meta($post->ID, '_location_stock_' . $location->term_id, true);
                             $location_regular_price = get_post_meta($post->ID, '_location_regular_price_' . $location->term_id, true);
                             $location_sale_price = get_post_meta($post->ID, '_location_sale_price_' . $location->term_id, true);
@@ -223,12 +220,9 @@ add_action('woocommerce_process_product_meta', function ($post_id) {
 
 // Add location fields to each variation
 add_action('woocommerce_product_after_variable_attributes', function ($loop, $variation_data, $variation) {
-    $locations = get_terms(array(
-        'taxonomy' => 'mulopimfwc_store_location',
-        'hide_empty' => false,
-    ));
+    global $mulopimfwc_locations;
 
-    if (empty($locations) || is_wp_error($locations)) {
+    if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
         return;
     }
     $is_stock_management_enabled = get_option('woocommerce_manage_stock');
@@ -250,7 +244,7 @@ add_action('woocommerce_product_after_variable_attributes', function ($loop, $va
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($locations as $location) :
+                    <?php foreach ($mulopimfwc_locations as $location) :
                         $location_stock = get_post_meta($variation->ID, '_location_stock_' . $location->term_id, true);
                         $location_regular_price = get_post_meta($variation->ID, '_location_regular_price_' . $location->term_id, true);
                         $location_sale_price = get_post_meta($variation->ID, '_location_sale_price_' . $location->term_id, true);
@@ -858,7 +852,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '2.0.3');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.1');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -878,7 +872,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '2.0.3');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.1');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }
@@ -1181,6 +1175,7 @@ function mulopimfwc_add_location_column_to_product_list($columns)
 add_action('manage_product_posts_custom_column', 'mulopimfwc_populate_locations_column_in_product_list', 10, 2);
 function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
 {
+    global $mulopimfwc_locations;
     if ($column === 'locations') {
         $product = wc_get_product($post_id);
         if (!$product) {
@@ -1188,13 +1183,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
             return;
         }
 
-        // Get all store locations
-        $locations = get_terms(array(
-            'taxonomy' => 'mulopimfwc_store_location',
-            'hide_empty' => false,
-        ));
-
-        if (!is_wp_error($locations) && !empty($locations)) {
+        if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
             $output = '';
 
             // Handle variable products
@@ -1207,7 +1196,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
 
                     $output .= '<b>' . esc_html($variation_name) . '</b>'; // Display variation name
 
-                    foreach ($locations as $location) {
+                    foreach ($mulopimfwc_locations as $location) {
                         $location_price = get_post_meta($variation_id, '_location_regular_price_' . $location->term_id, true);
                         $location_stock = get_post_meta($variation_id, '_location_stock_' . $location->term_id, true);
 
@@ -1227,7 +1216,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                 }
             } else {
                 // For simple products
-                foreach ($locations as $location) {
+                foreach ($mulopimfwc_locations as $location) {
                     $location_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location->term_id, true);
                     $location_stock = get_post_meta($product->get_id(), '_location_stock_' . $location->term_id, true);
 
