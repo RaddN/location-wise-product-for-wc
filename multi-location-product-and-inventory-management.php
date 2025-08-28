@@ -41,7 +41,6 @@ function mulopimfwc_get_locations()
         'taxonomy' => 'mulopimfwc_store_location',
         'hide_empty' => false,
     ]);
-
 }
 
 add_action('init', 'mulopimfwc_get_locations', 20);
@@ -360,6 +359,19 @@ class mulopimfwc_Location_Wise_Products
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('multi-location-product-and-inventory-management')
         ]);
+
+        wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', array(), '1.7.1');
+        wp_enqueue_script('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array('jquery'), '1.7.1', true);
+
+        wp_enqueue_script('mulopimfwc_script_map', plugins_url('assets/js/location-features.js', __FILE__), ['jquery'], '1.0.1', true);
+
+
+        // Localize script with configuration
+        wp_localize_script('mulopimfwc_script_map', 'mulopimfwc_locationWiseProducts', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'enableUserLocations' => 'yes',
+            'nonce' => wp_create_nonce('mulopimfwc_nonce')
+        ));
     }
 
     private function get_current_location()
@@ -440,6 +452,7 @@ class mulopimfwc_Location_Wise_Products
             'use_select2' => '',
             'herichical' => '',
             'show_count' => '',
+            'enable_user_locations' => 'no', // New attribute
         ], $atts);
 
         $is_user_logged_in = is_user_logged_in();
@@ -713,13 +726,11 @@ class mulopimfwc_Location_Wise_Products
         }
 
         $location = $this->get_filtered_location($section);
-
         if (!$location) {
             return;
         }
 
         $tax_query = (array) $query->get('tax_query');
-        // if global product show all locations enabled, show products that are not assigned to any location
         $options = $this->get_display_options();
         $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'yes';
 
@@ -743,9 +754,96 @@ class mulopimfwc_Location_Wise_Products
                 'terms' => $location,
             ];
         }
-
         $query->set('tax_query', $tax_query);
+
+        // Add custom ordering based on product priority display setting
+        $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'mixed';
+
+        if ($product_priority_display !== 'mixed' && $enable_all_locations === 'yes') {
+            add_filter('posts_join', [$this, 'custom_product_join'], 10, 2);
+            add_filter('posts_orderby', [$this, 'custom_product_orderby'], 10, 2);
+        }
     }
+
+    /**
+     * Add custom JOIN clause for location-based ordering
+     *
+     * @param string $join The JOIN clause
+     * @param WP_Query $query The WordPress query object
+     * @return string Modified JOIN clause
+     */
+    public function custom_product_join($join, $query)
+    {
+        global $wpdb;
+
+        // Only apply to main product queries
+        if (!$query->is_main_query() || !is_post_type_archive('product') && !is_shop() && !is_product_taxonomy()) {
+            return $join;
+        }
+
+        $location = $this->get_current_location();
+        if (!$location) {
+            return $join;
+        }
+
+        $term = get_term_by('slug', $location, 'mulopimfwc_store_location');
+        if (!$term || is_wp_error($term)) {
+            return $join;
+        }
+
+        $term_taxonomy_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id = %d AND taxonomy = %s",
+            $term->term_id,
+            'mulopimfwc_store_location'
+        ));
+
+        if ($term_taxonomy_id) {
+            $join .= " LEFT JOIN {$wpdb->term_relationships} AS location_tr 
+                        ON ({$wpdb->posts}.ID = location_tr.object_id AND location_tr.term_taxonomy_id = " . intval($term_taxonomy_id) . ") ";
+        }
+
+        // Remove this filter after execution
+        remove_filter('posts_join', [$this, 'custom_product_join'], 10);
+
+        return $join;
+    }
+
+    /**
+     * Add custom ORDER BY clause for location-based ordering
+     *
+     * @param string $orderby The ORDER BY clause
+     * @param WP_Query $query The WordPress query object
+     * @return string Modified ORDER BY clause
+     */
+    public function custom_product_orderby($orderby, $query)
+    {
+        global $wpdb;
+
+        // Only apply to main product queries
+        if (!$query->is_main_query() || !is_post_type_archive('product') && !is_shop() && !is_product_taxonomy()) {
+            return $orderby;
+        }
+
+        $options = $this->get_display_options();
+        $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'mixed';
+
+        if ($product_priority_display === 'location_first') {
+            $priority_value_for_location = 1;
+            $priority_value_for_global = 2;
+        } else { // global_first
+            $priority_value_for_location = 2;
+            $priority_value_for_global = 1;
+        }
+
+        $custom_orderby = "CASE WHEN location_tr.object_id IS NOT NULL THEN {$priority_value_for_location} ELSE {$priority_value_for_global} END, ";
+
+        // Remove this filter after execution
+        remove_filter('posts_orderby', [$this, 'custom_product_orderby'], 10);
+
+        return $custom_orderby . $orderby;
+    }
+
+
 
     public function filter_related_products_by_location($related_products, $product_id, $args)
     {
@@ -852,4 +950,139 @@ function mulopimfwc_settings_remove()
     if (get_option('mulopimfwc_display_options') !== false) {
         delete_option('mulopimfwc_display_options');
     }
+}
+
+
+// Add this to the main plugin file after the class definition
+
+// AJAX handler for saving user location
+add_action('wp_ajax_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
+add_action('wp_ajax_nopriv_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
+
+function mulopimfwc_save_user_location()
+{
+    // Check nonce
+    check_ajax_referer('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce');
+
+    // Get form data
+    $label = isset($_POST['label']) ? sanitize_text_field($_POST['label']) : '';
+    $street = isset($_POST['street']) ? sanitize_text_field($_POST['street']) : '';
+    $apartment = isset($_POST['apartment']) ? sanitize_text_field($_POST['apartment']) : '';
+    $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
+    $state = isset($_POST['state']) ? sanitize_text_field($_POST['state']) : '';
+    $postal = isset($_POST['postal']) ? sanitize_text_field($_POST['postal']) : '';
+    $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+    $note = isset($_POST['note']) ? sanitize_textarea_field($_POST['note']) : '';
+    $lat = isset($_POST['lat']) ? floatval($_POST['lat']) : 0;
+    $lng = isset($_POST['lng']) ? floatval($_POST['lng']) : 0;
+
+    // Check if we're editing an existing location
+    $location_id = isset($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : uniqid();
+
+    // Prepare location data
+    $location_data = array(
+        'id' => $location_id,
+        'label' => $label,
+        'street' => $street,
+        'apartment' => $apartment,
+        'city' => $city,
+        'state' => $state,
+        'postal' => $postal,
+        'country' => $country,
+        'note' => $note,
+        'lat' => $lat,
+        'lng' => $lng,
+        'address' => $street . ', ' . $city . ', ' . $state . ' ' . $postal . ', ' . $country
+    );
+
+    $is_logged_in = is_user_logged_in();
+
+    if ($is_logged_in) {
+        $user_id = get_current_user_id();
+        $user_locations = get_user_meta($user_id, 'mulopimfwc_user_locations', true);
+        if (!is_array($user_locations)) {
+            $user_locations = array();
+        }
+
+        // If editing an existing location, find and update it
+        $found = false;
+        foreach ($user_locations as $key => $location) {
+            if ($location['id'] === $location_id) {
+                $user_locations[$key] = $location_data;
+                $found = true;
+                break;
+            }
+        }
+
+        // If not found, add new location
+        if (!$found) {
+            $user_locations[] = $location_data;
+        }
+
+        // Update user meta
+        update_user_meta($user_id, 'mulopimfwc_user_locations', $user_locations);
+
+        wp_send_json_success(array(
+            'logged_in' => true,
+            'location_id' => $location_id,
+            'label' => $label,
+            'address' => $location_data['address']
+        ));
+    } else {
+        // For non-logged-in users, we can't save the location permanently.
+        // We'll just return the location data to be used temporarily.
+        wp_send_json_success(array(
+            'logged_in' => false,
+            'location_id' => $location_id,
+            'label' => $label,
+            'address' => $location_data['address']
+        ));
+    }
+}
+
+// AJAX handler for deleting user location
+add_action('wp_ajax_mulopimfwc_delete_user_location', 'mulopimfwc_delete_user_location');
+
+function mulopimfwc_delete_user_location()
+{
+    // Check nonce
+    if (!isset($_POST['mulopimfwc_shortcode_selector_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['mulopimfwc_shortcode_selector_nonce'])), 'mulopimfwc_shortcode_selector')) {
+        return;
+    }
+
+    // Get location ID
+    $location_id = isset($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : '';
+
+    if (empty($location_id)) {
+        wp_send_json_error(array('message' => 'Invalid location ID'));
+    }
+
+    $user_id = get_current_user_id();
+    $user_locations = get_user_meta($user_id, 'mulopimfwc_user_locations', true);
+
+    if (!is_array($user_locations)) {
+        wp_send_json_error(array('message' => 'No saved locations found'));
+    }
+
+    // Find and remove the location
+    $found = false;
+    foreach ($user_locations as $key => $location) {
+        if ($location['id'] === $location_id) {
+            unset($user_locations[$key]);
+            $found = true;
+            break;
+        }
+    }
+
+    if (!$found) {
+        wp_send_json_error(array('message' => 'Location not found'));
+    }
+
+    // Re-index array
+    $user_locations = array_values($user_locations);
+
+    // Update user meta
+    update_user_meta($user_id, 'mulopimfwc_user_locations', $user_locations);
+
+    wp_send_json_success(array('message' => 'Location deleted successfully'));
 }

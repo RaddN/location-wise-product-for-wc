@@ -14,7 +14,250 @@ class MULOPIMFWC_Admin
         add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'display_location_column_content'), 20, 2);
         // Add metabox to order details
         add_action('add_meta_boxes', array($this, 'add_location_metabox'));
+
+        // Add custom fields to location taxonomy
+        add_action('mulopimfwc_store_location_add_form_fields', array($this, 'add_location_fields'));
+        add_action('mulopimfwc_store_location_edit_form_fields', array($this, 'edit_location_fields'), 10, 2);
+        add_action('created_mulopimfwc_store_location', array($this, 'save_location_fields'), 10, 2);
+        add_action('edited_mulopimfwc_store_location', array($this, 'save_location_fields'), 10, 2);
+
+        // Add custom columns to location taxonomy table
+        add_filter('manage_edit-mulopimfwc_store_location_columns', array($this, 'add_location_taxonomy_columns'));
+        add_filter('manage_mulopimfwc_store_location_custom_column', array($this, 'add_location_taxonomy_column_content'), 10, 3);
+        add_filter('manage_edit-mulopimfwc_store_location_sortable_columns', array($this, 'add_location_taxonomy_sortable_columns'));
     }
+
+    public function add_location_fields()
+    {
+?>
+        <div class="form-field">
+            <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="text" name="street_address" id="street_address" value="" />
+            <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="city"><?php _e('City', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="text" name="city" id="city" value="" />
+            <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="state"><?php _e('State', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="text" name="state" id="state" value="" />
+            <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="text" name="postal_code" id="postal_code" value="" />
+            <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="text" name="country" id="country" value="" />
+            <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="email" name="email" id="email" value="" />
+            <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="tel" name="phone" id="phone" value="" />
+            <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="number" name="display_order" id="display_order" value="" min="0" step="1" />
+            <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+    <?php
+    }
+    /**
+     * Add custom fields when editing a location
+     */
+    public function edit_location_fields($term, $taxonomy)
+    {
+        // Get existing values
+        $street_address = get_term_meta($term->term_id, 'street_address', true);
+        $city = get_term_meta($term->term_id, 'city', true);
+        $state = get_term_meta($term->term_id, 'state', true);
+        $postal_code = get_term_meta($term->term_id, 'postal_code', true);
+        $country = get_term_meta($term->term_id, 'country', true);
+        $email = get_term_meta($term->term_id, 'email', true);
+        $phone = get_term_meta($term->term_id, 'phone', true);
+        $display_order = get_term_meta($term->term_id, 'display_order', true);
+
+    ?>
+        <tr class="form-field">
+            <th scope="row"><label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="text" name="street_address" id="street_address" value="<?php echo esc_attr($street_address); ?>" />
+                <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="city"><?php _e('City', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="text" name="city" id="city" value="<?php echo esc_attr($city); ?>" />
+                <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="state"><?php _e('State', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="text" name="state" id="state" value="<?php echo esc_attr($state); ?>" />
+                <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="text" name="postal_code" id="postal_code" value="<?php echo esc_attr($postal_code); ?>" />
+                <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" />
+                <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="email" name="email" id="email" value="<?php echo esc_attr($email); ?>" />
+                <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="tel" name="phone" id="phone" value="<?php echo esc_attr($phone); ?>" />
+                <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="number" name="display_order" id="display_order" value="<?php echo esc_attr($display_order); ?>" min="0" step="1" />
+                <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+<?php
+    }
+
+    /**
+     * Save custom fields when location is created or edited
+     */
+    public function save_location_fields($term_id, $tt_id)
+    {
+        if (isset($_POST['street_address'])) {
+            update_term_meta($term_id, 'street_address', sanitize_text_field($_POST['street_address']));
+        }
+
+        if (isset($_POST['city'])) {
+            update_term_meta($term_id, 'city', sanitize_text_field($_POST['city']));
+        }
+
+        if (isset($_POST['state'])) {
+            update_term_meta($term_id, 'state', sanitize_text_field($_POST['state']));
+        }
+
+        if (isset($_POST['postal_code'])) {
+            update_term_meta($term_id, 'postal_code', sanitize_text_field($_POST['postal_code']));
+        }
+
+        if (isset($_POST['country'])) {
+            update_term_meta($term_id, 'country', sanitize_text_field($_POST['country']));
+        }
+
+        if (isset($_POST['email'])) {
+            update_term_meta($term_id, 'email', sanitize_email($_POST['email']));
+        }
+
+        if (isset($_POST['phone'])) {
+            update_term_meta($term_id, 'phone', sanitize_text_field($_POST['phone']));
+        }
+
+        if (isset($_POST['display_order'])) {
+            $display_order = intval($_POST['display_order']);
+            update_term_meta($term_id, 'display_order', $display_order);
+        }
+    }
+
+    /**
+     * Add custom columns to location taxonomy table
+     */
+    public function add_location_taxonomy_columns($columns)
+    {
+        $new_columns = array();
+
+        // Add columns before the 'slug' column
+        foreach ($columns as $key => $value) {
+            if ($key === 'slug') {
+                $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
+                $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
+                $new_columns['country'] = __('Country', 'multi-location-product-and-inventory-management');
+            }
+            $new_columns[$key] = $value;
+        }
+
+        return $new_columns;
+    }
+
+    /**
+     * Add content to custom columns in location taxonomy table
+     */
+    public function add_location_taxonomy_column_content($content, $column_name, $term_id)
+    {
+        switch ($column_name) {
+            case 'display_order':
+                $display_order = get_term_meta($term_id, 'display_order', true);
+                echo $display_order ? esc_html($display_order) : '—';
+                break;
+
+            case 'city':
+                $city = get_term_meta($term_id, 'city', true);
+                echo $city ? esc_html($city) : '—';
+                break;
+
+            case 'country':
+                $country = get_term_meta($term_id, 'country', true);
+                echo $country ? esc_html($country) : '—';
+                break;
+        }
+
+        return $content;
+    }
+
+    /**
+     * Make display order column sortable
+     */
+    public function add_location_taxonomy_sortable_columns($columns)
+    {
+        $columns['display_order'] = 'display_order';
+        return $columns;
+    }
+
+
+
+
+
 
     public function add_settings_page()
     {
@@ -205,7 +448,7 @@ class MULOPIMFWC_Admin
             ],
             'hierarchical' => true,
             'show_ui' => true,
-            // 'show_admin_column' => true,
+            'show_admin_column' => true,
             'query_var' => true,
             'rewrite' => ['slug' => 'store-location'],
         ]);

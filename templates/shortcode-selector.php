@@ -1,13 +1,318 @@
 <?php
-
+// templates/shortcode-selector.php
 if (!defined('ABSPATH')) exit;
 // Template for the store location selector shortcode
 ?>
-
 <div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>">
     <?php if ($atts['show_title'] === 'yes'): ?>
         <h3 class="lwp-shortcode-title"><?php echo esc_html($atts['title']); ?></h3>
     <?php endif; ?>
+
+   <?php if ($atts['enable_user_locations'] === 'yes'): ?>
+    <div class="lwp-user-location-features">
+        <!-- Address Content Trigger -->
+        <div class="address-content" id="address-trigger">
+            <span class="address-label-icon">📍</span>
+            <span class="address-text">
+                <?php 
+                $current_location = '';
+                $location_set = false;
+                
+                // Check if user has a selected location
+                if ($is_user_logged_in) {
+                    $user_locations = get_user_meta($current_user->ID, 'mulopimfwc_user_locations', true);
+                    $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : '';
+                    
+                    if (!empty($user_locations) && is_array($user_locations) && $selected_location_id) {
+                        foreach ($user_locations as $location) {
+                            if ($location['id'] === $selected_location_id) {
+                                $current_location = $location['label'] . ' - ' . $location['address'];
+                                $location_set = true;
+                                break;
+                            }
+                        }
+                    }
+                } elseif (isset($_COOKIE['mulopimfwc_user_location'])) {
+                    // For non-logged in users, check if location is set in cookie
+                    $location_set = true;
+                    $current_location = __('Current Location', 'multi-location-product-and-inventory-management');
+                }
+                
+                echo $location_set ? esc_html($current_location) : esc_html__('Set Your Location', 'multi-location-product-and-inventory-management');
+                ?>
+            </span>
+        </div>
+
+        <!-- Tooltip Popup -->
+        <div class="tooltip_popup" id="location-tooltip" style="display: none;">
+            <div class="search-input-container">
+                <input type="text" id="address-search-input" placeholder="<?php esc_attr_e('Street, Postal Code', 'multi-location-product-and-inventory-management'); ?>" aria-label="<?php esc_attr_e('Enter your address', 'multi-location-product-and-inventory-management'); ?>" value="">
+                <label><?php _e('Enter your address', 'multi-location-product-and-inventory-management'); ?></label>
+                <div>
+                    <button type="button" aria-label="<?php esc_attr_e('Clear your address', 'multi-location-product-and-inventory-management'); ?>" data-testid="input-clear-icon" id="clear-address-btn">&times;</button>
+                </div>
+            </div>
+
+            <!-- For logged in user -->
+            <?php if ($is_user_logged_in): ?>
+                <div class="saved_locations">
+                    <h3 class="title"><?php _e('Saved Locations', 'multi-location-product-and-inventory-management'); ?></h3>
+                    <div class="saved-locations-list">
+                        <?php
+                        $user_locations = get_user_meta($current_user->ID, 'mulopimfwc_user_locations', true);
+                        if (!empty($user_locations) && is_array($user_locations)) {
+                            foreach ($user_locations as $location) {
+                                $selected = (isset($_COOKIE['mulopimfwc_user_location']) && $_COOKIE['mulopimfwc_user_location'] === $location['id']) ? 'selected' : '';
+                                ?>
+                                <div class="saved-location-item <?php echo esc_attr($selected); ?>" data-location-id="<?php echo esc_attr($location['id']); ?>">
+                                    <div class="location-info">
+                                        <span class="location-label"><?php echo esc_html($location['label']); ?></span>
+                                        <span class="location-address"><?php echo esc_html($location['address']); ?></span>
+                                    </div>
+                                    <div class="location-actions">
+                                        <button type="button" class="edit-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Edit location', 'multi-location-product-and-inventory-management'); ?>">✏️</button>
+                                        <button type="button" class="delete-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Delete location', 'multi-location-product-and-inventory-management'); ?>">🗑️</button>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        } else {
+                            ?>
+                            <p class="no-saved-locations"><?php _e('No saved locations yet', 'multi-location-product-and-inventory-management'); ?></p>
+                            <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Action Buttons -->
+            <div class="location-actions-container">
+                <button type="button" class="button button-primary lwp-use-current-location-btn">
+                    <?php _e('Use Current Location', 'multi-location-product-and-inventory-management'); ?>
+                </button>
+                <?php if ($is_user_logged_in): ?>
+                    <button type="button" class="button lwp-add-location-btn">
+                        <?php _e('Add New Location', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS Styles -->
+    <style>
+        .lwp-user-location-features {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .address-content {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .address-content:hover {
+            background: #e9ecef;
+            border-color: #dee2e6;
+        }
+
+        .address-label-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .address-text {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .tooltip_popup {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            margin-top: 4px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .search-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input-container input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input-container input:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .search-input-container label {
+            position: absolute;
+            left: 16px;
+            top: -8px;
+            background: white;
+            padding: 0 4px;
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .search-input-container button {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .search-input-container button:hover {
+            color: #495057;
+        }
+
+        .saved_locations {
+            margin-bottom: 20px;
+        }
+
+        .saved_locations .title {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .saved-locations-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .saved-location-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .saved-location-item:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        .saved-location-item.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .location-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .location-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .location-address {
+            color: #6c757d;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-location-btn,
+        .delete-location-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .edit-location-btn:hover {
+            background: #e3f2fd;
+        }
+
+        .delete-location-btn:hover {
+            background: #ffebee;
+        }
+
+        .no-saved-locations {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            margin: 20px 0;
+        }
+
+        .location-actions-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .location-actions-container .button {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .tooltip_popup {
+                left: -10px;
+                right: -10px;
+            }
+            
+            .location-actions-container {
+                flex-direction: column;
+            }
+            
+            .location-actions-container .button {
+                flex: none;
+            }
+        }
+    </style>
+<?php endif; ?>
 
     <form id="lwp-shortcode-selector-form" class="lwp-selector-form">
         <?php wp_nonce_field('mulopimfwc_shortcode_selector', 'mulopimfwc_shortcode_selector_nonce'); ?>
@@ -187,6 +492,79 @@ if (!defined('ABSPATH')) exit;
     </form>
 </div>
 
+
+<!-- Location Popup -->
+<div id="lwp-location-popup" class="lwp-location-popup" style="display:none;">
+    <div class="lwp-popup-content">
+        <div class="lwp-popup-header">
+            <h3><?php _e('Set Your Location', 'multi-location-product-and-inventory-management'); ?></h3>
+            <button type="button" class="lwp-close-popup">&times;</button>
+        </div>
+
+        <!-- Step 1: Map Selection -->
+        <div id="lwp-location-step1" class="lwp-location-step">
+            <div class="lwp-map-container">
+                <div id="lwp-location-map" class="lwp-location-map"></div>
+                <div class="lwp-map-controls">
+                    <button type="button" class="button button-primary lwp-continue-btn"><?php _e('Continue', 'multi-location-product-and-inventory-management'); ?></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Details Form -->
+        <div id="lwp-location-step2" class="lwp-location-step" style="display:none;">
+            <div class="lwp-location-details">
+                <div class="lwp-details-header">
+                    <h4><?php _e('Location Details', 'multi-location-product-and-inventory-management'); ?></h4>
+                    <p class="lwp-address-preview"></p>
+                </div>
+
+                <form id="lwp-location-form">
+                    <?php wp_nonce_field('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce'); ?>
+                    <div class="lwp-form-group">
+                        <label for="lwp-location-label"><?php _e('Label', 'multi-location-product-and-inventory-management'); ?></label>
+                        <select id="lwp-location-label" name="label" required>
+                            <option value="Home"><?php _e('Home', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Work"><?php _e('Work', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Partner"><?php _e('Partner', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Other"><?php _e('Other', 'multi-location-product-and-inventory-management'); ?></option>
+                        </select>
+                    </div>
+
+                    <div class="lwp-form-group">
+                        <label for="lwp-location-street"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
+                        <input type="text" id="lwp-location-street" name="street" required>
+                    </div>
+
+                    <div class="lwp-form-group">
+                        <label for="lwp-location-apartment"><?php _e('Apartment, suite, etc.', 'multi-location-product-and-inventory-management'); ?></label>
+                        <input type="text" id="lwp-location-apartment" name="apartment">
+                    </div>
+
+                    <div class="lwp-form-group">
+                        <label for="lwp-location-note"><?php _e('Note', 'multi-location-product-and-inventory-management'); ?></label>
+                        <textarea id="lwp-location-note" name="note"></textarea>
+                    </div>
+
+                    <input type="hidden" id="lwp-location-lat" name="lat">
+                    <input type="hidden" id="lwp-location-lng" name="lng">
+                    <input type="hidden" id="lwp-location-city" name="city">
+                    <input type="hidden" id="lwp-location-state" name="state">
+                    <input type="hidden" id="lwp-location-postal" name="postal">
+                    <input type="hidden" id="lwp-location-country" name="country">
+
+                    <div class="lwp-form-actions">
+                        <button type="button" class="button lwp-back-btn"><?php _e('Back', 'multi-location-product-and-inventory-management'); ?></button>
+                        <button type="submit" class="button button-primary"><?php _e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <?php if ($atts["herichical"] === "seperately"):
     // Prepare JS variables for inline script
     $locations_json = wp_json_encode($locations);
@@ -290,4 +668,4 @@ JS;
 
     wp_add_inline_script('mulopimfwc_script', $inline_js);
 
-endif; ?>
+endif;
