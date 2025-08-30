@@ -39,6 +39,9 @@
 .fixed .column-locations div {
     margin-bottom: 5px; /* Space between location entries */
 }
+.fixed .column-locations{
+    width: max-content !important;
+}
 .outofstock {
     background: #f8d7da;
     color: #721c24;

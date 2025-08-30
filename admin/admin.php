@@ -314,6 +314,7 @@ class MULOPIMFWC_Admin
 
             return $submenu_file;
         });
+        
 
         // add Stock Central submenu
         add_submenu_page(
@@ -325,6 +326,15 @@ class MULOPIMFWC_Admin
             [new mulopimfwc_Stock_Central(), 'location_stock_page_content']
         );
 
+        add_submenu_page(
+            'multi-location-product-and-inventory-management',
+            __('Location Managers', 'multi-location-product-and-inventory-management'),
+            __('Location Managers', 'multi-location-product-and-inventory-management'),
+            'manage_options',
+            'location-managers',
+            array(new MULOPIMFWC_Location_Managers(), 'admin_page')
+        );
+
         // Add Settings submenu
         add_submenu_page(
             'multi-location-product-and-inventory-management',
@@ -334,6 +344,8 @@ class MULOPIMFWC_Admin
             'multi-location-product-and-inventory-management-settings',
             [new mulopimfwc_settings(), 'settings_page_content']
         );
+
+        
     }
     /**
      * Add location column to orders table

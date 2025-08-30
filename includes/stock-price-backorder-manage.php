@@ -852,7 +852,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.1');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.3');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -872,7 +872,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.1');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.3');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }
@@ -1172,6 +1172,7 @@ function mulopimfwc_add_location_column_to_product_list($columns)
 
     return $new_columns;
 }
+
 add_action('manage_product_posts_custom_column', 'mulopimfwc_populate_locations_column_in_product_list', 10, 2);
 function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
 {
@@ -1196,6 +1197,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
 
                     $output .= '<b>' . esc_html($variation_name) . '</b>'; // Display variation name
 
+                    // Show location-wise info
                     foreach ($mulopimfwc_locations as $location) {
                         $location_price = get_post_meta($variation_id, '_location_regular_price_' . $location->term_id, true);
                         $location_stock = get_post_meta($variation_id, '_location_stock_' . $location->term_id, true);
@@ -1213,9 +1215,31 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                             $output .= '</div>'; // New line for each location
                         }
                     }
+
+                    // Add default stock and price for variation
+                    $default_stock_quantity = $variation->get_stock_quantity();
+                    $default_stock_status = $variation->get_stock_status();
+                    $default_price = $variation->get_regular_price();
+
+                    $output .= '<div style="margin-top: 5px;"><strong>' . __('Default', 'multi-location-product-and-inventory-management') . ': </strong>';
+                    
+                    if ($default_stock_status === 'instock') {
+                        $output .= '<mark class="instock">' . __('In stock', 'multi-location-product-and-inventory-management');
+                        if ($default_stock_quantity) {
+                            $output .= ' (' . $default_stock_quantity . ')';
+                        }
+                        $output .= '</mark>';
+                    } else {
+                        $output .= '<mark class="outofstock">' . __('Out of stock', 'multi-location-product-and-inventory-management') . '</mark>';
+                    }
+
+                    if ($default_price) {
+                        $output .= ' - ' . wc_price($default_price);
+                    }
+                    $output .= '</div><br>';
                 }
             } else {
-                // For simple products
+                // For simple products - show location-wise info first
                 foreach ($mulopimfwc_locations as $location) {
                     $location_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location->term_id, true);
                     $location_stock = get_post_meta($product->get_id(), '_location_stock_' . $location->term_id, true);
@@ -1232,9 +1256,89 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                         $output .= '</div>';
                     }
                 }
+
+                // Add default stock and price for simple product
+                $default_stock_quantity = $product->get_stock_quantity();
+                $default_stock_status = $product->get_stock_status();
+                $default_price = $product->get_regular_price();
+
+                $output .= '<div style="margin-top: 5px;"><strong>' . __('Default', 'multi-location-product-and-inventory-management') . ': </strong>';
+                
+                if ($default_stock_status === 'instock') {
+                    $output .= '<mark class="instock">' . __('In stock', 'multi-location-product-and-inventory-management');
+                    if ($default_stock_quantity) {
+                        $output .= ' (' . $default_stock_quantity . ')';
+                    }
+                    $output .= '</mark>';
+                } else {
+                    $output .= '<mark class="outofstock">' . __('Out of stock', 'multi-location-product-and-inventory-management') . '</mark>';
+                }
+
+                if ($default_price) {
+                    $output .= ' - ' . wc_price($default_price);
+                }
+                $output .= '</div>';
             }
 
             echo wp_kses_post($output) ?: '<span class="na">—</span>';
+        } else {
+            // If no locations are set, show only default info
+            if ($product->is_type('variable')) {
+                $variation_ids = $product->get_children();
+                $output = '';
+                foreach ($variation_ids as $variation_id) {
+                    $variation = new WC_Product_Variation($variation_id);
+                    $variation_title = $variation->get_attributes();
+                    $variation_name = implode(', ', $variation_title);
+
+                    $output .= '<b>' . esc_html($variation_name) . '</b>';
+                    
+                    $default_stock_quantity = $variation->get_stock_quantity();
+                    $default_stock_status = $variation->get_stock_status();
+                    $default_price = $variation->get_regular_price();
+
+                    $output .= '<div><strong>' . __('Default', 'multi-location-product-and-inventory-management') . ': </strong>';
+                    
+                    if ($default_stock_status === 'instock') {
+                        $output .= '<mark class="instock">' . __('In stock', 'multi-location-product-and-inventory-management');
+                        if ($default_stock_quantity) {
+                            $output .= ' (' . $default_stock_quantity . ')';
+                        }
+                        $output .= '</mark>';
+                    } else {
+                        $output .= '<mark class="outofstock">' . __('Out of stock', 'multi-location-product-and-inventory-management') . '</mark>';
+                    }
+
+                    if ($default_price) {
+                        $output .= ' - ' . wc_price($default_price);
+                    }
+                    $output .= '</div><br>';
+                }
+                echo wp_kses_post($output);
+            } else {
+                $default_stock_quantity = $product->get_stock_quantity();
+                $default_stock_status = $product->get_stock_status();
+                $default_price = $product->get_regular_price();
+
+                $output = '<div><strong>' . __('Default', 'multi-location-product-and-inventory-management') . ': </strong>';
+                
+                if ($default_stock_status === 'instock') {
+                    $output .= '<mark class="instock">' . __('In stock', 'multi-location-product-and-inventory-management');
+                    if ($default_stock_quantity) {
+                        $output .= ' (' . $default_stock_quantity . ')';
+                    }
+                    $output .= '</mark>';
+                } else {
+                    $output .= '<mark class="outofstock">' . __('Out of stock', 'multi-location-product-and-inventory-management') . '</mark>';
+                }
+
+                if ($default_price) {
+                    $output .= ' - ' . wc_price($default_price);
+                }
+                $output .= '</div>';
+                
+                echo wp_kses_post($output);
+            }
         }
     }
 }
