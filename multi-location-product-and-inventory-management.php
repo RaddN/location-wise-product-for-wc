@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -229,7 +229,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/js/admin.js',
             ['jquery'],
-            '1.0.3',
+            '1.0.4',
             true
         );
 
@@ -249,7 +249,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/css/admin.css',
             [],
-            '1.0.3'
+            '1.0.4'
         );
     }
 
@@ -350,9 +350,9 @@ class mulopimfwc_Location_Wise_Products
 
     public function enqueue_scripts()
     {
-        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.3');
+        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.4');
         wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.3', true);
+        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.4', true);
         wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
         wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
@@ -364,7 +364,7 @@ class mulopimfwc_Location_Wise_Products
         wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', array(), '1.7.1');
         wp_enqueue_script('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array('jquery'), '1.7.1', true);
 
-        wp_enqueue_script('mulopimfwc_script_map', plugins_url('assets/js/location-features.js', __FILE__), ['jquery'], '1.0.3', true);
+        wp_enqueue_script('mulopimfwc_script_map', plugins_url('assets/js/location-features.js', __FILE__), ['jquery'], '1.0.4', true);
 
 
         // Localize script with configuration
@@ -928,7 +928,7 @@ class mulopimfwc_Location_Wise_Products
     }
     function custom_admin_styles()
     {
-        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.3");
+        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.4");
     }
 }
 
@@ -1087,3 +1087,4 @@ function mulopimfwc_delete_user_location()
 
     wp_send_json_success(array('message' => 'Location deleted successfully'));
 }
+

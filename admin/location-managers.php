@@ -1037,40 +1037,87 @@ class MULOPIMFWC_Location_Managers
     {
         if (!current_user_can('mulopimfwc_location_manager')) return;
 
+        $manager = wp_get_current_user();
+        $manager_capabilities = get_user_meta($manager->ID, 'mulopimfwc_manager_capabilities', true);
+
+        // If no capabilities are set, deny access to everything except dashboard and profile
+        if (empty($manager_capabilities) || !is_array($manager_capabilities)) {
+            $manager_capabilities = [];
+        }
+
         // Get all global menu items
         global $menu, $submenu;
 
-        // Allowed pages (your plugin pages + essentials)
-        $allowed_pages = [
+        // Base allowed pages (always accessible)
+        $base_allowed_pages = [
             'index.php', // Dashboard
-            'upload.php',
-            'media-new.php',
-            'edit.php?post_type=product',
-            'post-new.php?post_type=product',
-            "edit-tags.php?taxonomy=product_brand&amp;post_type=product",
-            "edit-tags.php?taxonomy=product_cat&amp;post_type=product",
-            "edit-tags.php?taxonomy=product_tag&amp;post_type=product",
-            "product_attributes",
             'profile.php', // User profile
-            "wc-orders",
-            'edit.php?post_type=shop_order',
-            "coupons-moved",
-            'multi-location-product-and-inventory-management',
-            'location-stock-management',
-            "Library",
-            "upload_files",
-            'woocommerce',
-            'products',
-            'edit_products',
-            'edit.php',
-            'post-new.php',
-            'edit-tags.php',
-            'manage_product_terms',
         ];
+
+        // Capability-based page mapping
+        $capability_pages = [
+            'manage_inventory' => [
+                'multi-location-product-and-inventory-management',
+                'location-stock-management',
+                'upload.php', // Media library for product images
+                'media-new.php',
+                'Library',
+                'upload_files',
+            ],
+            'view_products' => [
+                'edit.php?post_type=product',
+                'products',
+                'edit_products',
+            ],
+            'manage_products' => [
+                'edit.php?post_type=product',
+                'post-new.php?post_type=product',
+                'edit-tags.php?taxonomy=product_brand&amp;post_type=product',
+                'edit-tags.php?taxonomy=product_cat&amp;post_type=product',
+                'edit-tags.php?taxonomy=product_tag&amp;post_type=product',
+                'product_attributes',
+                'products',
+                'edit_products',
+                'edit.php',
+                'post-new.php',
+                'edit-tags.php',
+                'manage_product_terms',
+                'upload.php', // Media library for product management
+                'media-new.php',
+                'Library',
+                'upload_files',
+            ],
+            'view_orders' => [
+                'wc-orders',
+                'edit.php?post_type=shop_order',
+                'woocommerce',
+            ],
+            'manage_orders' => [
+                'wc-orders',
+                'edit.php?post_type=shop_order',
+                'woocommerce',
+                'coupons-moved', // If they can manage orders, they might need coupons
+            ],
+            'run_reports' => [
+                'woocommerce', // WooCommerce main menu usually contains reports
+                // Add specific report pages here if you have custom ones
+            ],
+        ];
+
+        // Build allowed pages based on capabilities
+        $allowed_pages = $base_allowed_pages;
+
+        foreach ($manager_capabilities as $capability) {
+            if (isset($capability_pages[$capability])) {
+                $allowed_pages = array_merge($allowed_pages, $capability_pages[$capability]);
+            }
+        }
+
+        // Remove duplicates
+        $allowed_pages = array_unique($allowed_pages);
 
         // Remove all top-level menus except allowed ones
         foreach ($menu as $index => $item) {
-
             if (!in_array($item[2], $allowed_pages)) {
                 remove_menu_page($item[2]);
             }
@@ -1238,3 +1285,547 @@ class MULOPIMFWC_Location_Managers
 
 // Initialize the class
 new MULOPIMFWC_Location_Managers();
+
+
+
+
+
+
+
+/**
+ * filter orders based on location manager's assigned locations
+ */
+
+class MULOPIMFWC_Order_Filter
+{
+    public function __construct()
+    {
+        // Filter orders in admin list table
+        add_action('pre_get_posts', [$this, 'filter_orders_by_location_manager']);
+
+        // Filter orders in WooCommerce HPOS (High Performance Order Storage) if enabled
+        add_filter('woocommerce_order_query_args', [$this, 'filter_hpos_orders_by_location_manager']);
+
+        // Add location filter dropdown in orders admin
+        add_action('restrict_manage_posts', [$this, 'add_location_filter_dropdown']);
+
+        // Handle location filter dropdown
+        add_action('pre_get_posts', [$this, 'handle_location_filter_dropdown']);
+    }
+
+    /**
+     * Filter orders for location managers (Traditional Posts)
+     */
+    public function filter_orders_by_location_manager($query)
+    {
+        // Only apply in admin area
+        if (!is_admin()) {
+            return;
+        }
+
+        // Only apply to main query
+        if (!$query->is_main_query()) {
+            return;
+        }
+
+        // Only apply to shop_order post type
+        if (!isset($query->query['post_type']) || $query->query['post_type'] !== 'shop_order') {
+            return;
+        }
+
+        // Check if current user is a location manager
+        if (!$this->is_current_user_location_manager()) {
+            return;
+        }
+
+        // Get assigned locations for current user
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+
+        if (empty($assigned_locations)) {
+            // If no locations assigned, show no orders
+            $query->set('post__in', [0]);
+            return;
+        }
+
+        // Add meta query to filter by store location
+        $meta_query = $query->get('meta_query') ?: [];
+
+        $meta_query[] = [
+            'key' => '_store_location',
+            'value' => $assigned_locations,
+            'compare' => 'IN'
+        ];
+
+        $query->set('meta_query', $meta_query);
+    }
+
+    /**
+     * Filter orders for location managers (HPOS - High Performance Order Storage)
+     */
+    public function filter_hpos_orders_by_location_manager($query_args)
+    {
+        // Only apply in admin area
+        if (!is_admin()) {
+            return $query_args;
+        }
+
+        // Check if current user is a location manager
+        if (!$this->is_current_user_location_manager()) {
+            return $query_args;
+        }
+
+        // Get assigned locations for current user
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+
+        if (empty($assigned_locations)) {
+            // If no locations assigned, show no orders
+            $query_args['post__in'] = [0];
+            return $query_args;
+        }
+
+        // Add meta query for HPOS
+        if (!isset($query_args['meta_query'])) {
+            $query_args['meta_query'] = [];
+        }
+
+        $query_args['meta_query'][] = [
+            'key' => '_store_location',
+            'value' => $assigned_locations,
+            'compare' => 'IN'
+        ];
+
+        return $query_args;
+    }
+
+    /**
+     * Add location filter dropdown for admins (not location managers)
+     */
+    public function add_location_filter_dropdown()
+    {
+        global $typenow;
+
+        // Only show on orders page
+        if ($typenow !== 'shop_order') {
+            return;
+        }
+
+        // Don't show for location managers (they already have filtered view)
+        if ($this->is_current_user_location_manager()) {
+            return;
+        }
+
+        // Only show for users who can manage woocommerce
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        global $mulopimfwc_locations;
+
+        if (empty($mulopimfwc_locations)) {
+            return;
+        }
+
+        $selected_location = isset($_GET['filter_by_location']) ? sanitize_text_field($_GET['filter_by_location']) : '';
+
+        echo '<select name="filter_by_location" id="filter_by_location">';
+        echo '<option value="">' . esc_html__('All Locations', 'multi-location-product-and-inventory-management') . '</option>';
+
+        foreach ($mulopimfwc_locations as $location) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($location->slug),
+                selected($selected_location, $location->slug, false),
+                esc_html($location->name)
+            );
+        }
+
+        echo '</select>';
+    }
+
+    /**
+     * Handle location filter dropdown selection
+     */
+    public function handle_location_filter_dropdown($query)
+    {
+        // Only apply in admin area
+        if (!is_admin()) {
+            return;
+        }
+
+        // Only apply to main query
+        if (!$query->is_main_query()) {
+            return;
+        }
+
+        // Only apply to shop_order post type
+        if (!isset($query->query['post_type']) || $query->query['post_type'] !== 'shop_order') {
+            return;
+        }
+
+        // Don't apply if user is location manager (they have their own filtering)
+        if ($this->is_current_user_location_manager()) {
+            return;
+        }
+
+        // Check if location filter is set
+        if (empty($_GET['filter_by_location'])) {
+            return;
+        }
+
+        $filter_location = sanitize_text_field($_GET['filter_by_location']);
+
+        // Add meta query to filter by selected location
+        $meta_query = $query->get('meta_query') ?: [];
+
+        $meta_query[] = [
+            'key' => '_store_location',
+            'value' => $filter_location,
+            'compare' => '='
+        ];
+
+        $query->set('meta_query', $meta_query);
+    }
+
+    /**
+     * Check if current user is a location manager
+     */
+    private function is_current_user_location_manager()
+    {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        return in_array('mulopimfwc_location_manager', $user->roles);
+    }
+
+    /**
+     * Add notice to show current location filtering status
+     */
+    public function add_location_filter_notice()
+    {
+        $screen = get_current_screen();
+
+        if (!$screen || $screen->id !== 'edit-shop_order') {
+            return;
+        }
+
+        if (!$this->is_current_user_location_manager()) {
+            return;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+
+        if (empty($assigned_locations)) {
+            echo '<div class="notice notice-warning"><p>' .
+                esc_html__('You are not assigned to any locations. No orders will be displayed.', 'multi-location-product-and-inventory-management') .
+                '</p></div>';
+            return;
+        }
+
+        global $mulopimfwc_locations;
+        $location_names = [];
+
+        foreach ($assigned_locations as $location_slug) {
+            $location = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+            if ($location) {
+                $location_names[] = $location->name;
+            }
+        }
+
+        if (!empty($location_names)) {
+            echo '<div class="notice notice-info"><p>' .
+                sprintf(
+                    esc_html__('You are viewing orders for: %s', 'multi-location-product-and-inventory-management'),
+                    '<strong>' . implode(', ', $location_names) . '</strong>'
+                ) .
+                '</p></div>';
+        }
+    }
+}
+
+// Initialize the order filter
+add_action('init', function () {
+    new MULOPIMFWC_Order_Filter();
+});
+
+// Also add the notice functionality
+add_action('admin_notices', [new MULOPIMFWC_Order_Filter(), 'add_location_filter_notice']);
+
+
+
+/**
+ * Filter order count in admin menu for location managers
+ * This handles both traditional posts and WooCommerce HPOS
+ */
+
+class MULOPIMFWC_Order_Count_Filter
+{
+    public function __construct()
+    {
+        // Filter post counts for traditional WordPress posts
+        add_filter('wp_count_posts', [$this, 'filter_order_count'], 10, 3);
+
+        // Filter WooCommerce HPOS order counts
+        add_filter('woocommerce_order_query', [$this, 'filter_wc_order_count_query'], 10, 2);
+
+        // Alternative approach for WooCommerce admin menu counts
+        add_filter('woocommerce_menu_order_count', [$this, 'filter_wc_menu_order_count']);
+    }
+
+    /**
+     * Filter order count for traditional WordPress posts
+     */
+    public function filter_order_count($counts, $type, $perm)
+    {
+        if ($type !== 'shop_order' || !is_admin()) {
+            return $counts;
+        }
+
+        if (!$this->is_current_user_location_manager()) {
+            return $counts;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+
+        if (empty($assigned_locations)) {
+            // Reset all counts to 0 if no locations assigned
+            $empty_counts = new stdClass();
+            foreach ($counts as $status => $count) {
+                $empty_counts->$status = 0;
+            }
+            return $empty_counts;
+        }
+
+        // Get filtered counts for each status
+        $filtered_counts = new stdClass();
+        foreach ($counts as $status => $count) {
+            $filtered_counts->$status = $this->get_filtered_order_count($status, $assigned_locations);
+        }
+
+        return $filtered_counts;
+    }
+
+    /**
+     * Get filtered order count for specific status and locations
+     */
+    private function get_filtered_order_count($status, $assigned_locations)
+    {
+        global $wpdb;
+
+        // Handle WooCommerce HPOS if enabled
+        if ($this->is_hpos_enabled()) {
+
+            // HPOS enabled - query orders table
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            $orders_meta_table = $wpdb->prefix . 'wc_orders_meta';
+
+            $placeholders = implode(',', array_fill(0, count($assigned_locations), '%s'));
+            $query_params = array_merge([$status], $assigned_locations);
+
+            $sql = $wpdb->prepare("
+                SELECT COUNT(o.id)
+                FROM {$orders_table} o
+                INNER JOIN {$orders_meta_table} om ON o.id = om.order_id
+                WHERE o.status = %s
+                AND om.meta_key = '_store_location'
+                AND om.meta_value IN ({$placeholders})
+            ", $query_params);
+
+            return (int) $wpdb->get_var($sql);
+        } else {
+            // Traditional posts table
+            $placeholders = implode(',', array_fill(0, count($assigned_locations), '%s'));
+            $query_params = array_merge([$status], $assigned_locations);
+
+            $sql = $wpdb->prepare("
+                SELECT COUNT(p.ID)
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status = %s
+                AND pm.meta_key = '_store_location'
+                AND pm.meta_value IN ({$placeholders})
+            ", $query_params);
+
+            return (int) $wpdb->get_var($sql);
+        }
+    }
+
+    /**
+     * Filter WooCommerce HPOS order count query
+     */
+    public function filter_wc_order_count_query($query, $query_vars)
+    {
+        if (!is_admin() || !$this->is_current_user_location_manager()) {
+            return $query;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+
+        if (empty($assigned_locations)) {
+            // Force no results
+            $query_vars['post__in'] = [0];
+            return $query;
+        }
+
+        // Add meta query for assigned locations
+        if (!isset($query_vars['meta_query'])) {
+            $query_vars['meta_query'] = [];
+        }
+
+        $query_vars['meta_query'][] = [
+            'key' => '_store_location',
+            'value' => $assigned_locations,
+            'compare' => 'IN'
+        ];
+
+        return $query;
+    }
+
+    /**
+     * Filter WooCommerce menu order count
+     */
+    public function filter_wc_menu_order_count($count)
+    {
+        if (!is_admin() || !$this->is_current_user_location_manager()) {
+            return $count;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+
+        if (empty($assigned_locations)) {
+            return 0;
+        }
+
+        // Get count of processing orders for assigned locations
+        return $this->get_filtered_order_count('wc-processing', $assigned_locations);
+    }
+
+    /**
+     * Check if WooCommerce HPOS is enabled
+     */
+    private function is_hpos_enabled()
+    {
+        // Check if WooCommerce HPOS is available and enabled
+        if (!function_exists('wc_get_container')) {
+            return false;
+        }
+
+        // Multiple ways to check HPOS
+        if (function_exists('wc_get_order_datastore')) {
+            $datastore = wc_get_order_datastore();
+            return is_a($datastore, 'Automattic\WooCommerce\Internal\DataStores\Orders\OrdersTableDataStore');
+        }
+
+        // Alternative check
+        if (class_exists('Automattic\WooCommerce\Utilities\OrderUtil')) {
+            return \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+        }
+
+        // Fallback check
+        if (function_exists('wc_get_container')) {
+            try {
+                $features_controller = wc_get_container()->get(\Automattic\WooCommerce\Internal\Features\FeaturesController::class);
+                return $features_controller->feature_is_enabled('custom_order_tables');
+            } catch (Exception $e) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if current user is a location manager
+     */
+    private function is_current_user_location_manager()
+    {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        return in_array('mulopimfwc_location_manager', $user->roles);
+    }
+
+    /**
+     * Get total order count for all statuses (for dashboard widget)
+     */
+    public function get_location_manager_total_orders()
+    {
+        if (!$this->is_current_user_location_manager()) {
+            return null;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+
+        if (empty($assigned_locations)) {
+            return 0;
+        }
+
+        global $wpdb;
+
+        // Handle WooCommerce HPOS if enabled
+        if ($this->is_hpos_enabled()) {
+
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            $orders_meta_table = $wpdb->prefix . 'wc_orders_meta';
+
+            $placeholders = implode(',', array_fill(0, count($assigned_locations), '%s'));
+
+            $sql = $wpdb->prepare("
+                SELECT COUNT(DISTINCT o.id)
+                FROM {$orders_table} o
+                INNER JOIN {$orders_meta_table} om ON o.id = om.order_id
+                WHERE om.meta_key = '_store_location'
+                AND om.meta_value IN ({$placeholders})
+            ", $assigned_locations);
+
+            return (int) $wpdb->get_var($sql);
+        } else {
+            $placeholders = implode(',', array_fill(0, count($assigned_locations), '%s'));
+
+            $sql = $wpdb->prepare("
+                SELECT COUNT(DISTINCT p.ID)
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                WHERE p.post_type = 'shop_order'
+                AND pm.meta_key = '_store_location'
+                AND pm.meta_value IN ({$placeholders})
+            ", $assigned_locations);
+
+            return (int) $wpdb->get_var($sql);
+        }
+    }
+}
+
+// Initialize the order count filter
+new MULOPIMFWC_Order_Count_Filter();
+
+/**
+ * Alternative approach: Hook into WooCommerce reports and dashboard widgets
+ */
+add_filter('woocommerce_reports_order_statuses', function ($order_statuses) {
+    $filter = new MULOPIMFWC_Order_Count_Filter();
+    if (
+        method_exists($filter, 'is_current_user_location_manager') &&
+        $filter->is_current_user_location_manager()
+    ) {
+        // This ensures reports also respect location filtering
+        add_filter('woocommerce_reports_get_order_report_query', function ($query) {
+            $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+            if (!empty($assigned_locations)) {
+                $query['meta_query'] = $query['meta_query'] ?? [];
+                $query['meta_query'][] = [
+                    'key' => '_store_location',
+                    'value' => $assigned_locations,
+                    'compare' => 'IN'
+                ];
+            }
+            return $query;
+        });
+    }
+    return $order_statuses;
+});
+?>
