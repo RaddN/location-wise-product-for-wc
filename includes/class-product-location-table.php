@@ -43,9 +43,8 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             'title'         => __('Product', 'multi-location-product-and-inventory-management'),
             'stock'         => __('Stock by Location', 'multi-location-product-and-inventory-management'),
             'price'         => __('Price by Location', 'multi-location-product-and-inventory-management'),
-            'purchase_price' => __('Purchase Price', 'multi-location-product-and-inventory-management'),
+            'purchase_price' => __('Purchase Info', 'multi-location-product-and-inventory-management'),
             'gross_profit'   => __('Gross Profit', 'multi-location-product-and-inventory-management'),
-            'locations'     => __('Locations', 'multi-location-product-and-inventory-management'),
             'actions'       => __('Actions', 'multi-location-product-and-inventory-management'),
         ];
     }
@@ -70,8 +69,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 return $this->get_purchase_price_display($item);
             case 'gross_profit':
                 return $this->get_gross_profit_display($item);
-            case 'locations':
-                return $this->get_locations_display($item);
             case 'actions':
                 return $this->get_actions_display($item);
             default:
@@ -246,8 +243,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             }
         } else {
             $purchase_price = get_post_meta($item['id'], '_purchase_price', true);
+            $purchase_quantity = get_post_meta($item['id'], '_purchase_quantity', true);
             $output .= '<div class="purchase-price-item">';
-            $output .= '<span class="purchase-price-value">' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
+            $output .= '<span class="purchase-price-value"> Price: ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
+            $output .= '</div>';
+            $output .= '<div class="purchase-price-item">';
+            $output .= '<span class="purchase-price-value"> Quantity: ' . (!empty($purchase_quantity) ? $purchase_quantity : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
             $output .= '</div>';
         }
 

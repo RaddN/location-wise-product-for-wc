@@ -17,19 +17,19 @@ class MULOPIMFWC_Dashboard
     public function dashboard_page_content()
     {
         global $mulopimfwc_locations;
-        
+
         // Increase memory limit for dashboard operations
         if (function_exists('ini_set')) {
             ini_set('memory_limit', '512M');
         }
-        
+
         // Set max execution time
         set_time_limit(300);
-        
+
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.4", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.4");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.5", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.5");
 
         // Initialize data arrays
         $product_counts = [];
@@ -247,7 +247,7 @@ class MULOPIMFWC_Dashboard
     private function get_location_product_count($location_id)
     {
         global $wpdb;
-        
+
         $query = $wpdb->prepare("
             SELECT COUNT(DISTINCT p.ID) 
             FROM {$wpdb->posts} p
@@ -258,7 +258,7 @@ class MULOPIMFWC_Dashboard
             AND tt.taxonomy = 'mulopimfwc_store_location'
             AND tt.term_id = %d
         ", $location_id);
-        
+
         return (int) $wpdb->get_var($query);
     }
 
@@ -268,9 +268,9 @@ class MULOPIMFWC_Dashboard
     private function get_location_stock_level($location_id)
     {
         global $wpdb;
-        
+
         $meta_key = '_location_stock_' . $location_id;
-        
+
         $query = $wpdb->prepare("
             SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)), 0) as total_stock
             FROM {$wpdb->posts} p
@@ -281,7 +281,7 @@ class MULOPIMFWC_Dashboard
             AND pm.meta_value != ''
             AND pm.meta_value IS NOT NULL
         ", $meta_key);
-        
+
         return (int) $wpdb->get_var($query);
     }
 
@@ -291,7 +291,7 @@ class MULOPIMFWC_Dashboard
     private function get_orders_data_efficiently()
     {
         global $mulopimfwc_locations;
-        
+
         $orders_by_location = ['Default' => 0];
         $location_revenue = ['Default' => 0];
         $location_slugs = ['Default' => 'default'];
@@ -339,16 +339,16 @@ class MULOPIMFWC_Dashboard
     private function get_low_stock_products_efficiently()
     {
         global $wpdb, $mulopimfwc_locations;
-        
+
         if (empty($mulopimfwc_locations)) {
             return [];
         }
 
         $low_stock_products = [];
-        
+
         foreach ($mulopimfwc_locations as $location) {
             $meta_key = '_location_stock_' . $location->term_id;
-            
+
             $query = $wpdb->prepare("
                 SELECT p.ID, p.post_title, pm.meta_value as stock
                 FROM {$wpdb->posts} p
@@ -361,9 +361,9 @@ class MULOPIMFWC_Dashboard
                 ORDER BY CAST(pm.meta_value AS SIGNED) ASC
                 LIMIT 20
             ", $meta_key);
-            
+
             $results = $wpdb->get_results($query);
-            
+
             foreach ($results as $result) {
                 $low_stock_products[] = [
                     'product_id' => $result->ID,
@@ -383,7 +383,7 @@ class MULOPIMFWC_Dashboard
     private function get_recent_products_data()
     {
         global $wpdb;
-        
+
         $days = 30;
         $labels = [];
         $counts = [];
@@ -415,7 +415,7 @@ class MULOPIMFWC_Dashboard
     private function get_total_products_count()
     {
         global $wpdb;
-        
+
         $query = "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status = 'publish'";
         return (int) $wpdb->get_var($query);
     }
@@ -427,34 +427,49 @@ class MULOPIMFWC_Dashboard
     {
         // Use caching to prevent recalculation
         $cache_key = 'mulopimfwc_total_investment';
-        $cached_value = get_transient($cache_key);
-        
-        if ($cached_value !== false) {
-            return $cached_value;
-        }
+        // $cached_value = get_transient($cache_key);
+
+        // if ($cached_value !== false) {
+        //     return $cached_value;
+        // }
 
         global $wpdb;
-        
-        // Calculate investment for simple products
-        $simple_investment = $wpdb->get_var("
-            SELECT COALESCE(SUM(
-                CAST(pm1.meta_value AS DECIMAL(10,2)) * 
-                COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
-            ), 0) as total
-            FROM {$wpdb->posts} p
-            INNER JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id AND pm1.meta_key = '_purchase_price'
-            LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = '_stock'
-            WHERE p.post_type = 'product' 
-            AND p.post_status = 'publish'
-            AND pm1.meta_value != ''
-            AND pm1.meta_value > 0
-        ");
 
-        $total_investment = floatval($simple_investment);
-        
+        // Log the start of the calculation
+        error_log("Starting total investment calculation.");
+
+        // Calculate investment based on _purchase_price and _purchase_quantity
+        $total_investment = $wpdb->get_var("
+        SELECT COALESCE(SUM(
+            CAST(pm1.meta_value AS DECIMAL(10,2)) * 
+            COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
+        ), 0) as total
+        FROM {$wpdb->postmeta} pm1
+        INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
+        WHERE pm1.meta_key = '_purchase_price'
+        AND pm2.meta_key = '_purchase_quantity'
+        AND pm1.meta_value != ''
+        AND pm1.meta_value > 0
+        AND pm2.meta_value != ''
+        AND pm2.meta_value > 0
+        AND pm1.post_id IN (
+            SELECT ID FROM {$wpdb->posts} 
+            WHERE post_type = 'product' 
+            AND post_status = 'publish'
+        )
+    ");
+
+        $total_investment = floatval($total_investment);
+
+        // Log the raw investment total
+        error_log("Raw total investment calculated: " . $total_investment);
+
         // Cache for 1 hour
         set_transient($cache_key, $total_investment, HOUR_IN_SECONDS);
-        
+
+        // Log the final cached value
+        error_log("Total investment cached: " . $total_investment);
+
         return $total_investment;
     }
 
@@ -465,7 +480,7 @@ class MULOPIMFWC_Dashboard
     {
         $cache_key = 'mulopimfwc_monthly_investment';
         $cached_data = get_transient($cache_key);
-        
+
         if ($cached_data !== false) {
             return $cached_data;
         }
@@ -486,7 +501,7 @@ class MULOPIMFWC_Dashboard
 
         // Cache for 6 hours
         set_transient($cache_key, $result, 6 * HOUR_IN_SECONDS);
-        
+
         return $result;
     }
 }

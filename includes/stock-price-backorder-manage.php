@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit;
 
 
 /**
- * Add Purchase Price field to WooCommerce product general tab
+ * Add Purchase Price & Purchase Quantity field to WooCommerce product general tab
  */
 
 // Add the Purchase Price field to the General tab
@@ -28,6 +28,20 @@ function mulopimfwc_add_purchase_price_field()
         )
     );
 
+    woocommerce_wp_text_input(
+        array(
+            'id'          => '_purchase_quantity',
+            'label'       => __('Total Quantity Purchase', 'multi-location-product-and-inventory-management'),
+            'desc_tip'    => true,
+            'description' => __('Enter the total quantity purchase for this product.', 'multi-location-product-and-inventory-management'),
+            'type'        => 'number',
+            'custom_attributes' => array(
+                'step' => 'any',
+                'min'  => '0'
+            )
+        )
+    );
+
     echo '</div>';
 }
 
@@ -41,7 +55,9 @@ function mulopimfwc_save_purchase_price_field($post_id)
         return;
     }
     $purchase_price = isset($_POST['_purchase_price']) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_price']))) : '';
+    $purchase_quantity =  isset($_POST['_purchase_quantity']) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_quantity']))) : '';
     update_post_meta($post_id, '_purchase_price', $purchase_price);
+    update_post_meta($post_id, '_purchase_quantity', $purchase_quantity);
 }
 
 // Add Purchase Price to variable products (if needed)
@@ -64,6 +80,22 @@ function mulopimfwc_add_variation_purchase_price_field($loop, $variation_data, $
             'wrapper_class' => 'form-row form-row-first'
         )
     );
+
+    woocommerce_wp_text_input(
+        array(
+            'id'            => '_purchase_quantity[' . $loop . ']',
+            'label'         => __('Purchase Quantity', 'multi-location-product-and-inventory-management'),
+            'desc_tip'      => true,
+            'description'   => __('Enter the purchase quantiy for this variation.', 'multi-location-product-and-inventory-management'),
+            'value'         => get_post_meta($variation->ID, '_purchase_quantity', true),
+            'type'          => 'number',
+            'custom_attributes' => array(
+                'step' => 'any',
+                'min'  => '0'
+            ),
+            'wrapper_class' => 'form-row form-row-first'
+        )
+    );
 }
 
 // Save the Purchase Price field value for variable products
@@ -76,7 +108,9 @@ function mulopimfwc_save_variation_purchase_price_field($variation_id, $loop)
         return;
     }
     $purchase_price = isset($_POST['_purchase_price'][$loop]) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_price'][$loop]))) : '';
+    $purchase_quantity = isset($_POST['_purchase_quantity'][$loop]) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_quantity'][$loop]))) : '';
     update_post_meta($variation_id, '_purchase_price', $purchase_price);
+    update_post_meta($variation_id, '_purchase_quantity', $purchase_quantity);
 }
 
 // stock manage, price manage, backorder manage
@@ -852,7 +886,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.4');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.5');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -872,7 +906,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.4');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.5');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }
