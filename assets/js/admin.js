@@ -205,17 +205,17 @@ jQuery(document).ready(function ($) {
     togglelocationintitlesettings($strict_filtering, 'disabled', $strict_table);
 
 
-    const $enableLocationInfo = $('#enable_location_information');
+    const $enableLocationInfo = $('.enable_location_information input');
 
     // Get the "Enable Location by User Role" table row
-    const $userRoleRow = $('#enable_location_information').closest('tr').next();
+    const $userRoleRow = $('.enable_location_information').closest('tr').next();
 
     // Function to check and toggle visibility
     function toggleUserRoleRow() {
-        if ($enableLocationInfo.val() === 'no') {
-            $userRoleRow.hide();
-        } else {
+        if ($enableLocationInfo.is(':checked')) {
             $userRoleRow.show();
+        } else {
+            $userRoleRow.hide();
         }
     }
 
