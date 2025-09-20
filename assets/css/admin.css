@@ -138,3 +138,109 @@
         width: 100%;
     }
 }
+
+.mulopimfwc_pro_only_blur > * {
+  filter: blur(3px);
+}
+
+.mulopimfwc_pro_only_blur1 > * {
+    filter: blur(1.5px);
+}
+
+.mulopimfwc_pro_only:hover:before {
+  content: "Pro Features Only";
+  background: #ff0000;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999999;
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: #fff;
+  width: max-content;
+}
+
+.mulopimfwc_pro_only {
+  position: relative;
+}
+
+
+ .mulopimfwc_switch {
+  position: relative;
+  display: inline-block;
+  width: 80px;
+  height: 26px;
+}
+ .mulopimfwc_switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+ .mulopimfwc_switch span.mulopimfwc_switch-on {
+  color: #fff;
+  position: absolute;
+  left: 15px;
+  top: 3px;
+  z-index: 9;
+  display: none;
+}
+ .mulopimfwc_switch span.mulopimfwc_switch-off {
+  color: #fff;
+  position: absolute;
+  right: 15px;
+  top: 3px;
+  z-index: 9;
+}
+ .mulopimfwc_switch input[type="checkbox"]:checked ~ .mulopimfwc_switch-off {
+  display: none;
+}
+ .mulopimfwc_switch input[type="checkbox"]:checked ~ .mulopimfwc_switch-on {
+  display: block;
+}
+ .mulopimfwc_slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ed6f6f;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+ .mulopimfwc_slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 24px;
+  left: 4px;
+  bottom: 4px;
+  background-color: #fff;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+ input:checked + .mulopimfwc_slider {
+  background-color: #2196f3;
+}
+ input:focus + .mulopimfwc_slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+ input:checked + .mulopimfwc_slider:before {
+  -webkit-transform: translateX(42px);
+  -ms-transform: translateX(42px);
+  transform: translateX(42px);
+}
+ .mulopimfwc_slider.round {
+  border-radius: 4px;
+}
+ .mulopimfwc_slider.round:before {
+  border-radius: 4px;
+}
+ input:disabled + .mulopimfwc_slider {
+  opacity: 0.5;
+}
+ label.mulopimfwc_slider {
+  background: none !important;
+}

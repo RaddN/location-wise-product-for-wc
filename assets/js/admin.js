@@ -226,7 +226,7 @@ jQuery(document).ready(function ($) {
     $enableLocationInfo.on('change', toggleUserRoleRow);
 
     function togglepopupsetting() {
-        if ($enable_popup.val() === 'no') {
+        if ($enable_popup.val() === 'off') {
             $popup_settings.hide();
         } else {
             $popup_settings.show();
@@ -236,7 +236,7 @@ jQuery(document).ready(function ($) {
     $enable_popup.on('change', togglepopupsetting);
 
     function toggleherichicalsettings() {
-        if ($herichical.val() === 'no') {
+        if ($herichical.val() === 'off') {
             $herichical_settings.hide();
         } else {
             $herichical_settings.show();

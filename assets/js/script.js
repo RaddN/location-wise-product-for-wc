@@ -48,7 +48,7 @@ jQuery(document).ready(function($) {
     }
 
     $('#lwp-shortcode-selector-form').on('change', function() {
-        const dropdown = $(this).find('#lwp-selected-store-shortcode');
+        const dropdown = $(this).find('#lwp-shortcode-selector');
         const selectedStore = dropdown.val();
 
         if (!selectedStore) {
@@ -102,7 +102,7 @@ jQuery(document).ready(function($) {
                 if (parseInt(location_data.location_stock) > 0) {
                     location_info_html += '<span class="in-stock">' + location_data.location_stock + ' in stock</span>';
                 } else {
-                    if (location_data.location_backorders === 'no') {
+                    if (location_data.location_backorders === 'off') {
                         location_info_html += '<span class="out-of-stock">Out of stock</span>';
                     } else {
                         location_info_html += '<span class="on-backorder">Available on backorder</span>';

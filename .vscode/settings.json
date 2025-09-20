@@ -1,0 +1,9 @@
+{
+  "intelephense.environment.includePaths": [
+    "C:/Users/GM Team/Local Sites/dynamic-ajax-product-filters-for-woocommerce/app/public/wp-includes",
+    "C:/Users/GM Team/Local Sites/dynamic-ajax-product-filters-for-woocommerce/app/public/wp-admin/includes",
+    "C:/Users/GM Team/Local Sites/dynamic-ajax-product-filters-for-woocommerce/app/public/wp-content/plugins/woocommerce",
+    "C:/Users/GM Team/Local Sites/dynamic-ajax-product-filters-for-woocommerce/app/public/wp-content/plugins/woocommerce/includes"
+  ],
+  "intelephense.files.maxMemory": 4096
+}

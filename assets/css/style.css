@@ -57,17 +57,7 @@
 }
 
 
-/* Add this to your assets/css/style.css file */
-
 /* Shortcode Styles */
-.lwp-shortcode-store-selector {
-    margin: 20px 0;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
-
 .lwp-shortcode-title {
     margin-top: 0;
     margin-bottom: 15px;

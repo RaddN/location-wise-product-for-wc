@@ -4,7 +4,7 @@ $options = $this->get_display_options();
 ?>
 <div id="lwp-store-selector-modal" style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-store-selector-content">
-    <?php if(isset($options["title_show_popup"]) && $options["title_show_popup"]==="yes"){?>
+    <?php if(isset($options["title_show_popup"]) && $options["title_show_popup"]==="on"){?>
         <h2><?php echo esc_html($options["mulopimfwc_popup_title"] ?? 'Select Your Location'); ?></h2><?php }?>
         <form id="lwp-store-selector-form-modal">
             <?php wp_nonce_field('mulopimfwc_modal_selector', 'mulopimfwc_modal_selector_nonce'); ?>
@@ -17,7 +17,7 @@ $options = $this->get_display_options();
                 $child_counts = array();
                 $depth_map = array();
                 $max_depth = 0;
-                $show_count = isset($options["show_count"]) && $options["show_count"] === "yes";
+                $show_count = isset($options["show_count"]) && $options["show_count"] === "on";
                 
                 // First pass: identify all parent-child relationships and depths
                 foreach ($locations as $location) {
@@ -110,12 +110,12 @@ $options = $this->get_display_options();
                     <option value=""><?php echo isset($options["mulopimfwc_popup_placeholder"]) && $options["mulopimfwc_popup_placeholder"] != ' ' ? esc_html($options["mulopimfwc_popup_placeholder"]) : esc_html('-- Select a Store --'); ?></option>
                     <?php
                     if (!empty($locations) && !is_wp_error($locations)) {
-                        if (isset($options["herichical"]) && $options["herichical"] === "yes") {
+                        if (isset($options["herichical"]) && $options["herichical"] === "on") {
                             // Organize locations into a hierarchical structure
                             $parent_locations = array();
                             $child_locations = array();
                             $child_counts = array();
-                            $show_count = isset($options["show_count"]) && $options["show_count"] === "yes";
+                            $show_count = isset($options["show_count"]) && $options["show_count"] === "on";
                             
                             foreach ($locations as $location) {
                                 if ($location->parent == 0) {
@@ -218,7 +218,7 @@ jQuery(document).ready(function($) {
         }
     });
 ";
-if (isset($options["use_select2"]) && $options["use_select2"] === "yes") {
+if (isset($options["use_select2"]) && $options["use_select2"] === "on") {
     $inline_js .= "
     // Initialize Select2 on all dropdowns
     $('.lwp-store-selector-dropdown').select2();
@@ -233,7 +233,7 @@ else:
 $inline_js = "
 jQuery(document).ready(function($) {
     " . (
-        (isset($options["use_select2"]) && $options["use_select2"] === "yes")
+        (isset($options["use_select2"]) && $options["use_select2"] === "on")
         ? "$('#lwp-store-selector-modal-dropdown').select2();"
         : ""
     ) . "
