@@ -50,7 +50,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure general settings for location-based stock and price management.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'multi-location-product-and-inventory-management'
+            'lwp-general-settings'
         );
 
         // Add "Enable Location Stock" field
@@ -60,7 +60,7 @@ class mulopimfwc_settings
             function () {
                 $this->render_advance_checkbox("enable_location_stock", __("Enable or disable location-specific stock management.", 'multi-location-product-and-inventory-management'));
             },
-            'multi-location-product-and-inventory-management',
+            'lwp-general-settings',
             'location_stock_general_section'
         );
 
@@ -71,7 +71,7 @@ class mulopimfwc_settings
             function () {
                 $this->render_advance_checkbox("enable_location_price", __("Enable or disable location-specific pricing.", 'multi-location-product-and-inventory-management'));
             },
-            'multi-location-product-and-inventory-management',
+            'lwp-general-settings',
             'location_stock_general_section'
         );
 
@@ -82,7 +82,7 @@ class mulopimfwc_settings
             function () {
                 $this->render_advance_checkbox("enable_location_backorder", __("Enable or disable location-specific backorder management.", 'multi-location-product-and-inventory-management'));
             },
-            'multi-location-product-and-inventory-management',
+            'lwp-general-settings',
             'location_stock_general_section'
         );
 
@@ -93,7 +93,7 @@ class mulopimfwc_settings
             function () {
                 $this->render_advance_checkbox("enable_location_information", __("Enable or disable location-specific information management.", 'multi-location-product-and-inventory-management'), 'off');
             },
-            'multi-location-product-and-inventory-management',
+            'lwp-general-settings',
             'location_stock_general_section'
         );
 
@@ -112,7 +112,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html__('Select user roles for which location-specific information is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'multi-location-product-and-inventory-management',
+            'lwp-general-settings',
             'location_stock_general_section'
         );
 
@@ -349,7 +349,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure how inventory is reserved during checkout process.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-inventory-settings'
+            'location-inventory-reserve-settings'
         );
 
         // Add "Enable Inventory Reservation" field
@@ -367,7 +367,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Reserve inventory when products are added to cart.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-inventory-settings',
+            'location-inventory-reserve-settings',
             'mulopimfwc_inventory_reservation_section'
         );
 
@@ -383,7 +383,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('How long to reserve inventory items in cart before releasing (1-1440 minutes).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-inventory-settings',
+            'location-inventory-reserve-settings',
             'mulopimfwc_inventory_reservation_section'
         );
 
@@ -402,7 +402,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('How strictly to enforce inventory reservations.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-inventory-settings',
+            'location-inventory-reserve-settings',
             'mulopimfwc_inventory_reservation_section'
         );
         // Add "Product Shipping" section
@@ -922,7 +922,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure business hours and availability for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-customer-experience-settings'
+            'lwp-business-hour-settings'
         );
 
         // Add "Enable Business Hours" field
@@ -940,7 +940,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Enable management of business hours for each location.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-business-hour-settings',
             'mulopimfwc_location_hours_section'
         );
 
@@ -959,7 +959,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Show store hours on product pages next to location information.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-business-hour-settings',
             'mulopimfwc_location_hours_section'
         );
 
@@ -978,7 +978,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Only allow purchases when the store location is open.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-business-hour-settings',
             'mulopimfwc_location_hours_section'
         );
 
@@ -989,7 +989,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure how location information appears in URLs.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-customer-experience-settings'
+            'lwp-url-management-settings'
         );
 
         // Add "Enable Location in URLs" field
@@ -1007,7 +1007,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Include location information in product and category URLs.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-url-management-settings',
             'mulopimfwc_location_url_section'
         );
 
@@ -1027,7 +1027,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('How to format location information in URLs.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-url-management-settings',
             'mulopimfwc_location_url_section'
         );
 
@@ -1043,7 +1043,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Prefix used in URLs for location (e.g., "store" for store-name.example.com).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-url-management-settings',
             'mulopimfwc_location_url_section'
         );
         // Add Location Display section
@@ -1053,7 +1053,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure how the location selector appears to customers.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-extensions-settings'
+            'lwp-location-selection-settings'
         );
 
         // Add "Display Location on Single Product" field
@@ -1071,7 +1071,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Show current location on single product pages.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-extensions-settings',
+            'lwp-location-selection-settings',
             'mulopimfwc_location_display_section'
         );
 
@@ -1093,7 +1093,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Where to display the current location on single product pages.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-extensions-settings',
+            'lwp-location-selection-settings',
             'mulopimfwc_location_display_section'
         );
 
@@ -1105,7 +1105,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure store locator functionality and integration.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-extensions-settings'
+            'lwp-store-locator-settings'
         );
 
         // Add "Enable Store Locator" field
@@ -1123,7 +1123,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Enable store locator with map functionality.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-extensions-settings',
+            'lwp-store-locator-settings',
             'mulopimfwc_store_locator_section'
         );
 
@@ -1143,7 +1143,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Select which map provider to use for the store locator.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-extensions-settings',
+            'lwp-store-locator-settings',
             'mulopimfwc_store_locator_section'
         );
 
@@ -1159,7 +1159,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Enter your API key for the selected map provider.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-extensions-settings',
+            'lwp-store-locator-settings',
             'mulopimfwc_store_locator_section'
         );
 
@@ -1175,7 +1175,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Default zoom level for the store locator map (1-20).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-extensions-settings',
+            'lwp-store-locator-settings',
             'mulopimfwc_store_locator_section'
         );
         // Add Advanced Settings section
@@ -1229,7 +1229,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure options for importing and exporting location-based product data.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-advance-settings'
+            'lwp-import-export-settings'
         );
 
         // Add new section for Location Manager Settings
@@ -1239,7 +1239,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure permissions and capabilities for location managers.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-advance-settings'
+            'lwp-location-manager-settings'
         );
 
         // Add "Enable Location Manager Role" field
@@ -1257,7 +1257,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Create a dedicated user role for managing specific store locations.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-advance-settings',
+            'lwp-location-manager-settings',
             'mulopimfwc_location_manager_section'
         );
 
@@ -1278,7 +1278,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Select which capabilities location managers should have for their assigned locations.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-advance-settings',
+            'lwp-location-manager-settings',
             'mulopimfwc_location_manager_section'
         );
 
@@ -1298,7 +1298,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Control location managers\' access to the WordPress admin dashboard.', 'multi-location-product-and-inventory-management'); ?></p>
             <?php
             },
-            'location-advance-settings',
+            'lwp-location-manager-settings',
             'mulopimfwc_location_manager_section'
         );
 
@@ -1391,7 +1391,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure how products are allocated to different locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-advance-settings'
+            'lwp-location-allocation-settings'
         );
 
         // Add "Bulk Location Assignment" field
@@ -1409,7 +1409,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Enable bulk assignment of products to locations.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-advance-settings',
+            'lwp-location-allocation-settings',
             'mulopimfwc_product_allocation_section'
         );
 
@@ -1428,7 +1428,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Automatically assign products to locations based on their categories.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-advance-settings',
+            'lwp-location-allocation-settings',
             'mulopimfwc_product_allocation_section'
         );
 
@@ -1521,7 +1521,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure how products are displayed based on location availability and stock.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-product-visibility-settings'
+            'lwp-outstock-product-settings'
         );
 
         // Add "Show Out of Stock Products" field
@@ -1542,7 +1542,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('How to display products that are out of stock at the selected location.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-product-visibility-settings',
+            'lwp-outstock-product-settings',
             'mulopimfwc_location_product_display_section'
         );
 
@@ -1563,7 +1563,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Suggest alternative locations when product is unavailable at current location.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-product-visibility-settings',
+            'lwp-outstock-product-settings',
             'mulopimfwc_location_product_display_section'
         );
 
@@ -1584,7 +1584,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('How to display stock information for location-specific products.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-product-visibility-settings',
+            'lwp-outstock-product-settings',
             'mulopimfwc_location_product_display_section'
         );
 
@@ -1595,7 +1595,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure admin-specific visibility and management options.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-product-visibility-settings'
+            'lwp-admin-product-visibility-settings'
         );
 
         // Add "Show All Products in Admin" field
@@ -1614,30 +1614,30 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Whether admins can see all products regardless of location restrictions.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-product-visibility-settings',
+            'lwp-admin-product-visibility-settings',
             'mulopimfwc_admin_visibility_section'
         );
 
         add_settings_section(
             'mulopimfwc_filter_settings_section',
-            __('Location Filtering Settings', 'location-product-visibility-settings'),
+            __('Location Filtering Settings', 'multi-location-product-and-inventory-management'),
             [$this, 'filter_settings_section_callback'],
-            'location-product-visibility-settings'
+            'lwp-product-filtering-settings'
         );
 
         add_settings_field(
             'mulopimfwc_strict_filtering',
-            __('Strict Location Filtering', 'location-product-visibility-settings'),
+            __('Strict Location Filtering', 'multi-location-product-and-inventory-management'),
             [$this, 'strict_filtering_field_callback'],
-            'location-product-visibility-settings',
+            'lwp-product-filtering-settings',
             'mulopimfwc_filter_settings_section'
         );
 
         add_settings_field(
             'mulopimfwc_filtered_sections',
-            __('Apply Location Filtering To', 'location-product-visibility-settings'),
+            __('Apply Location Filtering To', 'multi-location-product-and-inventory-management'),
             [$this, 'filtered_sections_field_callback'],
-            'location-product-visibility-settings',
+            'lwp-product-filtering-settings',
             'mulopimfwc_filter_settings_section'
         );
 
@@ -1648,7 +1648,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure how orders are processed and fulfilled from different locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-cross-order-settings'
+            'lwp-order-fullfill-settings'
         );
 
         // Add "Order Assignment Method" field
@@ -1668,7 +1668,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('How orders are assigned to locations for fulfillment.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-cross-order-settings',
+            'lwp-order-fullfill-settings',
             'mulopimfwc_order_fulfillment_section'
         );
 
@@ -1688,7 +1688,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Who should receive order notifications.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-cross-order-settings',
+            'lwp-order-fullfill-settings',
             'mulopimfwc_order_fulfillment_section'
         );
         // Cross-Location Order Management
@@ -1893,7 +1893,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure advanced settings for in-store pickup functionality.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-customer-experience-settings'
+            'lwp-location-pickup-settings'
         );
 
         // Add "Enable Location Pickup" field
@@ -1911,7 +1911,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Enable in-store pickup option for products at specific locations.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-location-pickup-settings',
             'mulopimfwc_location_pickup_section'
         );
 
@@ -1927,7 +1927,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Default pickup instructions shown to customers (can be customized per location).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-location-pickup-settings',
             'mulopimfwc_location_pickup_section'
         );
 
@@ -1947,7 +1947,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Who should receive notifications when an order is ready for pickup.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-location-pickup-settings',
             'mulopimfwc_location_pickup_section'
         );
 
@@ -1963,7 +1963,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Default preparation time in hours before an order is ready for pickup.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-location-pickup-settings',
             'mulopimfwc_location_pickup_section'
         );
         // Location-based Customer Insights
@@ -1973,7 +1973,7 @@ class mulopimfwc_settings
             function () {
                 echo '<p>' . esc_html__('Configure customer analytics and insights based on location data.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'location-customer-experience-settings'
+            'lwp-customer-insights-settings'
         );
 
         // Add "Enable Customer Location Tracking" field
@@ -1991,7 +1991,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Track and analyze customer preferences by location.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-customer-insights-settings',
             'mulopimfwc_customer_insights_section'
         );
 
@@ -2011,7 +2011,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('How to store customer location selection history.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-customer-insights-settings',
             'mulopimfwc_customer_insights_section'
         );
 
@@ -2030,7 +2030,7 @@ class mulopimfwc_settings
             <p class="description"><?php echo esc_html_e('Show product recommendations based on location popularity.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
-            'location-customer-experience-settings',
+            'lwp-customer-insights-settings',
             'mulopimfwc_customer_insights_section'
         );
     }
@@ -2173,6 +2173,13 @@ class mulopimfwc_settings
                             </div>
                         </div>
                     </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <div class="lwp-filter-settings lwp-location-show-title">
+                                <?php do_settings_sections('lwp-general-settings'); ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="popup-shortcode-settings" class="lwp-tab-content" style="display:none;">
@@ -2188,8 +2195,28 @@ class mulopimfwc_settings
                             <?php do_settings_sections('location-product-visibility-settings'); ?>
                         </div>
                     </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-outstock-product-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-admin-product-visibility-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-product-filtering-settings'); ?>
+                        </div>
+                    </div>
                 </div>
                 <div id="cross-order-settings" class="lwp-tab-content" style="display:none;">
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-order-fullfill-settings'); ?>
+                        </div>
+                    </div>
                     <div class="lwp-settings-section">
                         <div class="lwp-settings-box">
                             <?php do_settings_sections('location-cross-order-settings'); ?>
@@ -2200,6 +2227,11 @@ class mulopimfwc_settings
                     <div class="lwp-settings-section">
                         <div class="lwp-settings-box">
                             <?php do_settings_sections('location-inventory-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('location-inventory-reserve-settings'); ?>
                         </div>
                     </div>
                 </div>
@@ -2250,14 +2282,39 @@ class mulopimfwc_settings
                 <div id="customer-experience" class="lwp-tab-content" style="display:none;">
                     <div class="lwp-settings-section">
                         <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-business-hour-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-url-management-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
                             <?php do_settings_sections('location-customer-experience-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-location-pickup-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-customer-insights-settings'); ?>
                         </div>
                     </div>
                 </div>
                 <div id="extensions" class="lwp-tab-content" style="display:none;">
                     <div class="lwp-settings-section">
                         <div class="lwp-settings-box">
-                            <?php do_settings_sections('location-extensions-settings'); ?>
+                            <?php do_settings_sections('lwp-location-selection-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-store-locator-settings'); ?>
                         </div>
                     </div>
                 </div>
@@ -2265,6 +2322,21 @@ class mulopimfwc_settings
                     <div class="lwp-settings-section">
                         <div class="lwp-settings-box">
                             <?php do_settings_sections('location-advance-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-import-export-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-location-manager-settings'); ?>
+                        </div>
+                    </div>
+                    <div class="lwp-settings-section">
+                        <div class="lwp-settings-box">
+                            <?php do_settings_sections('lwp-location-allocation-settings'); ?>
                         </div>
                     </div>
                 </div>
