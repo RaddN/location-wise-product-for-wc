@@ -244,3 +244,11 @@
  label.mulopimfwc_slider {
   background: none !important;
 }
+
+
+/* New style */
+.lwp-nav-tabs a.nav-tab.nav-tab {
+    display: flex;
+    align-items: center;
+    column-gap: 5px;
+}
