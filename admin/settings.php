@@ -14,7 +14,13 @@ class mulopimfwc_settings
         register_setting('mulopimfwc_settings', 'mulopimfwc_display_options', 'sanitize_settings');
         add_settings_section(
             'mulopimfwc_display_settings_section',
-            __('Display Location in Product Title Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 24 24" 
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill="#2563eb" d="M12 2C8.7 2 6 4.7 6 8c0 5.2 6 11.1 6 11.1s6-6 6-11.1c0-3.3-2.7-6-6-6m0 3.9c1.1 0 2.1 1 2.1 2.1 0 1.2-.9 2.1-2.1 2.1S9.9 9.1 9.9 8c0-1.2 1-2.1 2.1-2.1m-5.2 9.2c-1.3.3-2.3.6-3.2 1-.4.2-.8.5-1.1.8s-.5.9-.5 1.4c0 .8.5 1.4 1.1 1.8s1.3.7 2.2 1c1.8.6 4.1.9 6.7.9s4.9-.3 6.7-.8c.9-.3 1.6-.6 2.2-1s1.1-1 1.1-1.8c0-1-.8-1.7-1.6-2.2s-1.9-.8-3.2-1l-.3 2c1.1.2 2 .5 2.6.8.4.2.5.4.6.4l-.2.2c-.3.2-.9.5-1.6.7-1.7.4-3.9.7-6.3.7s-4.6-.3-6.1-.8c-.7-.2-1.3-.5-1.6-.7l-.2-.2c.1-.1.2-.2.5-.4.6-.3 1.5-.6 2.7-.8z"/>
+</svg>
+Display Location in Product Title Settings', 'multi-location-product-and-inventory-management'),
             [$this, 'settings_section_callback'],
             'multi-location-product-and-inventory-management'
         );
@@ -46,7 +52,15 @@ class mulopimfwc_settings
         // Add settings section
         add_settings_section(
             'location_stock_general_section',
-            __('General Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 486.493 486.493" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="m20.086 142.379 22.4 10.5c-5.4 21-6.6 43.2-3 65.5l-23.2 8.4c-8.7 3.2-13.2 12.8-10.1 21.6l8.9 24.4c3.2 8.7 12.8 13.2 21.6 10.1l23.2-8.4c11.5 19.4 26.7 35.7 44.3 48.3l-10.5 22.4c-3.9 8.4-.3 18.4 8.1 22.4l23.6 11c8.4 3.9 18.4.3 22.4-8.1l10.5-22.5c15.5 3.9 31.7 5.6 48.1 4.6l.3-6.5c.4-9.2 4.4-17.7 11.2-23.9 6.1-5.6 13.9-8.8 22.2-9 1.4-3.5 3-6.9 4.8-10.3-2.2-2.8-3.9-5.9-5.1-9.2-9.1 3.7-18.8 6.3-29 7.5-59.9 7-114.1-35.8-121.1-95.7s35.8-114.1 95.7-121.1 114.1 35.8 121.1 95.7c2.4 20.8-1.1 40.9-9.4 58.6 3.9 1.6 7.4 3.9 10.5 6.8 3.5-1.4 7-2.7 10.7-3.9 2.1-17.7 17.6-31.1 35.7-30.3l2.4.1c1.7-14.5 1.4-29.3-1-44.1l24.2-8.8c8.7-3.2 13.2-12.8 10.1-21.6l-8.9-24.4c-3.2-8.7-12.8-13.2-21.6-10.1l-24.2 8.8c-11.3-19.1-26.3-35.3-43.7-47.8l10.9-23.2c3.9-8.4.3-18.4-8.1-22.4l-23.6-11c-8.4-3.9-18.4-.3-22.4 8.1l-10.8 23.1c-20.8-5.4-42.9-6.6-64.9-3.1l-8.6-23.8c-3.2-8.7-12.8-13.2-21.6-10.1l-24.4 8.9c-8.7 3.2-13.2 12.8-10.1 21.6l8.6 23.6c-19.3 11.4-35.7 26.4-48.3 43.9l-22.5-10.5c-8.4-3.9-18.4-.3-22.4 8.1l-11 23.6c-4.1 8.2-.5 18.2 8 22.2"/>
+  <path d="M379.286 246.779v-.5c0-5.6-4.4-10.3-10.1-10.6l-16.4-.7c-5.9-.3-10.8 4.3-11.1 10.1l-.7 15.6c-13.5 1.9-26.8 6.6-38.8 14l-10.5-11.5c-4-4.3-10.7-4.6-15-.7l-12.1 11.1c-2.3 2.1-3.4 5-3.4 7.8 0 2.6.9 5.1 2.8 7.2l10.5 11.5c-8.5 11.3-14.3 24.1-17.4 37.4l-15.6-.7c-5.9-.3-10.8 4.3-11.1 10.1l-.7 16.4v.5c0 5.6 4.4 10.3 10.1 10.6l15.7.7c2 13.5 6.7 26.7 14.2 38.6l-11.7 10.7c-2.3 2.1-3.4 5-3.4 7.8 0 2.6.9 5.1 2.8 7.2l11.1 12.1c4 4.3 10.7 4.6 15 .7l11.8-10.8c11.3 8.4 24 14.1 37.2 17.2l-.7 16.1v.5c0 5.6 4.4 10.3 10.1 10.6l16.4.7c5.9.3 10.8-4.3 11.1-10.1l.7-16.1c13.4-1.9 26.4-6.6 38.3-14l10.9 12c4 4.3 10.7 4.6 15 .7l12.1-11.1c-2.3-2.1-3.4-5-3.4-7.8 0-2.6.9-5.1 2.8-7.2l-10.9-12c8.4-11.2 14.2-23.8 17.3-37l16.1.7c5.9.3 10.8-4.3 11.1-10.1l.7-16.4v-.5c0-5.6-4.4-10.3-10.1-10.6l-16.1-.7c-1.9-13.4-6.5-26.6-13.9-38.5l11.8-10.8c2.3-2.1 3.4-5 3.4-7.8 0-2.6-.9-5.1-2.8-7.2l-11.1-12.1c-4-4.3-10.7-4.6-15-.7l-11.7 10.7c-11.3-8.5-24-14.4-37.2-17.5zm16.5 77.1c9.6 10.5 14.3 23.7 14.3 36.9 0 14.8-6 29.6-17.8 40.3-22.3 20.4-56.8 18.8-77.2-3.4-9.6-10.5-14.3-23.7-14.3-36.9 0-14.8 6-29.6 17.8-40.3 22.2-20.4 56.8-18.9 77.2 3.4m-197.9-212.2c-44.7 0-81 36.3-81 81s36.3 81 81 81 81-36.3 81-81-36.3-81-81-81m0 54.6c-14.6 0-26.4 11.8-26.4 26.4 0 6.7-5.4 12.1-12.1 12.1s-12.1-5.4-12.1-12.1c0-27.9 22.7-50.6 50.6-50.6 6.7 0 12.1 5.4 12.1 12.1s-5.5 12.1-12.1 12.1"/>
+</svg>
+General Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure general settings for location-based stock and price management.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -118,7 +132,13 @@ class mulopimfwc_settings
 
         add_settings_section(
             'popup_shortcode_manage_section',
-            __('Popup Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 512 512" 
+     width="16" height="16" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill="#2563eb" d="M432 64H208c-8.8 0-16 7.2-16 16v16h-64V80c0-44.2 35.8-80 80-80h224c44.2 0 80 35.8 80 80v224c0 44.2-35.8 80-80 80h-16v-64h16c8.8 0 16-7.2 16-16V80c0-8.8-7.2-16-16-16M0 192c0-35.3 28.7-64 64-64h256c35.3 0 64 28.7 64 64v256c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64zm64 32c0 17.7 14.3 32 32 32h192c17.7 0 32-14.3 32-32s-14.3-32-32-32H96c-17.7 0-32 14.3-32 32"/>
+</svg>
+Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure Popup settings for location-based stock and price management.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -257,7 +277,15 @@ class mulopimfwc_settings
         // Add new Inventory Management section
         add_settings_section(
             'mulopimfwc_inventory_management_section',
-            __('Inventory Management (Coming Soon)', 'multi-location-product-and-inventory-management'),
+            __('<svg version="1.2" 
+     baseProfile="tiny" 
+     xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 256 230" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M61.2 106h37.4v31.2H61.2zm0 72.7h37.4v-31.2H61.2zm0 41.4h37.4v-31.2H61.2zm48.5-41.4H147v-31.2h-37.4v31.2zm0 41.4H147v-31.2h-37.4v31.2zm48.5-31.2v31.2h37.4v-31.2zM255 67.2 128.3 7.6 1.7 67.4l7.9 16.5 16.1-7.7v144h18.2V75.6h169v144.8h18.2v-144l16.1 7.5z"/>
+</svg>Inventory Management (Coming Soon)', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how inventory is managed across multiple locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -345,7 +373,13 @@ class mulopimfwc_settings
         // Add Inventory Reservation Section
         add_settings_section(
             'mulopimfwc_inventory_reservation_section',
-            __('Inventory Reservation Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 24 24" 
+     fill="none" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M0 4.6A2.6 2.6 0 0 1 2.6 2h18.8A2.6 2.6 0 0 1 24 4.6v.8A2.6 2.6 0 0 1 21.4 8H21v10.6c0 1.33-1.07 2.4-2.4 2.4H5.4C4.07 21 3 19.93 3 18.6V8h-.4A2.6 2.6 0 0 1 0 5.4zM2.6 4a.6.6 0 0 0-.6.6v.8a.6.6 0 0 0 .6.6h18.8a.6.6 0 0 0 .6-.6v-.8a.6.6 0 0 0-.6-.6zM8 10a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2z" fill="#000"/>
+</svg>Inventory Reservation Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how inventory is reserved during checkout process.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -408,7 +442,13 @@ class mulopimfwc_settings
         // Add "Product Shipping" section
         add_settings_section(
             'mulopimfwc_shipping_section',
-            __('Location-Based Shipping', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 14 14" 
+     aria-hidden="true" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M13 7.118v-.007a.275.275 0 0 0-.277-.27h-.072l-1.12-2.166a.28.28 0 0 0-.246-.148H9.373l.073-.579a.8.8 0 0 0-.202-.614.8.8 0 0 0-.59-.256H2.716a.293.293 0 0 0-.29.264l-.06.477H5.75c.22 0 .393.178.387.398a.41.41 0 0 1-.408.397H4.6v.002H1.29a.29.29 0 0 0-.29.281.27.27 0 0 0 .274.281h4.385a.41.41 0 0 1 .35.421.44.44 0 0 1-.433.426H2.552a.293.293 0 0 0-.291.284.275.275 0 0 0 .277.284h2.987a.41.41 0 0 1 .357.421.44.44 0 0 1-.438.426H1.73a.293.293 0 0 0-.292.285.275.275 0 0 0 .277.284h.248l-.097 1.017c-.02.231.05.45.201.615a.8.8 0 0 0 .591.255h.215a1.24 1.24 0 0 0 1.226 1.026c.618 0 1.147-.442 1.28-1.026h2.675a.9.9 0 0 0 .582-.218.8.8 0 0 0 .555.218h.044a1.24 1.24 0 0 0 1.226 1.026c.618 0 1.147-.442 1.28-1.026h.176c.46 0 .868-.374.91-.834L13 7.145v-.02zm-8.887 3.236a.69.69 0 0 1-.692-.71.734.734 0 0 1 .729-.71c.391 0 .702.318.691.71a.734.734 0 0 1-.728.71m6.362 0a.69.69 0 0 1-.692-.71.734.734 0 0 1 .729-.71c.391 0 .701.318.691.71a.734.734 0 0 1-.728.71m1.785-1.328a.34.34 0 0 1-.33.302h-.19a1.24 1.24 0 0 0-1.213-.962c-.596 0-1.109.41-1.264.962h-.059a.24.24 0 0 1-.181-.076.24.24 0 0 1-.06-.19l.358-3.967h.823l-.13 1.444c-.022.231.05.45.2.615s.36.255.592.255h1.6z"/>
+</svg>Location-Based Shipping', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure shipping options based on product locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -476,7 +516,12 @@ class mulopimfwc_settings
         // Add section for Location-wise Payment Methods
         add_settings_section(
             'mulopimfwc_location_payment_section',
-            __('Location-wise Payment Methods', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 24 24"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2m0 14H4v-6h16zm0-10H4V6h16z"/>
+</svg>Location-wise Payment Methods', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure which payment methods are available for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -505,7 +550,13 @@ class mulopimfwc_settings
         // Add section for Location-based Taxes
         add_settings_section(
             'mulopimfwc_location_tax_section',
-            __('Location-based Tax Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 1024 1024" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M441.71 414.154c0-23.138-17.983-41.656-39.864-41.656-21.875 0-39.864 18.522-39.864 41.656s17.989 41.656 39.864 41.656c21.881 0 39.864-18.518 39.864-41.656m40.96 0c0 45.495-36.048 82.616-80.824 82.616-44.769 0-80.824-37.124-80.824-82.616s36.055-82.616 80.824-82.616c44.776 0 80.824 37.121 80.824 82.616m176.274 192.62c0-23.138-17.983-41.656-39.864-41.656-21.875 0-39.864 18.522-39.864 41.656s17.989 41.656 39.864 41.656c21.881 0 39.864-18.518 39.864-41.656m40.96 0c0 45.495-36.048 82.616-80.824 82.616-44.769 0-80.824-37.124-80.824-82.616s36.055-82.616 80.824-82.616c44.776 0 80.824 37.121 80.824 82.616m-95.515-225.529L363.022 629.79c-7.88 8.114-7.69 21.08.424 28.96s21.08 7.69 28.96-.424l241.367-248.545c7.88-8.114 7.69-21.08-.424-28.96s-21.08-7.69-28.96.424"/>
+  <path d="M829.44 911.36c45.245 0 81.92-36.675 81.92-81.92V194.56c0-45.245-36.675-81.92-81.92-81.92H194.56c-45.245 0-81.92 36.675-81.92 81.92v634.88c0 45.245 36.675 81.92 81.92 81.92zm0 40.96H194.56c-67.866 0-122.88-55.014-122.88-122.88V194.56c0-67.866 55.014-122.88 122.88-122.88h634.88c67.866 0 122.88 55.014 122.88 122.88v634.88c0 67.866-55.014 122.88-122.88 122.88"/>
+</svg>Location-based Tax Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure tax settings specific to each store location.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -556,7 +607,12 @@ class mulopimfwc_settings
         // Add section for Location-based Discounts
         add_settings_section(
             'mulopimfwc_location_discounts_section',
-            __('Location-based Discounts', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 20 20" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill-rule="evenodd" d="M11.566.66a2.19 2.19 0 0 0-3.132 0l-.962.985a2.2 2.2 0 0 1-1.592.66l-1.377-.017a2.19 2.19 0 0 0-2.215 2.215l.016 1.377a2.2 2.2 0 0 1-.66 1.592l-.984.962a2.19 2.19 0 0 0 0 3.132l.985.962c.428.418.667.994.66 1.592l-.017 1.377a2.19 2.19 0 0 0 2.215 2.215l1.377-.016a2.2 2.2 0 0 1 1.592.66l.962.984c.859.88 2.273.88 3.132 0l.962-.985a2.2 2.2 0 0 1 1.592-.66l1.377.017a2.19 2.19 0 0 0 2.215-2.215l-.016-1.377a2.2 2.2 0 0 1 .66-1.592l.984-.962c.88-.859.88-2.273 0-3.132l-.985-.962a2.2 2.2 0 0 1-.66-1.592l.017-1.377a2.19 2.19 0 0 0-2.215-2.215l-1.377.016a2.2 2.2 0 0 1-1.592-.66zM7 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m6 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m.778-8.278a1.1 1.1 0 0 1 0 1.556l-6 6a1.1 1.1 0 1 1-1.556-1.556l6-6a1.1 1.1 0 0 1 1.556 0"/>
+</svg>Location-based Discounts', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure discount rules specific to each store location.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -622,7 +678,14 @@ class mulopimfwc_settings
         // Add Location-based Product Reviews section
         add_settings_section(
             'mulopimfwc_reviews_section',
-            __('Location-based Product Reviews', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 330 330" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M165 0C74.019 0 0 74.019 0 165s74.019 165 165 165 165-74.019 165-165S255.981 0 165 0m0 300c-74.439 0-135-60.561-135-135S90.561 30 165 30s135 60.561 135 135-60.561 135-135 135"/>
+  <path d="m247.157 128.196-47.476-6.9-21.23-43.019a15 15 0 0 0-26.902 0l-21.23 43.019-47.476 6.9a14.998 14.998 0 0 0-8.312 25.585l34.353 33.486-8.109 47.282a15 15 0 0 0 21.765 15.813L165 228.039l42.462 22.323a15 15 0 0 0 6.979 1.723h.05c8.271-.015 14.972-6.725 14.972-15 0-1.152-.13-2.274-.375-3.352l-7.97-46.466 34.352-33.486a15 15 0 0 0-8.313-25.585"/>
+</svg>Location-based Product Reviews', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how product reviews are handled across different locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -689,7 +752,13 @@ class mulopimfwc_settings
         // Location-based Product Bundle Settings
         add_settings_section(
             'mulopimfwc_product_bundle_section',
-            __('Location-based Product Bundles', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 36 36" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path class="clr-i-solid clr-i-solid-path-1" d="m32.43 8.35-13-6.21a1 1 0 0 0-.87 0l-15 7.24a1 1 0 0 0-.57.9v16.55a1 1 0 0 0 .6.92l13 6.19a1 1 0 0 0 .87 0l15-7.24a1 1 0 0 0 .57-.9V9.25a1 1 0 0 0-.6-.9M19 4.15l10.93 5.22-5.05 2.44-10.67-5.35Zm-2 11.49L6 10.41l5.9-2.85 10.7 5.35Zm1 15.8V17.36l13-6.29v14.1Z"/>
+  <path fill="none" d="M0 0h36v36H0z"/>
+</svg>Location-based Product Bundles', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure product bundles that are specific to store locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -757,7 +826,12 @@ class mulopimfwc_settings
         // Add Location SEO section
         add_settings_section(
             'mulopimfwc_seo_section',
-            __('Location SEO Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 24 24" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M2.293 18.707a1 1 0 0 1 0-1.414l3-3a1 1 0 0 1 1.262-.125l2.318 1.545 2.42-2.42a1 1 0 0 1 1.414 1.414l-3 3a1 1 0 0 1-1.262.125l-2.318-1.545-2.42 2.42a1 1 0 0 1-1.414 0M22 3v18a1 1 0 0 1-1 1H3a1 1 0 0 1 0-2h17V8H4v4a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1M4 6h16V4H4Zm10.707 6.707 1-1a1 1 0 0 0-1.414-1.414l-1 1a1 1 0 1 0 1.414 1.414"/>
+</svg>Location SEO Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure SEO settings for location-based product pages.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -823,7 +897,13 @@ class mulopimfwc_settings
         // Add section for Location-based Email Notifications
         add_settings_section(
             'mulopimfwc_location_email_section',
-            __('Location-based Email Notifications', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w.org/2000/svg" 
+     viewBox="0 0 24 24"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M11.5 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2m6.5-6v-5.5c0-3.07-2.13-5.64-5-6.32V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5v.68c-2.87.68-5 3.25-5 6.32V16l-2 2v1h17v-1z"/>
+  <path d="M0 0h24v24H0z" fill="none"/>
+</svg>Location-based Email Notifications', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure email notifications based on store locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -890,7 +970,14 @@ class mulopimfwc_settings
         // Add Location-based PDF Invoice Section
         add_settings_section(
             'mulopimfwc_pdf_invoice_section',
-            __('Location-based PDF Invoices', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 15 15" 
+     fill="none" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M3.5 8H3V7h.5a.5.5 0 0 1 0 1M7 10V7h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z" fill="#000"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M1 1.5A1.5 1.5 0 0 1 2.5 0h8.207L14 3.293V13.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 1 13.5zM3.5 6H2v5h1V9h.5a1.5 1.5 0 1 0 0-3m4 0H6v5h1.5A1.5 1.5 0 0 0 9 9.5v-2A1.5 1.5 0 0 0 7.5 6m2.5 5V6h3v1h-2v1h1v1h-1v2z" fill="#000"/>
+</svg>Location-based PDF Invoices', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure settings for location-specific PDF invoices.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -918,7 +1005,13 @@ class mulopimfwc_settings
         // Add section for Location Hours and Availability
         add_settings_section(
             'mulopimfwc_location_hours_section',
-            __('Location Hours & Availability', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 32 32" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.2.1.1.2.2.2.3.1.1.1.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.2-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
+</svg>Location Hours & Availability', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure business hours and availability for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -985,7 +1078,14 @@ class mulopimfwc_settings
         // Add Location URL Settings Section
         add_settings_section(
             'mulopimfwc_location_url_section',
-            __('Location URL Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 24 24" 
+     xml:space="preserve" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <g/>
+  <path d="m20.7 19.3-1-1c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l1 1c.2.2.5.3.7.3s.5-.1.7-.3c.4-.4.4-1 0-1.4M14 22c0 .6.4 1 1 1s1-.4 1-1v-2c0-.6-.4-1-1-1s-1 .4-1 1zm8-8h-2c-.6 0-1 .4-1 1s.4 1 1 1h2c.6 0 1-.4 1-1s-.4-1-1-1m-1.3-5.6q0-2.1-1.5-3.6t-3.6-1.5c-2.1 0-2.6.5-3.6 1.5L9.8 7c-.4.4-.4 1 0 1.4s1 .4 1.4 0l2.2-2.2c1.2-1.2 3.2-1.2 4.4 0 .6.6.9 1.4.9 2.2s-.3 1.6-.9 2.2l-2.2 2.2c-.4.4-.4 1 0 1.4.2.2.5.3.7.3s.5-.1.7-.3l2.2-2.2q1.5-1.5 1.5-3.6M3.3 15.6q0 2.1 1.5 3.6t3.6 1.5c2.1 0 2.6-.5 3.6-1.5l2.2-2.2c.4-.4.4-1 0-1.4s-1-.4-1.4 0l-2.2 2.2c-1.2 1.2-3.2 1.2-4.4 0-.6-.6-.9-1.4-.9-2.2s.3-1.6.9-2.2l2.2-2.2c.4-.4.4-1 0-1.4s-1-.4-1.4 0L4.8 12q-1.5 1.5-1.5 3.6M5.7 4.3l-1-1c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l1 1c.2.2.4.3.7.3s.5-.1.7-.3c.4-.4.4-1 0-1.4M10 4V2c0-.6-.4-1-1-1s-1 .4-1 1v2c0 .6.4 1 1 1s1-.4 1-1m-6 6c.6 0 1-.4 1-1s-.4-1-1-1H2c-.6 0-1 .4-1 1s.4 1 1 1z"/>
+</svg>Location URL Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how location information appears in URLs.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1049,7 +1149,12 @@ class mulopimfwc_settings
         // Add Location Display section
         add_settings_section(
             'mulopimfwc_location_display_section',
-            __('Location Selection Display (Coming Soon)', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 24 24" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill-rule="evenodd" d="M3.055 13H1v-2h2.055A9.004 9.004 0 0 1 11 3.055V1h2v2.055A9.004 9.004 0 0 1 20.945 11H23v2h-2.055A9.004 9.004 0 0 1 13 20.945V23h-2v-2.055A9.004 9.004 0 0 1 3.055 13M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14m0 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8m0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
+</svg>Location Selection Display (Coming Soon)', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how the location selector appears to customers.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1101,7 +1206,18 @@ class mulopimfwc_settings
         // Add "Store Locator Integration" section
         add_settings_section(
             'mulopimfwc_store_locator_section',
-            __('Store Locator', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 48 48" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <g data-name="Layer 2">
+    <path fill="none" data-name="invisible box" d="M0 0h48v48H0z"/>
+    <g data-name="Health Icons">
+      <path d="M45.8 16.4v-.3l-5-10.9A2 2 0 0 0 39 4H9a2 2 0 0 0-1.8 1.2L2.3 16.1v.3a6 6 0 0 0 1 5.2 6.9 6.9 0 0 0 2.8 2V41a2.9 2.9 0 0 0 3 3H39a2.9 2.9 0 0 0 3-3V23.6a6.9 6.9 0 0 0 2.8-2 6 6 0 0 0 1-5.2M6 17.6 10.3 8h27.4l4.3 9.6a1.9 1.9 0 0 1-.4 1.5 2.1 2.1 0 0 1-1.8.9h-.9a2.2 2.2 0 0 1-2.3-2.1 2 2 0 0 0-4 0 2.1 2.1 0 0 1-2.2 2.1h-2.2a2.1 2.1 0 0 1-2.2-2.1 2 2 0 0 0-4 0 2.1 2.1 0 0 1-2.2 2.1h-2.2a2.1 2.1 0 0 1-2.2-2.1 2 2 0 0 0-4 0A2.2 2.2 0 0 1 9.1 20h-.9a2.1 2.1 0 0 1-1.8-.9 1.9 1.9 0 0 1-.4-1.5M35 40V27h-7v13H10V23.9a5.9 5.9 0 0 0 3.4-1.5 6.3 6.3 0 0 0 4.2 1.6h2.2a6.3 6.3 0 0 0 4.2-1.6 6.3 6.3 0 0 0 4.2 1.6h2.2a6.3 6.3 0 0 0 4.2-1.6 5.9 5.9 0 0 0 3.4 1.5V40Z"/>
+      <path d="M13 27h11v10H13z"/>
+    </g>
+  </g>
+</svg>Store Locator', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure store locator functionality and integration.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1181,7 +1297,15 @@ class mulopimfwc_settings
         // Add Advanced Settings section
         add_settings_section(
             'mulopimfwc_advanced_settings_section',
-            __('Advanced Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 508.963 508.963" 
+     xml:space="preserve" 
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path style="fill:#010002" d="m248.777 293.557 29.595-29.66-30.242-30.156-29.552 29.574c-12.36-8.413-26.51-14.237-41.718-17.17v-41.912h-42.71v41.934c-15.164 2.955-29.293 8.758-41.675 17.17l-29.638-29.574-30.156 30.156 29.509 29.66c-8.305 12.295-14.172 26.424-17.127 41.718H3.151v42.689h41.912c2.955 15.164 8.822 29.293 17.127 41.718l-29.509 29.574 30.156 30.156 29.617-29.574c12.36 8.369 26.51 14.237 41.696 17.192v41.912h42.689v-41.955c15.207-2.955 29.315-8.801 41.718-17.192l29.552 29.53 30.242-30.134-29.595-29.574c8.413-12.382 14.215-26.51 17.127-41.739h41.998v-42.645h-41.977c-2.912-15.274-8.714-29.338-17.127-41.698m-93.25 109.622c-25.669 0-46.593-20.859-46.593-46.593s20.924-46.571 46.593-46.571c25.712 0 46.528 20.837 46.528 46.571 0 25.735-20.795 46.593-46.528 46.593"/>
+  <path style="fill:#010002" d="m495.633 334.175.302-.216-207.727-208.827-.324-98.255L187.365 0l-10.699 10.721 53.452 53.323-52.072 52.18-53.409-53.366-10.742 10.656 26.963 100.412 95.602.324-.626.518L444.92 384.952l.28-.259c13.935 13.633 36.411 13.633 50.13-.237 13.914-13.827 13.936-36.196.303-50.281M482.13 371.19c-6.212 6.191-16.243 6.212-22.412 0-6.148-6.191-6.212-16.157-.065-22.369 6.234-6.169 16.264-6.169 22.477-.022 6.147 6.148 6.212 16.157 0 22.391"/>
+  <g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/>
+</svg>Advanced Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Advanced configuration options for location management.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1225,7 +1349,14 @@ class mulopimfwc_settings
         // Add section for Import/Export Settings
         add_settings_section(
             'mulopimfwc_import_export_section',
-            __('Import & Export Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 367 367" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M175 252.501c-8.285 0-15-6.716-15-15s6.716-15 15-15l65 .001h30V158.5H145c-8.283 0-15-6.716-15-15v-125H15c-8.283 0-15 6.716-15 15v300c0 8.284 6.717 15 15 15h240c8.285 0 15-6.716 15-15v-80.998h-30zm191.925-16.478c-.022-.225-.064-.442-.096-.664-.038-.263-.068-.526-.12-.786-.051-.254-.119-.499-.182-.747-.058-.226-.107-.453-.175-.677-.073-.242-.164-.477-.249-.713-.081-.225-.155-.452-.246-.674-.092-.221-.199-.432-.301-.646-.107-.23-.209-.46-.329-.684-.11-.205-.235-.4-.355-.6-.132-.221-.257-.443-.4-.658-.146-.219-.31-.425-.467-.635-.136-.182-.262-.368-.406-.544q-.45-.547-.948-1.049c-.016-.016-.028-.033-.045-.05l-37.499-37.501c-5.857-5.857-15.355-5.857-21.213 0s-5.858 15.355-.001 21.213l11.893 11.895H270v30h45.787l-11.893 11.893c-5.858 5.858-5.858 15.355 0 21.213a14.95 14.95 0 0 0 10.606 4.394c3.84 0 7.678-1.464 10.607-4.394l37.498-37.499q.011-.013.022-.023.512-.514.972-1.075c.146-.177.272-.364.409-.547.156-.209.318-.414.465-.632.145-.216.27-.441.402-.662.117-.198.242-.392.352-.596.121-.225.223-.458.332-.688.101-.213.207-.423.298-.643.093-.223.167-.451.248-.678.085-.234.175-.467.247-.708.068-.225.119-.454.176-.683.063-.246.132-.49.182-.741.052-.261.082-.524.12-.788.032-.221.073-.438.096-.663q.072-.729.073-1.46l.002-.02-.002-.025a15 15 0 0 0-.074-1.455"/>
+  <path d="M261.214 128.5 160 27.287V128.5h58.787z"/>
+</svg>Import & Export Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure options for importing and exporting location-based product data.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1235,7 +1366,13 @@ class mulopimfwc_settings
         // Add new section for Location Manager Settings
         add_settings_section(
             'mulopimfwc_location_manager_section',
-            __('Location Manager Settings  (Unnecessary)', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w.org/2000/svg" 
+     viewBox="0 0 197.667 197.667" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M188.583 146.142v44.025a7.5 7.5 0 0 1-7.5 7.5h-164.5a7.5 7.5 0 0 1-7.5-7.5v-44.025c0-16.349 11.019-30.763 26.796-35.05l35.933-9.765a7.5 7.5 0 0 1 8.462 3.487l18.559 32.144 18.559-32.144a7.504 7.504 0 0 1 8.462-3.487l35.933 9.765c15.777 4.287 26.796 18.7 26.796 35.05M98.833 0C77.722 0 60.547 20.479 60.547 45.652c0 25.172 17.175 45.652 38.287 45.652s38.286-20.479 38.286-45.652S119.945 0 98.833 0"/>
+</svg>Location Manager Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure permissions and capabilities for location managers.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1387,7 +1524,13 @@ class mulopimfwc_settings
         // Add section for Product Allocation Settings
         add_settings_section(
             'mulopimfwc_product_allocation_section',
-            __('Product Allocation Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 512 512" 
+     xml:space="preserve" 
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="m324.386 198.993-68.385-68.385-68.344 68.344c-18.293 18.272-28.367 42.571-28.368 68.426.001 53.326 43.386 96.711 96.711 96.711 53.326 0 96.711-43.385 96.711-96.711 0-25.829-10.059-50.115-28.325-68.385M256 329.956c-34.504 0-62.577-28.072-62.578-62.576.001-16.73 6.519-32.455 18.364-44.283l44.216-44.216 44.248 44.248c11.818 11.823 18.327 27.536 18.327 44.249.001 34.505-28.072 62.578-62.577 62.578M102.4 34.133V0H0v102.4h34.133v17.067h34.133V102.4H102.4V68.267h17.067V34.133zM68.267 68.267H34.133V34.133h34.133zM409.6 0v34.133h-17.067v34.133H409.6V102.4h34.133v17.067h34.133V102.4H512V0zm68.267 68.267h-34.133V34.133h34.133zM307.2 34.133V0H204.8v34.133h-17.067v34.133H204.8V102.4h102.4V68.267h17.067V34.133zm-34.133 34.134h-34.133V34.133h34.133zM307.2 443.733V409.6H204.8v34.133h-17.067v34.133H204.8V512h102.4v-34.133h17.067v-34.133H307.2zm-34.133 34.134h-34.133v-34.133h34.133zM102.4 443.733V409.6H68.267v-17.067H34.133V409.6H0V512h102.4v-34.133h17.067v-34.133H102.4zm-34.133 34.134H34.133v-34.133h34.133zm68.266-443.734h34.133v34.133h-34.133zm204.8 0h34.133v34.133h-34.133zm-204.8 409.6h34.133v34.133h-34.133zm204.8 0h34.133v34.133h-34.133zM68.267 204.8v-17.067H34.133V204.8H0v102.4h34.133v17.067h34.133V307.2H102.4V204.8zm0 68.267H34.133v-34.133h34.133zm-34.134 68.266h34.133v34.133H34.133zm0-204.8h34.133v34.133H34.133zm409.6 204.8h34.133v34.133h-34.133zm34.134 68.267v-17.067h-34.133V409.6H409.6v34.133h-17.067v34.133H409.6V512H512V409.6zm0 68.267h-34.133v-34.133h34.133zm-34.134-341.334h34.133v34.133h-34.133zm34.134 68.267v-17.067h-34.133V204.8H409.6v102.4h34.133v17.067h34.133V307.2H512V204.8zm0 68.267h-34.133v-34.133h34.133z"/>
+</svg>Product Allocation Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how products are allocated to different locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1435,7 +1578,14 @@ class mulopimfwc_settings
         // Add Product Visibility section
         add_settings_section(
             'mulopimfwc_product_visibility_section',
-            __('Product Visibility Rules', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 32 32" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M14.5 11h13L23 4.7V1c0-.6-.4-1-1-1H10c-.6 0-1 .4-1 1v2.7zM13 13H4v14h9zm2 14h13V13H15zm-3-16L8.2 5.9 4.5 11zm3 18v3h12c.6 0 1-.4 1-1v-2zm-2 0H4v2c0 .6.4 1 1 1h8z"/>
+</svg>
+Product Visibility Rules', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure advanced rules for product visibility based on locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1517,7 +1667,13 @@ class mulopimfwc_settings
         // Add Location-Based Product Display section
         add_settings_section(
             'mulopimfwc_location_product_display_section',
-            __('Out of Stock Product Display', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 512 512" 
+     width="16" height="16" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill="#2563eb" d="M486.4 0c-14.114 0-25.6 11.486-25.6 25.6v93.867h-25.6V53.504c0-10.684-8.695-19.371-19.371-19.371H352.17c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V53.504c0-10.684-8.695-19.371-19.371-19.371h-63.659c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V53.504c0-10.684-8.695-19.371-19.371-19.371H96.171c-10.675 0-19.371 8.687-19.371 19.371v65.963H51.2V25.6C51.2 11.486 39.714 0 25.6 0S0 11.486 0 25.6V512h51.2v-51.2h409.6V512H512V25.6C512 11.486 500.514 0 486.4 0m-25.6 443.733h-25.6V377.77c0-10.684-8.695-19.371-19.371-19.371H352.17c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V377.77c0-10.684-8.695-19.371-19.371-19.371h-63.659c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V377.77c0-10.684-8.695-19.371-19.371-19.371H96.171c-10.675 0-19.371 8.687-19.371 19.371v65.963H51.2V298.667h409.6zm0-162.133h-25.6v-65.963c0-10.684-8.695-19.371-19.371-19.371H352.17c-10.675 0-19.371 8.687-19.371 19.371V281.6h-25.6v-65.963c0-10.684-8.695-19.371-19.371-19.371h-63.659c-10.675 0-19.371 8.687-19.371 19.371V281.6h-25.6v-65.963c0-10.684-8.695-19.371-19.371-19.371H96.171c-10.675 0-19.371 8.687-19.371 19.371V281.6H51.2V136.533h409.6z"/>
+</svg>
+Out of Stock Product Display', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how products are displayed based on location availability and stock.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1591,7 +1747,13 @@ class mulopimfwc_settings
         // Add Admin Visibility Controls section
         add_settings_section(
             'mulopimfwc_admin_visibility_section',
-            __('Admin Visibility Controls', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 52 52" 
+     xml:space="preserve"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M50 43v2.2c0 2.6-2.2 4.8-4.8 4.8H6.8C4.2 50 2 47.8 2 45.2V43c0-5.8 6.8-9.4 13.2-12.2l.6-.3c.5-.2 1-.2 1.5.1 2.6 1.7 5.5 2.6 8.6 2.6s6.1-1 8.6-2.6c.5-.3 1-.3 1.5-.1l.6.3C43.2 33.6 50 37.1 50 43M26 2c6.6 0 11.9 5.9 11.9 13.2S32.6 28.4 26 28.4s-11.9-5.9-11.9-13.2S19.4 2 26 2"/>
+</svg>Admin Visibility Controls', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure admin-specific visibility and management options.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1620,7 +1782,13 @@ class mulopimfwc_settings
 
         add_settings_section(
             'mulopimfwc_filter_settings_section',
-            __('Location Filtering Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 48 48" 
+     data-name="Layer 1" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M47 12a2 2 0 0 0-2-2H24a2 2 0 0 0 0 4h21a2 2 0 0 0 2-2M3 14h5.35a6 6 0 1 0 0-4H3a2 2 0 0 0 0 4m11-4a2 2 0 1 1-2 2 2 2 0 0 1 2-2m31 12h-7.35a6 6 0 1 0 0 4H45a2 2 0 0 0 0-4m-13 4a2 2 0 1 1 2-2 2 2 0 0 1-2 2m-10-4H3a2 2 0 0 0 0 4h19a2 2 0 0 0 0-4m23 12H28a2 2 0 0 0 0 4h17a2 2 0 0 0 0-4m-27-4a6 6 0 0 0-5.65 4H3a2 2 0 0 0 0 4h9.35A6 6 0 1 0 18 30m0 8a2 2 0 1 1 2-2 2 2 0 0 1-2 2"/>
+</svg>Location Filtering Settings', 'multi-location-product-and-inventory-management'),
             [$this, 'filter_settings_section_callback'],
             'lwp-product-filtering-settings'
         );
@@ -1644,7 +1812,13 @@ class mulopimfwc_settings
         // Add Order Fulfillment section
         add_settings_section(
             'mulopimfwc_order_fulfillment_section',
-            __('Order Fulfillment', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 24 24" 
+     fill="none" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M0 4.6A2.6 2.6 0 0 1 2.6 2h18.8A2.6 2.6 0 0 1 24 4.6v.8A2.6 2.6 0 0 1 21.4 8H21v10.6c0 1.33-1.07 2.4-2.4 2.4H5.4C4.07 21 3 19.93 3 18.6V8h-.4A2.6 2.6 0 0 1 0 5.4zM2.6 4a.6.6 0 0 0-.6.6v.8a.6.6 0 0 0 .6.6h18.8a.6.6 0 0 0 .6-.6v-.8a.6.6 0 0 0-.6-.6zM8 10a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2z" fill="#000"/>
+</svg>Order Fulfillment', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how orders are processed and fulfilled from different locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1694,7 +1868,13 @@ class mulopimfwc_settings
         // Cross-Location Order Management
         add_settings_section(
             'mulopimfwc_cross_location_order_section',
-            __('Cross-Location Order Management (Coming Soon)', 'multi-location-product-and-inventory-management'),
+            __('<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 297 297"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="m112.632 185.074 6.88-3.972a5.864 5.864 0 0 0 2.146-8.01l-13.036-22.579a5.86 5.86 0 0 0-8.009-2.146l-6.88 3.972a5.8 5.8 0 0 1-2.923.794c-3.063 0-5.872-2.449-5.872-5.872v-7.944a5.864 5.864 0 0 0-5.864-5.864H53.001a5.864 5.864 0 0 0-5.864 5.864v7.944c0 3.423-2.81 5.872-5.872 5.872a5.8 5.8 0 0 1-2.923-.794l-6.88-3.972a5.86 5.86 0 0 0-8.009 2.146l-13.036 22.579a5.864 5.864 0 0 0 2.146 8.01l6.88 3.972c3.909 2.257 3.909 7.899 0 10.156l-6.88 3.972a5.863 5.863 0 0 0-2.146 8.01l13.036 22.579a5.86 5.86 0 0 0 8.009 2.146l6.88-3.972a5.8 5.8 0 0 1 2.923-.794c3.063 0 5.872 2.449 5.872 5.872v7.944a5.864 5.864 0 0 0 5.864 5.864h26.072a5.864 5.864 0 0 0 5.864-5.864v-7.944c0-3.423 2.81-5.872 5.872-5.872.976 0 1.978.249 2.923.794l6.88 3.972a5.86 5.86 0 0 0 8.009-2.146l13.036-22.579a5.864 5.864 0 0 0-2.146-8.01l-6.88-3.972c-3.908-2.257-3.908-7.9.001-10.156m-46.594 22.474c-9.608 0-17.396-7.789-17.396-17.396s7.789-17.396 17.396-17.396 17.396 7.789 17.396 17.396-7.789 17.396-17.396 17.396m42.071-183.889A8.053 8.053 0 1 0 96.72 35.048l14.39 14.389c-52.889 2.619-95.701 44.162-100.334 96.506l1.19-2.062a19.18 19.18 0 0 1 16.57-9.564c.144 0 .287.013.431.017 9.074-37.721 41.965-66.251 81.815-68.729L96.72 79.666a8.053 8.053 0 0 0 11.388 11.389l28.004-28.004a8.055 8.055 0 0 0 0-11.388zm101.759 41.198c17.881 0 32.428-14.547 32.428-32.428C242.296 14.547 227.749 0 209.868 0S177.44 14.547 177.44 32.428s14.547 32.429 32.428 32.429m63.171 87.419v-44.58c0-12.34-7.93-23.283-19.657-27.124l-.054-.018-17.152-2.84a2.875 2.875 0 0 0-3.545 1.764l-19.462 53.399c-1.123 3.081-5.48 3.081-6.602 0l-19.462-53.399a2.875 2.875 0 0 0-2.698-1.892c-.279 0-17.999 2.964-17.999 2.964-11.823 3.94-19.723 14.9-19.723 27.294v44.432c0 6.659 5.398 12.056 12.056 12.056h102.241c6.66 0 12.057-5.398 12.057-12.056m14.331 10.657c-.673 9.215-8.233 14.858-17.45 15.526-7.062 40.425-41.207 71.64-82.979 74.237l14.061-14.061a8.053 8.053 0 1 0-11.389-11.389L161.61 255.25a8.053 8.053 0 0 0 0 11.389l28.003 28.003c1.573 1.572 3.633 2.358 5.694 2.358s4.122-.786 5.694-2.358a8.053 8.053 0 0 0 0-11.389l-14.389-14.389c56.028-2.774 100.758-49.227 100.758-105.931"/>
+  <path d="M216.936 77.105c-.747-.814-1.84-1.224-2.946-1.224h-8.245c-1.105 0-2.198.41-2.946 1.224a3.825 3.825 0 0 0-.504 4.505l4.407 6.644-2.063 17.405 4.063 10.808c.396 1.087 1.933 1.087 2.33 0l4.063-10.808-2.063-17.405 4.407-6.644a3.82 3.82 0 0 0-.503-4.505"/>
+</svg>Cross-Location Order Management (Coming Soon)', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how orders containing products from multiple locations are handled.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1825,7 +2005,12 @@ class mulopimfwc_settings
         // Add Customer Experience Section
         add_settings_section(
             'mulopimfwc_customer_experience_section',
-            __('Customer Experience Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="-0.5 0 33 33" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M16.5 0a9.5 9.5 0 0 1 4.581 17.825C27.427 19.947 32 25.94 32 33H0c0-7.3 4.888-13.458 11.57-15.379A9.5 9.5 0 0 1 16.5 0" fill="#1C1C1F"/>
+</svg>Customer Experience Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how customers interact with location-based features.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1889,7 +2074,12 @@ class mulopimfwc_settings
         // Advanced Location Pickup Settings
         add_settings_section(
             'mulopimfwc_location_pickup_section',
-            __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 1024 1024" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path d="M128.896 736H96a32 32 0 0 1-32-32V224a32 32 0 0 1 32-32h576a32 32 0 0 1 32 32v96h164.544a32 32 0 0 1 31.616 27.136l54.144 352A32 32 0 0 1 922.688 736h-91.52a144 144 0 1 1-286.272 0H415.104a144 144 0 1 1-286.272 0zm23.36-64a143.872 143.872 0 0 1 239.488 0H568.32c17.088-25.6 42.24-45.376 71.744-55.808V256H128v416zm655.488 0h77.632l-19.648-128H704v64.896A144 144 0 0 1 807.744 672m48.128-192-14.72-96H704v96zM688 832a80 80 0 1 0 0-160 80 80 0 0 0 0 160m-416 0a80 80 0 1 0 0-160 80 80 0 0 0 0 160"/>
+</svg>Advanced Location Pickup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure advanced settings for in-store pickup functionality.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -1969,7 +2159,13 @@ class mulopimfwc_settings
         // Location-based Customer Insights
         add_settings_section(
             'mulopimfwc_customer_insights_section',
-            __('Location-based Customer Insights', 'multi-location-product-and-inventory-management'),
+            __('<svg viewBox="0 0 24 24" 
+     fill="none" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M4 3a1 1 0 0 0-2 0v17.2A1.8 1.8 0 0 0 3.8 22H21a1 1 0 1 0 0-2H4zm17.707 4.707a1 1 0 0 0-1.414-1.414L14 12.586l-3.293-3.293a1 1 0 0 0-1.414 0l-4 4a1 1 0 1 0 1.414 1.414L10 11.414l3.293 3.293a1 1 0 0 0 1.414 0z" fill="#000"/>
+</svg>Location-based Customer Insights', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure customer analytics and insights based on location data.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -2092,7 +2288,7 @@ class mulopimfwc_settings
 
     public function settings_section_callback()
     {
-        echo '<p>' . esc_html_e('Configure how store locations appear with product titles.', 'multi-location-product-and-inventory-management') . '</p>';
+        echo '<p>' . esc_html('Configure how store locations appear with product titles.', 'multi-location-product-and-inventory-management') . '</p>';
     }
 
     public function display_format_field_callback()
@@ -2147,24 +2343,33 @@ class mulopimfwc_settings
     public function settings_page_content()
     {
     ?>
-        <div class="wrap lwp-settings-container">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+    <div class="lwp-settings-main-container">
+        <div class="wrap lwp-settings-heading">
+            
+                <div class="lwp-settings-icon">
 
-            <div class="lwp-admin-notice">
-                <p><?php echo esc_html_e('Use this shortcode to show location selector on any page', 'multi-location-product-and-inventory-management'); ?> <code>[mulopimfwc_store_location_selector title ="Select Your Location" show_title = "on" use_select2 = 'on/off' herichical = 'on/off/seperately' show_count = 'on/off' class = ""]</code></p>
-            </div>
+                    <svg class="svg-inline--fa fa-gear" aria-hidden="true" data-prefix="fas" data-icon="gear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M15.497 5.206c.1.272.016.575-.2.769l-1.353 1.231a6 6 0 0 1 0 1.588l1.353 1.231c.216.194.3.497.2.769a8 8 0 0 1-.494 1.072l-.147.253a8 8 0 0 1-.691.975.71.71 0 0 1-.766.212l-1.741-.553a6 6 0 0 1-1.375.794l-.391 1.784a.71.71 0 0 1-.569.556 8 8 0 0 1-2.656 0 .71.71 0 0 1-.569-.556l-.391-1.784a6 6 0 0 1-1.375-.794l-1.738.556a.72.72 0 0 1-.766-.212 8 8 0 0 1-.691-.975l-.147-.253a8 8 0 0 1-.494-1.072.71.71 0 0 1 .2-.769l1.353-1.231Q1.997 8.403 1.996 8c-.001-.403.019-.534.053-.794L.696 5.975a.71.71 0 0 1-.2-.769A8 8 0 0 1 .99 4.134l.147-.253q.31-.516.691-.975a.71.71 0 0 1 .766-.212l1.741.553a6 6 0 0 1 1.375-.794L6.101.669A.71.71 0 0 1 6.67.113Q7.32 0 8 0c.68 0 .897.037 1.328.109a.71.71 0 0 1 .569.556l.391 1.784c.494.203.956.472 1.375.794l1.741-.553a.72.72 0 0 1 .766.212q.38.459.691.975l.147.253q.287.515.494 1.072zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 1 0 0 5"/></svg>
+                    </div>
+                    <div>
+                    <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+                    </div>
 
-            <div class="nav-tab-wrapper lwp-nav-tabs">
+        </div>
+
+            <div class="lwp-settings-inner-container">
+
+            <div class="lwp-settings-left">
+                <div class="nav-tab-wrapper lwp-nav-tabs">
                 <?php
-                echo $this->mls_nav_tabs("#lwp-display-settings", "nav-tab-active", '<svg class="svg-inline--fa fa-gear" aria-hidden="true" data-prefix="fas" data-icon="gear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M15.497 5.206c.1.272.016.575-.2.769l-1.353 1.231a6 6 0 0 1 0 1.588l1.353 1.231c.216.194.3.497.2.769a8 8 0 0 1-.494 1.072l-.147.253a8 8 0 0 1-.691.975.71.71 0 0 1-.766.212l-1.741-.553a6 6 0 0 1-1.375.794l-.391 1.784a.71.71 0 0 1-.569.556 8 8 0 0 1-2.656 0 .71.71 0 0 1-.569-.556l-.391-1.784a6 6 0 0 1-1.375-.794l-1.738.556a.72.72 0 0 1-.766-.212 8 8 0 0 1-.691-.975l-.147-.253a8 8 0 0 1-.494-1.072.71.71 0 0 1 .2-.769l1.353-1.231Q1.997 8.403 1.996 8c-.001-.403.019-.534.053-.794L.696 5.975a.71.71 0 0 1-.2-.769A8 8 0 0 1 .99 4.134l.147-.253q.31-.516.691-.975a.71.71 0 0 1 .766-.212l1.741.553a6 6 0 0 1 1.375-.794L6.101.669A.71.71 0 0 1 6.67.113Q7.32 0 8 0c.68 0 .897.037 1.328.109a.71.71 0 0 1 .569.556l.391 1.784c.494.203.956.472 1.375.794l1.741-.553a.72.72 0 0 1 .766.212q.38.459.691.975l.147.253q.287.515.494 1.072zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 1 0 0 5"/></svg>', esc_html__('General', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#popup-shortcode-settings", "nav-tab", '<svg class="svg-inline--fa fa-window-restore" aria-hidden="true" data-prefix="fas" data-icon="window-restore" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M13.5 2h-7c-.275 0-.5.225-.5.5V3H4v-.5A2.5 2.5 0 0 1 6.5 0h7A2.5 2.5 0 0 1 16 2.5v7a2.5 2.5 0 0 1-2.5 2.5H13v-2h.5c.275 0 .5-.225.5-.5v-7c0-.275-.225-.5-.5-.5M0 6c0-1.103.897-2 2-2h8c1.103 0 2 .897 2 2v8c0 1.103-.897 2-2 2H2c-1.103 0-2-.897-2-2zm2 1a1 1 0 0 0 1 1h6a1 1 0 1 0 0-2H3a1 1 0 0 0-1 1"/></svg>', esc_html__('Popup Manage', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#product-visibility-settings", "nav-tab", '<svg class="svg-inline--fa fa-eye" aria-hidden="true" data-prefix="fas" data-icon="eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="currentColor" d="M9 1C6.475 1 4.453 2.15 2.981 3.519 1.519 4.875.541 6.5.078 7.616a1 1 0 0 0 0 .769c.463 1.115 1.441 2.74 2.903 4.096C4.453 13.85 6.475 15 9 15s4.547-1.15 6.019-2.519c1.462-1.359 2.441-2.981 2.906-4.097a1 1 0 0 0 0-.769c-.466-1.116-1.444-2.741-2.906-4.097C13.547 2.15 11.525 1 9 1M4.5 8a4.5 4.5 0 1 1 9 0 4.5 4.5 0 1 1-9 0M9 6a2.002 2.002 0 0 1-2.634 1.897c-.172-.056-.372.05-.366.231a3.002 3.002 0 0 0 3.775 2.769A3.002 3.002 0 0 0 9.128 5c-.181-.006-.287.191-.231.366q.101.3.103.634"/></svg>', esc_html__('Product Visibility', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#cross-order-settings", "nav-tab", '<svg class="svg-inline--fa fa-truck" aria-hidden="true" data-prefix="fas" data-icon="truck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="currentColor" d="M1.5 0A1.5 1.5 0 0 0 0 1.5v10A1.5 1.5 0 0 0 1.5 13H2a3.001 3.001 0 0 0 6 0h4a3.001 3.001 0 0 0 6 0h1a1 1 0 1 0 0-2V7.416c0-.531-.209-1.041-.584-1.416L16 3.584A2 2 0 0 0 14.584 3H13V1.5A1.5 1.5 0 0 0 11.5 0zM13 5h1.584L17 7.416V8h-4zm-9.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0M15 11.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3"/></svg>', esc_html__('Order Fulfill', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#inventory-settings", "nav-tab", '<svg class="svg-inline--fa fa-chart-bar" aria-hidden="true" data-prefix="fas" data-icon="chart-bar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M1 1a1 1 0 0 1 1 1v10.5c0 .275.225.5.5.5H15a1 1 0 1 1 0 2H2.5A2.5 2.5 0 0 1 0 12.5V2a1 1 0 0 1 1-1m3 3a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1m1 2h4a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2m0 3h8a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2"/></svg>', esc_html__('Inventory', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#location-wise-everything", "nav-tab", '<svg class="svg-inline--fa fa-map-location-dot" aria-hidden="true" data-prefix="fas" data-icon="map-location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="currentColor" d="M12.75 3.75c0 1.706-2.284 4.747-3.288 6-.241.3-.688.3-.925 0-1.003-1.253-3.287-4.294-3.287-6C5.25 1.678 6.928 0 9 0s3.75 1.678 3.75 3.75M13 6.263q.163-.324.3-.644l.047-.116 3.625-1.45A.75.75 0 0 1 18 4.75v8.463a.755.755 0 0 1-.472.697L13 15.719zM4.3 4.322c.075.441.225.884.4 1.297q.136.319.3.644v7.856l-3.972 1.59A.75.75 0 0 1 0 15.012V6.55c0-.306.188-.581.472-.697l3.831-1.531zm5.944 6.053A33 33 0 0 0 12 7.969v7.791l-6-1.716V7.969a33 33 0 0 0 1.756 2.406c.641.8 1.847.8 2.487 0M9 4.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 1 0 0 2.5"/></svg>', esc_html__('Location Wise Everything', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#customer-experience", "nav-tab", '<svg class="svg-inline--fa fa-users" aria-hidden="true" data-prefix="fas" data-icon="users" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="currentColor" d="M4.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M16 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M0 9.334A3.336 3.336 0 0 1 3.334 6h1.334c.497 0 .969.109 1.394.303A4 4 0 0 0 7.356 10H.666A.67.67 0 0 1 0 9.334M12.666 10h-.022a4 4 0 0 0 1.353-3q-.002-.355-.059-.697A3.3 3.3 0 0 1 15.332 6h1.334A3.335 3.335 0 0 1 20 9.334c0 .369-.3.666-.666.666zM7 7a3 3 0 1 1 6 0 3 3 0 1 1-6 0m-3 8.166C4 12.866 5.866 11 8.166 11h3.669c2.3 0 4.166 1.866 4.166 4.166a.834.834 0 0 1-.834.834H4.834A.834.834 0 0 1 4 15.166"/></svg>', esc_html__('Customer Experience', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#extensions", "nav-tab", '<svg width="16" height="16" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg"><path d="M.04.418V.329h.044A.044.044 0 0 0 .128.277.046.046 0 0 0 .082.24H.04V.151A.02.02 0 0 1 .062.129h.089V.084A.044.044 0 0 1 .203.04.046.046 0 0 1 .24.087v.042h.089a.02.02 0 0 1 .022.022V.24h.042a.046.046 0 0 1 .046.037.044.044 0 0 1-.044.052H.351v.089A.02.02 0 0 1 .329.44H.262V.396A.044.044 0 0 0 .21.352a.046.046 0 0 0-.037.046V.44H.062A.02.02 0 0 1 .04.418"/></svg>', esc_html__('Extensions', 'multi-location-product-and-inventory-management'));
-                echo $this->mls_nav_tabs("#advance-settings", "nav-tab", '<svg class="svg-inline--fa fa-sliders" aria-hidden="true" data-prefix="fas" data-icon="sliders" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M0 13a1 1 0 0 0 1 1h1.709c.384.884 1.266 1.5 2.291 1.5s1.906-.616 2.291-1.5H15a1 1 0 1 0 0-2H7.291c-.384-.884-1.266-1.5-2.291-1.5s-1.906.616-2.291 1.5H1a1 1 0 0 0-1 1m4 0a1 1 0 1 1 2 0 1 1 0 1 1-2 0m6-5a1 1 0 1 1 2 0 1 1 0 1 1-2 0m1-2.5A2.5 2.5 0 0 0 8.709 7H1a1 1 0 1 0 0 2h7.709c.384.884 1.266 1.5 2.291 1.5s1.906-.616 2.291-1.5H15a1 1 0 1 0 0-2h-1.709A2.5 2.5 0 0 0 11 5.5M6 4a1 1 0 1 1 0-2 1 1 0 1 1 0 2m2.291-2C7.906 1.116 7.025.5 6 .5S4.094 1.116 3.709 2H1a1 1 0 1 0 0 2h2.709C4.093 4.884 4.975 5.5 6 5.5S7.906 4.884 8.291 4H15a1 1 0 1 0 0-2z"/></svg>', esc_html__('Advance Settings', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#lwp-display-settings", "nav-tab-active", '<svg class="svg-inline--fa fa-sliders" aria-hidden="true" data-prefix="fas" data-icon="sliders" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#2563eb" d="M0 13a1 1 0 0 0 1 1h1.709c.384.884 1.266 1.5 2.291 1.5s1.906-.616 2.291-1.5H15a1 1 0 1 0 0-2H7.291c-.384-.884-1.266-1.5-2.291-1.5s-1.906.616-2.291 1.5H1a1 1 0 0 0-1 1m4 0a1 1 0 1 1 2 0 1 1 0 1 1-2 0m6-5a1 1 0 1 1 2 0 1 1 0 1 1-2 0m1-2.5A2.5 2.5 0 0 0 8.709 7H1a1 1 0 1 0 0 2h7.709c.384.884 1.266 1.5 2.291 1.5s1.906-.616 2.291-1.5H15a1 1 0 1 0 0-2h-1.709A2.5 2.5 0 0 0 11 5.5M6 4a1 1 0 1 1 0-2 1 1 0 1 1 0 2m2.291-2C7.906 1.116 7.025.5 6 .5S4.094 1.116 3.709 2H1a1 1 0 1 0 0 2h2.709C4.093 4.884 4.975 5.5 6 5.5S7.906 4.884 8.291 4H15a1 1 0 1 0 0-2z"/></svg>', esc_html__('General', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#popup-shortcode-settings", "nav-tab", '<svg class="svg-inline--fa fa-window-restore" aria-hidden="true" data-prefix="fas" data-icon="window-restore" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#a855f7" d="M13.5 2h-7c-.275 0-.5.225-.5.5V3H4v-.5A2.5 2.5 0 0 1 6.5 0h7A2.5 2.5 0 0 1 16 2.5v7a2.5 2.5 0 0 1-2.5 2.5H13v-2h.5c.275 0 .5-.225.5-.5v-7c0-.275-.225-.5-.5-.5M0 6c0-1.103.897-2 2-2h8c1.103 0 2 .897 2 2v8c0 1.103-.897 2-2 2H2c-1.103 0-2-.897-2-2zm2 1a1 1 0 0 0 1 1h6a1 1 0 1 0 0-2H3a1 1 0 0 0-1 1"/></svg>', esc_html__('Popup Manage', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#product-visibility-settings", "nav-tab", '<svg class="svg-inline--fa fa-eye" aria-hidden="true" data-prefix="fas" data-icon="eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="#14b8a6" d="M9 1C6.475 1 4.453 2.15 2.981 3.519 1.519 4.875.541 6.5.078 7.616a1 1 0 0 0 0 .769c.463 1.115 1.441 2.74 2.903 4.096C4.453 13.85 6.475 15 9 15s4.547-1.15 6.019-2.519c1.462-1.359 2.441-2.981 2.906-4.097a1 1 0 0 0 0-.769c-.466-1.116-1.444-2.741-2.906-4.097C13.547 2.15 11.525 1 9 1M4.5 8a4.5 4.5 0 1 1 9 0 4.5 4.5 0 1 1-9 0M9 6a2.002 2.002 0 0 1-2.634 1.897c-.172-.056-.372.05-.366.231a3.002 3.002 0 0 0 3.775 2.769A3.002 3.002 0 0 0 9.128 5c-.181-.006-.287.191-.231.366q.101.3.103.634"/></svg>', esc_html__('Product Visibility', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#cross-order-settings", "nav-tab", '<svg class="svg-inline--fa fa-truck" aria-hidden="true" data-prefix="fas" data-icon="truck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#f97316" d="M1.5 0A1.5 1.5 0 0 0 0 1.5v10A1.5 1.5 0 0 0 1.5 13H2a3.001 3.001 0 0 0 6 0h4a3.001 3.001 0 0 0 6 0h1a1 1 0 1 0 0-2V7.416c0-.531-.209-1.041-.584-1.416L16 3.584A2 2 0 0 0 14.584 3H13V1.5A1.5 1.5 0 0 0 11.5 0zM13 5h1.584L17 7.416V8h-4zm-9.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0M15 11.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3"/></svg>', esc_html__('Order Fulfill', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#inventory-settings", "nav-tab", '<svg class="svg-inline--fa fa-chart-bar" aria-hidden="true" data-prefix="fas" data-icon="chart-bar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#22c55e" d="M1 1a1 1 0 0 1 1 1v10.5c0 .275.225.5.5.5H15a1 1 0 1 1 0 2H2.5A2.5 2.5 0 0 1 0 12.5V2a1 1 0 0 1 1-1m3 3a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1m1 2h4a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2m0 3h8a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2"/></svg>', esc_html__('Inventory', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#location-wise-everything", "nav-tab", '<svg class="svg-inline--fa fa-map-location-dot" aria-hidden="true" data-prefix="fas" data-icon="map-location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="#ef4444" d="M12.75 3.75c0 1.706-2.284 4.747-3.288 6-.241.3-.688.3-.925 0-1.003-1.253-3.287-4.294-3.287-6C5.25 1.678 6.928 0 9 0s3.75 1.678 3.75 3.75M13 6.263q.163-.324.3-.644l.047-.116 3.625-1.45A.75.75 0 0 1 18 4.75v8.463a.755.755 0 0 1-.472.697L13 15.719zM4.3 4.322c.075.441.225.884.4 1.297q.136.319.3.644v7.856l-3.972 1.59A.75.75 0 0 1 0 15.012V6.55c0-.306.188-.581.472-.697l3.831-1.531zm5.944 6.053A33 33 0 0 0 12 7.969v7.791l-6-1.716V7.969a33 33 0 0 0 1.756 2.406c.641.8 1.847.8 2.487 0M9 4.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 1 0 0 2.5"/></svg>', esc_html__('Location Wise Everything', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#customer-experience", "nav-tab", '<svg class="svg-inline--fa fa-users" aria-hidden="true" data-prefix="fas" data-icon="users" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#06b6d4" d="M4.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M16 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M0 9.334A3.336 3.336 0 0 1 3.334 6h1.334c.497 0 .969.109 1.394.303A4 4 0 0 0 7.356 10H.666A.67.67 0 0 1 0 9.334M12.666 10h-.022a4 4 0 0 0 1.353-3q-.002-.355-.059-.697A3.3 3.3 0 0 1 15.332 6h1.334A3.335 3.335 0 0 1 20 9.334c0 .369-.3.666-.666.666zM7 7a3 3 0 1 1 6 0 3 3 0 1 1-6 0m-3 8.166C4 12.866 5.866 11 8.166 11h3.669c2.3 0 4.166 1.866 4.166 4.166a.834.834 0 0 1-.834.834H4.834A.834.834 0 0 1 4 15.166"/></svg>', esc_html__('Customer Experience', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#extensions", "nav-tab", '<svg width="16" height="16" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M.04.418V.329h.044A.044.044 0 0 0 .128.277.046.046 0 0 0 .082.24H.04V.151A.02.02 0 0 1 .062.129h.089V.084A.044.044 0 0 1 .203.04.046.046 0 0 1 .24.087v.042h.089a.02.02 0 0 1 .022.022V.24h.042a.046.046 0 0 1 .046.037.044.044 0 0 1-.044.052H.351v.089A.02.02 0 0 1 .329.44H.262V.396A.044.044 0 0 0 .21.352a.046.046 0 0 0-.037.046V.44H.062A.02.02 0 0 1 .04.418"/></svg>', esc_html__('Extensions', 'multi-location-product-and-inventory-management'));
+                echo $this->mls_nav_tabs("#advance-settings", "nav-tab", '<svg class="svg-inline--fa fa-gear" aria-hidden="true" data-prefix="fas" data-icon="gear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#6366f1" d="M15.497 5.206c.1.272.016.575-.2.769l-1.353 1.231a6 6 0 0 1 0 1.588l1.353 1.231c.216.194.3.497.2.769a8 8 0 0 1-.494 1.072l-.147.253a8 8 0 0 1-.691.975.71.71 0 0 1-.766.212l-1.741-.553a6 6 0 0 1-1.375.794l-.391 1.784a.71.71 0 0 1-.569.556 8 8 0 0 1-2.656 0 .71.71 0 0 1-.569-.556l-.391-1.784a6 6 0 0 1-1.375-.794l-1.738.556a.72.72 0 0 1-.766-.212 8 8 0 0 1-.691-.975l-.147-.253a8 8 0 0 1-.494-1.072.71.71 0 0 1 .2-.769l1.353-1.231Q1.997 8.403 1.996 8c-.001-.403.019-.534.053-.794L.696 5.975a.71.71 0 0 1-.2-.769A8 8 0 0 1 .99 4.134l.147-.253q.31-.516.691-.975a.71.71 0 0 1 .766-.212l1.741.553a6 6 0 0 1 1.375-.794L6.101.669A.71.71 0 0 1 6.67.113Q7.32 0 8 0c.68 0 .897.037 1.328.109a.71.71 0 0 1 .569.556l.391 1.784c.494.203.956.472 1.375.794l1.741-.553a.72.72 0 0 1 .766.212q.38.459.691.975l.147.253q.287.515.494 1.072zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 1 0 0 5"/></svg>', esc_html__('Advance Settings', 'multi-location-product-and-inventory-management'));
                 ?>
             </div>
 
@@ -2244,16 +2449,41 @@ class mulopimfwc_settings
                 <div id="location-wise-everything" class="lwp-tab-content" style="display:none;">
                     <div class="lwp-settings-section">
                         <div class="lwp-settings-box">
-                            <div class="lwp-subtab-wrapper" style=" padding-bottom: 20px; display: flex; gap: 1rem; ">
-                                <a href="#lwp-subtab-shipping" class="lwp-subtab lwp-subtab-active"><?php echo esc_html_e('Shipping', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-payments" class="lwp-subtab"><?php echo esc_html_e('Payments', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-tax" class="lwp-subtab"><?php echo esc_html_e('Tax', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-discounts" class="lwp-subtab"><?php echo esc_html_e('Discounts', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-reviews" class="lwp-subtab"><?php echo esc_html_e('Reviews', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-bundles" class="lwp-subtab"><?php echo esc_html_e('Bundles', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-seo" class="lwp-subtab"><?php echo esc_html_e('SEO', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-notifications" class="lwp-subtab"><?php echo esc_html_e('Notifications', 'multi-location-product-and-inventory-management'); ?></a>
-                                <a href="#lwp-subtab-others" class="lwp-subtab"><?php echo esc_html_e('Others', 'multi-location-product-and-inventory-management'); ?></a>
+                            <div class="lwp-subtab-wrapper" style="display: flex; gap: 1rem; ">
+                                <a href="#lwp-subtab-shipping" class="lwp-subtab lwp-subtab-active"><svg viewBox="0 0 14 14" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" style="margin-right:6px;vertical-align:middle">
+  <path d="M13 7.118v-.007a.275.275 0 0 0-.277-.27h-.072l-1.12-2.166a.28.28 0 0 0-.246-.148H9.373l.073-.579a.8.8 0 0 0-.202-.614.8.8 0 0 0-.59-.256H2.716a.293.293 0 0 0-.29.264l-.06.477H5.75c.22 0 .393.178.387.398a.41.41 0 0 1-.408.397H4.6v.002H1.29a.29.29 0 0 0-.29.281.27.27 0 0 0 .274.281h4.385a.41.41 0 0 1 .35.421.44.44 0 0 1-.433.426H2.552a.293.293 0 0 0-.291.284.275.275 0 0 0 .277.284h2.987a.41.41 0 0 1 .357.421.44.44 0 0 1-.438.426H1.73a.293.293 0 0 0-.292.285.275.275 0 0 0 .277.284h.248l-.097 1.017c-.02.231.05.45.201.615a.8.8 0 0 0 .591.255h.215a1.24 1.24 0 0 0 1.226 1.026c.618 0 1.147-.442 1.28-1.026h2.675a.9.9 0 0 0 .582-.218.8.8 0 0 0 .555.218h.044a1.24 1.24 0 0 0 1.226 1.026c.618 0 1.147-.442 1.28-1.026h.176c.46 0 .868-.374.91-.834L13 7.145v-.02zm-8.887 3.236a.69.69 0 0 1-.692-.71.734.734 0 0 1 .729-.71c.391 0 .702.318.691.71a.734.734 0 0 1-.728.71m6.362 0a.69.69 0 0 1-.692-.71.734.734 0 0 1 .729-.71c.391 0 .701.318.691.71a.734.734 0 0 1-.728.71m1.785-1.328a.34.34 0 0 1-.33.302h-.19a1.24 1.24 0 0 0-1.213-.962c-.596 0-1.109.41-1.264.962h-.059a.24.24 0 0 1-.181-.076.24.24 0 0 1-.06-.19l.358-3.967h.823l-.13 1.444c-.022.231.05.45.2.615s.36.255.592.255h1.6z"></path>
+</svg><?php echo esc_html_e('Shipping', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-payments" class="lwp-subtab"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle">
+  <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2m0 14H4v-6h16zm0-10H4V6h16z"></path>
+</svg><?php echo esc_html_e('Payments', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-tax" class="lwp-subtab"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="margin-right:6px;vertical-align:middle">
+  <path d="M441.71 414.154c0-23.138-17.983-41.656-39.864-41.656-21.875 0-39.864 18.522-39.864 41.656s17.989 41.656 39.864 41.656c21.881 0 39.864-18.518 39.864-41.656m40.96 0c0 45.495-36.048 82.616-80.824 82.616-44.769 0-80.824-37.124-80.824-82.616s36.055-82.616 80.824-82.616c44.776 0 80.824 37.121 80.824 82.616m176.274 192.62c0-23.138-17.983-41.656-39.864-41.656-21.875 0-39.864 18.522-39.864 41.656s17.989 41.656 39.864 41.656c21.881 0 39.864-18.518 39.864-41.656m40.96 0c0 45.495-36.048 82.616-80.824 82.616-44.769 0-80.824-37.124-80.824-82.616s36.055-82.616 80.824-82.616c44.776 0 80.824 37.121 80.824 82.616m-95.515-225.529L363.022 629.79c-7.88 8.114-7.69 21.08.424 28.96s21.08 7.69 28.96-.424l241.367-248.545c7.88-8.114 7.69-21.08-.424-28.96s-21.08-7.69-28.96.424"></path>
+  <path d="M829.44 911.36c45.245 0 81.92-36.675 81.92-81.92V194.56c0-45.245-36.675-81.92-81.92-81.92H194.56c-45.245 0-81.92 36.675-81.92 81.92v634.88c0 45.245 36.675 81.92 81.92 81.92zm0 40.96H194.56c-67.866 0-122.88-55.014-122.88-122.88V194.56c0-67.866 55.014-122.88 122.88-122.88h634.88c67.866 0 122.88 55.014 122.88 122.88v634.88c0 67.866-55.014 122.88-122.88 122.88"></path>
+</svg><?php echo esc_html_e('Tax', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-discounts" class="lwp-subtab"><svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="margin-right:6px;vertical-align:middle">
+  <path fill-rule="evenodd" d="M11.566.66a2.19 2.19 0 0 0-3.132 0l-.962.985a2.2 2.2 0 0 1-1.592.66l-1.377-.017a2.19 2.19 0 0 0-2.215 2.215l.016 1.377a2.2 2.2 0 0 1-.66 1.592l-.984.962a2.19 2.19 0 0 0 0 3.132l.985.962c.428.418.667.994.66 1.592l-.017 1.377a2.19 2.19 0 0 0 2.215 2.215l1.377-.016a2.2 2.2 0 0 1 1.592.66l.962.984c.859.88 2.273.88 3.132 0l.962-.985a2.2 2.2 0 0 1 1.592-.66l1.377.017a2.19 2.19 0 0 0 2.215-2.215l-.016-1.377a2.2 2.2 0 0 1 .66-1.592l.984-.962c.88-.859.88-2.273 0-3.132l-.985-.962a2.2 2.2 0 0 1-.66-1.592l.017-1.377a2.19 2.19 0 0 0-2.215-2.215l-1.377.016a2.2 2.2 0 0 1-1.592-.66zM7 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m6 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m.778-8.278a1.1 1.1 0 0 1 0 1.556l-6 6a1.1 1.1 0 1 1-1.556-1.556l6-6a1.1 1.1 0 0 1 1.556 0"></path>
+</svg><?php echo esc_html_e('Discounts', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-reviews" class="lwp-subtab"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 330" xml:space="preserve" width="16" height="16" style="margin-right:6px;vertical-align:middle">
+  <path d="M165 0C74.019 0 0 74.019 0 165s74.019 165 165 165 165-74.019 165-165S255.981 0 165 0m0 300c-74.439 0-135-60.561-135-135S90.561 30 165 30s135 60.561 135 135-60.561 135-135 135"></path>
+  <path d="m247.157 128.196-47.476-6.9-21.23-43.019a15 15 0 0 0-26.902 0l-21.23 43.019-47.476 6.9a14.998 14.998 0 0 0-8.312 25.585l34.353 33.486-8.109 47.282a15 15 0 0 0 21.765 15.813L165 228.039l42.462 22.323a15 15 0 0 0 6.979 1.723h.05c8.271-.015 14.972-6.725 14.972-15 0-1.152-.13-2.274-.375-3.352l-7.97-46.466 34.352-33.486a15 15 0 0 0-8.313-25.585"></path>
+</svg><?php echo esc_html_e('Reviews', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-bundles" class="lwp-subtab"><svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="margin-right:6px;vertical-align:middle">
+  <path class="clr-i-solid clr-i-solid-path-1" d="m32.43 8.35-13-6.21a1 1 0 0 0-.87 0l-15 7.24a1 1 0 0 0-.57.9v16.55a1 1 0 0 0 .6.92l13 6.19a1 1 0 0 0 .87 0l15-7.24a1 1 0 0 0 .57-.9V9.25a1 1 0 0 0-.6-.9M19 4.15l10.93 5.22-5.05 2.44-10.67-5.35Zm-2 11.49L6 10.41l5.9-2.85 10.7 5.35Zm1 15.8V17.36l13-6.29v14.1Z"></path>
+  <path fill="none" d="M0 0h36v36H0z"></path>
+</svg><?php echo esc_html_e('Bundles', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-seo" class="lwp-subtab"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="margin-right:6px;vertical-align:middle">
+  <path d="M2.293 18.707a1 1 0 0 1 0-1.414l3-3a1 1 0 0 1 1.262-.125l2.318 1.545 2.42-2.42a1 1 0 0 1 1.414 1.414l-3 3a1 1 0 0 1-1.262.125l-2.318-1.545-2.42 2.42a1 1 0 0 1-1.414 0M22 3v18a1 1 0 0 1-1 1H3a1 1 0 0 1 0-2h17V8H4v4a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1M4 6h16V4H4Zm10.707 6.707 1-1a1 1 0 0 0-1.414-1.414l-1 1a1 1 0 1 0 1.414 1.414"></path>
+</svg><?php echo esc_html_e('SEO', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-notifications" class="lwp-subtab"><svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle">
+  <path d="M11.5 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2m6.5-6v-5.5c0-3.07-2.13-5.64-5-6.32V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5v.68c-2.87.68-5 3.25-5 6.32V16l-2 2v1h17v-1z"></path>
+  <path d="M0 0h24v24H0z" fill="none"></path>
+</svg><?php echo esc_html_e('Notifications', 'multi-location-product-and-inventory-management'); ?></a>
+                                <a href="#lwp-subtab-others" class="lwp-subtab"><svg viewBox="0 0 16 16" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="16" height="16" 
+     style="margin-right:6px;vertical-align:middle">
+  <path d="M12.5.023a3.4 3.4 0 0 0-.883.094C9.75.605 8.633 2.5 9.121 4.352a3.5 3.5 0 0 0 .5 1.054C9.511 5.422 7.996 8 7.996 8l3.41.023.801-1.117c.379.032.781.024 1.172-.078a3.474 3.474 0 0 0 2.496-4.234 3.7 3.7 0 0 0-.504-1.055l-1.36 2.305a.987.987 0 0 1-1.355.355l-.875-.508a.974.974 0 0 1-.355-1.347L12.789.035c-.098-.004-.195-.012-.289-.012M3.625.715q-.017-.001-.027.004c-.23.047-.446.133-.657.219-.02.625.086 1.44-.156 1.656-.242.21-1.039.035-1.652-.031a3.4 3.4 0 0 0-.313.75c.477.394 1.137.84 1.153 1.156.015.32-.625.804-1.059 1.25.102.258.25.492.406.718.606-.125 1.36-.375 1.621-.187.262.188.262 1.004.344 1.625.246.074.508.105.778.125.28-.555.566-1.32.875-1.406.316-.09.96.457 1.5.781a4 4 0 0 0 .59-.531c-.255-.574-.72-1.293-.59-1.594.125-.3.968-.469 1.558-.687.004-.075.031-.145.031-.22 0-.19-.035-.378-.062-.562-.606-.16-1.465-.242-1.621-.531-.16-.29.238-1.062.433-1.656q-.3-.27-.652-.469c-.504.375-1.086.996-1.406.938-.317-.055-.66-.82-.996-1.344a.4.4 0 0 1-.098-.004m.594 1.879a1.688 1.688 0 0 1 0 3.375c-.93 0-1.684-.754-1.684-1.688S3.29 2.594 4.22 2.594m8.62 6.332a.73.73 0 0 0-.36.074H3.43c-.246-.105-.746-.047-.965.18l-2.16 2.113c-.192.176-.301.484-.305.707-.055.887 1 1.32 1.637.793L3 11.461 3.004 15c0 .57.457 1 .996 1h7.992c.524 0 .996-.445.996-.937l-.004-3.602 1.336 1.309c.637.527 1.688.093 1.637-.793-.004-.223-.113-.532-.3-.704l-2.165-2.117c-.144-.152-.418-.226-.652-.23m0 0"/>
+</svg><?php echo esc_html_e('Others', 'multi-location-product-and-inventory-management'); ?></a>
                             </div>
                             <div id="lwp-subtab-shipping" class="lwp-subtab-content" style="display:block;">
                                 <?php do_settings_sections('lwp-location-shipping-settings'); ?>
@@ -2351,9 +2581,30 @@ class mulopimfwc_settings
                 <?php submit_button(); ?>
             </form>
 
-            <div class="lwp-footer">
-                <p><?php echo esc_html_e('Thank you for using Multi Location Product & Inventory Management for WooCommerce', 'multi-location-product-and-inventory-management'); ?></p>
             </div>
+
+            <div class="lwp-settings-right">
+                
+                <div class="lwp-admin-notice">
+                <p><svg viewBox="0 -2 20 20" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#3b82f6;padding:10px;border-radius:6px">
+  <path fill="#ffffff" d="M12.736.064c.52.2.787.805.598 1.353L8.546 15.305c-.19.548-.763.83-1.282.631-.52-.2-.787-.805-.598-1.353L11.454.695c.19-.548.763-.83 1.282-.631M2.414 8.256 5.95 11.99c.39.412.39 1.08 0 1.492a.963.963 0 0 1-1.414 0L.293 9.003a1.1 1.1 0 0 1 0-1.493l4.243-4.48a.963.963 0 0 1 1.414 0 1.1 1.1 0 0 1 0 1.494zm15.172 0L14.05 4.524a1.1 1.1 0 0 1 0-1.493.963.963 0 0 1 1.414 0l4.243 4.479c.39.412.39 1.08 0 1.493l-4.243 4.478a.963.963 0 0 1-1.414 0 1.1 1.1 0 0 1 0-1.492z"/>
+</svg><?php echo esc_html_e('Use this shortcode to show location selector on any page', 'multi-location-product-and-inventory-management'); ?></p> <code>[mulopimfwc_store_location_selector title ="Select Your Location" show_title = "on" use_select2 = 'on/off' herichical = 'on/off/seperately' show_count = 'on/off' class = ""]</code>
+            </div>
+
+            </div>
+
+
+            </div>
+
+            
+
+            <!-- <div class="lwp-footer">
+                <p><?php echo esc_html_e('Thank you for using Multi Location Product & Inventory Management for WooCommerce', 'multi-location-product-and-inventory-management'); ?></p>
+            </div> -->
+        </div>
         </div>
     <?php
     }

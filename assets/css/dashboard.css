@@ -98,3 +98,23 @@
         margin-bottom: 15px;
     }
 }
+
+
+/* New Style */
+/* Out of Stock */
+.stock-status.out-of-stock {
+    color: #991b1b;
+    background-color: #fee2e2;
+    padding: 4px 8px;
+    border-radius: 50px;
+    font-weight: 600;
+}
+
+/* Low Stock */
+.stock-status.low-stock {
+    color: #854d0e;
+    background-color: #fef9c3;
+    padding: 4px 8px;
+    border-radius: 50px;
+    font-weight: 600;
+}

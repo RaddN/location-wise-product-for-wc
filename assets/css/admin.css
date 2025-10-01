@@ -85,10 +85,11 @@
 
 .lwp-admin-notice {
     background: #fff;
-    border-left: 4px solid #2271b1;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
-    margin: 20px 0;
+    margin: 0px 0px 20px;
     padding: 12px 15px;
+    border: 1px solid #e5e7eb;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    border-radius: 8px;
 }
 
 .lwp-admin-notice code {
@@ -98,12 +99,17 @@
 }
 
 .lwp-nav-tabs {
-    margin-bottom: 20px;
+    border-top: 1px solid;
+        padding: 0;
+    position: relative;
+        border-color: #e5e7eb;
+            display: flex;
+    justify-content: space-between;
+    background-color: #f7f7f7;
 }
 
 .lwp-tab-content {
     background: #fff;
-    border: 1px solid #c3c4c7;
     border-top: none;
     padding: 20px;
     margin-top: -1px;
@@ -112,10 +118,14 @@
 .lwp-settings-box {
     background: #fff;
     padding: 20px;
-    margin-bottom: 20px;
+    border-radius: 8px;
 }
 
 .lwp-settings-box h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.lwp-settings-box h2 + p {
     margin-top: 0;
     padding-bottom: 12px;
     border-bottom: 1px solid #eee;
@@ -247,8 +257,122 @@
 
 
 /* New style */
-.lwp-nav-tabs a.nav-tab.nav-tab {
+.lwp-settings-main-container {
+    border: 2px solid #d1d1d4;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    margin: 20px 20px 0px 0px;
+}
+.wrap.lwp-settings-heading {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.lwp-settings-icon {
+    color: #ffffff;
+    background: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 7px;
+}
+.wrap.lwp-settings-heading h1 {
+    padding: 0;
+}
+.lwp-settings-inner-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.lwp-settings-left {
+    flex: 0 0 80%;
+    max-width: 80%;
+        background-color: #ffffff;
+}
+
+.lwp-settings-right {
+    flex: 0 0 19%;
+    max-width: 19%;
+}
+.lwp-nav-tabs a.nav-tab {
+        border: none;
+            margin-left: 0;
+}
+.lwp-nav-tabs a.nav-tab {
     display: flex;
     align-items: center;
     column-gap: 5px;
+    background: none;
+    border-bottom: 3px solid transparent;
+    border-top: 3px solid transparent;
+        padding: 12px 14px;
+        border-right: 1px solid #e5e7eb;
+}
+
+.lwp-nav-tabs a.nav-tab.nav-tab-active {
+    background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+    border-bottom: 3px solid #0ea5e9;
+    color: #1d4ed8;
+}
+.lwp-settings-section {
+    border: 1px solid #e5e7eb;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    border-radius: 8px;
+}
+.lwp-settings-section:not(:last-child) {
+    margin-bottom: 20px;
+}
+select, textarea, input[type=date], input[type=datetime-local], input[type=datetime], input[type=email], input[type=month], input[type=number], input[type=password], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week] {
+    border-color: #d1d5db !important;
+    border-radius: 6px !important;
+        width: 100%;
+        width: 100% !important;
+    max-width: 100% !important;
+        min-height: 45px !important;
+
+}
+
+p.submit .button {
+    background: #2563eb;
+    border-color: #2563eb;
+    padding: 5px 15px;
+}
+p.submit {
+    margin-top: 0;
+    padding-left: 20px;
+}
+:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+div#product-visibility-settings, div#inventory-settings, div#customer-experience, div#extensions, div#advance-settings {
+    display: flex;
+  flex-wrap: wrap;      /* allow items to move to the next row */
+  gap: 20px;            /* space between columns and rows */
+}
+div#product-visibility-settings .lwp-settings-section, div#inventory-settings .lwp-settings-section, div#customer-experience .lwp-settings-section
+, div#extensions .lwp-settings-section, div#advance-settings .lwp-settings-section {
+    flex: 1 1 calc(50% - 20px);  /* each takes ~50% of row width minus gap */
+  min-width: 300px;
+}
+
+.lwp-subtab-wrapper {
+    background-color: #2563eb;
+    margin-bottom: 20px;
+    padding-bottom: 0 !important;
+    border-radius: 8px;
+}
+.lwp-subtab-wrapper a
+ {
+    padding: 12px 12px !important;
+    color: #ffffff;
+}
+.lwp-subtab-wrapper a svg {
+    fill: #ffffff;
 }

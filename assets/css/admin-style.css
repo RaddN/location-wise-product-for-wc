@@ -96,5 +96,6 @@
         border: 2px solid red; /* Highlight border */
     }
 a.lwp-subtab.lwp-subtab-active {
-    color: #008dff;
+    color: #ffffff;
+    background-color: #ffffff1a !important;
 }
