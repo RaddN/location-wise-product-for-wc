@@ -43,7 +43,7 @@ if (!defined('ABSPATH')) exit;
                         // For non-logged in users, check if location is set in cookie
                         $location_set = true;
                         $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : (isset($_COOKIE['mulopimfwc_store_location']) ? $_COOKIE['mulopimfwc_store_location']:'');
-                        $current_location = $selected_location_id ?? __('Current Location', 'multi-location-product-and-inventory-management');
+                        $current_location = !empty($selected_location_id) ? $selected_location_id : __('Current Location', 'multi-location-product-and-inventory-management');
                     }
 
                     echo $location_set ? esc_html($current_location) : esc_html__('Set Your Address', 'multi-location-product-and-inventory-management');

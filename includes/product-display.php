@@ -223,3 +223,6 @@ function mulopimfwc_out_of_stock_badge_css() {
     }
 }
 add_action('wp_enqueue_scripts', 'mulopimfwc_out_of_stock_badge_css');
+
+
+
