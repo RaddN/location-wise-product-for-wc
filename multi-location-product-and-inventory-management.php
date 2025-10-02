@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.5.6
+ * Version: 1.0.5.7
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -17,6 +17,10 @@
  */
 
 if (!defined('ABSPATH')) exit;
+
+if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
+    define('MULTI_LOCATION_PLUGIN_URL', plugin_dir_url(__FILE__));
+}
 
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     add_action('admin_notices', function () {
@@ -53,11 +57,14 @@ add_action('init', 'mulopimfwc_get_values', 20);
 
 require_once plugin_dir_path(__FILE__) . 'admin/settings.php';
 require_once plugin_dir_path(__FILE__) . 'admin/dashboard.php';
+require_once plugin_dir_path(__FILE__) . 'admin/license-page.php';
 require_once plugin_dir_path(__FILE__) . 'admin/stock-central.php';
 require_once plugin_dir_path(__FILE__) . 'admin/admin.php';
 require_once plugin_dir_path(__FILE__) . 'includes/product-display.php';
 require_once plugin_dir_path(__FILE__) . 'admin/location-based-everythings.php';
 require_once plugin_dir_path(__FILE__) . 'admin/location-managers.php';
+require_once plugin_dir_path(__FILE__) . 'includes/product-location-selector-single.php';
+require_once plugin_dir_path(__FILE__) . 'admin/import-export-settings.php';
 
 class mulopimfwc_Location_Wise_Products
 {
@@ -227,7 +234,7 @@ class mulopimfwc_Location_Wise_Products
     public function cymulopimfwc_enqueue_admin_scripts($hook)
     {
         // Only on product location page
-        // if ($hook !== 'woocommerce_page_product-locations') {
+        // if ($hook !== 'multi-location-product-and-inventory-management-settings') {
         //     return;
         // }
 
@@ -235,7 +242,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/js/admin.js',
             ['jquery'],
-            '1.0.5.6',
+            '1.0.5.7',
             true
         );
 
@@ -255,7 +262,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/css/admin.css',
             [],
-            '1.0.5.6'
+            '1.0.5.7'
         );
     }
 
@@ -356,9 +363,9 @@ class mulopimfwc_Location_Wise_Products
 
     public function enqueue_scripts()
     {
-        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.5.6');
+        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.5.7');
         wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.5.6', true);
+        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.5.7', true);
         wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
         wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
@@ -370,7 +377,7 @@ class mulopimfwc_Location_Wise_Products
         wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', array(), '1.7.1');
         wp_enqueue_script('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array('jquery'), '1.7.1', true);
 
-        wp_enqueue_script('mulopimfwc_script_map', plugins_url('assets/js/location-features.js', __FILE__), ['jquery'], '1.0.5.6', true);
+        wp_enqueue_script('mulopimfwc_script_map', plugins_url('assets/js/location-features.js', __FILE__), ['jquery'], '1.0.5.7', true);
 
 
         // Localize script with configuration
@@ -439,7 +446,8 @@ class mulopimfwc_Location_Wise_Products
         $options = get_option('mulopimfwc_display_options', []);
         $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
         $selected_location = $this->get_current_location();
-        $show_modal = $show_popup_admin === 'on' ? true : (empty($selected_location) && !$is_admin_or_manager);
+        $locationSelected = isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
+        $show_modal = $show_popup_admin === 'on' && empty($selected_location) ? true : (empty($selected_location) && !$is_admin_or_manager);
 
         $locations = $mulopimfwc_locations;
 
@@ -460,6 +468,8 @@ class mulopimfwc_Location_Wise_Products
             'herichical' => '',
             'show_count' => '',
             'enable_user_locations' => 'off', // New attribute
+            'max_width' => '300',
+            'multi_line' => 'off'
         ], $atts);
 
         $is_user_logged_in = is_user_logged_in();
@@ -921,7 +931,7 @@ class mulopimfwc_Location_Wise_Products
     }
     function custom_admin_styles()
     {
-        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.5.6");
+        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.5.7");
     }
 }
 
@@ -971,7 +981,7 @@ function mulopimfwc_save_user_location()
     $lng = isset($_POST['lng']) ? floatval($_POST['lng']) : 0;
 
     // Check if we're editing an existing location
-    $location_id = isset($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : uniqid();
+    $location_id = isset($_POST['location_id']) && !empty($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : uniqid();
 
     // Prepare location data
     $location_data = array(
@@ -1024,7 +1034,7 @@ function mulopimfwc_save_user_location()
         ));
     } else {
         // For non-logged-in users, we can't save the location permanently.
-        // We'll just return the location data to be used temporarily.
+        wc_setcookie('mulopimfwc_user_location', $location_data['address'] , time() + 60 * 60 * 24 * 30);
         wp_send_json_success(array(
             'logged_in' => false,
             'location_id' => $location_id,
@@ -1034,18 +1044,18 @@ function mulopimfwc_save_user_location()
     }
 }
 
+
+
 // AJAX handler for deleting user location
 add_action('wp_ajax_mulopimfwc_delete_user_location', 'mulopimfwc_delete_user_location');
 
 function mulopimfwc_delete_user_location()
 {
-    // Check nonce
-    if (!isset($_POST['mulopimfwc_shortcode_selector_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['mulopimfwc_shortcode_selector_nonce'])), 'mulopimfwc_shortcode_selector')) {
-        return;
-    }
 
     // Get location ID
     $location_id = isset($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : '';
+
+    error_log("You are deleting: " . $location_id);
 
     if (empty($location_id)) {
         wp_send_json_error(array('message' => 'Invalid location ID'));
@@ -1081,3 +1091,76 @@ function mulopimfwc_delete_user_location()
     wp_send_json_success(array('message' => 'Location deleted successfully'));
 }
 
+
+
+
+
+
+
+
+
+
+require_once plugin_dir_path(__FILE__) . 'includes/analytics.php';
+
+class mulopimfwc_analytics_main
+{
+    private $analytics;
+
+    public function __construct()
+    {
+        global $mulopimfwc_options;
+        // Initialize analytics with the correct plugin file path
+        $this->analytics = new mulopimfwc_anaylytics(
+            '04',
+            'https://plugincy.com/wp-json/product-analytics/v1',
+            "1.0.1",
+            'One Page Quick Checkout for WooCommerce',
+            __FILE__ // Pass the main plugin file
+        );
+
+        add_action('admin_footer',  array($this->analytics, "add_deactivation_feedback_form"));
+
+        // Plugin hooks
+        add_action('init', array($this, 'init'));
+        if (!isset($mulopimfwc_options["allow_data_share"]) || (isset($mulopimfwc_options["allow_data_share"])  && $mulopimfwc_options["allow_data_share"] === 'on')) {
+            add_action('admin_init', array($this, 'admin_init'));
+        }
+
+        // Handle deactivation feedback AJAX
+        add_action('wp_ajax_send_deactivation_feedback', array($this, 'handle_deactivation_feedback'));
+    }
+
+    public function init()
+    {
+        // Any initialization code
+    }
+
+    public function admin_init()
+    {
+        // Send analytics data on first activation or weekly
+        $this->maybe_send_analytics();
+    }
+
+    private function maybe_send_analytics()
+    {
+        $last_sent = get_option('onepaquc_analytics_last_sent', 0);
+        $week_ago = strtotime('-1 week');
+
+        if ($last_sent < $week_ago) {
+            $this->analytics->send_tracking_data();
+            update_option('onepaquc_analytics_last_sent', time());
+        }
+    }
+
+    public function handle_deactivation_feedback()
+    {
+        check_ajax_referer('deactivation_feedback', 'nonce');
+
+        $reason = sanitize_text_field(wp_unslash($_POST['reason'] ?? ''));
+        $this->analytics->send_deactivation_data($reason);
+
+        wp_die();
+    }
+}
+
+new mulopimfwc_analytics_main();

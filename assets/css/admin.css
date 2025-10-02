@@ -327,7 +327,7 @@
 .lwp-settings-section:not(:last-child) {
     margin-bottom: 20px;
 }
-select, textarea, input[type=date], input[type=datetime-local], input[type=datetime], input[type=email], input[type=month], input[type=number], input[type=password], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week] {
+.lwp-settings-main-container select, .lwp-settings-main-container textarea, .lwp-settings-main-container input[type=date], .lwp-settings-main-container input[type=datetime-local], .lwp-settings-main-container input[type=datetime], .lwp-settings-main-container input[type=email], .lwp-settings-main-container input[type=month], .lwp-settings-main-container input[type=number], .lwp-settings-main-container input[type=password], .lwp-settings-main-container input[type=search], .lwp-settings-main-container input[type=tel], .lwp-settings-main-container input[type=text], .lwp-settings-main-container input[type=time], .lwp-settings-main-container input[type=url], .lwp-settings-main-container input[type=week] {
     border-color: #d1d5db !important;
     border-radius: 6px !important;
         width: 100%;
@@ -335,6 +335,10 @@ select, textarea, input[type=date], input[type=datetime-local], input[type=datet
     max-width: 100% !important;
         min-height: 45px !important;
 
+}
+
+p.support-links a {
+    text-decoration: none;
 }
 
 p.submit .button {

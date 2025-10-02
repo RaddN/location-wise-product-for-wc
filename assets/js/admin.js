@@ -257,8 +257,9 @@ jQuery(document).ready(function ($) {
         $(this).addClass('nav-tab-active');
 
         // Show target content
-        $('.lwp-tab-content').hide();
+        $('.lwp-tab-content,.mulopimfwc_settings').hide();
         $($(this).attr('href')).show();
+        $($(this).attr('href')).closest('.mulopimfwc_settings').show();
     });
 
     // Add toggle functionality for sections if needed

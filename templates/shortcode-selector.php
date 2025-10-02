@@ -3,16 +3,21 @@
 if (!defined('ABSPATH')) exit;
 // Template for the store location selector shortcode
 ?>
-<div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>">
+<?php 
+    // If no unit is present, append 'px'
+    $max_width = trim($atts['max_width']);
+    if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i', $max_width)) {
+        $max_width .= 'px';
+    }
+?>
+<div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" style="max-width: <?php echo esc_attr($max_width);?>;">
     <?php if ($atts['show_title'] === 'on'): ?>
         <h3 class="lwp-shortcode-title"><?php echo esc_html($atts['title']); ?></h3>
     <?php endif; ?>
     <?php if ($atts['enable_user_locations'] === 'on'): ?>
         <div class="lwp-user-location-features">
             <div class="address-content" id="address-trigger">
-                <span class="address-label-icon"><svg aria-hidden="true" focusable="false" class="fl-interaction-secondary" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.3224 2C16.9186 2 20.6446 5.72596 20.6446 10.3222C20.6446 11.8203 20.2487 13.226 19.5559 14.4404L18.4715 15.8911C17.8726 16.5162 16.6838 17.706 14.9052 19.4602L13.0213 21.313C12.6322 21.6947 12.0092 21.6946 11.6203 21.3128L7.91833 17.6571L6.59648 16.3282C6.2846 16.0104 5.78156 15.3801 5.08734 14.4375C4.3955 13.2238 4.00024 11.8192 4.00024 10.3222C4.00024 5.72596 7.72621 2 12.3224 2ZM12.3224 3.5C8.55463 3.5 5.50024 6.55439 5.50024 10.3222C5.50024 11.4141 5.75604 12.466 6.23886 13.4136L6.37241 13.66L6.96356 14.5436L7.18196 14.7804L7.77128 15.385C8.23371 15.8535 8.88147 16.5011 9.70239 17.3151C10.6866 18.2861 11.4247 19.0143 11.9168 19.4998C11.9577 19.5401 11.9986 19.5805 12.0395 19.6209C12.1953 19.7745 12.4456 19.7745 12.6013 19.6209L12.6754 19.5478L15.3017 16.9571L17.2047 15.0461C17.3404 14.9068 17.4503 14.7925 17.5337 14.7039L17.6874 14.534L18.2724 13.659L18.4049 13.4158C18.84 12.5624 19.0911 11.6245 19.1369 10.6487L19.1446 10.3222C19.1446 6.55439 16.0902 3.5 12.3224 3.5ZM12.3224 6.75C14.3935 6.75 16.0724 8.42893 16.0724 10.5C16.0724 12.5711 14.3935 14.25 12.3224 14.25C10.2513 14.25 8.57241 12.5711 8.57241 10.5C8.57241 8.42893 10.2513 6.75 12.3224 6.75ZM12.3224 8.25C11.0798 8.25 10.0724 9.25736 10.0724 10.5C10.0724 11.7426 11.0798 12.75 12.3224 12.75C13.5651 12.75 14.5724 11.7426 14.5724 10.5C14.5724 9.25736 13.5651 8.25 12.3224 8.25Z"></path>
-                    </svg></span>
+                <svg aria-hidden="true" class="address-label-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.322 2a8.322 8.322 0 0 1 7.234 12.44l-1.085 1.451q-.897.938-3.566 3.57l-1.884 1.852a1 1 0 0 1-1.4 0l-3.703-3.656-1.322-1.329q-.466-.477-1.509-1.89A8.322 8.322 0 0 1 12.322 2m0 1.5a6.822 6.822 0 0 0-6.083 9.914l.133.246.592.884.218.236.59.605c.462.469 1.11 1.116 1.93 1.93l2.215 2.185.123.12a.4.4 0 0 0 .561 0l.074-.072 2.627-2.59 1.903-1.912.329-.342.153-.17.585-.875.133-.243a6.8 6.8 0 0 0 .732-2.767l.008-.327A6.82 6.82 0 0 0 12.322 3.5m0 3.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5m0 1.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5"/></svg>
                 <span class="address-text">
                     <?php
                     $current_location = '';
@@ -23,6 +28,8 @@ if (!defined('ABSPATH')) exit;
                         $user_locations = get_user_meta($current_user->ID, 'mulopimfwc_user_locations', true);
                         $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : '';
 
+                        
+
                         if (!empty($user_locations) && is_array($user_locations) && $selected_location_id) {
                             foreach ($user_locations as $location) {
                                 if ($location['id'] === $selected_location_id) {
@@ -32,10 +39,11 @@ if (!defined('ABSPATH')) exit;
                                 }
                             }
                         }
-                    } elseif (isset($_COOKIE['mulopimfwc_user_location'])) {
+                    } else {
                         // For non-logged in users, check if location is set in cookie
                         $location_set = true;
-                        $current_location = __('Current Location', 'multi-location-product-and-inventory-management');
+                        $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : (isset($_COOKIE['mulopimfwc_store_location']) ? $_COOKIE['mulopimfwc_store_location']:'');
+                        $current_location = $selected_location_id ?? __('Current Location', 'multi-location-product-and-inventory-management');
                     }
 
                     echo $location_set ? esc_html($current_location) : esc_html__('Set Your Address', 'multi-location-product-and-inventory-management');
@@ -60,17 +68,39 @@ if (!defined('ABSPATH')) exit;
                                 foreach ($user_locations as $location) {
                                     $selected = (isset($_COOKIE['mulopimfwc_user_location']) && $_COOKIE['mulopimfwc_user_location'] === $location['id']) ? 'selected' : '';
                             ?>
-                                    <div class="saved-location-item <?php echo esc_attr($selected); ?>" data-location-id="<?php echo esc_attr($location['id']); ?>">
+                                    <div
+                                        class="saved-location-item <?php echo esc_attr($selected); ?>"
+                                        data-location-id="<?php echo esc_attr($location['id']); ?>"
+                                        data-label="<?php echo esc_attr($location['label']); ?>"
+                                        data-address="<?php echo esc_attr($location['address']); ?>"
+                                        data-street="<?php echo esc_attr($location['street'] ?? ''); ?>"
+                                        data-city="<?php echo esc_attr($location['city'] ?? ''); ?>"
+                                        data-state="<?php echo esc_attr($location['state'] ?? ''); ?>"
+                                        data-postal="<?php echo esc_attr($location['postal'] ?? ''); ?>"
+                                        data-country="<?php echo esc_attr($location['country'] ?? ''); ?>"
+                                        data-lat="<?php echo esc_attr($location['lat'] ?? ''); ?>"
+                                        data-lng="<?php echo esc_attr($location['lng'] ?? ''); ?>"
+                                        data-note="<?php echo esc_attr($location['note'] ?? ''); ?>">
+
                                         <div class="saved-address-icon">
-                                            <?php if($location['label'] == "home"){?>
-                                            <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M18.1941 4C18.5738 4 18.8876 4.28215 18.9373 4.64823L18.9441 4.75L18.944 9.431L21.7074 11.6364C22.0312 11.8948 22.0842 12.3667 21.8259 12.6904C21.591 12.9848 21.1797 13.0554 20.8636 12.8717L20.7719 12.8089L20.735 12.779L20.7152 19.2271C20.7123 20.1433 20.0059 20.8932 19.1084 20.9659L18.9652 20.9716H4.99021C4.07204 20.9716 3.31902 20.2645 3.24601 19.3652L3.24021 19.2216L3.24 12.788L3.16041 12.8505C2.85462 13.0509 2.44007 13.0025 2.18974 12.7212C1.9394 12.44 1.93947 12.0226 2.17402 11.7421L2.25141 11.6624L10.3627 4.44395C10.9595 3.91282 11.8337 3.85713 12.4895 4.29021L12.6176 4.38334L14.589 5.956L14.5895 4.75C14.5895 4.3703 14.8716 4.05651 15.2377 4.00685L15.3395 4H18.1941ZM11.4192 5.52522L11.3599 5.56449L4.74 11.454L4.74021 19.2216C4.74021 19.34 4.82244 19.4391 4.93289 19.465L4.99021 19.4716H9.05978C9.24021 19.4716 9.24666 19.3652 9.24389 19.1808C9.24435 19.1698 9.24475 19.1487 9.2451 19.1175L9.24597 18.9933C9.24609 18.9675 9.24619 18.9392 9.24627 18.9084L9.24667 18.5623C9.2438 17.7576 9.24189 17.106 9.24093 16.6074L9.24021 15.9744C9.24021 14.4556 10.4714 13.2244 11.9902 13.2244C13.4527 13.2244 14.6486 14.3661 14.7352 15.8069L14.7402 15.9744C14.7405 16.1549 14.7408 16.328 14.741 16.4936L14.7419 17.1879C14.742 17.2595 14.7421 17.3291 14.7421 17.3969V18.9526C14.7421 18.9791 14.742 19.0037 14.7419 19.0265L14.741 19.1806C14.7408 19.2036 14.7405 19.2191 14.7402 19.2271C14.7352 19.3652 14.8037 19.4716 14.914 19.4716H18.9652C19.0833 19.4716 19.1823 19.3898 19.2084 19.2796L19.2152 19.2224L19.239 11.585L11.682 5.55583C11.6059 5.49508 11.5036 5.48527 11.4192 5.52522ZM11.9902 14.7244C11.343 14.7244 10.8107 15.2163 10.7467 15.8466L10.7402 15.9744L10.7409 16.5728C10.7413 16.8583 10.7416 17.1231 10.742 17.3673L10.7428 17.8283C10.7432 18.0451 10.7436 18.2412 10.744 18.4167L10.7449 18.7403C10.7453 18.8883 10.7457 19.0157 10.7462 19.1225L10.7467 19.2224C10.7469 19.278 10.7365 19.4716 10.8861 19.4716H13.1062C13.2402 19.4716 13.2402 19.3707 13.2402 19.2271V15.9744C13.2402 15.284 12.6806 14.7244 11.9902 14.7244ZM17.4432 5.49937H16.0892L16.089 7.153L17.444 8.234L17.4432 5.49937Z"></path>
-                                            </svg>
+                                            <?php if ($location['label'] == "Home") { ?>
+                                                <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M18.1941 4C18.5738 4 18.8876 4.28215 18.9373 4.64823L18.9441 4.75L18.944 9.431L21.7074 11.6364C22.0312 11.8948 22.0842 12.3667 21.8259 12.6904C21.591 12.9848 21.1797 13.0554 20.8636 12.8717L20.7719 12.8089L20.735 12.779L20.7152 19.2271C20.7123 20.1433 20.0059 20.8932 19.1084 20.9659L18.9652 20.9716H4.99021C4.07204 20.9716 3.31902 20.2645 3.24601 19.3652L3.24021 19.2216L3.24 12.788L3.16041 12.8505C2.85462 13.0509 2.44007 13.0025 2.18974 12.7212C1.9394 12.44 1.93947 12.0226 2.17402 11.7421L2.25141 11.6624L10.3627 4.44395C10.9595 3.91282 11.8337 3.85713 12.4895 4.29021L12.6176 4.38334L14.589 5.956L14.5895 4.75C14.5895 4.3703 14.8716 4.05651 15.2377 4.00685L15.3395 4H18.1941ZM11.4192 5.52522L11.3599 5.56449L4.74 11.454L4.74021 19.2216C4.74021 19.34 4.82244 19.4391 4.93289 19.465L4.99021 19.4716H9.05978C9.24021 19.4716 9.24666 19.3652 9.24389 19.1808C9.24435 19.1698 9.24475 19.1487 9.2451 19.1175L9.24597 18.9933C9.24609 18.9675 9.24619 18.9392 9.24627 18.9084L9.24667 18.5623C9.2438 17.7576 9.24189 17.106 9.24093 16.6074L9.24021 15.9744C9.24021 14.4556 10.4714 13.2244 11.9902 13.2244C13.4527 13.2244 14.6486 14.3661 14.7352 15.8069L14.7402 15.9744C14.7405 16.1549 14.7408 16.328 14.741 16.4936L14.7419 17.1879C14.742 17.2595 14.7421 17.3291 14.7421 17.3969V18.9526C14.7421 18.9791 14.742 19.0037 14.7419 19.0265L14.741 19.1806C14.7408 19.2036 14.7405 19.2191 14.7402 19.2271C14.7352 19.3652 14.8037 19.4716 14.914 19.4716H18.9652C19.0833 19.4716 19.1823 19.3898 19.2084 19.2796L19.2152 19.2224L19.239 11.585L11.682 5.55583C11.6059 5.49508 11.5036 5.48527 11.4192 5.52522ZM11.9902 14.7244C11.343 14.7244 10.8107 15.2163 10.7467 15.8466L10.7402 15.9744L10.7409 16.5728C10.7413 16.8583 10.7416 17.1231 10.742 17.3673L10.7428 17.8283C10.7432 18.0451 10.7436 18.2412 10.744 18.4167L10.7449 18.7403C10.7453 18.8883 10.7457 19.0157 10.7462 19.1225L10.7467 19.2224C10.7469 19.278 10.7365 19.4716 10.8861 19.4716H13.1062C13.2402 19.4716 13.2402 19.3707 13.2402 19.2271V15.9744C13.2402 15.284 12.6806 14.7244 11.9902 14.7244ZM17.4432 5.49937H16.0892L16.089 7.153L17.444 8.234L17.4432 5.49937Z"></path>
+                                                </svg>
+                                            <?php } else if ($location['label'] == "Work") { ?>
+                                                <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M13.7383 4C14.6565 4 15.4095 4.70711 15.4825 5.60647C15.4954 5.83634 15.5019 5.95581 15.5019 5.96487C15.5019 6.0767 15.6017 6.0767 15.6017 6.0767H17.75C18.7165 6.0767 19.5 6.8602 19.5 7.8267V17.8267C19.5 18.7932 18.7165 19.5767 17.75 19.5767H5.75C4.7835 19.5767 4 18.7932 4 17.8267V7.8267C4 6.8602 4.7835 6.0767 5.75 6.0767L7.7285 6.07699C7.72552 6.07596 7.72831 6.07482 7.73755 6.07355C7.82035 6.06224 7.83829 5.98992 7.83829 5.96487V5.75C7.83829 4.83183 8.5454 4.07881 9.44477 4.0058L9.58829 4H13.7383ZM7.68585 14.6492L5.5 14.649V17.8267C5.5 17.945 5.58223 18.0442 5.69268 18.0701L5.75 18.0767H17.75C17.8881 18.0767 18 17.9648 18 17.8267V14.649L9.44477 14.6492C9.38509 14.6492 9.34532 14.7293 9.34494 14.8062C9.34426 14.9465 9.34204 15.2126 9.33829 15.6046C9.33829 16.0188 9.00251 16.3546 8.58829 16.3546C8.2086 16.3546 7.8948 16.0724 7.84514 15.7063L7.83829 15.6046V14.8072C7.83829 14.6944 7.75845 14.6492 7.68585 14.6492ZM15.6017 14.6508C15.5421 14.6508 15.5023 14.7309 15.5019 14.8078C15.5012 14.9481 15.499 15.2142 15.4953 15.6062C15.4953 16.0204 15.1595 16.3562 14.7453 16.3562C14.3656 16.3562 14.0518 16.074 14.0021 15.708L13.9953 15.6062V14.8088C13.9953 14.696 13.9154 14.6508 13.8428 14.6508H15.6017ZM17.75 7.5767H5.75C5.61193 7.5767 5.5 7.68863 5.5 7.8267V13.149H18V7.8267C18 7.70835 17.9178 7.60921 17.8073 7.5833L17.75 7.5767ZM13.7383 5.5H9.58829C9.46995 5.5 9.37081 5.58223 9.3449 5.69268L9.33829 5.75V5.96487C9.33829 6.04728 9.39174 6.07355 9.44477 6.0767H13.8849C13.9883 6.0767 13.9883 6.00433 13.9883 5.96487V5.75C13.9883 5.63165 13.9061 5.53251 13.7956 5.5066L13.7383 5.5Z"></path>
+                                                </svg>
+                                            <?php } else if ($location['label'] == "Partner") { ?>
+                                                <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M18.3384 4.43834C21.1017 5.75361 22.3527 9.19469 21.1327 12.1242C19.5851 15.3674 16.697 17.9595 12.4684 19.9005C12.2142 20.0143 11.925 20.0305 11.6609 19.9491L11.5307 19.9C7.30258 17.9591 4.41482 15.3671 2.86737 12.1242C1.64733 9.19469 2.89838 5.75361 5.66167 4.43834C7.55198 3.53859 9.48847 4.12319 11.0402 5.29285C11.1519 5.37698 11.2861 5.48788 11.443 5.62554L11.7293 5.88324C11.8823 6.02397 12.1176 6.02407 12.2707 5.88348L12.5865 5.60038C12.7311 5.47451 12.8557 5.37218 12.9603 5.29338C14.5155 4.12201 16.45 3.53949 18.3384 4.43834ZM17.6937 5.79274C16.5158 5.23207 15.1885 5.49301 13.8627 6.49154L13.7119 6.61193C13.5969 6.70757 13.4536 6.83367 13.2852 6.98833C13.0777 7.17884 12.7316 7.45514 12.2466 7.81724L12.2467 7.81729C12.1018 7.92549 11.9023 7.92304 11.7601 7.81131C11.3453 7.48537 11.0424 7.24931 10.8513 7.10313L10.7202 6.99308L10.5628 6.84994C10.3818 6.68743 10.2378 6.56641 10.1374 6.49069C8.81398 5.49318 7.485 5.23172 6.30633 5.79274C4.27543 6.75941 3.33513 9.34576 4.22115 11.4782C5.55607 14.2758 8.04261 16.5647 11.7406 18.3415L12 18.463L12.2586 18.3419C15.82 16.631 18.257 14.4472 19.5981 11.8491L19.748 11.5475C20.6363 9.41456 19.7816 6.92068 17.8809 5.88805L17.6937 5.79274Z"></path>
+                                                </svg>
+                                            <?php } else if ($location['label'] == "Other") { ?>
+                                                <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.3224 2C16.9186 2 20.6446 5.72596 20.6446 10.3222C20.6446 11.8203 20.2487 13.226 19.5559 14.4404L18.4715 15.8911C17.8726 16.5162 16.6838 17.706 14.9052 19.4602L13.0213 21.313C12.6322 21.6947 12.0092 21.6946 11.6203 21.3128L7.91833 17.6571L6.59648 16.3282C6.2846 16.0104 5.78156 15.3801 5.08734 14.4375C4.3955 13.2238 4.00024 11.8192 4.00024 10.3222C4.00024 5.72596 7.72621 2 12.3224 2ZM12.3224 3.5C8.55463 3.5 5.50024 6.55439 5.50024 10.3222C5.50024 11.4141 5.75604 12.466 6.23886 13.4136L6.37241 13.66L6.96356 14.5436L7.18196 14.7804L7.77128 15.385C8.23371 15.8535 8.88147 16.5011 9.70239 17.3151C10.6866 18.2861 11.4247 19.0143 11.9168 19.4998C11.9577 19.5401 11.9986 19.5805 12.0395 19.6209C12.1953 19.7745 12.4456 19.7745 12.6013 19.6209L12.6754 19.5478L15.3017 16.9571L17.2047 15.0461C17.3404 14.9068 17.4503 14.7925 17.5337 14.7039L17.6874 14.534L18.2724 13.659L18.4049 13.4158C18.84 12.5624 19.0911 11.6245 19.1369 10.6487L19.1446 10.3222C19.1446 6.55439 16.0902 3.5 12.3224 3.5ZM12.3224 6.75C14.3935 6.75 16.0724 8.42893 16.0724 10.5C16.0724 12.5711 14.3935 14.25 12.3224 14.25C10.2513 14.25 8.57241 12.5711 8.57241 10.5C8.57241 8.42893 10.2513 6.75 12.3224 6.75ZM12.3224 8.25C11.0798 8.25 10.0724 9.25736 10.0724 10.5C10.0724 11.7426 11.0798 12.75 12.3224 12.75C13.5651 12.75 14.5724 11.7426 14.5724 10.5C14.5724 9.25736 13.5651 8.25 12.3224 8.25Z"></path>
+                                                </svg>
                                             <?php } ?>
-                                        <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M13.7383 4C14.6565 4 15.4095 4.70711 15.4825 5.60647C15.4954 5.83634 15.5019 5.95581 15.5019 5.96487C15.5019 6.0767 15.6017 6.0767 15.6017 6.0767H17.75C18.7165 6.0767 19.5 6.8602 19.5 7.8267V17.8267C19.5 18.7932 18.7165 19.5767 17.75 19.5767H5.75C4.7835 19.5767 4 18.7932 4 17.8267V7.8267C4 6.8602 4.7835 6.0767 5.75 6.0767L7.7285 6.07699C7.72552 6.07596 7.72831 6.07482 7.73755 6.07355C7.82035 6.06224 7.83829 5.98992 7.83829 5.96487V5.75C7.83829 4.83183 8.5454 4.07881 9.44477 4.0058L9.58829 4H13.7383ZM7.68585 14.6492L5.5 14.649V17.8267C5.5 17.945 5.58223 18.0442 5.69268 18.0701L5.75 18.0767H17.75C17.8881 18.0767 18 17.9648 18 17.8267V14.649L9.44477 14.6492C9.38509 14.6492 9.34532 14.7293 9.34494 14.8062C9.34426 14.9465 9.34204 15.2126 9.33829 15.6046C9.33829 16.0188 9.00251 16.3546 8.58829 16.3546C8.2086 16.3546 7.8948 16.0724 7.84514 15.7063L7.83829 15.6046V14.8072C7.83829 14.6944 7.75845 14.6492 7.68585 14.6492ZM15.6017 14.6508C15.5421 14.6508 15.5023 14.7309 15.5019 14.8078C15.5012 14.9481 15.499 15.2142 15.4953 15.6062C15.4953 16.0204 15.1595 16.3562 14.7453 16.3562C14.3656 16.3562 14.0518 16.074 14.0021 15.708L13.9953 15.6062V14.8088C13.9953 14.696 13.9154 14.6508 13.8428 14.6508H15.6017ZM17.75 7.5767H5.75C5.61193 7.5767 5.5 7.68863 5.5 7.8267V13.149H18V7.8267C18 7.70835 17.9178 7.60921 17.8073 7.5833L17.75 7.5767ZM13.7383 5.5H9.58829C9.46995 5.5 9.37081 5.58223 9.3449 5.69268L9.33829 5.75V5.96487C9.33829 6.04728 9.39174 6.07355 9.44477 6.0767H13.8849C13.9883 6.0767 13.9883 6.00433 13.9883 5.96487V5.75C13.9883 5.63165 13.9061 5.53251 13.7956 5.5066L13.7383 5.5Z"></path></svg>
-                                        <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M18.3384 4.43834C21.1017 5.75361 22.3527 9.19469 21.1327 12.1242C19.5851 15.3674 16.697 17.9595 12.4684 19.9005C12.2142 20.0143 11.925 20.0305 11.6609 19.9491L11.5307 19.9C7.30258 17.9591 4.41482 15.3671 2.86737 12.1242C1.64733 9.19469 2.89838 5.75361 5.66167 4.43834C7.55198 3.53859 9.48847 4.12319 11.0402 5.29285C11.1519 5.37698 11.2861 5.48788 11.443 5.62554L11.7293 5.88324C11.8823 6.02397 12.1176 6.02407 12.2707 5.88348L12.5865 5.60038C12.7311 5.47451 12.8557 5.37218 12.9603 5.29338C14.5155 4.12201 16.45 3.53949 18.3384 4.43834ZM17.6937 5.79274C16.5158 5.23207 15.1885 5.49301 13.8627 6.49154L13.7119 6.61193C13.5969 6.70757 13.4536 6.83367 13.2852 6.98833C13.0777 7.17884 12.7316 7.45514 12.2466 7.81724L12.2467 7.81729C12.1018 7.92549 11.9023 7.92304 11.7601 7.81131C11.3453 7.48537 11.0424 7.24931 10.8513 7.10313L10.7202 6.99308L10.5628 6.84994C10.3818 6.68743 10.2378 6.56641 10.1374 6.49069C8.81398 5.49318 7.485 5.23172 6.30633 5.79274C4.27543 6.75941 3.33513 9.34576 4.22115 11.4782C5.55607 14.2758 8.04261 16.5647 11.7406 18.3415L12 18.463L12.2586 18.3419C15.82 16.631 18.257 14.4472 19.5981 11.8491L19.748 11.5475C20.6363 9.41456 19.7816 6.92068 17.8809 5.88805L17.6937 5.79274Z"></path></svg>
-                                    <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.3224 2C16.9186 2 20.6446 5.72596 20.6446 10.3222C20.6446 11.8203 20.2487 13.226 19.5559 14.4404L18.4715 15.8911C17.8726 16.5162 16.6838 17.706 14.9052 19.4602L13.0213 21.313C12.6322 21.6947 12.0092 21.6946 11.6203 21.3128L7.91833 17.6571L6.59648 16.3282C6.2846 16.0104 5.78156 15.3801 5.08734 14.4375C4.3955 13.2238 4.00024 11.8192 4.00024 10.3222C4.00024 5.72596 7.72621 2 12.3224 2ZM12.3224 3.5C8.55463 3.5 5.50024 6.55439 5.50024 10.3222C5.50024 11.4141 5.75604 12.466 6.23886 13.4136L6.37241 13.66L6.96356 14.5436L7.18196 14.7804L7.77128 15.385C8.23371 15.8535 8.88147 16.5011 9.70239 17.3151C10.6866 18.2861 11.4247 19.0143 11.9168 19.4998C11.9577 19.5401 11.9986 19.5805 12.0395 19.6209C12.1953 19.7745 12.4456 19.7745 12.6013 19.6209L12.6754 19.5478L15.3017 16.9571L17.2047 15.0461C17.3404 14.9068 17.4503 14.7925 17.5337 14.7039L17.6874 14.534L18.2724 13.659L18.4049 13.4158C18.84 12.5624 19.0911 11.6245 19.1369 10.6487L19.1446 10.3222C19.1446 6.55439 16.0902 3.5 12.3224 3.5ZM12.3224 6.75C14.3935 6.75 16.0724 8.42893 16.0724 10.5C16.0724 12.5711 14.3935 14.25 12.3224 14.25C10.2513 14.25 8.57241 12.5711 8.57241 10.5C8.57241 8.42893 10.2513 6.75 12.3224 6.75ZM12.3224 8.25C11.0798 8.25 10.0724 9.25736 10.0724 10.5C10.0724 11.7426 11.0798 12.75 12.3224 12.75C13.5651 12.75 14.5724 11.7426 14.5724 10.5C14.5724 9.25736 13.5651 8.25 12.3224 8.25Z"></path></svg>
-                                    </div>
+                                        </div>
                                         <div class="location-info">
                                             <span class="location-label"><?php echo esc_html($location['label']); ?></span>
                                             <span class="location-address"><?php echo esc_html($location['address']); ?></span>
@@ -132,6 +162,12 @@ if (!defined('ABSPATH')) exit;
             .address-text {
                 color: #495057;
                 font-weight: 500;
+                <?php if($atts['multi_line'] !== "on"){?>
+                width: calc(<?php echo esc_attr($max_width);?> - (<?php echo esc_attr($max_width);?> / 3));              /* Set a fixed width */
+                white-space: nowrap;      /* Prevent text from wrapping */
+                overflow: hidden;         /* Hide the overflowed text */
+                text-overflow: ellipsis;
+                <?php } ?>
             }
 
             .tooltip_popup {
@@ -368,7 +404,7 @@ if (!defined('ABSPATH')) exit;
             }
         </style>
     <?php endif; ?>
-    <form id="lwp-shortcode-selector-form" class="lwp-selector-form">
+    <form id="lwp-shortcode-selector-form" class="lwp-selector-form" style="display: <?php echo $atts['enable_user_locations'] === 'on'? 'none':'block';?>;">
         <?php wp_nonce_field('mulopimfwc_shortcode_selector', 'mulopimfwc_shortcode_selector_nonce'); ?>
         <?php if ($atts["herichical"] === "seperately"): ?>
             <?php
@@ -551,9 +587,11 @@ if (!defined('ABSPATH')) exit;
                 <div class="lwp-details-header">
                     <h4><?php _e('Location Details', 'multi-location-product-and-inventory-management'); ?></h4>
                     <p class="lwp-address-preview"></p>
+                    <span class="edit_location_map" style="cursor: pointer;">✏️</span>
                 </div>
                 <form id="lwp-location-form">
                     <?php wp_nonce_field('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce'); ?>
+                    <input type="hidden" id="lwp-editing-location-id" name="location_id" value="">
                     <div class="lwp-form-group">
                         <label for="lwp-location-label"><?php _e('Label', 'multi-location-product-and-inventory-management'); ?></label>
                         <select id="lwp-location-label" name="label" required>
@@ -742,6 +780,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                     // Step navigation events
                     $('.lwp-continue-btn').on('click', this.handleContinueToStep2.bind(this));
+                    $('.edit_location_map').on('click', this.handleBackToStep1.bind(this));
                     $('.lwp-back-btn').on('click', this.handleBackToStep1.bind(this));
 
                     // Form submission
@@ -918,16 +957,30 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 handleLocationFormSubmit: function(e) {
                     e.preventDefault();
 
-                    const formData = $(e.target).serialize();
+                    const isEditing = !!$('#lwp-editing-location-id').val();
+                    const action = 'mulopimfwc_save_user_location';
+                    const payload = $(e.target).serialize() + '&action=' + action;
 
                     $.ajax({
                         url: mulopimfwc_locationWiseProducts.ajaxUrl,
                         type: 'POST',
-                        data: formData + '&action=mulopimfwc_save_user_location',
-                        success: this.handleLocationSaveSuccess.bind(this),
+                        data: payload,
+                        success: (res) => {
+                            if (!res || !res.success) {
+                                this.showAlert((res && res.data && res.data.message) || 'Error saving location');
+                                return;
+                            }
+
+                            if (isEditing) {
+                                this.handleUpdateSuccess(res);
+                            } else {
+                                this.handleLocationSaveSuccess(res);
+                            }
+                        },
                         error: () => this.showAlert('Error saving location')
                     });
                 },
+
 
                 handleLocationSaveSuccess: function(response) {
                     if (response.success) {
@@ -937,12 +990,89 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                             this.addLocationToDropdown(response.data);
                         }
 
-                        this.setUserLocation(response.data.location_id);
-                        this.reloadPage();
+                        this.updateCurrentLocation(response.data.location_id, response.data.address);
                     } else {
                         this.showAlert(response.data.message || 'Error saving location');
                     }
                 },
+
+
+                updateCurrentLocation: function(locationId, address, $item = null) {
+                    if (!locationId) {
+                        $('#location-tooltip').hide();
+                        this.showAlert('No matching store found for this address.');
+                        return;
+                    }
+                    const addrArray = address.split(',').map(s => s.trim().toLowerCase());
+
+                    const $dropdown = $('select#lwp-shortcode-selector');
+                    let found = false;
+
+                    // If already selected, skip
+                    if ($item && $item.hasClass('selected')) {
+                        $('#location-tooltip').hide();
+                        return;
+                    }
+
+                    // Build an array of dropdown option values (lowercase)
+                    const dropdownValues = [];
+                    $dropdown.find('option').each(function() {
+                        dropdownValues.push($(this).val().toLowerCase());
+                    });
+
+                    // First, check if any addrArray value matches any dropdown value
+                    for (let i = 0; i < addrArray.length; i++) {
+                        const addr = addrArray[i];
+                        if (dropdownValues.includes(addr)) {
+                            $dropdown.find('option').each(function() {
+                                if ($(this).val().toLowerCase() === addr) {
+                                    $(this).prop('selected', true);
+                                    found = true;
+                                    return false;
+                                }
+                            });
+                            break;
+                        }
+                    }
+
+                    // If not found by value, fallback to text match
+                    if (!found) {
+                        for (let i = 0; i < addrArray.length; i++) {
+                            const addr = addrArray[i];
+                            $dropdown.find('option').each(function() {
+                                if ($(this).text().trim().toLowerCase().includes(addr)) {
+                                    $(this).prop('selected', true);
+                                    found = true;
+                                    return false;
+                                }
+                            });
+                            if (found) break;
+                        }
+                    }
+
+                    // Trigger change event if selection changed
+                    if (found) {
+                        if ($item) {
+                            $('.saved-location-item').removeClass('selected');
+                            $item.addClass('selected');
+                            this.updateAddressDisplay($item);
+                        }
+
+                        $dropdown.trigger('change');
+                        $('#location-tooltip').hide();
+                    } else {
+                        this.showAlert('We don\'t have service for this area. Please choose another location.');
+                        this.reloadPage();
+                    }
+                },
+
+                handleUpdateSuccess: function(response) {
+                    // Reset editing state and close
+                    $('#lwp-editing-location-id').val('');
+                    this.closeLocationPopup();
+                    this.reloadPage();
+                },
+
 
                 addLocationToDropdown: function(locationData) {
                     const newOption = $('<option>', {
@@ -992,16 +1122,10 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 handleSavedLocationSelect: function(e) {
                     const $item = $(e.currentTarget);
                     const locationId = $item.data('location-id');
+                    const address = $item.data('address');
 
-                    if (locationId) {
-                        $('.saved-location-item').removeClass('selected');
-                        $item.addClass('selected');
+                    this.updateCurrentLocation(locationId, address, $item);
 
-                        this.setUserLocation(locationId);
-                        this.updateAddressDisplay($item);
-                        $('#location-tooltip').hide();
-                        this.reloadPage();
-                    }
                 },
 
                 updateAddressDisplay: function($item) {
@@ -1012,14 +1136,91 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                 handleEditLocation: function(e) {
                     e.stopPropagation();
-                    const locationId = $(e.target).data('location-id');
-                    // TODO: Implement edit functionality
-                    this.showAlert('Edit location functionality would be implemented here for location ID: ' + locationId);
+
+                    const $item = $(e.currentTarget).closest('.saved-location-item');
+                    const loc = {
+                        id: $item.data('locationId'),
+                        label: ($item.data('label') || '').toString(),
+                        street: ($item.data('street') || '').toString(),
+                        city: ($item.data('city') || '').toString(),
+                        state: ($item.data('state') || '').toString(),
+                        postal: ($item.data('postal') || '').toString(),
+                        country: ($item.data('country') || '').toString(),
+                        note: ($item.data('note') || '').toString(),
+                        lat: parseFloat($item.data('lat')) || null,
+                        lng: parseFloat($item.data('lng')) || null,
+                        address: ($item.data('address') || '').toString()
+                    };
+
+                    // Fallback: if we don’t have lat/lng yet (older saves), fetch once via AJAX
+                    if (!loc.lat || !loc.lng) {
+                        $.ajax({
+                            url: mulopimfwc_locationWiseProducts.ajaxUrl,
+                            type: 'POST',
+                            data: {
+                                action: 'mulopimfwc_get_user_location',
+                                location_id: loc.id,
+                                nonce: $('#mulopimfwc_shortcode_selector_nonce').val()
+                            }
+                        }).done((res) => {
+                            if (res && res.success && res.data && res.data.location) {
+                                Object.assign(loc, res.data.location);
+                            }
+                            this.openEditLocationForm(loc);
+                        }).fail(() => this.openEditLocationForm(loc));
+                        return;
+                    }
+
+                    this.openEditLocationForm(loc);
                 },
+
+                openEditLocationForm: function(loc) {
+                    // Show popup on step 2 with prefilled values
+                    $('#lwp-location-popup').show();
+                    $('#lwp-location-step1').hide();
+                    $('#lwp-location-step2').show();
+
+                    // Track editing state
+                    $('#lwp-editing-location-id').val(loc.id);
+
+                    // Map state in case user wants to tweak pin
+                    this.initMap();
+                    const lat = loc.lat ?? this.config.defaultLocation.lat;
+                    const lng = loc.lng ?? this.config.defaultLocation.lng;
+                    this.setMapLocation(lat, lng);
+
+                    // Cache for reverse geocode consistency
+                    this.selectedLat = lat;
+                    this.selectedLng = lng;
+                    this.selectedAddress = {
+                        street: loc.street || '',
+                        city: loc.city || '',
+                        state: loc.state || '',
+                        postal: loc.postal || '',
+                        country: loc.country || ''
+                    };
+
+                    // Prefill form
+                    $('#lwp-location-label').val(loc.label || 'Other');
+                    $('#lwp-location-street').val(loc.street || '');
+                    $('#lwp-location-apartment').val(''); // optional: store separately if you support it
+                    $('#lwp-location-note').val(loc.note || '');
+                    $('#lwp-location-lat').val(lat);
+                    $('#lwp-location-lng').val(lng);
+                    $('#lwp-location-city').val(loc.city || '');
+                    $('#lwp-location-state').val(loc.state || '');
+                    $('#lwp-location-postal').val(loc.postal || '');
+                    $('#lwp-location-country').val(loc.country || '');
+
+                    $('.lwp-form-actions button[type="submit"]').text(mulopimfwc_locationWiseProducts.i18n_update || 'Update Location');
+
+                    this.updateAddressPreview();
+                },
+
 
                 handleDeleteLocation: function(e) {
                     e.stopPropagation();
-                    const locationId = $(e.target).data('location-id');
+                    const locationId = $(e.currentTarget).data('locationId');
 
                     if (confirm('Are you sure you want to delete this location?')) {
                         this.deleteLocation(locationId);
