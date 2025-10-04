@@ -498,11 +498,11 @@ code {
 }
 
 .params-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 10px;
-}
-
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+        }
+        
 .param-item {
   background: #f6f7f7;
   border: 1px solid #dcdcde;

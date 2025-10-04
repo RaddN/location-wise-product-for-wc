@@ -29,7 +29,7 @@ class MULOPIMFWC_Admin
 
     public function add_location_fields()
     {
-?>
+        ?>
         <div class="form-field">
             <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="street_address" id="street_address" value="" />
@@ -314,7 +314,7 @@ class MULOPIMFWC_Admin
 
             return $submenu_file;
         });
-        
+
 
         // add Stock Central submenu
         add_submenu_page(
@@ -345,7 +345,14 @@ class MULOPIMFWC_Admin
             [new mulopimfwc_settings(), 'settings_page_content']
         );
 
-        
+        // Add "Get Pro" submenu (external link)
+        add_submenu_page(
+            'multi-location-product-and-inventory-management',
+            __('Get Pro', 'multi-location-product-and-inventory-management'),
+            __('⭐ Get Pro', 'multi-location-product-and-inventory-management'),
+            'manage_options',
+            'https://plugincy.com/multi-location-product-and-inventory-management/'
+        );
     }
     /**
      * Add location column to orders table
