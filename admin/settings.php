@@ -2389,6 +2389,386 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     {
     ?>
         <div class="wrap">
+            <!-- welcome box here -->
+            <div class="plugincy-filter-welcome-container">
+                <div class="welcome-header">
+                    <div class="plugincy-plugin-icon">
+                        <span class="dashicons dashicons-location-alt"></span>
+                    </div>
+                    <div class="header-content">
+                        <div><?php echo esc_html__('Multi Location Product & Inventory Management for WooCommerce Pro', 'multi-location-product-and-inventory-management'); ?></div>
+                        <p class="tagline"><?php echo esc_html__('Manage products, inventory, and pricing across multiple store locations effortlessly', 'multi-location-product-and-inventory-management'); ?></p>
+                    </div>
+                    <div class="version-badge">
+                        <span><?php echo esc_html__('Pro Version', 'multi-location-product-and-inventory-management'); ?></span>
+                    </div>
+                </div>
+
+                <div class="welcome-content">
+                    <div class="quick-actions">
+                        <h3><?php echo esc_html__('Quick Start Guide:', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <div class="action-steps">
+                            <div class="step">
+                                <span class="step-number"><?php echo esc_html__('1', 'multi-location-product-and-inventory-management'); ?></span>
+                                <div class="step-content">
+                                    <h4><?php echo esc_html__('Create Locations', 'multi-location-product-and-inventory-management'); ?></h4>
+                                    <p><?php echo esc_html__('Set up your store locations with names, addresses, and contact details', 'multi-location-product-and-inventory-management'); ?></p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number"><?php echo esc_html__('2', 'multi-location-product-and-inventory-management'); ?></span>
+                                <div class="step-content">
+                                    <h4><?php echo esc_html__('Assign Products', 'multi-location-product-and-inventory-management'); ?></h4>
+                                    <p><?php echo esc_html__('Link products to locations and manage stock, pricing, and availability', 'multi-location-product-and-inventory-management'); ?></p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number"><?php echo esc_html__('3', 'multi-location-product-and-inventory-management'); ?></span>
+                                <div class="step-content">
+                                    <h4><?php echo esc_html__('Enable Location Selector', 'multi-location-product-and-inventory-management'); ?></h4>
+                                    <p><?php echo esc_html__('Let customers choose their preferred location and see relevant products', 'multi-location-product-and-inventory-management'); ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cta-section">
+                        <div class="cta-buttons">
+                            <a href="https://plugincy.com/multi-location-product-and-inventory-management/" target="_blank" class="btn btn-primary" style="background: #ff5a36; color: #fff;">
+                                <span class="dashicons dashicons-star-filled"></span>
+                                <?php echo esc_html__('Upgrade to Pro', 'multi-location-product-and-inventory-management'); ?>
+                            </a>
+                            <a href="https://demo.plugincy.com/multi-location-product-and-inventory-management/" target="_blank" class="btn btn-accent">
+                                <span class="dashicons dashicons-visibility"></span>
+                                <?php echo esc_html__('View Demo', 'multi-location-product-and-inventory-management'); ?>
+                            </a>
+                            <a href="https://plugincy.com/documentations/multi-location-product-and-inventory-management/"
+                                target="_blank" class="btn btn-primary">
+                                <span class="dashicons dashicons-book"></span>
+                                <?php echo esc_html__('View Documentation', 'multi-location-product-and-inventory-management'); ?>
+                            </a>
+                            <a href="https://www.plugincy.com/support/"
+                                target="_blank" class="btn btn-secondary">
+                                <span class="dashicons dashicons-sos"></span>
+                                <?php echo esc_html__('Get Support', 'multi-location-product-and-inventory-management'); ?>
+                            </a>
+                        </div>
+
+                        <div class="support-info">
+                            <div class="support-item">
+                                <span class="dashicons dashicons-location"></span>
+                                <span><?php echo esc_html__('Unlimited Locations', 'multi-location-product-and-inventory-management'); ?></span>
+                            </div>
+                            <div class="support-item">
+                                <span class="dashicons dashicons-update"></span>
+                                <span><?php echo esc_html__('Regular Updates', 'multi-location-product-and-inventory-management'); ?></span>
+                            </div>
+                            <div class="support-item">
+                                <span class="dashicons dashicons-shield"></span>
+                                <span><?php echo esc_html__('Premium Support', 'multi-location-product-and-inventory-management'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .plugincy-filter-welcome-container {
+                    margin: 20px auto;
+                    background: #fff;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 20px rgba(0, 0, 0, 0.1);
+                    overflow: hidden;
+                    animation: slideIn 0.6s ease-out;
+                }
+
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .plugincy-filter-welcome-container .welcome-header {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 25px 20px;
+                    display: flex;
+                    align-items: center;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .plugincy-filter-welcome-container .welcome-header::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+                    opacity: 0.3;
+                }
+
+                .plugincy-filter-welcome-container .plugincy-plugin-icon {
+                    font-size: 48px;
+                    margin-right: 20px;
+                    opacity: 0.9;
+                    position: relative;
+                    z-index: 2;
+                }
+
+                .plugincy-filter-welcome-container .plugincy-plugin-icon .dashicons {
+                    font-size: 48px;
+                    width: 48px;
+                    height: 48px;
+                }
+
+                .plugincy-filter-welcome-container .header-content {
+                    flex: 1;
+                    position: relative;
+                    z-index: 2;
+                }
+
+                .plugincy-filter-welcome-container .header-content div {
+                    font-size: 28px;
+                    font-weight: 700;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    color: #fff;
+                    padding: 0 0 10px;
+                    line-height: 1.2;
+                }
+
+                .plugincy-filter-welcome-container .tagline {
+                    font-size: 16px;
+                    opacity: 0.9;
+                    font-weight: 400;
+                    margin: 0;
+                }
+
+                .plugincy-filter-welcome-container .version-badge {
+                    position: relative;
+                    z-index: 2;
+                }
+
+                .plugincy-filter-welcome-container .version-badge span {
+                    background: rgba(255, 255, 255, 0.2);
+                    padding: 6px 16px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                }
+
+                .plugincy-filter-welcome-container .welcome-content {
+                    padding: 20px;
+                }
+
+                .plugincy-filter-welcome-container .quick-actions {
+                    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+                    padding: 20px;
+                    border-radius: 10px;
+                    margin-bottom: 20px;
+                }
+
+                .plugincy-filter-welcome-container .quick-actions h3 {
+                    color: #2d3748;
+                    margin-bottom: 20px;
+                    font-size: 20px;
+                    margin-top: 0;
+                }
+
+                .plugincy-filter-welcome-container .quick-actions h3 .dashicons {
+                    color: #667eea;
+                    font-size: 20px;
+                    width: 20px;
+                    height: 20px;
+                }
+
+                .plugincy-filter-welcome-container .action-steps {
+                    display: flex;
+                    gap: 20px;
+                    flex-wrap: wrap;
+                }
+
+                .plugincy-filter-welcome-container .step {
+                    flex: 1;
+                    min-width: 200px;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 15px;
+                }
+
+                .plugincy-filter-welcome-container .step-number {
+                    background: #667eea;
+                    color: white;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                    font-size: 14px;
+                    flex-shrink: 0;
+                }
+
+                .plugincy-filter-welcome-container .step-content h4 {
+                    color: #2d3748;
+                    margin-bottom: 4px;
+                    font-size: 16px;
+                    margin: 0;
+                }
+
+                .plugincy-filter-welcome-container .step-content p {
+                    color: #718096;
+                    font-size: 14px;
+                }
+
+                .plugincy-filter-welcome-container .cta-section {
+                    text-align: center;
+                    border-top: 1px solid #e2e8f0;
+                    padding-top: 20px;
+                }
+
+                .plugincy-filter-welcome-container .cta-buttons {
+                    display: flex;
+                    gap: 15px;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    margin-bottom: 20px;
+                }
+
+                .plugincy-filter-welcome-container .btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 12px 24px;
+                    border-radius: 6px;
+                    text-decoration: none;
+                    font-weight: 600;
+                    font-size: 14px;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                    border: none;
+                    box-sizing: border-box;
+                }
+
+                .plugincy-filter-welcome-container .btn-primary {
+                    background: #667eea;
+                    color: white;
+                }
+
+                .plugincy-filter-welcome-container .btn-primary:hover {
+                    background: #5a67d8;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                }
+
+                .plugincy-filter-welcome-container .btn-secondary {
+                    background: #48bb78;
+                    color: white;
+                }
+
+                .plugincy-filter-welcome-container .btn-secondary:hover {
+                    background: #38a169;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+                }
+
+                .plugincy-filter-welcome-container .btn-accent {
+                    background: #ed8936;
+                    color: white;
+                }
+
+                .plugincy-filter-welcome-container .btn-accent:hover {
+                    background: #dd6b20;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+                }
+
+                .plugincy-filter-welcome-container .btn .dashicons {
+                    font-size: 16px;
+                    width: 16px;
+                    height: 16px;
+                }
+
+                .plugincy-filter-welcome-container .support-info {
+                    display: flex;
+                    justify-content: center;
+                    gap: 30px;
+                    flex-wrap: wrap;
+                }
+
+                .plugincy-filter-welcome-container .support-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #718096;
+                    font-size: 14px;
+                }
+
+                .plugincy-filter-welcome-container .support-item .dashicons {
+                    color: #48bb78;
+                    font-size: 16px;
+                    width: 16px;
+                    height: 16px;
+                }
+
+                @media (max-width: 768px) {
+                    .plugincy-filter-welcome-container .welcome-header {
+                        flex-direction: column;
+                        text-align: center;
+                        padding: 20px;
+                    }
+
+                    .plugincy-filter-welcome-container .plugincy-plugin-icon {
+                        margin-right: 0;
+                        margin-bottom: 15px;
+                    }
+
+                    .plugincy-filter-welcome-container .header-content div {
+                        font-size: 24px;
+                    }
+
+                    .plugincy-filter-welcome-container .welcome-content {
+                        padding: 20px;
+                    }
+
+                    .plugincy-filter-welcome-container .action-steps {
+                        flex-direction: column;
+                    }
+
+                    .plugincy-filter-welcome-container .cta-buttons {
+                        flex-direction: column;
+                        align-items: center;
+                    }
+
+                    .plugincy-filter-welcome-container .btn {
+                        width: 100%;
+                        max-width: 300px;
+                        justify-content: center;
+                    }
+
+                    .plugincy-filter-welcome-container .support-info {
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 15px;
+                    }
+
+                    .version-badge {
+                        margin-top: 15px;
+                    }
+                }
+            </style>
             <div class="lwp-settings-main-container">
                 <h1 class="wrap lwp-settings-heading">
 
