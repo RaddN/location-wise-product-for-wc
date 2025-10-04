@@ -265,8 +265,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = $this->get_display_options();
                 $mulopimfwc_popup_custom_css = isset($options['mulopimfwc_popup_custom_css']) ? $options['mulopimfwc_popup_custom_css'] : null;
         ?>
-            <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}">
-            <?php echo esc_attr($mulopimfwc_popup_custom_css ?? null); ?>
+            <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}"><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
             </textarea>
         <?php
             },
@@ -1172,7 +1171,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_location_display_section'
         );
 
-         // Add "Location Display Position" field
+        // Add "Location Display Position" field
         add_settings_field(
             'location_display_position',
             __('Location Display Position', 'multi-location-product-and-inventory-management'),
@@ -1333,7 +1332,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_cookie_expiry' => '30']);
                 $value = isset($options['location_cookie_expiry']) ? $options['location_cookie_expiry'] : '30';
         ?>
-            <input disabled type="number" name="mulopimfwc_display_options[location_cookie_expiry]" value="<?php echo esc_attr($value); ?>" min="1" max="365" class="small-text">
+            <input type="number" name="mulopimfwc_display_options[location_cookie_expiry]" value="<?php echo esc_attr($value); ?>" min="1" max="365" class="small-text">
             <p class="description"><?php echo esc_html_e('Number of days to remember user\'s location choice (1-365).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
@@ -1341,27 +1340,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_advanced_settings_section'
         );
 
-        add_settings_field(
-            'location_detection_method',
-            __('Location Detection Method', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['location_detection_method' => 'manual']);
-                $value = isset($options['location_detection_method']) ? $options['location_detection_method'] : 'manual';
-        ?>
-            <select name="mulopimfwc_display_options[location_detection_method]">
-                <option value="manual" <?php selected($value, 'manual'); ?>><?php echo esc_html_e('Manual Selection Only', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="geolocation" <?php selected($value, 'geolocation'); ?>><?php echo esc_html_e('Manual Selection & Browser Geolocation', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="ip_based" <?php selected($value, 'ip_based'); ?>><?php echo esc_html_e('Manual Selection & IP-Based Detection', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="user_profile" <?php selected($value, 'user_profile'); ?>><?php echo esc_html_e('Manual Selection & User Profile Address', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('How to automatically detect customer location.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'location-advance-settings',
-            'mulopimfwc_advanced_settings_section'
-        );
-
-        // Add "Enable Location Manager Role" field
+        // Add "Contribute to Plugincy" field
         add_settings_field(
             'allow_data_share',
             __('Contribute to Plugincy', 'multi-location-product-and-inventory-management'),
@@ -1465,15 +1444,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'enable_location_manager_role',
             __('Enable Location Manager Role', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['enable_location_manager_role' => 'on']);
-                $value = isset($options['enable_location_manager_role']) ? $options['enable_location_manager_role'] : 'on';
-        ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_manager_role]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Create a dedicated user role for managing specific store locations.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+                $this->render_advance_checkbox("enable_location_manager_role", __("Create a dedicated user role for managing specific store locations.", 'multi-location-product-and-inventory-management'), true);
             },
             'lwp-location-manager-settings',
             'mulopimfwc_location_manager_section'
@@ -2106,10 +2077,10 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $options = get_option('mulopimfwc_display_options', ['location_switching_behavior' => 'preserve_cart']);
                 $value = isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'preserve_cart';
         ?>
-            <select disabled name="mulopimfwc_display_options[location_switching_behavior]">
-                <option value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management'); ?></option>
+            <select name="mulopimfwc_display_options[location_switching_behavior]">
+                <option disabled value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="update_cart" <?php selected($value, 'update_cart'); ?>><?php echo esc_html_e('Update Cart (Remove unavailable products)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option disabled value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('How to handle cart contents when a customer changes their location.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
@@ -2123,15 +2094,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'location_change_notification',
             __('Location Change Notification', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['location_change_notification' => 'on']);
-                $value = isset($options['location_change_notification']) ? $options['location_change_notification'] : 'on';
-        ?>
-            <select disabled name="mulopimfwc_display_options[location_change_notification]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Display a notification when a customer changes their location.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+                $this->render_advance_checkbox("location_change_notification", __("Display a notification when a customer changes their location.", 'multi-location-product-and-inventory-management'));
             },
             'location-customer-experience-settings',
             'mulopimfwc_customer_experience_section'
@@ -2280,10 +2243,10 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $options = get_option('mulopimfwc_display_options', ['customer_location_history' => 'latest']);
                 $value = isset($options['customer_location_history']) ? $options['customer_location_history'] : 'latest';
         ?>
-            <select disabled name="mulopimfwc_display_options[customer_location_history]">
+            <select name="mulopimfwc_display_options[customer_location_history]">
                 <option value="latest" <?php selected($value, 'latest'); ?>><?php echo esc_html_e('Store Latest Only', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="all" <?php selected($value, 'all'); ?>><?php echo esc_html_e('Store Full History', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('Do Not Store', 'multi-location-product-and-inventory-management'); ?></option>
+                <option disabled value="all" <?php selected($value, 'all'); ?>><?php echo esc_html_e('Store Full History', 'multi-location-product-and-inventory-management'); ?></option>
+                <option disabled value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('Do Not Store', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('How to store customer location selection history.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
@@ -2427,7 +2390,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     ?>
         <div class="wrap">
             <div class="lwp-settings-main-container">
-                <div class="wrap lwp-settings-heading">
+                <h1 class="wrap lwp-settings-heading">
 
                     <div class="lwp-settings-icon">
 
@@ -2436,10 +2399,10 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                         </svg>
                     </div>
                     <div>
-                        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+                        <span><?php echo esc_html(get_admin_page_title()); ?></span>
                     </div>
 
-                </div>
+                </h1>
 
                 <div class="lwp-settings-inner-container">
 
@@ -2676,15 +2639,211 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     <div class="lwp-settings-right">
 
                         <div class="lwp-admin-notice">
-                            <p><svg viewBox="0 -2 20 20"
+                            <div class="notice-header"><svg viewBox="0 -2 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="20" height="20"
                                     style="margin-right:6px;vertical-align:middle;background-color:#3b82f6;padding:10px;border-radius:6px">
                                     <path fill="#ffffff" d="M12.736.064c.52.2.787.805.598 1.353L8.546 15.305c-.19.548-.763.83-1.282.631-.52-.2-.787-.805-.598-1.353L11.454.695c.19-.548.763-.83 1.282-.631M2.414 8.256 5.95 11.99c.39.412.39 1.08 0 1.492a.963.963 0 0 1-1.414 0L.293 9.003a1.1 1.1 0 0 1 0-1.493l4.243-4.48a.963.963 0 0 1 1.414 0 1.1 1.1 0 0 1 0 1.494zm15.172 0L14.05 4.524a1.1 1.1 0 0 1 0-1.493.963.963 0 0 1 1.414 0l4.243 4.479c.39.412.39 1.08 0 1.493l-4.243 4.478a.963.963 0 0 1-1.414 0 1.1 1.1 0 0 1 0-1.492z" />
-                                </svg><?php echo esc_html_e('Use this shortcode to show location selector on any page', 'multi-location-product-and-inventory-management'); ?></p> <code>[mulopimfwc_store_location_selector title ="Select Your Location" show_title = "on" use_select2 = 'on/off' herichical = 'on/off/seperately' show_count = 'on/off' class = ""]</code>
+                                </svg>
+                                <h3 class="notice-title" style="font-size: 15px;"><?php echo esc_html_e('Location Selector Shortcode', 'multi-location-product-and-inventory-management'); ?></h3>
+                            </div>
+                            <div class="notice-content">
+                                <p class="notice-description">
+                                    Use this shortcode to display the location selector on any page or post. Copy and paste it into the WordPress editor or use it in your template files.
+                                </p>
+
+                                <div class="shortcode-section">
+                                    <div class="shortcode-header">
+                                        <span class="shortcode-label">Shortcode</span>
+                                        <button class="copy-btn" onclick="copyToClipboard(event)">
+                                            <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                            <span class="btn-text">Copy Code</span>
+                                        </button>
+                                    </div>
+                                    <div class="shortcode-body">
+                                        <code id="shortcode-text">[mulopimfwc_store_location_selector enable_user_locations="on"]</code>
+                                    </div>
+                                </div>
+
+                                <div class="params-section">
+                                    <h4 class="params-title">
+                                        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                        </svg>
+                                        Available Parameters
+                                    </h4>
+                                    <div class="params-grid">
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">title</div>
+                                                <div class="param-value">Set custom selector title</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector title="Select Your Location"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">show_title</div>
+                                                <div class="param-value">on / off - Display title</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector show_title="on"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">use_select2</div>
+                                                <div class="param-value">on / off - Enhanced dropdown</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector use_select2="on"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">herichical</div>
+                                                <div class="param-value">on / off / seperately</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector herichical="on"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">show_count</div>
+                                                <div class="param-value">on / off - Show item count</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector show_count="on"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">class</div>
+                                                <div class="param-value">Custom CSS class name</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector class="my-custom-class"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">enable_user_locations</div>
+                                                <div class="param-value">on / off - User locations</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector enable_user_locations="off"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">max_width</div>
+                                                <div class="param-value">Maximum width in pixels</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector max_width="300"]</span>
+                                            </span>
+                                        </div>
+                                        <div class="param-item">
+                                            <div class="param-content">
+                                                <div class="param-name">multi_line</div>
+                                                <div class="param-value">on / off - Multi-line display</div>
+                                            </div>
+                                            <span class="param-info">
+                                                !
+                                                <span class="param-tooltip">[mulopimfwc_store_location_selector multi_line="on"]</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="usage-hint">
+                                    <p>
+                                        <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                            <path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                                        </svg>
+                                        <span><strong>Pro Tip:</strong> You can modify the parameter values directly in the shortcode to customize the location selector appearance and behavior.</span>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
+
+                    <script>
+                        function copyToClipboard(event) {
+                            const shortcodeText = document.getElementById('shortcode-text').textContent;
+                            const button = event.currentTarget;
+                            const buttonText = button.querySelector('.btn-text');
+                            const originalText = buttonText.textContent;
+
+                            // Fallback function for older browsers
+                            function fallbackCopy(text) {
+                                const textArea = document.createElement('textarea');
+                                textArea.value = text;
+                                textArea.style.position = 'fixed';
+                                textArea.style.left = '-999999px';
+                                textArea.style.top = '-999999px';
+                                document.body.appendChild(textArea);
+                                textArea.focus();
+                                textArea.select();
+
+                                try {
+                                    document.execCommand('copy');
+                                    textArea.remove();
+                                    return true;
+                                } catch (err) {
+                                    console.error('Fallback: Could not copy text', err);
+                                    textArea.remove();
+                                    return false;
+                                }
+                            }
+
+                            // Try modern clipboard API first, fallback to execCommand
+                            const copyPromise = navigator.clipboard && navigator.clipboard.writeText ?
+                                navigator.clipboard.writeText(shortcodeText) :
+                                Promise.resolve(fallbackCopy(shortcodeText));
+
+                            copyPromise.then(() => {
+                                button.classList.add('copied');
+                                button.innerHTML = `
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span class="btn-text">Copied!</span>
+                `;
+
+                                setTimeout(() => {
+                                    button.classList.remove('copied');
+                                    button.innerHTML = `
+                        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span class="btn-text">${originalText}</span>
+                    `;
+                                }, 2000);
+                            }).catch(err => {
+                                console.error('Failed to copy:', err);
+                                alert('Failed to copy. Please select and copy manually.');
+                            });
+                        }
+                    </script>
 
 
                 </div>

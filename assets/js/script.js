@@ -73,7 +73,7 @@ jQuery(document).ready(function ($) {
 
         // Check if the cart has products before changing the store location
         checkCartHasProducts(function (cartHasProducts) {
-            if (cartHasProducts) {
+            if (cartHasProducts && mulopimfwc_locationWiseProducts.location_change_notification) {
                 const confirmChange = confirm("Do you want to change the store location? Your cart will be emptied.");
                 if (!confirmChange) {
                     dropdown.val(getCookie('mulopimfwc_store_location') || '');
