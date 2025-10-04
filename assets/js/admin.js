@@ -341,3 +341,27 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const menuLink = document.querySelector(
+        'li#toplevel_page_multi-location-product-and-inventory-management li:last-child a'
+    );
+    if (menuLink) {
+        // Open in new tab securely
+        menuLink.setAttribute('target', '_blank');
+        menuLink.setAttribute('rel', 'noopener noreferrer');
+        // Add CSS class for styling
+        menuLink.classList.add('mulopimfwc-get-pro-link');
+    }
+});

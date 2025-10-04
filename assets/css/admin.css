@@ -498,11 +498,11 @@ code {
 }
 
 .params-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 10px;
-        }
-        
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
 .param-item {
   background: #f6f7f7;
   border: 1px solid #dcdcde;
@@ -651,4 +651,37 @@ code {
   code {
     font-size: 11px;
   }
+}
+
+/* Highlight "Get Pro" submenu item */
+li#toplevel_page_multi-location-product-and-inventory-management
+  li:last-child
+  a, li#toplevel_page_multi-location-product-and-inventory-management
+  li:last-child
+  a:focus {
+  color: #fff !important;
+  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 4px;
+  font-weight: 600;
+  margin: 4px 8px;
+  padding: 5px 10px !important;
+}
+
+/* Hover effect */
+li#toplevel_page_multi-location-product-and-inventory-management
+  li:last-child
+  a:hover {
+  background: linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%);
+  color: #fff !important;
+  transform: translateX(2px);
+}
+
+/* Add a subtle icon */
+li#toplevel_page_multi-location-product-and-inventory-management
+  li:last-child
+  a::after {
+  content: "↗";
+  margin-left: 6px;
+  font-size: 12px;
+  opacity: 0.9;
 }
