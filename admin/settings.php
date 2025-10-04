@@ -390,15 +390,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'enable_inventory_reservation',
             __('Enable Inventory Reservation', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['enable_inventory_reservation' => 'on']);
-                $value = isset($options['enable_inventory_reservation']) ? $options['enable_inventory_reservation'] : 'on';
-        ?>
-            <select disabled name="mulopimfwc_display_options[enable_inventory_reservation]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Reserve inventory when products are added to cart.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+                $this->render_advance_checkbox("enable_inventory_reservation", __("Reserve inventory when products are added to cart.", 'multi-location-product-and-inventory-management'), true);
             },
             'location-inventory-reserve-settings',
             'mulopimfwc_inventory_reservation_section'
@@ -1647,18 +1639,9 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
         // Add "Show Global Products" field
         add_settings_field(
             'show_global_products',
-            __('Show Global Products', 'multi-location-product-and-inventory-management'),
+            __('Enable Popup', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['enable_all_locations' => 'on']);
-                $value = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'on';
-        ?>
-            <select name="mulopimfwc_display_options[enable_all_locations]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="when_location_selected" <?php selected($value, 'when_location_selected'); ?>><?php echo esc_html_e('Only When Location is Selected (coming soon)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Show products that are not assigned to any specific location.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+                $this->render_advance_checkbox("enable_all_locations", __("Show products that are not assigned to any specific location.", 'multi-location-product-and-inventory-management'));
             },
             'location-product-visibility-settings',
             'mulopimfwc_product_visibility_section'
@@ -1817,16 +1800,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'show_all_products_admin',
             __('Show All Products in Admin', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['show_all_products_admin' => 'on']);
-                $value = isset($options['show_all_products_admin']) ? $options['show_all_products_admin'] : 'on';
-        ?>
-            <select name="mulopimfwc_display_options[show_all_products_admin]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="based_on_role" <?php selected($value, 'based_on_role'); ?>><?php echo esc_html_e('Based on User Role', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Whether admins can see all products regardless of location restrictions.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+                $this->render_advance_checkbox("show_all_products_admin", __("Whether admins can see all products regardless of location restrictions.", 'multi-location-product-and-inventory-management'));
             },
             'lwp-admin-product-visibility-settings',
             'mulopimfwc_admin_visibility_section'
@@ -1939,15 +1913,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'allow_mixed_location_cart',
             __('Allow Mixed-Location Cart', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['allow_mixed_location_cart' => 'on']);
-                $value = isset($options['allow_mixed_location_cart']) ? $options['allow_mixed_location_cart'] : 'on';
-        ?>
-            <select disabled name="mulopimfwc_display_options[allow_mixed_location_cart]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Allow customers to add products from different locations to their cart.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+                $this->render_advance_checkbox("allow_mixed_location_cart", __("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'), true);
             },
             'location-cross-order-settings',
             'mulopimfwc_cross_location_order_section'
@@ -1983,6 +1949,16 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             </select>
             <p class="description"><?php echo esc_html_e('Group cart items by their store location for better visibility.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
+            },
+            'location-cross-order-settings',
+            'mulopimfwc_cross_location_order_section'
+        );
+
+        add_settings_field(
+            'group_cart_by_location',
+            __('Group Cart Items by Location', 'multi-location-product-and-inventory-management'),
+            function () {
+                $this->render_advance_checkbox("group_cart_by_location", __("Group cart items by their store location for better visibility.", 'multi-location-product-and-inventory-management'), true);
             },
             'location-cross-order-settings',
             'mulopimfwc_cross_location_order_section'
@@ -2069,6 +2045,16 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'location-customer-experience-settings'
         );
 
+        add_settings_field(
+            'location_required',
+            __('Location Required', 'multi-location-product-and-inventory-management'),
+            function () {
+                $this->render_advance_checkbox("location_required", __("When enabled, an location is always required when a product has at least one in stock (can have 0 stock too).", 'multi-location-product-and-inventory-management'), true);
+            },
+            'location-customer-experience-settings',
+            'mulopimfwc_customer_experience_section'
+        );
+
         // Add Location Switching Behavior field
         add_settings_field(
             'location_switching_behavior',
@@ -2110,6 +2096,22 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         ?>
             <textarea disabled name="mulopimfwc_display_options[location_notification_text]" rows="2" class="large-text"><?php echo esc_textarea($value); ?></textarea>
             <p class="description"><?php echo esc_html_e('Text shown when location is changed. Use %location% as a placeholder for the location name.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+            },
+            'location-customer-experience-settings',
+            'mulopimfwc_customer_experience_section'
+        );
+
+        add_settings_field(
+            'default_user_location',
+            __('Default Location', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = get_option('mulopimfwc_display_options', ['default_user_location' => 'preserve_cart']);
+                $value = isset($options['default_user_location']) ? $options['default_user_location'] : 'preserve_cart';
+        ?>
+            <select disabled name="mulopimfwc_display_options[default_user_location]">
+            </select>
+            <p class="description"><?php echo esc_html_e('Set a default location when a customer has not selected one. Leave empty to force customers to select one', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
             'location-customer-experience-settings',
@@ -3297,12 +3299,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     <?php
     }
 
-    public function render_advance_checkbox($key, $message = null)
+    public function render_advance_checkbox($key, $message = null, $disabled = false)
     {
         global $allowed_tags, $mulopimfwc_options;
     ?>
         <label class="mulopimfwc_switch <?php echo esc_attr($key); ?>">
-            <input type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on"); ?>>
+            <input <?php echo $disabled? 'disabled' : ''; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on"); ?>>
             <span class="mulopimfwc_slider round"></span>
             <span class="mulopimfwc_switch-on">On</span>
             <span class="mulopimfwc_switch-off">Off</span>
