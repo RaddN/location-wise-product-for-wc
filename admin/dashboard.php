@@ -99,15 +99,28 @@ class MULOPIMFWC_Dashboard
 
 ?>
         <div class="wrap lwp-dashboard">
-            <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
-
+        
             <div class="lwp-dashboard-overview">
-                <div class="lwp-card lwp-card-stats">
-                    <h2><?php echo esc_html__('Quick Stats', 'multi-location-product-and-inventory-management'); ?></h2>
+                <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
+                <div class="lwp-card-stats">
                     <div class="lwp-stats-grid">
                         <div class="lwp-stat-item">
-                            <span class="lwp-stat-value"><?php echo esc_html($this->get_total_products_count()); ?></span>
-                            <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management'); ?></span>
+
+                        <div class="lwp-stat-item-icon">
+
+                        <svg class="svg-inline--fa fa-gear" aria-hidden="true" data-prefix="fas" data-icon="gear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                            <path fill="currentColor" d="M15.497 5.206c.1.272.016.575-.2.769l-1.353 1.231a6 6 0 0 1 0 1.588l1.353 1.231c.216.194.3.497.2.769a8 8 0 0 1-.494 1.072l-.147.253a8 8 0 0 1-.691.975.71.71 0 0 1-.766.212l-1.741-.553a6 6 0 0 1-1.375.794l-.391 1.784a.71.71 0 0 1-.569.556 8 8 0 0 1-2.656 0 .71.71 0 0 1-.569-.556l-.391-1.784a6 6 0 0 1-1.375-.794l-1.738.556a.72.72 0 0 1-.766-.212 8 8 0 0 1-.691-.975l-.147-.253a8 8 0 0 1-.494-1.072.71.71 0 0 1 .2-.769l1.353-1.231Q1.997 8.403 1.996 8c-.001-.403.019-.534.053-.794L.696 5.975a.71.71 0 0 1-.2-.769A8 8 0 0 1 .99 4.134l.147-.253q.31-.516.691-.975a.71.71 0 0 1 .766-.212l1.741.553a6 6 0 0 1 1.375-.794L6.101.669A.71.71 0 0 1 6.67.113Q7.32 0 8 0c.68 0 .897.037 1.328.109a.71.71 0 0 1 .569.556l.391 1.784c.494.203.956.472 1.375.794l1.741-.553a.72.72 0 0 1 .766.212q.38.459.691.975l.147.253q.287.515.494 1.072zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 1 0 0 5" />
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management'); ?></span>
+                        <span class="lwp-stat-value"><?php echo esc_html($this->get_total_products_count()); ?></span>
+                            
+                    </div>
+
+
+
+                            
                         </div>
                         <div class="lwp-stat-item">
                             <span class="lwp-stat-value"><?php echo count($mulopimfwc_locations); ?></span>
