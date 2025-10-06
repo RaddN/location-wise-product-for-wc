@@ -49,7 +49,14 @@ function mulopimfwc_get_values()
     $mulopimfwc_options = get_option('mulopimfwc_display_options') ?:
         [
             'enable_location_stock' => 'on',
-            'enable_location_price' => 'on'
+            'enable_location_price' => 'on',
+            'enable_location_backorder' => 'on',
+            'enable_all_locations' => 'on',
+            'location_change_notification' => 'on',
+            'display_location_single_product' => 'on', 
+            'allow_data_share' => 'on', 
+            'strict_filtering' => 'enabled',
+
         ];
 }
 
@@ -75,7 +82,7 @@ class mulopimfwc_Location_Wise_Products
         add_filter('woocommerce_shortcode_products_query', [$this, 'filter_shortcode_products']);
         add_filter('woocommerce_products_widget_query_args', [$this, 'filter_widget_products']);
         add_filter('woocommerce_related_products_args', [$this, 'filter_related_products']);
-        $options = get_option('mulopimfwc_display_options', ['enable_popup' => 'on']);
+        $options = get_option('mulopimfwc_display_options', ['enable_popup' => 'off']);
         if (isset($options['enable_popup']) && $options['enable_popup'] === 'on') {
             add_action('wp_footer', [$this, 'location_selector_modal']);
         }
@@ -548,7 +555,7 @@ class mulopimfwc_Location_Wise_Products
 
         $location_text = count($location_names) === 1 ? $location_names[0] : implode(', ', $location_names);
         $separator = isset($options['separator']) ? $options['separator'] : ' - ';
-        $format = isset($options['display_format']) ? $options['display_format'] : 'append';
+        $format = isset($options['display_format']) ? $options['display_format'] : 'none';
 
         switch ($format) {
             case 'prepend':
@@ -759,7 +766,7 @@ class mulopimfwc_Location_Wise_Products
         $query->set('tax_query', $tax_query);
 
         // Add custom ordering based on product priority display setting
-        $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'mixed';
+        $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
 
         if ($product_priority_display !== 'mixed' && $enable_all_locations === 'on') {
             add_filter('posts_join', [$this, 'custom_product_join'], 10, 2);
@@ -827,7 +834,7 @@ class mulopimfwc_Location_Wise_Products
         }
 
         $options = $this->get_display_options();
-        $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'mixed';
+        $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
 
         if ($product_priority_display === 'location_first') {
             $priority_value_for_location = 1;

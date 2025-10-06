@@ -919,7 +919,7 @@ $user_roles = $current_user->roles;
 
 // Check if the current user role has permission
 if (array_intersect($user_roles, $selected_roles)) {
-    if ((get_option('mulopimfwc_display_options', ['enable_location_information' => 'on'])['enable_location_information'] ?? 'on') === 'on') {
+    if ((get_option('mulopimfwc_display_options', ['enable_location_information' => 'off'])['enable_location_information'] ?? 'off') === 'on') {
         // Add location-specific stock and price display on product pages
         add_action('woocommerce_single_product_summary', 'mulopimfwc_display_location_specific_stock_info', 25);
         add_action('woocommerce_shop_loop_item_title', 'mulopimfwc_display_location_specific_stock_info_loop', 15);
@@ -1111,7 +1111,7 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
 
 
 
-if (array_intersect($user_roles, $selected_roles) && (get_option('mulopimfwc_display_options', ['enable_location_information' => 'on'])['enable_location_information'] ?? 'on') === 'on') {
+if (array_intersect($user_roles, $selected_roles) && (get_option('mulopimfwc_display_options', ['enable_location_information' => 'off'])['enable_location_information'] ?? 'off') === 'on') {
 
     /**
      * Add stock status to product category/archive pages
