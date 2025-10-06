@@ -41,6 +41,10 @@
         const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label]);
         const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label]);
 
+        // Calculate percentages
+        const total = values.reduce((a, b) => a + b, 0);
+        const percentages = values.map(v => ((v / total) * 100).toFixed(1));
+
         new Chart(ctx, {
             type: 'pie',
             data: {
@@ -48,8 +52,8 @@
                 datasets: [{
                     data: values,
                     backgroundColor: bgColors,
-                    borderColor: borderColors,
-                    borderWidth: 1
+                    borderColor: '#f8f9fa',
+                    borderWidth: 2
                 }]
             },
             options: {
@@ -57,7 +61,7 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'right',
+                        display: false // Hide default legend
                     },
                     title: {
                         display: false
@@ -65,9 +69,8 @@
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const value = context.raw;
-                                const percentage = Math.round((value / total) * 100);
+                                const percentage = percentages[context.dataIndex];
                                 return `${context.label}: ${value} (${percentage}%)`;
                             }
                         },
@@ -79,9 +82,71 @@
                         cornerRadius: 6,
                         caretSize: 6,
                         boxPadding: 6
+                    },
+                    // Custom plugin to draw labels outside the chart
+                    datalabels: false
+                },
+                layout: {
+                    padding: {
+                        top: 40,
+                        bottom: 40,
+                        left: 120,
+                        right: 120
                     }
                 }
-            }
+            },
+            plugins: [{
+                // Custom plugin to draw labels with lines
+                afterDraw: function (chart) {
+                    const ctx = chart.ctx;
+                    const chartArea = chart.chartArea;
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+                    const radius = Math.min(
+                        (chartArea.right - chartArea.left) / 2,
+                        (chartArea.bottom - chartArea.top) / 2
+                    );
+
+                    chart.data.datasets[0].data.forEach((value, index) => {
+                        const meta = chart.getDatasetMeta(0);
+                        const arc = meta.data[index];
+                        const angle = (arc.startAngle + arc.endAngle) / 2;
+
+                        // Line start point (at the edge of the pie)
+                        const x1 = centerX + Math.cos(angle) * radius;
+                        const y1 = centerY + Math.sin(angle) * radius;
+
+                        // Line end point (extended outward)
+                        const lineLength = 30;
+                        const x2 = centerX + Math.cos(angle) * (radius + lineLength);
+                        const y2 = centerY + Math.sin(angle) * (radius + lineLength);
+
+                        // Horizontal line extension
+                        const horizontalLength = 20;
+                        const x3 = x2 + (Math.cos(angle) > 0 ? horizontalLength : -horizontalLength);
+                        const y3 = y2;
+
+                        // Draw the line
+                        ctx.beginPath();
+                        ctx.strokeStyle = bgColors[index];
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.lineTo(x3, y3);
+                        ctx.stroke();
+
+                        // Draw the label
+                        const label = `${chart.data.labels[index]}: ${percentages[index]}%`;
+                        ctx.fillStyle = '#333';
+                        ctx.font = '12px Arial, sans-serif';
+                        ctx.textAlign = Math.cos(angle) > 0 ? 'left' : 'right';
+                        ctx.textBaseline = 'middle';
+
+                        const labelX = x3 + (Math.cos(angle) > 0 ? 5 : -5);
+                        ctx.fillText(label, labelX, y3);
+                    });
+                }
+            }]
         });
     }
 

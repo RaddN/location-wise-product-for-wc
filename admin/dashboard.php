@@ -46,7 +46,8 @@ class MULOPIMFWC_Dashboard
         foreach ($mulopimfwc_locations as $index => $location) {
             // Generate pastel colors
             $hue = ($index * 47) % 360;
-            $location_colors[$location->name] = "hsla({$hue}, 70%, 70%, 0.7)";
+            $location_colors[$location->name] = "hsla({$hue}, 70%, 45%, 1)";
+
             $location_border_colors[$location->name] = "hsla({$hue}, 70%, 60%, 1.0)";
 
             // Get product count for this location using a more efficient query
