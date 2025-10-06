@@ -7,6 +7,58 @@ class mulopimfwc_settings
     public function __construct()
     {
         add_action('admin_init', [$this, 'register_settings']);
+        add_action('admin_init', [$this, 'handle_reset_settings']);
+    }
+
+    /**
+     * Handle reset settings form submission
+     */
+    public function handle_reset_settings()
+    {
+        // Check if reset form was submitted
+        if (!isset($_POST['mulopimfwc_reset_settings'])) {
+            return;
+        }
+
+        // Verify nonce
+        if (
+            !isset($_POST['mulopimfwc_reset_settings_nonce']) ||
+            !wp_verify_nonce($_POST['mulopimfwc_reset_settings_nonce'], 'mulopimfwc_reset_settings_action')
+        ) {
+            wp_die(__('Security check failed. Please go back and try again.', 'multi-location-product-and-inventory-management'));
+        }
+
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management'));
+        }
+
+        // Delete the settings option
+        $deleted = delete_option('mulopimfwc_display_options');
+
+        // Add admin notice
+        if ($deleted) {
+            add_settings_error(
+                'mulopimfwc_messages',
+                'mulopimfwc_reset_success',
+                __('Settings have been reset to default values successfully.', 'multi-location-product-and-inventory-management'),
+                'success'
+            );
+        } else {
+            add_settings_error(
+                'mulopimfwc_messages',
+                'mulopimfwc_reset_error',
+                __('No settings were found to reset or reset failed. Settings may already be at default values.', 'multi-location-product-and-inventory-management'),
+                'warning'
+            );
+        }
+
+        // Set transient for redirect
+        set_transient('mulopimfwc_settings_reset', true, 30);
+
+        // Redirect to avoid form resubmission
+        wp_redirect(add_query_arg('settings-updated', 'true', wp_get_referer()));
+        exit;
     }
 
     public function register_settings()
@@ -159,7 +211,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'use_select2',
             __('Use Select2', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("use_select2", __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management'), 'off');
+                $this->render_advance_checkbox("use_select2", __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management'));
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -252,7 +304,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'show_popup_admin',
             __('Show Popup for Admins', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("show_popup_admin", __("Show popup for admin users", 'multi-location-product-and-inventory-management'), 'off');
+                $this->render_advance_checkbox("show_popup_admin", __("Show popup for admin users", 'multi-location-product-and-inventory-management'));
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -1639,7 +1691,7 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
         // Add "Show Global Products" field
         add_settings_field(
             'show_global_products',
-            __('Enable Popup', 'multi-location-product-and-inventory-management'),
+            __('Show Global Products', 'multi-location-product-and-inventory-management'),
             function () {
                 $this->render_advance_checkbox("enable_all_locations", __("Show products that are not assigned to any specific location.", 'multi-location-product-and-inventory-management'));
             },
@@ -1720,8 +1772,8 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'show_out_of_stock_products',
             __('Show Out of Stock Products', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['show_out_of_stock_products' => 'hide']);
-                $value = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'hide';
+                $options = get_option('mulopimfwc_display_options', ['show_out_of_stock_products' => 'none']);
+                $value = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
         ?>
             <select name="mulopimfwc_display_options[show_out_of_stock_products]">
                 <option value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('Default', 'multi-location-product-and-inventory-management'); ?></option>
@@ -3010,11 +3062,52 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                             <?php submit_button(); ?>
                         </form>
 
+
                         <div id="license-settings" class="lwp-tab-content" style="display:none;">
                             <?php
                             global $mulopimfwc_License_Manager;
                             $mulopimfwc_License_Manager->render_license_form();
                             ?></div>
+
+                        <!-- Reset Settings Form -->
+                        <form method="post" action="" class="lwp-reset-settings-form" style="margin-top: 30px;">
+                            <?php wp_nonce_field('mulopimfwc_reset_settings_action', 'mulopimfwc_reset_settings_nonce'); ?>
+                            <input type="hidden" name="mulopimfwc_reset_settings" value="1">
+
+                            <div class="lwp-reset-settings-section" style="background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 4px;">
+                                <h3 style="margin: 0 0 10px 0; color: #dc2626; font-size: 16px; font-weight: 600;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                                        <path fill="#dc2626" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+                                    </svg>
+                                    <?php echo esc_html__('Reset Settings', 'multi-location-product-and-inventory-management'); ?>
+                                </h3>
+                                <p class="description" style="margin: 0 0 15px 0; max-width: 800px;">
+                                    <?php echo esc_html__('This will reset all plugin settings to their default values. This action cannot be undone. Please make sure you have exported your settings if you want to restore them later.', 'multi-location-product-and-inventory-management'); ?>
+                                </p>
+                                <button type="submit" class="button button-secondary lwp-reset-button" style="background: #dc2626; color: white; border-color: #b91c1c;" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to reset all settings to their default values? This action cannot be undone!', 'multi-location-product-and-inventory-management')); ?>');">
+                                    <span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
+                                    <?php echo esc_html__('Reset All Settings', 'multi-location-product-and-inventory-management'); ?>
+                                </button>
+                            </div>
+                        </form>
+
+                        <style>
+                            .lwp-reset-settings-form {
+                                margin: 0 20px 20px;
+                            }
+
+                            .lwp-reset-button:hover {
+                                background: #b91c1c !important;
+                                border-color: #991b1b !important;
+                                color: white !important;
+                            }
+
+                            .lwp-reset-button:focus {
+                                background: #dc2626 !important;
+                                border-color: #b91c1c !important;
+                                box-shadow: 0 0 0 1px #dc2626 !important;
+                            }
+                        </style>
 
                     </div>
 
@@ -3304,7 +3397,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         global $allowed_tags, $mulopimfwc_options;
     ?>
         <label class="mulopimfwc_switch <?php echo esc_attr($key); ?>">
-            <input <?php echo $disabled? 'disabled' : ''; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on"); ?>>
+            <input <?php echo $disabled ? 'disabled' : ''; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on"); ?>>
             <span class="mulopimfwc_slider round"></span>
             <span class="mulopimfwc_switch-on">On</span>
             <span class="mulopimfwc_switch-off">Off</span>
