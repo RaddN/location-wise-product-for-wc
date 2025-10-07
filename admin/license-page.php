@@ -586,7 +586,7 @@ class mulopimfwc_License_Manager
             <div class="plugincy-dapfforwc-card-header">
                 <h2>
                     <svg width="16" height="16" style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M.276.293.195.374H.142v.053H.089V.48H0V.391L.187.204A.2.2 0 0 1 .178.151a.151.151 0 1 1 .097.141zM.427.107A.053.053 0 1 0 .374.16.053.053 0 0 0 .427.107" />
+                        <path fill="#2563eb" d="M.276.293.195.374H.142v.053H.089V.48H0V.391L.187.204A.2.2 0 0 1 .178.151a.151.151 0 1 1 .097.141zM.427.107A.053.053 0 1 0 .374.16.053.053 0 0 0 .427.107" />
                     </svg>
                     License Settings
                 </h2>
@@ -596,7 +596,7 @@ class mulopimfwc_License_Manager
                 <div class="col-md-6 plugincy-dapfforwc-card" style="<?php echo !$is_valid ? 'flex: 0 0 100%; max-width: 99%;' : ''; ?>">
 
                     <div  style="gap: 5px;align-items: center;display:flex; margin-bottom: 10px;">
-                        <div style=" background: #eee; padding: 5px; border-radius: 5px; "><span class="dashicons dashicons-lock"></span></div>
+                        <div style=" background: #ffedd5; padding: 5px; border-radius: 5px; "><span class="dashicons dashicons-lock" style="color: #ea580c;"></span></div>
                         <h3 for="mulopimfwc_license_key" style="font-size: 16px;margin: 0;"><?php echo esc_html__('License Key', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h3>
                     </div>
                     <form method="post" action="">
@@ -604,7 +604,7 @@ class mulopimfwc_License_Manager
                         <div>
                             <div style="position: relative;">
                                 <input type="text" style="width: 100%;border: 1px solid #eee;padding: 6px 0 6px 15px;" id="mulopimfwc_license_key" name="mulopimfwc_license_key" value="<?php echo esc_attr($license_key); ?>" class="regular-text" placeholder="Enter your license key" />
-                                <div style="vertical-align: middle;margin-left: 8px;position: absolute;right: 0;top: 0;background: #dcffdc;height: 100%;display: flex;align-items: center;justify-content: center;padding: 0 20px;border-radius: 0 2px 2px 0;cursor:pointer;gap: 2px;">
+                                <div style="vertical-align: middle;margin-left: 8px;position: absolute;right: -1px;top: 0;background: #dcffdc;height: 100%;display: flex;align-items: center;justify-content: center;padding: 0 20px;border-radius: 0 2px 2px 0;cursor:pointer;gap: 2px;">
                                     <?php if ($is_valid && !$is_expired): ?>
                                         <span class="dashicons dashicons-yes-alt" style="color: green; margin-top: 3px;"></span>
                                         <span style="color: green; font-weight: bold;">Active</span>
