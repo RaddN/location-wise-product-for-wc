@@ -160,37 +160,106 @@
 
         const labels = Object.keys(mulopimfwc_DashboardData.stockLevels);
         const values = Object.values(mulopimfwc_DashboardData.stockLevels);
-        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label]);
-        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label]);
+
+        // Create gradient - vertical from top to bottom
+        const canvas = ctx;
+        const chartCtx = canvas.getContext('2d');
+
+        const gradient = chartCtx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(255, 77, 77, 0.6)'); // Red at top
+        gradient.addColorStop(1, 'rgba(255, 242, 242, 0)'); // Transparent at bottom
+
+        const borderColor = '#ff4d4d';
 
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-
                 datasets: [{
                     label: mulopimfwc_DashboardData.i18n.totalStock,
                     data: values,
-                    backgroundColor: bgColors,
-                    borderColor: borderColors,
-                    borderWidth: 1
+                    backgroundColor: gradient,
+                    borderColor: borderColor,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#ff4d4d',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#ff4d4d',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
-                fill: true,
                 maintainAspectRatio: false,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 11
+                            },
+                            color: '#666'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Stock Level',
+                            font: {
+                                size: 12
+                            },
+                            color: '#666'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 11
+                            },
+                            color: '#333'
+                        }
                     }
                 },
                 plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: {
+                                size: 11
+                            },
+                            color: '#666',
+                            padding: 15
+                        }
+                    },
                     tooltip: {
                         backgroundColor: 'rgba(0,0,0,0.8)',
                         padding: 10,
-                        cornerRadius: 6
+                        cornerRadius: 6,
+                        titleFont: {
+                            size: 13
+                        },
+                        bodyFont: {
+                            size: 12
+                        }
                     }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
                 }
             }
         });
@@ -213,37 +282,103 @@
                     data: mulopimfwc_DashboardData.dateCounts,
                     fill: {
                         target: 'origin',
-                        above: 'rgba(78, 84, 200, 0.1)'
+                        above: 'rgba(16, 185, 129, 0.08)'
                     },
-                    borderColor: '#4e54c8',
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
                     tension: 0.4,
-                    pointBackgroundColor: '#4e54c8',
+                    pointBackgroundColor: '#2563eb',
                     pointBorderColor: '#fff',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#2563eb',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 3,
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    },
                     x: {
                         grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            },
+                            padding: 8
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        border: {
                             display: false
+                        },
+                        grid: {
+                            color: '#f3f4f6',
+                            drawTicks: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Products',
+                            color: '#374151',
+                            font: {
+                                size: 13,
+                                weight: '500'
+                            },
+                            padding: {
+                                bottom: 10
+                            }
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            },
+                            padding: 10,
+                            stepSize: 1,
+                            precision: 0,
+                            callback: function (value) {
+                                // Only show whole numbers
+                                if (Math.floor(value) === value) {
+                                    return value;
+                                }
+                            }
                         }
                     }
                 },
                 plugins: {
+                    legend: {
+                        display: false
+                    },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        padding: 10,
-                        cornerRadius: 6
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        usePointStyle: true,
+                        callbacks: {
+                            label: function (context) {
+                                const count = context.raw;
+                                const label = mulopimfwc_DashboardData.i18n.newProducts || 'Products';
+                                return label + ': ' + count + (count === 1 ? ' product' : ' products');
+                            }
+                        }
                     }
                 }
             }
@@ -258,6 +393,16 @@
         const ctx = document.getElementById('investment-30day');
         if (!ctx) return;
 
+        const currency_code = mulopimfwc_DashboardData.currency_code;
+
+        // Get currency symbol
+        const currencySymbol = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency_code,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(0).replace(/\d/g, '').trim();
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -267,60 +412,112 @@
                     data: mulopimfwc_DashboardData.monthlyInvestmentData,
                     fill: {
                         target: 'origin',
-                        above: 'rgba(78, 84, 200, 0.1)'
+                        above: 'rgba(37, 99, 235, 0.08)'
                     },
-                    borderColor: '#4e54c8',
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
                     tension: 0.4,
-                    pointBackgroundColor: '#4e54c8',
+                    pointBackgroundColor: '#2563eb',
                     pointBorderColor: '#fff',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#2563eb',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 3,
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            // Use currency format
-                            callback: function (value, index, values) {
-                                return new Intl.NumberFormat('en-US', {
-                                    style: 'currency',
-                                    currency: 'USD',
-                                    minimumFractionDigits: 0
-                                }).format(value);
-                            }
-                        }
-                    },
                     x: {
                         grid: {
-                            display: false
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            },
+                            padding: 8
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        border: {
+                            display: false,
+                            dash: [5, 5]
+                        },
+                        grid: {
+                            color: '#f3f4f6',
+                            drawTicks: false
+                        },
+                        title: {
+                            display: true,
+                            text: `Investment (${currencySymbol})`,
+                            color: '#374151',
+                            font: {
+                                size: 13,
+                                weight: '500'
+                            },
+                            padding: {
+                                bottom: 10
+                            }
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            },
+                            padding: 10,
+                            callback: function (value) {
+                                // Format with k for thousands, M for millions
+                                if (value >= 1000000) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                } else if (value >= 1000) {
+                                    return (value / 1000) + 'k';
+                                }
+                                return value;
+                            }
                         }
                     }
                 },
                 plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: false
+                    },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        padding: 10,
-                        cornerRadius: 6,
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        usePointStyle: true,
                         callbacks: {
                             label: function (context) {
-                                return context.dataset.label + ': ' +
+                                return mulopimfwc_DashboardData.i18n.investment + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
-                                        currency: 'USD'
+                                        currency: currency_code,
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
                                     }).format(context.raw);
                             }
                         }
-                    },
-                    legend: {
-                        position: 'top'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Monthly Investment Report'
                     }
                 }
             }
@@ -340,6 +537,10 @@
         const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(153, 102, 255, 0.7)');
         const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(153, 102, 255, 1)');
 
+        // Calculate percentages
+        const total = values.reduce((a, b) => a + b, 0);
+        const percentages = values.map(v => ((v / total) * 100).toFixed(1));
+
         new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -347,8 +548,8 @@
                 datasets: [{
                     data: values,
                     backgroundColor: bgColors,
-                    borderColor: borderColors,
-                    borderWidth: 1,
+                    borderColor: '#f8f9fa',
+                    borderWidth: 2,
                     hoverOffset: 10
                 }]
             },
@@ -358,7 +559,7 @@
                 cutout: '60%',
                 plugins: {
                     legend: {
-                        position: 'right',
+                        display: false // Hide default legend
                     },
                     title: {
                         display: false
@@ -366,9 +567,8 @@
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const value = context.raw;
-                                const percentage = Math.round((value / total) * 100);
+                                const percentage = percentages[context.dataIndex];
                                 return `${context.label}: ${value} ${mulopimfwc_DashboardData.i18n.orders} (${percentage}%)`;
                             }
                         },
@@ -376,8 +576,68 @@
                         padding: 10,
                         cornerRadius: 6
                     }
+                },
+                layout: {
+                    padding: {
+                        top: 40,
+                        bottom: 40,
+                        left: 120,
+                        right: 120
+                    }
                 }
-            }
+            },
+            plugins: [{
+                // Custom plugin to draw labels with lines
+                afterDraw: function (chart) {
+                    const ctx = chart.ctx;
+                    const chartArea = chart.chartArea;
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+                    const radius = Math.min(
+                        (chartArea.right - chartArea.left) / 2,
+                        (chartArea.bottom - chartArea.top) / 2
+                    );
+
+                    chart.data.datasets[0].data.forEach((value, index) => {
+                        const meta = chart.getDatasetMeta(0);
+                        const arc = meta.data[index];
+                        const angle = (arc.startAngle + arc.endAngle) / 2;
+
+                        // Line start point (at the edge of the doughnut)
+                        const x1 = centerX + Math.cos(angle) * radius;
+                        const y1 = centerY + Math.sin(angle) * radius;
+
+                        // Line end point (extended outward)
+                        const lineLength = 30;
+                        const x2 = centerX + Math.cos(angle) * (radius + lineLength);
+                        const y2 = centerY + Math.sin(angle) * (radius + lineLength);
+
+                        // Horizontal line extension
+                        const horizontalLength = 20;
+                        const x3 = x2 + (Math.cos(angle) > 0 ? horizontalLength : -horizontalLength);
+                        const y3 = y2;
+
+                        // Draw the line
+                        ctx.beginPath();
+                        ctx.strokeStyle = bgColors[index];
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.lineTo(x3, y3);
+                        ctx.stroke();
+
+                        // Draw the label
+                        const label = `${chart.data.labels[index]}: ${percentages[index]}%`;
+                        ctx.fillStyle = '#333';
+                        ctx.font = '12px Arial, sans-serif';
+                        ctx.textAlign = Math.cos(angle) > 0 ? 'left' : 'right';
+                        ctx.textBaseline = 'middle';
+
+                        const labelX = x3 + (Math.cos(angle) > 0 ? 5 : -5);
+                        ctx.fillText(label, labelX, y3);
+                    });
+                }
+            }]
         });
     }
 
@@ -395,6 +655,14 @@
         const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(75, 192, 192, 1)');
         const currency_code = mulopimfwc_DashboardData.currency_code;
 
+        // Get currency symbol
+        const currencySymbol = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency_code,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(0).replace(/\d/g, '').trim();
+
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -404,29 +672,68 @@
                     data: values,
                     backgroundColor: bgColors,
                     borderColor: borderColors,
-                    borderWidth: 1
+                    borderWidth: 0,
+                    borderRadius: 6,
+                    barThickness: 50,
+                    maxBarThickness: 60
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
                     y: {
                         beginAtZero: true,
+                        border: {
+                            display: false
+                        },
+                        grid: {
+                            color: '#f3f4f6',
+                            drawTicks: false
+                        },
+                        title: {
+                            display: true,
+                            text: `Revenue (${currencySymbol})`,
+                            color: '#374151',
+                            font: {
+                                size: 13,
+                                weight: '500'
+                            },
+                            padding: {
+                                bottom: 10
+                            }
+                        },
                         ticks: {
-                            // Format as currency - assumes USD, update as needed
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            },
+                            padding: 10,
                             callback: function (value) {
-                                return new Intl.NumberFormat('en-US', {
-                                    style: 'currency',
-                                    currency: currency_code,
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0
-                                }).format(value);
+                                // Format with k for thousands
+                                if (value >= 1000) {
+                                    return (value / 1000) + 'k';
+                                }
+                                return value;
                             }
                         }
                     }
                 },
                 plugins: {
+                    legend: {
+                        display: false
+                    },
                     tooltip: {
                         callbacks: {
                             label: function (context) {
@@ -438,8 +745,9 @@
                             }
                         },
                         backgroundColor: 'rgba(0,0,0,0.8)',
-                        padding: 10,
-                        cornerRadius: 6
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false
                     }
                 }
             }
