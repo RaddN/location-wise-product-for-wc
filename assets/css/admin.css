@@ -351,7 +351,7 @@ p.submit .button {
   border-color: #2563eb;
   padding: 5px 15px;
 }
-p.submit {
+.lwp-settings-left p.submit {
   margin-top: 0;
   padding-left: 20px;
 }
@@ -387,6 +387,9 @@ div#advance-settings .lwp-settings-section {
 .lwp-subtab-wrapper a {
   padding: 12px 12px !important;
   color: #ffffff;
+      display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .lwp-subtab-wrapper a svg {
   fill: #ffffff;
@@ -421,7 +424,7 @@ div#advance-settings .lwp-settings-section {
 }
 
 .copy-btn {
-  background: #2271b1;
+  background: #2563eb;
   color: #ffffff;
   border: none;
   padding: 6px 14px;
