@@ -387,9 +387,9 @@ div#advance-settings .lwp-settings-section {
 .lwp-subtab-wrapper a {
   padding: 12px 12px !important;
   color: #ffffff;
-      display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .lwp-subtab-wrapper a svg {
   fill: #ffffff;
@@ -659,7 +659,8 @@ code {
 /* Highlight "Get Pro" submenu item */
 li#toplevel_page_multi-location-product-and-inventory-management
   li:last-child
-  a, li#toplevel_page_multi-location-product-and-inventory-management
+  a,
+li#toplevel_page_multi-location-product-and-inventory-management
   li:last-child
   a:focus {
   color: #fff !important;
@@ -687,4 +688,60 @@ li#toplevel_page_multi-location-product-and-inventory-management
   margin-left: 6px;
   font-size: 12px;
   opacity: 0.9;
+}
+
+.taxonomy-mulopimfwc_store_location hr.wp-header-end {
+  visibility: visible !important;
+}
+
+.location-item {
+  margin-bottom: 5px;
+}
+
+.location-item label {
+  display: block;
+  cursor: pointer;
+  padding: 3px 0;
+}
+
+.location-children {
+  margin-top: 5px;
+}
+
+.location-checkbox {
+  cursor: pointer;
+}
+
+.location-item label:hover {
+  background-color: #f5f5f5;
+}
+
+.mulopimfwc-btn-primary {
+  background: #2563eb !important;
+  border: 1px solid #2563eb !important;
+  padding: 0px 30px !important;
+  border-radius: 6px !important;
+  font-size: 15px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+}
+
+/* Hover effect: darker blue + lifted */
+.mulopimfwc-btn-primary:hover {
+  background: #1e4fd6 !important;
+  border-color: #1e4fd6 !important;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.mulopimfwc-btn-primary svg {
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  fill: #fff;
 }

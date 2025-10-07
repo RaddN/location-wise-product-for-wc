@@ -43,7 +43,7 @@ class mulopimfwc_Stock_Central
     margin: 20px 20px 0px 0px;
 }
             .mlsctock-cenral-header {
-    background-image: linear-gradient(to right, #c084fc, #a855f7);
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 25px 25px;
         border-top-left-radius: 8px;
     border-top-right-radius: 8px;

@@ -10,6 +10,138 @@ class MULOPIMFWC_Dashboard
     public function __construct() {}
 
     /**
+     * Export dashboard report as Excel
+     */
+    public function export_dashboard_report()
+    {
+        // Verify nonce for security
+        check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
+
+        // Check user permissions
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+        }
+
+        global $mulopimfwc_locations;
+
+        // Increase memory and execution time
+        if (function_exists('ini_set')) {
+            ini_set('memory_limit', '512M');
+        }
+        set_time_limit(300);
+
+        // Get all dashboard data
+        $product_counts = [];
+        $stock_levels = [];
+
+        foreach ($mulopimfwc_locations as $location) {
+            $product_counts[$location->name] = $this->get_location_product_count($location->term_id);
+            $stock_levels[$location->name] = $this->get_location_stock_level($location->term_id);
+        }
+
+        $orders_data = $this->get_orders_data_efficiently();
+        $low_stock_products = $this->get_low_stock_products_efficiently();
+        $total_investment = $this->calculate_total_investment_efficiently();
+        $recent_products_data = $this->get_recent_products_data();
+
+        // Create CSV content
+        $filename = 'dashboard-report-' . gmdate('Y-m-d-H-i-s') . '.csv';
+
+        // Set headers for CSV download
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Open output stream
+        $output = fopen('php://output', 'w');
+
+        // Add UTF-8 BOM for proper Excel encoding
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        // Write Report Header
+        fputcsv($output, array(__('Dashboard Report', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Generated on:', 'multi-location-product-and-inventory-management'), gmdate('Y-m-d H:i:s')));
+        fputcsv($output, array('')); // Empty row
+
+        // Summary Statistics
+        fputcsv($output, array(__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Metric', 'multi-location-product-and-inventory-management'), __('Value', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Total Products', 'multi-location-product-and-inventory-management'), $this->get_total_products_count()));
+        fputcsv($output, array(__('Total Locations', 'multi-location-product-and-inventory-management'), count($mulopimfwc_locations)));
+        fputcsv($output, array(__('Total Orders (30 days)', 'multi-location-product-and-inventory-management'), array_sum($orders_data['orders'])));
+        fputcsv($output, array(__('Total Revenue (30 days)', 'multi-location-product-and-inventory-management'), get_woocommerce_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)));
+        fputcsv($output, array(__('Total Investment', 'multi-location-product-and-inventory-management'), get_woocommerce_currency_symbol() . number_format($total_investment, 2)));
+        fputcsv($output, array(__('Total Stock', 'multi-location-product-and-inventory-management'), array_sum($stock_levels)));
+        fputcsv($output, array('')); // Empty row
+
+        // Products by Location
+        fputcsv($output, array(__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Product Count', 'multi-location-product-and-inventory-management')));
+        foreach ($product_counts as $location => $count) {
+            fputcsv($output, array($location, $count));
+        }
+        fputcsv($output, array('')); // Empty row
+
+        // Stock Levels by Location
+        fputcsv($output, array(__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Stock Level', 'multi-location-product-and-inventory-management')));
+        foreach ($stock_levels as $location => $stock) {
+            fputcsv($output, array($location, $stock));
+        }
+        fputcsv($output, array('')); // Empty row
+
+        // Orders by Location (30 days)
+        fputcsv($output, array(__('ORDERS BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Orders', 'multi-location-product-and-inventory-management')));
+        foreach ($orders_data['orders'] as $location => $orders) {
+            fputcsv($output, array($location, $orders));
+        }
+        fputcsv($output, array('')); // Empty row
+
+        // Revenue by Location (30 days)
+        fputcsv($output, array(__('REVENUE BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Revenue', 'multi-location-product-and-inventory-management')));
+        foreach ($orders_data['revenue'] as $location => $revenue) {
+            fputcsv($output, array($location, get_woocommerce_currency_symbol() . number_format($revenue, 2)));
+        }
+        fputcsv($output, array('')); // Empty row
+
+        // Low Stock Products
+        if (!empty($low_stock_products)) {
+            fputcsv($output, array(__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management')));
+            fputcsv($output, array(
+                __('Product', 'multi-location-product-and-inventory-management'),
+                __('Location', 'multi-location-product-and-inventory-management'),
+                __('Stock', 'multi-location-product-and-inventory-management'),
+                __('Status', 'multi-location-product-and-inventory-management')
+            ));
+
+            foreach ($low_stock_products as $item) {
+                $status = $item['stock'] == 0 ? __('Out of Stock', 'multi-location-product-and-inventory-management') : __('Low Stock', 'multi-location-product-and-inventory-management');
+                fputcsv($output, array(
+                    $item['product_title'],
+                    $item['location_name'],
+                    $item['stock'],
+                    $status
+                ));
+            }
+            fputcsv($output, array('')); // Empty row
+        }
+
+        // New Products (Last 30 Days)
+        fputcsv($output, array(__('NEW PRODUCTS (LAST 30 DAYS)', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Date', 'multi-location-product-and-inventory-management'), __('Products Added', 'multi-location-product-and-inventory-management')));
+        foreach ($recent_products_data['labels'] as $index => $label) {
+            fputcsv($output, array($label, $recent_products_data['counts'][$index]));
+        }
+
+        fclose($output);
+        exit;
+    }
+
+
+    /**
      * Render the dashboard page content
      * 
      * @return void
@@ -47,8 +179,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.5.8", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.5.8");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.5.13", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.5.13");
 
         // Initialize data arrays
         $product_counts = [];
@@ -120,6 +252,8 @@ class MULOPIMFWC_Dashboard
         $total_investment = $this->calculate_total_investment_efficiently();
 
         wp_localize_script('lwp-dashboard-js', 'mulopimfwc_DashboardData', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'export_nonce' => wp_create_nonce('mulopimfwc_export_nonce'),
             'productCounts' => $product_counts,
             'stockLevels' => $stock_levels,
             'locationColors' => $location_colors,
@@ -145,7 +279,14 @@ class MULOPIMFWC_Dashboard
         <div class="wrap lwp-dashboard">
 
             <div class="lwp-dashboard-overview">
-                <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
+                    <button class="mulopimfwc-btn-primary" style="padding: 10px 30px !important;" id="export_report">
+                        <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M.226.046a.02.02 0 0 1 .028 0l.08.08a.02.02 0 0 1-.028.028L.26.108V.32a.02.02 0 1 1-.04 0V.108L.174.154A.02.02 0 0 1 .146.126zM.1.34a.02.02 0 0 1 .02.02V.4h.24V.36a.02.02 0 1 1 .04 0V.4a.04.04 0 0 1-.04.04H.12A.04.04 0 0 1 .08.4V.36A.02.02 0 0 1 .1.34"/>
+                        </svg>
+                        <?php echo esc_html__('Export Report', 'multi-location-product-and-inventory-management'); ?></button>
+                </div>
                 <div class="lwp-card-stats">
                     <div class="lwp-stats-grid">
                         <div class="lwp-stat-item">

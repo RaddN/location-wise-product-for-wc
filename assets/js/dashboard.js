@@ -282,10 +282,10 @@
                     data: mulopimfwc_DashboardData.dateCounts,
                     fill: {
                         target: 'origin',
-                        above: 'rgba(16, 185, 129, 0.08)'
+                        above: 'rgba(37, 99, 235, 0.08)'
                     },
                     borderColor: '#2563eb',
-                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
                     tension: 0.4,
                     pointBackgroundColor: '#2563eb',
                     pointBorderColor: '#fff',
@@ -755,3 +755,74 @@
     }
 
 })(jQuery);
+
+
+
+
+
+
+
+
+
+
+jQuery(document).ready(function($) {
+    // Handle Export Report button click
+    $('#export_report').on('click', function(e) {
+        e.preventDefault();
+        
+        const button = $(this);
+        const originalText = button.text();
+        
+        // Disable button and show loading state
+        button.prop('disabled', true).text('Exporting...');
+        
+        // Make AJAX request
+        $.ajax({
+            url: mulopimfwc_DashboardData.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_export_dashboard_report',
+                nonce: mulopimfwc_DashboardData.export_nonce
+            },
+            xhrFields: {
+                responseType: 'blob' // Important for file download
+            },
+            success: function(blob, status, xhr) {
+                // Get filename from response header or use default
+                const disposition = xhr.getResponseHeader('Content-Disposition');
+                let filename = 'dashboard-report-' + new Date().getTime() + '.csv';
+                
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                
+                // Trigger download
+                document.body.appendChild(a);
+                a.click();
+                
+                // Cleanup
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Reset button
+                button.prop('disabled', false).text(originalText);
+            },
+            error: function(xhr, status, error) {
+                console.error('Export error:', error);
+                alert('Failed to export report. Please try again.');
+                button.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+});

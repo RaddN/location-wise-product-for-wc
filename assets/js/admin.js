@@ -91,6 +91,9 @@ jQuery(document).ready(function ($) {
 
     // Function to show location selection modal
     function showLocationModal(productId, locations) {
+        // Organize locations into hierarchy
+        var locationTree = buildLocationTree(locations);
+
         // Create modal HTML
         var modalHtml = '<div id="location-selector-modal" class="location-modal">' +
             '<div class="location-modal-content">' +
@@ -98,10 +101,8 @@ jQuery(document).ready(function ($) {
             '<h3>' + mulopimfwc_locationWiseProducts.i18n.selectLocations + '</h3>' +
             '<div class="location-checkboxes">';
 
-        // Add location checkboxes
-        $.each(locations, function (index, location) {
-            modalHtml += '<label><input type="checkbox" name="product_locations[]" value="' + location.id + '" ' + (location.selected ? 'checked' : '') + '> ' + location.name + '</label><br>';
-        });
+        // Add hierarchical location checkboxes
+        modalHtml += renderLocationTree(locationTree, locations, 0);
 
         // Add submit button
         modalHtml += '</div>' +
@@ -124,9 +125,63 @@ jQuery(document).ready(function ($) {
             $('input[name="product_locations[]"]:checked').each(function () {
                 selectedLocations.push($(this).val());
             });
-
             saveProductLocations(productId, selectedLocations);
         });
+    }
+
+    // Build location tree structure
+    function buildLocationTree(locations) {
+        var tree = {};
+        var locationsMap = {};
+
+        // Create a map of all locations
+        locations.forEach(function (loc) {
+            locationsMap[loc.id] = loc;
+            if (!tree[loc.parent]) {
+                tree[loc.parent] = [];
+            }
+            tree[loc.parent].push(loc);
+        });
+
+        return tree;
+    }
+
+    // Render location tree recursively
+    function renderLocationTree(tree, allLocations, parentId, level) {
+        level = level || 0;
+        var html = '';
+
+        if (!tree[parentId]) {
+            return html;
+        }
+
+        // Sort locations by name
+        tree[parentId].sort(function (a, b) {
+            return a.name.localeCompare(b.name);
+        });
+
+        tree[parentId].forEach(function (location) {
+            var indent = level * 20; // 20px indent per level
+            var hasChildren = tree[location.id] && tree[location.id].length > 0;
+
+            html += '<div class="location-item" style="margin-left: ' + indent + 'px;">';
+            html += '<label style="font-weight: ' + (level === 0 ? 'bold' : 'normal') + ';">';
+            html += '<input type="checkbox" class="location-checkbox" name="product_locations[]" value="' + location.id + '" ' +
+                (location.selected ? 'checked' : '') + '> ';
+            html += location.name;
+            html += '</label>';
+
+            // Render children if any
+            if (hasChildren) {
+                html += '<div class="location-children">';
+                html += renderLocationTree(tree, allLocations, location.id, level + 1);
+                html += '</div>';
+            }
+
+            html += '</div>';
+        });
+
+        return html;
     }
 
     // Function to save product locations

@@ -4,7 +4,7 @@
  * Location Managers Admin Page
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.0.5.8
+ * @since 1.0.5.13
  */
 
 if (!defined('ABSPATH')) exit;
@@ -230,19 +230,23 @@ class MULOPIMFWC_Location_Managers
 
 ?>
         <div class="wrap mulopimfwc-location-managers-main">
-            
+
 
             <div class="mulopimfwc-location-managers">
                 <div class="mulopimfwc-manager-header">
-                <h1  class="mlm-settings-heading">
-            <div class="mlm-settings-icon">
-                        <svg class="svg-inline--fa fa-users" aria-hidden="true" data-prefix="fas" data-icon="users" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#ffffff" d="M4.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M16 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M0 9.334A3.336 3.336 0 0 1 3.334 6h1.334c.497 0 .969.109 1.394.303A4 4 0 0 0 7.356 10H.666A.67.67 0 0 1 0 9.334M12.666 10h-.022a4 4 0 0 0 1.353-3q-.002-.355-.059-.697A3.3 3.3 0 0 1 15.332 6h1.334A3.335 3.335 0 0 1 20 9.334c0 .369-.3.666-.666.666zM7 7a3 3 0 1 1 6 0 3 3 0 1 1-6 0m-3 8.166C4 12.866 5.866 11 8.166 11h3.669c2.3 0 4.166 1.866 4.166 4.166a.834.834 0 0 1-.834.834H4.834A.834.834 0 0 1 4 15.166"></path></svg>
-                    </div>
-                        <span><?php echo esc_html__('Location Managers', 'multi-location-product-and-inventory-management'); ?></span>            
-            </h1>
-                <!-- Add New Manager Button -->
+                    <h1 class="mlm-settings-heading">
+                        <div class="mlm-settings-icon">
+                            <svg class="svg-inline--fa fa-users" aria-hidden="true" data-prefix="fas" data-icon="users" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16">
+                                <path fill="#ffffff" d="M4.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M16 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M0 9.334A3.336 3.336 0 0 1 3.334 6h1.334c.497 0 .969.109 1.394.303A4 4 0 0 0 7.356 10H.666A.67.67 0 0 1 0 9.334M12.666 10h-.022a4 4 0 0 0 1.353-3q-.002-.355-.059-.697A3.3 3.3 0 0 1 15.332 6h1.334A3.335 3.335 0 0 1 20 9.334c0 .369-.3.666-.666.666zM7 7a3 3 0 1 1 6 0 3 3 0 1 1-6 0m-3 8.166C4 12.866 5.866 11 8.166 11h3.669c2.3 0 4.166 1.866 4.166 4.166a.834.834 0 0 1-.834.834H4.834A.834.834 0 0 1 4 15.166"></path>
+                            </svg>
+                        </div>
+                        <span><?php echo esc_html__('Location Managers', 'multi-location-product-and-inventory-management'); ?></span>
+                    </h1>
+                    <!-- Add New Manager Button -->
                     <button type="button" class="button button-primary" id="mulopimfwc-add-manager-btn">
-                        <svg class="svg-inline--fa fa-plus" aria-hidden="true" data-prefix="fas" data-icon="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32v144H48c-17.7 0-32 14.3-32 32s14.3 32 32 32h144v144c0 17.7 14.3 32 32 32s32-14.3 32-32V288h144c17.7 0 32-14.3 32-32s-14.3-32-32-32H256z"/></svg> <?php echo esc_html__('Add New Location Manager', 'multi-location-product-and-inventory-management'); ?>
+                        <svg class="svg-inline--fa fa-plus" aria-hidden="true" data-prefix="fas" data-icon="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                            <path fill="currentColor" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32v144H48c-17.7 0-32 14.3-32 32s14.3 32 32 32h144v144c0 17.7 14.3 32 32 32s32-14.3 32-32V288h144c17.7 0 32-14.3 32-32s-14.3-32-32-32H256z" />
+                        </svg> <?php echo esc_html__('Add New Location Manager', 'multi-location-product-and-inventory-management'); ?>
                     </button>
                 </div>
 
@@ -275,7 +279,9 @@ class MULOPIMFWC_Location_Managers
                                     </div>
 
                                     <div class="manager-locations">
-                                        <h4><svg class="svg-inline--fa fa-location-dot" aria-hidden="true" data-prefix="fas" data-icon="location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="#9ca3af" d="M215.7 499.2C267 435 384 279.4 384 192 384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2 12.3 15.3 35.1 15.3 47.4 0M192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128"/></svg><?php echo esc_html__('Assigned Locations:', 'multi-location-product-and-inventory-management'); ?></h4>
+                                        <h4><svg class="svg-inline--fa fa-location-dot" aria-hidden="true" data-prefix="fas" data-icon="location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                                                <path fill="#9ca3af" d="M215.7 499.2C267 435 384 279.4 384 192 384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2 12.3 15.3 35.1 15.3 47.4 0M192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128" />
+                                            </svg><?php echo esc_html__('Assigned Locations:', 'multi-location-product-and-inventory-management'); ?></h4>
                                         <?php if (empty($assigned_locations)): ?>
                                             <p class="no-locations"><?php echo esc_html__('No locations assigned', 'multi-location-product-and-inventory-management'); ?></p>
                                         <?php else: ?>
@@ -293,7 +299,9 @@ class MULOPIMFWC_Location_Managers
                                     </div>
 
                                     <div class="manager-capabilities">
-                                        <h4><svg class="svg-inline--fa fa-key" aria-hidden="true" data-prefix="fas" data-icon="key" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#9ca3af" d="M336 352c97.2 0 176-78.8 176-176S433.2 0 336 0 160 78.8 160 176c0 18.7 2.9 36.8 8.3 53.7L7 391c-4.5 4.5-7 10.6-7 17v80c0 13.3 10.7 24 24 24h80c13.3 0 24-10.7 24-24v-40h40c13.3 0 24-10.7 24-24v-40h40c6.4 0 12.5-2.5 17-7l33.3-33.3c16.9 5.4 35 8.3 53.7 8.3m40-256a40 40 0 1 1 0 80 40 40 0 1 1 0-80"/></svg><?php echo esc_html__('Permissions:', 'multi-location-product-and-inventory-management'); ?></h4>
+                                        <h4><svg class="svg-inline--fa fa-key" aria-hidden="true" data-prefix="fas" data-icon="key" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                                <path fill="#9ca3af" d="M336 352c97.2 0 176-78.8 176-176S433.2 0 336 0 160 78.8 160 176c0 18.7 2.9 36.8 8.3 53.7L7 391c-4.5 4.5-7 10.6-7 17v80c0 13.3 10.7 24 24 24h80c13.3 0 24-10.7 24-24v-40h40c13.3 0 24-10.7 24-24v-40h40c6.4 0 12.5-2.5 17-7l33.3-33.3c16.9 5.4 35 8.3 53.7 8.3m40-256a40 40 0 1 1 0 80 40 40 0 1 1 0-80" />
+                                            </svg><?php echo esc_html__('Permissions:', 'multi-location-product-and-inventory-management'); ?></h4>
                                         <?php if (empty($manager_capabilities)): ?>
                                             <p class="no-capabilities"><?php echo esc_html__('No specific permissions set (using global defaults)', 'multi-location-product-and-inventory-management'); ?></p>
                                         <?php else: ?>
@@ -308,13 +316,17 @@ class MULOPIMFWC_Location_Managers
                                     </div>
 
                                     <div class="manager-actions">
-                                            <button type="button" class="button button-small mulopimfwc-edit-manager" data-manager-id="<?php echo esc_attr($manager->ID); ?>">
-                                                <svg class="svg-inline--fa fa-pencil" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="pencil" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg=""><path fill="currentColor" d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"></path></svg> <?php echo esc_html__('Edit', 'multi-location-product-and-inventory-management'); ?>
-                                            </button>
-                                            <button type="button" class="button button-small button-link-delete mulopimfwc-delete-manager" data-manager-id="<?php echo esc_attr($manager->ID); ?>">
-                                                <svg class="svg-inline--fa fa-trash" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg> <?php echo esc_html__('Delete', 'multi-location-product-and-inventory-management'); ?>
-                                            </button>
-                                        </div>
+                                        <button type="button" class="button button-small mulopimfwc-edit-manager mulopimfwc-btn-primary" data-manager-id="<?php echo esc_attr($manager->ID); ?>" data-assign-locations=<?php echo wp_json_encode($assigned_locations); ?> data-assign-capabilities=<?php echo wp_json_encode($manager_capabilities); ?>>
+                                            <svg class="svg-inline--fa fa-pencil" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="pencil" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="">
+                                                <path fill="currentColor" d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"></path>
+                                            </svg> <?php echo esc_html__('Edit', 'multi-location-product-and-inventory-management'); ?>
+                                        </button>
+                                        <button type="button" class="button button-small button-link-delete mulopimfwc-delete-manager" data-manager-id="<?php echo esc_attr($manager->ID); ?>">
+                                            <svg class="svg-inline--fa fa-trash" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
+                                                <path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path>
+                                            </svg> <?php echo esc_html__('Delete', 'multi-location-product-and-inventory-management'); ?>
+                                        </button>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -335,7 +347,7 @@ class MULOPIMFWC_Location_Managers
                     <input type="hidden" id="manager-id" name="manager_id" value="">
                     <input type="hidden" id="action-type" name="action_type" value="create">
 
-                    <div class="mulopimfwc-form-row">
+                    <div class="mulopimfwc-form-row" id="search_or_add_manager">
                         <label for="user-search"><?php echo esc_html__('Select User:', 'multi-location-product-and-inventory-management'); ?></label>
                         <div class="user-search-container">
                             <input type="text" id="user-search" placeholder="<?php echo esc_attr__('Search users by name or email...', 'multi-location-product-and-inventory-management'); ?>">
@@ -403,7 +415,8 @@ class MULOPIMFWC_Location_Managers
                         <button type="button" class="button button-secondary mulopimfwc-modal-close">
                             <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management'); ?>
                         </button>
-                        <button type="submit" class="button button-primary" id="mulopimfwc-save-manager">
+                        <button type="submit" class="button button-primary mulopimfwc-btn-primary" id="mulopimfwc-save-manager">
+                            <svg width="16" height="16" viewBox="0 0 0.32 0.32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M.22.02h-.2V.3h.06V.18h.16V.3H.3V.1z"/><path d="M.2.3V.22H.12V.3z" /></svg>
                             <?php echo esc_html__('Save Manager', 'multi-location-product-and-inventory-management'); ?>
                         </button>
                     </div>
@@ -416,86 +429,86 @@ class MULOPIMFWC_Location_Managers
         <style>
             /* New start*/
             .wrap.mulopimfwc-location-managers-main {
-    border: 2px solid #d1d1d4;
-    border-radius: 8px;
-    background-color: #f9fafb;
-    margin: 20px 20px 0px 0px;    
-}
-h1.mlm-settings-heading {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-.mlm-settings-icon {
-    color: #ffffff;
-    background: #3b82f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    border-radius: 7px;
-}
-.mulopimfwc-manager-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;
-    padding: 20px;
-}
-.mulopimfwc-manager-header button {
-    background: #2563eb !important;
-    border-color: #2563eb !important;
-    padding: 5px 15px !important;
-    border-radius: 6px !important;
-    font-size: 15px !important;
-    font-weight: 600;
-        display: flex !important;
-    justify-content: center;
-    align-items: center;
-}
-.mulopimfwc-manager-header button svg {
-    width: 15px;
-    height: 15px;
-    margin-right: 6px;
-}
-.mulopimfwc-managers-list {
-    padding: 10px 25px;
-}
-.manager-info img {
-    border-radius: 50%;
-}
-.manager-actions .mulopimfwc-edit-manager {
-    background: #2563eb !important;
-    border-color: #2563eb !important;
-    padding: 0px 30px !important;
-    border-radius: 6px !important;
-    font-size: 15px !important;
-    color: #ffffff;
-    font-weight: 600;
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
-}
-.manager-actions .mulopimfwc-delete-manager {
-    background: #ffffff !important;
-    border-color: #dc2626 !important;
-    padding: 0px 30px !important;
-    border-radius: 6px !important;
-    font-size: 15px !important;
-    color: #dc2626;
-    font-weight: 600;
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
-}
-.manager-actions button svg {
-    width: 12px;
-    height: 12px;
-    margin-right: 6px;
-}
+                border: 2px solid #d1d1d4;
+                border-radius: 8px;
+                background-color: #f9fafb;
+                margin: 20px 20px 0px 0px;
+            }
+
+            h1.mlm-settings-heading {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .mlm-settings-icon {
+                color: #ffffff;
+                background: #3b82f6;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 10px;
+                border-radius: 7px;
+            }
+
+            .mulopimfwc-manager-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;
+                padding: 20px;
+            }
+
+            .mulopimfwc-manager-header button {
+                background: #2563eb !important;
+                border-color: #2563eb !important;
+                padding: 5px 15px !important;
+                border-radius: 6px !important;
+                font-size: 15px !important;
+                font-weight: 600;
+                display: flex !important;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .mulopimfwc-manager-header button svg {
+                width: 15px;
+                height: 15px;
+                margin-right: 6px;
+            }
+
+            .mulopimfwc-managers-list {
+                padding: 10px 25px;
+            }
+
+            .manager-info img {
+                border-radius: 50%;
+            }
+
+
+            .manager-actions .mulopimfwc-delete-manager {
+                background: #ffffff !important;
+                border-color: #dc2626 !important;
+                padding: 0px 30px !important;
+                border-radius: 6px !important;
+                font-size: 15px !important;
+                color: #dc2626;
+                font-weight: 600;
+                display: flex !important;
+                justify-content: center;
+                align-items: center;
+                transition: all 0.25s ease !important;
+            }
+
+            .manager-actions .mulopimfwc-delete-manager:hover {
+                box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4) !important;
+                transform: translateY(-2px);
+            }
+
+            
 
             /* New End */
-           
+
             .mulopimfwc-managers-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -503,12 +516,12 @@ h1.mlm-settings-heading {
             }
 
             .mulopimfwc-manager-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-}
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                padding: 25px;
+                border-radius: 8px;
+                box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            }
 
             .manager-header {
                 display: flex;
@@ -524,10 +537,10 @@ h1.mlm-settings-heading {
             }
 
             .manager-details h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-}
+                margin: 0;
+                font-size: 18px;
+                font-weight: 600;
+            }
 
             .manager-email {
                 margin: 0px 0 0;
@@ -550,13 +563,15 @@ h1.mlm-settings-heading {
                 margin: 0 0 10px;
                 font-size: 14px;
                 display: flex;
-    align-items: center;
+                align-items: center;
             }
-            .manager-locations h4 svg, .manager-capabilities h4 svg{
-    width: auto;
-    height: 14px;
-    margin-right: 6px;
-}
+
+            .manager-locations h4 svg,
+            .manager-capabilities h4 svg {
+                width: auto;
+                height: 14px;
+                margin-right: 6px;
+            }
 
             .location-list,
             .capability-list {
@@ -745,7 +760,9 @@ h1.mlm-settings-heading {
                 $(document).on('click', '.mulopimfwc-edit-manager', function() {
                     isEditMode = true;
                     const managerId = $(this).data('manager-id');
-                    loadManagerData(managerId);
+                    const assign_locations = $(this).data('assign-locations');
+                    const assign_capabilities = $(this).data('assign-capabilities');
+                    loadManagerData(managerId, assign_locations, assign_capabilities);
                 });
 
                 // Delete manager button
@@ -799,12 +816,32 @@ h1.mlm-settings-heading {
                     $('#toggle-create-user').text('<?php echo esc_js(__('Create New User Instead', 'multi-location-product-and-inventory-management')); ?>');
                 }
 
-                function loadManagerData(managerId) {
-                    // This would typically load data via AJAX
-                    // For now, we'll just show the modal
+                function loadManagerData(managerId, assign_locations, assign_capabilities) {
+                    // Update modal title and form fields
                     $('#mulopimfwc-modal-title').text('<?php echo esc_js(__('Edit Location Manager', 'multi-location-product-and-inventory-management')); ?>');
                     $('#manager-id').val(managerId);
                     $('#action-type').val('edit');
+                    $('#search_or_add_manager').hide();
+
+                    // Reset all checkboxes first
+                    $('input[name="assigned_locations[]"]').prop('checked', false);
+                    $('input[name="manager_capabilities[]"]').prop('checked', false);
+
+                    // Check assigned locations
+                    if (assign_locations && assign_locations.length > 0) {
+                        assign_locations.forEach(function(location) {
+                            $('input[name="assigned_locations[]"][value="' + location + '"]').prop('checked', true);
+                        });
+                    }
+
+                    // Check assigned capabilities
+                    if (assign_capabilities && assign_capabilities.length > 0) {
+                        assign_capabilities.forEach(function(capability) {
+                            $('input[name="manager_capabilities[]"][value="' + capability + '"]').prop('checked', true);
+                        });
+                    }
+
+                    // Show the modal
                     $('#mulopimfwc-manager-modal').show();
                 }
 

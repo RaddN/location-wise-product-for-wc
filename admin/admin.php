@@ -25,11 +25,16 @@ class MULOPIMFWC_Admin
         add_filter('manage_edit-mulopimfwc_store_location_columns', array($this, 'add_location_taxonomy_columns'));
         add_filter('manage_mulopimfwc_store_location_custom_column', array($this, 'add_location_taxonomy_column_content'), 10, 3);
         add_filter('manage_edit-mulopimfwc_store_location_sortable_columns', array($this, 'add_location_taxonomy_sortable_columns'));
+
+
+
+        // Add AJAX actions for export
+        add_action('wp_ajax_mulopimfwc_export_dashboard_report', array(new MULOPIMFWC_Dashboard(), 'export_dashboard_report'));
     }
 
     public function add_location_fields()
     {
-        ?>
+?>
         <div class="form-field">
             <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="street_address" id="street_address" value="" />
@@ -455,21 +460,50 @@ class MULOPIMFWC_Admin
     {
         register_taxonomy('mulopimfwc_store_location', 'product', [
             'labels' => [
-                'name' => __('locations', 'multi-location-product-and-inventory-management'),
-                'singular_name' => __('Store Location', 'multi-location-product-and-inventory-management'),
-                'search_items' => __('Search Store Locations', 'multi-location-product-and-inventory-management'),
-                'all_items' => __('All Store Locations', 'multi-location-product-and-inventory-management'),
-                'edit_item' => __('Edit Store Location', 'multi-location-product-and-inventory-management'),
-                'update_item' => __('Update Store Location', 'multi-location-product-and-inventory-management'),
-                'add_new_item' => __('Add New Store Location', 'multi-location-product-and-inventory-management'),
-                'new_item_name' => __('New Store Location Name', 'multi-location-product-and-inventory-management'),
-                'menu_name' => __('Store Locations', 'multi-location-product-and-inventory-management'),
+                'name' => __('Locations', 'multi-location-product-and-inventory-management'),
+                'singular_name' => __('Location', 'multi-location-product-and-inventory-management'),
+                'search_items' => __('Search Location', 'multi-location-product-and-inventory-management'),
+                'all_items' => __('All Locations', 'multi-location-product-and-inventory-management'),
+                'parent_item' => __('Parent Location', 'multi-location-product-and-inventory-management'),
+                'parent_item_colon' => __('Parent Location:', 'multi-location-product-and-inventory-management'),
+                'edit_item' => __('Edit Location', 'multi-location-product-and-inventory-management'),
+                'view_item' => __('View Location', 'multi-location-product-and-inventory-management'),
+                'update_item' => __('Update Location', 'multi-location-product-and-inventory-management'),
+                'add_new_item' => __('Add New Location', 'multi-location-product-and-inventory-management'),
+                'new_item_name' => __('New Location Name', 'multi-location-product-and-inventory-management'),
+                'separate_items_with_commas' => __('Separate locations with commas', 'multi-location-product-and-inventory-management'),
+                'add_or_remove_items' => __('Add or remove locations', 'multi-location-product-and-inventory-management'),
+                'choose_from_most_used' => __('Choose from most used locations', 'multi-location-product-and-inventory-management'),
+                'not_found' => __('No locations found', 'multi-location-product-and-inventory-management'),
+                'no_terms' => __('No locations', 'multi-location-product-and-inventory-management'),
+                'menu_name' => __('Locations', 'multi-location-product-and-inventory-management'),
+                'popular_items' => __('Popular Locations', 'multi-location-product-and-inventory-management'),
+                'back_to_items' => __('Back to Locations', 'multi-location-product-and-inventory-management'),
             ],
+            'description' => __('Manage locations for products and inventory tracking', 'multi-location-product-and-inventory-management'),
+            'public' => true,
+            'publicly_queryable' => true,
             'hierarchical' => true,
             'show_ui' => true,
+            'show_in_menu' => true,
+            'show_in_nav_menus' => true,
+            'show_in_rest' => true,
+            'show_tagcloud' => false,
+            'show_in_quick_edit' => true,
             'show_admin_column' => true,
             'query_var' => true,
-            'rewrite' => ['slug' => 'store-location'],
+            'rewrite' => [
+                'slug' => 'store-location',
+                'with_front' => false,
+                'hierarchical' => true,
+            ],
+            'capabilities' => [
+                'manage_terms' => 'manage_woocommerce',
+                'edit_terms' => 'manage_woocommerce',
+                'delete_terms' => 'manage_woocommerce',
+                'assign_terms' => 'edit_products',
+            ],
+            'sort' => true,
         ]);
     }
 }
