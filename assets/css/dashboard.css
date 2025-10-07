@@ -24,6 +24,12 @@
 .lwp-dashboard-charts {
     padding: 10px 20px 0px;
 }
+table.lwp-low-stock-table a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 14px;
+}
 
 /* Grid layout */
 .lwp-row {
@@ -77,7 +83,7 @@
     flex: 1;
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
-.lwp-stat-item-icon svg {
+.lwp-stat-item-icon {
     color: #2563eb;
     background: #dbeafe;
     display: flex;
@@ -90,7 +96,7 @@
 
 .lwp-stat-value {
     display: block;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: bold;
     color: #111827;
 }
@@ -107,6 +113,7 @@
 .lwp-low-stock-table {
     width: 100%;
     border-collapse: collapse;
+    font-weight: 600;
 }
 
 .lwp-low-stock-table th,
@@ -118,6 +125,7 @@
 
 .lwp-low-stock-table th {
     font-weight: 600;
+    font-size: 18px;
 }
 
 /* Responsive styles */
