@@ -10,9 +10,23 @@ class MULOPIMFWC_Dashboard
     public function __construct() {}
 
     /**
-     * Export dashboard report as Excel
+     * Export dashboard report as Excel/CSV
      */
     public function export_dashboard_report()
+    {
+
+        // Verify nonce for security
+        check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
+
+        if(isset($_POST['format']) & $_POST['format'] === "html"){
+            $this->export_dashboard_report_html();
+        }else{
+            $this->export_dashboard_report_csv();
+        }
+        
+    }
+
+    public function export_dashboard_report_csv()
     {
         // Verify nonce for security
         check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
@@ -22,123 +36,728 @@ class MULOPIMFWC_Dashboard
             wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
         }
 
-        global $mulopimfwc_locations;
+        global $mulopimfwc_locations, $wpdb;
 
-        // Increase memory and execution time
         if (function_exists('ini_set')) {
             ini_set('memory_limit', '512M');
         }
         set_time_limit(300);
 
-        // Get all dashboard data
-        $product_counts = [];
-        $stock_levels = [];
+        // ---------- Build location lists (names & IDs) ----------
+        $locations = [];
+        $location_ids = [];
+        if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
+            foreach ($mulopimfwc_locations as $l) {
+                $locations[]    = $l->name;     // human label (column header)
+                $location_ids[] = (int) $l->term_id;
+            }
+        }
+        // Always include "Default"
+        $locations_with_default = array_merge($locations, ['Default']);
 
+        // ---------- Products by location (incl. Default) ----------
+        $product_counts = [];
         foreach ($mulopimfwc_locations as $location) {
             $product_counts[$location->name] = $this->get_location_product_count($location->term_id);
+        }
+        // Default = products without any mulopimfwc_store_location term
+        $product_counts['Default'] = $this->get_default_product_count();
+
+        // ---------- Stock level by location (incl. Default) ----------
+        $stock_levels = [];
+        foreach ($mulopimfwc_locations as $location) {
             $stock_levels[$location->name] = $this->get_location_stock_level($location->term_id);
         }
+        // Default = fall back to global _stock for products with NO location term
+        $stock_levels['Default'] = $this->get_default_stock_level();
 
-        $orders_data = $this->get_orders_data_efficiently();
-        $low_stock_products = $this->get_low_stock_products_efficiently();
-        $total_investment = $this->calculate_total_investment_efficiently();
-        $recent_products_data = $this->get_recent_products_data();
+        // ---------- Orders / revenue / low stock / totals ----------
+        $orders_data          = $this->get_orders_data_efficiently();
+        $low_stock_products   = $this->get_low_stock_products_efficiently();
+        $total_investment     = $this->calculate_total_investment_efficiently();
 
-        // Create CSV content
-        $filename = 'dashboard-report-' . gmdate('Y-m-d-H-i-s') . '.csv';
+        // ---------- New products (last 30 days) — location-wise matrix ----------
+        // Returns: ['labels'=>[dates...], 'columns'=>[ 'Cumilla'=>[], 'Kandirpar'=>[], 'Default'=>[], ...], 'totals'=>[]]
+        $recent_matrix = $this->get_recent_products_data_by_location($location_ids, $locations);
 
-        // Set headers for CSV download
+        // ---------- CSV headers ----------
+        $filename = 'location-wise-report-' . gmdate('Y-m-d-H-i-s') . '.csv';
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Pragma: no-cache');
         header('Expires: 0');
 
-        // Open output stream
         $output = fopen('php://output', 'w');
-
-        // Add UTF-8 BOM for proper Excel encoding
+        // UTF-8 BOM
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-        // Write Report Header
-        fputcsv($output, array(__('Dashboard Report', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Generated on:', 'multi-location-product-and-inventory-management'), gmdate('Y-m-d H:i:s')));
+        // ---------- Report header ----------
+        fputcsv($output, array(__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Generated on:', 'multi-location-product-and-inventory-management'), gmdate('l, F d, Y - H:i:s')));
+        fputcsv($output, array(__('Store:', 'multi-location-product-and-inventory-management'), get_bloginfo('name')));
+        fputcsv($output, array(__('Currency:', 'multi-location-product-and-inventory-management'), ' (' . get_woocommerce_currency() . ')'));
         fputcsv($output, array('')); // Empty row
 
-        // Summary Statistics
-        fputcsv($output, array(__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Metric', 'multi-location-product-and-inventory-management'), __('Value', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Total Products', 'multi-location-product-and-inventory-management'), $this->get_total_products_count()));
-        fputcsv($output, array(__('Total Locations', 'multi-location-product-and-inventory-management'), count($mulopimfwc_locations)));
-        fputcsv($output, array(__('Total Orders (30 days)', 'multi-location-product-and-inventory-management'), array_sum($orders_data['orders'])));
-        fputcsv($output, array(__('Total Revenue (30 days)', 'multi-location-product-and-inventory-management'), get_woocommerce_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)));
-        fputcsv($output, array(__('Total Investment', 'multi-location-product-and-inventory-management'), get_woocommerce_currency_symbol() . number_format($total_investment, 2)));
-        fputcsv($output, array(__('Total Stock', 'multi-location-product-and-inventory-management'), array_sum($stock_levels)));
-        fputcsv($output, array('')); // Empty row
+        // ---------- Summary ----------
+        fputcsv($output, [__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, [__('Metric', 'multi-location-product-and-inventory-management'), __('Value', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, [__('Total Products', 'multi-location-product-and-inventory-management'), $this->get_total_products_count()]);
+        fputcsv($output, [__('Total Locations', 'multi-location-product-and-inventory-management'), count($mulopimfwc_locations)]);
+        fputcsv($output, [__('Total Orders (30 days)', 'multi-location-product-and-inventory-management'), array_sum($orders_data['orders'])]);
+        fputcsv($output, [__('Total Revenue (30 days)', 'multi-location-product-and-inventory-management'), number_format(array_sum($orders_data['revenue']), 2)]);
+        fputcsv($output, [__('Total Investment', 'multi-location-product-and-inventory-management'), number_format($total_investment, 2)]);
+        fputcsv($output, [__('Total Stock', 'multi-location-product-and-inventory-management'), array_sum($stock_levels)]);
+        fputcsv($output, ['']);
 
-        // Products by Location
-        fputcsv($output, array(__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Product Count', 'multi-location-product-and-inventory-management')));
-        foreach ($product_counts as $location => $count) {
-            fputcsv($output, array($location, $count));
+        // ---------- Products by Location (incl. Default) ----------
+        fputcsv($output, [__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Product Count', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+        $total_products = array_sum($product_counts);
+        foreach ($locations_with_default as $loc_name) {
+            $count = isset($product_counts[$loc_name]) ? $product_counts[$loc_name] : 0;
+            $percentage = $total_products > 0 ? round(($count / $total_products) * 100, 2) : 0;
+            fputcsv($output, array($loc_name, $count, $percentage . '%'));
         }
-        fputcsv($output, array('')); // Empty row
+        fputcsv($output, ['']);
 
-        // Stock Levels by Location
-        fputcsv($output, array(__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Stock Level', 'multi-location-product-and-inventory-management')));
-        foreach ($stock_levels as $location => $stock) {
-            fputcsv($output, array($location, $stock));
+        // ---------- Stock Levels by Location (incl. Default) ----------
+        fputcsv($output, [__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Stock Level', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+
+        $total_stocks = array_sum($stock_levels);
+        foreach ($locations_with_default as $loc_name) {
+            $count = isset($stock_levels[$loc_name]) ? $stock_levels[$loc_name] : 0;
+            $percentage = $total_stocks > 0 ? round(($count / $total_stocks) * 100, 2) : 0;
+            fputcsv($output, array($loc_name, $count, $percentage . '%'));
         }
-        fputcsv($output, array('')); // Empty row
+        fputcsv($output, ['']);
 
-        // Orders by Location (30 days)
-        fputcsv($output, array(__('ORDERS BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Orders', 'multi-location-product-and-inventory-management')));
+        // ---------- Orders by Location (30 days) ----------
+        fputcsv($output, [__('ORDERS BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Orders', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+        $total_orders = array_sum($orders_data['orders']);
         foreach ($orders_data['orders'] as $location => $orders) {
-            fputcsv($output, array($location, $orders));
+            $percentage = $total_orders > 0 ? round(($orders / $total_orders) * 100, 2) : 0;
+            fputcsv($output, array($location, $orders, $percentage . '%'));
         }
-        fputcsv($output, array('')); // Empty row
+        fputcsv($output, ['']);
 
-        // Revenue by Location (30 days)
-        fputcsv($output, array(__('REVENUE BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Revenue', 'multi-location-product-and-inventory-management')));
+        // ---------- Revenue by Location (30 days) ----------
+        fputcsv($output, [__('REVENUE BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Revenue', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+        $total_revenue = array_sum($orders_data['revenue']);
         foreach ($orders_data['revenue'] as $location => $revenue) {
-            fputcsv($output, array($location, get_woocommerce_currency_symbol() . number_format($revenue, 2)));
+            $percentage = $total_revenue > 0 ? round(($revenue / $total_revenue) * 100, 2) : 0;
+            fputcsv($output, array($location, number_format($revenue, 2), $percentage . '%'));
         }
-        fputcsv($output, array('')); // Empty row
+        fputcsv($output, ['']);
 
-        // Low Stock Products
+        // ---------- Low Stock ----------
         if (!empty($low_stock_products)) {
-            fputcsv($output, array(__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management')));
-            fputcsv($output, array(
+            fputcsv($output, [__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management')]);
+            fputcsv($output, [
                 __('Product', 'multi-location-product-and-inventory-management'),
                 __('Location', 'multi-location-product-and-inventory-management'),
                 __('Stock', 'multi-location-product-and-inventory-management'),
                 __('Status', 'multi-location-product-and-inventory-management')
-            ));
-
+            ]);
             foreach ($low_stock_products as $item) {
-                $status = $item['stock'] == 0 ? __('Out of Stock', 'multi-location-product-and-inventory-management') : __('Low Stock', 'multi-location-product-and-inventory-management');
-                fputcsv($output, array(
-                    $item['product_title'],
-                    $item['location_name'],
-                    $item['stock'],
-                    $status
-                ));
+                $status = $item['stock'] == 0 ? __('⚠ Out of Stock', 'multi-location-product-and-inventory-management') : __('⚡ Low Stock', 'multi-location-product-and-inventory-management');
+                fputcsv($output, [$item['product_title'], $item['location_name'], $item['stock'], $status]);
             }
-            fputcsv($output, array('')); // Empty row
+            fputcsv($output, ['']);
         }
 
-        // New Products (Last 30 Days)
-        fputcsv($output, array(__('NEW PRODUCTS (LAST 30 DAYS)', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Date', 'multi-location-product-and-inventory-management'), __('Products Added', 'multi-location-product-and-inventory-management')));
-        foreach ($recent_products_data['labels'] as $index => $label) {
-            fputcsv($output, array($label, $recent_products_data['counts'][$index]));
+        // ---------- New Products (Last 30 Days) — location-wise ----------
+        // Header row: Date | <each location> | Default | Total Added
+        fputcsv($output, [__('NEW PRODUCTS (LAST 30 DAYS) — LOCATION-WISE', 'multi-location-product-and-inventory-management')]);
+        $header = array_merge([__('Date', 'multi-location-product-and-inventory-management')], $locations, ['Default', __('Total Added', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, $header);
+
+        foreach ($recent_matrix['labels'] as $i => $label) {
+            $row = [$label];
+            // each physical location in order
+            foreach ($locations as $loc_name) {
+                $row[] = isset($recent_matrix['columns'][$loc_name][$i]) ? $recent_matrix['columns'][$loc_name][$i] : 0;
+            }
+            // Default
+            $row[] = isset($recent_matrix['columns']['Default'][$i]) ? $recent_matrix['columns']['Default'][$i] : 0;
+            // Totals (per date)
+            $row[] = $recent_matrix['totals'][$i];
+            fputcsv($output, $row);
         }
+
+        // Report Footer
+        fputcsv($output, array('═══════════════════════════════════════════════════════════════'));
+        fputcsv($output, array(__('End of Report', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('Thank you for using Multi Location Product & Inventory Management for WooCommerce Pro!', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array('═══════════════════════════════════════════════════════════════'));
 
         fclose($output);
         exit;
     }
+
+    public function export_dashboard_report_html()
+    {
+        // Verify nonce for security
+        check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
+
+        // Check user permissions
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+        }
+
+        global $mulopimfwc_locations, $wpdb;
+
+        if (function_exists('ini_set')) {
+            ini_set('memory_limit', '512M');
+        }
+        set_time_limit(300);
+
+        // ---------- Build location lists (names & IDs) ----------
+        $locations = [];
+        $location_ids = [];
+        if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
+            foreach ($mulopimfwc_locations as $l) {
+                $locations[]    = $l->name;
+                $location_ids[] = (int) $l->term_id;
+            }
+        }
+        $locations_with_default = array_merge($locations, ['Default']);
+
+        // ---------- Products by location (incl. Default) ----------
+        $product_counts = [];
+        foreach ($mulopimfwc_locations as $location) {
+            $product_counts[$location->name] = $this->get_location_product_count($location->term_id);
+        }
+        $product_counts['Default'] = $this->get_default_product_count();
+
+        // ---------- Stock level by location (incl. Default) ----------
+        $stock_levels = [];
+        foreach ($mulopimfwc_locations as $location) {
+            $stock_levels[$location->name] = $this->get_location_stock_level($location->term_id);
+        }
+        $stock_levels['Default'] = $this->get_default_stock_level();
+
+        // ---------- Orders / revenue / low stock / totals ----------
+        $orders_data          = $this->get_orders_data_efficiently();
+        $low_stock_products   = $this->get_low_stock_products_efficiently();
+        $total_investment     = $this->calculate_total_investment_efficiently();
+
+        // ---------- New products (last 30 days) — location-wise matrix ----------
+        $recent_matrix = $this->get_recent_products_data_by_location($location_ids, $locations);
+
+        // ---------- HTML/Excel headers ----------
+        $filename = 'location-wise-report-' . gmdate('Y-m-d-H-i-s') . '.xls';
+        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Start HTML output with UTF-8 BOM
+        echo chr(0xEF) . chr(0xBB) . chr(0xBF);
+
+?>
+        <!DOCTYPE html>
+        <html>
+
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 11pt;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                    background-color: #ffffff;
+                }
+
+                th {
+                    background-color: #5b21b6;
+                    color: #ffffff;
+                    padding: 12px 10px;
+                    text-align: left;
+                    font-weight: bold;
+                    font-size: 11pt;
+                    border: 1px solid #4c1d95;
+                }
+
+                td {
+                    padding: 10px;
+                    border: 1px solid #d1d5db;
+                    font-size: 10pt;
+                    color: #000000;
+                    background-color: #ffffff;
+                }
+
+                tr.even-row td {
+                    background-color: #f3f4f6;
+                }
+
+                .summary-table td:first-child {
+                    font-weight: bold;
+                    color: #374151;
+                    background-color: #f9fafb;
+                }
+
+                .percentage {
+                    color: #5b21b6;
+                    font-weight: bold;
+                }
+
+                .stock-low {
+                    color: #d97706;
+                    font-weight: bold;
+                }
+
+                .stock-out {
+                    color: #dc2626;
+                    font-weight: bold;
+                }
+
+                .status-badge {
+                    padding: 4px 10px;
+                    font-size: 9pt;
+                    font-weight: bold;
+                }
+
+                .status-low {
+                    background-color: #fef3c7;
+                    color: #92400e;
+                }
+
+                .status-out {
+                    background-color: #fee2e2;
+                    color: #991b1b;
+                }
+            </style>
+        </head>
+
+        <body>
+            <!-- Report Header as Table -->
+            <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                <tr>
+                    <td style="background-color: #5b21b6; color: #ffffff; padding: 20px; text-align: center;" colspan="10">
+                        <h1 style="margin: 0 0 10px 0; font-size: 18pt; font-weight: bold; color: #ffffff;">
+                            <?php echo esc_html__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management'); ?>
+                        </h1>
+                        <div style="font-size: 10pt; color: #ffffff; line-height: 1.5;">
+                            <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo gmdate('l, F d, Y - H:i:s'); ?></div>
+                            <div><strong><?php echo esc_html__('Store:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html(get_bloginfo('name')); ?></div>
+                            <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html(get_woocommerce_currency()); ?></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Summary Statistics -->
+            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                <tr></tr>
+                <tr>
+                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                        <?php echo esc_html__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management'); ?>
+                    </td>
+                </tr>
+            </table>
+            <table class="summary-table">
+                <tr>
+                    <th><?php echo esc_html__('Metric', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Value', 'multi-location-product-and-inventory-management'); ?></th>
+                </tr>
+                <tr>
+                    <td><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html(number_format($this->get_total_products_count())); ?></td>
+                </tr>
+                <tr class="even-row">
+                    <td><?php echo esc_html__('Total Locations', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html(count($mulopimfwc_locations)); ?></td>
+                </tr>
+                <tr>
+                    <td><?php echo esc_html__('Total Orders (30 days)', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html(number_format(array_sum($orders_data['orders']))); ?></td>
+                </tr>
+                <tr class="even-row">
+                    <td><?php echo esc_html__('Total Revenue (30 days)', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html(get_woocommerce_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)); ?></td>
+                </tr>
+                <tr>
+                    <td><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html(get_woocommerce_currency_symbol() . number_format($total_investment, 2)); ?></td>
+                </tr>
+                <tr class="even-row">
+                    <td><?php echo esc_html__('Total Stock', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html(number_format(array_sum($stock_levels))); ?></td>
+                </tr>
+            </table>
+
+            <!-- Products by Location -->
+            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                <tr></tr>
+                <tr>
+                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                        <?php echo esc_html__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management'); ?>
+                    </td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Product Count', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                </tr>
+                <?php
+                $total_products = array_sum($product_counts);
+                $row_count = 0;
+                foreach ($locations_with_default as $loc_name) {
+                    $count = isset($product_counts[$loc_name]) ? $product_counts[$loc_name] : 0;
+                    $percentage = $total_products > 0 ? round(($count / $total_products) * 100, 2) : 0;
+                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                    echo '<tr' . $row_class . '>';
+                    echo '<td>' . esc_html($loc_name) . '</td>';
+                    echo '<td>' . esc_html(number_format($count)) . '</td>';
+                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                    echo '</tr>';
+                    $row_count++;
+                }
+                ?>
+            </table>
+
+            <!-- Stock Levels by Location -->
+            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                <tr></tr>
+                <tr>
+                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                        <?php echo esc_html__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management'); ?>
+                    </td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Stock Level', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                </tr>
+                <?php
+                $total_stocks = array_sum($stock_levels);
+                $row_count = 0;
+                foreach ($locations_with_default as $loc_name) {
+                    $count = isset($stock_levels[$loc_name]) ? $stock_levels[$loc_name] : 0;
+                    $percentage = $total_stocks > 0 ? round(($count / $total_stocks) * 100, 2) : 0;
+                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                    echo '<tr' . $row_class . '>';
+                    echo '<td>' . esc_html($loc_name) . '</td>';
+                    echo '<td>' . esc_html(number_format($count)) . '</td>';
+                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                    echo '</tr>';
+                    $row_count++;
+                }
+                ?>
+            </table>
+
+            <!-- Orders by Location -->
+            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                <tr></tr>
+                <tr>
+                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                        <?php echo esc_html__('ORDERS BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management'); ?>
+                    </td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                </tr>
+                <?php
+                $total_orders = array_sum($orders_data['orders']);
+                $row_count = 0;
+                foreach ($orders_data['orders'] as $location => $orders) {
+                    $percentage = $total_orders > 0 ? round(($orders / $total_orders) * 100, 2) : 0;
+                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                    echo '<tr' . $row_class . '>';
+                    echo '<td>' . esc_html($location) . '</td>';
+                    echo '<td>' . esc_html(number_format($orders)) . '</td>';
+                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                    echo '</tr>';
+                    $row_count++;
+                }
+                ?>
+            </table>
+
+            <!-- Revenue by Location -->
+            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                <tr></tr>
+                <tr>
+                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                        <?php echo esc_html__('REVENUE BY LOCATION (30 DAYS)', 'multi-location-product-and-inventory-management'); ?>
+                    </td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                </tr>
+                <?php
+                $total_revenue = array_sum($orders_data['revenue']);
+                $row_count = 0;
+                foreach ($orders_data['revenue'] as $location => $revenue) {
+                    $percentage = $total_revenue > 0 ? round(($revenue / $total_revenue) * 100, 2) : 0;
+                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                    echo '<tr' . $row_class . '>';
+                    echo '<td>' . esc_html($location) . '</td>';
+                    echo '<td>' . esc_html(get_woocommerce_currency_symbol() . number_format($revenue, 2)) . '</td>';
+                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                    echo '</tr>';
+                    $row_count++;
+                }
+                ?>
+            </table>
+
+            <?php if (!empty($low_stock_products)) : ?>
+                <!-- Low Stock Products -->
+                <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                    <tr></tr>
+                    <tr>
+                        <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                            <?php echo esc_html__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management'); ?>
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <th><?php echo esc_html__('Product', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th><?php echo esc_html__('Stock', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th><?php echo esc_html__('Status', 'multi-location-product-and-inventory-management'); ?></th>
+                    </tr>
+                    <?php
+                    $row_count = 0;
+                    foreach ($low_stock_products as $item) :
+                        $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                    ?>
+                        <tr<?php echo $row_class; ?>>
+                            <td><?php echo esc_html($item['product_title']); ?></td>
+                            <td><?php echo esc_html($item['location_name']); ?></td>
+                            <td class="<?php echo $item['stock'] == 0 ? 'stock-out' : 'stock-low'; ?>">
+                                <?php echo esc_html($item['stock']); ?>
+                            </td>
+                            <td>
+                                <span class="status-badge <?php echo $item['stock'] == 0 ? 'status-out' : 'status-low'; ?>">
+                                    <?php echo $item['stock'] == 0 ? esc_html__('Out of Stock', 'multi-location-product-and-inventory-management') : esc_html__('Low Stock', 'multi-location-product-and-inventory-management'); ?>
+                                </span>
+                            </td>
+                            </tr>
+                        <?php
+                        $row_count++;
+                    endforeach;
+                        ?>
+                </table>
+            <?php endif; ?>
+
+            <!-- New Products (Last 30 Days) -->
+            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                <tr></tr>
+                <tr>
+                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                        <?php echo esc_html__('NEW PRODUCTS (LAST 30 DAYS) - LOCATION-WISE', 'multi-location-product-and-inventory-management'); ?>
+                    </td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <th><?php echo esc_html__('Date', 'multi-location-product-and-inventory-management'); ?></th>
+                    <?php foreach ($locations as $loc_name) : ?>
+                        <th><?php echo esc_html($loc_name); ?></th>
+                    <?php endforeach; ?>
+                    <th><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Total Added', 'multi-location-product-and-inventory-management'); ?></th>
+                </tr>
+                <?php
+                $row_count = 0;
+                foreach ($recent_matrix['labels'] as $i => $label) :
+                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                ?>
+                    <tr<?php echo $row_class; ?>>
+                        <td><?php echo esc_html($label); ?></td>
+                        <?php foreach ($locations as $loc_name) : ?>
+                            <td><?php echo esc_html(isset($recent_matrix['columns'][$loc_name][$i]) ? $recent_matrix['columns'][$loc_name][$i] : 0); ?></td>
+                        <?php endforeach; ?>
+                        <td><?php echo esc_html(isset($recent_matrix['columns']['Default'][$i]) ? $recent_matrix['columns']['Default'][$i] : 0); ?></td>
+                        <td><strong><?php echo esc_html($recent_matrix['totals'][$i]); ?></strong></td>
+                        </tr>
+                    <?php
+                    $row_count++;
+                endforeach;
+                    ?>
+            </table>
+
+            <!-- Footer -->
+            <div class="footer">
+                <h2>End of Report</h2>
+                <p>Thank you for using Multi Location Product & Inventory Management for WooCommerce Pro!</p>
+                <p>Generated by Multi Location Product & Inventory Management for WooCommerce Pro</p>
+            </div>
+        </body>
+
+        </html>
+    <?php
+        exit;
+    }
+
+    /**
+     * Products with NO mulopimfwc_store_location term.
+     */
+    private function get_default_product_count()
+    {
+        global $wpdb;
+        $sql = "
+        SELECT COUNT(p.ID)
+        FROM {$wpdb->posts} p
+        WHERE p.post_type='product' 
+          AND p.post_status='publish'
+          AND NOT EXISTS (
+            SELECT 1
+            FROM {$wpdb->term_relationships} tr
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
+            WHERE tr.object_id=p.ID
+              AND tt.taxonomy='mulopimfwc_store_location'
+          )
+    ";
+        return (int) $wpdb->get_var($sql);
+    }
+
+    /**
+     * Sum _stock for products with NO location term (global stock).
+     */
+    private function get_default_stock_level()
+    {
+        global $wpdb;
+        $sql = "
+        SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)),0)
+        FROM {$wpdb->posts} p
+        INNER JOIN {$wpdb->postmeta} pm ON pm.post_id=p.ID AND pm.meta_key='_stock'
+        WHERE p.post_type='product'
+          AND p.post_status='publish'
+          AND pm.meta_value IS NOT NULL AND pm.meta_value!=''
+          AND NOT EXISTS (
+            SELECT 1
+            FROM {$wpdb->term_relationships} tr
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
+            WHERE tr.object_id=p.ID
+              AND tt.taxonomy='mulopimfwc_store_location'
+          )
+    ";
+        return (int) $wpdb->get_var($sql);
+    }
+
+    /**
+     * Build a date x location matrix for last 30 days.
+     * @param array $location_ids Numeric term_ids
+     * @param array $location_names Names (same order as $location_ids)
+     * @return array ['labels'=>[], 'columns'=> [ 'LocA'=>[...], 'Default'=>[...], ... ], 'totals'=>[]]
+     */
+    private function get_recent_products_data_by_location(array $location_ids, array $location_names)
+    {
+        global $wpdb;
+
+        $days   = 30;
+        $labels = [];
+        $date_index_map = []; // 'Y-m-d' => idx
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $d = gmdate('Y-m-d', strtotime("-$i days"));
+            $labels[] = gmdate('M d', strtotime($d));
+            $date_index_map[$d] = count($labels) - 1;
+        }
+
+        // Initialize columns for each location and Default
+        $columns = [];
+        foreach ($location_names as $ln) {
+            $columns[$ln] = array_fill(0, $days, 0);
+        }
+        $columns['Default'] = array_fill(0, $days, 0);
+
+        $totals = array_fill(0, $days, 0);
+
+        // Pull all products created in last 30 days once
+        $from = gmdate('Y-m-d 00:00:00', strtotime('-29 days')); // inclusive
+        $sql_products = $wpdb->prepare("
+        SELECT ID, DATE(post_date) AS d
+        FROM {$wpdb->posts}
+        WHERE post_type='product'
+          AND post_status='publish'
+          AND post_date >= %s
+    ", $from);
+
+        $rows = $wpdb->get_results($sql_products, ARRAY_A);
+        if (empty($rows)) {
+            return ['labels' => $labels, 'columns' => $columns, 'totals' => $totals];
+        }
+
+        // Map product IDs -> date (Y-m-d)
+        $ids  = array_map('intval', array_column($rows, 'ID'));
+        $pid_date = [];
+        foreach ($rows as $r) {
+            $pid_date[(int)$r['ID']] = $r['d'];
+            if (isset($date_index_map[$r['d']])) {
+                $totals[$date_index_map[$r['d']]]++; // total added per date
+            }
+        }
+
+        // Fetch location terms for these IDs in one query
+        $ids_in = implode(',', array_map('intval', $ids));
+        $term_rows = $wpdb->get_results("
+        SELECT tr.object_id AS pid, t.name AS lname
+        FROM {$wpdb->term_relationships} tr
+        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
+        INNER JOIN {$wpdb->terms} t ON tt.term_id=t.term_id
+        WHERE tt.taxonomy='mulopimfwc_store_location'
+          AND tr.object_id IN ($ids_in)
+    ", ARRAY_A);
+
+        // Build pid -> [loc names...]
+        $pid_locs = [];
+        foreach ($term_rows as $tr) {
+            $pid = (int) $tr['pid'];
+            $pid_locs[$pid][] = $tr['lname'];
+        }
+
+        // Tally counts
+        foreach ($pid_date as $pid => $d) {
+            if (!isset($date_index_map[$d])) {
+                continue;
+            }
+            $idx = $date_index_map[$d];
+
+            if (empty($pid_locs[$pid])) {
+                // Products with NO location term → Default
+                $columns['Default'][$idx]++;
+            } else {
+                // If a product has multiple locations, it will increment each assigned location
+                foreach ($pid_locs[$pid] as $lname) {
+                    // Only count known columns to avoid unexpected new names
+                    if (isset($columns[$lname])) {
+                        $columns[$lname][$idx]++;
+                    }
+                }
+            }
+        }
+
+        return [
+            'labels'  => $labels,
+            'columns' => $columns,
+            'totals'  => $totals,
+        ];
+    }
+
+
+
 
 
     /**
@@ -179,8 +798,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.5.13", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.5.13");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.5.14", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.5.14");
 
         // Initialize data arrays
         $product_counts = [];
@@ -275,17 +894,117 @@ class MULOPIMFWC_Dashboard
             ]
         ]);
 
-?>
+    ?>
         <div class="wrap lwp-dashboard">
 
             <div class="lwp-dashboard-overview">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
-                    <button class="mulopimfwc-btn-primary" style="padding: 10px 30px !important;" id="export_report">
-                        <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M.226.046a.02.02 0 0 1 .028 0l.08.08a.02.02 0 0 1-.028.028L.26.108V.32a.02.02 0 1 1-.04 0V.108L.174.154A.02.02 0 0 1 .146.126zM.1.34a.02.02 0 0 1 .02.02V.4h.24V.36a.02.02 0 1 1 .04 0V.4a.04.04 0 0 1-.04.04H.12A.04.04 0 0 1 .08.4V.36A.02.02 0 0 1 .1.34"/>
-                        </svg>
-                        <?php echo esc_html__('Export Report', 'multi-location-product-and-inventory-management'); ?></button>
+                    <div class="export_report_dropdown">
+                        <button class="mulopimfwc-btn-primary export_toggle_btn" style="padding: 10px 30px !important;">
+                            <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M.226.046a.02.02 0 0 1 .028 0l.08.08a.02.02 0 0 1-.028.028L.26.108V.32a.02.02 0 1 1-.04 0V.108L.174.154A.02.02 0 0 1 .146.126zM.1.34a.02.02 0 0 1 .02.02V.4h.24V.36a.02.02 0 1 1 .04 0V.4a.04.04 0 0 1-.04.04H.12A.04.04 0 0 1 .08.4V.36A.02.02 0 0 1 .1.34" />
+                            </svg>
+                            <?php echo esc_html__('Export Report', 'multi-location-product-and-inventory-management'); ?>
+                            <span class="dropdown_icon">▾</span>
+                        </button>
+
+                        <div class="dropdown_menu">
+                            <button class="export_report" id="export_report_csv" data-format="csv">
+                                <?php echo esc_html__('Export in CSV', 'multi-location-product-and-inventory-management'); ?>
+                            </button>
+
+                            <button class="export_report" id="export_report_html" data-format="html">
+                                <?php echo esc_html__('Export in Excel (HTML)', 'multi-location-product-and-inventory-management'); ?>
+                            </button>
+                        </div>
+                    </div>
+
+                    <style>
+                        .export_report_dropdown {
+                            position: relative;
+                            display: inline-block;
+                        }
+
+                        .dropdown_icon {
+                            font-size: 12px;
+                            margin-left: 5px;
+                            transition: transform 0.2s ease;
+                        }
+
+                        .export_report_dropdown.active .dropdown_icon {
+                            transform: rotate(180deg);
+                        }
+
+                        .dropdown_menu {
+                            position: absolute;
+                            top: calc(100% + 8px);
+                            right: 0;
+                            background: #fff;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 8px;
+                            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+                            display: none;
+                            min-width: 220px;
+                            overflow: hidden;
+                            z-index: 9999;
+                            animation: fadeIn 0.2s ease;
+                        }
+
+                        .dropdown_menu button {
+                            width: 100%;
+                            padding: 12px 20px;
+                            background: transparent;
+                            border: none;
+                            text-align: left;
+                            font-size: 14px;
+                            color: #334155;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                        }
+
+                        .dropdown_menu button:hover {
+                            background-color: #f3f4f6;
+                            color: #1e40af;
+                        }
+
+                        @keyframes fadeIn {
+                            from {
+                                opacity: 0;
+                                transform: translateY(-5px);
+                            }
+
+                            to {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                    </style>
+
+                    <script>
+                        jQuery(document).ready(function($) {
+                            const dropdown = $('.export_report_dropdown');
+                            const toggleBtn = dropdown.find('.export_toggle_btn');
+                            const menu = dropdown.find('.dropdown_menu');
+
+                            // Toggle dropdown
+                            toggleBtn.on('click', function(e) {
+                                e.stopPropagation();
+                                dropdown.toggleClass('active');
+                                menu.slideToggle(150);
+                            });
+
+                            // Close dropdown when clicking outside
+                            $(document).on('click', function(e) {
+                                if (!dropdown.is(e.target) && dropdown.has(e.target).length === 0) {
+                                    dropdown.removeClass('active');
+                                    menu.slideUp(150);
+                                }
+                            });
+                        });
+                    </script>
+
+
                 </div>
                 <div class="lwp-card-stats">
                     <div class="lwp-stats-grid">

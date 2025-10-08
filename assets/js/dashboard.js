@@ -767,11 +767,12 @@
 
 jQuery(document).ready(function($) {
     // Handle Export Report button click
-    $('#export_report').on('click', function(e) {
+    $('.export_report').on('click', function(e) {
         e.preventDefault();
         
         const button = $(this);
-        const originalText = button.text();
+        const originalHTML = button.html();
+        const format = button.data('format');
         
         // Disable button and show loading state
         button.prop('disabled', true).text('Exporting...');
@@ -782,7 +783,8 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'mulopimfwc_export_dashboard_report',
-                nonce: mulopimfwc_DashboardData.export_nonce
+                nonce: mulopimfwc_DashboardData.export_nonce,
+                format: format
             },
             xhrFields: {
                 responseType: 'blob' // Important for file download
@@ -790,7 +792,7 @@ jQuery(document).ready(function($) {
             success: function(blob, status, xhr) {
                 // Get filename from response header or use default
                 const disposition = xhr.getResponseHeader('Content-Disposition');
-                let filename = 'dashboard-report-' + new Date().getTime() + '.csv';
+                let filename = 'location-wise-report-' + new Date().getTime() + '.csv';
                 
                 if (disposition && disposition.indexOf('filename=') !== -1) {
                     const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
@@ -816,12 +818,12 @@ jQuery(document).ready(function($) {
                 document.body.removeChild(a);
                 
                 // Reset button
-                button.prop('disabled', false).text(originalText);
+                button.prop('disabled', false).html(originalHTML);
             },
             error: function(xhr, status, error) {
                 console.error('Export error:', error);
                 alert('Failed to export report. Please try again.');
-                button.prop('disabled', false).text(originalText);
+                button.prop('disabled', false).html(originalHTML);
             }
         });
     });
