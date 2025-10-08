@@ -85,7 +85,7 @@ class mulopimfwc_Location_Wise_Products
         add_filter('woocommerce_products_widget_query_args', [$this, 'filter_widget_products']);
         add_filter('woocommerce_related_products_args', [$this, 'filter_related_products']);
         $options = get_option('mulopimfwc_display_options', ['enable_popup' => 'off']);
-        if (isset($options['enable_popup']) && $options['enable_popup'] === 'on') {
+        if (isset($options['enable_popup']) && $options['enable_popup'] === 'on' && mulopimfwc_premium_feature()) {
             add_action('wp_footer', [$this, 'location_selector_modal']);
         }
         add_action('init', [$this, 'clear_cart_on_location_change']);
@@ -769,7 +769,7 @@ class mulopimfwc_Location_Wise_Products
         // Add custom ordering based on product priority display setting
         $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
 
-        if ($product_priority_display !== 'mixed' && $enable_all_locations === 'on') {
+        if ($product_priority_display !== 'mixed' && $enable_all_locations === 'on' && mulopimfwc_premium_feature()) {
             add_filter('posts_join', [$this, 'custom_product_join'], 10, 2);
             add_filter('posts_orderby', [$this, 'custom_product_orderby'], 10, 2);
         }

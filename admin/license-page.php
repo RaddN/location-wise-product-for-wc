@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 class mulopimfwc_License_Manager
 {
     private $api_url = 'https://plugincy.com/';
-    private $item_id = 697;
+    private $item_id = 10817;
     private $cache_key = 'mulopimfwc_license_cache';
     private $status_cache_key = 'mulopimfwc_status_cache';
     private $version_cache_key = 'mulopimfwc_version_cache';
@@ -583,7 +583,7 @@ class mulopimfwc_License_Manager
         $is_expired = $this->is_license_expired_cached();
         ?>
         <div class="wrap lwp-settings-section" style="padding: 20px;">
-            <div class="plugincy-dapfforwc-card-header">
+            <div class="mulopimfwc-card-header">
                 <h2>
                     <svg width="16" height="16" style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg">
                         <path fill="#2563eb" d="M.276.293.195.374H.142v.053H.089V.48H0V.391L.187.204A.2.2 0 0 1 .178.151a.151.151 0 1 1 .097.141zM.427.107A.053.053 0 1 0 .374.16.053.053 0 0 0 .427.107" />
@@ -593,7 +593,7 @@ class mulopimfwc_License_Manager
                 <p>Manage your license key, check status, and update to the latest version</p>
             </div>
             <div  style="gap: 20px; display:flex;">
-                <div class="col-md-6 plugincy-dapfforwc-card" style="<?php echo !$is_valid ? 'flex: 0 0 100%; max-width: 99%;' : ''; ?>">
+                <div class="col-md-6 <?php echo !$is_valid ? '' : ' mulopimfwc-card'; ?>" style="<?php echo !$is_valid ? 'flex: 0 0 100%; max-width: 99%;' : ''; ?>">
 
                     <div  style="gap: 5px;align-items: center;display:flex; margin-bottom: 10px;">
                         <div style=" background: #ffedd5; padding: 5px; border-radius: 5px; "><span class="dashicons dashicons-lock" style="color: #ea580c;"></span></div>
@@ -698,7 +698,7 @@ class mulopimfwc_License_Manager
                     </form>
                 </div>
                 <?php if ($is_valid && !$is_expired): ?>
-                    <div class="col-md-6 plugincy-dapfforwc-card" style="box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;">
+                    <div class="col-md-6 mulopimfwc-card" style="box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;">
                         <div style="display: flex; align-items: center; gap: 8px; justify-content: space-between;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="background: #f2fcf4;padding: 5px;border-radius: 5px;">
@@ -801,9 +801,14 @@ class mulopimfwc_License_Manager
                                             </span>
                                             <div>
                                                 <span style="color: #495057;">
-                                                    <?php echo esc_html($license_details->site_count); ?> of <?php echo esc_html($license_details->license_limit); ?> sites used
+                                                    <?php echo esc_html($license_details->site_count); ?> of <?php echo $license_details->license_limit == 0? "Unlimited" : esc_html($license_details->license_limit); ?> sites used
                                                 </span>
-                                                <?php if ($license_details->site_count >= $license_details->license_limit): ?>
+                                                <?php
+                                                if($license_details->license_limit == 0):?>
+                                                    <small style="color: #198754;">
+                                                        (<?php echo esc_html($license_details->activations_left); ?>)
+                                                    </small>
+                                                <?php elseif ($license_details->site_count >= $license_details->license_limit): ?>
                                                     <small style="color: #dc3545;">
                                                         <span class="dashicons dashicons-no" style="font-size: 14px; vertical-align: middle;"></span>
                                                         (Limit reached)
