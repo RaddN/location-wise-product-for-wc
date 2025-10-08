@@ -150,7 +150,7 @@ class mulopimfwc_anaylytics
             'plugin_version' => $this->plugin_version,
             'other_plugins' => $this->get_other_plugins(),
             'active_theme' => get_option('stylesheet'),
-            'using_pro' => "0",
+            'using_pro' => "1",
             'license_key' => $this->get_license_key(),
         );
     }
@@ -198,7 +198,7 @@ class mulopimfwc_anaylytics
     private function get_license_key()
     {
         // Example: Get license from options
-        return get_option('mulopimfwclicense_key', '');
+        return get_option('mulopimfwc_license_key', '');
     }
 
     /**

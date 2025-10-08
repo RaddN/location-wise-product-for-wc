@@ -176,7 +176,7 @@ General Settings', 'multi-location-product-and-inventory-management'),
                 }
 ?>
             <p class="description"><?php echo esc_html__('Select user roles for which location-specific information is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+            <?php
             },
             'lwp-general-settings',
             'location_stock_general_section'
@@ -201,7 +201,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'enable_popup',
             __('Enable Popup', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("enable_popup", __("Enable or disable popup management.", 'multi-location-product-and-inventory-management'));
+                if (mulopimfwc_premium_feature()) {
+                    $this->render_advance_checkbox('enable_popup', __("Enable or disable popup management.", 'multi-location-product-and-inventory-management'));
+                } else {
+                    $this->render_advance_checkbox('pro', __("Enable or disable popup management.", 'multi-location-product-and-inventory-management'), true, false);
+                }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -211,7 +215,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'use_select2',
             __('Use Select2', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("use_select2", __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management'));
+                if (mulopimfwc_premium_feature()) {
+                    $this->render_advance_checkbox("use_select2", __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management'));
+                } else {
+                    $this->render_advance_checkbox('pro', __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management'), true, false);
+                }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -221,7 +229,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'title_show_popup',
             __('Title Show in Popup', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("title_show_popup", __("Show title in popup modal", 'multi-location-product-and-inventory-management'));
+                if (mulopimfwc_premium_feature()) {
+                    $this->render_advance_checkbox("title_show_popup", __("Show title in popup modal", 'multi-location-product-and-inventory-management'));
+                } else {
+                    $this->render_advance_checkbox('pro', __("Show title in popup modal", 'multi-location-product-and-inventory-management'), true, false);
+                }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -233,9 +245,13 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $mulopimfwc_popup_title = isset($options['mulopimfwc_popup_title']) ? $options['mulopimfwc_popup_title'] : 'Select Your Location';
-        ?>
-            <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_title]" value="<?php echo esc_attr($mulopimfwc_popup_title); ?>" class="regular-text">
-        <?php
+                if (mulopimfwc_premium_feature()) { ?>
+                <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_title]" value="<?php echo esc_attr($mulopimfwc_popup_title); ?>" class="regular-text">
+            <?php } else { ?>
+                <label class="mulopimfwc_pro_only">
+                    <input disabled type="text" name="_pro[pro]" value="" placeholder="Select Your Location" class="regular-text">
+                </label>
+            <?php }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -247,9 +263,14 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $mulopimfwc_popup_placeholder = isset($options['mulopimfwc_popup_placeholder']) ? $options['mulopimfwc_popup_placeholder'] : ' -- Select a Store -- ';
-        ?>
-            <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_placeholder]" value="<?php echo esc_attr($mulopimfwc_popup_placeholder); ?>" class="regular-text">
-        <?php
+
+                if (mulopimfwc_premium_feature()) { ?>
+                <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_placeholder]" value="<?php echo esc_attr($mulopimfwc_popup_placeholder); ?>" class="regular-text">
+            <?php } else { ?>
+                <label class="mulopimfwc_pro_only">
+                    <input disabled type="text" name="_pro[pro]" value="" placeholder="-- Select a Store -- " class="regular-text">
+                </label>
+            <?php }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -264,9 +285,14 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 if (empty($mulopimfwc_popup_btn_txt) || $mulopimfwc_popup_btn_txt === '' || $mulopimfwc_popup_btn_txt === ' ') {
                     $mulopimfwc_popup_btn_txt = __('Select Location', 'multi-location-product-and-inventory-management');
                 }
-        ?>
-            <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_btn_txt]" value="<?php echo esc_attr($mulopimfwc_popup_btn_txt); ?>" class="regular-text">
-        <?php
+
+                if (mulopimfwc_premium_feature()) { ?>
+                <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_btn_txt]" value="<?php echo esc_attr($mulopimfwc_popup_btn_txt); ?>" class="regular-text">
+            <?php } else { ?>
+                <label class="mulopimfwc_pro_only">
+                    <input disabled type="text" name="_pro[pro]" value="" placeholder="Select Location" class="regular-text">
+                </label>
+            <?php }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -278,13 +304,23 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $value = isset($options['herichical']) ? $options['herichical'] : 'off';
-        ?>
-            <select id="herichical" name="mulopimfwc_display_options[herichical]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html__('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html__('off', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="seperately" <?php selected($value, 'seperately'); ?>><?php echo esc_html__('Seperately', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-        <?php
+
+                if (mulopimfwc_premium_feature()) {
+            ?>
+                <select id="herichical" name="mulopimfwc_display_options[herichical]">
+                    <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html__('on', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html__('off', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="seperately" <?php selected($value, 'seperately'); ?>><?php echo esc_html__('Seperately', 'multi-location-product-and-inventory-management'); ?></option>
+                </select>
+            <?php } else { ?>
+                <label class="mulopimfwc_pro_only">
+                    <select disabled id="herichical" name="_pro[pro]">
+                        <option value="on"><?php echo esc_html__('on', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="off" selected><?php echo esc_html__('off', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="seperately"><?php echo esc_html__('Seperately', 'multi-location-product-and-inventory-management'); ?></option>
+                    </select>
+                </label>
+            <?php }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -294,7 +330,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'show_count',
             __('Show Count', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("show_count", __("Show count in popup", 'multi-location-product-and-inventory-management'));
+                if (mulopimfwc_premium_feature()) {
+                    $this->render_advance_checkbox("show_count", __("Show count in popup", 'multi-location-product-and-inventory-management'));
+                } else {
+                    $this->render_advance_checkbox('pro', __("Show count in popup", 'multi-location-product-and-inventory-management'), true, false);
+                }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -304,7 +344,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'show_popup_admin',
             __('Show Popup for Admins', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("show_popup_admin", __("Show popup for admin users", 'multi-location-product-and-inventory-management'));
+                if (mulopimfwc_premium_feature()) {
+                    $this->render_advance_checkbox("show_popup_admin", __("Show popup for admin users", 'multi-location-product-and-inventory-management'));
+                } else {
+                    $this->render_advance_checkbox('pro', __("Show popup for admin users", 'multi-location-product-and-inventory-management'), true, false);
+                }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -316,10 +360,16 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $mulopimfwc_popup_custom_css = isset($options['mulopimfwc_popup_custom_css']) ? $options['mulopimfwc_popup_custom_css'] : null;
-        ?>
-            <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}"><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
+
+                if (mulopimfwc_premium_feature()) {
+            ?>
+                <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}"><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
             </textarea>
-        <?php
+            <?php } else { ?>
+                <label class="mulopimfwc_pro_only">
+                    <textarea disabled style="height: 10rem;" name="_pro[pro]" class="regular-text" placeholder="div#lwp-store-selector-modal{}"></textarea>
+                </label>
+            <?php }
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -350,7 +400,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['inventory_sync_mode' => 'independent']);
                 $value = isset($options['inventory_sync_mode']) ? $options['inventory_sync_mode'] : 'independent';
-        ?>
+            ?>
             <select disabled name="mulopimfwc_display_options[inventory_sync_mode]">
                 <option value="independent" <?php selected($value, 'independent'); ?>><?php echo esc_html__('Independent (Each location manages its own inventory)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="centralized" <?php selected($value, 'centralized'); ?>><?php echo esc_html__('Centralized (Main inventory with location allocations)', 'multi-location-product-and-inventory-management'); ?></option>
@@ -1662,7 +1712,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Automatically assign products to locations based on their categories.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+            <?php
             },
             'lwp-location-allocation-settings',
             'mulopimfwc_product_allocation_section'
@@ -1703,12 +1753,23 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['product_priority_display' => 'location_first']);
                 $value = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
-        ?>
-            <select name="mulopimfwc_display_options[product_priority_display]">
-                <option value="location_first" <?php selected($value, 'location_first'); ?>><?php echo esc_html_e('Location Products First', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="global_first" <?php selected($value, 'global_first'); ?>><?php echo esc_html_e('Global Products First', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="mixed" <?php selected($value, 'mixed'); ?>><?php echo esc_html_e('No Priority (Mixed)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
+
+                if (mulopimfwc_premium_feature()) {
+            ?>
+                <select name="mulopimfwc_display_options[product_priority_display]">
+                    <option value="location_first" <?php selected($value, 'location_first'); ?>><?php echo esc_html_e('Location Products First', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="global_first" <?php selected($value, 'global_first'); ?>><?php echo esc_html_e('Global Products First', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="mixed" <?php selected($value, 'mixed'); ?>><?php echo esc_html_e('No Priority (Mixed)', 'multi-location-product-and-inventory-management'); ?></option>
+                </select>
+            <?php } else { ?>
+                <label class="mulopimfwc_pro_only">
+                    <select disabled name="_pro[pro]">
+                        <option value="location_first"><?php echo esc_html_e('Location Products First', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="global_first"><?php echo esc_html_e('Global Products First', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="mixed" selected><?php echo esc_html_e('No Priority (Mixed)', 'multi-location-product-and-inventory-management'); ?></option>
+                    </select>
+                </label>
+            <?php } ?>
             <p class="description"><?php echo esc_html_e('Set display priority for location-specific vs. global products.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
@@ -2485,10 +2546,6 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
                     <div class="cta-section">
                         <div class="cta-buttons">
-                            <a href="https://plugincy.com/multi-location-product-and-inventory-management/" target="_blank" class="btn btn-primary" style="background: #ff5a36; color: #fff;">
-                                <span class="dashicons dashicons-star-filled"></span>
-                                <?php echo esc_html__('Upgrade to Pro', 'multi-location-product-and-inventory-management'); ?>
-                            </a>
                             <a href="https://demo.plugincy.com/multi-location-product-and-inventory-management/" target="_blank" class="btn btn-accent">
                                 <span class="dashicons dashicons-visibility"></span>
                                 <?php echo esc_html__('View Demo', 'multi-location-product-and-inventory-management'); ?>
@@ -3136,7 +3193,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         </button>
                                     </div>
                                     <div class="shortcode-body">
-                                        <code id="shortcode-text">[mulopimfwc_store_location_selector enable_user_locations="on"]</code>
+                                        <code id="shortcode-text">[mulopimfwc_store_location_selector<?php echo esc_attr(mulopimfwc_get_pro_class(false, ' enable_user_locations="on"', '')); ?>]</code>
                                     </div>
                                 </div>
 
@@ -3212,7 +3269,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         </div>
                                         <div class="param-item">
                                             <div class="param-content">
-                                                <div class="param-name">enable_user_locations</div>
+                                                <div class="param-name">enable_user_locations
+                                                    <?php echo mulopimfwc_get_pro_class(false, '', '<span style="background: #ff5a36;color: #fff;padding: 3px 6px;border-radius: 4px;">Paid</span>'); ?>
+                                                </div>
                                                 <div class="param-value">on / off - User locations</div>
                                             </div>
                                             <span class="param-info">
@@ -3389,11 +3448,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     <?php
     }
 
-    public function render_advance_checkbox($key, $message = null, $disabled = false)
+    public function render_advance_checkbox($key, $message = null, $disabled = false, $is_free = true)
     {
         global $allowed_tags, $mulopimfwc_options;
     ?>
-        <label class="mulopimfwc_switch <?php echo esc_attr($key); ?>">
+        <label class="mulopimfwc_switch <?php echo esc_attr($key);
+                                        echo $is_free ? '' : ' mulopimfwc_pro_only' ?>">
             <input <?php echo $disabled ? 'disabled' : ''; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on"); ?>>
             <span class="mulopimfwc_slider round"></span>
             <span class="mulopimfwc_switch-on">On</span>

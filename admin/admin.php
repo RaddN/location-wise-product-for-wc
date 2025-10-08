@@ -349,15 +349,6 @@ class MULOPIMFWC_Admin
             'multi-location-product-and-inventory-management-settings',
             [new mulopimfwc_settings(), 'settings_page_content']
         );
-
-        // Add "Get Pro" submenu (external link)
-        add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Get Pro', 'multi-location-product-and-inventory-management'),
-            __('⭐ Get Pro', 'multi-location-product-and-inventory-management'),
-            'manage_options',
-            'https://plugincy.com/multi-location-product-and-inventory-management/'
-        );
     }
     /**
      * Add location column to orders table

@@ -264,7 +264,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_gross_profit_display($item)
     {
-        $output = '<div class="gross-profit-container">';
+        $output = '<div class="gross-profit-container '.esc_attr(mulopimfwc_get_pro_class()).'">';
 
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
             foreach ($item['variations'] as $variation) {

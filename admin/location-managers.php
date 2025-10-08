@@ -222,14 +222,74 @@ class MULOPIMFWC_Location_Managers
     {
         global $mulopimfwc_locations;
 
-        $managers = $this->get_location_managers();
+        $sample_managers = [
+            (object) [
+                'ID' => 1,
+                'display_name' => 'John Doe',
+                'user_email' => 'john.doe@example.com',
+                'capabilities' => ['Manage Products', 'View Reports'],
+                'assigned_locations' => ['New York', 'Los Angeles']
+            ],
+            (object) [
+                'ID' => 2,
+                'display_name' => 'Jane Smith',
+                'user_email' => 'jane.smith@example.com',
+                'capabilities' => ['Manage Inventory'],
+                'assigned_locations' => ['Chicago']
+            ],
+            (object) [
+                'ID' => 3,
+                'display_name' => 'Alice Johnson',
+                'user_email' => 'alice.johnson@example.com',
+                'capabilities' => ['Manage Orders', 'Edit Products'],
+                'assigned_locations' => []
+            ],
+            (object) [
+                'ID' => 4,
+                'display_name' => 'Bob Brown',
+                'user_email' => 'bob.brown@example.com',
+                'capabilities' => ['View Reports'],
+                'assigned_locations' => ['Miami', 'Houston']
+            ],
+            (object) [
+                'ID' => 5,
+                'display_name' => 'Charlie Davis',
+                'user_email' => 'charlie.davis@example.com',
+                'capabilities' => ['Manage Products', 'Manage Inventory'],
+                'assigned_locations' => ['San Francisco']
+            ],
+            (object) [
+                'ID' => 7,
+                'display_name' => 'Ethan Green',
+                'user_email' => 'ethan.green@example.com',
+                'capabilities' => ['Edit Products'],
+                'assigned_locations' => ['Boston']
+            ],
+            (object) [
+                'ID' => 9,
+                'display_name' => 'George King',
+                'user_email' => 'george.king@example.com',
+                'capabilities' => ['Manage Inventory'],
+                'assigned_locations' => ['Denver', 'Las Vegas']
+            ],
+            (object) [
+                'ID' => 10,
+                'display_name' => 'Hannah Lee',
+                'user_email' => 'hannah.lee@example.com',
+                'capabilities' => ['Manage Products', 'Edit Products'],
+                'assigned_locations' => ['Phoenix']
+            ]
+        ];
+
+        $managers = mulopimfwc_get_pro_class(false, $this->get_location_managers(), $sample_managers);
+
         $locations = $mulopimfwc_locations;
         $capabilities = $this->get_available_capabilities();
         $options = get_option('mulopimfwc_display_options', []);
         $global_capabilities = isset($options['location_manager_capabilities']) ? $options['location_manager_capabilities'] : [];
 
 ?>
-        <div class="wrap mulopimfwc-location-managers-main">
+        <div class="wrap mulopimfwc-location-managers-main <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', 'mulopimfwc_pro_only mulopimfwc_pro_only_blur1')); ?>">
 
 
             <div class="mulopimfwc-location-managers">
@@ -243,7 +303,7 @@ class MULOPIMFWC_Location_Managers
                         <span><?php echo esc_html__('Location Managers', 'multi-location-product-and-inventory-management'); ?></span>
                     </h1>
                     <!-- Add New Manager Button -->
-                    <button type="button" class="button button-primary" id="mulopimfwc-add-manager-btn">
+                    <button type="button" class="button button-primary" id="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'mulopimfwc-add-manager-btn', ' ')); ?>">
                         <svg class="svg-inline--fa fa-plus" aria-hidden="true" data-prefix="fas" data-icon="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                             <path fill="currentColor" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32v144H48c-17.7 0-32 14.3-32 32s14.3 32 32 32h144v144c0 17.7 14.3 32 32 32s32-14.3 32-32V288h144c17.7 0 32-14.3 32-32s-14.3-32-32-32H256z" />
                         </svg> <?php echo esc_html__('Add New Location Manager', 'multi-location-product-and-inventory-management'); ?>
@@ -316,12 +376,12 @@ class MULOPIMFWC_Location_Managers
                                     </div>
 
                                     <div class="manager-actions">
-                                        <button type="button" class="button button-small mulopimfwc-edit-manager mulopimfwc-btn-primary" data-manager-id="<?php echo esc_attr($manager->ID); ?>" data-assign-locations=<?php echo wp_json_encode($assigned_locations); ?> data-assign-capabilities=<?php echo wp_json_encode($manager_capabilities); ?>>
+                                        <button type="button" class="button button-small <?php echo esc_attr(mulopimfwc_get_pro_class(false, 'mulopimfwc-edit-manager', ' ')); ?> mulopimfwc-btn-primary" data-manager-id="<?php echo esc_attr($manager->ID); ?>" data-assign-locations=<?php echo wp_json_encode($assigned_locations); ?> data-assign-capabilities=<?php echo wp_json_encode($manager_capabilities); ?>>
                                             <svg class="svg-inline--fa fa-pencil" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="pencil" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="">
                                                 <path fill="currentColor" d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"></path>
                                             </svg> <?php echo esc_html__('Edit', 'multi-location-product-and-inventory-management'); ?>
                                         </button>
-                                        <button type="button" class="button button-small button-link-delete mulopimfwc-delete-manager" data-manager-id="<?php echo esc_attr($manager->ID); ?>">
+                                        <button type="button" class="button button-small <?php echo esc_attr(mulopimfwc_get_pro_class(false, 'button-link-delete mulopimfwc-delete-manager', ' ')); ?> mulopimfwc-delete-btn" data-manager-id="<?php echo esc_attr($manager->ID); ?>">
                                             <svg class="svg-inline--fa fa-trash" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
                                                 <path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path>
                                             </svg> <?php echo esc_html__('Delete', 'multi-location-product-and-inventory-management'); ?>
@@ -416,7 +476,10 @@ class MULOPIMFWC_Location_Managers
                             <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management'); ?>
                         </button>
                         <button type="submit" class="button button-primary mulopimfwc-btn-primary" id="mulopimfwc-save-manager">
-                            <svg width="16" height="16" viewBox="0 0 0.32 0.32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M.22.02h-.2V.3h.06V.18h.16V.3H.3V.1z"/><path d="M.2.3V.22H.12V.3z" /></svg>
+                            <svg width="16" height="16" viewBox="0 0 0.32 0.32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M.22.02h-.2V.3h.06V.18h.16V.3H.3V.1z" />
+                                <path d="M.2.3V.22H.12V.3z" />
+                            </svg>
                             <?php echo esc_html__('Save Manager', 'multi-location-product-and-inventory-management'); ?>
                         </button>
                     </div>
@@ -486,13 +549,14 @@ class MULOPIMFWC_Location_Managers
             }
 
 
-            .manager-actions .mulopimfwc-delete-manager {
+            .manager-actions .mulopimfwc-delete-manager,
+            .mulopimfwc-delete-btn {
                 background: #ffffff !important;
                 border-color: #dc2626 !important;
                 padding: 0px 30px !important;
                 border-radius: 6px !important;
                 font-size: 15px !important;
-                color: #dc2626;
+                color: #dc2626 !important;
                 font-weight: 600;
                 display: flex !important;
                 justify-content: center;
@@ -500,12 +564,13 @@ class MULOPIMFWC_Location_Managers
                 transition: all 0.25s ease !important;
             }
 
-            .manager-actions .mulopimfwc-delete-manager:hover {
+            .manager-actions .mulopimfwc-delete-manager:hover,
+            .mulopimfwc-delete-btn:hover {
                 box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4) !important;
                 transform: translateY(-2px);
             }
 
-            
+
 
             /* New End */
 

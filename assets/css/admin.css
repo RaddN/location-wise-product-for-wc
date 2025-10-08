@@ -152,7 +152,7 @@
 }
 
 .mulopimfwc_pro_only:hover:before {
-  content: "Pro Features Only";
+  content: "Activate the License First";
   background: #ff0000;
   position: absolute;
   left: 50%;
@@ -654,40 +654,6 @@ code {
   code {
     font-size: 11px;
   }
-}
-
-/* Highlight "Get Pro" submenu item */
-li#toplevel_page_multi-location-product-and-inventory-management
-  li:last-child
-  a,
-li#toplevel_page_multi-location-product-and-inventory-management
-  li:last-child
-  a:focus {
-  color: #fff !important;
-  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
-  border-radius: 4px;
-  font-weight: 600;
-  margin: 4px 8px;
-  padding: 5px 10px !important;
-}
-
-/* Hover effect */
-li#toplevel_page_multi-location-product-and-inventory-management
-  li:last-child
-  a:hover {
-  background: linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%);
-  color: #fff !important;
-  transform: translateX(2px);
-}
-
-/* Add a subtle icon */
-li#toplevel_page_multi-location-product-and-inventory-management
-  li:last-child
-  a::after {
-  content: "↗";
-  margin-left: 6px;
-  font-size: 12px;
-  opacity: 0.9;
 }
 
 .taxonomy-mulopimfwc_store_location hr.wp-header-end {

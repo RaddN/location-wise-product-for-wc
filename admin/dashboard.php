@@ -18,12 +18,11 @@ class MULOPIMFWC_Dashboard
         // Verify nonce for security
         check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
 
-        if(isset($_POST['format']) & $_POST['format'] === "html"){
+        if (isset($_POST['format']) & $_POST['format'] === "html") {
             $this->export_dashboard_report_html();
-        }else{
+        } else {
             $this->export_dashboard_report_csv();
         }
-        
     }
 
     public function export_dashboard_report_csv()
@@ -870,6 +869,11 @@ class MULOPIMFWC_Dashboard
         // Calculate totals efficiently
         $total_investment = $this->calculate_total_investment_efficiently();
 
+        $dummydata = [];
+        foreach ($orders_by_location as $location => $_) {
+            $dummydata[$location] = random_int(1, 100); // or rand(1, 100)
+        }
+
         wp_localize_script('lwp-dashboard-js', 'mulopimfwc_DashboardData', [
             'ajaxurl' => admin_url('admin-ajax.php'),
             'export_nonce' => wp_create_nonce('mulopimfwc_export_nonce'),
@@ -878,11 +882,11 @@ class MULOPIMFWC_Dashboard
             'locationColors' => $location_colors,
             'locationBorderColors' => $location_border_colors,
             'dateLabels' => $recent_products_data['labels'],
-            'dateCounts' => $recent_products_data['counts'],
-            'ordersByLocation' => $orders_by_location,
-            'revenueByLocation' => $location_revenue,
+            'dateCounts' => mulopimfwc_get_pro_class(false, $recent_products_data['counts'], array_map(fn() => random_int(1, 100), range(1, 30))),
+            'ordersByLocation' => mulopimfwc_get_pro_class(false, $orders_by_location, $dummydata),
+            'revenueByLocation' => mulopimfwc_get_pro_class(false, $location_revenue, $dummydata),
             'monthlyInvestmentLabels' => $monthly_investment_data['labels'],
-            'monthlyInvestmentData' => $monthly_investment_data['data'],
+            'monthlyInvestmentData' => mulopimfwc_get_pro_class(false, $monthly_investment_data['data'], array_map(fn() => random_int(1, 100), range(1, 12))),
             'currency' => get_woocommerce_currency_symbol(),
             'currency_code' => get_woocommerce_currency(),
             'i18n' => [
@@ -896,11 +900,10 @@ class MULOPIMFWC_Dashboard
 
     ?>
         <div class="wrap lwp-dashboard">
-
             <div class="lwp-dashboard-overview">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
-                    <div class="export_report_dropdown">
+                    <div class="export_report_dropdown <?php echo esc_attr(mulopimfwc_get_pro_class(false)); ?>">
                         <button class="mulopimfwc-btn-primary export_toggle_btn" style="padding: 10px 30px !important;">
                             <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M.226.046a.02.02 0 0 1 .028 0l.08.08a.02.02 0 0 1-.028.028L.26.108V.32a.02.02 0 1 1-.04 0V.108L.174.154A.02.02 0 0 1 .146.126zM.1.34a.02.02 0 0 1 .02.02V.4h.24V.36a.02.02 0 1 1 .04 0V.4a.04.04 0 0 1-.04.04H.12A.04.04 0 0 1 .08.4V.36A.02.02 0 0 1 .1.34" />
@@ -910,11 +913,11 @@ class MULOPIMFWC_Dashboard
                         </button>
 
                         <div class="dropdown_menu">
-                            <button class="export_report" id="export_report_csv" data-format="csv">
+                            <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_csv" data-format="csv">
                                 <?php echo esc_html__('Export in CSV', 'multi-location-product-and-inventory-management'); ?>
                             </button>
 
-                            <button class="export_report" id="export_report_html" data-format="html">
+                            <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_html" data-format="html">
                                 <?php echo esc_html__('Export in Excel (HTML)', 'multi-location-product-and-inventory-management'); ?>
                             </button>
                         </div>
@@ -1035,7 +1038,7 @@ class MULOPIMFWC_Dashboard
                             </div>
 
                         </div>
-                        <div class="lwp-stat-item">
+                        <div class="lwp-stat-item <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                             <div class="lwp-stat-item-icon" style="background-color: #f3e8ff;">
 
                                 <svg class="svg-inline--fa fa-cart-shopping" aria-hidden="true" data-prefix="fas" data-icon="cart-shopping" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="18">
@@ -1044,7 +1047,7 @@ class MULOPIMFWC_Dashboard
                             </div>
                             <div>
                                 <span class="lwp-stat-label"><?php echo esc_html__('Orders (30 days)', 'multi-location-product-and-inventory-management'); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html(array_sum($orders_by_location)); ?></span>
+                                <span class="lwp-stat-value"><?php echo esc_html(mulopimfwc_get_pro_class(false, array_sum($orders_by_location), rand(1, 100))); ?><?php echo esc_html(array_sum($orders_by_location)); ?></span>
 
                             </div>
 
@@ -1114,7 +1117,7 @@ class MULOPIMFWC_Dashboard
                     <div class="lwp-col">
                         <div class="lwp-card">
                             <h2><?php echo esc_html__('Orders by Location (30 days)', 'multi-location-product-and-inventory-management'); ?></h2>
-                            <div class="lwp-chart-container">
+                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="ordersByLocationChart"></canvas>
                             </div>
                         </div>
@@ -1122,7 +1125,7 @@ class MULOPIMFWC_Dashboard
                     <div class="lwp-col">
                         <div class="lwp-card">
                             <h2><?php echo esc_html__('Revenue by Location (30 days)', 'multi-location-product-and-inventory-management'); ?></h2>
-                            <div class="lwp-chart-container">
+                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="revenueByLocationChart"></canvas>
                             </div>
                         </div>
@@ -1133,7 +1136,7 @@ class MULOPIMFWC_Dashboard
                     <div class="lwp-col">
                         <div class="lwp-card">
                             <h2><?php echo esc_html__('New Products (Last 30 Days)', 'multi-location-product-and-inventory-management'); ?></h2>
-                            <div class="lwp-chart-container">
+                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="newProductsChart"></canvas>
                             </div>
                         </div>
@@ -1141,7 +1144,7 @@ class MULOPIMFWC_Dashboard
                     <div class="lwp-col">
                         <div class="lwp-card">
                             <h2><?php echo esc_html__('Investment', 'multi-location-product-and-inventory-management'); ?></h2>
-                            <div class="lwp-chart-container">
+                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="investment-30day"></canvas>
                             </div>
                         </div>
@@ -1152,8 +1155,74 @@ class MULOPIMFWC_Dashboard
                     <div class="lwp-col">
                         <div class="lwp-card">
                             <h2><?php esc_html_e('Low Stock Products by Location', 'multi-location-product-and-inventory-management'); ?></h2>
-                            <?php if (!empty($low_stock_products)) : ?>
-                                <table class="lwp-low-stock-table">
+                            <?php
+                            $low_stock_sample_products = [
+                                [
+                                    "product_id" => 1,
+                                    "product_title" => "Apple Laptop",
+                                    "location_name" => "New York",
+                                    "stock" => 0
+                                ],
+                                [
+                                    "product_id" => 2,
+                                    "product_title" => "Samsung Galaxy Phone",
+                                    "location_name" => "Los Angeles",
+                                    "stock" => 2
+                                ],
+                                [
+                                    "product_id" => 3,
+                                    "product_title" => "Dell XPS 15",
+                                    "location_name" => "Chicago",
+                                    "stock" => 1
+                                ],
+                                [
+                                    "product_id" => 4,
+                                    "product_title" => "Sony Headphones",
+                                    "location_name" => "Miami",
+                                    "stock" => 0
+                                ],
+                                [
+                                    "product_id" => 5,
+                                    "product_title" => "LG OLED TV",
+                                    "location_name" => "Houston",
+                                    "stock" => 3
+                                ],
+                                [
+                                    "product_id" => 6,
+                                    "product_title" => "Amazon Echo",
+                                    "location_name" => "Seattle",
+                                    "stock" => 1
+                                ],
+                                [
+                                    "product_id" => 7,
+                                    "product_title" => "Microsoft Surface Pro",
+                                    "location_name" => "San Francisco",
+                                    "stock" => 2
+                                ],
+                                [
+                                    "product_id" => 8,
+                                    "product_title" => "Bose SoundLink Speaker",
+                                    "location_name" => "Boston",
+                                    "stock" => 0
+                                ],
+                                [
+                                    "product_id" => 9,
+                                    "product_title" => "iPad Pro",
+                                    "location_name" => "Atlanta",
+                                    "stock" => 1
+                                ],
+                                [
+                                    "product_id" => 10,
+                                    "product_title" => "Fitbit Charge 5",
+                                    "location_name" => "Denver",
+                                    "stock" => 0
+                                ]
+                            ];
+
+                            $low_stock_products = mulopimfwc_get_pro_class(false, $low_stock_products, $low_stock_sample_products);
+                            
+                            if (!empty($low_stock_products)) : ?>
+                                <table class="lwp-low-stock-table <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                     <thead>
                                         <tr>
                                             <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management'); ?></th>
@@ -1163,7 +1232,7 @@ class MULOPIMFWC_Dashboard
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($low_stock_products as $item) : ?>
+                                        <?php foreach ((object)$low_stock_products as $item) : ?>
                                             <tr>
                                                 <td>
                                                     <a href="<?php echo esc_url(get_edit_post_link($item['product_id'])); ?>">

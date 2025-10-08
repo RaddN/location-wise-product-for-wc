@@ -22,6 +22,8 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
     define('MULTI_LOCATION_PLUGIN_URL', plugin_dir_url(__FILE__));
 }
 
+define("mulopimfwc_VERSION","1.0.5.14");
+
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     add_action('admin_notices', function () {
         echo '<div class="error"><p>' . esc_html_e('Location Wise Products requires WooCommerce to be installed and active.', 'multi-location-product-and-inventory-management') . '</p></div>';
@@ -363,9 +365,7 @@ class mulopimfwc_Location_Wise_Products
             $links = [];
         }
         $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=multi-location-product-and-inventory-management')) . '">' . esc_html__('Settings', 'multi-location-product-and-inventory-management') . '</a>';
-        $pro_link = '<a href="https://plugincy.com/multi-location-product-and-inventory-management" style="color: #ff5722; font-weight: bold;" target="_blank">' . esc_html__('Get Pro', 'multi-location-product-and-inventory-management') . '</a>';
         $links[] = $settings_link;
-        $links[] = $pro_link;
         return $links;
     }
 
@@ -1119,8 +1119,8 @@ class mulopimfwc_analytics_main
         $this->analytics = new mulopimfwc_anaylytics(
             '04',
             'https://plugincy.com/wp-json/product-analytics/v1',
-            "1.0.1",
-            'One Page Quick Checkout for WooCommerce',
+            "1.0.5.14",
+            'Multi Location Product & Inventory Management for WooCommerce',
             __FILE__ // Pass the main plugin file
         );
 
