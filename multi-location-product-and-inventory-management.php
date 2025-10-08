@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.5.14
+ * Version: 1.0.2
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -22,7 +22,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
     define('MULTI_LOCATION_PLUGIN_URL', plugin_dir_url(__FILE__));
 }
 
-define("mulopimfwc_VERSION","1.0.5.14");
+define("mulopimfwc_VERSION","1.0.2");
 
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     add_action('admin_notices', function () {
@@ -252,7 +252,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/js/admin.js',
             ['jquery'],
-            '1.0.5.14',
+            '1.0.2',
             true
         );
 
@@ -272,7 +272,7 @@ class mulopimfwc_Location_Wise_Products
             'mulopimfwc-multi-location-product-and-inventory-managements-admin',
             plugin_dir_url(__FILE__) . 'assets/css/admin.css',
             [],
-            '1.0.5.14'
+            '1.0.2'
         );
     }
 
@@ -377,9 +377,9 @@ class mulopimfwc_Location_Wise_Products
                 ? (int)$mulopimfwc_options["location_cookie_expiry"]
                 : 30;
         
-        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.5.14');
+        wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.2');
         wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.5.14', true);
+        wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.2', true);
         wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
         wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
@@ -937,7 +937,7 @@ class mulopimfwc_Location_Wise_Products
     }
     function custom_admin_styles()
     {
-        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.5.14");
+        wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.2");
     }
 }
 
@@ -1119,7 +1119,7 @@ class mulopimfwc_analytics_main
         $this->analytics = new mulopimfwc_anaylytics(
             '04',
             'https://plugincy.com/wp-json/product-analytics/v1',
-            "1.0.5.14",
+            "1.0.2",
             'Multi Location Product & Inventory Management for WooCommerce',
             __FILE__ // Pass the main plugin file
         );
