@@ -53,14 +53,14 @@ if (!defined('ABSPATH')) exit;
             <div class="tooltip_popup" id="location-tooltip" style="display: none;">
                 <div class="search-input-container">
                     <input type="text" id="address-search-input" placeholder="<?php esc_attr_e('Enter your address', 'multi-location-product-and-inventory-management'); ?>" aria-label="<?php esc_attr_e('Enter your address', 'multi-location-product-and-inventory-management'); ?>" value="" readonly>
-                    <label><?php esc_html_e('Enter Your Address', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><?php _e('Enter Your Address', 'multi-location-product-and-inventory-management'); ?></label>
                     <div>
                         <button type="button" aria-label="<?php esc_attr_e('Clear your address', 'multi-location-product-and-inventory-management'); ?>" data-testid="input-clear-icon" id="clear-address-btn">&times;</button>
                     </div>
                 </div>
                 <?php if ($is_user_logged_in): ?>
                     <div class="saved_locations">
-                        <h3 class="title"><?php esc_html_e('Saved Address', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <h3 class="title"><?php _e('Saved Address', 'multi-location-product-and-inventory-management'); ?></h3>
                         <div class="saved-locations-list">
                             <?php
                             $user_locations = get_user_meta($current_user->ID, 'mulopimfwc_user_locations', true);
@@ -114,7 +114,7 @@ if (!defined('ABSPATH')) exit;
                                 }
                             } else {
                                 ?>
-                                <p class="no-saved-locations"><?php esc_html_e('No saved address yet', 'multi-location-product-and-inventory-management'); ?></p>
+                                <p class="no-saved-locations"><?php _e('No saved address yet', 'multi-location-product-and-inventory-management'); ?></p>
                             <?php
                             }
                             ?>
@@ -124,7 +124,7 @@ if (!defined('ABSPATH')) exit;
                 <div class="location-actions-container">
                     <?php if ($is_user_logged_in): ?>
                         <button type="button" class="button button-primary lwp-add-location-btn">
-                            <?php esc_html_e('Add New Address', 'multi-location-product-and-inventory-management'); ?>
+                            <?php _e('Add New Address', 'multi-location-product-and-inventory-management'); ?>
                         </button>
                     <?php endif; ?>
                 </div>
@@ -570,14 +570,14 @@ if (!defined('ABSPATH')) exit;
 <div id="lwp-location-popup" class="lwp-location-popup" style="display:none;">
     <div class="lwp-popup-content">
         <div class="lwp-popup-header">
-            <h3><?php esc_html_e('Set Your Location', 'multi-location-product-and-inventory-management'); ?></h3>
+            <h3><?php _e('Set Your Location', 'multi-location-product-and-inventory-management'); ?></h3>
             <button type="button" class="lwp-close-popup">&times;</button>
         </div>
         <div id="lwp-location-step1" class="lwp-location-step">
             <div class="lwp-map-container">
                 <div id="lwp-location-map" class="lwp-location-map"></div>
                 <div class="lwp-map-controls">
-                    <button type="button" class="button button-primary lwp-continue-btn"><?php esc_html_e('Continue', 'multi-location-product-and-inventory-management'); ?></button>
+                    <button type="button" class="button button-primary lwp-continue-btn"><?php _e('Continue', 'multi-location-product-and-inventory-management'); ?></button>
                 </div>
             </div>
         </div>
@@ -585,7 +585,7 @@ if (!defined('ABSPATH')) exit;
         <div id="lwp-location-step2" class="lwp-location-step" style="display:none;">
             <div class="lwp-location-details">
                 <div class="lwp-details-header">
-                    <h4><?php esc_html_e('Location Details', 'multi-location-product-and-inventory-management'); ?></h4>
+                    <h4><?php _e('Location Details', 'multi-location-product-and-inventory-management'); ?></h4>
                     <p class="lwp-address-preview"></p>
                     <span class="edit_location_map" style="cursor: pointer;">✏️</span>
                 </div>
@@ -593,24 +593,24 @@ if (!defined('ABSPATH')) exit;
                     <?php wp_nonce_field('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce'); ?>
                     <input type="hidden" id="lwp-editing-location-id" name="location_id" value="">
                     <div class="lwp-form-group">
-                        <label for="lwp-location-label"><?php esc_html_e('Label', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-label"><?php _e('Label', 'multi-location-product-and-inventory-management'); ?></label>
                         <select id="lwp-location-label" name="label" required>
-                            <option value="Home"><?php esc_html_e('Home', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="Work"><?php esc_html_e('Work', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="Partner"><?php esc_html_e('Partner', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="Other"><?php esc_html_e('Other', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Home"><?php _e('Home', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Work"><?php _e('Work', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Partner"><?php _e('Partner', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Other"><?php _e('Other', 'multi-location-product-and-inventory-management'); ?></option>
                         </select>
                     </div>
                     <div class="lwp-form-group">
-                        <label for="lwp-location-street"><?php esc_html_e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-street"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
                         <input type="text" id="lwp-location-street" name="street" required>
                     </div>
                     <div class="lwp-form-group">
-                        <label for="lwp-location-apartment"><?php esc_html_e('Apartment, suite, etc.', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-apartment"><?php _e('Apartment, suite, etc.', 'multi-location-product-and-inventory-management'); ?></label>
                         <input type="text" id="lwp-location-apartment" name="apartment">
                     </div>
                     <div class="lwp-form-group">
-                        <label for="lwp-location-note"><?php esc_html_e('Note', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-note"><?php _e('Note', 'multi-location-product-and-inventory-management'); ?></label>
                         <textarea id="lwp-location-note" name="note"></textarea>
                     </div>
                     <input type="hidden" id="lwp-location-lat" name="lat">
@@ -620,8 +620,8 @@ if (!defined('ABSPATH')) exit;
                     <input type="hidden" id="lwp-location-postal" name="postal">
                     <input type="hidden" id="lwp-location-country" name="country">
                     <div class="lwp-form-actions">
-                        <button type="button" class="button lwp-back-btn"><?php esc_html_e('Back', 'multi-location-product-and-inventory-management'); ?></button>
-                        <button type="submit" class="button button-primary"><?php esc_html_e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
+                        <button type="button" class="button lwp-back-btn"><?php _e('Back', 'multi-location-product-and-inventory-management'); ?></button>
+                        <button type="submit" class="button button-primary"><?php _e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
                     </div>
                 </form>
             </div>

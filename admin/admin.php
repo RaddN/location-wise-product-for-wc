@@ -36,51 +36,51 @@ class MULOPIMFWC_Admin
     {
 ?>
         <div class="form-field">
-            <label for="street_address"><?php esc_html_e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="street_address" id="street_address" value="" />
-            <p class="description"><?php esc_html_e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="city"><?php esc_html_e('City', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="city"><?php _e('City', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="city" id="city" value="" />
-            <p class="description"><?php esc_html_e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="state"><?php esc_html_e('State', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="state"><?php _e('State', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="state" id="state" value="" />
-            <p class="description"><?php esc_html_e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="postal_code"><?php esc_html_e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="postal_code" id="postal_code" value="" />
-            <p class="description"><?php esc_html_e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="country"><?php esc_html_e('Country', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="country" id="country" value="" />
-            <p class="description"><?php esc_html_e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="email"><?php esc_html_e('Email', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="email" name="email" id="email" value="" />
-            <p class="description"><?php esc_html_e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="phone"><?php esc_html_e('Phone', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="tel" name="phone" id="phone" value="" />
-            <p class="description"><?php esc_html_e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="display_order"><?php esc_html_e('Display Order', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="number" name="display_order" id="display_order" value="" min="0" step="1" />
-            <p class="description"><?php esc_html_e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
     <?php
     }
@@ -101,66 +101,66 @@ class MULOPIMFWC_Admin
 
     ?>
         <tr class="form-field">
-            <th scope="row"><label for="street_address"><?php esc_html_e('Street Address', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="text" name="street_address" id="street_address" value="<?php echo esc_attr($street_address); ?>" />
-                <p class="description"><?php esc_html_e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="city"><?php esc_html_e('City', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="city"><?php _e('City', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="text" name="city" id="city" value="<?php echo esc_attr($city); ?>" />
-                <p class="description"><?php esc_html_e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="state"><?php esc_html_e('State', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="state"><?php _e('State', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="text" name="state" id="state" value="<?php echo esc_attr($state); ?>" />
-                <p class="description"><?php esc_html_e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="postal_code"><?php esc_html_e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="text" name="postal_code" id="postal_code" value="<?php echo esc_attr($postal_code); ?>" />
-                <p class="description"><?php esc_html_e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="country"><?php esc_html_e('Country', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" />
-                <p class="description"><?php esc_html_e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="email"><?php esc_html_e('Email', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="email" name="email" id="email" value="<?php echo esc_attr($email); ?>" />
-                <p class="description"><?php esc_html_e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="phone"><?php esc_html_e('Phone', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="tel" name="phone" id="phone" value="<?php echo esc_attr($phone); ?>" />
-                <p class="description"><?php esc_html_e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="display_order"><?php esc_html_e('Display Order', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="number" name="display_order" id="display_order" value="<?php echo esc_attr($display_order); ?>" min="0" step="1" />
-                <p class="description"><?php esc_html_e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 <?php

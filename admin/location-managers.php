@@ -178,7 +178,7 @@ class MULOPIMFWC_Location_Managers
 
             add_role(
                 'mulopimfwc_location_manager',
-                __('Location Manager', 'multi-location-product-and-inventory-management'),
+                esc_html_e('Location Manager', 'multi-location-product-and-inventory-management'),
                 $capabilities
             );
         }
@@ -816,9 +816,10 @@ class MULOPIMFWC_Location_Managers
                 $('#mulopimfwc-add-manager-btn').on('click', function() {
                     isEditMode = false;
                     resetForm();
-                    $('#mulopimfwc-modal-title').text('<?php echo esc_js(__('Add New Location Manager', 'multi-location-product-and-inventory-management')); ?>');
+                    $('#mulopimfwc-modal-title').text('<?php echo esc_js(esc_html_e('Add New Location Manager', 'multi-location-product-and-inventory-management')); ?>');
                     $('#action-type').val('create');
                     $('#mulopimfwc-manager-modal').show();
+                    $('#search_or_add_manager').show();
                 });
 
                 // Edit manager button
@@ -832,7 +833,7 @@ class MULOPIMFWC_Location_Managers
 
                 // Delete manager button
                 $(document).on('click', '.mulopimfwc-delete-manager', function() {
-                    if (confirm('<?php echo esc_js(__('Are you sure you want to delete this location manager?', 'multi-location-product-and-inventory-management')); ?>')) {
+                    if (confirm('<?php echo esc_js(esc_html_e('Are you sure you want to delete this location manager?', 'multi-location-product-and-inventory-management')); ?>')) {
                         const managerId = $(this).data('manager-id');
                         deleteManager(managerId);
                     }
@@ -847,7 +848,7 @@ class MULOPIMFWC_Location_Managers
                 $('#toggle-create-user').on('click', function() {
                     $('#create-new-user').toggle();
                     const isVisible = $('#create-new-user').is(':visible');
-                    $(this).text(isVisible ? '<?php echo esc_js(__('Select Existing User Instead', 'multi-location-product-and-inventory-management')); ?>' : '<?php echo esc_js(__('Create New User Instead', 'multi-location-product-and-inventory-management')); ?>');
+                    $(this).text(isVisible ? '<?php echo esc_js(esc_html_e('Select Existing User Instead', 'multi-location-product-and-inventory-management')); ?>' : '<?php echo esc_js(esc_html_e('Create New User Instead', 'multi-location-product-and-inventory-management')); ?>');
                 });
 
                 // User search
@@ -878,12 +879,12 @@ class MULOPIMFWC_Location_Managers
                     $('#selected-user-id').val('');
                     $('#user-search-results').empty().hide();
                     $('#create-new-user').hide();
-                    $('#toggle-create-user').text('<?php echo esc_js(__('Create New User Instead', 'multi-location-product-and-inventory-management')); ?>');
+                    $('#toggle-create-user').text('<?php echo esc_js(esc_html_e('Create New User Instead', 'multi-location-product-and-inventory-management')); ?>');
                 }
 
                 function loadManagerData(managerId, assign_locations, assign_capabilities) {
                     // Update modal title and form fields
-                    $('#mulopimfwc-modal-title').text('<?php echo esc_js(__('Edit Location Manager', 'multi-location-product-and-inventory-management')); ?>');
+                    $('#mulopimfwc-modal-title').text('<?php echo esc_js(esc_html_e('Edit Location Manager', 'multi-location-product-and-inventory-management')); ?>');
                     $('#manager-id').val(managerId);
                     $('#action-type').val('edit');
                     $('#search_or_add_manager').hide();
@@ -932,7 +933,7 @@ class MULOPIMFWC_Location_Managers
                     resultsContainer.empty();
 
                     if (users.length === 0) {
-                        resultsContainer.html('<div class="search-result-item"><?php echo esc_js(__('No users found', 'multi-location-product-and-inventory-management')); ?></div>');
+                        resultsContainer.html('<div class="search-result-item"><?php echo esc_js(esc_html_e('No users found', 'multi-location-product-and-inventory-management')); ?></div>');
                     } else {
                         users.forEach(user => {
                             const item = $(`<div class="search-result-item" data-user-id="${user.ID}">
@@ -967,7 +968,7 @@ class MULOPIMFWC_Location_Managers
                             if (response.success) {
                                 location.reload();
                             } else {
-                                alert(response.data.message || '<?php echo esc_js(__('Error saving manager', 'multi-location-product-and-inventory-management')); ?>');
+                                alert(response.data.message || '<?php echo esc_js(esc_html_e('Error saving manager', 'multi-location-product-and-inventory-management')); ?>');
                             }
                         }
                     });
@@ -986,7 +987,7 @@ class MULOPIMFWC_Location_Managers
                             if (response.success) {
                                 location.reload();
                             } else {
-                                alert(response.data.message || '<?php echo esc_js(__('Error deleting manager', 'multi-location-product-and-inventory-management')); ?>');
+                                alert(response.data.message || '<?php echo esc_js(esc_html_e('Error deleting manager', 'multi-location-product-and-inventory-management')); ?>');
                             }
                         }
                     });
@@ -1004,7 +1005,7 @@ class MULOPIMFWC_Location_Managers
         check_ajax_referer('mulopimfwc_location_managers_nonce', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => esc_html_e('Permission denied', 'multi-location-product-and-inventory-management')]);
         }
 
         $query = sanitize_text_field($_POST['query']);
@@ -1036,7 +1037,7 @@ class MULOPIMFWC_Location_Managers
         check_ajax_referer('mulopimfwc_location_managers_nonce', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => esc_html_e('Permission denied', 'multi-location-product-and-inventory-management')]);
         }
 
         $action_type = sanitize_text_field($_POST['action_type']);
@@ -1056,7 +1057,7 @@ class MULOPIMFWC_Location_Managers
 
                     // Check if username or email already exists
                     if (username_exists($username) || email_exists($email)) {
-                        wp_send_json_error(['message' => __('Username or email already exists', 'multi-location-product-and-inventory-management')]);
+                        wp_send_json_error(['message' => esc_html_e('Username or email already exists', 'multi-location-product-and-inventory-management')]);
                     }
 
                     // Create new user
@@ -1079,7 +1080,7 @@ class MULOPIMFWC_Location_Managers
                 }
 
                 if (empty($user_id)) {
-                    wp_send_json_error(['message' => __('Please select or create a user', 'multi-location-product-and-inventory-management')]);
+                    wp_send_json_error(['message' => esc_html_e('Please select or create a user', 'multi-location-product-and-inventory-management')]);
                 }
 
                 // Change user role to location manager
@@ -1088,7 +1089,7 @@ class MULOPIMFWC_Location_Managers
             } else {
                 // Edit mode
                 if (empty($manager_id)) {
-                    wp_send_json_error(['message' => __('Invalid manager ID', 'multi-location-product-and-inventory-management')]);
+                    wp_send_json_error(['message' => esc_html_e('Invalid manager ID', 'multi-location-product-and-inventory-management')]);
                 }
                 $user_id = $manager_id;
             }
@@ -1099,7 +1100,7 @@ class MULOPIMFWC_Location_Managers
             // Save manager capabilities
             update_user_meta($user_id, 'mulopimfwc_manager_capabilities', $manager_capabilities);
 
-            wp_send_json_success(['message' => __('Location manager saved successfully', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_success(['message' => esc_html_e('Location manager saved successfully', 'multi-location-product-and-inventory-management')]);
         } catch (Exception $e) {
             wp_send_json_error(['message' => $e->getMessage()]);
         }
@@ -1113,13 +1114,13 @@ class MULOPIMFWC_Location_Managers
         check_ajax_referer('mulopimfwc_location_managers_nonce', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => esc_html_e('Permission denied', 'multi-location-product-and-inventory-management')]);
         }
 
         $manager_id = intval($_POST['manager_id']);
 
         if (empty($manager_id)) {
-            wp_send_json_error(['message' => __('Invalid manager ID', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => esc_html_e('Invalid manager ID', 'multi-location-product-and-inventory-management')]);
         }
 
         // Remove location manager role and revert to subscriber
@@ -1130,7 +1131,7 @@ class MULOPIMFWC_Location_Managers
         delete_user_meta($manager_id, 'mulopimfwc_assigned_locations');
         delete_user_meta($manager_id, 'mulopimfwc_manager_capabilities');
 
-        wp_send_json_success(['message' => __('Location manager deleted successfully', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_success(['message' => esc_html_e('Location manager deleted successfully', 'multi-location-product-and-inventory-management')]);
     }
 
     /**
@@ -1141,19 +1142,19 @@ class MULOPIMFWC_Location_Managers
         check_ajax_referer('mulopimfwc_location_managers_nonce', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => esc_html_e('Permission denied', 'multi-location-product-and-inventory-management')]);
         }
 
         $manager_id = intval($_POST['manager_id']);
         $capabilities = isset($_POST['capabilities']) ? array_map('sanitize_text_field', $_POST['capabilities']) : [];
 
         if (empty($manager_id)) {
-            wp_send_json_error(['message' => __('Invalid manager ID', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => esc_html_e('Invalid manager ID', 'multi-location-product-and-inventory-management')]);
         }
 
         update_user_meta($manager_id, 'mulopimfwc_manager_capabilities', $capabilities);
 
-        wp_send_json_success(['message' => __('Permissions updated successfully', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_success(['message' => esc_html_e('Permissions updated successfully', 'multi-location-product-and-inventory-management')]);
     }
 
     /**
@@ -1728,7 +1729,7 @@ class MULOPIMFWC_Order_Filter
                 sprintf(
                     // translators: %s: List of location names (e.g. "Sydney, Melbourne")
                     esc_html__('You are viewing orders for: %s', 'multi-location-product-and-inventory-management'),
-                    '<strong>' . implode(', ', $location_names) . '</strong>'
+                    '<strong>' . implode(', ', esc_attr($location_names)) . '</strong>'
                 ) .
                 '</p></div>';
         }
@@ -1930,7 +1931,7 @@ class MULOPIMFWC_Order_Count_Filter
     /**
      * Check if current user is a location manager
      */
-    private function is_current_user_location_manager()
+    public function is_current_user_location_manager()
     {
         if (!is_user_logged_in()) {
             return false;
