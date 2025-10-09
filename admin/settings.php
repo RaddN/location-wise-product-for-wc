@@ -1293,8 +1293,8 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_selector_layout' => 'list']);
                 $value = isset($options['location_selector_layout']) ? $options['location_selector_layout'] : 'list';
         ?>
-            <label>
-                <select disabled name="mulopimfwc_display_options[location_selector_layout]">
+            <label class="<?php echo esc_attr(mulopimfwc_get_pro_class(false)); ?>">
+                <select <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', ' disabled ')); ?> name="mulopimfwc_display_options[location_selector_layout]">
                     <option value="list" <?php selected($value, 'list'); ?>><?php echo esc_html_e('List View', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="buttons" <?php selected($value, 'buttons'); ?>><?php echo esc_html_e('Button Style', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="select" <?php selected($value, 'select'); ?>><?php echo esc_html_e('Select Dropdown', 'multi-location-product-and-inventory-management'); ?></option>
