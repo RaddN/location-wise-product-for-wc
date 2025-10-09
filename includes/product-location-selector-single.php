@@ -701,6 +701,7 @@ class MULOPIMFWC_Product_Location_Selector
 
         wp_send_json_success([
             'message' => sprintf(
+                // translators: %s: Name of the location that has been switched to.
                 __('Location changed to: %s', 'multi-location-product-and-inventory-management'),
                 $location_name
             ),

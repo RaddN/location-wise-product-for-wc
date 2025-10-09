@@ -1726,6 +1726,7 @@ class MULOPIMFWC_Order_Filter
         if (!empty($location_names)) {
             echo '<div class="notice notice-info"><p>' .
                 sprintf(
+                    // translators: %s: List of location names (e.g. "Sydney, Melbourne")
                     esc_html__('You are viewing orders for: %s', 'multi-location-product-and-inventory-management'),
                     '<strong>' . implode(', ', $location_names) . '</strong>'
                 ) .

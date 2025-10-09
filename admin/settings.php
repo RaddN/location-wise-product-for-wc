@@ -1293,7 +1293,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_selector_layout' => 'list']);
                 $value = isset($options['location_selector_layout']) ? $options['location_selector_layout'] : 'list';
         ?>
-            <label class="mulopimfwc_pro_only">
+            <label>
                 <select disabled name="mulopimfwc_display_options[location_selector_layout]">
                     <option value="list" <?php selected($value, 'list'); ?>><?php echo esc_html_e('List View', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="buttons" <?php selected($value, 'buttons'); ?>><?php echo esc_html_e('Button Style', 'multi-location-product-and-inventory-management'); ?></option>
@@ -3450,7 +3450,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
     public function render_advance_checkbox($key, $message = null, $disabled = false, $is_free = true)
     {
-        global $allowed_tags, $mulopimfwc_options;
+        global $mulopimfwc_allowed_tags, $mulopimfwc_options;
     ?>
         <label class="mulopimfwc_switch <?php echo esc_attr($key);
                                         echo $is_free ? '' : ' mulopimfwc_pro_only' ?>">
@@ -3461,7 +3461,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         </label>
 <?php
         if (isset($message) && !empty($message)) {
-            echo "<p class='description' style='max-width: 800px;'>" . wp_kses($message, $allowed_tags) . "</p>";
+            echo "<p class='description' style='max-width: 800px;'>" . wp_kses($message, $mulopimfwc_allowed_tags) . "</p>";
         }
     }
 }
