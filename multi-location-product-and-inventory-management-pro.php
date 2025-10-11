@@ -78,6 +78,8 @@ global $mulopimfwc_locations, $mulopimfwc_allowed_tags, $mulopimfwc_options;
 
             ];
 
+        error_log(json_encode($mulopimfwc_options));
+
         $mulopimfwc_allowed_tags = array(
             'a' => array(
                 'href' => array(),
@@ -1114,7 +1116,7 @@ global $mulopimfwc_locations, $mulopimfwc_allowed_tags, $mulopimfwc_options;
         );
     }
 
-    add_action('init', 'mulopimfwc_get_values', 20);
+    add_action('init', 'mulopimfwc_get_values', 11);
 
 require_once plugin_dir_path(__FILE__) . 'admin/settings.php';
 require_once plugin_dir_path(__FILE__) . 'admin/dashboard.php';

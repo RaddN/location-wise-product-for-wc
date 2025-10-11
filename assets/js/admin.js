@@ -323,6 +323,24 @@ jQuery(document).ready(function ($) {
         $(this).next('.form-table').slideToggle();
         $(this).toggleClass('closed');
     });
+
+
+    const $displayFormat = $('#mulopimfwc_display_title');
+    const $separatorRow = $('input[name="mulopimfwc_display_options[separator]"]').closest('tr');
+
+    function toggleSeparatorRow() {
+        if ($displayFormat.val() === 'brackets' || $displayFormat.val() === 'none') {
+            $separatorRow.hide();
+        } else {
+            $separatorRow.show();
+        }
+    }
+
+    // Initial check on page load
+    toggleSeparatorRow();
+
+    // Listen for changes
+    $displayFormat.on('change', toggleSeparatorRow);
 });
 
 
