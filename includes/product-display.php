@@ -110,8 +110,8 @@ function mulopimfwc_is_product_out_of_stock_for_location($product_id)
     }
 
     // Check if product is assigned to this location
-    $options = get_option('mulopimfwc_display_options', []);
-    $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'on';
+    global $mulopimfwc_options;
+    $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
     $terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
 
     // If enable_all_locations is on and product has no location terms, use global stock

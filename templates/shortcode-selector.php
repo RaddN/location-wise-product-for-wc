@@ -3,21 +3,23 @@
 if (!defined('ABSPATH')) exit;
 // Template for the store location selector shortcode
 ?>
-<?php 
-    // If no unit is present, append 'px'
-    $max_width = trim($atts['max_width']);
-    if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i', $max_width)) {
-        $max_width .= 'px';
-    }
+<?php
+// If no unit is present, append 'px'
+$max_width = trim($atts['max_width']);
+if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i', $max_width)) {
+    $max_width .= 'px';
+}
 ?>
-<div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" style="max-width: <?php echo esc_attr($max_width);?>;">
+<div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" style="max-width: <?php echo esc_attr($max_width); ?>;">
     <?php if ($atts['show_title'] === 'on'): ?>
         <h3 class="lwp-shortcode-title"><?php echo esc_html($atts['title']); ?></h3>
     <?php endif; ?>
     <?php if ($atts['enable_user_locations'] === 'on'): ?>
         <div class="lwp-user-location-features">
             <div class="address-content" id="address-trigger">
-                <svg aria-hidden="true" class="address-label-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.322 2a8.322 8.322 0 0 1 7.234 12.44l-1.085 1.451q-.897.938-3.566 3.57l-1.884 1.852a1 1 0 0 1-1.4 0l-3.703-3.656-1.322-1.329q-.466-.477-1.509-1.89A8.322 8.322 0 0 1 12.322 2m0 1.5a6.822 6.822 0 0 0-6.083 9.914l.133.246.592.884.218.236.59.605c.462.469 1.11 1.116 1.93 1.93l2.215 2.185.123.12a.4.4 0 0 0 .561 0l.074-.072 2.627-2.59 1.903-1.912.329-.342.153-.17.585-.875.133-.243a6.8 6.8 0 0 0 .732-2.767l.008-.327A6.82 6.82 0 0 0 12.322 3.5m0 3.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5m0 1.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5"/></svg>
+                <svg aria-hidden="true" class="address-label-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.322 2a8.322 8.322 0 0 1 7.234 12.44l-1.085 1.451q-.897.938-3.566 3.57l-1.884 1.852a1 1 0 0 1-1.4 0l-3.703-3.656-1.322-1.329q-.466-.477-1.509-1.89A8.322 8.322 0 0 1 12.322 2m0 1.5a6.822 6.822 0 0 0-6.083 9.914l.133.246.592.884.218.236.59.605c.462.469 1.11 1.116 1.93 1.93l2.215 2.185.123.12a.4.4 0 0 0 .561 0l.074-.072 2.627-2.59 1.903-1.912.329-.342.153-.17.585-.875.133-.243a6.8 6.8 0 0 0 .732-2.767l.008-.327A6.82 6.82 0 0 0 12.322 3.5m0 3.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5m0 1.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5" />
+                </svg>
                 <span class="address-text">
                     <?php
                     $current_location = '';
@@ -28,7 +30,7 @@ if (!defined('ABSPATH')) exit;
                         $user_locations = get_user_meta($current_user->ID, 'mulopimfwc_user_locations', true);
                         $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : '';
 
-                        
+
 
                         if (!empty($user_locations) && is_array($user_locations) && $selected_location_id) {
                             foreach ($user_locations as $location) {
@@ -42,7 +44,7 @@ if (!defined('ABSPATH')) exit;
                     } else {
                         // For non-logged in users, check if location is set in cookie
                         $location_set = true;
-                        $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : (isset($_COOKIE['mulopimfwc_store_location']) ? $_COOKIE['mulopimfwc_store_location']:'');
+                        $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : (isset($_COOKIE['mulopimfwc_store_location']) ? $_COOKIE['mulopimfwc_store_location'] : '');
                         $current_location = !empty($selected_location_id) ? $selected_location_id : __('Current Location', 'multi-location-product-and-inventory-management');
                     }
 
@@ -162,10 +164,12 @@ if (!defined('ABSPATH')) exit;
             .address-text {
                 color: #495057;
                 font-weight: 500;
-                <?php if($atts['multi_line'] !== "on"){?>
-                width: calc(<?php echo esc_attr($max_width);?> - (<?php echo esc_attr($max_width);?> / 3));              /* Set a fixed width */
-                white-space: nowrap;      /* Prevent text from wrapping */
-                overflow: hidden;         /* Hide the overflowed text */
+                <?php if ($atts['multi_line'] !== "on") { ?>width: calc(<?php echo esc_attr($max_width); ?> - (<?php echo esc_attr($max_width); ?> / 3));
+                /* Set a fixed width */
+                white-space: nowrap;
+                /* Prevent text from wrapping */
+                overflow: hidden;
+                /* Hide the overflowed text */
                 text-overflow: ellipsis;
                 <?php } ?>
             }
@@ -404,7 +408,7 @@ if (!defined('ABSPATH')) exit;
             }
         </style>
     <?php endif; ?>
-    <form id="lwp-shortcode-selector-form" class="lwp-selector-form" style="display: <?php echo $atts['enable_user_locations'] === 'on'? 'none':'block';?>;">
+    <form id="lwp-shortcode-selector-form" class="lwp-selector-form" style="display: <?php echo $atts['enable_user_locations'] === 'on' ? 'none' : 'block'; ?>;">
         <?php wp_nonce_field('mulopimfwc_shortcode_selector', 'mulopimfwc_shortcode_selector_nonce'); ?>
         <?php if ($atts["herichical"] === "seperately"): ?>
             <?php
@@ -690,11 +694,14 @@ JS;
     // Output inline script
     wp_add_inline_script('mulopimfwc_script', $inline_js);
 else:
-    $use_select2 = $atts["use_select2"] === "on";
-    $show_button = $atts['show_button'] === 'on';
-    $auto_submit_js = $atts['show_button'] === 'off' ? 'true' : 'false';
+    $use_select2 = ($atts['use_select2'] === 'on') ? 'true' : 'false';
+    $show_button = ($atts['show_button'] === 'on') ? 'true' : 'false';
+    $auto_submit_js = ($atts['show_button'] === 'off') ? 'true' : 'false';
     $inline_js = <<<JS
-jQuery(document).ready(function($) {
+(function ($) {
+  'use strict';
+
+  $(function () {
     if ($use_select2) {
         $('#lwp-shortcode-selector').select2();
     }
@@ -711,6 +718,8 @@ jQuery(document).ready(function($) {
         $('#lwp-shortcode-selector-form').submit();
     });
 });
+
+})(jQuery);
 JS;
     wp_add_inline_script('mulopimfwc_script', $inline_js);
 endif;
@@ -1061,7 +1070,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         $dropdown.trigger('change');
                         $('#location-tooltip').hide();
                     } else {
-                        this.showAlert('We don\'t have service for this area. Please choose another location.');
+                        this.showAlert('We don\'t have product for this location. Please choose another location.');
                         this.reloadPage();
                     }
                 },

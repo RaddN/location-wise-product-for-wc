@@ -157,7 +157,7 @@ General Settings', 'multi-location-product-and-inventory-management'),
             'enable_location_information',
             __('Enable Location Information', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("enable_location_information", __("Enable or disable location-specific information management.", 'multi-location-product-and-inventory-management'), 'off');
+                $this->render_advance_checkbox("enable_location_information", __("Enable or disable location-specific information management.", 'multi-location-product-and-inventory-management'));
             },
             'lwp-general-settings',
             'location_stock_general_section'
