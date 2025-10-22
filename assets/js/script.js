@@ -71,30 +71,40 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        // Check if the cart has products before changing the store location
-        checkCartHasProducts(function (cartHasProducts) {
-            if (cartHasProducts && mulopimfwc_locationWiseProducts.location_change_notification) {
-                const confirmChange = confirm("Do you want to change the store location? Your cart will be emptied.");
-                if (!confirmChange) {
-                    dropdown.val(getCookie('mulopimfwc_store_location') || '');
-                    $('.saved-location-item').removeClass('selected');
-                    $('.saved-location-item[data-location-id="' + getCookie('mulopimfwc_user_location') + '"]').addClass('selected');
-                    var selectedAddress = $('.saved-location-item.selected').data('address');
-                    var label = $('.saved-location-item.selected').data('label');
-                    if (selectedAddress) {
-                        $('.address-text').text(label + ' - ' + selectedAddress);
-                    }
-                    return;
-                }
-            }
+        if (mulopimfwc_locationWiseProducts.allow_mixed_in_cart !== 'on') {
 
-            // Set the cookie and clear the cart
+            // Check if the cart has products before changing the store location
+            checkCartHasProducts(function (cartHasProducts) {
+                if (cartHasProducts && mulopimfwc_locationWiseProducts.location_change_notification) {
+                    const confirmChange = confirm("Do you want to change the store location? Your cart will be emptied.");
+                    if (!confirmChange) {
+                        dropdown.val(getCookie('mulopimfwc_store_location') || '');
+                        $('.saved-location-item').removeClass('selected');
+                        $('.saved-location-item[data-location-id="' + getCookie('mulopimfwc_user_location') + '"]').addClass('selected');
+                        var selectedAddress = $('.saved-location-item.selected').data('address');
+                        var label = $('.saved-location-item.selected').data('label');
+                        if (selectedAddress) {
+                            $('.address-text').text(label + ' - ' + selectedAddress);
+                        }
+                        return;
+                    }
+                }
+
+                // Set the cookie and clear the cart
+                document.cookie = "mulopimfwc_store_location=" + selectedStore + "; path=/";
+                if (locationId) {
+                    document.cookie = `mulopimfwc_user_location=${locationId};path=/`;
+                }
+                clearCartAndReload();
+            });
+        } else {
+            // Set the cookie without clearing the cart
             document.cookie = "mulopimfwc_store_location=" + selectedStore + "; path=/";
             if (locationId) {
                 document.cookie = `mulopimfwc_user_location=${locationId};path=/`;
             }
-            clearCartAndReload();
-        });
+            window.location.href = window.location.href.split('?')[0];
+        }
     });
 
     // Helper function to get cookie value

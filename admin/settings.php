@@ -2010,7 +2010,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
      style="margin-right:6px;vertical-align:middle;background-color:#dcfce7;padding:10px;border-radius:6px">
   <path fill="#16a34a" d="m112.632 185.074 6.88-3.972a5.864 5.864 0 0 0 2.146-8.01l-13.036-22.579a5.86 5.86 0 0 0-8.009-2.146l-6.88 3.972a5.8 5.8 0 0 1-2.923.794c-3.063 0-5.872-2.449-5.872-5.872v-7.944a5.864 5.864 0 0 0-5.864-5.864H53.001a5.864 5.864 0 0 0-5.864 5.864v7.944c0 3.423-2.81 5.872-5.872 5.872a5.8 5.8 0 0 1-2.923-.794l-6.88-3.972a5.86 5.86 0 0 0-8.009 2.146l-13.036 22.579a5.864 5.864 0 0 0 2.146 8.01l6.88 3.972c3.909 2.257 3.909 7.899 0 10.156l-6.88 3.972a5.863 5.863 0 0 0-2.146 8.01l13.036 22.579a5.86 5.86 0 0 0 8.009 2.146l6.88-3.972a5.8 5.8 0 0 1 2.923-.794c3.063 0 5.872 2.449 5.872 5.872v7.944a5.864 5.864 0 0 0 5.864 5.864h26.072a5.864 5.864 0 0 0 5.864-5.864v-7.944c0-3.423 2.81-5.872 5.872-5.872.976 0 1.978.249 2.923.794l6.88 3.972a5.86 5.86 0 0 0 8.009-2.146l13.036-22.579a5.864 5.864 0 0 0-2.146-8.01l-6.88-3.972c-3.908-2.257-3.908-7.9.001-10.156m-46.594 22.474c-9.608 0-17.396-7.789-17.396-17.396s7.789-17.396 17.396-17.396 17.396 7.789 17.396 17.396-7.789 17.396-17.396 17.396m42.071-183.889A8.053 8.053 0 1 0 96.72 35.048l14.39 14.389c-52.889 2.619-95.701 44.162-100.334 96.506l1.19-2.062a19.18 19.18 0 0 1 16.57-9.564c.144 0 .287.013.431.017 9.074-37.721 41.965-66.251 81.815-68.729L96.72 79.666a8.053 8.053 0 0 0 11.388 11.389l28.004-28.004a8.055 8.055 0 0 0 0-11.388zm101.759 41.198c17.881 0 32.428-14.547 32.428-32.428C242.296 14.547 227.749 0 209.868 0S177.44 14.547 177.44 32.428s14.547 32.429 32.428 32.429m63.171 87.419v-44.58c0-12.34-7.93-23.283-19.657-27.124l-.054-.018-17.152-2.84a2.875 2.875 0 0 0-3.545 1.764l-19.462 53.399c-1.123 3.081-5.48 3.081-6.602 0l-19.462-53.399a2.875 2.875 0 0 0-2.698-1.892c-.279 0-17.999 2.964-17.999 2.964-11.823 3.94-19.723 14.9-19.723 27.294v44.432c0 6.659 5.398 12.056 12.056 12.056h102.241c6.66 0 12.057-5.398 12.057-12.056m14.331 10.657c-.673 9.215-8.233 14.858-17.45 15.526-7.062 40.425-41.207 71.64-82.979 74.237l14.061-14.061a8.053 8.053 0 1 0-11.389-11.389L161.61 255.25a8.053 8.053 0 0 0 0 11.389l28.003 28.003c1.573 1.572 3.633 2.358 5.694 2.358s4.122-.786 5.694-2.358a8.053 8.053 0 0 0 0-11.389l-14.389-14.389c56.028-2.774 100.758-49.227 100.758-105.931"/>
   <path fill="#16a34a" d="M216.936 77.105c-.747-.814-1.84-1.224-2.946-1.224h-8.245c-1.105 0-2.198.41-2.946 1.224a3.825 3.825 0 0 0-.504 4.505l4.407 6.644-2.063 17.405 4.063 10.808c.396 1.087 1.933 1.087 2.33 0l4.063-10.808-2.063-17.405 4.407-6.644a3.82 3.82 0 0 0-.503-4.505"/>
-</svg>Cross-Location Order Management (Coming Soon)', 'multi-location-product-and-inventory-management'),
+</svg>Cross-Location Order Management', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how orders containing products from multiple locations are handled.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -2023,27 +2023,27 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'allow_mixed_location_cart',
             __('Allow Mixed-Location Cart', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("allow_mixed_location_cart", __("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'), true);
+                $this->render_advance_checkbox("allow_mixed_location_cart", __("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'));
             },
             'location-cross-order-settings',
             'mulopimfwc_cross_location_order_section'
         );
 
-        // Add "Mixed Cart Warning Message" field
-        add_settings_field(
-            'mixed_cart_warning',
-            __('Mixed Cart Warning Message', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['mixed_cart_warning' => __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management')]);
-                $value = isset($options['mixed_cart_warning']) ? $options['mixed_cart_warning'] : __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management');
-        ?>
-            <textarea disabled name="mulopimfwc_display_options[mixed_cart_warning]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
-            <p class="description"><?php echo esc_html_e('Warning message to display when cart contains products from multiple locations.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'location-cross-order-settings',
-            'mulopimfwc_cross_location_order_section'
-        );
+        // // Add "Mixed Cart Warning Message" field
+        // add_settings_field(
+        //     'mixed_cart_warning',
+        //     __('Mixed Cart Warning Message', 'multi-location-product-and-inventory-management'),
+        //     function () {
+        //         $options = get_option('mulopimfwc_display_options', ['mixed_cart_warning' => __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management')]);
+        //         $value = isset($options['mixed_cart_warning']) ? $options['mixed_cart_warning'] : __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management');
+        // ?>
+        <!-- //     <textarea disabled name="mulopimfwc_display_options[mixed_cart_warning]" rows="3" class="large-text"><?php //echo esc_textarea($value); ?></textarea>
+        //     <p class="description"><?php //echo esc_html_e('Warning message to display when cart contains products from multiple locations.', 'multi-location-product-and-inventory-management'); ?></p> -->
+         <?php
+        //     },
+        //     'location-cross-order-settings',
+        //     'mulopimfwc_cross_location_order_section'
+        // );
 
         // Add "Group Cart Items by Location" field
         add_settings_field(
