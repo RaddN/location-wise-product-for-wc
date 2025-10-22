@@ -1,3 +1,32 @@
+function mulopimfwc_toggleDisabledClass(isDisabled, allinputFields) {
+    // If a jQuery object is passed, convert to array
+    if (window.jQuery && allinputFields instanceof jQuery) {
+        allinputFields = allinputFields.toArray();
+    }
+
+    if (!Array.isArray(allinputFields)) {
+        if (isDisabled) {
+            allinputFields.classList.add('disabled');
+            allinputFields.readOnly = true;
+        } else {
+            allinputFields.classList.remove('disabled');
+            allinputFields.readOnly = false;
+        }
+    } else {
+        allinputFields.forEach(field => {
+            if (isDisabled) {
+                field.classList.add('disabled');
+                field.readOnly = true;
+            } else {
+                field.classList.remove('disabled');
+                field.readOnly = false;
+            }
+        });
+    }
+}
+
+
+
 jQuery(document).ready(function ($) {
     // Handle "Add to Location" button click
     $(document).on('click', '.add-location', function (e) {
@@ -341,6 +370,20 @@ jQuery(document).ready(function ($) {
 
     // Listen for changes
     $displayFormat.on('change', toggleSeparatorRow);
+
+    // handle Display Location on Single Product toggle
+
+    const $enableLocationSingleProduct = $('input[name="mulopimfwc_display_options[display_location_single_product]"]');
+    const $relatedSettings = $enableLocationSingleProduct.closest('table').find('input, select').not($enableLocationSingleProduct);
+
+    // Set initial state
+    mulopimfwc_toggleDisabledClass(!$enableLocationSingleProduct.is(':checked'), $relatedSettings);
+
+    // Handle change event
+    $enableLocationSingleProduct.on('change', function () {
+        mulopimfwc_toggleDisabledClass(!$(this).is(':checked'), $relatedSettings);
+    });
+
 });
 
 

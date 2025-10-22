@@ -2269,7 +2269,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $options = get_option('mulopimfwc_display_options', ['pickup_instructions' => '']);
                 $value = isset($options['pickup_instructions']) ? $options['pickup_instructions'] : '';
         ?>
-            <textarea name="mulopimfwc_display_options[pickup_instructions]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
+            <textarea disabled name="mulopimfwc_display_options[pickup_instructions]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
             <p class="description"><?php echo esc_html_e('Default pickup instructions shown to customers (can be customized per location).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },

@@ -107,7 +107,6 @@ jQuery(document).ready(function ($) {
 jQuery(document).ready(function ($) {
     // Listen for variation change events
     $('.variations_form').on('found_variation', function (event, variation) {
-        console.log(variation);
         if (variation.location_data) {
             var location_data = variation.location_data;
             var location_info_html = '';

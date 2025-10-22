@@ -576,3 +576,9 @@ form#lwp-store-selector-form-modal > div * {
     overflow-y: auto;
   }
 }
+
+.mulopimfwc-product-location-selector-wrapper {
+    display: block;
+    clear: both;
+    padding-bottom: 14px;
+}

@@ -4,7 +4,7 @@
  * Location Managers Admin Page
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.0.2.4
+ * @since 1.0.3.5
  */
 
 if (!defined('ABSPATH')) exit;
@@ -972,6 +972,11 @@ class MULOPIMFWC_Location_Managers
                             }
                         }
                     });
+
+                    // reload after 1s 
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
                 }
 
                 function deleteManager(managerId) {
