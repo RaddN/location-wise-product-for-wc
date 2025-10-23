@@ -7,6 +7,9 @@ class MULOPIMFWC_Admin
     public function __construct()
     {
         add_action('init', [$this, 'register_store_location_taxonomy']);
+
+        add_action('admin_enqueue_scripts', [$this, 'mulopimfwc_admin_assets']);
+
         // Hook to add the settings page
         add_action('admin_menu', [$this, 'add_settings_page']);
         // Add custom column to orders table
@@ -30,6 +33,152 @@ class MULOPIMFWC_Admin
 
         // Add AJAX actions for export
         add_action('wp_ajax_mulopimfwc_export_dashboard_report', array(new MULOPIMFWC_Dashboard(), 'export_dashboard_report'));
+    }
+
+    public function mulopimfwc_admin_assets($hook)
+    {
+        // Only load on our taxonomy screens
+        $screen = get_current_screen();
+        if (empty($screen) || $screen->taxonomy !== 'mulopimfwc_store_location') {
+            return;
+        }
+
+        // WordPress media library
+        wp_enqueue_media();
+
+        // Small inline script (no separate file needed)
+        $js = '
+        (function($){
+            function openMedia(callback, multiple, title){
+            const frame = wp.media({
+                title: title || "Select media",
+                multiple: !!multiple,
+                library: { type: "image" }
+            });
+            frame.on("select", function(){
+                const selection = frame.state().get("selection");
+                callback(selection);
+            });
+            frame.open();
+            }
+
+            $(document).on("click",".mulopimfwc-upload-logo", function(e){
+            e.preventDefault();
+            const $wrap = $(this).closest(".mulopimfwc-media-wrap");
+            openMedia(function(sel){
+                const item = sel.first().toJSON();
+                $wrap.find(".mulopimfwc-logo-id").val(item.id);
+                $wrap.find(".mulopimfwc-logo-preview").html("<img src=\'"+(item.sizes?.thumbnail?.url || item.url)+"\' style=\'max-width:80px;height:auto;border:1px solid #ddd;border-radius:4px;\'>");
+            }, false, "Select Logo");
+            });
+
+            $(document).on("click",".mulopimfwc-remove-logo", function(e){
+            e.preventDefault();
+            const $wrap = $(this).closest(".mulopimfwc-media-wrap");
+            $wrap.find(".mulopimfwc-logo-id").val("");
+            $wrap.find(".mulopimfwc-logo-preview").empty();
+            });
+
+            $(document).on("click",".mulopimfwc-upload-gallery", function(e){
+            e.preventDefault();
+            const $wrap = $(this).closest(".mulopimfwc-media-wrap");
+            openMedia(function(sel){
+                const ids = [];
+                const thumbs = [];
+                sel.each(function(m){
+                const j = m.toJSON();
+                ids.push(j.id);
+                thumbs.push("<img src=\'"+(j.sizes?.thumbnail?.url || j.url)+"\' style=\'width:60px;height:auto;margin:2px;border:1px solid #ddd;border-radius:3px;\'>");
+                });
+                // merge with existing ids if any
+                const prev = ($wrap.find(".mulopimfwc-gallery-ids").val() || "").split(",").filter(Boolean);
+                const all = prev.concat(ids).filter((v,i,a)=>a.indexOf(v)===i);
+                $wrap.find(".mulopimfwc-gallery-ids").val(all.join(","));
+                $wrap.find(".mulopimfwc-gallery-preview").html(thumbs.join(""));
+            }, true, "Select Gallery Images");
+            });
+
+            $(document).on("click",".mulopimfwc-clear-gallery", function(e){
+            e.preventDefault();
+            const $wrap = $(this).closest(".mulopimfwc-media-wrap");
+            $wrap.find(".mulopimfwc-gallery-ids").val("");
+            $wrap.find(".mulopimfwc-gallery-preview").empty();
+            });
+        })(jQuery);
+        ';
+        wp_add_inline_script('jquery', $js);
+    }
+
+    /** =========================================
+     *  Helpers: WooCommerce data sources
+     *  =========================================*/
+    public function get_shipping_zones_options()
+    {
+        if (!class_exists('WC_Shipping_Zones')) return array();
+        $zones = \WC_Shipping_Zones::get_zones(); // excludes "Locations not covered by your other zones"
+        // Add "Rest of the world" pseudo zone
+        $default_zone = new \WC_Shipping_Zone(0);
+        $zones[0] = array(
+            'id' => 0,
+            'zone_name' => $default_zone->get_zone_name(),
+            'shipping_methods' => $default_zone->get_shipping_methods()
+        );
+
+        $out = array();
+        foreach ($zones as $z) {
+            $out[(int)$z['id']] = $z['zone_name'];
+        }
+        return $out;
+    }
+
+    public function get_shipping_methods_grouped_by_zone()
+    {
+        if (!class_exists('WC_Shipping_Zones')) return array();
+        $zones = \WC_Shipping_Zones::get_zones();
+        $default_zone = new \WC_Shipping_Zone(0);
+        $zones[0] = array(
+            'id' => 0,
+            'zone_name' => $default_zone->get_zone_name(),
+            'shipping_methods' => $default_zone->get_shipping_methods()
+        );
+
+        $out = array(); // [zone_id => [instance_id => label]]
+        foreach ($zones as $z) {
+            $zone_id = (int) $z['id'];
+            $out[$zone_id] = array();
+            foreach ($z['shipping_methods'] as $method) {
+                // Show only enabled instances
+                if (isset($method->enabled) && $method->enabled === 'yes') {
+                    $label = $method->get_title() . ' (' . $method->id . ')';
+                    $out[$zone_id][$method->instance_id] = $label;
+                }
+            }
+        }
+        return $out;
+    }
+
+    public function get_payment_method_options()
+    {
+        if (!class_exists('WC_Payment_Gateways')) return array();
+        $gateways = \WC_Payment_Gateways::instance()->payment_gateways();
+        $out = array();
+        foreach ($gateways as $gw) {
+            if ($gw->enabled === 'yes') {
+                $out[$gw->id] = $gw->get_title();
+            }
+        }
+        return $out;
+    }
+
+    private function get_tax_class_options()
+    {
+        // WC_Tax::get_tax_classes() returns array of class names (no "Standard")
+        $classes = \WC_Tax::get_tax_classes();
+        $out = array('' => __('Standard rate', 'multi-location-product-and-inventory-management'));
+        foreach ($classes as $class) {
+            $out[sanitize_title($class)] = $class;
+        }
+        return $out;
     }
 
     public function add_location_fields()
@@ -77,6 +226,95 @@ class MULOPIMFWC_Admin
             <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
+        <!-- Latitude / Longitude -->
+        <div class="form-field">
+            <label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="text" name="latitude" id="latitude" value="" />
+            <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="text" name="longitude" id="longitude" value="" />
+            <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <!-- Logo -->
+        <div class="form-field mulopimfwc-media-wrap">
+            <label><?php _e('Logo', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="hidden" name="logo_id" class="mulopimfwc-logo-id" value="">
+            <div class="mulopimfwc-logo-preview" style="margin:6px 0;"></div>
+            <p>
+                <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management'); ?></span>
+                <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management'); ?></span>
+            </p>
+        </div>
+
+        <!-- Gallery -->
+        <div class="form-field mulopimfwc-media-wrap">
+            <label><?php _e('Gallery', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="hidden" name="gallery_ids" class="mulopimfwc-gallery-ids" value="">
+            <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;"></div>
+            <p>
+                <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management'); ?></span>
+                <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management'); ?></span>
+            </p>
+        </div>
+
+        <!-- Shipping Zones -->
+        <?php $zones = $this->get_shipping_zones_options(); ?>
+        <div class="form-field">
+            <label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management'); ?></label>
+            <select name="shipping_zones[]" id="shipping_zones" multiple style="min-width: 320px;">
+                <?php foreach ($zones as $zid => $zname): ?>
+                    <option value="<?php echo esc_attr($zid); ?>"><?php echo esc_html($zname); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <!-- Shipping Methods (instances) -->
+        <?php $zone_methods = $this->get_shipping_methods_grouped_by_zone(); ?>
+        <div class="form-field">
+            <label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management'); ?></label>
+            <select name="shipping_methods[]" id="shipping_methods" multiple style="min-width: 420px;">
+                <?php foreach ($zone_methods as $zid => $methods): ?>
+                    <?php if (!empty($methods)): ?>
+                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management'), $zones[$zid] ?? $zid)); ?>">
+                            <?php foreach ($methods as $instance_id => $label): ?>
+                                <option value="<?php echo esc_attr($zid . ':' . $instance_id); ?>"><?php echo esc_html($label); ?></option>
+                            <?php endforeach; ?>
+                        </optgroup>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <!-- Payment Methods -->
+        <?php $payments = $this->get_payment_method_options(); ?>
+        <div class="form-field">
+            <label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management'); ?></label>
+            <select name="payment_methods[]" id="payment_methods" multiple style="min-width: 320px;">
+                <?php foreach ($payments as $pid => $ptitle): ?>
+                    <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <!-- Tax Class -->
+        <?php $tax_classes = $this->get_tax_class_options(); ?>
+        <div class="form-field">
+            <label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management'); ?></label>
+            <select name="tax_class" id="tax_class" style="min-width: 220px;">
+                <?php foreach ($tax_classes as $key => $label): ?>
+                    <option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
         <div class="form-field">
             <label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="number" name="display_order" id="display_order" value="" min="0" step="1" />
@@ -87,8 +325,16 @@ class MULOPIMFWC_Admin
     /**
      * Add custom fields when editing a location
      */
+    private static $edit_location_fields_called = false;
+
     public function edit_location_fields($term, $taxonomy)
     {
+        // Prevent multiple calls to this function
+        if (self::$edit_location_fields_called) {
+            return;
+        }
+        self::$edit_location_fields_called = true;
+
         // Get existing values
         $street_address = get_term_meta($term->term_id, 'street_address', true);
         $city = get_term_meta($term->term_id, 'city', true);
@@ -99,6 +345,29 @@ class MULOPIMFWC_Admin
         $phone = get_term_meta($term->term_id, 'phone', true);
         $display_order = get_term_meta($term->term_id, 'display_order', true);
 
+        $latitude      = get_term_meta($term->term_id, 'latitude', true);
+        $longitude     = get_term_meta($term->term_id, 'longitude', true);
+        $logo_id       = get_term_meta($term->term_id, 'logo_id', true);
+        $gallery_ids   = get_term_meta($term->term_id, 'gallery_ids', true); // stored as CSV
+        $sel_zones     = (array) get_term_meta($term->term_id, 'shipping_zones', true);
+        $sel_methods   = (array) get_term_meta($term->term_id, 'shipping_methods', true); // array of "zoneId:instanceId"
+        $sel_payments  = (array) get_term_meta($term->term_id, 'payment_methods', true);
+        $sel_tax_class = (string) get_term_meta($term->term_id, 'tax_class', true);
+
+        $zones        = $this->get_shipping_zones_options();
+        $zone_methods = $this->get_shipping_methods_grouped_by_zone();
+        $payments     = $this->get_payment_method_options();
+        $tax_classes  = $this->get_tax_class_options();
+
+        $logo_src = $logo_id ? wp_get_attachment_image_url($logo_id, 'thumbnail') : '';
+        $gallery_ids_csv = is_array($gallery_ids) ? implode(',', $gallery_ids) : (string) $gallery_ids;
+        $gallery_thumbs = '';
+        if ($gallery_ids_csv) {
+            foreach (array_filter(array_map('absint', explode(',', $gallery_ids_csv))) as $gid) {
+                $src = wp_get_attachment_image_url($gid, 'thumbnail');
+                if ($src) $gallery_thumbs .= '<img src="' . esc_url($src) . '" style="width:60px;height:auto;margin:2px;border:1px solid #ddd;border-radius:3px;">';
+            }
+        }
     ?>
         <tr class="form-field">
             <th scope="row"><label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label></th>
@@ -156,6 +425,110 @@ class MULOPIMFWC_Admin
             </td>
         </tr>
 
+         <tr class="form-field">
+            <th scope="row"><label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="text" name="latitude" id="latitude" value="<?php echo esc_attr($latitude); ?>" />
+                <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="text" name="longitude" id="longitude" value="<?php echo esc_attr($longitude); ?>" />
+                <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label><?php _e('Logo', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td class="mulopimfwc-media-wrap">
+                <input type="hidden" name="logo_id" class="mulopimfwc-logo-id" value="<?php echo esc_attr($logo_id); ?>">
+                <div class="mulopimfwc-logo-preview" style="margin:6px 0;"><?php
+                    if ($logo_src) echo '<img src="'.esc_url($logo_src).'" style="max-width:80px;height:auto;border:1px solid #ddd;border-radius:4px;">';
+                ?></div>
+                <p>
+                    <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management'); ?></span>
+                    <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management'); ?></span>
+                </p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label><?php _e('Gallery', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td class="mulopimfwc-media-wrap">
+                <input type="hidden" name="gallery_ids" class="mulopimfwc-gallery-ids" value="<?php echo esc_attr($gallery_ids_csv); ?>">
+                <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;"><?php echo $gallery_thumbs; ?></div>
+                <p>
+                    <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management'); ?></span>
+                    <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management'); ?></span>
+                </p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <select name="shipping_zones[]" id="shipping_zones" multiple style="min-width: 320px;">
+                    <?php foreach ($zones as $zid => $zname): ?>
+                        <option value="<?php echo esc_attr($zid); ?>" <?php selected(in_array((string)$zid, array_map('strval', (array)$sel_zones), true)); ?>>
+                            <?php echo esc_html($zname); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <select name="shipping_methods[]" id="shipping_methods" multiple style="min-width: 420px;">
+                    <?php foreach ($zone_methods as $zid => $methods): if (empty($methods)) continue; ?>
+                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management'), $zones[$zid] ?? $zid)); ?>">
+                            <?php foreach ($methods as $instance_id => $label): 
+                                $val = $zid . ':' . $instance_id;
+                            ?>
+                                <option value="<?php echo esc_attr($val); ?>" <?php selected(in_array($val, (array)$sel_methods, true)); ?>>
+                                    <?php echo esc_html($label); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </optgroup>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <select name="payment_methods[]" id="payment_methods" multiple style="min-width: 320px;">
+                    <?php foreach ($payments as $pid => $ptitle): ?>
+                        <option value="<?php echo esc_attr($pid); ?>" <?php selected(in_array($pid, (array)$sel_payments, true)); ?>>
+                            <?php echo esc_html($ptitle); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <select name="tax_class" id="tax_class" style="min-width: 220px;">
+                    <?php foreach ($tax_classes as $key => $label): ?>
+                        <option value="<?php echo esc_attr($key); ?>" <?php selected((string)$sel_tax_class === (string)$key); ?>>
+                            <?php echo esc_html($label); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
         <tr class="form-field">
             <th scope="row"><label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
@@ -197,6 +570,63 @@ class MULOPIMFWC_Admin
 
         if (isset($_POST['phone'])) {
             update_term_meta($term_id, 'phone', sanitize_text_field($_POST['phone']));
+        }
+
+                // Latitude / Longitude
+        if (isset($_POST['latitude'])) {
+            update_term_meta($term_id, 'latitude', sanitize_text_field($_POST['latitude']));
+        }
+        if (isset($_POST['longitude'])) {
+            update_term_meta($term_id, 'longitude', sanitize_text_field($_POST['longitude']));
+        }
+
+        // Logo (attachment ID)
+        if (isset($_POST['logo_id'])) {
+            update_term_meta($term_id, 'logo_id', absint($_POST['logo_id']));
+        }
+
+        // Gallery (CSV of IDs)
+        if (isset($_POST['gallery_ids'])) {
+            $ids = array_filter(array_map('absint', explode(',', (string) $_POST['gallery_ids'])));
+            update_term_meta($term_id, 'gallery_ids', $ids); // store as array for convenience
+        }
+
+        // Shipping Zones (array of IDs)
+        if (isset($_POST['shipping_zones'])) {
+            $zones = array_map('absint', (array) $_POST['shipping_zones']);
+            update_term_meta($term_id, 'shipping_zones', $zones);
+        } else {
+            delete_term_meta($term_id, 'shipping_zones');
+        }
+
+        // Shipping Methods (array of "zoneId:instanceId")
+        if (isset($_POST['shipping_methods'])) {
+            $methods = array();
+            foreach ((array) $_POST['shipping_methods'] as $val) {
+                // keep "zoneId:instanceId" pattern safe
+                $val = preg_replace('/[^0-9:]/', '', (string) $val);
+                if (preg_match('/^\d+:\d+$/', $val)) {
+                    $methods[] = $val;
+                }
+            }
+            $methods = array_values(array_unique($methods));
+            update_term_meta($term_id, 'shipping_methods', $methods);
+        } else {
+            delete_term_meta($term_id, 'shipping_methods');
+        }
+
+        // Payment Methods (gateway IDs)
+        if (isset($_POST['payment_methods'])) {
+            $payments = array_map('wc_clean', (array) $_POST['payment_methods']);
+            $payments = array_values(array_unique($payments));
+            update_term_meta($term_id, 'payment_methods', $payments);
+        } else {
+            delete_term_meta($term_id, 'payment_methods');
+        }
+
+        // Tax Class (slug or empty for Standard)
+        if (isset($_POST['tax_class'])) {
+            update_term_meta($term_id, 'tax_class', sanitize_title((string) $_POST['tax_class']));
         }
 
         if (isset($_POST['display_order'])) {

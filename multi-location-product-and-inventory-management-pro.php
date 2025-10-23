@@ -1126,6 +1126,8 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'admin/location-managers.php';
     require_once plugin_dir_path(__FILE__) . 'includes/product-location-selector-single.php';
     require_once plugin_dir_path(__FILE__) . 'admin/import-export-settings.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/location-based-shipping.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/location-wise-shipping-payment-tax.php';
 
     class mulopimfwc_Location_Wise_Products
     {
@@ -3349,4 +3351,3 @@ if (!function_exists('mulopimfwc_get_values')) {
 
     new mulopimfwc_analytics_main();
 }
-

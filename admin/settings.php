@@ -4,8 +4,11 @@ if (!defined('ABSPATH')) exit;
 
 class mulopimfwc_settings
 {
+
+    private $MULOPIMFWC_Admin;
     public function __construct()
     {
+        $this->MULOPIMFWC_Admin = new MULOPIMFWC_Admin();
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_init', [$this, 'handle_reset_settings']);
     }
@@ -555,13 +558,32 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['enable_location_shipping' => 'off']);
                 $value = isset($options['enable_location_shipping']) ? $options['enable_location_shipping'] : 'off';
+
+                $zones_methods = $this->MULOPIMFWC_Admin->get_shipping_methods_grouped_by_zone();
         ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_shipping]">
+            <select <?php echo disabled($zones_methods && count($zones_methods) <= 1); ?> name="mulopimfwc_display_options[enable_location_shipping]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Enable different shipping options based on product location.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+
+            <?php
+
+
+                if ($zones_methods && count($zones_methods) <= 1) {
+                    echo '<div class="lwp-notice lwp-notice-warning" style="background-color: #fff3cd; border: 1px solid #ffeeba; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 10px 0;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="flex-shrink: 0; margin-top: 2px;">
+                                <path fill="#856404" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            <div>
+                                <p style="margin: 0; color: #856404;">
+                                    ' . esc_html__('Important: Ensure that shipping methods are properly configured in WooCommerce settings for location-based shipping to function correctly.', 'multi-location-product-and-inventory-management') . '
+                                </p>
+                            </div>
+                        </div>
+                    </div>';
+                }
             },
             'lwp-location-shipping-settings',
             'mulopimfwc_shipping_section'
@@ -574,7 +596,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['shipping_calculation_method' => 'per_location']);
                 $value = isset($options['shipping_calculation_method']) ? $options['shipping_calculation_method'] : 'per_location';
-        ?>
+            ?>
             <select disabled name="mulopimfwc_display_options[shipping_calculation_method]">
                 <option value="per_location" <?php selected($value, 'per_location'); ?>><?php echo esc_html_e('Per Location (Each location has its own rates)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="nearest_location" <?php selected($value, 'nearest_location'); ?>><?php echo esc_html_e('Nearest Location (Calculate from closest store)', 'multi-location-product-and-inventory-management'); ?></option>
@@ -621,20 +643,36 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'lwp-location-payment-settings'
         );
 
-        // Add "Enable Location-wise Payment Methods" field
+        // Add "Enable Location-wise Payment" field
         add_settings_field(
             'enable_location_payment_methods',
-            __('Enable Location-wise Payment Methods', 'multi-location-product-and-inventory-management'),
+            __('Enable Location-wise Payment', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['enable_location_payment_methods' => 'off']);
                 $value = isset($options['enable_location_payment_methods']) ? $options['enable_location_payment_methods'] : 'off';
+                $payments = $this->MULOPIMFWC_Admin->get_payment_method_options();
+
         ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_payment_methods]">
+            <select <?php echo disabled(empty($payments)); ?> name="mulopimfwc_display_options[enable_location_payment_methods]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Enable or disable payment method restrictions by location.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+            <?php
+                if (empty($payments)) {
+                    echo '<div class="lwp-notice lwp-notice-warning" style="background-color: #fff3cd; border: 1px solid #ffeeba; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 10px 0;">
+                            <div style="display: flex; align-items: start; gap: 12px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="flex-shrink: 0; margin-top: 2px;">
+                                    <path fill="#856404" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                                </svg>
+                                <div>
+                                    <p style="margin: 0; color: #856404;">
+                                        ' . esc_html__('Important: No payment methods are currently enabled in WooCommerce. Please enable at least one payment method for location-wise payment settings to function correctly.', 'multi-location-product-and-inventory-management') . '
+                                    </p>
+                                </div>
+                            </div>
+                        </div>';
+                }
             },
             'lwp-location-payment-settings',
             'mulopimfwc_location_payment_section'
@@ -663,13 +701,33 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['enable_location_taxes' => 'off']);
                 $value = isset($options['enable_location_taxes']) ? $options['enable_location_taxes'] : 'off';
-        ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_taxes]">
+
+                // Check if WooCommerce taxes are enabled
+                $wc_tax_enabled = wc_tax_enabled();
+            ?>
+            <select <?php echo !$wc_tax_enabled ? 'disabled' : ''; ?> name="mulopimfwc_display_options[enable_location_taxes]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Apply different tax rates based on the product location.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+            <?php
+                if (!$wc_tax_enabled) {
+                    echo '<div class="lwp-notice lwp-notice-warning" style="background-color: #fff3cd; border: 1px solid #ffeeba; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 10px 0;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="flex-shrink: 0; margin-top: 2px;">
+                                <path fill="#856404" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            <div>
+                                <p style="margin: 0; color: #856404;">
+                                    ' . sprintf(
+                        __('WooCommerce taxes are currently disabled. To use location-based taxes, please <a href="%s" target="_blank" style="color: #856404; text-decoration: underline;">enable taxes</a> in WooCommerce settings first.', 'multi-location-product-and-inventory-management'),
+                        admin_url('admin.php?page=wc-settings&tab=general#:~:text=Shop%20country/region-,Enable%20taxes,-Enable%20taxes')
+                    ) . '
+                                </p>
+                            </div>
+                        </div>
+                    </div>';
+                }
             },
             'lwp-location-tax-settings',
             'mulopimfwc_location_tax_section'
@@ -682,7 +740,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['tax_calculation_mixed_cart' => 'separate']);
                 $value = isset($options['tax_calculation_mixed_cart']) ? $options['tax_calculation_mixed_cart'] : 'separate';
-        ?>
+            ?>
             <select disabled name="mulopimfwc_display_options[tax_calculation_mixed_cart]">
                 <option value="separate" <?php selected($value, 'separate'); ?>><?php echo esc_html_e('Calculate Separately by Location', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="shipping" <?php selected($value, 'shipping'); ?>><?php echo esc_html_e('Based on Shipping Location', 'multi-location-product-and-inventory-management'); ?></option>
@@ -2036,10 +2094,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         //     function () {
         //         $options = get_option('mulopimfwc_display_options', ['mixed_cart_warning' => __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management')]);
         //         $value = isset($options['mixed_cart_warning']) ? $options['mixed_cart_warning'] : __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management');
-        // ?>
-        <!-- //     <textarea disabled name="mulopimfwc_display_options[mixed_cart_warning]" rows="3" class="large-text"><?php //echo esc_textarea($value); ?></textarea>
-        //     <p class="description"><?php //echo esc_html_e('Warning message to display when cart contains products from multiple locations.', 'multi-location-product-and-inventory-management'); ?></p> -->
-         <?php
+        // 
+        ?>
+        <!-- //     <textarea disabled name="mulopimfwc_display_options[mixed_cart_warning]" rows="3" class="large-text"><?php //echo esc_textarea($value); 
+                                                                                                                            ?></textarea>
+        //     <p class="description"><?php //echo esc_html_e('Warning message to display when cart contains products from multiple locations.', 'multi-location-product-and-inventory-management'); 
+                                        ?></p> -->
+        <?php
         //     },
         //     'location-cross-order-settings',
         //     'mulopimfwc_cross_location_order_section'
@@ -2065,10 +2126,10 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $value = isset($options['multi_location_order_handling']) ? $options['multi_location_order_handling'] : 'split';
         ?>
             <select disabled name="mulopimfwc_display_options[multi_location_order_handling]">
+                <option value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('No Special Handling', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="split" <?php selected($value, 'split'); ?>><?php echo esc_html_e('Split into Separate Orders', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="primary" <?php selected($value, 'primary'); ?>><?php echo esc_html_e('Assign to Primary Location', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="largest" <?php selected($value, 'largest'); ?>><?php echo esc_html_e('Assign to Location with Most Items', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="manual" <?php selected($value, 'manual'); ?>><?php echo esc_html_e('Manual Assignment', 'multi-location-product-and-inventory-management'); ?></option>
+                <option disabled value="primary" <?php selected($value, 'primary'); ?>><?php echo esc_html_e('Assign to Primary Location', 'multi-location-product-and-inventory-management'); ?></option>
+                <option disabled value="largest" <?php selected($value, 'largest'); ?>><?php echo esc_html_e('Assign to Location with Most Items', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('How to handle orders containing products from multiple locations.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
