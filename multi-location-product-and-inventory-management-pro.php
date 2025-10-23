@@ -78,8 +78,6 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             ];
 
-        error_log(json_encode($mulopimfwc_options));
-
         $mulopimfwc_allowed_tags = array(
             'a' => array(
                 'href' => array(),
@@ -1195,6 +1193,36 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('woocommerce_before_order_itemmeta', [$this, 'display_location_in_order_items'], 10, 3);
             add_action('woocommerce_check_cart_items', [$this, 'validate_mixed_cart_locations']);
             add_action('woocommerce_before_cart_table', [$this, 'display_cart_location_summary']);
+
+            // Cart grouping by location
+            add_action('woocommerce_before_cart_table', [$this, 'maybe_override_cart_display'], 5);
+            add_action('woocommerce_after_cart_table', [$this, 'maybe_restore_cart_display'], 5);
+
+            // Override cart display everywhere
+            add_action('woocommerce_before_cart_contents', [$this, 'maybe_override_cart_contents_display'], 5);
+            add_action('woocommerce_after_cart_contents', [$this, 'maybe_restore_cart_contents_display'], 5);
+            add_action('woocommerce_review_order_before_cart_contents', [$this, 'maybe_override_checkout_cart_display'], 5);
+            add_action('woocommerce_review_order_after_cart_contents', [$this, 'maybe_restore_checkout_cart_display'], 5);
+
+            // Override mini cart display
+            add_action('woocommerce_before_mini_cart', [$this, 'maybe_override_mini_cart_display'], 5);
+            add_action('woocommerce_after_mini_cart', [$this, 'maybe_restore_mini_cart_display'], 5);
+
+            // WooCommerce Blocks support
+            add_filter('woocommerce_blocks_cart_block_renderer', [$this, 'filter_cart_block_renderer'], 10, 1);
+            add_filter('woocommerce_blocks_cart_item_renderer', [$this, 'filter_cart_item_renderer'], 10, 1);
+            add_filter('woocommerce_blocks_cart_table_renderer', [$this, 'filter_cart_table_renderer'], 10, 1);
+
+            // Additional cart widget support
+            add_filter('woocommerce_widget_cart_item_html', [$this, 'filter_widget_cart_item_html'], 10, 3);
+            add_filter('woocommerce_cart_widget_item_html', [$this, 'filter_widget_cart_item_html'], 10, 3);
+
+            // Cart fragments for AJAX updates
+            add_filter('woocommerce_add_to_cart_fragments', [$this, 'filter_cart_fragments'], 10, 1);
+
+            // Output buffering for any cart display
+            add_action('wp_head', [$this, 'maybe_start_cart_output_buffering'], 1);
+            add_action('wp_footer', [$this, 'maybe_end_cart_output_buffering'], 999);
         }
 
 
@@ -1228,9 +1256,16 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function display_location_in_cart($item_data, $cart_item)
         {
+            global $mulopimfwc_options;
+
+            // Check if cart grouping is enabled
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+                ? $mulopimfwc_options['group_cart_by_location']
+                : 'off';
+
             // Always show location information when available
             // Check if location data exists
-            if (isset($cart_item['mulopimfwc_location_name'])) {
+            if (isset($cart_item['mulopimfwc_location_name']) && ($group_cart !== 'on' || is_cart())) {
                 $item_data[] = array(
                     'key'     => __('Location', 'multi-location-product-and-inventory-management'),
                     'value'   => esc_html($cart_item['mulopimfwc_location_name']),
@@ -1364,11 +1399,60 @@ if (!function_exists('mulopimfwc_get_values')) {
                         'location_name' => isset($cart_item['mulopimfwc_location_name'])
                             ? $cart_item['mulopimfwc_location_name']
                             : __('Unknown Location', 'multi-location-product-and-inventory-management'),
+                        'location_slug' => $location,
                         'items' => array()
                     );
                 }
 
-                $items_by_location[$location]['items'][] = $cart_item;
+                $items_by_location[$location]['items'][] = array_merge($cart_item, ['cart_item_key' => $cart_item_key]);
+            }
+
+            return $items_by_location;
+        }
+
+        /**
+         * Get cart items grouped by location for grouping display
+         */
+        public function get_cart_items_by_location_for_grouping()
+        {
+            global $mulopimfwc_options;
+
+            // Check if cart grouping is enabled
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+                ? $mulopimfwc_options['group_cart_by_location']
+                : 'off';
+
+            if ($group_cart !== 'on') {
+                return array();
+            }
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return array();
+            }
+
+            $items_by_location = array();
+
+            foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
+                $location = isset($cart_item['mulopimfwc_location'])
+                    ? $cart_item['mulopimfwc_location']
+                    : 'unknown';
+
+                if (!isset($items_by_location[$location])) {
+                    $items_by_location[$location] = array(
+                        'location_name' => isset($cart_item['mulopimfwc_location_name'])
+                            ? $cart_item['mulopimfwc_location_name']
+                            : __('Unknown Location', 'multi-location-product-and-inventory-management'),
+                        'location_slug' => $location,
+                        'items' => array()
+                    );
+                }
+
+                $items_by_location[$location]['items'][] = array_merge($cart_item, ['cart_item_key' => $cart_item_key]);
             }
 
             return $items_by_location;
@@ -1408,6 +1492,799 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                 echo '</div>';
             }
+        }
+
+        /**
+         * Check if cart grouping is enabled and override cart display
+         */
+        public function maybe_override_cart_display()
+        {
+            global $mulopimfwc_options;
+
+            // Check if cart grouping is enabled
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+                ? $mulopimfwc_options['group_cart_by_location']
+                : 'off';
+
+            if ($group_cart !== 'on') {
+                return;
+            }
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return;
+            }
+
+            // Only override on cart page
+            if (!is_cart()) {
+                return;
+            }
+
+            // Start output buffering to capture the cart table
+            ob_start();
+        }
+
+        /**
+         * Restore cart display after grouping
+         */
+        public function maybe_restore_cart_display()
+        {
+            global $mulopimfwc_options;
+
+            // Check if cart grouping is enabled
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+                ? $mulopimfwc_options['group_cart_by_location']
+                : 'off';
+
+            if ($group_cart !== 'on') {
+                return;
+            }
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return;
+            }
+
+            // Only override on cart page
+            if (!is_cart()) {
+                return;
+            }
+
+            // Get the buffered content and replace with grouped display
+            $cart_content = ob_get_clean();
+
+            // Display the grouped cart
+            $this->display_grouped_cart();
+        }
+
+        /**
+         * Check if cart grouping should be applied
+         */
+        private function should_apply_cart_grouping()
+        {
+            global $mulopimfwc_options;
+
+            // Check if cart grouping is enabled
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+                ? $mulopimfwc_options['group_cart_by_location']
+                : 'off';
+
+            if ($group_cart !== 'on') {
+                return false;
+            }
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * Override cart contents display
+         */
+        public function maybe_override_cart_contents_display()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Only on cart page
+            if (!is_cart()) {
+                return;
+            }
+
+            // Start output buffering
+            ob_start();
+        }
+
+        /**
+         * Restore cart contents display
+         */
+        public function maybe_restore_cart_contents_display()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Only on cart page
+            if (!is_cart()) {
+                return;
+            }
+
+            // Get buffered content and replace with grouped display
+            $content = ob_get_clean();
+            $this->display_grouped_cart();
+        }
+
+        /**
+         * Override mini cart display
+         */
+        public function maybe_override_mini_cart_display()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Start output buffering
+            ob_start();
+        }
+
+        /**
+         * Restore mini cart display
+         */
+        public function maybe_restore_mini_cart_display()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Get buffered content and replace with grouped display
+            $content = ob_get_clean();
+            $this->display_grouped_mini_cart();
+        }
+
+        /**
+         * Display grouped mini cart
+         */
+        public function display_grouped_mini_cart()
+        {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            if (empty($items_by_location)) {
+                // Fallback to default mini cart display
+                wc_get_template('cart/mini-cart.php');
+                return;
+            }
+
+            // If only one location, display normally
+            if (count($items_by_location) === 1) {
+                wc_get_template('cart/mini-cart.php');
+                return;
+            }
+
+            // Display grouped mini cart
+?>
+            <div class="mulopimfwc-grouped-mini-cart">
+                <?php foreach ($items_by_location as $location_data): ?>
+                    <div class="mulopimfwc-mini-location-group">
+                        <div class="mulopimfwc-mini-location-header">
+                            <div class="mulopimfwc-mini-location-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                </svg>
+                            </div>
+                            <span class="mulopimfwc-mini-location-name"><?php echo esc_html($location_data['location_name']); ?></span>
+                        </div>
+
+                        <div class="mulopimfwc-mini-location-items">
+                            <?php foreach ($location_data['items'] as $cart_item): ?>
+                                <?php
+                                $product = $cart_item['data'];
+                                $product_id = $cart_item['product_id'];
+                                $variation_id = $cart_item['variation_id'];
+                                $cart_item_key = $cart_item['cart_item_key'];
+
+                                if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) {
+                                    continue;
+                                }
+                                ?>
+                                <div class="woocommerce-mini-cart-item mini_cart_item">
+                                    <?php
+                                    echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
+                                        '<a href="%s" class="remove remove_from_cart_button" aria-label="%s" data-product_id="%s" data-cart_item_key="%s" data-product_sku="%s">&times;</a>',
+                                        esc_url(wc_get_cart_remove_url($cart_item_key)),
+                                        esc_html__('Remove this item', 'woocommerce'),
+                                        $product_id,
+                                        $cart_item_key,
+                                        $product->get_sku()
+                                    ), $cart_item_key);
+                                    ?>
+
+                                    <?php
+                                    $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $product->get_image(), $cart_item, $cart_item_key);
+                                    if (!$product->is_visible()) {
+                                        echo $thumbnail;
+                                    } else {
+                                        printf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $thumbnail);
+                                    }
+                                    ?>
+
+                                    <div class="mini_cart_item_details">
+                                        <?php
+                                        if (!$product->is_visible()) {
+                                            echo wp_kses_post(apply_filters('woocommerce_cart_item_name', $product->get_name(), $cart_item, $cart_item_key) . '&nbsp;');
+                                        } else {
+                                            echo wp_kses_post(apply_filters('woocommerce_cart_item_name', sprintf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $product->get_name()), $cart_item, $cart_item_key));
+                                        }
+
+                                        do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
+
+                                        // Meta data
+                                        echo wc_get_formatted_cart_item_data($cart_item);
+
+                                        // Backorder notification
+                                        if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
+                                            echo wp_kses_post(apply_filters('woocommerce_cart_item_backorder_notification', '<p class="backorder_notification">' . esc_html__('Available on backorder', 'woocommerce') . '</p>', $product_id));
+                                        }
+                                        ?>
+
+                                        <div class="mini_cart_item_quantity">
+                                            <?php echo apply_filters('woocommerce_widget_cart_item_quantity', '<span class="quantity">' . sprintf('%s &times; %s', $cart_item['quantity'], $product->get_price_html()) . '</span>', $cart_item, $cart_item_key); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php
+        }
+
+        /**
+         * Override checkout cart display
+         */
+        public function maybe_override_checkout_cart_display()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Only on checkout page
+            if (!is_checkout()) {
+                return;
+            }
+
+            // Start output buffering
+            ob_start();
+        }
+
+        /**
+         * Restore checkout cart display
+         */
+        public function maybe_restore_checkout_cart_display()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Only on checkout page
+            if (!is_checkout()) {
+                return;
+            }
+
+            // Get buffered content and replace with grouped display
+            $content = ob_get_clean();
+            $this->display_grouped_checkout_cart();
+        }
+
+        /**
+         * Display grouped checkout cart
+         */
+        public function display_grouped_checkout_cart()
+        {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            if (empty($items_by_location)) {
+                // Fallback to default checkout cart display
+                wc_get_template('checkout/review-order.php');
+                return;
+            }
+
+            // If only one location, display normally
+            if (count($items_by_location) === 1) {
+                wc_get_template('checkout/review-order.php');
+                return;
+            }
+
+            // Display grouped checkout cart
+        ?>
+            <div class="mulopimfwc-grouped-checkout-cart">
+                <?php foreach ($items_by_location as $location_data): ?>
+                    <div class="mulopimfwc-location-group">
+                        <div class="mulopimfwc-location-header">
+                            <div class="mulopimfwc-location-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                </svg>
+                            </div>
+                            <h3 class="mulopimfwc-location-name"><?php echo esc_html($location_data['location_name']); ?></h3>
+                        </div>
+
+                        <div class="mulopimfwc-location-items">
+                            <table class="shop_table woocommerce-checkout-review-order-table" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th class="product-name"><?php esc_html_e('Product', 'woocommerce'); ?></th>
+                                        <th class="product-total"><?php esc_html_e('Subtotal', 'woocommerce'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($location_data['items'] as $cart_item): ?>
+                                        <?php
+                                        $product = $cart_item['data'];
+                                        $product_id = $cart_item['product_id'];
+                                        $variation_id = $cart_item['variation_id'];
+                                        $cart_item_key = $cart_item['cart_item_key'];
+
+                                        if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) {
+                                            continue;
+                                        }
+                                        ?>
+                                        <tr class="cart_item">
+                                            <td class="product-name">
+                                                <?php
+                                                if (!$product->is_visible()) {
+                                                    echo wp_kses_post(apply_filters('woocommerce_cart_item_name', $product->get_name(), $cart_item, $cart_item_key) . '&nbsp;');
+                                                } else {
+                                                    echo wp_kses_post(apply_filters('woocommerce_cart_item_name', sprintf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $product->get_name()), $cart_item, $cart_item_key));
+                                                }
+
+                                                do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
+
+                                                // Meta data
+                                                echo wc_get_formatted_cart_item_data($cart_item);
+
+                                                // Backorder notification
+                                                if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
+                                                    echo wp_kses_post(apply_filters('woocommerce_cart_item_backorder_notification', '<p class="backorder_notification">' . esc_html__('Available on backorder', 'woocommerce') . '</p>', $product_id));
+                                                }
+                                                ?>
+                                                <strong class="product-quantity"><?php echo apply_filters('woocommerce_checkout_cart_item_quantity', '&nbsp;&times;&nbsp;' . $cart_item['quantity'], $cart_item, $cart_item_key); ?></strong>
+                                            </td>
+                                            <td class="product-total">
+                                                <?php
+                                                echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key);
+                                                ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php
+        }
+
+        /**
+         * Display cart grouped by location
+         */
+        public function display_grouped_cart()
+        {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            if (empty($items_by_location)) {
+                // Fallback to default cart display
+                wc_get_template('cart/cart.php');
+                return;
+            }
+
+            // If only one location, display normally
+            if (count($items_by_location) === 1) {
+                wc_get_template('cart/cart.php');
+                return;
+            }
+
+            // Display grouped cart
+        ?>
+            <form class="woocommerce-cart-form" action="<?php echo esc_url(wc_get_cart_url()); ?>" method="post">
+                <?php wp_nonce_field('woocommerce-cart', 'woocommerce-cart-nonce'); ?>
+                <div class="mulopimfwc-grouped-cart">
+                    <?php foreach ($items_by_location as $location_data): ?>
+                        <div class="mulopimfwc-location-group">
+                            <div class="mulopimfwc-location-header">
+                                <div class="mulopimfwc-location-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <h3 class="mulopimfwc-location-name"><?php echo esc_html($location_data['location_name']); ?></h3>
+                            </div>
+
+                            <div class="mulopimfwc-location-items">
+                                <table class="shop_table shop_table_responsive cart woocommerce-cart-form__contents" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th class="product-remove">&nbsp;</th>
+                                            <th class="product-thumbnail">&nbsp;</th>
+                                            <th class="product-name"><?php esc_html_e('Product', 'woocommerce'); ?></th>
+                                            <th class="product-price"><?php esc_html_e('Price', 'woocommerce'); ?></th>
+                                            <th class="product-quantity"><?php esc_html_e('Quantity', 'woocommerce'); ?></th>
+                                            <th class="product-subtotal"><?php esc_html_e('Subtotal', 'woocommerce'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($location_data['items'] as $cart_item): ?>
+                                            <?php
+                                            $product = $cart_item['data'];
+                                            $product_id = $cart_item['product_id'];
+                                            $variation_id = $cart_item['variation_id'];
+                                            $cart_item_key = $cart_item['cart_item_key'];
+
+                                            if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) {
+                                                continue;
+                                            }
+                                            ?>
+                                            <tr class="woocommerce-cart-form__cart-item cart_item">
+                                                <td class="product-remove">
+                                                    <?php
+                                                    echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
+                                                        '<a href="%s" class="remove" aria-label="%s" data-product_id="%s" data-product_sku="%s">&times;</a>',
+                                                        esc_url(wc_get_cart_remove_url($cart_item_key)),
+                                                        esc_html__('Remove this item', 'woocommerce'),
+                                                        $product_id,
+                                                        $product->get_sku()
+                                                    ), $cart_item_key);
+                                                    ?>
+                                                </td>
+                                                <td class="product-thumbnail">
+                                                    <?php
+                                                    $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $product->get_image(), $cart_item, $cart_item_key);
+                                                    if (!$product->is_visible()) {
+                                                        echo $thumbnail;
+                                                    } else {
+                                                        printf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $thumbnail);
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td class="product-name" data-title="<?php esc_attr_e('Product', 'woocommerce'); ?>">
+                                                    <?php
+                                                    if (!$product->is_visible()) {
+                                                        echo wp_kses_post(apply_filters('woocommerce_cart_item_name', $product->get_name(), $cart_item, $cart_item_key) . '&nbsp;');
+                                                    } else {
+                                                        echo wp_kses_post(apply_filters('woocommerce_cart_item_name', sprintf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $product->get_name()), $cart_item, $cart_item_key));
+                                                    }
+
+                                                    do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
+
+                                                    // Meta data
+                                                    echo wc_get_formatted_cart_item_data($cart_item);
+
+                                                    // Backorder notification
+                                                    if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
+                                                        echo wp_kses_post(apply_filters('woocommerce_cart_item_backorder_notification', '<p class="backorder_notification">' . esc_html__('Available on backorder', 'woocommerce') . '</p>', $product_id));
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td class="product-price" data-title="<?php esc_attr_e('Price', 'woocommerce'); ?>">
+                                                    <?php
+                                                    echo apply_filters('woocommerce_cart_item_price', WC()->cart->get_product_price($product), $cart_item, $cart_item_key);
+                                                    ?>
+                                                </td>
+                                                <td class="product-quantity" data-title="<?php esc_attr_e('Quantity', 'woocommerce'); ?>">
+                                                    <?php
+                                                    if ($product->is_sold_individually()) {
+                                                        $product_quantity = sprintf('1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key);
+                                                    } else {
+                                                        $product_quantity = woocommerce_quantity_input(
+                                                            array(
+                                                                'input_name'   => "cart[{$cart_item_key}][qty]",
+                                                                'input_value'  => $cart_item['quantity'],
+                                                                'max_value'    => $product->get_max_purchase_quantity(),
+                                                                'min_value'    => '0',
+                                                                'product_name' => $product->get_name(),
+                                                            ),
+                                                            $product,
+                                                            false
+                                                        );
+                                                    }
+
+                                                    echo apply_filters('woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item);
+                                                    ?>
+                                                </td>
+                                                <td class="product-subtotal" data-title="<?php esc_attr_e('Subtotal', 'woocommerce'); ?>">
+                                                    <?php
+                                                    echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key);
+                                                    ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="button" name="update_cart" value="<?php esc_attr_e('Update cart', 'woocommerce'); ?>"><?php esc_html_e('Update cart', 'woocommerce'); ?></button>
+                    <?php do_action('woocommerce_cart_actions'); ?>
+                </div>
+            </form>
+        <?php
+        }
+
+        /**
+         * Filter WooCommerce cart block renderer
+         */
+        public function filter_cart_block_renderer($content)
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return $content;
+            }
+
+            // Replace cart block content with grouped display
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            if (empty($items_by_location) || count($items_by_location) === 1) {
+                return $content;
+            }
+
+            ob_start();
+            $this->display_grouped_cart_block();
+            return ob_get_clean();
+        }
+
+        /**
+         * Filter WooCommerce cart item renderer
+         */
+        public function filter_cart_item_renderer($content)
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return $content;
+            }
+
+            // This will be handled by the cart block renderer
+            return $content;
+        }
+
+        /**
+         * Filter WooCommerce cart table renderer
+         */
+        public function filter_cart_table_renderer($content)
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return $content;
+            }
+
+            // This will be handled by the cart block renderer
+            return $content;
+        }
+
+        /**
+         * Display grouped cart block
+         */
+        public function display_grouped_cart_block()
+        {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            if (empty($items_by_location)) {
+                return;
+            }
+
+            // If only one location, don't group
+            if (count($items_by_location) === 1) {
+                return;
+            }
+
+        ?>
+            <div class="mulopimfwc-grouped-cart-block">
+                <?php foreach ($items_by_location as $location_data): ?>
+                    <div class="mulopimfwc-location-group">
+                        <div class="mulopimfwc-location-header">
+                            <div class="mulopimfwc-location-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                </svg>
+                            </div>
+                            <h3 class="mulopimfwc-location-name"><?php echo esc_html($location_data['location_name']); ?></h3>
+                        </div>
+
+                        <div class="mulopimfwc-location-items">
+                            <?php foreach ($location_data['items'] as $cart_item): ?>
+                                <?php
+                                $product = $cart_item['data'];
+                                $product_id = $cart_item['product_id'];
+                                $variation_id = $cart_item['variation_id'];
+                                $cart_item_key = $cart_item['cart_item_key'];
+
+                                if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) {
+                                    continue;
+                                }
+                                ?>
+                                <div class="woocommerce-cart-form__cart-item cart_item">
+                                    <div class="product-remove">
+                                        <?php
+                                        echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
+                                            '<a href="%s" class="remove" aria-label="%s" data-product_id="%s" data-product_sku="%s">&times;</a>',
+                                            esc_url(wc_get_cart_remove_url($cart_item_key)),
+                                            esc_html__('Remove this item', 'woocommerce'),
+                                            $product_id,
+                                            $product->get_sku()
+                                        ), $cart_item_key);
+                                        ?>
+                                    </div>
+                                    <div class="product-thumbnail">
+                                        <?php
+                                        $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $product->get_image(), $cart_item, $cart_item_key);
+                                        if (!$product->is_visible()) {
+                                            echo $thumbnail;
+                                        } else {
+                                            printf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $thumbnail);
+                                        }
+                                        ?>
+                                    </div>
+                                    <div class="product-name">
+                                        <?php
+                                        if (!$product->is_visible()) {
+                                            echo wp_kses_post(apply_filters('woocommerce_cart_item_name', $product->get_name(), $cart_item, $cart_item_key) . '&nbsp;');
+                                        } else {
+                                            echo wp_kses_post(apply_filters('woocommerce_cart_item_name', sprintf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $product->get_name()), $cart_item, $cart_item_key));
+                                        }
+
+                                        do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
+
+                                        // Meta data
+                                        echo wc_get_formatted_cart_item_data($cart_item);
+
+                                        // Backorder notification
+                                        if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
+                                            echo wp_kses_post(apply_filters('woocommerce_cart_item_backorder_notification', '<p class="backorder_notification">' . esc_html__('Available on backorder', 'woocommerce') . '</p>', $product_id));
+                                        }
+                                        ?>
+                                    </div>
+                                    <div class="product-price">
+                                        <?php
+                                        echo apply_filters('woocommerce_cart_item_price', WC()->cart->get_product_price($product), $cart_item, $cart_item_key);
+                                        ?>
+                                    </div>
+                                    <div class="product-quantity">
+                                        <?php
+                                        if ($product->is_sold_individually()) {
+                                            $product_quantity = sprintf('1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key);
+                                        } else {
+                                            $product_quantity = woocommerce_quantity_input(
+                                                array(
+                                                    'input_name'   => "cart[{$cart_item_key}][qty]",
+                                                    'input_value'  => $cart_item['quantity'],
+                                                    'max_value'    => $product->get_max_purchase_quantity(),
+                                                    'min_value'    => '0',
+                                                    'product_name' => $product->get_name(),
+                                                ),
+                                                $product,
+                                                false
+                                            );
+                                        }
+
+                                        echo apply_filters('woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item);
+                                        ?>
+                                    </div>
+                                    <div class="product-subtotal">
+                                        <?php
+                                        echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key);
+                                        ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+<?php
+        }
+
+        /**
+         * Filter widget cart item HTML
+         */
+        public function filter_widget_cart_item_html($html, $cart_item, $cart_item_key)
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return $html;
+            }
+
+            // Add location information to widget cart items
+            if (isset($cart_item['mulopimfwc_location_name'])) {
+                $location_name = $cart_item['mulopimfwc_location_name'];
+                $location_html = '<div class="mulopimfwc-widget-location"><span class="mulopimfwc-widget-location-icon">📍</span> ' . esc_html($location_name) . '</div>';
+
+                // Insert location info before the product name
+                $html = str_replace('<div class="product-name">', $location_html . '<div class="product-name">', $html);
+            }
+
+            return $html;
+        }
+
+        /**
+         * Filter cart fragments for AJAX updates
+         */
+        public function filter_cart_fragments($fragments)
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return $fragments;
+            }
+
+            // Update mini cart fragment with grouped display
+            if (isset($fragments['div.widget_shopping_cart_content'])) {
+                ob_start();
+                $this->display_grouped_mini_cart();
+                $fragments['div.widget_shopping_cart_content'] = ob_get_clean();
+            }
+
+            return $fragments;
+        }
+
+        /**
+         * Start cart output buffering
+         */
+        public function maybe_start_cart_output_buffering()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Start output buffering for any cart-related content
+            if (is_cart() || is_checkout() || (function_exists('wc_get_page_id') && is_page(wc_get_page_id('cart')))) {
+                ob_start();
+            }
+        }
+
+        /**
+         * End cart output buffering
+         */
+        public function maybe_end_cart_output_buffering()
+        {
+            if (!$this->should_apply_cart_grouping()) {
+                return;
+            }
+
+            // Process buffered content for cart-related pages
+            if (is_cart() || is_checkout() || (function_exists('wc_get_page_id') && is_page(wc_get_page_id('cart')))) {
+                $content = ob_get_clean();
+
+                // Check if content contains cart elements and apply grouping
+                if (strpos($content, 'woocommerce-cart') !== false || strpos($content, 'cart_item') !== false) {
+                    // Apply grouping logic to the content
+                    $content = $this->apply_cart_grouping_to_content($content);
+                }
+
+                echo $content;
+            }
+        }
+
+        /**
+         * Apply cart grouping to content
+         */
+        private function apply_cart_grouping_to_content($content)
+        {
+            // This is a more advanced implementation that would parse and modify HTML content
+            // For now, we'll rely on the hook-based approach
+            return $content;
         }
 
         /**
@@ -1656,6 +2533,26 @@ if (!function_exists('mulopimfwc_get_values')) {
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.3.5', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
+
+            // Check if cart grouping is enabled
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+                ? $mulopimfwc_options['group_cart_by_location']
+                : 'off';
+
+            // Always show location information when available
+            // Check if location data exists
+            if ($group_cart === 'on') {
+                // Cart Block grouping (JS + CSS)
+                wp_enqueue_script(
+                    'mulopimfwc-cart-block-grouping',
+                    plugins_url('assets/js/cart-block-grouping.js', __FILE__),
+                    array('wp-hooks'), // important
+                    '1.0.4',
+                    true
+                );
+
+                wp_add_inline_style( 'mulopimfwc_style', '.wc-block-components-product-details__location{display:none !important;}' );
+            }
 
 
             wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
@@ -2452,3 +3349,4 @@ if (!function_exists('mulopimfwc_get_values')) {
 
     new mulopimfwc_analytics_main();
 }
+

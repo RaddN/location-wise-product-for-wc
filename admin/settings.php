@@ -2050,25 +2050,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'group_cart_by_location',
             __('Group Cart Items by Location', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['group_cart_by_location' => 'on']);
-                $value = isset($options['group_cart_by_location']) ? $options['group_cart_by_location'] : 'on';
-        ?>
-            <select disabled name="mulopimfwc_display_options[group_cart_by_location]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Group cart items by their store location for better visibility.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'location-cross-order-settings',
-            'mulopimfwc_cross_location_order_section'
-        );
-
-        add_settings_field(
-            'group_cart_by_location',
-            __('Group Cart Items by Location', 'multi-location-product-and-inventory-management'),
-            function () {
-                $this->render_advance_checkbox("group_cart_by_location", __("Group cart items by their store location for better visibility.", 'multi-location-product-and-inventory-management'), true);
+                $this->render_advance_checkbox("group_cart_by_location", __("Group cart items by their store location for better visibility.", 'multi-location-product-and-inventory-management'));
             },
             'location-cross-order-settings',
             'mulopimfwc_cross_location_order_section'
