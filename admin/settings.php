@@ -772,17 +772,44 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
 
         // Add "Enable Location Discounts" field
         add_settings_field(
-            'enable_location_discounts',
+            'enable_location_discounts', 
             __('Enable Location Discounts', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['enable_location_discounts' => 'off']);
-                $value = isset($options['enable_location_discounts']) ? $options['enable_location_discounts'] : 'off';
+            $options = get_option('mulopimfwc_display_options', ['enable_location_discounts' => 'off']);
+            $value = isset($options['enable_location_discounts']) ? $options['enable_location_discounts'] : 'off';
+
+            // Check if any coupons exist
+            $args = array(
+                'posts_per_page' => -1,
+                'orderby' => 'title',
+                'order' => 'asc',
+                'post_type' => 'shop_coupon',
+                'post_status' => 'publish',
+            );
+            $coupons = get_posts($args);
         ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_discounts]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
+            <select <?php echo disabled( empty( $coupons ) ) ? 'disabled' : ''; ?> name="mulopimfwc_display_options[enable_location_discounts]">
+            <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
+            <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Allow different discount rules for each store location.', 'multi-location-product-and-inventory-management'); ?></p>
+
+            <?php
+            if (empty($coupons)) {
+                echo '<div class="lwp-notice lwp-notice-warning" style="background-color: #fff3cd; border: 1px solid #ffeeba; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 10px 0;">
+                <div style="display: flex; align-items: start; gap: 12px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="flex-shrink: 0; margin-top: 2px;">
+                    <path fill="#856404" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                    </svg>
+                    <div>
+                    <p style="margin: 0; color: #856404;">
+                        ' . esc_html__('Important: No coupons found in WooCommerce. Please create at least one coupon for location-based discounts to work properly.', 'multi-location-product-and-inventory-management') . '
+                    </p>
+                    </div>
+                </div>
+                </div>';
+            }
+            ?>
         <?php
             },
             'lwp-location-discount-settings',
