@@ -1124,41 +1124,6 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_location_email_section'
         );
 
-        // Add Location-based PDF Invoice Section
-        add_settings_section(
-            'mulopimfwc_pdf_invoice_section',
-            __('<svg viewBox="0 0 15 15" 
-     fill="none" 
-     xmlns="http://www.w3.org/2000/svg"
-     width="20" height="20" 
-     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
-  <path fill="#2563eb" d="M3.5 8H3V7h.5a.5.5 0 0 1 0 1M7 10V7h.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z" fill="#000"/>
-  <path fill="#2563eb" fill-rule="evenodd" clip-rule="evenodd" d="M1 1.5A1.5 1.5 0 0 1 2.5 0h8.207L14 3.293V13.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 1 13.5zM3.5 6H2v5h1V9h.5a1.5 1.5 0 1 0 0-3m4 0H6v5h1.5A1.5 1.5 0 0 0 9 9.5v-2A1.5 1.5 0 0 0 7.5 6m2.5 5V6h3v1h-2v1h1v1h-1v2z" fill="#000"/>
-</svg>Location-based PDF Invoices', 'multi-location-product-and-inventory-management'),
-            function () {
-                echo '<p>' . esc_html__('Configure settings for location-specific PDF invoices.', 'multi-location-product-and-inventory-management') . '</p>';
-            },
-            'lwp-location-others-settings'
-        );
-
-        // Add "Enable Location-based PDF Invoices" field
-        add_settings_field(
-            'enable_location_invoices',
-            __('Enable Location-based PDF Invoices', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['enable_location_invoices' => 'off']);
-                $value = isset($options['enable_location_invoices']) ? $options['enable_location_invoices'] : 'off';
-        ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_invoices]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Generate location-specific PDF invoices for orders.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'lwp-location-others-settings',
-            'mulopimfwc_pdf_invoice_section'
-        );
         // Add section for Location Hours and Availability
         add_settings_section(
             'mulopimfwc_location_hours_section',
