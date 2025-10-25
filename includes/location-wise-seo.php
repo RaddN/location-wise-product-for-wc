@@ -192,23 +192,6 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
                     'name'  => $t->name,
                 ];
 
-                // If you store address fields in term meta, enrich here:
-                // $street = get_term_meta($t->term_id, 'street', true);
-                // $city   = get_term_meta($t->term_id, 'city', true);
-                // $region = get_term_meta($t->term_id, 'state', true);
-                // $postal = get_term_meta($t->term_id, 'postal', true);
-                // $country= get_term_meta($t->term_id, 'country', true);
-                // if ($street || $city || $region || $postal || $country) {
-                //     $place['address'] = array_filter([
-                //         '@type' => 'PostalAddress',
-                //         'streetAddress'   => $street,
-                //         'addressLocality' => $city,
-                //         'addressRegion'   => $region,
-                //         'postalCode'      => $postal,
-                //         'addressCountry'  => $country,
-                //     ]);
-                // }
-
                 $places[] = $place;
             }
 
