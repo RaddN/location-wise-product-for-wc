@@ -389,7 +389,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
   <path fill="#2563eb" d="M61.2 106h37.4v31.2H61.2zm0 72.7h37.4v-31.2H61.2zm0 41.4h37.4v-31.2H61.2zm48.5-41.4H147v-31.2h-37.4v31.2zm0 41.4H147v-31.2h-37.4v31.2zm48.5-31.2v31.2h37.4v-31.2zM255 67.2 128.3 7.6 1.7 67.4l7.9 16.5 16.1-7.7v144h18.2V75.6h169v144.8h18.2v-144l16.1 7.5z"/>
-</svg>Inventory Management (Coming Soon)', 'multi-location-product-and-inventory-management'),
+</svg>Inventory Management', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure how inventory is managed across multiple locations.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -401,33 +401,13 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'inventory_sync_mode',
             __('Inventory Sync Mode', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['inventory_sync_mode' => 'independent']);
-                $value = isset($options['inventory_sync_mode']) ? $options['inventory_sync_mode'] : 'independent';
-            ?>
-            <select disabled name="mulopimfwc_display_options[inventory_sync_mode]">
-                <option value="independent" <?php selected($value, 'independent'); ?>><?php echo esc_html__('Independent (Each location manages its own inventory)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="centralized" <?php selected($value, 'centralized'); ?>><?php echo esc_html__('Centralized (Main inventory with location allocations)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="synchronized" <?php selected($value, 'synchronized'); ?>><?php echo esc_html__('Synchronized (Changes in one location affect all)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html__('Choose how inventory is managed across multiple locations.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'location-inventory-settings',
-            'mulopimfwc_inventory_management_section'
-        );
-
-        // Add "Inventory Sync Mode" field
-        add_settings_field(
-            'inventory_sync_mode',
-            __('Inventory Sync Mode', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['inventory_sync_mode' => 'independent']);
-                $value = isset($options['inventory_sync_mode']) ? $options['inventory_sync_mode'] : 'independent';
+                $options = get_option('mulopimfwc_display_options', ['inventory_sync_mode' => 'centralized']);
+                $value = isset($options['inventory_sync_mode']) ? $options['inventory_sync_mode'] : 'centralized';
         ?>
-            <select disabled name="mulopimfwc_display_options[inventory_sync_mode]">
-                <option value="independent" <?php selected($value, 'independent'); ?>><?php echo esc_html_e('Independent (Each location manages its own inventory)', 'multi-location-product-and-inventory-management'); ?></option>
+            <select name="mulopimfwc_display_options[inventory_sync_mode]">
+                <option disabled value="independent" <?php selected($value, 'independent'); ?>><?php echo esc_html_e('Independent (Each location manages its own inventory)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="centralized" <?php selected($value, 'centralized'); ?>><?php echo esc_html_e('Centralized (Main inventory with location allocations)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="synchronized" <?php selected($value, 'synchronized'); ?>><?php echo esc_html_e('Synchronized (Changes in one location affect all)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option disabled value="synchronized" <?php selected($value, 'synchronized'); ?>><?php echo esc_html_e('Synchronized (Changes in one location affect all)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Choose how inventory is managed across multiple locations.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
@@ -436,19 +416,16 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_inventory_management_section'
         );
 
-        // Add "Low Stock Threshold Method" field
+        // Add "Low Stock Threshold" field (number input)
         add_settings_field(
-            'low_stock_threshold_method',
-            __('Low Stock Threshold Method', 'multi-location-product-and-inventory-management'),
+            'low_stock_threshold',
+            __('Low Stock Threshold', 'multi-location-product-and-inventory-management'),
             function () {
-                $options = get_option('mulopimfwc_display_options', ['low_stock_threshold_method' => 'per_location']);
-                $value = isset($options['low_stock_threshold_method']) ? $options['low_stock_threshold_method'] : 'per_location';
+            $options = get_option('mulopimfwc_display_options', ['low_stock_threshold' => 5]);
+            $value = isset($options['low_stock_threshold']) ? $options['low_stock_threshold'] : 5;
         ?>
-            <select disabled name="mulopimfwc_display_options[low_stock_threshold_method]">
-                <option value="per_location" <?php selected($value, 'per_location'); ?>><?php echo esc_html_e('Per Location (Each location has its own threshold)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="global" <?php selected($value, 'global'); ?>><?php echo esc_html_e('Global (Use WooCommerce default threshold for all locations)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Choose how low stock thresholds are determined.', 'multi-location-product-and-inventory-management'); ?></p>
+            <input type="number" name="mulopimfwc_display_options[low_stock_threshold]" value="<?php echo esc_attr($value); ?>" min="0" step="1" class="small-text">
+            <p class="description"><?php echo esc_html_e('Trigger low-stock alert when location stock is less than or equal to this number (units).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
             'location-inventory-settings',
@@ -469,6 +446,22 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 <option value="both" <?php selected($value, 'both'); ?>><?php echo esc_html_e('Both Admin and Location Manager', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Who should receive low stock notifications.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+            },
+            'location-inventory-settings',
+            'mulopimfwc_inventory_management_section'
+        );
+
+        // Add "Out of Stock Threshold" field
+        add_settings_field(
+            'out_of_stock_threshold',
+            __('Out of Stock Threshold', 'multi-location-product-and-inventory-management'),
+            function () {
+            $options = get_option('mulopimfwc_display_options', ['out_of_stock_threshold' => 0]);
+            $value = isset($options['out_of_stock_threshold']) ? $options['out_of_stock_threshold'] : 0;
+        ?>
+            <input type="number" name="mulopimfwc_display_options[out_of_stock_threshold]" value="<?php echo esc_attr($value); ?>" min="0" step="1" class="small-text">
+            <p class="description"><?php echo esc_html_e('Trigger out-of-stock alert when location stock is less than or equal to this number (units).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
             'location-inventory-settings',
@@ -1367,7 +1360,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['enable_store_locator' => 'off']);
                 $value = isset($options['enable_store_locator']) ? $options['enable_store_locator'] : 'off';
         ?>
-            <select disabled name="mulopimfwc_display_options[enable_store_locator]">
+            <select name="mulopimfwc_display_options[enable_store_locator]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>

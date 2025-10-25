@@ -33,7 +33,23 @@ class MULOPIMFWC_Admin
 
         // Add AJAX actions for export
         add_action('wp_ajax_mulopimfwc_export_dashboard_report', array(new MULOPIMFWC_Dashboard(), 'export_dashboard_report'));
+
+        // Shortcode for location status
+        // [mulopimfwc_location_status id="123"]
+
+        add_shortcode('mulopimfwc_location_status', [$this, 'shortcode_location_status']);
     }
+
+    public function shortcode_location_status($atts)
+    {
+        $atts = shortcode_atts(['id' => 0], $atts, 'mulopimfwc_location_status');
+        $term_id = absint($atts['id']);
+        if (!$term_id || !get_term($term_id, 'mulopimfwc_store_location')) return '';
+
+        $badge = $this->render_status_badge($term_id);
+        return '<div class="mulopimfwc-location-status">' . $badge . '</div>';
+    }
+
 
     public function mulopimfwc_admin_assets($hook)
     {
@@ -261,6 +277,63 @@ class MULOPIMFWC_Admin
             </p>
         </div>
 
+        <!-- Business Hours -->
+        <?php
+        $def = $this->get_default_business_hours();
+        $tzs = timezone_identifiers_list(); // basic list
+        $days_labels = [
+            'mon' => __('Monday', 'multi-location-product-and-inventory-management'),
+            'tue' => __('Tuesday', 'multi-location-product-and-inventory-management'),
+            'wed' => __('Wednesday', 'multi-location-product-and-inventory-management'),
+            'thu' => __('Thursday', 'multi-location-product-and-inventory-management'),
+            'fri' => __('Friday', 'multi-location-product-and-inventory-management'),
+            'sat' => __('Saturday', 'multi-location-product-and-inventory-management'),
+            'sun' => __('Sunday', 'multi-location-product-and-inventory-management'),
+        ];
+        ?>
+        <div class="form-field">
+            <label><?php _e('Business Hours', 'multi-location-product-and-inventory-management'); ?></label>
+            <div style="border:1px solid #ddd;border-radius:6px;padding:10px;max-width:660px;">
+                <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management'); ?></p>
+
+                <p>
+                    <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management'); ?>:</strong>
+                    <select name="bh[timezone]" style="min-width:280px;">
+                        <?php foreach ($tzs as $tz): ?>
+                            <option value="<?php echo esc_attr($tz); ?>" <?php selected($tz, $def['timezone']); ?>>
+                                <?php echo esc_html($tz); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </p>
+
+                <table class="form-table" style="width:auto;border-collapse:collapse;">
+                    <tbody>
+                        <?php foreach ($def['days'] as $key => $vals): ?>
+                            <tr>
+                                <th style="text-align:left;padding:6px 8px;width:140px;"><?php echo esc_html($days_labels[$key]); ?></th>
+                                <td style="padding:6px 8px;">
+                                    <label style="margin-right:10px;">
+                                        <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][closed]" value="1">
+                                        <?php _e('Closed', 'multi-location-product-and-inventory-management'); ?>
+                                    </label>
+                                    <label style="margin-right:10px;">
+                                        <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][all_day]" value="1">
+                                        <?php _e('24 hours', 'multi-location-product-and-inventory-management'); ?>
+                                    </label>
+                                    <span style="margin-left:10px;">
+                                        <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>">
+                                        &nbsp;–&nbsp;
+                                        <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][close]" value="<?php echo esc_attr($vals['close']); ?>">
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Shipping Zones -->
         <?php $zones = $this->get_shipping_zones_options(); ?>
         <div class="form-field">
@@ -425,7 +498,7 @@ class MULOPIMFWC_Admin
             </td>
         </tr>
 
-         <tr class="form-field">
+        <tr class="form-field">
             <th scope="row"><label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <input type="text" name="latitude" id="latitude" value="<?php echo esc_attr($latitude); ?>" />
@@ -446,8 +519,8 @@ class MULOPIMFWC_Admin
             <td class="mulopimfwc-media-wrap">
                 <input type="hidden" name="logo_id" class="mulopimfwc-logo-id" value="<?php echo esc_attr($logo_id); ?>">
                 <div class="mulopimfwc-logo-preview" style="margin:6px 0;"><?php
-                    if ($logo_src) echo '<img src="'.esc_url($logo_src).'" style="max-width:80px;height:auto;border:1px solid #ddd;border-radius:4px;">';
-                ?></div>
+                                                                            if ($logo_src) echo '<img src="' . esc_url($logo_src) . '" style="max-width:80px;height:auto;border:1px solid #ddd;border-radius:4px;">';
+                                                                            ?></div>
                 <p>
                     <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management'); ?></span>
                     <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management'); ?></span>
@@ -464,6 +537,64 @@ class MULOPIMFWC_Admin
                     <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management'); ?></span>
                     <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management'); ?></span>
                 </p>
+            </td>
+        </tr>
+
+        <?php
+        $bh = $this->get_business_hours($term->term_id);
+        $tzs = timezone_identifiers_list();
+        $days_labels = [
+            'mon' => __('Monday', 'multi-location-product-and-inventory-management'),
+            'tue' => __('Tuesday', 'multi-location-product-and-inventory-management'),
+            'wed' => __('Wednesday', 'multi-location-product-and-inventory-management'),
+            'thu' => __('Thursday', 'multi-location-product-and-inventory-management'),
+            'fri' => __('Friday', 'multi-location-product-and-inventory-management'),
+            'sat' => __('Saturday', 'multi-location-product-and-inventory-management'),
+            'sun' => __('Sunday', 'multi-location-product-and-inventory-management'),
+        ];
+        ?>
+        <tr class="form-field">
+            <th scope="row"><label><?php _e('Business Hours', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <div style="border:1px solid #ddd;border-radius:6px;padding:10px;max-width:660px;">
+                    <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management'); ?></p>
+
+                    <p>
+                        <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management'); ?>:</strong>
+                        <select name="bh[timezone]" style="min-width:280px;">
+                            <?php foreach ($tzs as $tz): ?>
+                                <option value="<?php echo esc_attr($tz); ?>" <?php selected($tz, $bh['timezone']); ?>>
+                                    <?php echo esc_html($tz); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </p>
+
+                    <table class="form-table" style="width:auto;border-collapse:collapse;">
+                        <tbody>
+                            <?php foreach ($bh['days'] as $key => $vals): ?>
+                                <tr>
+                                    <th style="text-align:left;padding:6px 8px;width:140px;"><?php echo esc_html($days_labels[$key]); ?></th>
+                                    <td style="padding:6px 8px;">
+                                        <label style="margin-right:10px;">
+                                            <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][closed]" value="1" <?php checked(!empty($vals['closed'])); ?>>
+                                            <?php _e('Closed', 'multi-location-product-and-inventory-management'); ?>
+                                        </label>
+                                        <label style="margin-right:10px;">
+                                            <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][all_day]" value="1" <?php checked(!empty($vals['all_day'])); ?>>
+                                            <?php _e('24 hours', 'multi-location-product-and-inventory-management'); ?>
+                                        </label>
+                                        <span style="margin-left:10px;">
+                                            <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>">
+                                            &nbsp;–&nbsp;
+                                            <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][close]" value="<?php echo esc_attr($vals['close']); ?>">
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </td>
         </tr>
 
@@ -487,7 +618,7 @@ class MULOPIMFWC_Admin
                 <select name="shipping_methods[]" id="shipping_methods" multiple style="min-width: 420px;">
                     <?php foreach ($zone_methods as $zid => $methods): if (empty($methods)) continue; ?>
                         <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management'), $zones[$zid] ?? $zid)); ?>">
-                            <?php foreach ($methods as $instance_id => $label): 
+                            <?php foreach ($methods as $instance_id => $label):
                                 $val = $zid . ':' . $instance_id;
                             ?>
                                 <option value="<?php echo esc_attr($val); ?>" <?php selected(in_array($val, (array)$sel_methods, true)); ?>>
@@ -572,7 +703,7 @@ class MULOPIMFWC_Admin
             update_term_meta($term_id, 'phone', sanitize_text_field($_POST['phone']));
         }
 
-                // Latitude / Longitude
+        // Latitude / Longitude
         if (isset($_POST['latitude'])) {
             update_term_meta($term_id, 'latitude', sanitize_text_field($_POST['latitude']));
         }
@@ -589,6 +720,47 @@ class MULOPIMFWC_Admin
         if (isset($_POST['gallery_ids'])) {
             $ids = array_filter(array_map('absint', explode(',', (string) $_POST['gallery_ids'])));
             update_term_meta($term_id, 'gallery_ids', $ids); // store as array for convenience
+        }
+
+        // Business Hours
+        if (isset($_POST['bh']) && is_array($_POST['bh'])) {
+            $raw = wp_unslash($_POST['bh']);
+
+            $tz = isset($raw['timezone']) ? sanitize_text_field($raw['timezone']) : wp_timezone_string();
+            if (!in_array($tz, timezone_identifiers_list(), true)) {
+                $tz = wp_timezone_string();
+            }
+
+            $days_clean = [];
+            $keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            foreach ($keys as $k) {
+                $row = isset($raw['days'][$k]) ? (array) $raw['days'][$k] : [];
+                $closed  = empty($row['closed']) ? 0 : 1;
+                $all_day = empty($row['all_day']) ? 0 : 1;
+
+                // Time strings like 09:00, 18:00
+                $open  = isset($row['open'])  ? preg_replace('/[^0-9:]/', '', (string) $row['open'])  : '09:00';
+                $close = isset($row['close']) ? preg_replace('/[^0-9:]/', '', (string) $row['close']) : '18:00';
+
+                // Normalize: if all_day, ignore times; if closed, ignore times.
+                if ($all_day) {
+                    $open = '00:00';
+                    $close = '23:59';
+                }
+
+                $days_clean[$k] = [
+                    'closed'  => $closed,
+                    'all_day' => $all_day,
+                    'open'    => $open ?: '09:00',
+                    'close'   => $close ?: '18:00',
+                ];
+            }
+
+            $to_save = [
+                'timezone' => $tz,
+                'days'     => $days_clean,
+            ];
+            update_term_meta($term_id, 'business_hours', $to_save);
         }
 
         // Shipping Zones (array of IDs)
@@ -645,6 +817,7 @@ class MULOPIMFWC_Admin
         // Add columns before the 'slug' column
         foreach ($columns as $key => $value) {
             if ($key === 'slug') {
+                $new_columns['status'] = __('Status', 'multi-location-product-and-inventory-management');
                 $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
                 $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
                 $new_columns['country'] = __('Country', 'multi-location-product-and-inventory-management');
@@ -661,6 +834,9 @@ class MULOPIMFWC_Admin
     public function add_location_taxonomy_column_content($content, $column_name, $term_id)
     {
         switch ($column_name) {
+            case 'status':
+                echo $this->render_status_badge($term_id);
+                break;
             case 'display_order':
                 $display_order = get_term_meta($term_id, 'display_order', true);
                 echo $display_order ? esc_html($display_order) : '—';
@@ -926,5 +1102,131 @@ class MULOPIMFWC_Admin
             ],
             'sort' => true,
         ]);
+    }
+
+    /** ---------- Business Hours Helpers ---------- */
+
+    /**
+     * Get business hours structure with sane defaults.
+     */
+    private function get_default_business_hours()
+    {
+        $days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+        $default = [];
+        foreach ($days as $d) {
+            $default[$d] = [
+                'closed' => 0,     // 1 = closed all day
+                'all_day' => 0,    // 1 = open 24h
+                'open' => '09:00',
+                'close' => '18:00',
+            ];
+        }
+        return [
+            'timezone' => wp_timezone_string(), // fallback to site timezone
+            'days'     => $default,
+        ];
+    }
+
+    /**
+     * Fetch merged business hours for a term (defaults + saved).
+     */
+    private function get_business_hours($term_id)
+    {
+        $saved = (array) get_term_meta($term_id, 'business_hours', true);
+        $def   = $this->get_default_business_hours();
+
+        // Merge timezone
+        $tz = !empty($saved['timezone']) ? $saved['timezone'] : $def['timezone'];
+
+        // Merge days
+        $merged_days = $def['days'];
+        if (!empty($saved['days']) && is_array($saved['days'])) {
+            foreach ($merged_days as $d => $vals) {
+                if (!empty($saved['days'][$d]) && is_array($saved['days'][$d])) {
+                    $merged_days[$d] = array_merge($vals, $saved['days'][$d]);
+                }
+            }
+        }
+
+        return [
+            'timezone' => $tz,
+            'days'     => $merged_days,
+        ];
+    }
+
+    /**
+     * Determine if a location is open "now".
+     * Returns ['open' => bool, 'now' => DateTimeImmutable, 'next_change' => ?DateTimeImmutable]
+     */
+    public function is_location_open_now($term_id, $now_ts = null)
+    {
+        $bh = $this->get_business_hours($term_id);
+        $tz = new \DateTimeZone($bh['timezone'] ?: wp_timezone_string());
+
+        $now = $now_ts ? (new \DateTimeImmutable('@' . $now_ts))->setTimezone($tz)
+            : (new \DateTimeImmutable('now', $tz));
+
+        // Map PHP day of week (1 Mon .. 7 Sun) to keys
+        $map = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+        $idx = (int) $now->format('N') - 1;
+        $today_key = $map[$idx];
+        $today = $bh['days'][$today_key];
+
+        // Helper to build DateTimeImmutable from "H:i" today
+        $mk = function ($timeStr, \DateTimeImmutable $base) use ($tz) {
+            [$H, $i] = array_pad(explode(':', $timeStr), 2, '00');
+            return $base->setTime((int)$H, (int)$i, 0);
+        };
+
+        // Closed all day
+        if (!empty($today['closed'])) {
+            return ['open' => false, 'now' => $now, 'next_change' => null];
+        }
+
+        // Open 24 hours
+        if (!empty($today['all_day'])) {
+            // Next change is tomorrow at 00:00 if tomorrow is closed/not 24h; we keep it null for simplicity
+            return ['open' => true, 'now' => $now, 'next_change' => null];
+        }
+
+        // Normal window
+        $open  = $mk($today['open'] ?? '09:00',  $now);
+        $close = $mk($today['close'] ?? '18:00', $now);
+
+        $open_ts  = $open->getTimestamp();
+        $close_ts = $close->getTimestamp();
+        $now_ts2  = $now->getTimestamp();
+
+        // Handle overnight window (e.g., 20:00 -> 02:00)
+        $is_overnight = $close_ts <= $open_ts;
+        if ($is_overnight) {
+            // Open from open_time today until close_time next day
+            $tomorrow = $now->modify('+1 day');
+            $close = $mk($today['close'] ?? '18:00', $tomorrow);
+            $close_ts = $close->getTimestamp();
+
+            $open_now = ($now_ts2 >= $open_ts) || ($now_ts2 < $close_ts);
+            $next_change = $open_now
+                ? (($now_ts2 >= $open_ts) ? $close : $open) // if before close (past midnight), next change is close; else open
+                : $open;
+            return ['open' => $open_now, 'now' => $now, 'next_change' => $next_change];
+        }
+
+        // Regular same-day window
+        $open_now = ($now_ts2 >= $open_ts && $now_ts2 < $close_ts);
+        $next_change = $open_now ? $close : ($now_ts2 < $open_ts ? $open : null);
+
+        return ['open' => $open_now, 'now' => $now, 'next_change' => $next_change];
+    }
+
+    /** Render a small badge for admin tables/metabox. */
+    private function render_status_badge($term_id)
+    {
+        $st = $this->is_location_open_now($term_id);
+        $label = $st['open'] ? __('Open', 'multi-location-product-and-inventory-management')
+            : __('Closed', 'multi-location-product-and-inventory-management');
+        $color = $st['open'] ? '#16a34a' : '#dc2626';
+        return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;color:#fff;background:' . $color . ';font-size:12px;line-height:1.6;">'
+            . esc_html($label) . '</span>';
     }
 }

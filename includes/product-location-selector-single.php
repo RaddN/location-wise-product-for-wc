@@ -484,9 +484,9 @@ class MULOPIMFWC_Product_Location_Selector
                                 data-location-id="<?php echo esc_attr($location->term_id); ?>" />
                             <label for="location-<?php echo esc_attr($location->term_id); ?>">
                                 <?php echo esc_html($location->name); ?>
-                                <?php if (!empty($location->description)): ?>
-                                    <span class="mulopimfwc-location-description"><?php echo esc_html($location->description); ?></span>
-                                <?php endif; ?>
+                                <!-- <?php //if (!empty($location->description)): ?>
+                                    <span class="mulopimfwc-location-description"><?php //echo esc_html($location->description); ?></span>
+                                <?php //endif; ?> -->
                             </label>
                         </div>
                     <?php endforeach; ?>

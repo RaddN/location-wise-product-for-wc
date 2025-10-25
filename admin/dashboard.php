@@ -1156,6 +1156,7 @@ class MULOPIMFWC_Dashboard
                         <div class="lwp-card">
                             <h2><?php esc_html_e('Low Stock Products by Location', 'multi-location-product-and-inventory-management'); ?></h2>
                             <?php
+                            global $mulopimfwc_options;
                             $low_stock_sample_products = [
                                 [
                                     "product_id" => 1,
@@ -1220,6 +1221,7 @@ class MULOPIMFWC_Dashboard
                             ];
 
                             $low_stock_products = mulopimfwc_get_pro_class(false, $low_stock_products, $low_stock_sample_products);
+                            $out_of_stock_threshold = isset($mulopimfwc_options['out_of_stock_threshold']) ? (int) $mulopimfwc_options['out_of_stock_threshold'] : 0;
                             
                             if (!empty($low_stock_products)) : ?>
                                 <table class="lwp-low-stock-table <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
@@ -1241,14 +1243,14 @@ class MULOPIMFWC_Dashboard
                                                 </td>
                                                 <td><?php echo esc_html($item['location_name']); ?></td>
                                                 <td>
-                                                    <span class="stock-quantity <?php echo $item['stock'] == 0 ? 'out-of-stock' : 'low-stock'; ?>">
+                                                    <span class="stock-quantity <?php echo (int) $item['stock'] <= $out_of_stock_threshold ? 'out-of-stock' : 'low-stock'; ?>">
                                                         <?php echo esc_html($item['stock']); ?>
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span class="stock-status <?php echo $item['stock'] == 0 ? 'out-of-stock' : 'low-stock'; ?>">
+                                                    <span class="stock-status <?php echo (int) $item['stock'] <= $out_of_stock_threshold ? 'out-of-stock' : 'low-stock'; ?>">
                                                         <?php
-                                                        if ($item['stock'] == 0) {
+                                                        if ((int) $item['stock'] <= $out_of_stock_threshold) {
                                                             esc_html_e('Out of Stock', 'multi-location-product-and-inventory-management');
                                                         } else {
                                                             esc_html_e('Low Stock', 'multi-location-product-and-inventory-management');
@@ -1368,13 +1370,14 @@ class MULOPIMFWC_Dashboard
      */
     private function get_low_stock_products_efficiently()
     {
-        global $wpdb, $mulopimfwc_locations;
+        global $wpdb, $mulopimfwc_locations, $mulopimfwc_options;
 
         if (empty($mulopimfwc_locations)) {
             return [];
         }
 
         $low_stock_products = [];
+        $threshold = isset($mulopimfwc_options['low_stock_threshold']) ? (int) $mulopimfwc_options['low_stock_threshold'] : 5;
 
         foreach ($mulopimfwc_locations as $location) {
             $meta_key = '_location_stock_' . $location->term_id;
@@ -1386,11 +1389,11 @@ class MULOPIMFWC_Dashboard
                 WHERE p.post_type = 'product' 
                 AND p.post_status = 'publish'
                 AND pm.meta_key = %s
-                AND CAST(pm.meta_value AS SIGNED) <= 5
+                AND CAST(pm.meta_value AS SIGNED) <= %d
                 AND pm.meta_value != ''
                 ORDER BY CAST(pm.meta_value AS SIGNED) ASC
                 LIMIT 20
-            ", $meta_key);
+            ", $meta_key, $threshold);
 
             $results = $wpdb->get_results($query);
 

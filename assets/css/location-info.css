@@ -1,0 +1,566 @@
+/**
+ * Frontend Location Information Styles - Enhanced with Business Hours
+ * Multi Location Product & Inventory Management for WooCommerce
+ */
+
+/* =================================================================
+   Location Wrapper
+   ================================================================= */
+
+.mulopimfwc-location-info-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+    margin-bottom: 32px;
+}
+
+.mulopimfwc-location-compact {
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* =================================================================
+   Location Header
+   ================================================================= */
+
+.mulopimfwc-location-header {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.mulopimfwc-location-logo {
+    flex-shrink: 0;
+}
+
+.mulopimfwc-location-logo img {
+    max-width: 120px;
+    height: auto;
+    border-radius: 8px;
+}
+
+.mulopimfwc-location-title-wrapper {
+    flex: 1;
+}
+
+.mulopimfwc-title-status-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.mulopimfwc-location-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mulopimfwc-location-icon {
+    color: #3498db;
+    flex-shrink: 0;
+}
+
+.mulopimfwc-location-description {
+    margin-top: 12px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.mulopimfwc-location-description p:last-child {
+    margin-bottom: 0;
+}
+
+/* =================================================================
+   Compact Header
+   ================================================================= */
+
+.mulopimfwc-compact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.mulopimfwc-compact-header .mulopimfwc-section-title {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* =================================================================
+   Status Badge
+   ================================================================= */
+
+.mulopimfwc-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.mulopimfwc-status-open {
+    background: #d4edda;
+    color: #155724;
+}
+
+.mulopimfwc-status-closed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.mulopimfwc-status-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.mulopimfwc-status-open .mulopimfwc-status-icon {
+    color: #28a745;
+}
+
+.mulopimfwc-status-closed .mulopimfwc-status-icon {
+    color: #dc3545;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* =================================================================
+   Section Titles
+   ================================================================= */
+
+.mulopimfwc-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mulopimfwc-section-icon {
+    color: #3498db;
+}
+
+/* =================================================================
+   Info Grid
+   ================================================================= */
+
+.mulopimfwc-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.mulopimfwc-info-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.mulopimfwc-info-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.mulopimfwc-info-icon {
+    flex-shrink: 0;
+    color: #3498db;
+    margin-top: 2px;
+}
+
+.mulopimfwc-info-content {
+    flex: 1;
+}
+
+.mulopimfwc-info-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.mulopimfwc-info-value {
+    font-size: 15px;
+    color: #1a1a1a;
+    line-height: 1.5;
+}
+
+.mulopimfwc-info-value.mulopimfwc-link {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.mulopimfwc-info-value.mulopimfwc-link:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* =================================================================
+   Business Hours Section
+   ================================================================= */
+
+.mulopimfwc-location-hours-section {
+    margin: 32px 0;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.mulopimfwc-hours-status-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.mulopimfwc-hours-next-change {
+    font-size: 14px;
+    color: #666;
+    padding: 4px 12px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+}
+
+.mulopimfwc-hours-list {
+    display: grid;
+    gap: 8px;
+}
+
+.mulopimfwc-hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #fff;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.mulopimfwc-hours-row:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.mulopimfwc-hours-current {
+    background: #e3f2fd;
+    border: 2px solid #2196f3;
+    font-weight: 600;
+}
+
+.mulopimfwc-hours-day {
+    font-size: 15px;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mulopimfwc-today-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #2196f3;
+    background: rgba(33, 150, 243, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+}
+
+.mulopimfwc-hours-time {
+    font-size: 15px;
+    color: #555;
+}
+
+.mulopimfwc-closed-text {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.mulopimfwc-open-24 {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.mulopimfwc-hours-timezone {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fff;
+    border-radius: 6px;
+    width: fit-content;
+}
+
+.mulopimfwc-hours-timezone svg {
+    flex-shrink: 0;
+}
+
+/* =================================================================
+   Action Buttons
+   ================================================================= */
+
+.mulopimfwc-location-actions {
+    margin-top: 20px;
+}
+
+.mulopimfwc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.mulopimfwc-btn-primary {
+    background: #3498db;
+    color: #fff;
+}
+
+.mulopimfwc-btn-primary:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.mulopimfwc-btn svg {
+    flex-shrink: 0;
+}
+
+/* =================================================================
+   Map Section
+   ================================================================= */
+
+.mulopimfwc-location-map-section {
+    margin: 32px 0;
+}
+
+.mulopimfwc-map-wrapper {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mulopimfwc-location-map {
+    width: 100%;
+    height: 400px;
+    background: #f0f0f0;
+    position: relative;
+}
+
+.mulopimfwc-location-map.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e0e0e0;
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Map Popup Styles */
+.mulopimfwc-map-popup {
+    padding: 8px 4px;
+    min-width: 200px;
+}
+
+.mulopimfwc-map-popup-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+}
+
+.mulopimfwc-map-popup-address {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.mulopimfwc-map-popup-actions {
+    margin-top: 10px;
+}
+
+/* =================================================================
+   Gallery Section
+   ================================================================= */
+
+.mulopimfwc-location-gallery-section {
+    margin: 32px 0;
+}
+
+.mulopimfwc-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.mulopimfwc-gallery-item {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.mulopimfwc-gallery-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.mulopimfwc-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.mulopimfwc-gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* =================================================================
+   Responsive Design
+   ================================================================= */
+
+@media screen and (max-width: 768px) {
+    .mulopimfwc-location-info-wrapper {
+        padding: 20px;
+    }
+
+    .mulopimfwc-location-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .mulopimfwc-title-status-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mulopimfwc-location-title {
+        font-size: 22px;
+    }
+
+    .mulopimfwc-section-title {
+        font-size: 18px;
+    }
+
+    .mulopimfwc-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .mulopimfwc-location-map {
+        height: 300px;
+    }
+
+    .mulopimfwc-gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .mulopimfwc-hours-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .mulopimfwc-hours-status-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mulopimfwc-compact-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .mulopimfwc-location-title {
+        font-size: 20px;
+    }
+
+    .mulopimfwc-info-item {
+        padding: 12px;
+    }
+
+    .mulopimfwc-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .mulopimfwc-gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* =================================================================
+   Print Styles
+   ================================================================= */
+
+@media print {
+    .mulopimfwc-location-info-wrapper {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .mulopimfwc-location-map,
+    .mulopimfwc-gallery-grid,
+    .mulopimfwc-location-actions {
+        display: none;
+    }
+
+    .mulopimfwc-info-item {
+        break-inside: avoid;
+    }
+}
