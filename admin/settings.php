@@ -878,7 +878,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_specific_reviews' => 'off']);
                 $value = isset($options['location_specific_reviews']) ? $options['location_specific_reviews'] : 'off';
         ?>
-            <select disabled name="mulopimfwc_display_options[location_specific_reviews]">
+            <select name="mulopimfwc_display_options[location_specific_reviews]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
@@ -897,30 +897,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['show_location_in_reviews' => 'on']);
                 $value = isset($options['show_location_in_reviews']) ? $options['show_location_in_reviews'] : 'on';
         ?>
-            <select disabled name="mulopimfwc_display_options[show_location_in_reviews]">
+            <select name="mulopimfwc_display_options[show_location_in_reviews]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Display location information in product reviews.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'lwp-location-reviews-settings',
-            'mulopimfwc_reviews_section'
-        );
-
-        // Add "Filter Reviews by Location" field
-        add_settings_field(
-            'filter_reviews_by_location',
-            __('Filter Reviews by Location', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['filter_reviews_by_location' => 'on']);
-                $value = isset($options['filter_reviews_by_location']) ? $options['filter_reviews_by_location'] : 'on';
-        ?>
-            <select disabled name="mulopimfwc_display_options[filter_reviews_by_location]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Allow customers to filter reviews by store location.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
             'lwp-location-reviews-settings',
@@ -1023,7 +1004,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_in_meta_title' => 'on']);
                 $value = isset($options['location_in_meta_title']) ? $options['location_in_meta_title'] : 'on';
         ?>
-            <select disabled name="mulopimfwc_display_options[location_in_meta_title]">
+            <select name="mulopimfwc_display_options[location_in_meta_title]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
@@ -1042,7 +1023,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_in_meta_description' => 'on']);
                 $value = isset($options['location_in_meta_description']) ? $options['location_in_meta_description'] : 'on';
         ?>
-            <select disabled name="mulopimfwc_display_options[location_in_meta_description]">
+            <select name="mulopimfwc_display_options[location_in_meta_description]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
@@ -1061,7 +1042,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_structured_data' => 'on']);
                 $value = isset($options['location_structured_data']) ? $options['location_structured_data'] : 'on';
         ?>
-            <select disabled name="mulopimfwc_display_options[location_structured_data]">
+            <select name="mulopimfwc_display_options[location_structured_data]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>

@@ -1,0 +1,222 @@
+/* =========================================
+   Location-wise Reviews — Pro Styling
+   ========================================= */
+
+:root {
+  --mulopimfwc-accent: #6c5ce7;      /* Primary accent */
+  --mulopimfwc-accent-2: #a29bfe;    /* Secondary accent */
+  --mulopimfwc-ink: #1f2937;         /* Headings / strong text */
+  --mulopimfwc-text: #4b5563;        /* Body text */
+  --mulopimfwc-muted: #9ca3af;       /* Muted text */
+  --mulopimfwc-bg: #ffffff;          /* Card background */
+  --mulopimfwc-border: #eceff3;      /* Subtle borders */
+  --mulopimfwc-shadow: 0 6px 24px rgba(17, 24, 39, .08),
+                       0 2px 8px rgba(17, 24, 39, .06);
+  --mulopimfwc-radius: 14px;
+  --mulopimfwc-radius-sm: 10px;
+  --mulopimfwc-gap: 14px;
+  --mulopimfwc-trans: 180ms cubic-bezier(.22,.61,.36,1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mulopimfwc-ink: #e5e7eb;
+    --mulopimfwc-text: #cbd5e1;
+    --mulopimfwc-muted: #94a3b8;
+    --mulopimfwc-bg: #0f172a;
+    --mulopimfwc-border: #1f2937;
+    --mulopimfwc-shadow: 0 6px 24px rgba(0,0,0,.4),
+                         0 2px 8px rgba(0,0,0,.35);
+  }
+}
+
+/* ---------- Section wrapper ---------- */
+
+.mulopimfwc-neighbour-reviews {
+  margin: 2rem 0 2.25rem;
+  padding: 1.25rem;
+  background:
+    radial-gradient(1200px 300px at 10% -10%, rgba(162,155,254,.14), transparent 45%),
+    radial-gradient(900px 260px at 95% -5%, rgba(108,92,231,.10), transparent 50%),
+    var(--mulopimfwc-bg);
+  border: 1px solid var(--mulopimfwc-border);
+  border-radius: var(--mulopimfwc-radius);
+  box-shadow: var(--mulopimfwc-shadow);
+}
+
+/* ---------- Title & subtitle ---------- */
+
+.mulopimfwc-neighbour-reviews__title {
+  margin: 0 0 .35rem;
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: var(--mulopimfwc-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.mulopimfwc-neighbour-reviews__title::before {
+  content: "";
+  width: .6rem;
+  height: .6rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--mulopimfwc-accent), var(--mulopimfwc-accent-2));
+  box-shadow: 0 0 0 6px color-mix(in oklab, var(--mulopimfwc-accent) 12%, transparent);
+}
+
+.mulopimfwc-neighbour-reviews__subtitle {
+  margin: 0 0 .5rem;
+  font-size: .95rem;
+  color: var(--mulopimfwc-muted);
+}
+
+/* ---------- List container ---------- */
+
+.mulopimfwc-neighbour-reviews__list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mulopimfwc-gap);
+}
+
+@media (min-width: 760px) {
+  .mulopimfwc-neighbour-reviews__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Review item card ---------- */
+
+.mulopimfwc-neighbour-reviews__item {
+  border: 1px solid var(--mulopimfwc-border);
+  border-radius: var(--mulopimfwc-radius-sm);
+  background: var(--mulopimfwc-bg);
+  padding: 14px 14px 12px;
+  transition: transform var(--mulopimfwc-trans), box-shadow var(--mulopimfwc-trans), border-color var(--mulopimfwc-trans);
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+
+.mulopimfwc-neighbour-reviews__item::after {
+  /* Top accent hairline */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--mulopimfwc-accent), var(--mulopimfwc-accent-2));
+  opacity: .85;
+  transform: translateY(-100%);
+  transition: transform var(--mulopimfwc-trans);
+}
+
+.mulopimfwc-neighbour-reviews__item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mulopimfwc-shadow);
+  border-color: color-mix(in oklab, var(--mulopimfwc-accent) 28%, var(--mulopimfwc-border));
+}
+
+.mulopimfwc-neighbour-reviews__item:hover::after {
+  transform: translateY(0);
+}
+
+/* ---------- Meta row ---------- */
+
+.mulopimfwc-neighbour-reviews__meta {
+  font-size: .93rem;
+  color: var(--mulopimfwc-text);
+  margin: 0 0 .35rem;
+  display: flex;
+  align-items: center;
+  gap: .6ch;
+  flex-wrap: wrap;
+}
+
+.mulopimfwc-neighbour-reviews__author {
+  color: var(--mulopimfwc-ink);
+  font-weight: 700;
+}
+
+.mulopimfwc-neighbour-reviews__dot {
+  color: var(--mulopimfwc-muted);
+}
+
+.mulopimfwc-neighbour-reviews__date {
+  color: var(--mulopimfwc-muted);
+}
+
+/* ---------- Rating (stars) ---------- */
+
+.mulopimfwc-neighbour-reviews__rating {
+  margin-left: .35em;
+  font-size: 1rem;
+  letter-spacing: .08em;
+  white-space: nowrap;
+  background: linear-gradient(135deg, var(--mulopimfwc-accent), var(--mulopimfwc-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 0 rgba(0,0,0,.05);
+}
+
+/* ---------- Content ---------- */
+
+.mulopimfwc-neighbour-reviews__content {
+  color: var(--mulopimfwc-text);
+  line-height: 1.55;
+  font-size: .98rem;
+}
+
+.mulopimfwc-neighbour-reviews__content p {
+  margin: 0 0 .6rem;
+}
+
+.mulopimfwc-neighbour-reviews__content p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Per-review location label in Woo's list ---------- */
+
+.mulopimfwc-review-location {
+  margin: .55em 0 0;
+  font-size: .92em;
+  color: var(--mulopimfwc-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: .45ch;
+  padding: .25rem .5rem;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg,
+      color-mix(in oklab, var(--mulopimfwc-accent) 12%, transparent),
+      color-mix(in oklab, var(--mulopimfwc-accent-2) 10%, transparent)
+    );
+  border: 1px solid color-mix(in oklab, var(--mulopimfwc-border) 70%, transparent);
+}
+
+.mulopimfwc-review-location__label {
+  display: inline-flex;
+  align-items: center;
+  gap: .45ch;
+}
+
+/* ---------- Subtle focus ring for accessibility ---------- */
+
+.mulopimfwc-neighbour-reviews__item:focus-within {
+  outline: 2px solid color-mix(in oklab, var(--mulopimfwc-accent) 50%, transparent);
+  outline-offset: 2px;
+}
+
+/* ---------- Motion preference ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .mulopimfwc-neighbour-reviews__item,
+  .mulopimfwc-neighbour-reviews__item::after {
+    transition: none;
+  }
+}

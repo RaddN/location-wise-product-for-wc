@@ -1129,6 +1129,9 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'includes/location-based-shipping.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-shipping-payment-tax.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-coupons.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/location-wise-reviews.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/location-wise-seo.php';
+    
 
     class mulopimfwc_Location_Wise_Products
     {
