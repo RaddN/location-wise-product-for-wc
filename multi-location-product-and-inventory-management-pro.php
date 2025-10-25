@@ -1131,6 +1131,8 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-coupons.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-reviews.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-seo.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/location-wise-email.php';
+
     
 
     class mulopimfwc_Location_Wise_Products

@@ -1075,7 +1075,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_specific_emails' => 'off']);
                 $value = isset($options['location_specific_emails']) ? $options['location_specific_emails'] : 'off';
         ?>
-            <select disabled name="mulopimfwc_display_options[location_specific_emails]">
+            <select name="mulopimfwc_display_options[location_specific_emails]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
@@ -1094,7 +1094,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['include_location_logo_emails' => 'on']);
                 $value = isset($options['include_location_logo_emails']) ? $options['include_location_logo_emails'] : 'on';
         ?>
-            <select disabled name="mulopimfwc_display_options[include_location_logo_emails]">
+            <select name="mulopimfwc_display_options[include_location_logo_emails]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
@@ -1113,7 +1113,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['location_specific_email_recipients' => 'on']);
                 $value = isset($options['location_specific_email_recipients']) ? $options['location_specific_email_recipients'] : 'on';
         ?>
-            <select disabled name="mulopimfwc_display_options[location_specific_email_recipients]">
+            <select name="mulopimfwc_display_options[location_specific_email_recipients]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
