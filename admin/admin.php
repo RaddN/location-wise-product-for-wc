@@ -38,6 +38,29 @@ class MULOPIMFWC_Admin
         // [mulopimfwc_location_status id="123"]
 
         add_shortcode('mulopimfwc_location_status', [$this, 'shortcode_location_status']);
+        add_action('update_option_mulopimfwc_display_options', [$this, 'flush_rewrite_on_settings_change'], 10, 2);
+    }
+
+    /**
+     * Flush rewrite rules when location URL settings change
+     */
+    public function flush_rewrite_on_settings_change($old_value, $new_value)
+    {
+        // Check if location URL settings changed
+        $old_prefix = isset($old_value['location_url_prefix']) ? $old_value['location_url_prefix'] : 'store-location';
+        $new_prefix = isset($new_value['location_url_prefix']) ? $new_value['location_url_prefix'] : 'store-location';
+
+        $old_enabled = isset($old_value['enable_location_urls']) ? $old_value['enable_location_urls'] : 'on';
+        $new_enabled = isset($new_value['enable_location_urls']) ? $new_value['enable_location_urls'] : 'on';
+
+        // NEW: Check if URL format changed
+        $old_format = isset($old_value['url_location_format']) ? $old_value['url_location_format'] : 'query_param';
+        $new_format = isset($new_value['url_location_format']) ? $new_value['url_location_format'] : 'query_param';
+
+        // If prefix, enabled status, or format changed, flush rewrite rules
+        if ($old_prefix !== $new_prefix || $old_enabled !== $new_enabled || $old_format !== $new_format) {
+            flush_rewrite_rules();
+        }
     }
 
     public function shortcode_location_status($atts)
@@ -820,7 +843,6 @@ class MULOPIMFWC_Admin
                 $new_columns['status'] = __('Status', 'multi-location-product-and-inventory-management');
                 $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
                 $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
-                $new_columns['country'] = __('Country', 'multi-location-product-and-inventory-management');
             }
             $new_columns[$key] = $value;
         }
@@ -1055,7 +1077,17 @@ class MULOPIMFWC_Admin
     }
     public function register_store_location_taxonomy()
     {
-        register_taxonomy('mulopimfwc_store_location', 'product', [
+        global $mulopimfwc_options;
+        $mulopimfwc_options = get_option('mulopimfwc_display_options');
+
+        $enable_location_urls = isset($mulopimfwc_options['enable_location_urls']) ? $mulopimfwc_options['enable_location_urls'] : 'on';
+        $location_url_prefix = isset($mulopimfwc_options['location_url_prefix']) ? $mulopimfwc_options['location_url_prefix'] : 'store-location';
+
+        // NEW: Get URL format setting
+        $url_format = isset($mulopimfwc_options['url_location_format']) ? $mulopimfwc_options['url_location_format'] : 'query_param';
+
+        // Configure taxonomy settings based on URL format
+        $taxonomy_args = [
             'labels' => [
                 'name' => __('Locations', 'multi-location-product-and-inventory-management'),
                 'singular_name' => __('Location', 'multi-location-product-and-inventory-management'),
@@ -1079,21 +1111,15 @@ class MULOPIMFWC_Admin
             ],
             'description' => __('Manage locations for products and inventory tracking', 'multi-location-product-and-inventory-management'),
             'public' => true,
-            'publicly_queryable' => true,
+            'publicly_queryable' => $enable_location_urls === 'on' ? true : false,
             'hierarchical' => true,
             'show_ui' => true,
-            'show_in_menu' => true,
-            'show_in_nav_menus' => true,
-            'show_in_rest' => true,
+            'show_in_menu' => $enable_location_urls === 'on' ? true : false,
+            'show_in_nav_menus' => $enable_location_urls === 'on' ? true : false,
+            'show_in_rest' => $enable_location_urls === 'on' ? true : false,
             'show_tagcloud' => false,
             'show_in_quick_edit' => true,
             'show_admin_column' => true,
-            'query_var' => true,
-            'rewrite' => [
-                'slug' => 'store-location',
-                'with_front' => false,
-                'hierarchical' => true,
-            ],
             'capabilities' => [
                 'manage_terms' => 'manage_woocommerce',
                 'edit_terms' => 'manage_woocommerce',
@@ -1101,7 +1127,29 @@ class MULOPIMFWC_Admin
                 'assign_terms' => 'edit_products',
             ],
             'sort' => true,
-        ]);
+        ];
+
+        // Configure based on URL format
+        switch ($url_format) {
+            case 'path_prefix':
+                // URL format: /location/location-name
+                $taxonomy_args['query_var'] = false;
+                $taxonomy_args['rewrite'] = [
+                    'slug' => $location_url_prefix,
+                    'with_front' => false,
+                    'hierarchical' => true,
+                ];
+                break;
+
+            case 'query_param':
+            default:
+                // URL format: ?location=location-name
+                $taxonomy_args['query_var'] = 'location';
+                $taxonomy_args['rewrite'] = false;
+                break;
+        }
+
+        register_taxonomy('mulopimfwc_store_location', 'product', $taxonomy_args);
     }
 
     /** ---------- Business Hours Helpers ---------- */

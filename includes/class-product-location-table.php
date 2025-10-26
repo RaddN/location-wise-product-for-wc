@@ -392,9 +392,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $output = '<div class="location-actions">';
         foreach ($locations as $location) {
             $is_active = !get_post_meta($item['id'], '_location_disabled_' . $location->term_id, true);
-            $action_class = $is_active ? 'deactivate-location' : 'activate-location';
-            $action_text = $is_active ? __('Deactivate', 'multi-location-product-and-inventory-management') : __('Activate', 'multi-location-product-and-inventory-management');
-            $button_class = $is_active ? 'button-secondary' : 'button-primary';
+            $action_class = $is_active ? 'activate-location' : 'deactivate-location';
+            $action_text = $is_active ? __('Activated', 'multi-location-product-and-inventory-management') : __('Deactivated', 'multi-location-product-and-inventory-management');
+            $button_class = $is_active ? 'button-primary' : 'button-secondary';
 
             $output .= '<div class="location-action-item">';
             $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';

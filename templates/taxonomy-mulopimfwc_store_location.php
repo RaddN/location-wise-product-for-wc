@@ -24,11 +24,11 @@ do_action('mulopimfwc_before_main_content');
         <header class="mulopimfwc-location-archive-header">
             <?php
             /**
-             * Hook: mulopimfwc_store_location_description
+             * Hook: mulopimfwc_store_location_description_before_loop
              * 
              * @hooked MULOPIMFWC_Frontend_Location_Information::display_location_archive_info - 10
              */
-            do_action('mulopimfwc_store_location_description');
+            do_action('mulopimfwc_store_location_description_before_loop');
             ?>
         </header>
 

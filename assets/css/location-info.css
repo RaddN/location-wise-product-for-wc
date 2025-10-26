@@ -1,566 +1,1221 @@
 /**
- * Frontend Location Information Styles - Enhanced with Business Hours
+ * Enhanced Location Information Styles
  * Multi Location Product & Inventory Management for WooCommerce
  */
 
-/* =================================================================
-   Location Wrapper
-   ================================================================= */
+/* ========================================
+   ARCHIVE PAGE - FULL DISPLAY
+   ======================================== */
 
-.mulopimfwc-location-info-wrapper {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 32px;
-    margin-bottom: 32px;
+.mulopimfwc-location-full-wrapper {
+  margin: 0 0 40px 0;
 }
 
-.mulopimfwc-location-compact {
-    padding: 20px;
-    margin-bottom: 20px;
+/* Hero Section */
+.mulopimfwc-location-hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 50px 30px;
+  border-radius: 16px;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
 }
 
-/* =================================================================
-   Location Header
-   ================================================================= */
-
-.mulopimfwc-location-header {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 32px;
-    padding-bottom: 24px;
-    border-bottom: 2px solid #f0f0f0;
+.mulopimfwc-hero-content {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.mulopimfwc-location-logo {
-    flex-shrink: 0;
+.mulopimfwc-hero-logo {
+  flex-shrink: 0;
 }
 
-.mulopimfwc-location-logo img {
-    max-width: 120px;
-    height: auto;
-    border-radius: 8px;
+.mulopimfwc-hero-logo img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 15px;
+  backdrop-filter: blur(10px);
 }
 
-.mulopimfwc-location-title-wrapper {
-    flex: 1;
-}
-
-.mulopimfwc-title-status-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
+.mulopimfwc-hero-info {
+  flex: 1;
 }
 
 .mulopimfwc-location-title {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 700;
-    color: #1a1a1a;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
 }
 
-.mulopimfwc-location-icon {
-    color: #3498db;
-    flex-shrink: 0;
+.mulopimfwc-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.mulopimfwc-location-description {
-    margin-top: 12px;
-    color: #666;
-    line-height: 1.6;
+.mulopimfwc-location-title svg {
+  flex-shrink: 0;
 }
 
-.mulopimfwc-location-description p:last-child {
-    margin-bottom: 0;
+.mulopimfwc-hero-description {
+  margin-top: 15px;
+  margin-bottom: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  opacity: 0.95;
 }
 
-/* =================================================================
-   Compact Header
-   ================================================================= */
-
-.mulopimfwc-compact-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e5e5e5;
+.mulopimfwc-hero-description p {
+  margin-bottom: 0;
+}
+/* Grid Layout */
+.mulopimfwc-location-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.mulopimfwc-compact-header .mulopimfwc-section-title {
-    margin: 0;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* Cards */
+.mulopimfwc-info-card,
+.mulopimfwc-map-card,
+.mulopimfwc-gallery-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
 }
 
-/* =================================================================
-   Status Badge
-   ================================================================= */
-
-.mulopimfwc-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.4;
-    white-space: nowrap;
+.mulopimfwc-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1f2937;
 }
 
-.mulopimfwc-status-open {
-    background: #d4edda;
-    color: #155724;
+.mulopimfwc-card-title svg {
+  color: #667eea;
 }
 
-.mulopimfwc-status-closed {
-    background: #f8d7da;
-    color: #721c24;
+/* Contact List */
+.mulopimfwc-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
-.mulopimfwc-status-icon {
-    animation: pulse 2s ease-in-out infinite;
+.mulopimfwc-contact-item {
+  display: flex;
+  gap: 12px;
 }
 
-.mulopimfwc-status-open .mulopimfwc-status-icon {
-    color: #28a745;
+.mulopimfwc-contact-item svg {
+  flex-shrink: 0;
+  color: #667eea;
+  margin-top: 2px;
 }
 
-.mulopimfwc-status-closed .mulopimfwc-status-icon {
-    color: #dc3545;
+.mulopimfwc-contact-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+.mulopimfwc-contact-value {
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.5;
 }
 
-/* =================================================================
-   Section Titles
-   ================================================================= */
-
-.mulopimfwc-section-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin: 0 0 20px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.mulopimfwc-contact-link {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.2s;
 }
 
-.mulopimfwc-section-icon {
-    color: #3498db;
+.mulopimfwc-contact-link:hover {
+  color: #764ba2;
 }
 
-/* =================================================================
-   Info Grid
-   ================================================================= */
-
-.mulopimfwc-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 24px;
+/* Business Hours Card */
+.mulopimfwc-hours-card {
+  margin-top: 20px;
 }
 
-.mulopimfwc-info-item {
-    display: flex;
-    gap: 12px;
-    padding: 16px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+.mulopimfwc-hours-status {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 8px;
 }
 
-.mulopimfwc-info-item:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
+.mulopimfwc-next-change {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #6b7280;
 }
 
-.mulopimfwc-info-icon {
-    flex-shrink: 0;
-    color: #3498db;
-    margin-top: 2px;
+.mulopimfwc-next-change strong {
+  color: #374151;
 }
 
-.mulopimfwc-info-content {
-    flex: 1;
-}
-
-.mulopimfwc-info-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-}
-
-.mulopimfwc-info-value {
-    font-size: 15px;
-    color: #1a1a1a;
-    line-height: 1.5;
-}
-
-.mulopimfwc-info-value.mulopimfwc-link {
-    color: #3498db;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-.mulopimfwc-info-value.mulopimfwc-link:hover {
-    color: #2980b9;
-    text-decoration: underline;
-}
-
-/* =================================================================
-   Business Hours Section
-   ================================================================= */
-
-.mulopimfwc-location-hours-section {
-    margin: 32px 0;
-    padding: 24px;
-    background: #f8f9fa;
-    border-radius: 12px;
-}
-
-.mulopimfwc-hours-status-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.mulopimfwc-hours-next-change {
-    font-size: 14px;
-    color: #666;
-    padding: 4px 12px;
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #dee2e6;
-}
-
-.mulopimfwc-hours-list {
-    display: grid;
-    gap: 8px;
+.mulopimfwc-hours-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .mulopimfwc-hours-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: #fff;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
 }
 
 .mulopimfwc-hours-row:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: #f9fafb;
 }
 
-.mulopimfwc-hours-current {
-    background: #e3f2fd;
-    border: 2px solid #2196f3;
-    font-weight: 600;
+.mulopimfwc-current-day {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
 }
 
-.mulopimfwc-hours-day {
-    font-size: 15px;
-    color: #1a1a1a;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.mulopimfwc-current-day:hover {
+  background: #dbeafe;
 }
 
-.mulopimfwc-today-badge {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #2196f3;
-    background: rgba(33, 150, 243, 0.1);
-    padding: 2px 8px;
-    border-radius: 10px;
-    letter-spacing: 0.5px;
+.mulopimfwc-day-name {
+  font-weight: 500;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.mulopimfwc-hours-time {
-    font-size: 15px;
-    color: #555;
+.mulopimfwc-today-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3b82f6;
+  background: #dbeafe;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
-.mulopimfwc-closed-text {
-    color: #dc3545;
-    font-weight: 500;
+.mulopimfwc-day-hours {
+  font-size: 14px;
+  color: #6b7280;
 }
 
-.mulopimfwc-open-24 {
-    color: #28a745;
-    font-weight: 600;
+.mulopimfwc-closed {
+  color: #dc2626;
+  font-weight: 500;
 }
 
-.mulopimfwc-hours-timezone {
-    margin-top: 16px;
-    font-size: 13px;
-    color: #888;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    background: #fff;
-    border-radius: 6px;
-    width: fit-content;
+.mulopimfwc-all-day {
+  color: #059669;
+  font-weight: 500;
 }
 
-.mulopimfwc-hours-timezone svg {
-    flex-shrink: 0;
+.mulopimfwc-timezone-info {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
 }
 
-/* =================================================================
-   Action Buttons
-   ================================================================= */
-
-.mulopimfwc-location-actions {
-    margin-top: 20px;
+.mulopimfwc-timezone-info svg {
+  color: #9ca3af;
 }
 
+/* Status Badge */
+.mulopimfwc-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mulopimfwc-status-open {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.mulopimfwc-status-closed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.mulopimfwc-status-icon {
+  width: 8px;
+  height: 8px;
+}
+
+/* Buttons */
 .mulopimfwc-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  justify-content: center;
 }
 
 .mulopimfwc-btn-primary {
-    background: #3498db;
-    color: #fff;
+  background: #667eea;
+  color: #fff;
 }
 
 .mulopimfwc-btn-primary:hover {
-    background: #2980b9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.mulopimfwc-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.mulopimfwc-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.mulopimfwc-btn-sm {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.mulopimfwc-btn-block {
+  width: 100%;
 }
 
 .mulopimfwc-btn svg {
-    flex-shrink: 0;
+  flex-shrink: 0;
 }
 
-/* =================================================================
-   Map Section
-   ================================================================= */
-
-.mulopimfwc-location-map-section {
-    margin: 32px 0;
-}
-
-.mulopimfwc-map-wrapper {
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Map */
+.mulopimfwc-map-container {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .mulopimfwc-location-map {
-    width: 100%;
-    height: 400px;
-    background: #f0f0f0;
-    position: relative;
+  width: 100%;
+  height: 450px;
+  position: relative;
+}
+
+.mulopimfwc-map-large {
+  height: 500px;
+}
+
+.mulopimfwc-map-small {
+  height: 300px;
 }
 
 .mulopimfwc-location-map.loading::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 40px;
-    height: 40px;
-    border: 4px solid #e0e0e0;
-    border-top-color: #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  z-index: 1000;
 }
 
 @keyframes spin {
-    to { transform: translate(-50%, -50%) rotate(360deg); }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
-/* Map Popup Styles */
-.mulopimfwc-map-popup {
-    padding: 8px 4px;
-    min-width: 200px;
-}
-
-.mulopimfwc-map-popup-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 6px;
-}
-
-.mulopimfwc-map-popup-address {
-    font-size: 14px;
-    color: #666;
-    line-height: 1.4;
-}
-
-.mulopimfwc-map-popup-actions {
-    margin-top: 10px;
-}
-
-/* =================================================================
-   Gallery Section
-   ================================================================= */
-
-.mulopimfwc-location-gallery-section {
-    margin: 32px 0;
+/* Gallery */
+.mulopimfwc-gallery-card {
+  margin-top: 30px;
 }
 
 .mulopimfwc-gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
 }
 
 .mulopimfwc-gallery-item {
-    position: relative;
-    display: block;
-    aspect-ratio: 1;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.mulopimfwc-gallery-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  display: block;
 }
 
 .mulopimfwc-gallery-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
 }
 
 .mulopimfwc-gallery-item:hover img {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
-/* =================================================================
-   Responsive Design
-   ================================================================= */
+.mulopimfwc-gallery-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.mulopimfwc-gallery-item:hover .mulopimfwc-gallery-overlay {
+  opacity: 1;
+}
+
+.mulopimfwc-gallery-overlay svg {
+  color: #fff;
+}
+
+/* ========================================
+   SINGLE PRODUCT - TABBED DISPLAY
+   ======================================== */
+
+.mulopimfwc-tabbed-locations-wrapper {
+  margin: 30px 0;
+  padding: 30px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.mulopimfwc-locations-heading {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 25px 0;
+  color: #1f2937;
+}
+
+.mulopimfwc-locations-tabs-container {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 25px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Tabs Sidebar */
+.mulopimfwc-tabs-sidebar {
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+  max-height: 700px;
+}
+
+.mulopimfwc-tabs-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mulopimfwc-tab-item {
+  padding: 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.mulopimfwc-tab-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #667eea;
+  transform: scaleY(0);
+  transition: transform 0.2s;
+}
+
+.mulopimfwc-tab-item:hover {
+  background: #fff;
+}
+
+.mulopimfwc-tab-item.active {
+  background: #fff;
+  border-left: 4px solid #667eea;
+}
+
+.mulopimfwc-tab-item.active::before {
+  transform: scaleY(1);
+}
+
+.mulopimfwc-tab-logo {
+  margin-bottom: 12px;
+}
+
+.mulopimfwc-tab-logo img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  background: #fff;
+}
+
+.mulopimfwc-tab-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.mulopimfwc-tab-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.mulopimfwc-tab-title a {
+  color: #1f2937;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+
+.mulopimfwc-tab-title a:hover {
+  color: #667eea;
+}
+
+.mulopimfwc-tab-title svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.6;
+}
+
+.mulopimfwc-tab-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mulopimfwc-tab-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.mulopimfwc-tab-detail svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.mulopimfwc-tab-detail a {
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mulopimfwc-tab-detail a:hover {
+  color: #667eea;
+}
+
+.mulopimfwc-btn-directions {
+  width: 100%;
+  background: #667eea;
+  color: #fff;
+}
+
+.mulopimfwc-btn-directions:hover {
+  background: #5568d3;
+}
+
+/* Tabs Content - Map Panel */
+.mulopimfwc-tabs-content {
+  position: relative;
+  min-height: 700px;
+}
+
+.mulopimfwc-map-interactive {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+/* Map Info Overlay */
+.mulopimfwc-map-info-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 320px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.mulopimfwc-overlay-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.mulopimfwc-overlay-logo {
+  text-align: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mulopimfwc-overlay-logo img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.mulopimfwc-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mulopimfwc-overlay-header h4 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+  flex: 1;
+}
+
+.mulopimfwc-overlay-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.mulopimfwc-overlay-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mulopimfwc-overlay-item {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.mulopimfwc-overlay-item svg {
+  flex-shrink: 0;
+  color: #667eea;
+  margin-top: 2px;
+}
+
+.mulopimfwc-overlay-item a {
+  color: #374151;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mulopimfwc-overlay-item a:hover {
+  color: #667eea;
+}
+
+.mulopimfwc-overlay-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.mulopimfwc-overlay-actions .mulopimfwc-btn {
+  flex: 1;
+}
+
+/* ========================================
+   COMPACT DISPLAY
+   ======================================== */
+
+.mulopimfwc-location-compact {
+  margin: 20px 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.mulopimfwc-location-compact > div {
+  flex-basis: 50%;
+}
+
+.mulopimfwc-compact-header {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mulopimfwc-compact-logo img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.mulopimfwc-compact-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.mulopimfwc-compact-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f2937;
+}
+
+.mulopimfwc-compact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mulopimfwc-compact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.mulopimfwc-compact-item svg {
+  flex-shrink: 0;
+  color: #667eea;
+  margin-top: 2px;
+}
+
+.mulopimfwc-compact-item a {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mulopimfwc-compact-item a:hover {
+  color: #764ba2;
+}
+
+.mulopimfwc-compact-actions {
+  margin-bottom: 15px;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media screen and (max-width: 1024px) {
+  .mulopimfwc-location-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mulopimfwc-locations-tabs-container {
+    grid-template-columns: 1fr;
+  }
+
+  .mulopimfwc-tabs-sidebar {
+    max-height: 400px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .mulopimfwc-tabs-content {
+    min-height: 500px;
+  }
+
+  .mulopimfwc-map-info-overlay {
+    position: static;
+    width: auto;
+    margin-bottom: 15px;
+  }
+}
 
 @media screen and (max-width: 768px) {
-    .mulopimfwc-location-info-wrapper {
-        padding: 20px;
-    }
+  .mulopimfwc-hero-content {
+    flex-direction: column;
+    text-align: center;
+  }
 
-    .mulopimfwc-location-header {
+  .mulopimfwc-location-title {
+    font-size: 28px;
+    justify-content: center;
+  }
+
+  .mulopimfwc-hero-logo img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .mulopimfwc-tab-item {
+    padding: 15px;
+  }
+
+  .mulopimfwc-gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .mulopimfwc-location-map {
+    height: 350px;
+  }
+
+  .mulopimfwc-map-large {
+    height: 400px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .mulopimfwc-tabbed-locations-wrapper {
+    padding: 15px;
+  }
+
+  .mulopimfwc-locations-heading {
+    font-size: 20px;
+  }
+
+  .mulopimfwc-tab-logo img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .mulopimfwc-overlay-actions {
+    flex-direction: column;
+  }
+
+  .mulopimfwc-overlay-actions .mulopimfwc-btn {
+    width: 100%;
+  }
+}
+
+/* Add this to your location-info.css file */
+
+/* Map Info Overlay - Toggle visibility */
+.mulopimfwc-map-info-overlay {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.mulopimfwc-map-info-overlay.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Marker cursor pointer */
+.mulopimfwc-custom-marker {
+  cursor: pointer;
+}
+
+.mulopimfwc-marker-pin {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.mulopimfwc-marker-pin:hover {
+  transform: scale(1.1);
+}
+
+.mulopimfwc-marker-pin:active {
+  transform: scale(0.95);
+}
+
+/* Overlay content styling */
+.mulopimfwc-overlay-content {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mulopimfwc-location-archive-wrapper {
+    padding-top: clamp(1.25rem, 0.625rem + 3.125vw, 4.375rem);
+}
+
+
+/**
+ * Additional CSS for Search and Grid Layout
+ * Add this to your location-info.css file
+ */
+
+/* ========================================
+   SHORTCODE WRAPPER
+   ======================================== */
+
+.mulopimfwc-shortcode-locations-wrapper {
+    margin: 30px 0;
+    padding: 0;
+}
+.mulopimfwc-shortcode-locations-wrapper a, .mulopimfwc-map-wrapper a {
+    text-decoration: none !important;
+}
+
+.mulopimfwc-shortcode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+/* ========================================
+   SEARCH FUNCTIONALITY
+   ======================================== */
+
+.mulopimfwc-search-wrapper {
+    position: relative;
+    max-width: 400px;
+    flex: 1;
+    min-width: 250px;
+}
+
+.mulopimfwc-location-search {
+    width: 100%;
+    padding: 12px 45px 12px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    transition: all 0.3s;
+    background: #fff;
+}
+
+.mulopimfwc-location-search:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.mulopimfwc-location-search::placeholder {
+    color: #9ca3af;
+}
+
+.mulopimfwc-search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+    
+}
+
+/* No Results Message */
+.mulopimfwc-no-results {
+    padding: 60px 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.mulopimfwc-no-results svg {
+    color: #d1d5db;
+    margin-bottom: 15px;
+}
+
+.mulopimfwc-no-results p {
+    font-size: 16px;
+    margin: 0;
+    color: #9ca3af;
+}
+
+/* Search Hidden Animation */
+.mulopimfwc-tab-item.search-hidden,
+.mulopimfwc-grid-location-item.search-hidden {
+    display: none;
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+/* ========================================
+   GRID LAYOUT
+   ======================================== */
+
+.mulopimfwc-grid-locations-wrapper {
+    padding: 30px;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+.mulopimfwc-locations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 25px;
+}
+
+.mulopimfwc-grid-location-item {
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.4s ease-out;
+}
+
+.mulopimfwc-grid-location-item:hover {
+    transform: translateY(-4px);
+}
+
+.mulopimfwc-grid-location-item .mulopimfwc-location-compact {
+    margin: 0;
+    height: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.3s;
+}
+
+.mulopimfwc-grid-location-item:hover .mulopimfwc-location-compact {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   SHORTCODE SPECIFIC ADJUSTMENTS
+   ======================================== */
+
+.mulopimfwc-shortcode-locations-wrapper .mulopimfwc-tabbed-locations-wrapper {
+    background: transparent;
+    padding: 0;
+}
+
+.mulopimfwc-shortcode-locations-wrapper .mulopimfwc-locations-heading {
+    margin: 0;
+}
+
+/* Multiple Shortcode Maps Support */
+[id^="mulopimfwc-tabbed-map-shortcode-"] {
+    width: 100%;
+    height: 100%;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN FOR SEARCH & GRID
+   ======================================== */
+
+@media screen and (max-width: 1024px) {
+    .mulopimfwc-locations-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .mulopimfwc-shortcode-header {
         flex-direction: column;
-        gap: 16px;
+        align-items: stretch;
     }
-
-    .mulopimfwc-title-status-row {
-        flex-direction: column;
-        align-items: flex-start;
+    
+    .mulopimfwc-search-wrapper {
+        max-width: 100%;
     }
-
-    .mulopimfwc-location-title {
-        font-size: 22px;
-    }
-
-    .mulopimfwc-section-title {
-        font-size: 18px;
-    }
-
-    .mulopimfwc-info-grid {
+    
+    .mulopimfwc-locations-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 15px;
     }
-
-    .mulopimfwc-location-map {
-        height: 300px;
-    }
-
-    .mulopimfwc-gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 12px;
-    }
-
-    .mulopimfwc-hours-row {
+    
+    .mulopimfwc-grid-location-item .mulopimfwc-location-compact {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
     }
-
-    .mulopimfwc-hours-status-wrapper {
-        flex-direction: column;
-        align-items: flex-start;
+    
+    .mulopimfwc-grid-location-item .mulopimfwc-location-compact > div {
+        flex-basis: 100%;
     }
-
-    .mulopimfwc-compact-header {
-        flex-direction: column;
-        align-items: flex-start;
+    
+    .mulopimfwc-grid-location-item .mulopimfwc-map-wrapper {
+        min-height: 250px;
     }
 }
 
 @media screen and (max-width: 480px) {
-    .mulopimfwc-location-title {
-        font-size: 20px;
+    .mulopimfwc-location-search {
+        font-size: 14px;
+        padding: 10px 40px 10px 12px;
     }
-
-    .mulopimfwc-info-item {
-        padding: 12px;
+    
+    .mulopimfwc-search-icon {
+        width: 18px;
+        height: 18px;
     }
-
-    .mulopimfwc-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .mulopimfwc-gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
+    
+    .mulopimfwc-grid-locations-wrapper {
+        padding: 15px;
     }
 }
 
-/* =================================================================
-   Print Styles
-   ================================================================= */
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+.mulopimfwc-location-search.loading {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'%3E%3Cpath fill='%23667eea' d='M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 20px;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+.mulopimfwc-location-search:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.mulopimfwc-tab-item:focus-visible,
+.mulopimfwc-grid-location-item:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .mulopimfwc-location-search {
+        border-width: 3px;
+    }
+    
+    .mulopimfwc-tab-item.active {
+        border-left-width: 6px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .mulopimfwc-grid-location-item,
+    .mulopimfwc-tab-item,
+    .mulopimfwc-location-search,
+    .mulopimfwc-grid-location-item.search-hidden,
+    .mulopimfwc-tab-item.search-hidden {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
 
 @media print {
-    .mulopimfwc-location-info-wrapper {
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-
-    .mulopimfwc-location-map,
-    .mulopimfwc-gallery-grid,
-    .mulopimfwc-location-actions {
+    .mulopimfwc-search-wrapper {
         display: none;
     }
-
-    .mulopimfwc-info-item {
-        break-inside: avoid;
+    
+    .mulopimfwc-location-map,
+    .mulopimfwc-map-info-overlay {
+        display: none;
     }
+    
+    .mulopimfwc-locations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mulopimfwc-grid-location-item {
+        page-break-inside: avoid;
+    }
+}
+
+.mulopimfwc-location-info-wrapper.mulopimfwc-location-grid {
+    flex-direction: column-reverse;
 }

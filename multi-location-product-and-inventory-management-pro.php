@@ -3134,7 +3134,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         new mulopimfwc_Location_Wise_Products();
     }
 
-    add_action('plugins_loaded', 'mulopimfwc_location_wise_products_init');
+    add_action('plugins_loaded', 'mulopimfwc_location_wise_products_init', 100);
 
 
 
