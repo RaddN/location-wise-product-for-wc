@@ -5,10 +5,8 @@ if (!defined('ABSPATH')) exit;
 class mulopimfwc_settings
 {
 
-    private $MULOPIMFWC_Admin;
     public function __construct()
     {
-        $this->MULOPIMFWC_Admin = new MULOPIMFWC_Admin();
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_init', [$this, 'handle_reset_settings']);
     }
@@ -552,7 +550,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['enable_location_shipping' => 'off']);
                 $value = isset($options['enable_location_shipping']) ? $options['enable_location_shipping'] : 'off';
 
-                $zones_methods = $this->MULOPIMFWC_Admin->get_shipping_methods_grouped_by_zone();
+                global $MULOPIMFWC_Admin;
+
+                $zones_methods = $MULOPIMFWC_Admin->get_shipping_methods_grouped_by_zone();
         ?>
             <select <?php echo disabled($zones_methods && count($zones_methods) <= 1); ?> name="mulopimfwc_display_options[enable_location_shipping]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
@@ -643,7 +643,8 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = get_option('mulopimfwc_display_options', ['enable_location_payment_methods' => 'off']);
                 $value = isset($options['enable_location_payment_methods']) ? $options['enable_location_payment_methods'] : 'off';
-                $payments = $this->MULOPIMFWC_Admin->get_payment_method_options();
+                global $MULOPIMFWC_Admin;
+                $payments = $MULOPIMFWC_Admin->get_payment_method_options();
 
         ?>
             <select <?php echo disabled(empty($payments)); ?> name="mulopimfwc_display_options[enable_location_payment_methods]">

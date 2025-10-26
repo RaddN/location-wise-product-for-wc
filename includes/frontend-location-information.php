@@ -10,19 +10,12 @@ if (!defined('ABSPATH')) exit;
 
 class MULOPIMFWC_Frontend_Location_Information
 {
-    /**
-     * Reference to Admin class for business hours functionality
-     */
-    private $admin;
 
     /**
      * Constructor
      */
     public function __construct()
-    {
-        // Get admin instance for business hours methods
-        $this->admin = new MULOPIMFWC_Admin();
-        
+    {        
         // Enqueue scripts and styles
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
 

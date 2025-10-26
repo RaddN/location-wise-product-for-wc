@@ -1155,7 +1155,8 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             add_filter('the_title', [$this, 'add_location_to_product_title'], 10, 2);
             add_filter('woocommerce_product_title', [$this, 'add_location_to_wc_product_title'], 10, 2);
-            new MULOPIMFWC_Admin();
+            global $MULOPIMFWC_Admin;
+            $MULOPIMFWC_Admin = new MULOPIMFWC_Admin();
             add_filter('woocommerce_related_products', [$this, 'filter_related_products_by_location'], 10, 3);
             add_filter('woocommerce_recently_viewed_products_widget_query_args', [$this, 'filter_widget_products_by_location']);
             add_filter('woocommerce_cross_sells_products', [$this, 'filter_cross_sells_by_location'], 10, 1);
