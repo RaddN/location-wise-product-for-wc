@@ -65,7 +65,6 @@ class MULOPIMFWC_Runtime_Filters
         }
 
         $loc_id = $this->get_active_location_id();
-        error_log('Active location ID: ' . json_encode($loc_id));
         if (! $loc_id) {
             self::$loc_cache = [];
             return self::$loc_cache;
@@ -128,9 +127,7 @@ class MULOPIMFWC_Runtime_Filters
     public function filter_payment_gateways($gateways)
     {
         $cfg = $this->get_location_config();
-        error_log('Payment gateways before filter: ' . print_r(array_keys($gateways), true));
-        error_log('Location config payments: ' . json_encode($cfg));
-        if (empty($cfg['payments'])) {
+        if (empty($cfg['payments']) || !is_array($cfg['payments']) || count($cfg['payments']) === 0 || $cfg['payments'] === [""]) {
             // No restriction -> do nothing
             return $gateways;
         }

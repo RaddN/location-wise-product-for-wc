@@ -465,67 +465,6 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'location-inventory-settings',
             'mulopimfwc_inventory_management_section'
         );
-        // Add Inventory Reservation Section
-        add_settings_section(
-            'mulopimfwc_inventory_reservation_section',
-            __('<svg viewBox="0 0 24 24" 
-     fill="none" 
-     xmlns="http://www.w3.org/2000/svg"
-     width="20" height="20" 
-     style="margin-right:6px;vertical-align:middle;background-color:#dcfce7;padding:10px;border-radius:6px">
-  <path fill="#16a34a" fill-rule="evenodd" clip-rule="evenodd" d="M0 4.6A2.6 2.6 0 0 1 2.6 2h18.8A2.6 2.6 0 0 1 24 4.6v.8A2.6 2.6 0 0 1 21.4 8H21v10.6c0 1.33-1.07 2.4-2.4 2.4H5.4C4.07 21 3 19.93 3 18.6V8h-.4A2.6 2.6 0 0 1 0 5.4zM2.6 4a.6.6 0 0 0-.6.6v.8a.6.6 0 0 0 .6.6h18.8a.6.6 0 0 0 .6-.6v-.8a.6.6 0 0 0-.6-.6zM8 10a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2z" fill="#000"/>
-</svg>Inventory Reservation Settings', 'multi-location-product-and-inventory-management'),
-            function () {
-                echo '<p>' . esc_html__('Configure how inventory is reserved during checkout process.', 'multi-location-product-and-inventory-management') . '</p>';
-            },
-            'location-inventory-reserve-settings'
-        );
-
-        // Add "Enable Inventory Reservation" field
-        add_settings_field(
-            'enable_inventory_reservation',
-            __('Enable Inventory Reservation', 'multi-location-product-and-inventory-management'),
-            function () {
-                $this->render_advance_checkbox("enable_inventory_reservation", __("Reserve inventory when products are added to cart.", 'multi-location-product-and-inventory-management'), true);
-            },
-            'location-inventory-reserve-settings',
-            'mulopimfwc_inventory_reservation_section'
-        );
-
-        // Add "Reservation Duration (Minutes)" field
-        add_settings_field(
-            'reservation_duration',
-            __('Reservation Duration (Minutes)', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['reservation_duration' => '60']);
-                $value = isset($options['reservation_duration']) ? $options['reservation_duration'] : '60';
-        ?>
-            <input disabled type="number" name="mulopimfwc_display_options[reservation_duration]" value="<?php echo esc_attr($value); ?>" min="1" max="1440" class="small-text">
-            <p class="description"><?php echo esc_html_e('How long to reserve inventory items in cart before releasing (1-1440 minutes).', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'location-inventory-reserve-settings',
-            'mulopimfwc_inventory_reservation_section'
-        );
-
-        // Add "Reservation Handling" field
-        add_settings_field(
-            'reservation_handling',
-            __('Reservation Handling', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['reservation_handling' => 'soft_reserve']);
-                $value = isset($options['reservation_handling']) ? $options['reservation_handling'] : 'soft_reserve';
-        ?>
-            <select disabled name="mulopimfwc_display_options[reservation_handling]">
-                <option value="soft_reserve" <?php selected($value, 'soft_reserve'); ?>><?php echo esc_html_e('Soft Reserve (Display as reserved but allow overselling)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="hard_reserve" <?php selected($value, 'hard_reserve'); ?>><?php echo esc_html_e('Hard Reserve (Prevent others from purchasing reserved items)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('How strictly to enforce inventory reservations.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'location-inventory-reserve-settings',
-            'mulopimfwc_inventory_reservation_section'
-        );
         // Add "Product Shipping" section
         add_settings_section(
             'mulopimfwc_shipping_section',
@@ -902,79 +841,6 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_reviews_section'
         );
 
-        // Location-based Product Bundle Settings
-        add_settings_section(
-            'mulopimfwc_product_bundle_section',
-            __('<svg viewBox="0 0 36 36" 
-     xmlns="http://www.w3.org/2000/svg"
-     width="20" height="20" 
-     style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
-  <path fill="#2563eb" class="clr-i-solid clr-i-solid-path-1" d="m32.43 8.35-13-6.21a1 1 0 0 0-.87 0l-15 7.24a1 1 0 0 0-.57.9v16.55a1 1 0 0 0 .6.92l13 6.19a1 1 0 0 0 .87 0l15-7.24a1 1 0 0 0 .57-.9V9.25a1 1 0 0 0-.6-.9M19 4.15l10.93 5.22-5.05 2.44-10.67-5.35Zm-2 11.49L6 10.41l5.9-2.85 10.7 5.35Zm1 15.8V17.36l13-6.29v14.1Z"/>
-</svg>Location-based Product Bundles', 'multi-location-product-and-inventory-management'),
-            function () {
-                echo '<p>' . esc_html__('Configure product bundles that are specific to store locations.', 'multi-location-product-and-inventory-management') . '</p>';
-            },
-            'lwp-location-bundles-settings'
-        );
-
-        // Add "Enable Location Bundles" field
-        add_settings_field(
-            'enable_location_bundles',
-            __('Enable Location Bundles', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['enable_location_bundles' => 'on']);
-                $value = isset($options['enable_location_bundles']) ? $options['enable_location_bundles'] : 'on';
-        ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_bundles]">
-                <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('Enable location-specific product bundles.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'lwp-location-bundles-settings',
-            'mulopimfwc_product_bundle_section'
-        );
-
-        // Add "Bundle Stock Management" field
-        add_settings_field(
-            'bundle_stock_management',
-            __('Bundle Stock Management', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['bundle_stock_management' => 'components']);
-                $value = isset($options['bundle_stock_management']) ? $options['bundle_stock_management'] : 'components';
-        ?>
-            <select disabled name="mulopimfwc_display_options[bundle_stock_management]">
-                <option value="components" <?php selected($value, 'components'); ?>><?php echo esc_html_e('Component Based (Check stock of each item)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="bundle" <?php selected($value, 'bundle'); ?>><?php echo esc_html_e('Bundle Based (Treat as a single product)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('How to manage stock for bundled products.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'lwp-location-bundles-settings',
-            'mulopimfwc_product_bundle_section'
-        );
-
-        // Add "Bundle Pricing Display" field
-        add_settings_field(
-            'bundle_pricing_display',
-            __('Bundle Pricing Display', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['bundle_pricing_display' => 'itemized']);
-                $value = isset($options['bundle_pricing_display']) ? $options['bundle_pricing_display'] : 'itemized';
-        ?>
-            <select disabled name="mulopimfwc_display_options[bundle_pricing_display]">
-                <option value="itemized" <?php selected($value, 'itemized'); ?>><?php echo esc_html_e('Itemized (Show individual prices)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="bundle_only" <?php selected($value, 'bundle_only'); ?>><?php echo esc_html_e('Bundle Only (Show only total price)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="both" <?php selected($value, 'both'); ?>><?php echo esc_html_e('Both (Show total and savings)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('How to display pricing for product bundles.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
-            },
-            'lwp-location-bundles-settings',
-            'mulopimfwc_product_bundle_section'
-        );
-
         // Add Location SEO section
         add_settings_section(
             'mulopimfwc_seo_section',
@@ -1112,6 +978,67 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Send order notifications to location-specific email addresses.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+            },
+            'lwp-location-notifications-settings',
+            'mulopimfwc_location_email_section'
+        );
+
+        // Add "Notes" field
+        add_settings_field(
+            'location_email_notes',
+            '',
+            function () {
+        ?>
+            <div style="display:flex;gap:16px;align-items:flex-start;background:#f8fafc;border:1px solid #e6eef8;padding:16px;border-radius:10px;max-width:820px;">
+                <div style="flex-shrink:0;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="display:block;">
+                        <path fill="#2563eb" d="M12 2C8.7 2 6 4.7 6 8c0 5.2 6 11.1 6 11.1s6-6 6-11.1c0-3.3-2.7-6-6-6m0 3.9c1.1 0 2.1 1 2.1 2.1 0 1.2-.9 2.1-2.1 2.1S9.9 9.1 9.9 8c0-1.2 1-2.1 2.1-2.1z" />
+                    </svg>
+                </div>
+                <div style="flex:1;">
+                    <h4 style="margin:0 0 8px 0;color:#0f172a;font-weight:700;font-size:15px;"><?php echo esc_html__('Email Notification — Important Notes', 'multi-location-product-and-inventory-management'); ?></h4>
+
+                    <p style="margin:0 0 10px 0;color:#475569;line-height:1.5;">
+                        <?php echo esc_html__('When enabled, order and pickup notifications will be sent to the location manager (if assigned) and the location contact email. Admin recipients depend on your notification settings.', 'multi-location-product-and-inventory-management'); ?>
+                    </p>
+
+                    <p style="margin:0 0 8px 0;color:#475569;font-weight:600;"><?php echo esc_html__('Available placeholders for email templates:', 'multi-location-product-and-inventory-management'); ?></p>
+
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                        <code style="background:#0f172a;color:#fff;padding:5px 8px;border-radius:6px;font-size:13px;"><?php echo esc_html('{order_store_location}'); ?></code>
+                        <code style="background:#0f172a;color:#fff;padding:5px 8px;border-radius:6px;font-size:13px;"><?php echo esc_html('{store_location_address}'); ?></code>
+                        <code style="background:#0f172a;color:#fff;padding:5px 8px;border-radius:6px;font-size:13px;"><?php echo esc_html('{store_location_phone}'); ?></code>
+                        <code style="background:#0f172a;color:#fff;padding:5px 8px;border-radius:6px;font-size:13px;"><?php echo esc_html('{store_location_email}'); ?></code>
+                        <code style="background:#0f172a;color:#fff;padding:5px 8px;border-radius:6px;font-size:13px;"><?php echo esc_html('{store_location_logo}'); ?></code>
+                        <code style="background:#0f172a;color:#fff;padding:5px 8px;border-radius:6px;font-size:13px;"><?php echo esc_html('{store_manager_name}'); ?></code>
+                    </div>
+
+                    <p style="margin:0 0 8px 0;color:#475569;font-weight:600;"><?php echo esc_html__('Example usage in an email template:', 'multi-location-product-and-inventory-management'); ?></p>
+
+                    <pre style="background:#0b1220;color:#e6f0ff;padding:10px;border-radius:6px;overflow:auto;font-size:13px;margin:0 0 10px 0;max-width:100%;">
+    <?php echo esc_html("Order received for: {order_store_location}\nAddress: {store_location_address}\nContact: {store_location_phone} / {store_location_email}\nManager: {store_manager_name}\n\n{store_location_logo}"); ?>
+                </pre>
+
+                    <p style="margin:8px 0 0 0;color:#475569;line-height:1.4;">
+                        <?php
+                        /* translators: %s: documentation url */
+                        printf(
+                            wp_kses(
+                                __('If a location logo is not available the site/store default will be used. For full integration details and more placeholders, see the <a href="%s" target="_blank">plugin documentation</a>.', 'multi-location-product-and-inventory-management'),
+                                array(
+                                    'a' => array(
+                                        'href' => array(),
+                                        'target' => array()
+                                    )
+                                )
+                            ),
+                            esc_url('https://plugincy.com/documentations/multi-location-product-and-inventory-management/')
+                        );
+                        ?>
+                    </p>
+                </div>
+            </div>
         <?php
             },
             'lwp-location-notifications-settings',
@@ -1259,12 +1186,12 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             <p class="description"><?php echo esc_html_e('URL Prefix (e.g., "store" for store-name.example.com):', 'multi-location-product-and-inventory-management'); ?></p>
             <p class="description" style="color: #4a4a4a; display: flex; align-items: center; background: #e0f7fa; border-radius: 5px; gap: 10px; font-size: 12px; font-weight: bold; padding: 10px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" style="fill: #00796b; width: 15%;">
-                    <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18C5.58 18 2 14.42 2 10S5.58 2 10 2s8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                    <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18C5.58 18 2 14.42 2 10S5.58 2 10 2s8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
                 </svg>
                 <?php echo esc_html_e('After changes, visit Settings > Permalinks and click "Save Changes" to flush rewrite rules.', 'multi-location-product-and-inventory-management'); ?>
             </p>
-            
-            <?php
+
+        <?php
             },
             'lwp-url-management-settings',
             'mulopimfwc_location_url_section'
@@ -2325,13 +2252,30 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             function () {
                 $options = get_option('mulopimfwc_display_options', ['enable_location_pickup' => 'on']);
                 $value = isset($options['enable_location_pickup']) ? $options['enable_location_pickup'] : 'on';
+
+                // Check if local pickup is enabled in WooCommerce settings
+                $pickup_settings = get_option('woocommerce_pickup_location_settings');
         ?>
-            <select disabled name="mulopimfwc_display_options[enable_location_pickup]">
+            <select name="mulopimfwc_display_options[enable_location_pickup]">
                 <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Enable in-store pickup option for products at specific locations.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+            <?php
+                if (isset($pickup_settings['enabled']) && $pickup_settings['enabled'] === 'yes') {
+                    // Local pickup is enabled
+                } else {
+                    echo '<div class="lwp-notice lwp-notice-warning" style="background-color: #fff3cd; border: 1px solid #ffeeba; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 10px 0;">
+                    <div style="display: flex; align-items: start; gap: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="flex-shrink: 0; margin-top: 2px;">
+                            <path fill="#856404" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                        </svg>
+                        <div>
+                            <p style="margin: 0; color: #856404;">' . esc_html__('Local pickup is not enabled in WooCommerce settings. Please enable it to use this feature.', 'multi-location-product-and-inventory-management') . '</p>
+                        </div>
+                    </div>
+                </div>';
+                }
             },
             'lwp-location-pickup-settings',
             'mulopimfwc_location_pickup_section'
@@ -2344,7 +2288,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             function () {
                 $options = get_option('mulopimfwc_display_options', ['pickup_instructions' => '']);
                 $value = isset($options['pickup_instructions']) ? $options['pickup_instructions'] : '';
-        ?>
+            ?>
             <textarea disabled name="mulopimfwc_display_options[pickup_instructions]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
             <p class="description"><?php echo esc_html_e('Default pickup instructions shown to customers (can be customized per location).', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
@@ -3053,11 +2997,6 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         <?php do_settings_sections('location-inventory-settings'); ?>
                                     </div>
                                 </div>
-                                <div class="lwp-settings-section">
-                                    <div class="lwp-settings-box">
-                                        <?php do_settings_sections('location-inventory-reserve-settings'); ?>
-                                    </div>
-                                </div>
                             </div>
                             <div id="location-wise-everything" class="lwp-tab-content" style="display:none;">
                                 <div class="lwp-settings-section">
@@ -3080,10 +3019,6 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                                     <path d="M165 0C74.019 0 0 74.019 0 165s74.019 165 165 165 165-74.019 165-165S255.981 0 165 0m0 300c-74.439 0-135-60.561-135-135S90.561 30 165 30s135 60.561 135 135-60.561 135-135 135"></path>
                                                     <path d="m247.157 128.196-47.476-6.9-21.23-43.019a15 15 0 0 0-26.902 0l-21.23 43.019-47.476 6.9a14.998 14.998 0 0 0-8.312 25.585l34.353 33.486-8.109 47.282a15 15 0 0 0 21.765 15.813L165 228.039l42.462 22.323a15 15 0 0 0 6.979 1.723h.05c8.271-.015 14.972-6.725 14.972-15 0-1.152-.13-2.274-.375-3.352l-7.97-46.466 34.352-33.486a15 15 0 0 0-8.313-25.585"></path>
                                                 </svg><?php echo esc_html_e('Reviews', 'multi-location-product-and-inventory-management'); ?></a>
-                                            <a href="#lwp-subtab-bundles" class="lwp-subtab"><svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="margin-right:6px;vertical-align:middle">
-                                                    <path class="clr-i-solid clr-i-solid-path-1" d="m32.43 8.35-13-6.21a1 1 0 0 0-.87 0l-15 7.24a1 1 0 0 0-.57.9v16.55a1 1 0 0 0 .6.92l13 6.19a1 1 0 0 0 .87 0l15-7.24a1 1 0 0 0 .57-.9V9.25a1 1 0 0 0-.6-.9M19 4.15l10.93 5.22-5.05 2.44-10.67-5.35Zm-2 11.49L6 10.41l5.9-2.85 10.7 5.35Zm1 15.8V17.36l13-6.29v14.1Z"></path>
-                                                    <path fill="none" d="M0 0h36v36H0z"></path>
-                                                </svg><?php echo esc_html_e('Bundles', 'multi-location-product-and-inventory-management'); ?></a>
                                             <a href="#lwp-subtab-seo" class="lwp-subtab"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="margin-right:6px;vertical-align:middle">
                                                     <path d="M2.293 18.707a1 1 0 0 1 0-1.414l3-3a1 1 0 0 1 1.262-.125l2.318 1.545 2.42-2.42a1 1 0 0 1 1.414 1.414l-3 3a1 1 0 0 1-1.262.125l-2.318-1.545-2.42 2.42a1 1 0 0 1-1.414 0M22 3v18a1 1 0 0 1-1 1H3a1 1 0 0 1 0-2h17V8H4v4a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1M4 6h16V4H4Zm10.707 6.707 1-1a1 1 0 0 0-1.414-1.414l-1 1a1 1 0 1 0 1.414 1.414"></path>
                                                 </svg><?php echo esc_html_e('SEO', 'multi-location-product-and-inventory-management'); ?></a>
@@ -3091,12 +3026,6 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                                     <path d="M11.5 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2m6.5-6v-5.5c0-3.07-2.13-5.64-5-6.32V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5v.68c-2.87.68-5 3.25-5 6.32V16l-2 2v1h17v-1z"></path>
                                                     <path d="M0 0h24v24H0z" fill="none"></path>
                                                 </svg><?php echo esc_html_e('Notifications', 'multi-location-product-and-inventory-management'); ?></a>
-                                            <a href="#lwp-subtab-others" class="lwp-subtab"><svg viewBox="0 0 16 16"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="16" height="16"
-                                                    style="margin-right:6px;vertical-align:middle">
-                                                    <path d="M12.5.023a3.4 3.4 0 0 0-.883.094C9.75.605 8.633 2.5 9.121 4.352a3.5 3.5 0 0 0 .5 1.054C9.511 5.422 7.996 8 7.996 8l3.41.023.801-1.117c.379.032.781.024 1.172-.078a3.474 3.474 0 0 0 2.496-4.234 3.7 3.7 0 0 0-.504-1.055l-1.36 2.305a.987.987 0 0 1-1.355.355l-.875-.508a.974.974 0 0 1-.355-1.347L12.789.035c-.098-.004-.195-.012-.289-.012M3.625.715q-.017-.001-.027.004c-.23.047-.446.133-.657.219-.02.625.086 1.44-.156 1.656-.242.21-1.039.035-1.652-.031a3.4 3.4 0 0 0-.313.75c.477.394 1.137.84 1.153 1.156.015.32-.625.804-1.059 1.25.102.258.25.492.406.718.606-.125 1.36-.375 1.621-.187.262.188.262 1.004.344 1.625.246.074.508.105.778.125.28-.555.566-1.32.875-1.406.316-.09.96.457 1.5.781a4 4 0 0 0 .59-.531c-.255-.574-.72-1.293-.59-1.594.125-.3.968-.469 1.558-.687.004-.075.031-.145.031-.22 0-.19-.035-.378-.062-.562-.606-.16-1.465-.242-1.621-.531-.16-.29.238-1.062.433-1.656q-.3-.27-.652-.469c-.504.375-1.086.996-1.406.938-.317-.055-.66-.82-.996-1.344a.4.4 0 0 1-.098-.004m.594 1.879a1.688 1.688 0 0 1 0 3.375c-.93 0-1.684-.754-1.684-1.688S3.29 2.594 4.22 2.594m8.62 6.332a.73.73 0 0 0-.36.074H3.43c-.246-.105-.746-.047-.965.18l-2.16 2.113c-.192.176-.301.484-.305.707-.055.887 1 1.32 1.637.793L3 11.461 3.004 15c0 .57.457 1 .996 1h7.992c.524 0 .996-.445.996-.937l-.004-3.602 1.336 1.309c.637.527 1.688.093 1.637-.793-.004-.223-.113-.532-.3-.704l-2.165-2.117c-.144-.152-.418-.226-.652-.23m0 0" />
-                                                </svg><?php echo esc_html_e('Others', 'multi-location-product-and-inventory-management'); ?></a>
                                         </div>
                                         <div id="lwp-subtab-shipping" class="lwp-subtab-content" style="display:block;">
                                             <?php do_settings_sections('lwp-location-shipping-settings'); ?>

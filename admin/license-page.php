@@ -126,7 +126,7 @@ class mulopimfwc_License_Manager
                 wp_send_json_success(array(
                     'update_available' => true,
                     'new_version' => $update_info->new_version,
-                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5'
+                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6'
                 ));
             } else {
                 wp_send_json_success(array(
@@ -309,7 +309,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6')
         ));
 
         if (is_wp_error($response)) {
@@ -344,7 +344,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6')
         ));
 
         if (is_wp_error($response)) {
@@ -376,7 +376,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6')
         ));
 
         if (is_wp_error($response)) {
@@ -409,7 +409,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6')
         ));
 
         if (is_wp_error($response)) {
@@ -440,7 +440,7 @@ class mulopimfwc_License_Manager
             return false;
         }
 
-        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5';
+        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6';
         if (version_compare($current_version, $version_info->new_version, '<')) {
             return $version_info;
         }
@@ -461,7 +461,7 @@ class mulopimfwc_License_Manager
             wp_send_json_success(array(
                 'update_available' => true,
                 'new_version' => $update_info->new_version,
-                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5'
+                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6'
             ));
         } else {
             wp_send_json_success(array(
@@ -622,7 +622,7 @@ class mulopimfwc_License_Manager
                         <?php if ($is_valid && !$is_expired): ?>
                             <?php $version_info = $this->get_version_info($license_key); ?>
                             <?php if ($version_info && isset($version_info->new_version)):
-                                $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.5'; ?>
+                                $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.3.6'; ?>
                                 <div style="margin-top: 15px;padding: 15px;background: #fbfbfb;border-radius: 6px;">
                                     <strong style="display: flex; align-items: center; gap: 8px;">
                                         <div style="background: #dce6ff;padding: 5px;border-radius: 5px;">

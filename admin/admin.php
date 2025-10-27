@@ -399,6 +399,20 @@ class MULOPIMFWC_Admin
             <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
+        <!-- Pickup Locations -->
+        <?php $pickup_locations = $this->get_pickup_locations(); ?>
+        <?php if (!empty($pickup_locations)): ?>
+            <div class="form-field">
+                <label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management'); ?></label>
+                <select name="pickup_locations[]" id="pickup_locations" multiple style="min-width: 320px;">
+                    <?php foreach ($pickup_locations as $pid => $ptitle): ?>
+                        <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management'); ?></p>
+            </div>
+        <?php endif; ?>
+
         <!-- Tax Class -->
         <?php $tax_classes = $this->get_tax_class_options(); ?>
         <div class="form-field">
@@ -669,6 +683,27 @@ class MULOPIMFWC_Admin
             </td>
         </tr>
 
+        <!-- Pickup Locations -->
+        <?php
+        $pickup_locations = $this->get_pickup_locations();
+        $sel_pickup = (array) get_term_meta($term->term_id, 'pickup_locations', true);
+        ?>
+        <?php if (!empty($pickup_locations)): ?>
+            <tr class="form-field">
+                <th scope="row"><label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management'); ?></label></th>
+                <td>
+                    <select name="pickup_locations[]" id="pickup_locations" multiple style="min-width: 320px;">
+                        <?php foreach ($pickup_locations as $pid => $ptitle): ?>
+                            <option value="<?php echo esc_attr($pid); ?>" <?php selected(in_array($pid, (array)$sel_pickup, true)); ?>>
+                                <?php echo esc_html($ptitle); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management'); ?></p>
+                </td>
+            </tr>
+        <?php endif; ?>
+
         <tr class="form-field">
             <th scope="row"><label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
@@ -817,6 +852,21 @@ class MULOPIMFWC_Admin
             update_term_meta($term_id, 'payment_methods', $payments);
         } else {
             delete_term_meta($term_id, 'payment_methods');
+        }
+
+        // Pickup Locations
+        if (isset($_POST['pickup_locations']) && is_array($_POST['pickup_locations'])) {
+            $pickup_locs = array();
+            foreach ($_POST['pickup_locations'] as $pickup_loc) {
+                $sanitized = sanitize_text_field($pickup_loc);
+                if (!empty($sanitized)) {
+                    $pickup_locs[] = $sanitized;
+                }
+            }
+            $pickup_locs = array_values(array_unique($pickup_locs));
+            update_term_meta($term_id, 'pickup_locations', $pickup_locs);
+        } else {
+            delete_term_meta($term_id, 'pickup_locations');
         }
 
         // Tax Class (slug or empty for Standard)
@@ -1276,5 +1326,30 @@ class MULOPIMFWC_Admin
         $color = $st['open'] ? '#16a34a' : '#dc2626';
         return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;color:#fff;background:' . $color . ';font-size:12px;line-height:1.6;">'
             . esc_html($label) . '</span>';
+    }
+
+    public function get_pickup_locations()
+    {
+        $pickup_settings = get_option('woocommerce_pickup_location_settings');
+
+        if (empty($pickup_settings['enabled']) || $pickup_settings['enabled'] !== 'yes') {
+            return array();
+        }
+
+        // Get pickup locations from the correct option
+        $pickup_locations = get_option('pickup_location_pickup_locations', array());
+        $out = array();
+
+        if (!empty($pickup_locations) && is_array($pickup_locations)) {
+            foreach ($pickup_locations as $index => $location) {
+                // Check if location is enabled (it's stored as boolean true, not 'yes')
+                if (!empty($location['enabled']) && $location['enabled'] === true) {
+                    // Use name as both key and value for consistent storage
+                    $out[$location['name']] = $location['name'];
+                }
+            }
+        }
+
+        return $out;
     }
 }
