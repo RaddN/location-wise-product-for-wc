@@ -6,6 +6,13 @@ class MULOPIMFWC_Location_Wise_Local_Pickup
 
     public function __construct()
     {
+        global $mulopimfwc_options;
+        $mulopimfwc_options = get_option('mulopimfwc_display_options');
+
+        $enable_location_pickup = isset($mulopimfwc_options['enable_location_pickup']) ? $mulopimfwc_options['enable_location_pickup'] : 'on';
+        if ($enable_location_pickup !== 'on') {
+            return;
+        }
         add_filter('option_pickup_location_pickup_locations', array($this, 'filter_pickup_locations_by_store'), 999, 1);
     }
 

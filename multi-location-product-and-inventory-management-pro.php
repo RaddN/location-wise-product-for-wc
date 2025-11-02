@@ -1134,8 +1134,10 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-email.php';
     require_once plugin_dir_path(__FILE__) . 'includes/frontend-location-information.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-local-pickup.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/location-hours-restriction.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/customer-location-insights.php';
 
-    
+
 
     class mulopimfwc_Location_Wise_Products
     {
@@ -1234,8 +1236,416 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Output buffering for any cart display
             add_action('wp_head', [$this, 'maybe_start_cart_output_buffering'], 1);
             add_action('wp_footer', [$this, 'maybe_end_cart_output_buffering'], 999);
+
+
+            // inter_location_transfer_costs
+
+            add_action('woocommerce_cart_calculate_fees', [$this, 'add_inter_location_transfer_fees']);
+            add_filter('woocommerce_cart_shipping_packages', [$this, 'split_shipping_packages_by_location']);
+
+            // display the notice for transfer cost breakdown
+            add_action('woocommerce_before_cart_totals', [$this, 'display_transfer_cost_breakdown']);
+            add_action('woocommerce_review_order_before_order_total', [$this, 'display_transfer_cost_breakdown']);
+            // Save transfer cost details to order meta
+            add_action('woocommerce_checkout_order_processed', [$this, 'save_transfer_costs_to_order'], 10, 1);
+            // Display transfer costs in admin order details
+            add_action('woocommerce_admin_order_data_after_order_details', [$this, 'display_transfer_costs_in_order'], 10, 1);
         }
 
+        /**
+         * Display transfer costs in order details (admin)
+         */
+        public function display_transfer_costs_in_order($order)
+        {
+            $transfer_costs = $order->get_meta('_inter_location_transfer_costs');
+
+            if (empty($transfer_costs) || !is_array($transfer_costs)) {
+                return;
+            }
+
+            $destination = $order->get_meta('_destination_location');
+
+?>
+            <div class="mulopimfwc-order-transfer-costs" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                <h4 style="margin-top: 0; color: #1e40af;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 5px;">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                    </svg>
+                    <?php esc_html_e('Inter-Location Transfer Costs', 'multi-location-product-and-inventory-management'); ?>
+                </h4>
+
+                <?php if (!empty($destination)): ?>
+                    <p style="margin: 5px 0; color: #64748b; font-size: 13px;">
+                        <?php echo sprintf(esc_html__('Destination: %s', 'multi-location-product-and-inventory-management'), '<strong>' . esc_html($destination) . '</strong>'); ?>
+                    </p>
+                <?php endif; ?>
+
+                <table class="widefat" style="margin-top: 10px; border: 1px solid #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 8px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0;"><?php esc_html_e('From Location', 'multi-location-product-and-inventory-management'); ?></th>
+                            <th style="padding: 8px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0;"><?php esc_html_e('To Location', 'multi-location-product-and-inventory-management'); ?></th>
+                            <th style="padding: 8px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; text-align: right;"><?php esc_html_e('Cost', 'multi-location-product-and-inventory-management'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $total = 0;
+                        foreach ($transfer_costs as $transfer):
+                            $total += $transfer['cost'];
+                        ?>
+                            <tr>
+                                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><?php echo esc_html($transfer['from']); ?></td>
+                                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><?php echo esc_html($transfer['to']); ?></td>
+                                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;"><?php echo wc_price($transfer['cost']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <td colspan="2" style="padding: 8px; font-weight: bold; background: #f8fafc;"><?php esc_html_e('Total Transfer Cost', 'multi-location-product-and-inventory-management'); ?></td>
+                            <td style="padding: 8px; font-weight: bold; text-align: right; background: #f8fafc;"><?php echo wc_price($total); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <?php
+        }
+
+        /**
+         * Save transfer cost information to order meta
+         */
+        public function save_transfer_costs_to_order($order_id)
+        {
+            global $mulopimfwc_options;
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return;
+            }
+
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                return;
+            }
+
+            // Get user's selected location
+            $selected_location = $this->get_current_location();
+
+            if (empty($selected_location) || $selected_location === 'all-products') {
+                return;
+            }
+
+            // Get transfer costs settings
+            $options = get_option('mulopimfwc_display_options', []);
+            $transfer_costs = isset($options['inter_location_transfer_costs'])
+                ? $options['inter_location_transfer_costs']
+                : [];
+
+            if (empty($transfer_costs)) {
+                return;
+            }
+
+            // Get selected location term
+            $destination_term = get_term_by('slug', $selected_location, 'mulopimfwc_store_location');
+            if (!$destination_term || is_wp_error($destination_term)) {
+                return;
+            }
+
+            $destination_slug = $destination_term->slug;
+            $transfer_details = [];
+
+            // Get cart items grouped by location
+            $items_by_location = $this->get_cart_items_by_location();
+
+            // Collect transfer cost details
+            foreach ($items_by_location as $location_data) {
+                $source_slug = $location_data['location_slug'];
+
+                if ($source_slug === $destination_slug || $source_slug === 'unknown') {
+                    continue;
+                }
+
+                $cost_key = $source_slug . '_to_' . $destination_slug;
+
+                if (isset($transfer_costs[$cost_key]) && !empty($transfer_costs[$cost_key])) {
+                    $cost = floatval($transfer_costs[$cost_key]);
+
+                    if ($cost > 0) {
+                        $transfer_details[] = [
+                            'from' => $location_data['location_name'],
+                            'to' => $destination_term->name,
+                            'cost' => $cost
+                        ];
+                    }
+                }
+            }
+
+            // Save transfer details to order meta
+            if (!empty($transfer_details)) {
+                $order->update_meta_data('_inter_location_transfer_costs', $transfer_details);
+                $order->update_meta_data('_destination_location', $destination_term->name);
+                $order->save();
+            }
+        }
+
+
+        /**
+         * Add inter-location transfer fees to cart
+         */
+        public function add_inter_location_transfer_fees()
+        {
+            global $mulopimfwc_options;
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return;
+            }
+
+            // Get user's selected location (destination)
+            $selected_location = $this->get_current_location();
+
+            if (empty($selected_location) || $selected_location === 'all-products') {
+                return;
+            }
+
+            // Get transfer costs settings
+            $options = get_option('mulopimfwc_display_options', []);
+            $transfer_costs = isset($options['inter_location_transfer_costs'])
+                ? $options['inter_location_transfer_costs']
+                : [];
+
+            if (empty($transfer_costs)) {
+                return;
+            }
+
+            // Get selected location term
+            $destination_term = get_term_by('slug', $selected_location, 'mulopimfwc_store_location');
+            if (!$destination_term || is_wp_error($destination_term)) {
+                return;
+            }
+
+            $destination_slug = $destination_term->slug;
+            $total_transfer_cost = 0;
+            $transfer_details = [];
+
+            // Get cart items grouped by location
+            $items_by_location = $this->get_cart_items_by_location();
+
+            // Calculate transfer costs for each source location
+            foreach ($items_by_location as $location_data) {
+                $source_slug = $location_data['location_slug'];
+
+                // Skip if it's the same location or unknown
+                if ($source_slug === $destination_slug || $source_slug === 'unknown') {
+                    continue;
+                }
+
+                // Build the cost key: source_to_destination
+                $cost_key = $source_slug . '_to_' . $destination_slug;
+
+                // Check if transfer cost exists for this route
+                if (isset($transfer_costs[$cost_key]) && !empty($transfer_costs[$cost_key])) {
+                    $cost = floatval($transfer_costs[$cost_key]);
+
+                    if ($cost > 0) {
+                        $total_transfer_cost += $cost;
+                        $transfer_details[] = sprintf(
+                            __('%s to %s: %s', 'multi-location-product-and-inventory-management'),
+                            $location_data['location_name'],
+                            $destination_term->name,
+                            $cost
+                        );
+                    }
+                }
+            }
+
+            // Add transfer cost as a fee if greater than zero
+            if ($total_transfer_cost > 0) {
+                $fee_label = __('Inter-location Transfer', 'multi-location-product-and-inventory-management');
+
+                // Add detailed breakdown if multiple transfers
+                if (count($transfer_details) > 1) {
+                    $fee_label .= ' (' . implode(', ', $transfer_details) . ')';
+                } elseif (count($transfer_details) === 1) {
+                    $fee_label .= ' (' . $transfer_details[0] . ')';
+                }
+
+                WC()->cart->add_fee($fee_label, $total_transfer_cost, true);
+            }
+        }
+
+        /**
+         * Split shipping packages by location for accurate shipping calculation
+         */
+        public function split_shipping_packages_by_location($packages)
+        {
+            global $mulopimfwc_options;
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return $packages;
+            }
+
+            // Check if location-based shipping is enabled
+            $enable_location_shipping = isset($mulopimfwc_options['enable_location_shipping'])
+                ? $mulopimfwc_options['enable_location_shipping']
+                : 'off';
+
+            if ($enable_location_shipping !== 'on') {
+                return $packages;
+            }
+
+            // Get cart items grouped by location
+            $items_by_location = $this->get_cart_items_by_location();
+
+            if (count($items_by_location) <= 1) {
+                return $packages;
+            }
+
+            // Create separate shipping packages for each location
+            $new_packages = [];
+            $package_index = 1;
+
+            foreach ($items_by_location as $location_data) {
+                $location_slug = $location_data['location_slug'];
+                $location_name = $location_data['location_name'];
+
+                // Create package for this location
+                $package_contents = [];
+                $package_contents_cost = 0;
+
+                foreach ($location_data['items'] as $cart_item) {
+                    $package_contents[$cart_item['cart_item_key']] = $cart_item;
+                    $package_contents_cost += $cart_item['line_total'];
+                }
+
+                $new_packages['location_' . $location_slug . '_' . $package_index] = [
+                    'contents' => $package_contents,
+                    'contents_cost' => $package_contents_cost,
+                    'applied_coupons' => WC()->cart->get_applied_coupons(),
+                    'user' => [
+                        'ID' => get_current_user_id()
+                    ],
+                    'destination' => [
+                        'country' => WC()->customer->get_shipping_country(),
+                        'state' => WC()->customer->get_shipping_state(),
+                        'postcode' => WC()->customer->get_shipping_postcode(),
+                        'city' => WC()->customer->get_shipping_city(),
+                        'address' => WC()->customer->get_shipping_address(),
+                        'address_2' => WC()->customer->get_shipping_address_2()
+                    ],
+                    'location_slug' => $location_slug,
+                    'location_name' => $location_name,
+                    'package_name' => sprintf(
+                        __('Shipping from %s', 'multi-location-product-and-inventory-management'),
+                        $location_name
+                    )
+                ];
+
+                $package_index++;
+            }
+
+            return !empty($new_packages) ? $new_packages : $packages;
+        }
+
+        /**
+         * Display transfer cost breakdown in cart totals
+         */
+        public function display_transfer_cost_breakdown()
+        {
+            global $mulopimfwc_options;
+
+            // Check if mixed location cart is enabled
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+                ? $mulopimfwc_options['allow_mixed_location_cart']
+                : 'off';
+
+            if ($allow_mixed !== 'on') {
+                return;
+            }
+
+            // Get user's selected location
+            $selected_location = $this->get_current_location();
+
+            if (empty($selected_location) || $selected_location === 'all-products') {
+                return;
+            }
+
+            // Get transfer costs settings
+            $options = get_option('mulopimfwc_display_options', []);
+            $transfer_costs = isset($options['inter_location_transfer_costs'])
+                ? $options['inter_location_transfer_costs']
+                : [];
+
+            if (empty($transfer_costs)) {
+                return;
+            }
+
+            // Get selected location term
+            $destination_term = get_term_by('slug', $selected_location, 'mulopimfwc_store_location');
+            if (!$destination_term || is_wp_error($destination_term)) {
+                return;
+            }
+
+            $destination_slug = $destination_term->slug;
+            $has_transfers = false;
+
+            // Get cart items grouped by location
+            $items_by_location = $this->get_cart_items_by_location();
+
+            // Check if there are any transfer costs
+            foreach ($items_by_location as $location_data) {
+                $source_slug = $location_data['location_slug'];
+
+                if ($source_slug === $destination_slug || $source_slug === 'unknown') {
+                    continue;
+                }
+
+                $cost_key = $source_slug . '_to_' . $destination_slug;
+
+                if (isset($transfer_costs[$cost_key]) && floatval($transfer_costs[$cost_key]) > 0) {
+                    $has_transfers = true;
+                    break;
+                }
+            }
+
+            if (!$has_transfers) {
+                return;
+            }
+
+        ?>
+            <div class="mulopimfwc-transfer-cost-notice woocommerce-info">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4z" fill="currentColor" />
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor" />
+                    </svg>
+                    <div>
+                        <strong><?php esc_html_e('Transfer Costs Applied', 'multi-location-product-and-inventory-management'); ?></strong>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;">
+                            <?php
+                            echo sprintf(
+                                esc_html__('Your order includes products from multiple locations. Transfer costs to %s have been added to your total.', 'multi-location-product-and-inventory-management'),
+                                '<strong>' . esc_html($destination_term->name) . '</strong>'
+                            );
+                            ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        <?php
+        }
 
         /**
          * Add location data to cart item when product is added
@@ -1688,7 +2098,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Display grouped mini cart
-?>
+        ?>
             <div class="mulopimfwc-grouped-mini-cart">
                 <?php foreach ($items_by_location as $location_data): ?>
                     <div class="mulopimfwc-mini-location-group">
@@ -2562,7 +2972,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     true
                 );
 
-                wp_add_inline_style( 'mulopimfwc_style', '.wc-block-components-product-details__location{display:none !important;}' );
+                wp_add_inline_style('mulopimfwc_style', '.wc-block-components-product-details__location{display:none !important;}');
             }
 
 
@@ -2574,7 +2984,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'cookie_expiry' => $cookie_expiry,
                 'allow_mixed_in_cart' => isset($mulopimfwc_options['allow_mixed_location_cart'])
                     ? $mulopimfwc_options['allow_mixed_location_cart']
-                    : 'off'
+                    : 'off',
+                'location_notification_text' => isset($mulopimfwc_options['location_notification_text'])
+                    ? $mulopimfwc_options['location_notification_text']
+                    : 'Do you want to change the store location? Your cart will be emptied.'
             ]);
 
             wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', array(), '1.7.1');

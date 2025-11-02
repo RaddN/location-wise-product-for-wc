@@ -1318,3 +1318,131 @@ form#lwp-store-selector-form-modal > div * {
         right: 15px;
     }
 }
+
+
+
+/* Location Business Hours Restriction Styles */
+
+/* Closed location notice on single product */
+.mulopimfwc-closed-location-notice {
+    background-color: #f8d7da;
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.mulopimfwc-closed-location-notice strong {
+    font-weight: 600;
+}
+
+/* Disabled add to cart button when location closed */
+.single-product .product .cart .button.disabled,
+.single-product .product .cart .button:disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    cursor: not-allowed !important;
+    opacity: 0.65;
+}
+
+/* Shop page closed notice */
+.woocommerce-info.mulopimfwc-shop-closed {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+}
+
+/* Disable add to cart buttons in loops when closed */
+.woocommerce ul.products li.product .button.disabled,
+.woocommerce ul.products li.product .button:disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    cursor: not-allowed !important;
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+/* Add visual indicator for closed products */
+.mulopimfwc-location-closed .product {
+    position: relative;
+    opacity: 0.7;
+}
+
+.mulopimfwc-location-closed .product::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.05);
+    pointer-events: none;
+}
+
+/* Closed badge overlay */
+.mulopimfwc-closed-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    text-transform: uppercase;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .mulopimfwc-closed-location-notice {
+        padding: 12px;
+        font-size: 13px;
+    }
+    
+    .mulopimfwc-closed-badge {
+        top: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+
+
+/* transfer cost style */
+
+.mulopimfwc-transfer-cost-notice {
+    background: #e0f2fe;
+    border-left: 4px solid #3b82f6;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.mulopimfwc-transfer-cost-notice svg {
+    color: #3b82f6;
+}
+
+.mulopimfwc-order-transfer-costs table {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.mulopimfwc-order-transfer-costs th,
+.mulopimfwc-order-transfer-costs td {
+    padding: 10px;
+    text-align: left;
+}
+
+.mulopimfwc-order-transfer-costs thead {
+    background: #f1f5f9;
+}
+
+.mulopimfwc-order-transfer-costs tbody tr:hover {
+    background: #f8fafc;
+}
