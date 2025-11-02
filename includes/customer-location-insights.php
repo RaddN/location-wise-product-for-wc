@@ -694,7 +694,7 @@ class Mulopimfwc_Customer_Location_Insights
     /**
      * Render analytics dashboard page
      */
-   /**
+    /**
      * Render analytics dashboard page
      */
     public function render_analytics_page()
@@ -781,12 +781,12 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         // Calculate conversion rate
-        $conversion_rate = $global_stats['total_views'] > 0 
-            ? ($global_stats['total_purchases'] / $global_stats['total_views']) * 100 
+        $conversion_rate = $global_stats['total_views'] > 0
+            ? ($global_stats['total_purchases'] / $global_stats['total_views']) * 100
             : 0;
 
     ?>
-        <div class="wrap mulopimfwc-analytics-wrap">
+        <div class="wrap mulopimfwc-analytics-wrap <?php echo mulopimfwc_premium_feature() ? '' : ' mulopimfwc_pro_only_blur mulopimfwc_pro_only'; ?>">
             <h1>
                 <span class="dashicons dashicons-chart-area"></span>
                 <?php esc_html_e('Location Analytics Dashboard', 'multi-location-product-and-inventory-management'); ?>
@@ -795,7 +795,7 @@ class Mulopimfwc_Customer_Location_Insights
             <!-- Global Overview Section -->
             <div class="mulopimfwc-global-overview">
                 <h2><?php esc_html_e('Global Overview', 'multi-location-product-and-inventory-management'); ?></h2>
-                
+
                 <div class="mulopimfwc-overview-grid">
                     <div class="overview-card primary">
                         <div class="card-icon">
@@ -922,11 +922,11 @@ class Mulopimfwc_Customer_Location_Insights
                             </tr>
                         </thead>
                         <tbody>
-                            <?php 
+                            <?php
                             $rank = 1;
-                            foreach ($location_scores as $slug => $data): 
-                                $location_conversion = $data['stats']['total_views'] > 0 
-                                    ? ($data['stats']['total_purchases'] / $data['stats']['total_views']) * 100 
+                            foreach ($location_scores as $slug => $data):
+                                $location_conversion = $data['stats']['total_views'] > 0
+                                    ? ($data['stats']['total_purchases'] / $data['stats']['total_views']) * 100
                                     : 0;
                             ?>
                                 <tr>
@@ -948,9 +948,9 @@ class Mulopimfwc_Customer_Location_Insights
                                     <td class="num-column"><?php echo esc_html(number_format($location_conversion, 2)); ?>%</td>
                                     <td class="num-column"><strong><?php echo esc_html(number_format($data['score'])); ?></strong></td>
                                 </tr>
-                            <?php 
+                            <?php
                                 $rank++;
-                            endforeach; 
+                            endforeach;
                             ?>
                         </tbody>
                     </table>
@@ -960,14 +960,14 @@ class Mulopimfwc_Customer_Location_Insights
             <!-- Individual Location Details -->
             <div class="mulopimfwc-location-details">
                 <h2><?php esc_html_e('Location Details', 'multi-location-product-and-inventory-management'); ?></h2>
-                
+
                 <div class="mulopimfwc-analytics-dashboard">
                     <?php foreach ($locations as $location): ?>
                         <?php
                         $stats = $this->get_location_stats($location->slug);
                         $top_products = $this->get_popular_products($location->slug, 5);
-                        $location_conversion = $stats['total_views'] > 0 
-                            ? ($stats['total_purchases'] / $stats['total_views']) * 100 
+                        $location_conversion = $stats['total_views'] > 0
+                            ? ($stats['total_purchases'] / $stats['total_views']) * 100
                             : 0;
                         ?>
 
@@ -1044,9 +1044,9 @@ class Mulopimfwc_Customer_Location_Insights
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php 
+                                            <?php
                                             $product_rank = 1;
-                                            foreach ($top_products as $product_id => $product_data): 
+                                            foreach ($top_products as $product_id => $product_data):
                                                 $product = wc_get_product($product_id);
                                                 if (!$product) continue;
                                             ?>
@@ -1061,9 +1061,9 @@ class Mulopimfwc_Customer_Location_Insights
                                                     <td class="num-col"><strong><?php echo esc_html($product_data['purchase_count']); ?></strong></td>
                                                     <td class="num-col"><?php echo esc_html(number_format($product_data['popularity_score'])); ?></td>
                                                 </tr>
-                                            <?php 
+                                            <?php
                                                 $product_rank++;
-                                            endforeach; 
+                                            endforeach;
                                             ?>
                                         </tbody>
                                     </table>
@@ -1342,7 +1342,7 @@ class Mulopimfwc_Customer_Location_Insights
                     margin-bottom: 20px;
                 }
 
-                .mulopimfwc-location-details > h2 {
+                .mulopimfwc-location-details>h2 {
                     font-size: 20px;
                     color: #1d2327;
                     margin-bottom: 20px;
