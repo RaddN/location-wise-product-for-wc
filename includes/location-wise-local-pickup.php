@@ -9,7 +9,7 @@ class MULOPIMFWC_Location_Wise_Local_Pickup
         global $mulopimfwc_options;
         $mulopimfwc_options = get_option('mulopimfwc_display_options');
 
-        $enable_location_pickup = isset($mulopimfwc_options['enable_location_pickup']) ? $mulopimfwc_options['enable_location_pickup'] : 'on';
+        $enable_location_pickup = isset($mulopimfwc_options['enable_location_pickup']) && mulopimfwc_premium_feature() ? $mulopimfwc_options['enable_location_pickup'] : 'off';
         if ($enable_location_pickup !== 'on') {
             return;
         }

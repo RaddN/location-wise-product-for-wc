@@ -1318,7 +1318,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1340,7 +1340,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Get transfer costs settings
             $options = get_option('mulopimfwc_display_options', []);
-            $transfer_costs = isset($options['inter_location_transfer_costs'])
+            $transfer_costs = isset($options['inter_location_transfer_costs']) && mulopimfwc_premium_feature()
                 ? $options['inter_location_transfer_costs']
                 : [];
 
@@ -1400,7 +1400,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1417,7 +1417,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Get transfer costs settings
             $options = get_option('mulopimfwc_display_options', []);
-            $transfer_costs = isset($options['inter_location_transfer_costs'])
+            $transfer_costs = isset($options['inter_location_transfer_costs']) && mulopimfwc_premium_feature()
                 ? $options['inter_location_transfer_costs']
                 : [];
 
@@ -1489,7 +1489,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1498,7 +1498,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if location-based shipping is enabled
-            $enable_location_shipping = isset($mulopimfwc_options['enable_location_shipping'])
+            $enable_location_shipping = isset($mulopimfwc_options['enable_location_shipping']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['enable_location_shipping']
                 : 'off';
 
@@ -1567,7 +1567,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1584,7 +1584,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Get transfer costs settings
             $options = get_option('mulopimfwc_display_options', []);
-            $transfer_costs = isset($options['inter_location_transfer_costs'])
+            $transfer_costs = isset($options['inter_location_transfer_costs']) && mulopimfwc_premium_feature()
                 ? $options['inter_location_transfer_costs']
                 : [];
 
@@ -1680,7 +1680,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
@@ -1706,7 +1706,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1755,7 +1755,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1800,7 +1800,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1839,7 +1839,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
@@ -1848,7 +1848,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1888,7 +1888,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1923,7 +1923,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
@@ -1932,7 +1932,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1957,7 +1957,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
@@ -1966,7 +1966,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -1994,7 +1994,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
@@ -2003,7 +2003,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
+            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
@@ -2956,7 +2956,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location'])
+            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
@@ -2982,10 +2982,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'location_change_notification' => isset($mulopimfwc_options["location_change_notification"]),
                 'nonce' => wp_create_nonce('multi-location-product-and-inventory-management'),
                 'cookie_expiry' => $cookie_expiry,
-                'allow_mixed_in_cart' => isset($mulopimfwc_options['allow_mixed_location_cart'])
+                'allow_mixed_in_cart' => isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                     ? $mulopimfwc_options['allow_mixed_location_cart']
                     : 'off',
-                'location_notification_text' => isset($mulopimfwc_options['location_notification_text'])
+                'location_notification_text' => isset($mulopimfwc_options['location_notification_text']) && mulopimfwc_premium_feature()
                     ? $mulopimfwc_options['location_notification_text']
                     : 'Do you want to change the store location? Your cart will be emptied.'
             ]);

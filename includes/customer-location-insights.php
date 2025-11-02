@@ -110,7 +110,7 @@ class Mulopimfwc_Customer_Location_Insights
     {
         $options = get_option('mulopimfwc_display_options', []);
         return isset($options['enable_customer_location_tracking']) &&
-            $options['enable_customer_location_tracking'] === 'on';
+            $options['enable_customer_location_tracking'] === 'on' && mulopimfwc_premium_feature();
     }
 
     /**
@@ -510,7 +510,7 @@ class Mulopimfwc_Customer_Location_Insights
 
         $options = get_option('mulopimfwc_display_options', []);
         $recommendations_enabled = isset($options['location_based_recommendations']) &&
-            $options['location_based_recommendations'] === 'on';
+            $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
 
         if ($recommendations_enabled) {
             wp_enqueue_style(
@@ -542,7 +542,7 @@ class Mulopimfwc_Customer_Location_Insights
     {
         $options = get_option('mulopimfwc_display_options', []);
         $recommendations_enabled = isset($options['location_based_recommendations']) &&
-            $options['location_based_recommendations'] === 'on';
+            $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
 
         if (!$recommendations_enabled) {
             return '';

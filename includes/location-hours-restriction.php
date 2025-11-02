@@ -97,8 +97,8 @@ class MULOPIMFWC_Business_Hours_Restriction {
     public function check_location_hours($is_purchasable, $product) {
         global $mulopimfwc_options;
         
-        // Check if restriction is enabled
-        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) 
+        // Check if restriction is enabled 
+        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['restrict_purchase_to_open_hours'] 
             : 'off';
         
@@ -120,7 +120,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
     public function display_closed_location_notice() {
         global $mulopimfwc_options;
         
-        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) 
+        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours'])  && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['restrict_purchase_to_open_hours'] 
             : 'off';
         
@@ -159,7 +159,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
     public function display_shop_closed_notice() {
         global $mulopimfwc_options;
         
-        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) 
+        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours'])  && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['restrict_purchase_to_open_hours'] 
             : 'off';
         
@@ -195,7 +195,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
     public function validate_add_to_cart($passed, $product_id, $quantity) {
         global $mulopimfwc_options;
         
-        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) 
+        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['restrict_purchase_to_open_hours'] 
             : 'off';
         
@@ -236,7 +236,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
     public function custom_add_to_cart_text($text, $product) {
         global $mulopimfwc_options;
         
-        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) 
+        $restrict_hours = isset($mulopimfwc_options['restrict_purchase_to_open_hours']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['restrict_purchase_to_open_hours'] 
             : 'off';
         

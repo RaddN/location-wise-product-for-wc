@@ -21,7 +21,7 @@ class MULOPIMFWC_Frontend_Location_Information
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         global $mulopimfwc_options;
         // mulopimfwc_display_options[store_locator_archive_position]
-        $store_locator_archive_position = isset($mulopimfwc_options['store_locator_archive_position'])
+        $store_locator_archive_position = isset($mulopimfwc_options['store_locator_archive_position']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['store_locator_archive_position']
             : 'before_shop_loop';
         // Archive page hook based on settings
@@ -41,7 +41,7 @@ class MULOPIMFWC_Frontend_Location_Information
         }
 
         // mulopimfwc_display_options[store_locator_single_product_position]
-        $store_locator_single_product_position = isset($mulopimfwc_options['store_locator_single_product_position'])
+        $store_locator_single_product_position = isset($mulopimfwc_options['store_locator_single_product_position']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['store_locator_single_product_position']
             : 'in_tabs';
         // Single product page hook based on settings
@@ -90,12 +90,12 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         global $mulopimfwc_options;
 
-        $enable_locator = isset($mulopimfwc_options['enable_store_locator'])
+        $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['enable_store_locator']
             : 'off';
 
         // mulopimfwc_display_options[default_map_zoom]
-        $default_map_zoom = isset($mulopimfwc_options['default_map_zoom'])
+        $default_map_zoom = isset($mulopimfwc_options['default_map_zoom']) && mulopimfwc_premium_feature()
             ? intval($mulopimfwc_options['default_map_zoom'])
             : 15;
 
@@ -146,7 +146,7 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         global $mulopimfwc_options;
 
-        $enable_locator = isset($mulopimfwc_options['enable_store_locator'])
+        $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['enable_store_locator']
             : 'off';
 
@@ -169,7 +169,7 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         global $mulopimfwc_options, $product;
 
-        $enable_locator = isset($mulopimfwc_options['enable_store_locator'])
+        $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['enable_store_locator']
             : 'off';
 
@@ -647,7 +647,7 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         global $mulopimfwc_options;
         // mulopimfwc_display_options[enable_business_hours]
-        if ((isset($mulopimfwc_options['enable_business_hours']) && $mulopimfwc_options['enable_business_hours'] != 'on') || (isset($mulopimfwc_options['display_hours_archive_page']) && $mulopimfwc_options['display_hours_archive_page'] != 'on')) {
+        if ((isset($mulopimfwc_options['enable_business_hours']) && $mulopimfwc_options['enable_business_hours'] != 'on') || !mulopimfwc_premium_feature() || (isset($mulopimfwc_options['display_hours_archive_page']) && $mulopimfwc_options['display_hours_archive_page'] != 'on')) {
             return;
         }
         $bh = get_term_meta($term_id, 'business_hours', true);
@@ -902,7 +902,7 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         global $mulopimfwc_options;
 
-        $enable_locator = isset($mulopimfwc_options['enable_store_locator'])
+        $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['enable_store_locator']
             : 'off';
 

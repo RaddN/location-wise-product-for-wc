@@ -111,7 +111,7 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          * ------------------------- */
 
         public function seo_add_location_to_title($parts) {
-            if (!$this->is_enabled('location_in_meta_title')) return $parts;
+            if (!$this->is_enabled('location_in_meta_title') || !mulopimfwc_premium_feature()) return $parts;
             if (!is_singular('product')) return $parts;
             $product_id = get_the_ID();
             if (!$product_id) return $parts;
@@ -123,13 +123,13 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
         }
 
         public function yoast_add_location_to_title($title) {
-            if (!$this->is_enabled('location_in_meta_title')) return $title;
+            if (!$this->is_enabled('location_in_meta_title') || !mulopimfwc_premium_feature()) return $title;
             if (!is_singular('product')) return $title;
             return $this->build_title_with_location($title, get_the_ID());
         }
 
         public function rankmath_add_location_to_title($title) {
-            if (!$this->is_enabled('location_in_meta_title')) return $title;
+            if (!$this->is_enabled('location_in_meta_title') || !mulopimfwc_premium_feature()) return $title;
             if (!is_singular('product')) return $title;
             return $this->build_title_with_location($title, get_the_ID());
         }
@@ -139,13 +139,13 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          * ------------------------- */
 
         public function yoast_add_location_to_description($desc) {
-            if (!$this->is_enabled('location_in_meta_description')) return $desc;
+            if (!$this->is_enabled('location_in_meta_description') || !mulopimfwc_premium_feature()) return $desc;
             if (!is_singular('product')) return $desc;
             return $this->build_description_with_location((string)$desc, get_the_ID());
         }
 
         public function rankmath_add_location_to_description($desc) {
-            if (!$this->is_enabled('location_in_meta_description')) return $desc;
+            if (!$this->is_enabled('location_in_meta_description') || !mulopimfwc_premium_feature()) return $desc;
             if (!is_singular('product')) return $desc;
             return $this->build_description_with_location((string)$desc, get_the_ID());
         }
@@ -154,7 +154,7 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          * Output a native <meta name="description"> if no SEO plugin is active.
          */
         public function seo_output_fallback_meta_description() {
-            if (!$this->is_enabled('location_in_meta_description')) return;
+            if (!$this->is_enabled('location_in_meta_description') || !mulopimfwc_premium_feature()) return;
             if (!is_singular('product')) return;
 
             // Skip if Yoast or Rank Math is active
@@ -179,7 +179,7 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          * @return array
          */
         public function schema_add_location_to_product($markup, $product) {
-            if (!$this->is_enabled('location_structured_data')) return $markup;
+            if (!$this->is_enabled('location_structured_data') || !mulopimfwc_premium_feature()) return $markup;
             if (!is_singular('product') || !$product) return $markup;
 
             $terms = get_the_terms($product->get_id(), 'mulopimfwc_store_location');

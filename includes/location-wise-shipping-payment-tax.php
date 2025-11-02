@@ -12,15 +12,22 @@ class MULOPIMFWC_Runtime_Filters
 
     public function __construct()
     {
+
+        global $mulopimfwc_options;
+
         // Shipping: remove disallowed shipping method instances
         add_filter('woocommerce_package_rates', [$this, 'filter_package_rates'], 50, 2);
 
-        // Payment: remove disallowed gateways
-        add_filter('woocommerce_available_payment_gateways', [$this, 'filter_payment_gateways'], 50);
+        if (isset($mulopimfwc_options['enable_location_payment_methods']) && $mulopimfwc_options['enable_location_payment_methods'] === "on"  && mulopimfwc_premium_feature()) {
+            // Payment: remove disallowed gateways
+            add_filter('woocommerce_available_payment_gateways', [$this, 'filter_payment_gateways'], 50);
+        }
 
+        if (isset($mulopimfwc_options['enable_location_taxes']) && $mulopimfwc_options['enable_location_taxes'] === "on"  && mulopimfwc_premium_feature()) {
         // Tax class: set default tax class from location (product + variations)
         add_filter('woocommerce_product_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
         add_filter('woocommerce_product_variation_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
+        }
     }
 
     /**
@@ -171,5 +178,3 @@ add_action('init', function () {
         new MULOPIMFWC_Runtime_Filters();
     }
 });
-
-

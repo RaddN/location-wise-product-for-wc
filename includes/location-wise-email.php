@@ -112,7 +112,7 @@ class MULOPIMFWC_Location_Wise_Email {
         $loc_name = $term ? $this->get_location_name($term) : '';
 
         // {order_store_location}
-        if ($this->opt_on('location_specific_emails')) {
+        if ($this->opt_on('location_specific_emails') && mulopimfwc_premium_feature()) {
             $string = str_replace('{order_store_location}', esc_html($loc_name), $string);
         } else {
             $string = str_replace('{order_store_location}', '', $string);
@@ -172,7 +172,7 @@ class MULOPIMFWC_Location_Wise_Email {
 
 
 add_action('plugins_loaded', function () {
-    if (function_exists('WC')) {
+    if (function_exists('WC') && mulopimfwc_premium_feature()) {
         new MULOPIMFWC_Location_Wise_Email();
     }
 }, 20);

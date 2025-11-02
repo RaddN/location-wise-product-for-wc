@@ -69,7 +69,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 		public function render_reviews_tab_with_neighbours() {
 
 			$options          = get_option( 'mulopimfwc_display_options', array() );
-			$enabled_specific = isset( $options['location_specific_reviews'] ) ? $options['location_specific_reviews'] : 'off';
+			$enabled_specific = isset( $options['location_specific_reviews'] ) && mulopimfwc_premium_feature() ? $options['location_specific_reviews'] : 'off';
 
 			if ( 'on' === $enabled_specific && function_exists( 'is_product' ) && is_product() ) {
 				$current_location = $this->get_current_location_slug();
@@ -182,7 +182,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 		 */
 		public function maybe_output_review_location( $comment ) {
 			$options = get_option( 'mulopimfwc_display_options', array() );
-			$show    = isset( $options['show_location_in_reviews'] ) ? $options['show_location_in_reviews'] : 'off';
+			$show    = isset( $options['show_location_in_reviews'] ) && mulopimfwc_premium_feature() ? $options['show_location_in_reviews'] : 'off';
 
 			if ( 'on' !== $show ) {
 				return;
