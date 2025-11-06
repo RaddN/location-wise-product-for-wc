@@ -1009,13 +1009,15 @@ class MULOPIMFWC_Admin
             [new mulopimfwc_Stock_Central(), 'location_stock_page_content']
         );
 
+        global $MULOPIMFWC_Location_Managers;
+
         add_submenu_page(
             'multi-location-product-and-inventory-management',
             __('Location Managers', 'multi-location-product-and-inventory-management'),
             __('Location Managers', 'multi-location-product-and-inventory-management'),
             'manage_options',
             'location-managers',
-            array(new MULOPIMFWC_Location_Managers(), 'admin_page')
+            array($MULOPIMFWC_Location_Managers, 'admin_page')
         );
 
         // Add Settings submenu

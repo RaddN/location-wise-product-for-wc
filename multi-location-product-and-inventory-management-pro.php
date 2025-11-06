@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.3.6
+ * Version: 1.0.3.20
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -23,7 +23,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.0.3.6");
+    define("mulopimfwc_VERSION", "1.0.3.20");
 }
 
 // Check if the free version is installed and deactivate it if active
@@ -60,10 +60,37 @@ if (!function_exists('mulopimfwc_get_values')) {
             return;
         }
 
-        $mulopimfwc_locations = get_terms([
-            'taxonomy' => 'mulopimfwc_store_location',
-            'hide_empty' => false,
-        ]);
+        // Check if current user is a location manager
+        $is_location_manager = false;
+        $assigned_location_slugs = [];
+
+        if (is_user_logged_in()) {
+            $user = wp_get_current_user();
+            if (in_array('mulopimfwc_location_manager', $user->roles)) {
+                $is_location_manager = true;
+                $assigned_location_slugs = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
+
+                if (!is_array($assigned_location_slugs)) {
+                    $assigned_location_slugs = [];
+                }
+            }
+        }
+
+        // Get locations based on user role
+        if ($is_location_manager && !empty($assigned_location_slugs)) {
+            // For location managers, only get their assigned locations
+            $mulopimfwc_locations = get_terms([
+                'taxonomy' => 'mulopimfwc_store_location',
+                'hide_empty' => false,
+                'slug' => $assigned_location_slugs,
+            ]);
+        } else {
+            // For admins and other users, get all locations
+            $mulopimfwc_locations = get_terms([
+                'taxonomy' => 'mulopimfwc_store_location',
+                'hide_empty' => false,
+            ]);
+        }
 
         $mulopimfwc_options = get_option('mulopimfwc_display_options') ?:
             [
@@ -1141,6 +1168,10 @@ if (!function_exists('mulopimfwc_get_values')) {
 
     class mulopimfwc_Location_Wise_Products
     {
+
+        private $cart_items_cache = null;
+        private $should_group_cache = null;
+
         public function __construct()
         {
             add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
@@ -1211,32 +1242,16 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('woocommerce_before_cart_table', [$this, 'maybe_override_cart_display'], 5);
             add_action('woocommerce_after_cart_table', [$this, 'maybe_restore_cart_display'], 5);
 
-            // Override cart display everywhere
-            add_action('woocommerce_before_cart_contents', [$this, 'maybe_override_cart_contents_display'], 5);
-            add_action('woocommerce_after_cart_contents', [$this, 'maybe_restore_cart_contents_display'], 5);
+            // Only add checkout hooks if on checkout page
             add_action('woocommerce_review_order_before_cart_contents', [$this, 'maybe_override_checkout_cart_display'], 5);
             add_action('woocommerce_review_order_after_cart_contents', [$this, 'maybe_restore_checkout_cart_display'], 5);
 
-            // Override mini cart display
-            add_action('woocommerce_before_mini_cart', [$this, 'maybe_override_mini_cart_display'], 5);
-            add_action('woocommerce_after_mini_cart', [$this, 'maybe_restore_mini_cart_display'], 5);
 
-            // WooCommerce Blocks support
-            add_filter('woocommerce_blocks_cart_block_renderer', [$this, 'filter_cart_block_renderer'], 10, 1);
-            add_filter('woocommerce_blocks_cart_item_renderer', [$this, 'filter_cart_item_renderer'], 10, 1);
-            add_filter('woocommerce_blocks_cart_table_renderer', [$this, 'filter_cart_table_renderer'], 10, 1);
-
-            // Additional cart widget support
-            add_filter('woocommerce_widget_cart_item_html', [$this, 'filter_widget_cart_item_html'], 10, 3);
-            add_filter('woocommerce_cart_widget_item_html', [$this, 'filter_widget_cart_item_html'], 10, 3);
-
-            // Cart fragments for AJAX updates
-            add_filter('woocommerce_add_to_cart_fragments', [$this, 'filter_cart_fragments'], 10, 1);
-
-            // Output buffering for any cart display
-            add_action('wp_head', [$this, 'maybe_start_cart_output_buffering'], 1);
-            add_action('wp_footer', [$this, 'maybe_end_cart_output_buffering'], 999);
-
+            // Clear cache when cart changes
+            add_action('woocommerce_cart_item_removed', [$this, 'clear_cart_cache']);
+            add_action('woocommerce_cart_item_restored', [$this, 'clear_cart_cache']);
+            add_action('woocommerce_after_cart_item_quantity_update', [$this, 'clear_cart_cache']);
+            add_action('woocommerce_add_to_cart', [$this, 'clear_cart_cache']);
 
             // inter_location_transfer_costs
 
@@ -1250,6 +1265,14 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('woocommerce_checkout_order_processed', [$this, 'save_transfer_costs_to_order'], 10, 1);
             // Display transfer costs in admin order details
             add_action('woocommerce_admin_order_data_after_order_details', [$this, 'display_transfer_costs_in_order'], 10, 1);
+        }
+
+        /**
+         * Clear cart items cache
+         */
+        public function clear_cart_cache()
+        {
+            $this->cart_items_cache = null;
         }
 
         /**
@@ -1836,29 +1859,26 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function get_cart_items_by_location_for_grouping()
         {
-            global $mulopimfwc_options;
-
-            // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['group_cart_by_location']
-                : 'off';
-
-            if ($group_cart !== 'on') {
-                return array();
+            // Return cached result if available
+            if ($this->cart_items_cache !== null) {
+                return $this->cart_items_cache;
             }
 
-            // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
-
-            if ($allow_mixed !== 'on') {
+            if (!$this->should_apply_cart_grouping()) {
                 return array();
             }
 
             $items_by_location = array();
 
-            foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
+            // Get cart once and cache it
+            $cart_contents = WC()->cart->get_cart();
+
+            if (empty($cart_contents)) {
+                $this->cart_items_cache = array();
+                return array();
+            }
+
+            foreach ($cart_contents as $cart_item_key => $cart_item) {
                 $location = isset($cart_item['mulopimfwc_location'])
                     ? $cart_item['mulopimfwc_location']
                     : 'unknown';
@@ -1876,6 +1896,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $items_by_location[$location]['items'][] = array_merge($cart_item, ['cart_item_key' => $cart_item_key]);
             }
 
+            // Cache the result
+            $this->cart_items_cache = $items_by_location;
             return $items_by_location;
         }
 
@@ -1920,69 +1942,50 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function maybe_override_cart_display()
         {
-            global $mulopimfwc_options;
-
-            // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['group_cart_by_location']
-                : 'off';
-
-            if ($group_cart !== 'on') {
+            // Check if this is actually the cart page
+            if (!function_exists('is_cart') || !is_cart()) {
                 return;
             }
 
-            // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
-
-            if ($allow_mixed !== 'on') {
+            if (!$this->should_apply_cart_grouping()) {
                 return;
             }
 
-            // Only override on cart page
-            if (!is_cart()) {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            // Only group if there are multiple locations
+            if (count($items_by_location) <= 1) {
                 return;
             }
 
-            // Start output buffering to capture the cart table
+            // Start buffering ONLY for the cart table
             ob_start();
         }
+
 
         /**
          * Restore cart display after grouping
          */
         public function maybe_restore_cart_display()
         {
-            global $mulopimfwc_options;
-
-            // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['group_cart_by_location']
-                : 'off';
-
-            if ($group_cart !== 'on') {
+            // Check if this is actually the cart page
+            if (!function_exists('is_cart') || !is_cart()) {
                 return;
             }
 
-            // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
-
-            if ($allow_mixed !== 'on') {
+            if (!$this->should_apply_cart_grouping()) {
                 return;
             }
 
-            // Only override on cart page
-            if (!is_cart()) {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            // Only group if there are multiple locations
+            if (count($items_by_location) <= 1) {
                 return;
             }
 
-            // Get the buffered content and replace with grouped display
-            $cart_content = ob_get_clean();
-
-            // Display the grouped cart
+            // Clear buffer and display grouped cart
+            ob_end_clean();
             $this->display_grouped_cart();
         }
 
@@ -1991,6 +1994,11 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         private function should_apply_cart_grouping()
         {
+            // Return cached result if available
+            if ($this->should_group_cache !== null) {
+                return $this->should_group_cache;
+            }
+
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
@@ -1999,6 +2007,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 : 'off';
 
             if ($group_cart !== 'on') {
+                $this->should_group_cache = false;
                 return false;
             }
 
@@ -2007,75 +2016,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options['allow_mixed_location_cart']
                 : 'off';
 
-            if ($allow_mixed !== 'on') {
-                return false;
-            }
-
-            return true;
-        }
-
-        /**
-         * Override cart contents display
-         */
-        public function maybe_override_cart_contents_display()
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return;
-            }
-
-            // Only on cart page
-            if (!is_cart()) {
-                return;
-            }
-
-            // Start output buffering
-            ob_start();
-        }
-
-        /**
-         * Restore cart contents display
-         */
-        public function maybe_restore_cart_contents_display()
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return;
-            }
-
-            // Only on cart page
-            if (!is_cart()) {
-                return;
-            }
-
-            // Get buffered content and replace with grouped display
-            $content = ob_get_clean();
-            $this->display_grouped_cart();
-        }
-
-        /**
-         * Override mini cart display
-         */
-        public function maybe_override_mini_cart_display()
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return;
-            }
-
-            // Start output buffering
-            ob_start();
-        }
-
-        /**
-         * Restore mini cart display
-         */
-        public function maybe_restore_mini_cart_display()
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return;
-            }
-
-            // Get buffered content and replace with grouped display
-            $content = ob_get_clean();
-            $this->display_grouped_mini_cart();
+            $this->should_group_cache = ($allow_mixed === 'on');
+            return $this->should_group_cache;
         }
 
         /**
@@ -2181,16 +2123,21 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function maybe_override_checkout_cart_display()
         {
+            // Check if this is actually the checkout page
+            if (!function_exists('is_checkout') || !is_checkout()) {
+                return;
+            }
+
             if (!$this->should_apply_cart_grouping()) {
                 return;
             }
 
-            // Only on checkout page
-            if (!is_checkout()) {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            if (count($items_by_location) <= 1) {
                 return;
             }
 
-            // Start output buffering
             ob_start();
         }
 
@@ -2199,17 +2146,22 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function maybe_restore_checkout_cart_display()
         {
+            // Check if this is actually the checkout page
+            if (!function_exists('is_checkout') || !is_checkout()) {
+                return;
+            }
+
             if (!$this->should_apply_cart_grouping()) {
                 return;
             }
 
-            // Only on checkout page
-            if (!is_checkout()) {
+            $items_by_location = $this->get_cart_items_by_location_for_grouping();
+
+            if (count($items_by_location) <= 1) {
                 return;
             }
 
-            // Get buffered content and replace with grouped display
-            $content = ob_get_clean();
+            ob_end_clean();
             $this->display_grouped_checkout_cart();
         }
 
@@ -2452,53 +2404,6 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         /**
-         * Filter WooCommerce cart block renderer
-         */
-        public function filter_cart_block_renderer($content)
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return $content;
-            }
-
-            // Replace cart block content with grouped display
-            $items_by_location = $this->get_cart_items_by_location_for_grouping();
-
-            if (empty($items_by_location) || count($items_by_location) === 1) {
-                return $content;
-            }
-
-            ob_start();
-            $this->display_grouped_cart_block();
-            return ob_get_clean();
-        }
-
-        /**
-         * Filter WooCommerce cart item renderer
-         */
-        public function filter_cart_item_renderer($content)
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return $content;
-            }
-
-            // This will be handled by the cart block renderer
-            return $content;
-        }
-
-        /**
-         * Filter WooCommerce cart table renderer
-         */
-        public function filter_cart_table_renderer($content)
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return $content;
-            }
-
-            // This will be handled by the cart block renderer
-            return $content;
-        }
-
-        /**
          * Display grouped cart block
          */
         public function display_grouped_cart_block()
@@ -2621,94 +2526,6 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         /**
-         * Filter widget cart item HTML
-         */
-        public function filter_widget_cart_item_html($html, $cart_item, $cart_item_key)
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return $html;
-            }
-
-            // Add location information to widget cart items
-            if (isset($cart_item['mulopimfwc_location_name'])) {
-                $location_name = $cart_item['mulopimfwc_location_name'];
-                $location_html = '<div class="mulopimfwc-widget-location"><span class="mulopimfwc-widget-location-icon">📍</span> ' . esc_html($location_name) . '</div>';
-
-                // Insert location info before the product name
-                $html = str_replace('<div class="product-name">', $location_html . '<div class="product-name">', $html);
-            }
-
-            return $html;
-        }
-
-        /**
-         * Filter cart fragments for AJAX updates
-         */
-        public function filter_cart_fragments($fragments)
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return $fragments;
-            }
-
-            // Update mini cart fragment with grouped display
-            if (isset($fragments['div.widget_shopping_cart_content'])) {
-                ob_start();
-                $this->display_grouped_mini_cart();
-                $fragments['div.widget_shopping_cart_content'] = ob_get_clean();
-            }
-
-            return $fragments;
-        }
-
-        /**
-         * Start cart output buffering
-         */
-        public function maybe_start_cart_output_buffering()
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return;
-            }
-
-            // Start output buffering for any cart-related content
-            if (is_cart() || is_checkout() || (function_exists('wc_get_page_id') && is_page(wc_get_page_id('cart')))) {
-                ob_start();
-            }
-        }
-
-        /**
-         * End cart output buffering
-         */
-        public function maybe_end_cart_output_buffering()
-        {
-            if (!$this->should_apply_cart_grouping()) {
-                return;
-            }
-
-            // Process buffered content for cart-related pages
-            if (is_cart() || is_checkout() || (function_exists('wc_get_page_id') && is_page(wc_get_page_id('cart')))) {
-                $content = ob_get_clean();
-
-                // Check if content contains cart elements and apply grouping
-                if (strpos($content, 'woocommerce-cart') !== false || strpos($content, 'cart_item') !== false) {
-                    // Apply grouping logic to the content
-                    $content = $this->apply_cart_grouping_to_content($content);
-                }
-
-                echo $content;
-            }
-        }
-
-        /**
-         * Apply cart grouping to content
-         */
-        private function apply_cart_grouping_to_content($content)
-        {
-            // This is a more advanced implementation that would parse and modify HTML content
-            // For now, we'll rely on the hook-based approach
-            return $content;
-        }
-
-        /**
          * Get available locations for a product via AJAX
          */
         public function cymulopimfwc_get_available_locations()
@@ -2825,7 +2642,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.0.3.6',
+                '1.0.3.20',
                 true
             );
 
@@ -2845,7 +2662,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.0.3.6'
+                '1.0.3.20'
             );
         }
 
@@ -2950,9 +2767,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? (int)$mulopimfwc_options["location_cookie_expiry"]
                 : 30;
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.3.6');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.3.20');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.3.6', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.3.20', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
             // Check if cart grouping is enabled
@@ -3539,7 +3356,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.3.6");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.3.20");
         }
     }
 
@@ -3549,20 +3366,6 @@ if (!function_exists('mulopimfwc_get_values')) {
     }
 
     add_action('plugins_loaded', 'mulopimfwc_location_wise_products_init', 100);
-
-
-
-    register_uninstall_hook(__FILE__, 'mulopimfwc_settings_remove');
-
-    register_activation_hook(__FILE__, 'mulopimfwc_settings_remove');
-
-    function mulopimfwc_settings_remove()
-    {
-        // Check if the option exists and delete it
-        if (get_option('mulopimfwc_display_options') !== false) {
-            delete_option('mulopimfwc_display_options');
-        }
-    }
 
 
     // Add this to the main plugin file after the class definition
@@ -3721,7 +3524,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.0.3.6",
+                "1.0.3.20",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

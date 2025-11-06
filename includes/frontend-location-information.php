@@ -75,6 +75,32 @@ class MULOPIMFWC_Frontend_Location_Information
      */
     public function add_location_info_tab($tabs)
     {
+
+        global $mulopimfwc_options, $product;
+
+        $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
+            ? $mulopimfwc_options['enable_store_locator']
+            : 'off';
+
+        if ($enable_locator !== 'on' || !is_singular('product')) {
+            return $tabs;
+        }
+
+        if (!$product) {
+            $product = wc_get_product(get_the_ID());
+        }
+
+        if (!$product) {
+            return $tabs;
+        }
+
+        $locations = wp_get_object_terms($product->get_id(), 'mulopimfwc_store_location');
+
+        if (empty($locations) || is_wp_error($locations)) {
+            return $tabs;
+        }
+
+
         $tabs['location_info'] = [
             'title' => __('Location Information', 'multi-location-product-inventory-management'),
             'priority' => 30,
@@ -788,13 +814,13 @@ class MULOPIMFWC_Frontend_Location_Information
                         <div class="mulopimfwc-compact-logo">
                             <?php echo wp_get_attachment_image($logo_id, 'thumbnail', false, ['alt' => $location->name]); ?>
                         </div>
+                    <?php else: ?>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                        </svg>
                     <?php endif; ?>
-
                     <div class="mulopimfwc-compact-info">
                         <h4 class="mulopimfwc-compact-title">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
-                            </svg>
                             <?php echo esc_html($location->name); ?>
                         </h4>
                         <?php echo $this->render_status_badge($status, true); ?>

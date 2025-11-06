@@ -797,8 +797,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.3.6", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.3.6");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.3.20", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.3.20");
 
         // Initialize data arrays
         $product_counts = [];
@@ -1222,7 +1222,7 @@ class MULOPIMFWC_Dashboard
 
                             $low_stock_products = mulopimfwc_get_pro_class(false, $low_stock_products, $low_stock_sample_products);
                             $out_of_stock_threshold = isset($mulopimfwc_options['out_of_stock_threshold']) ? (int) $mulopimfwc_options['out_of_stock_threshold'] : 0;
-                            
+
                             if (!empty($low_stock_products)) : ?>
                                 <table class="lwp-low-stock-table <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                     <thead>
@@ -1449,6 +1449,56 @@ class MULOPIMFWC_Dashboard
     {
         global $wpdb;
 
+        // Check if current user is a location manager
+        $is_location_manager = false;
+        $assigned_location_slugs = [];
+
+        if (is_user_logged_in()) {
+            $user = wp_get_current_user();
+            if (in_array('mulopimfwc_location_manager', $user->roles)) {
+                $is_location_manager = true;
+                $assigned_location_slugs = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
+
+                if (!is_array($assigned_location_slugs)) {
+                    $assigned_location_slugs = [];
+                }
+            }
+        }
+
+        // For location managers with assigned locations
+        if ($is_location_manager && !empty($assigned_location_slugs)) {
+            // Get term IDs from slugs
+            $term_ids = [];
+            foreach ($assigned_location_slugs as $slug) {
+                $term = get_term_by('slug', $slug, 'mulopimfwc_store_location');
+                if ($term && !is_wp_error($term)) {
+                    $term_ids[] = $term->term_id;
+                }
+            }
+
+            if (empty($term_ids)) {
+                return 0;
+            }
+
+            // Build query to count products in assigned locations
+            $term_ids_placeholder = implode(',', array_fill(0, count($term_ids), '%d'));
+
+            $query = $wpdb->prepare(
+                "SELECT COUNT(DISTINCT p.ID) 
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+            WHERE p.post_type = 'product' 
+            AND p.post_status = 'publish'
+            AND tt.taxonomy = 'mulopimfwc_store_location'
+            AND tt.term_id IN ({$term_ids_placeholder})",
+                ...$term_ids
+            );
+
+            return (int) $wpdb->get_var($query);
+        }
+
+        // For admins and other users, return all products
         $query = "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status = 'publish'";
         return (int) $wpdb->get_var($query);
     }

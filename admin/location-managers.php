@@ -4,7 +4,7 @@
  * Location Managers Admin Page
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.0.3.6
+ * @since 1.0.3.20
  */
 
 if (!defined('ABSPATH')) exit;
@@ -1480,7 +1480,9 @@ class MULOPIMFWC_Location_Managers
 }
 
 // Initialize the class
-new MULOPIMFWC_Location_Managers();
+global $MULOPIMFWC_Location_Managers;
+
+$MULOPIMFWC_Location_Managers = new MULOPIMFWC_Location_Managers();
 
 
 

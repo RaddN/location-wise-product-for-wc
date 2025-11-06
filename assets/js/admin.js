@@ -344,7 +344,19 @@ jQuery(document).ready(function ($) {
         $('.lwp-tab-content,.mulopimfwc_settings').hide();
         $($(this).attr('href')).show();
         $($(this).attr('href')).closest('.mulopimfwc_settings').show();
+        // Update URL hash (without page reload)
+        const tabHash = $(this).attr('href');
+        history.replaceState(null, null, tabHash);
     });
+
+    // On page load, check URL hash and show correct tab
+    const currentHash = window.location.hash;
+    if (currentHash && $('.lwp-nav-tabs a[href="' + currentHash + '"]').length) {
+        $('.lwp-nav-tabs a[href="' + currentHash + '"]').trigger('click');
+    } else {
+        // Default: show first tab if none specified
+        $('.lwp-nav-tabs a:first').trigger('click');
+    }
 
     // Add toggle functionality for sections if needed
     $('.lwp-settings-box h2').addClass('lwp-section-toggle');
