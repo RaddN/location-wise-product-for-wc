@@ -23,7 +23,7 @@
         const el = row.querySelector(LOC_VALUE_SEL);
         const name = el?.textContent?.trim();
         if (name) return name;
-        return fromTitleFallback(row) || 'Unknown Location';
+        return fromTitleFallback(row) || 'Global';
     };
 
     const slugify = (s) =>

@@ -24,9 +24,9 @@ class MULOPIMFWC_Runtime_Filters
         }
 
         if (isset($mulopimfwc_options['enable_location_taxes']) && $mulopimfwc_options['enable_location_taxes'] === "on"  && mulopimfwc_premium_feature()) {
-        // Tax class: set default tax class from location (product + variations)
-        add_filter('woocommerce_product_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
-        add_filter('woocommerce_product_variation_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
+            // Tax class: set default tax class from location (product + variations)
+            add_filter('woocommerce_product_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
+            add_filter('woocommerce_product_variation_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
         }
     }
 

@@ -71,7 +71,7 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        if (mulopimfwc_locationWiseProducts.allow_mixed_in_cart !== 'on') {
+        if (mulopimfwc_locationWiseProducts.allow_mixed_in_cart !== 'on' && mulopimfwc_locationWiseProducts.allow_cart_update) {
 
             // Check if the cart has products before changing the store location
             checkCartHasProducts(function (cartHasProducts) {

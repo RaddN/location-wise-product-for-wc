@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.0.3.20
+ * @version 1.0.3.26
  * @author Your Name
- * @since 1.0.3.20
+ * @since 1.0.3.26
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.0.3.20';
+    const VERSION = '1.0.3.26';
 
     /**
      * Available display positions
@@ -119,11 +119,52 @@ class MULOPIMFWC_Product_Location_Selector
         wp_enqueue_script(
             'mulopimfwc-location-selector',
             plugins_url('../assets/js/location-selector.js', __FILE__),
-            ['jquery', 'wc-add-to-cart-variation'],
+            ['jquery'],
             self::VERSION,
             true
         );
+
+        // Targets for each position (Elementor + classic)
+        $targets = [
+            'after_title' => [
+                'h1.product_title',
+                'h1.entry-title',
+                '.elementor-widget-woocommerce-product-title h1'
+            ],
+            'after_price' => [
+                '.summary .price',
+                '.elementor-widget-woocommerce-product-price .woocommerce-Price-amount',
+                '.elementor-widget-woocommerce-product-price'
+            ],
+            'before_add_to_cart' => [
+                'form.cart',
+                '.elementor-widget-woocommerce-product-add-to-cart form.cart',
+                '.elementor-add-to-cart',
+                '.stock.out-of-stock'
+            ],
+            'after_add_to_cart' => [
+                'form.cart',
+                '.elementor-widget-woocommerce-product-add-to-cart form.cart',
+                '.elementor-add-to-cart',
+                '.stock.out-of-stock'
+            ],
+            'product_meta' => [
+                '.product_meta',
+                '.elementor-widget-woocommerce-product-meta .product_meta',
+                '.elementor-widget-woocommerce-product-meta'
+            ]
+        ];
+
+        wp_add_inline_script(
+            'mulopimfwc-location-selector',
+            'window.MULOPIMFWC_LOC_SELECTOR = ' . wp_json_encode([
+                'position' => $this->position,
+                'targets'  => $targets,
+            ]) . ';',
+            'before'
+        );
     }
+
 
     /**
      * Setup display hooks based on current page and settings
@@ -261,8 +302,12 @@ class MULOPIMFWC_Product_Location_Selector
 
         $patterns = $this->get_injection_patterns();
 
+        error_log("Single product page contents: " . $content);
+
         foreach ($patterns[$this->position] ?? $patterns['after_price'] as $pattern) {
+            error_log($this->position . $pattern);
             if (preg_match($pattern, $content)) {
+                error_log("pattern matches");
                 $replacement = $this->should_inject_after() ? '$0' . $selector_html : $selector_html . '$0';
                 $content = preg_replace($pattern, $replacement, $content, 1);
                 break;
@@ -288,20 +333,34 @@ class MULOPIMFWC_Product_Location_Selector
             'after_title' => [
                 '/<h1[^>]*class="[^"]*product_title[^"]*"[^>]*>.*?<\/h1>/i',
                 '/<h1[^>]*class="[^"]*entry-title[^"]*"[^>]*>.*?<\/h1>/i',
+                '/<div[^>]*class="[^"]*product_meta[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
             ],
             'after_price' => [
                 '/<p[^>]*class="[^"]*price[^"]*"[^>]*>.*?<\/p>/i',
                 '/<div[^>]*class="[^"]*price[^"]*"[^>]*>.*?<\/div>/i',
+                '/<div[^>]*class="[^"]*product_meta[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
             ],
             'before_add_to_cart' => [
                 '/<form[^>]*class="[^"]*cart[^"]*"[^>]*>/i',
                 '/<div[^>]*class="[^"]*single_variation_wrap[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*product_meta[^"]*"[^>]*>/i',
+                '/<h1[^>]*class="[^"]*product_title[^"]*"[^>]*>.*?<\/h1>/i',
+                '/<h1[^>]*class="[^"]*entry-title[^"]*"[^>]*>.*?<\/h1>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
             ],
             'after_add_to_cart' => [
                 '/<\/form>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*product_meta[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
             ],
             'product_meta' => [
                 '/<div[^>]*class="[^"]*product_meta[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
+                '/<div[^>]*class="[^"]*elementor-add-to-cart[^"]*"[^>]*>/i',
             ]
         ];
     }
@@ -325,6 +384,7 @@ class MULOPIMFWC_Product_Location_Selector
      */
     private function fallback_injection(string $content, string $selector_html): string
     {
+        $selector_html = '<div id="mulopimfwc-selector-portal" style="display:none">' . $selector_html . '</div>';
         if (preg_match('/<\/div>(?=[^<]*$)/i', $content)) {
             return preg_replace('/<\/div>(?=[^<]*$)/i', $selector_html . '</div>', $content, 1);
         }
@@ -346,30 +406,46 @@ class MULOPIMFWC_Product_Location_Selector
 
     /**
      * Render the location selector
+     * 
+     * @param int $product_id Optional product ID (for shortcode support)
+     * @param string $position Optional position override
      */
-    private function render_location_selector(): void
+    public function render_location_selector(int $product_id = 0, string $position = '', array $atts = []): void
     {
-        $this->current_product = wc_get_product();
+        static $location_selector_added = [];
+
+        $this->current_product = $product_id > 0 ? wc_get_product($product_id) : wc_get_product();
 
         if (!$this->current_product || !is_object($this->current_product)) {
             return;
         }
 
-        $locations = $this->get_available_locations();
+        $product_id_key = $this->current_product->get_id();
+
+        // Prevent duplicate selectors for the same product
+        if (isset($location_selector_added[$product_id_key])) {
+            return;
+        }
+
+        $locations = $this->get_available_locations($this->current_product);
 
         if (empty($locations)) {
             return;
         }
 
-        $this->render_selector_wrapper($locations);
+        $display_position = !empty($position) ? $position : $this->position;
+        $this->render_selector_wrapper($locations, $display_position, $atts);
+
+        $location_selector_added[$product_id_key] = true;
     }
 
     /**
-     * Get available locations for the current product
+     * Get available locations for a product
      * 
+     * @param WC_Product $product
      * @return array
      */
-    private function get_available_locations(): array
+    public function get_available_locations(WC_Product $product): array
     {
         $all_locations = get_terms([
             'taxonomy' => self::TAXONOMY,
@@ -380,7 +456,7 @@ class MULOPIMFWC_Product_Location_Selector
             return [];
         }
 
-        $product_locations = get_the_terms($this->current_product->get_id(), self::TAXONOMY);
+        $product_locations = get_the_terms($product->get_id(), self::TAXONOMY);
 
         // If product has specific locations, filter to only those
         if (!empty($product_locations) && !is_wp_error($product_locations)) {
@@ -397,27 +473,20 @@ class MULOPIMFWC_Product_Location_Selector
      * Render the selector wrapper and content
      * 
      * @param array $locations
+     * @param string $position
      */
-    private function render_selector_wrapper(array $locations): void
+    private function render_selector_wrapper(array $locations, string $position = '', $atts = []): void
     {
         $current_location = $this->get_current_location();
-        $layout = $this->get_layout_type();
+        $layout = isset($atts["layout"]) ? $atts["layout"] : $this->get_layout_type();
         $has_product_locations = $this->current_product_has_locations();
+        $display_position = !empty($position) ? $position : $this->position;
 
-        echo '<div class="mulopimfwc-product-location-selector-wrapper mulopimfwc-position-' . esc_attr($this->position) . '">';
-        echo '<div class="mulopimfwc-product-location-selector" data-product-id="' . esc_attr($this->current_product->get_id()) . '" data-position="' . esc_attr($this->position) . '">';
+        echo '<div class="mulopimfwc-product-location-selector-wrapper mulopimfwc-position-' . esc_attr($display_position) . '">';
+        echo '<div class="mulopimfwc-product-location-selector" data-product-id="' . esc_attr($this->current_product->get_id()) . '" data-position="' . esc_attr($display_position) . '">';
 
-        switch ($layout) {
-            case 'buttons':
-                $this->render_buttons_layout($locations, $current_location, $has_product_locations);
-                break;
-            case 'select':
-                $this->render_select_layout($locations, $current_location, $has_product_locations);
-                break;
-            case 'list':
-            default:
-                $this->render_list_layout($locations, $current_location, $has_product_locations);
-                break;
+        if ($has_product_locations && !empty($locations)) {
+            $this->render_layout($layout, $locations, $current_location);
         }
 
         echo '</div>';
@@ -425,11 +494,34 @@ class MULOPIMFWC_Product_Location_Selector
     }
 
     /**
+     * Render layout based on type
+     * 
+     * @param string $layout
+     * @param array $locations
+     * @param string $current_location
+     */
+    private function render_layout(string $layout, array $locations, string $current_location): void
+    {
+        switch ($layout) {
+            case 'buttons':
+                $this->render_buttons_layout($locations, $current_location);
+                break;
+            case 'select':
+                $this->render_select_layout($locations, $current_location);
+                break;
+            case 'list':
+            default:
+                $this->render_list_layout($locations, $current_location);
+                break;
+        }
+    }
+
+    /**
      * Get current location from cookie
      * 
      * @return string
      */
-    private function get_current_location(): string
+    public function get_current_location(): string
     {
         return isset($_COOKIE[self::COOKIE_NAME]) ? sanitize_text_field($_COOKIE[self::COOKIE_NAME]) : '';
     }
@@ -461,41 +553,35 @@ class MULOPIMFWC_Product_Location_Selector
      * 
      * @param array $locations
      * @param string $current_location
-     * @param bool $has_product_locations
+     * @param string $id_suffix Optional ID suffix for multiple selectors
      */
-    private function render_list_layout(array $locations, string $current_location, bool $has_product_locations): void
+    private function render_list_layout(array $locations, string $current_location, string $id_suffix = ''): void
     {
+        $label = $this->get_selector_label();
+        $product_id = $this->current_product->get_id();
 ?>
-        <?php if ($has_product_locations && !empty($locations)): ?>
-            <div class="mulopimfwc-location-list">
-                <div class="mulopimfwc-location-label">
-                    <?php echo esc_html($this->get_selector_label()); ?>
-                </div>
-                <div class="mulopimfwc-checkbox-list">
-                    <?php foreach ($locations as $location): ?>
-                        <div class="mulopimfwc-checkbox-item">
-                            <input
-                                type="radio"
-                                id="location-<?php echo esc_attr($location->term_id); ?>"
-                                name="mulopimfwc_location"
-                                class="mulopimfwc-location-checkbox"
-                                value="<?php echo esc_attr($location->slug); ?>"
-                                <?php checked($current_location, $location->slug); ?>
-                                data-location-id="<?php echo esc_attr($location->term_id); ?>" />
-                            <label for="location-<?php echo esc_attr($location->term_id); ?>">
-                                <?php echo esc_html($location->name); ?>
-                                <!-- <?php //if (!empty($location->description)): 
-                                        ?>
-                                    <span class="mulopimfwc-location-description"><?php //echo esc_html($location->description); 
-                                                                                    ?></span>
-                                <?php //endif; 
-                                ?> -->
-                            </label>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
+        <div class="mulopimfwc-location-list">
+            <div class="mulopimfwc-location-label">
+                <?php echo esc_html($label); ?>
             </div>
-        <?php endif; ?>
+            <div class="mulopimfwc-checkbox-list">
+                <?php foreach ($locations as $location): ?>
+                    <div class="mulopimfwc-checkbox-item">
+                        <input
+                            type="radio"
+                            id="location-<?php echo esc_attr($location->term_id . $id_suffix); ?>"
+                            name="mulopimfwc_location<?php echo esc_attr($id_suffix ? '_' . $product_id : ''); ?>"
+                            class="mulopimfwc-location-checkbox"
+                            value="<?php echo esc_attr($location->slug); ?>"
+                            <?php checked($current_location, $location->slug); ?>
+                            data-location-id="<?php echo esc_attr($location->term_id); ?>" />
+                        <label for="location-<?php echo esc_attr($location->term_id . $id_suffix); ?>">
+                            <?php echo esc_html($location->name); ?>
+                        </label>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
     <?php
     }
 
@@ -504,30 +590,28 @@ class MULOPIMFWC_Product_Location_Selector
      * 
      * @param array $locations
      * @param string $current_location
-     * @param bool $has_product_locations
      */
-    private function render_buttons_layout(array $locations, string $current_location, bool $has_product_locations): void
+    private function render_buttons_layout(array $locations, string $current_location): void
     {
+        $label = $this->get_selector_label();
     ?>
-        <?php if ($has_product_locations && !empty($locations)): ?>
-            <div class="mulopimfwc-location-buttons">
-                <div class="mulopimfwc-location-label">
-                    <?php echo esc_html($this->get_selector_label()); ?>
-                </div>
-                <div class="mulopimfwc-buttons-container">
-                    <?php foreach ($locations as $location): ?>
-                        <button
-                            type="button"
-                            class="mulopimfwc-location-button <?php echo $current_location === $location->slug ? 'active' : ''; ?>"
-                            data-location="<?php echo esc_attr($location->slug); ?>"
-                            data-location-id="<?php echo esc_attr($location->term_id); ?>"
-                            title="<?php echo esc_attr($location->description); ?>">
-                            <?php echo esc_html($location->name); ?>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
+        <div class="mulopimfwc-location-buttons">
+            <div class="mulopimfwc-location-label">
+                <?php echo esc_html($label); ?>
             </div>
-        <?php endif; ?>
+            <div class="mulopimfwc-buttons-container">
+                <?php foreach ($locations as $location): ?>
+                    <button
+                        type="button"
+                        class="mulopimfwc-location-button <?php echo $current_location === $location->slug ? 'active' : ''; ?>"
+                        data-location="<?php echo esc_attr($location->slug); ?>"
+                        data-location-id="<?php echo esc_attr($location->term_id); ?>"
+                        title="<?php echo esc_attr($location->description); ?>">
+                        <?php echo esc_html($location->name); ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        </div>
     <?php
     }
 
@@ -536,31 +620,28 @@ class MULOPIMFWC_Product_Location_Selector
      * 
      * @param array $locations
      * @param string $current_location
-     * @param bool $has_product_locations
      */
-    private function render_select_layout(array $locations, string $current_location, bool $has_product_locations): void
+    private function render_select_layout(array $locations, string $current_location): void
     {
+        $label = $this->get_selector_label();
     ?>
-        <?php if ($has_product_locations && !empty($locations)): ?>
-            <div class="mulopimfwc-location-select">
-                <div class="mulopimfwc-location-label">
-                    <?php echo esc_html($this->get_selector_label()); ?>
-                </div>
-                <select class="mulopimfwc-location-dropdown" data-current-location="<?php echo esc_attr($current_location); ?>">
-
-                    <option value=""><?php esc_html_e('Choose a location...', 'multi-location-product-and-inventory-management'); ?></option>
-                    <?php foreach ($locations as $location): ?>
-                        <option
-                            value="<?php echo esc_attr($location->slug); ?>"
-                            data-location-id="<?php echo esc_attr($location->term_id); ?>"
-                            <?php selected($current_location, $location->slug); ?>>
-                            <?php echo esc_html($location->name); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+        <div class="mulopimfwc-location-select">
+            <div class="mulopimfwc-location-label">
+                <?php echo esc_html($label); ?>
             </div>
-        <?php endif; ?>
-    <?php
+            <select class="mulopimfwc-location-dropdown" data-current-location="<?php echo esc_attr($current_location); ?>">
+                <option value=""><?php esc_html_e('Choose a location...', 'multi-location-product-and-inventory-management'); ?></option>
+                <?php foreach ($locations as $location): ?>
+                    <option
+                        value="<?php echo esc_attr($location->slug); ?>"
+                        data-location-id="<?php echo esc_attr($location->term_id); ?>"
+                        <?php selected($current_location, $location->slug); ?>>
+                        <?php echo esc_html($location->name); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+<?php
     }
 
     /**
@@ -568,7 +649,7 @@ class MULOPIMFWC_Product_Location_Selector
      * 
      * @return string
      */
-    private function get_selector_label(): string
+    public function get_selector_label(): string
     {
         return apply_filters(
             'mulopimfwc_location_selector_label',
@@ -697,7 +778,7 @@ class MULOPIMFWC_Product_Location_Selector
      * @param string $location
      * @return string
      */
-    private function get_location_display_name(string $location): string
+    public function get_location_display_name(string $location): string
     {
         if ($location === 'all-products') {
             return __('All Products', 'multi-location-product-and-inventory-management');
@@ -708,25 +789,32 @@ class MULOPIMFWC_Product_Location_Selector
     }
 }
 
-// Initialize the class
-new MULOPIMFWC_Product_Location_Selector();
-
-
-
+// Initialize the main class
+$GLOBALS['mulopimfwc_location_selector'] = new MULOPIMFWC_Product_Location_Selector();
 
 /**
- * Location Selector Shortcode
- * Add to your theme's functions.php or as a separate plugin file
+ * Location Selector Shortcode Handler
+ * 
+ * Provides shortcode functionality by reusing the main class methods
  */
-
-// Add this method to the MULOPIMFWC_Product_Location_Selector class
 class MULOPIMFWC_Product_Location_Selector_Shortcode
 {
-
+    /**
+     * @var array Track displayed shortcodes to prevent duplicates
+     */
     private static $shortcode_displayed = [];
 
+    /**
+     * @var MULOPIMFWC_Product_Location_Selector Main selector instance
+     */
+    private $selector;
+
+    /**
+     * Constructor
+     */
     public function __construct()
     {
+        $this->selector = $GLOBALS['mulopimfwc_location_selector'];
         add_shortcode('mulopimfwc_location_selector', [$this, 'render_shortcode']);
     }
 
@@ -740,19 +828,13 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     {
         $atts = shortcode_atts([
             'product_id' => 0,
-            'layout' => 'list', // list, buttons, select
+            'layout' => 'list',
             'label' => '',
         ], $atts, 'mulopimfwc_location_selector');
 
-        // Auto-detect product ID
         $product_id = $this->get_product_id($atts['product_id']);
 
-        if (!$product_id) {
-            return '';
-        }
-
-        // Prevent multiple displays of same selector
-        if (isset(self::$shortcode_displayed[$product_id])) {
+        if (!$product_id || isset(self::$shortcode_displayed[$product_id])) {
             return '';
         }
 
@@ -764,15 +846,31 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             return '';
         }
 
-        $locations = $this->get_available_locations($product);
+        // Reuse main class method to get locations
+        $locations = $this->selector->get_available_locations($product);
 
         if (empty($locations)) {
             return '';
         }
 
+        // Override label if provided
+        if (!empty($atts['label'])) {
+            add_filter('mulopimfwc_location_selector_label', function () use ($atts) {
+                return $atts['label'];
+            });
+        }
+
         ob_start();
-        $this->render_selector($product, $locations, $atts);
-        return ob_get_clean();
+        // Reuse main class render method with shortcode position
+        $this->selector->render_location_selector($product_id, 'shortcode', $atts);
+        $output = ob_get_clean();
+
+        // Remove label filter if it was added
+        if (!empty($atts['label'])) {
+            remove_all_filters('mulopimfwc_location_selector_label');
+        }
+
+        return $output;
     }
 
     /**
@@ -783,154 +881,22 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     private function get_product_id($provided_id)
     {
-        // Use provided ID if valid
         if ($provided_id > 0) {
             return absint($provided_id);
         }
 
-        // Try to get from global $product
         global $product;
         if ($product && is_a($product, 'WC_Product')) {
             return $product->get_id();
         }
 
-        // Try to get from query
-        if (is_product()) {
-            return get_the_ID();
-        }
-
-        // Try to get from loop
-        if (in_the_loop()) {
+        if (is_product() || in_the_loop()) {
             return get_the_ID();
         }
 
         return 0;
     }
-
-    /**
-     * Get available locations for product
-     * 
-     * @param WC_Product $product
-     * @return array
-     */
-    private function get_available_locations($product)
-    {
-        $all_locations = get_terms([
-            'taxonomy' => MULOPIMFWC_Product_Location_Selector::TAXONOMY,
-            'hide_empty' => false,
-        ]);
-
-        if (empty($all_locations) || is_wp_error($all_locations)) {
-            return [];
-        }
-
-        $product_locations = get_the_terms($product->get_id(), MULOPIMFWC_Product_Location_Selector::TAXONOMY);
-
-        if (!empty($product_locations) && !is_wp_error($product_locations)) {
-            $product_slugs = wp_list_pluck($product_locations, 'slug');
-            return array_filter($all_locations, function ($location) use ($product_slugs) {
-                return in_array($location->slug, $product_slugs, true);
-            });
-        }
-
-        return $all_locations;
-    }
-
-    /**
-     * Render selector HTML
-     * 
-     * @param WC_Product $product
-     * @param array $locations
-     * @param array $atts
-     */
-    private function render_selector($product, $locations, $atts)
-    {
-        $current_location = isset($_COOKIE[MULOPIMFWC_Product_Location_Selector::COOKIE_NAME])
-            ? sanitize_text_field($_COOKIE[MULOPIMFWC_Product_Location_Selector::COOKIE_NAME])
-            : '';
-
-        $layout = in_array($atts['layout'], MULOPIMFWC_Product_Location_Selector::LAYOUTS, true)
-            ? $atts['layout']
-            : 'list';
-
-        $label = !empty($atts['label'])
-            ? $atts['label']
-            : __('Select Location:', 'multi-location-product-and-inventory-management');
-
-        $has_product_locations = !empty(get_the_terms($product->get_id(), MULOPIMFWC_Product_Location_Selector::TAXONOMY));
-
-    ?>
-        <?php if ($has_product_locations && !empty($locations)): ?>
-            <div class="mulopimfwc-product-location-selector-wrapper mulopimfwc-shortcode">
-                <div class="mulopimfwc-product-location-selector"
-                    data-product-id="<?php echo esc_attr($product->get_id()); ?>"
-                    data-position="shortcode">
-                    <?php if ($layout === 'list'): ?>
-                        <div class="mulopimfwc-location-list">
-                            <div class="mulopimfwc-location-label">
-                                <?php echo esc_html($label); ?>
-                            </div>
-                            <div class="mulopimfwc-checkbox-list">
-                                <?php foreach ($locations as $location): ?>
-                                    <div class="mulopimfwc-checkbox-item">
-                                        <input type="radio"
-                                            id="location-shortcode-<?php echo esc_attr($location->term_id); ?>-<?php echo esc_attr($product->get_id()); ?>"
-                                            name="mulopimfwc_location_<?php echo esc_attr($product->get_id()); ?>"
-                                            class="mulopimfwc-location-checkbox"
-                                            value="<?php echo esc_attr($location->slug); ?>"
-                                            <?php checked($current_location, $location->slug); ?>
-                                            data-location-id="<?php echo esc_attr($location->term_id); ?>" />
-                                        <label for="location-shortcode-<?php echo esc_attr($location->term_id); ?>-<?php echo esc_attr($product->get_id()); ?>">
-                                            <?php echo esc_html($location->name); ?>
-                                        </label>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                    <?php elseif ($layout === 'buttons'): ?>
-                        <div class="mulopimfwc-location-buttons">
-                            <div class="mulopimfwc-location-label">
-                                <?php echo esc_html($label); ?>
-                            </div>
-                            <div class="mulopimfwc-buttons-container">
-                                <?php foreach ($locations as $location): ?>
-                                    <button type="button"
-                                        class="mulopimfwc-location-button <?php echo $current_location === $location->slug ? 'active' : ''; ?>"
-                                        data-location="<?php echo esc_attr($location->slug); ?>"
-                                        data-location-id="<?php echo esc_attr($location->term_id); ?>"
-                                        title="<?php echo esc_attr($location->description); ?>">
-                                        <?php echo esc_html($location->name); ?>
-                                    </button>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                    <?php else: // select 
-                    ?>
-                        <div class="mulopimfwc-location-select">
-                            <div class="mulopimfwc-location-label">
-                                <?php echo esc_html($label); ?>
-                            </div>
-                            <select class="mulopimfwc-location-dropdown" data-current-location="<?php echo esc_attr($current_location); ?>">
-                                <option value=""><?php esc_html_e('Choose a location...', 'multi-location-product-and-inventory-management'); ?></option>
-                                <?php foreach ($locations as $location): ?>
-                                    <option value="<?php echo esc_attr($location->slug); ?>"
-                                        data-location-id="<?php echo esc_attr($location->term_id); ?>"
-                                        <?php selected($current_location, $location->slug); ?>>
-                                        <?php echo esc_html($location->name); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php endif; ?>
-
-                </div>
-            </div>
-        <?php endif; ?>
-<?php
-    }
 }
 
-// Initialize shortcode
+// Initialize shortcode handler
 new MULOPIMFWC_Product_Location_Selector_Shortcode();

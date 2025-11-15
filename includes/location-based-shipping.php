@@ -46,9 +46,6 @@ class MULOPIMFWC_Location_Based_Shipping
         // AJAX handlers for saving method locations
         add_action('wp_ajax_mulopimfwc_save_shipping_method_locations', array($this, 'ajax_save_method_locations'));
         
-        // Add location filter to checkout
-        add_action('woocommerce_review_order_before_shipping', array($this, 'display_location_shipping_notice'));
-        
         // Refresh shipping methods when location changes
         add_action('wp_footer', array($this, 'add_location_change_shipping_refresh'));
         
@@ -439,35 +436,6 @@ class MULOPIMFWC_Location_Based_Shipping
             'message' => __('Locations saved successfully', 'multi-location-product-and-inventory-management'),
             'locations' => $locations
         ));
-    }
-
-    /**
-     * Display location shipping notice on checkout
-     */
-    public function display_location_shipping_notice()
-    {
-        $current_location = $this->get_current_location();
-
-        if (!$current_location || $current_location === 'all-products') {
-            return;
-        }
-
-        $term = get_term_by('slug', $current_location, 'mulopimfwc_store_location');
-        
-        if ($term && !is_wp_error($term)) {
-            ?>
-            <tr class="mulopimfwc-shipping-location-notice">
-                <td colspan="2" style="padding: 10px 0;">
-                    <div class="woocommerce-info" style="margin: 0;">
-                        <strong>📍 <?php esc_html_e('Shipping Location:', 'multi-location-product-and-inventory-management'); ?></strong>
-                        <?php echo esc_html($term->name); ?>
-                        <br>
-                        <small><?php esc_html_e('Shipping methods are filtered based on your selected store location.', 'multi-location-product-and-inventory-management'); ?></small>
-                    </div>
-                </td>
-            </tr>
-            <?php
-        }
     }
 
     /**

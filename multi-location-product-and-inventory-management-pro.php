@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.3.20
+ * Version: 1.0.3.26
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -23,7 +23,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.0.3.20");
+    define("mulopimfwc_VERSION", "1.0.3.26");
 }
 
 // Check if the free version is installed and deactivate it if active
@@ -1795,7 +1795,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     // Check if product still belongs to stored location
                     $terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
 
-                    if (is_wp_error($terms) || !in_array($stored_location, $terms)) {
+                    if (!empty($terms) && !in_array($stored_location, $terms)) {
                         // Product no longer available at stored location
                         $product = wc_get_product($product_id);
                         wc_add_notice(
@@ -1842,7 +1842,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $items_by_location[$location] = array(
                         'location_name' => isset($cart_item['mulopimfwc_location_name'])
                             ? $cart_item['mulopimfwc_location_name']
-                            : __('Unknown Location', 'multi-location-product-and-inventory-management'),
+                            : __('Global', 'multi-location-product-and-inventory-management'),
                         'location_slug' => $location,
                         'items' => array()
                     );
@@ -1887,7 +1887,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $items_by_location[$location] = array(
                         'location_name' => isset($cart_item['mulopimfwc_location_name'])
                             ? $cart_item['mulopimfwc_location_name']
-                            : __('Unknown Location', 'multi-location-product-and-inventory-management'),
+                            : __('Global', 'multi-location-product-and-inventory-management'),
                         'location_slug' => $location,
                         'items' => array()
                     );
@@ -2642,7 +2642,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.0.3.20',
+                '1.0.3.26',
                 true
             );
 
@@ -2662,7 +2662,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.0.3.20'
+                '1.0.3.26'
             );
         }
 
@@ -2767,9 +2767,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? (int)$mulopimfwc_options["location_cookie_expiry"]
                 : 30;
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.3.20');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.3.26');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.3.20', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.3.26', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
             // Check if cart grouping is enabled
@@ -2796,12 +2796,13 @@ if (!function_exists('mulopimfwc_get_values')) {
             wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
                 'cartHasProducts' => !WC()->cart->is_empty(),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'location_change_notification' => isset($mulopimfwc_options["location_change_notification"]),
+                'location_change_notification' => isset($mulopimfwc_options["location_change_notification"]) || (isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] === "prompt_user"),
                 'nonce' => wp_create_nonce('multi-location-product-and-inventory-management'),
                 'cookie_expiry' => $cookie_expiry,
                 'allow_mixed_in_cart' => isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                     ? $mulopimfwc_options['allow_mixed_location_cart']
                     : 'off',
+                'allow_cart_update' => isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] !== "preserve_cart",
                 'location_notification_text' => isset($mulopimfwc_options['location_notification_text']) && mulopimfwc_premium_feature()
                     ? $mulopimfwc_options['location_notification_text']
                     : 'Do you want to change the store location? Your cart will be emptied.'
@@ -3356,7 +3357,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.3.20");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.3.26");
         }
     }
 
@@ -3524,7 +3525,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.0.3.20",
+                "1.0.3.26",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

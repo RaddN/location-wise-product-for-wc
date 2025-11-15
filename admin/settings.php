@@ -2411,9 +2411,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $value = isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart';
         ?>
             <select name="mulopimfwc_display_options[location_switching_behavior]">
-                <option disabled value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="update_cart" <?php selected($value, 'update_cart'); ?>><?php echo esc_html_e('Update Cart (Remove unavailable products)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('How to handle cart contents when a customer changes their location.', 'multi-location-product-and-inventory-management'); ?></p>
             <?php
@@ -3699,7 +3699,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     ],
                     [
                         'number' => 6,
-                        'title' => __('Location Selector & Customer Experience', 'multi-location-product-and-inventory-management'),
+                        'title' => __('Location Selector Anywhere', 'multi-location-product-and-inventory-management'),
                         'url' => 'https://www.youtube.com/embed/VIDEO_ID_6',
                         'duration' => '6:50',
                         'difficulty' => 'intermediate',
@@ -3817,7 +3817,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     ],
                     [
                         'number' => 11,
-                        'title' => __('Location Selector & Customer Experience', 'multi-location-product-and-inventory-management'),
+                        'title' => __('Location Selector for specific Product', 'multi-location-product-and-inventory-management'),
                         'description' => __('Customize the location selector display on product pages and throughout your store. Learn to use shortcodes, and enhance customer experience with multiple layout options.', 'multi-location-product-and-inventory-management'),
                         'url' => 'https://www.youtube.com/embed/VIDEO_ID_6',
                         'duration' => '6:50',
