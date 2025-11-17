@@ -169,7 +169,7 @@ add_action('woocommerce_product_data_panels', function () {
 
                             <tr id="location-<?php echo esc_attr($location->term_id); ?>">
                                 <td><?php echo esc_html($location->name); ?></td>
-                                <td>
+                                <td class="location-stock-quantity">
                                     <input type="number" name="location_stock[<?php echo esc_attr($location->term_id); ?>]"
                                         value="<?php echo esc_attr($location_stock); ?>" step="1" min="0">
                                 </td>
@@ -416,7 +416,7 @@ if (!is_admin()) {
     // Override regular price for simple products
     add_filter('woocommerce_product_get_regular_price', function ($price, $product) {
         global $mulopimfwc_options;
-        if ($product->is_type('variation') || $mulopimfwc_options['enable_location_price'] !== 'on') {
+        if ($product->is_type('variation') || !isset($mulopimfwc_options['enable_location_price']) || (isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] !== 'on')) {
             return $price; // Handle variations separately
         }
         $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
@@ -428,7 +428,7 @@ if (!is_admin()) {
         $location_slug = mulopimfwc_get_current_store_location();
         $location_id = mulopimfwc_get_location_term_id($location_slug);
 
-        if (!$location_id || $mulopimfwc_options['enable_location_price'] !== 'on') {
+        if (!$location_id || !isset($mulopimfwc_options['enable_location_price']) || (isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] !== 'on')) {
             return $price;
         }
 
@@ -439,7 +439,7 @@ if (!is_admin()) {
     // Override sale price for simple products
     add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
         global $mulopimfwc_options;
-        if ($product->is_type('variation') || $mulopimfwc_options['enable_location_price'] !== 'on') {
+        if ($product->is_type('variation') || !isset($mulopimfwc_options['enable_location_price']) || (isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] !== 'on')) {
             return $price; // Handle variations separately
         }
 
@@ -472,7 +472,7 @@ if (!is_admin()) {
     add_filter('woocommerce_product_get_stock_quantity', function ($quantity, $product) {
         global $mulopimfwc_options;
 
-        if ($product->is_type('variation') || $mulopimfwc_options['enable_location_stock'] !== 'on') {
+        if ($product->is_type('variation') || !isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
             return $quantity; // Handle variations separately
         }
 
@@ -512,7 +512,7 @@ if (!is_admin()) {
     // Override backorder setting for simple products
     add_filter('woocommerce_product_get_backorders', function ($backorders, $product) {
         global $mulopimfwc_options;
-        if ($product->is_type('variation') || $mulopimfwc_options['enable_location_backorder'] !== 'on') {
+        if ($product->is_type('variation') || !isset($mulopimfwc_options['enable_location_backorder']) || (isset($mulopimfwc_options['enable_location_backorder']) && $mulopimfwc_options['enable_location_backorder'] !== 'on')) {
             return $backorders; // Handle variations separately
         }
 
@@ -549,7 +549,7 @@ if (!is_admin()) {
     // Override product stock status based on location stock
     add_filter('woocommerce_product_get_stock_status', function ($status, $product) {
         global $mulopimfwc_options;
-        if ($product->is_type('variation') || $mulopimfwc_options['enable_location_stock'] !== 'on') {
+        if ($product->is_type('variation') || !isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
             return $status; // Handle variations separately
         }
 
@@ -619,7 +619,7 @@ if (!is_admin()) {
     add_filter('woocommerce_product_variation_get_stock_quantity', function ($quantity, $variation) {
         global $mulopimfwc_options;
 
-        if ($mulopimfwc_options['enable_location_stock'] !== 'on') {
+        if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
             return $quantity;
         }
 
@@ -651,7 +651,7 @@ if (!is_admin()) {
     add_filter('woocommerce_product_variation_get_backorders', function ($backorders, $variation) {
         global $mulopimfwc_options;
 
-        if ($mulopimfwc_options['enable_location_backorder'] !== 'on') {
+        if (!isset($mulopimfwc_options['enable_location_backorder']) || (isset($mulopimfwc_options['enable_location_backorder']) && $mulopimfwc_options['enable_location_backorder'] !== 'on')) {
             return $backorders;
         }
 
@@ -660,7 +660,7 @@ if (!is_admin()) {
 
         // Use cart item location if available, otherwise fall back to current location
         $location_slug = $cart_item_location ? $cart_item_location : null;
-        
+
         if (!$location_slug && is_cart() && is_checkout()) {
             return $backorders;
         } else {
@@ -683,7 +683,7 @@ if (!is_admin()) {
     add_action('woocommerce_reduce_order_stock', function ($order) {
         global $mulopimfwc_options;
 
-        if ($mulopimfwc_options['enable_location_stock'] !== 'on') {
+        if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
             return;
         }
 
@@ -719,7 +719,7 @@ if (!is_admin()) {
     add_action('woocommerce_restore_order_stock', function ($order) {
         global $mulopimfwc_options;
 
-        if ($mulopimfwc_options['enable_location_stock'] !== 'on') {
+        if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
             return;
         }
 
@@ -841,7 +841,7 @@ if (!is_admin()) {
     // Override the final price for simple products
     add_filter('woocommerce_product_get_price', function ($price, $product) {
         global $mulopimfwc_options;
-        if ($product->is_type('variation') || $mulopimfwc_options['enable_location_price'] !== 'on') {
+        if ($product->is_type('variation') || !isset($mulopimfwc_options['enable_location_price']) || (isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] !== 'on')) {
             return $price; // Handle variations separately
         }
 
@@ -849,7 +849,7 @@ if (!is_admin()) {
         $raw_sale_price = get_post_meta($product->get_id(), '_sale_price', true);
         $raw_regular_price = get_post_meta($product->get_id(), '_regular_price', true);
         $raw_price = $raw_sale_price ? $raw_sale_price : $raw_regular_price;
-        
+
         // If incoming price differs from raw price, another plugin modified it
         // In that case, respect the other plugin's price
         if ($price != $raw_price && !empty($price)) {
@@ -898,7 +898,7 @@ if (!is_admin()) {
     add_filter('woocommerce_product_variation_get_price', function ($price, $variation) {
         global $mulopimfwc_options;
 
-        if ($mulopimfwc_options['enable_location_price'] !== 'on') {
+        if (!isset($mulopimfwc_options['enable_location_price']) || (isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] !== 'on')) {
             return $price;
         }
 
@@ -906,7 +906,7 @@ if (!is_admin()) {
         $raw_sale_price = get_post_meta($variation->get_id(), '_sale_price', true);
         $raw_regular_price = get_post_meta($variation->get_id(), '_regular_price', true);
         $raw_price = $raw_sale_price ? $raw_sale_price : $raw_regular_price;
-        
+
         // If incoming price differs from raw price, another plugin modified it
         // In that case, respect the other plugin's price
         if ($price != $raw_price && !empty($price)) {
@@ -955,10 +955,10 @@ if (!is_admin()) {
     add_filter('woocommerce_variation_prices', function ($prices, $product, $for_display) {
         global $mulopimfwc_options;
 
-        if ($mulopimfwc_options['enable_location_price'] !== 'on') {
+        if (!isset($mulopimfwc_options['enable_location_price']) || (isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] !== 'on')) {
             return $prices;
         }
-        
+
 
         // Check if we're in cart context and have cart item location data
         $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
@@ -1109,7 +1109,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.3.26');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.4');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -1129,7 +1129,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.3.26');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.4');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }

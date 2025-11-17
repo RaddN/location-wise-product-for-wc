@@ -164,7 +164,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             .address-text {
                 color: #495057;
                 font-weight: 500;
-                <?php if ($atts['multi_line'] !== "on") { ?>width: calc(<?php echo esc_attr($max_width); ?> - (<?php echo esc_attr($max_width); ?> / 3));
+                <?php if (!isset($atts['multi_line']) || (isset($atts['multi_line']) && $atts['multi_line'] !== "on")) { ?>width: calc(<?php echo esc_attr($max_width); ?> - (<?php echo esc_attr($max_width); ?> / 3));
                 /* Set a fixed width */
                 white-space: nowrap;
                 /* Prevent text from wrapping */

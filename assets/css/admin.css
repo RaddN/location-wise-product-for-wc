@@ -100,6 +100,10 @@
   display: flex;
   justify-content: space-between;
   background-color: #f7f7f7;
+  width: 100%;
+  overflow: hidden;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .lwp-tab-content {
@@ -291,6 +295,27 @@ label.mulopimfwc_slider {
   flex: 0 0 19%;
   max-width: 19%;
 }
+
+@media (min-width:1279px) and (max-width: 1575px) {
+  .lwp-settings-left {
+    flex: 0 0 70%;
+    max-width: 70%;
+  }
+
+  .lwp-settings-right {
+    flex: 0 0 29%;
+    max-width: 29%;
+  }
+}
+
+@media (max-width: 1279px) {
+  .lwp-settings-left,
+  .lwp-settings-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
 .lwp-nav-tabs a.nav-tab {
   border: none;
   margin-left: 0;
@@ -302,7 +327,7 @@ label.mulopimfwc_slider {
   background: none;
   border-bottom: 3px solid transparent;
   border-top: 3px solid transparent;
-  padding: 12px 14px;
+  padding: 12px;
   border-right: 1px solid #e5e7eb;
 }
 
@@ -502,7 +527,7 @@ code {
 
 .params-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(186px, 1fr));
   gap: 10px;
 }
 
@@ -712,8 +737,6 @@ code {
   fill: #fff;
 }
 
-
-
 .mulopimfwc-card {
   padding: 20px;
   border-radius: 11px;
@@ -723,7 +746,6 @@ code {
   background-color: #ffffff;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 }
-
 
 .lwp-settings-section .col-md-6 {
   flex: 0 0 50%;
@@ -740,4 +762,8 @@ code {
     flex: 0 0 100%;
     max-width: 100%;
   }
+}
+
+input.disabled + .mulopimfwc_slider {
+    opacity: 0.4;
 }

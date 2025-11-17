@@ -173,6 +173,9 @@ General Settings', 'multi-location-product-and-inventory-management'),
                 $selected_roles = isset($options['enable_location_by_user_role']) ? $options['enable_location_by_user_role'] : [];
                 foreach ($roles as $role_key => $role) {
                     $checked = in_array($role_key, $selected_roles) ? 'checked' : '';
+                    if($role_key === 'customer') {
+                        continue;
+                    }
                     echo "<label><input type='checkbox' name='mulopimfwc_display_options[enable_location_by_user_role][]' value='" . esc_attr($role_key) . "' " . esc_attr($checked) . "> " . esc_html($role['name']) . "</label><br>";
                 }
 ?>
@@ -2752,11 +2755,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $pages = [
             'shop' => __('Shop/Archive Pages', 'multi-location-product-and-inventory-management'),
             'single' => __('Single Product Pages', 'multi-location-product-and-inventory-management'),
-            'cart' => __('Cart & Checkout', 'multi-location-product-and-inventory-management'),
-            'related' => __('Related Products', 'multi-location-product-and-inventory-management'),
-            'search' => __('Search Results', 'multi-location-product-and-inventory-management'),
-            'widgets' => __('Widgets', 'multi-location-product-and-inventory-management'),
-            'Shortcode' => __('Shortcode used pages', 'multi-location-product-and-inventory-management')
+            'Shortcode' => __('Others pages', 'multi-location-product-and-inventory-management')
         ];
 
         foreach ($pages as $value => $label) {
@@ -3640,7 +3639,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
 
                 <!-- <div class="lwp-footer">
-                <p><?php echo esc_html_e('Thank you for using Multi Location Product & Inventory Management for WooCommerce', 'multi-location-product-and-inventory-management'); ?></p>
+                <p><?php //echo esc_html_e('Thank you for using Multi Location Product & Inventory Management for WooCommerce', 'multi-location-product-and-inventory-management'); ?></p>
             </div> -->
             </div>
 
@@ -3933,10 +3932,10 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                             <!-- Content Container -->
                             <div class="lwp-tutorial-content">
                                 <!-- Title -->
-                                <h3 class="lwp-tutorial-card-title"><?php echo esc_html($tutorial['title']); ?></h3>
+                                <h3 class="lwp-tutorial-card-title"><?php echo esc_html($tutorial['title'] ?? ''); ?></h3>
 
                                 <!-- Description -->
-                                <p class="lwp-tutorial-description"><?php echo esc_html($tutorial['description']); ?></p>
+                                <p class="lwp-tutorial-description"><?php echo esc_html($tutorial['description'] ?? ''); ?></p>
 
                                 <!-- Topics Covered -->
                                 <?php if (isset($tutorial['topics']) && !empty($tutorial['topics'])): ?>
@@ -3949,7 +3948,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         </div>
                                         <div class="lwp-topics-tags">
                                             <?php foreach ($tutorial['topics'] as $topic): ?>
-                                                <span class="lwp-topic-tag"><?php echo esc_html($topic); ?></span>
+                                                <span class="lwp-topic-tag"><?php echo esc_html($topic ?? ''); ?></span>
                                             <?php endforeach; ?>
                                         </div>
                                     </div>

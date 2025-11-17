@@ -768,6 +768,9 @@ class MULOPIMFWC_Dashboard
     public function adjustColorLightness($hex, $adjust)
     {
         // Remove # if present
+        if (!is_string($hex) || empty(trim($hex))) {
+            return '#000000';
+        }
         $hex = ltrim($hex, '#');
 
         // Convert to RGB
@@ -797,8 +800,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.3.26", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.3.26");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.4", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.4");
 
         // Initialize data arrays
         $product_counts = [];
