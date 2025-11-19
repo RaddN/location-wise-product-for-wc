@@ -173,7 +173,7 @@ General Settings', 'multi-location-product-and-inventory-management'),
                 $selected_roles = isset($options['enable_location_by_user_role']) ? $options['enable_location_by_user_role'] : [];
                 foreach ($roles as $role_key => $role) {
                     $checked = in_array($role_key, $selected_roles) ? 'checked' : '';
-                    if($role_key === 'customer') {
+                    if ($role_key === 'customer') {
                         continue;
                     }
                     echo "<label><input type='checkbox' name='mulopimfwc_display_options[enable_location_by_user_role][]' value='" . esc_attr($role_key) . "' " . esc_attr($checked) . "> " . esc_html($role['name']) . "</label><br>";
@@ -1697,30 +1697,31 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 </label>
             <?php } ?>
             <p class="description"><?php echo esc_html_e('Select which map provider to use for the store locator.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+            <?php
             },
             'lwp-store-locator-settings',
             'mulopimfwc_store_locator_section'
         );
 
-        // Add "Map API Key" field
-        // add_settings_field(
-        //     'map_api_key',
-        //     __('Map API Key', 'multi-location-product-and-inventory-management'),
-        //     function () {
-        //         $options = get_option('mulopimfwc_display_options', ['map_api_key' => '']);
-        //         $value = isset($options['map_api_key']) ? $options['map_api_key'] : '';
-        // 
+        /*
+        add_settings_field(
+            'map_api_key',
+            __('Map API Key', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = get_option('mulopimfwc_display_options', ['map_api_key' => '']);
+                $value = isset($options['map_api_key']) ? $options['map_api_key'] : '';
         ?>
-        <!-- <input disabled type="text" name="mulopimfwc_display_options[map_api_key]" value="<?php //echo esc_attr($value); 
-                                                                                                ?>" class="regular-text">
-             <p class="description"><?php //echo esc_html_e('Enter your API key for the selected map provider.', 'multi-location-product-and-inventory-management'); 
-                                    ?></p> -->
+                <input disabled type="text" name="mulopimfwc_display_options[map_api_key]"
+                    value="<?php echo esc_attr($value); ?>" class="regular-text">
+                <p class="description">
+                    <?php echo esc_html_e('Enter your API key for the selected map provider.', 'multi-location-product-and-inventory-management'); ?>
+                </p>
         <?php
-        //     },
-        //     'lwp-store-locator-settings',
-        //     'mulopimfwc_store_locator_section'
-        // );
+            },
+            'lwp-store-locator-settings',
+            'mulopimfwc_store_locator_section'
+        );
+        */
 
         // Add "Default Map Zoom Level" field
         add_settings_field(
@@ -1731,7 +1732,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $value = isset($options['default_map_zoom']) ? $options['default_map_zoom'] : '15';
 
                 if (mulopimfwc_premium_feature()) {
-        ?>
+            ?>
                 <input type="number" name="mulopimfwc_display_options[default_map_zoom]" value="<?php echo esc_attr($value); ?>" min="1" max="19" class="small-text">
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
@@ -2352,24 +2353,25 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'mulopimfwc_cross_location_order_section'
         );
 
-        // // Add "Mixed Cart Warning Message" field
-        // add_settings_field(
-        //     'mixed_cart_warning',
-        //     __('Mixed Cart Warning Message', 'multi-location-product-and-inventory-management'),
-        //     function () {
-        //         $options = get_option('mulopimfwc_display_options', ['mixed_cart_warning' => __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management')]);
-        //         $value = isset($options['mixed_cart_warning']) ? $options['mixed_cart_warning'] : __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management');
-        // 
+        // Add "Mixed Cart Warning Message" field
+        /* add_settings_field(
+            'mixed_cart_warning',
+            __('Mixed Cart Warning Message', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = get_option('mulopimfwc_display_options', ['mixed_cart_warning' => __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management')]);
+                $value = isset($options['mixed_cart_warning']) ? $options['mixed_cart_warning'] : __('Your cart contains products from multiple store locations.', 'multi-location-product-and-inventory-management');
+        
         ?>
-        <!-- //     <textarea disabled name="mulopimfwc_display_options[mixed_cart_warning]" rows="3" class="large-text"><?php //echo esc_textarea($value); 
+             <textarea disabled name="mulopimfwc_display_options[mixed_cart_warning]" rows="3" class="large-text"><?php echo esc_textarea($value); 
                                                                                                                             ?></textarea>
-        //     <p class="description"><?php //echo esc_html_e('Warning message to display when cart contains products from multiple locations.', 'multi-location-product-and-inventory-management'); 
-                                        ?></p> -->
+             <p class="description"><?php echo esc_html_e('Warning message to display when cart contains products from multiple locations.', 'multi-location-product-and-inventory-management'); 
+                                        ?></p>
         <?php
-        //     },
-        //     'location-cross-order-settings',
-        //     'mulopimfwc_cross_location_order_section'
-        // );
+            },
+            'location-cross-order-settings',
+            'mulopimfwc_cross_location_order_section'
+        );
+        */
 
         // Add "Group Cart Items by Location" field
         add_settings_field(
@@ -3639,7 +3641,8 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
 
                 <!-- <div class="lwp-footer">
-                <p><?php //echo esc_html_e('Thank you for using Multi Location Product & Inventory Management for WooCommerce', 'multi-location-product-and-inventory-management'); ?></p>
+                <p><?php //echo esc_html_e('Thank you for using Multi Location Product & Inventory Management for WooCommerce', 'multi-location-product-and-inventory-management'); 
+                    ?></p>
             </div> -->
             </div>
 

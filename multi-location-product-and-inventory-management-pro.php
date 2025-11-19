@@ -56,7 +56,6 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         // Check if taxonomy exists
         if (!taxonomy_exists('mulopimfwc_store_location')) {
-            error_log('Taxonomy mulopimfwc_store_location does not exist');
             return;
         }
 
@@ -3466,8 +3465,6 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         // Get location ID
         $location_id = isset($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : '';
-
-        error_log("You are deleting: " . $location_id);
 
         if (empty($location_id)) {
             wp_send_json_error(array('message' => 'Invalid location ID'));

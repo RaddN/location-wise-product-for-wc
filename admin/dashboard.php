@@ -1521,9 +1521,6 @@ class MULOPIMFWC_Dashboard
 
         global $wpdb;
 
-        // Log the start of the calculation
-        error_log("Starting total investment calculation.");
-
         // Calculate investment based on _purchase_price and _purchase_quantity
         $total_investment = $wpdb->get_var("
         SELECT COALESCE(SUM(
@@ -1547,14 +1544,8 @@ class MULOPIMFWC_Dashboard
 
         $total_investment = floatval($total_investment);
 
-        // Log the raw investment total
-        error_log("Raw total investment calculated: " . $total_investment);
-
         // Cache for 1 hour
         set_transient($cache_key, $total_investment, HOUR_IN_SECONDS);
-
-        // Log the final cached value
-        error_log("Total investment cached: " . $total_investment);
 
         return $total_investment;
     }

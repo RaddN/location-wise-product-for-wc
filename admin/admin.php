@@ -10,7 +10,7 @@ class MULOPIMFWC_Admin
 
         add_action('admin_enqueue_scripts', [$this, 'mulopimfwc_admin_assets']);
 
-        // Hook to add the settings page
+        // // Hook to add the settings page
         add_action('admin_menu', [$this, 'add_settings_page']);
         // Add custom column to orders table
         add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'add_location_column'), 20);

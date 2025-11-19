@@ -302,12 +302,8 @@ class MULOPIMFWC_Product_Location_Selector
 
         $patterns = $this->get_injection_patterns();
 
-        error_log("Single product page contents: " . $content);
-
         foreach ($patterns[$this->position] ?? $patterns['after_price'] as $pattern) {
-            error_log($this->position . $pattern);
             if (preg_match($pattern, $content)) {
-                error_log("pattern matches");
                 $replacement = $this->should_inject_after() ? '$0' . $selector_html : $selector_html . '$0';
                 $content = preg_replace($pattern, $replacement, $content, 1);
                 break;
