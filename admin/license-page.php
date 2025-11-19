@@ -511,7 +511,7 @@ class mulopimfwc_License_Manager
             $update_info = $this->check_for_updates();
             if ($update_info) {
                 echo '<div class="notice notice-info is-dismissible">';
-                echo '<p><strong>Dynamic AJAX Product Filters Pro Update Available!</strong></p>';
+                echo '<p><strong>Multi Location Product & Inventory Management for WooCommerce Pro Update Available!</strong></p>';
                 echo '<p>Version ' . esc_html($update_info->new_version) . ' is now available. ';
                 echo '<a href="' . admin_url('plugins.php') . '?force_check_updates=1">Update now</a> to get the latest features and improvements.</p>';
                 echo '</div>';
@@ -544,7 +544,7 @@ class mulopimfwc_License_Manager
 
         if ($is_expired) {
             echo '<div class="notice notice-error is-dismissible">';
-            echo '<p><strong>License Expired:</strong> Your Dynamic AJAX Product Filters Pro license expired on ' . esc_html($expires_date->format('M j, Y')) . '.</p>';
+            echo '<p><strong>License Expired:</strong> Your Multi Location Product & Inventory Management for WooCommerce Pro license expired on ' . esc_html($expires_date->format('M j, Y')) . '.</p>';
             echo '<p><a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank" class="button button-primary">Renew License</a> ';
             echo '<a href="https://plugincy.com/support" target="_blank">Contact Support</a></p>';
             echo '</div>';
