@@ -101,6 +101,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'display_location_single_product' => 'on',
                 'allow_data_share' => 'on',
                 'strict_filtering' => 'enabled',
+                'location_require_selection' => 'on',
 
             ];
 
