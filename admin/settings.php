@@ -2407,6 +2407,17 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'location-customer-experience-settings'
         );
 
+        // Location require settings
+        add_settings_field(
+            'location_require_selection',
+            __('Require Location Selection', 'multi-location-product-and-inventory-management'),
+            function () {
+                $this->render_advance_checkbox("location_require_selection", __("Require customers to select a location before adding products to the cart.", 'multi-location-product-and-inventory-management'));
+            },
+            'location-customer-experience-settings',
+            'mulopimfwc_customer_experience_section'
+        );
+
         // Add Location Switching Behavior field
         add_settings_field(
             'location_switching_behavior',

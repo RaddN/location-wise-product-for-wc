@@ -112,6 +112,48 @@ jQuery(document).ready(function ($) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? match[2] : '';
     }
+
+    function updateSingleProductAddToCartState() {
+        if (
+            typeof mulopimfwc_locationWiseProducts === 'undefined' ||
+            !mulopimfwc_locationWiseProducts.locationSelectionEnforced ||
+            !mulopimfwc_locationWiseProducts.singleProductRequiresLocation
+        ) {
+            return;
+        }
+
+        const selectedLocation = getCookie('mulopimfwc_store_location');
+        const needsSelection = !selectedLocation || selectedLocation === 'all-products';
+        const $button = $('.single_add_to_cart_button');
+
+        if (!$button.length) {
+            return;
+        }
+
+        let $notice = $('#mulopimfwc-location-required-notice');
+        if (!$notice.length) {
+            $notice = $('<p id="mulopimfwc-location-required-notice" class="mulopimfwc-location-required-notice" style="display:none;"></p>');
+            $button.after($notice);
+        }
+
+        const prompt =
+            mulopimfwc_locationWiseProducts.selectLocationPrompt ||
+            'Please select a store location before adding this product to your cart.';
+
+        if (needsSelection) {
+            $button.prop('disabled', true).addClass('disabled');
+            // $notice.text(prompt).show();
+        } else {
+            $button.prop('disabled', false).removeClass('disabled');
+            $notice.hide();
+        }
+    }
+
+    updateSingleProductAddToCartState();
+
+    $(document).on('change', '#lwp-shortcode-selector, #mulopimfwc_store_location, .mulopimfwc-location-selector', function () {
+        setTimeout(updateSingleProductAddToCartState, 100);
+    });
 });
 
 jQuery(document).ready(function ($) {

@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -23,7 +23,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.0.5");
+    define("mulopimfwc_VERSION", "1.0.6");
 }
 
 // Check if the free version is installed and deactivate it if active
@@ -1200,6 +1200,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_filter('woocommerce_rest_prepare_product_object', [$this, 'modify_product_rest_response'], 10, 3);
             add_filter('woocommerce_cart_contents', [$this, 'filter_cart_contents'], 10, 1);
             add_action('template_redirect', [$this, 'filter_recently_viewed_products']);
+            add_filter('woocommerce_add_to_cart_validation', [$this, 'validate_location_selection_before_add_to_cart'], 10, 5);
 
             add_action('wp_ajax_clear_cart', [$this, 'clear_cart']);
             add_action('wp_ajax_nopriv_clear_cart', [$this, 'clear_cart']);
@@ -1272,6 +1273,77 @@ if (!function_exists('mulopimfwc_get_values')) {
         public function clear_cart_cache()
         {
             $this->cart_items_cache = null;
+        }
+
+        /**
+         * Prevent adding location-bound products to the cart when no location is selected.
+         *
+         * @param bool $passed Whether WooCommerce validations passed.
+         * @param int $product_id Product ID being added.
+         * @param int $quantity Quantity requested.
+         * @param int $variation_id Variation ID if applicable.
+         * @param array $variations Variation attributes (unused).
+         * @return bool
+         */
+        public function validate_location_selection_before_add_to_cart($passed, $product_id, $quantity, $variation_id = 0, $variations = [])
+        {
+            if (!$passed) {
+                return $passed;
+            }
+
+            if (is_admin() && !wp_doing_ajax()) {
+                return $passed;
+            }
+
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+
+            $require_selection = isset($options['location_require_selection']) ? $options['location_require_selection'] : 'off';
+
+            if ($require_selection !== 'on') {
+                return $passed;
+            }
+
+            $primary_product = $variation_id ? $variation_id : $product_id;
+
+            if (!$this->product_has_assigned_locations($primary_product, $product_id)) {
+                return $passed;
+            }
+
+            $selected_location = isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
+
+            if ($selected_location === '' || $selected_location === 'all-products') {
+                if (function_exists('wc_add_notice')) {
+                    wc_add_notice(__('Please select a store location before adding this product to your cart.', 'multi-location-product-and-inventory-management'), 'error');
+                }
+                return false;
+            }
+
+            return $passed;
+        }
+
+        /**
+         * Determine if a product (or its parent) is assigned to any store location.
+         *
+         * @param int $product_id Primary product/variation ID to inspect.
+         * @param int $fallback_product_id Optional fallback (usually parent product).
+         * @return bool
+         */
+        private function product_has_assigned_locations($product_id, $fallback_product_id = 0)
+        {
+            $product_ids = array_unique(array_filter(array_map('absint', [$product_id, $fallback_product_id])));
+
+            foreach ($product_ids as $id) {
+                $terms = wp_get_object_terms($id, 'mulopimfwc_store_location', ['fields' => 'ids']);
+
+                if (!is_wp_error($terms) && !empty($terms)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /**
@@ -2641,7 +2713,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.0.5',
+                '1.0.6',
                 true
             );
 
@@ -2661,7 +2733,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.0.5'
+                '1.0.6'
             );
         }
 
@@ -2766,15 +2838,25 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? (int)$mulopimfwc_options["location_cookie_expiry"]
                 : 30;
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.5');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.5', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
             // Check if cart grouping is enabled
             $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
+
+            $location_require_selection = isset($mulopimfwc_options['location_require_selection']) ? $mulopimfwc_options['location_require_selection'] : 'off';
+            $single_product_requires_location = false;
+
+            if ($location_require_selection === 'on' && function_exists('is_product') && is_product()) {
+                $product_id = get_queried_object_id();
+                if ($product_id) {
+                    $single_product_requires_location = $this->product_has_assigned_locations($product_id);
+                }
+            }
 
             // Always show location information when available
             // Check if location data exists
@@ -2784,7 +2866,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.0.5',
+                    '1.0.6',
                     true
                 );
 
@@ -2804,7 +2886,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'allow_cart_update' => isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] !== "preserve_cart",
                 'location_notification_text' => isset($mulopimfwc_options['location_notification_text']) && mulopimfwc_premium_feature()
                     ? $mulopimfwc_options['location_notification_text']
-                    : 'Do you want to change the store location? Your cart will be emptied.'
+                    : 'Do you want to change the store location? Your cart will be emptied.',
+                'singleProductRequiresLocation' => $single_product_requires_location,
+                'selectLocationPrompt' => __('Please select a store location before adding this product to your cart.', 'multi-location-product-and-inventory-management'),
+                'locationSelectionEnforced' => ($location_require_selection === 'on')
             ]);
 
             wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', array(), '1.7.1');
@@ -3356,7 +3441,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.5");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.6");
         }
     }
 
@@ -3522,7 +3607,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.0.5",
+                "1.0.6",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );
