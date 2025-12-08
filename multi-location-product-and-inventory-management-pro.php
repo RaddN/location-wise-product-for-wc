@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.6
+ * Version: 1.0.6.5
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -23,7 +23,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.0.6");
+    define("mulopimfwc_VERSION", "1.0.6.5");
 }
 
 // Check if the free version is installed and deactivate it if active
@@ -102,6 +102,16 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'allow_data_share' => 'on',
                 'strict_filtering' => 'enabled',
                 'location_require_selection' => 'on',
+                'enable_product_filter' => 'on',
+                'social_notifications' => [
+                    'enabled' => 'off',
+                    'new_order' => 'on',
+                    'low_stock' => 'on',
+                    'out_of_stock' => 'on',
+                    'daily_digest' => 'off',
+                    'site_status' => 'off',
+                    'daily_digest_time' => '07:00',
+                ],
 
             ];
 
@@ -1163,6 +1173,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-local-pickup.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-hours-restriction.php';
     require_once plugin_dir_path(__FILE__) . 'includes/customer-location-insights.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/frontend-product-filter.php';
 
 
 
@@ -1218,6 +1229,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Save location to order meta
             add_action('woocommerce_thankyou', array($this, 'save_location_to_order_meta'), 10, 2);
+            add_action('woocommerce_checkout_order_processed', [$this, 'handle_social_new_order_notification'], 20, 1);
 
             // Use these specific hooks for HPOS orders table
             add_action('woocommerce_order_list_table_restrict_manage_orders', array($this, 'add_store_location_filter'));
@@ -1228,6 +1240,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('wp_ajax_update_product_location_status', [$this, 'cymulopimfwc_update_product_location_status']);
             add_action('wp_ajax_get_available_locations', [$this, 'cymulopimfwc_get_available_locations']);
             add_action('wp_ajax_save_product_locations', [$this, 'cymulopimfwc_save_product_locations']);
+            add_action('wp_ajax_get_product_quick_edit_data', [$this, 'cymulopimfwc_get_product_quick_edit_data']);
+            add_action('wp_ajax_save_product_quick_edit_data', [$this, 'cymulopimfwc_save_product_quick_edit_data']);
+            add_action('wp_ajax_remove_product_location', [$this, 'cymulopimfwc_remove_product_location']);
 
             add_action('admin_enqueue_scripts', [$this, 'cymulopimfwc_enqueue_admin_scripts']);
 
@@ -2700,6 +2715,422 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             wp_send_json_success(['message' => $message]);
         }
+
+        /**
+         * Get product data for quick edit popup via AJAX
+         */
+        public function cymulopimfwc_get_product_quick_edit_data()
+        {
+            // Check nonce
+            check_ajax_referer('location_wise_products_nonce', 'security');
+
+            // Check permissions
+            if (!current_user_can('manage_woocommerce')) {
+                wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Get product ID
+            $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+            if (!$product_id) {
+                wp_send_json_error(['message' => __('Invalid product ID.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            $product = wc_get_product($product_id);
+            if (!$product) {
+                wp_send_json_error(['message' => __('Product not found.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            global $mulopimfwc_locations;
+            $product_type = $product->get_type();
+            $data = [
+                'product_id' => $product_id,
+                'product_name' => $product->get_name(),
+                'product_type' => $product_type,
+                'default' => [],
+                'locations' => [],
+                'variations' => [],
+            ];
+
+            // Get default product data
+            $data['default'] = [
+                'stock_quantity' => $product->get_stock_quantity(),
+                'regular_price' => $product->get_regular_price(),
+                'sale_price' => $product->get_sale_price(),
+                'backorders' => $product->get_backorders(),
+                'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
+                'purchase_quantity' => get_post_meta($product_id, '_purchase_quantity', true),
+            ];
+
+            // Get location data - batch meta queries for better performance
+            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                $location_ids = array_map(function($loc) { return $loc->term_id; }, $mulopimfwc_locations);
+                
+                // Batch fetch all meta keys at once
+                $meta_keys = [];
+                foreach ($location_ids as $loc_id) {
+                    $meta_keys[] = '_location_stock_' . $loc_id;
+                    $meta_keys[] = '_location_regular_price_' . $loc_id;
+                    $meta_keys[] = '_location_sale_price_' . $loc_id;
+                    $meta_keys[] = '_location_backorders_' . $loc_id;
+                }
+                
+                // Get all meta in one query - optimized batch query
+                global $wpdb;
+                if (!empty($meta_keys)) {
+                    $escaped_keys = array_map(function($key) use ($wpdb) {
+                        return $wpdb->prepare('%s', $key);
+                    }, $meta_keys);
+                    $meta_query = $wpdb->prepare(
+                        "SELECT meta_key, meta_value FROM {$wpdb->postmeta} 
+                        WHERE post_id = %d AND meta_key IN (" . implode(',', $escaped_keys) . ")",
+                        $product_id
+                    );
+                    $meta_results = $wpdb->get_results($meta_query);
+                    $meta_values = [];
+                    foreach ($meta_results as $row) {
+                        $meta_values[$row->meta_key] = $row->meta_value;
+                    }
+                } else {
+                    $meta_values = [];
+                }
+                
+                // Build location data from cached meta
+                foreach ($mulopimfwc_locations as $location) {
+                    $location_data = [
+                        'id' => $location->term_id,
+                        'name' => $location->name,
+                        'stock' => isset($meta_values['_location_stock_' . $location->term_id]) ? $meta_values['_location_stock_' . $location->term_id] : '',
+                        'regular_price' => isset($meta_values['_location_regular_price_' . $location->term_id]) ? $meta_values['_location_regular_price_' . $location->term_id] : '',
+                        'sale_price' => isset($meta_values['_location_sale_price_' . $location->term_id]) ? $meta_values['_location_sale_price_' . $location->term_id] : '',
+                        'backorders' => isset($meta_values['_location_backorders_' . $location->term_id]) ? $meta_values['_location_backorders_' . $location->term_id] : '',
+                    ];
+                    $data['locations'][] = $location_data;
+                }
+            }
+
+            // Get variation data for variable products - optimized
+            if ($product_type === 'variable') {
+                // Get variation IDs directly without loading full objects
+                $variation_ids = $product->get_children();
+                
+                if (!empty($variation_ids)) {
+                    // Get location IDs if available
+                    $loc_ids_for_variations = [];
+                    if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                        $loc_ids_for_variations = array_map(function($loc) { return $loc->term_id; }, $mulopimfwc_locations);
+                    }
+                    
+                    // Batch load all variation meta at once
+                    global $wpdb;
+                    $variation_meta_keys = ['_stock', '_regular_price', '_sale_price', '_backorders', '_purchase_price'];
+                    foreach ($loc_ids_for_variations as $loc_id) {
+                        $variation_meta_keys[] = '_location_stock_' . $loc_id;
+                        $variation_meta_keys[] = '_location_regular_price_' . $loc_id;
+                        $variation_meta_keys[] = '_location_sale_price_' . $loc_id;
+                        $variation_meta_keys[] = '_location_backorders_' . $loc_id;
+                    }
+                    
+                    if (!empty($variation_meta_keys)) {
+                        $id_placeholders = implode(',', array_map('intval', $variation_ids));
+                        $prepared_meta_keys = array_map(function($key) use ($wpdb) {
+                            return $wpdb->prepare('%s', $key);
+                        }, $variation_meta_keys);
+                        $meta_query = $wpdb->prepare(
+                            "SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} 
+                            WHERE post_id IN ($id_placeholders) AND meta_key IN (" . implode(',', $prepared_meta_keys) . ")"
+                        );
+                        $all_variation_meta = $wpdb->get_results($meta_query);
+                        
+                        // Organize meta by variation ID
+                        $variation_meta_map = [];
+                        foreach ($all_variation_meta as $meta) {
+                            if (!isset($variation_meta_map[$meta->post_id])) {
+                                $variation_meta_map[$meta->post_id] = [];
+                            }
+                            $variation_meta_map[$meta->post_id][$meta->meta_key] = $meta->meta_value;
+                        }
+                    } else {
+                        $variation_meta_map = [];
+                    }
+                    
+                    // Get variation attributes efficiently
+                    foreach ($variation_ids as $variation_id) {
+                        $variation = wc_get_product($variation_id);
+                        if (!$variation) {
+                            continue;
+                        }
+                        
+                        $meta = isset($variation_meta_map[$variation_id]) ? $variation_meta_map[$variation_id] : [];
+                        
+                        // Get attributes
+                        $attributes = [];
+                        foreach ($variation->get_attributes() as $key => $value) {
+                            $attributes[$key] = $value;
+                        }
+                        
+                        $variation_info = [
+                            'id' => $variation_id,
+                            'attributes' => $attributes,
+                            'default' => [
+                                'stock_quantity' => isset($meta['_stock']) ? $meta['_stock'] : $variation->get_stock_quantity(),
+                                'regular_price' => isset($meta['_regular_price']) ? $meta['_regular_price'] : $variation->get_regular_price(),
+                                'sale_price' => isset($meta['_sale_price']) ? $meta['_sale_price'] : $variation->get_sale_price(),
+                                'backorders' => isset($meta['_backorders']) ? $meta['_backorders'] : $variation->get_backorders(),
+                                'purchase_price' => isset($meta['_purchase_price']) ? $meta['_purchase_price'] : '',
+                            ],
+                            'locations' => [],
+                        ];
+
+                        // Get location data for variation from cached meta
+                        if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                            foreach ($mulopimfwc_locations as $location) {
+                                $variation_info['locations'][] = [
+                                    'id' => $location->term_id,
+                                    'name' => $location->name,
+                                    'stock' => isset($meta['_location_stock_' . $location->term_id]) ? $meta['_location_stock_' . $location->term_id] : '',
+                                    'regular_price' => isset($meta['_location_regular_price_' . $location->term_id]) ? $meta['_location_regular_price_' . $location->term_id] : '',
+                                    'sale_price' => isset($meta['_location_sale_price_' . $location->term_id]) ? $meta['_location_sale_price_' . $location->term_id] : '',
+                                    'backorders' => isset($meta['_location_backorders_' . $location->term_id]) ? $meta['_location_backorders_' . $location->term_id] : '',
+                                ];
+                            }
+                        }
+
+                        $data['variations'][] = $variation_info;
+                    }
+                }
+            }
+
+            wp_send_json_success($data);
+        }
+
+        /**
+         * Save product quick edit data via AJAX
+         */
+        public function cymulopimfwc_save_product_quick_edit_data()
+        {
+            // Check nonce
+            check_ajax_referer('location_wise_products_nonce', 'security');
+
+            // Check permissions
+            if (!current_user_can('manage_woocommerce')) {
+                wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Get product ID
+            $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+            if (!$product_id) {
+                wp_send_json_error(['message' => __('Invalid product ID.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            $product = wc_get_product($product_id);
+            if (!$product) {
+                wp_send_json_error(['message' => __('Product not found.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Save default product data
+            if (isset($_POST['default'])) {
+                $default = $_POST['default'];
+                if (isset($default['stock_quantity'])) {
+                    $product->set_stock_quantity(intval($default['stock_quantity']));
+                }
+                if (isset($default['regular_price'])) {
+                    $product->set_regular_price(wc_format_decimal($default['regular_price']));
+                }
+                if (isset($default['sale_price'])) {
+                    $product->set_sale_price(wc_format_decimal($default['sale_price']));
+                }
+                if (isset($default['backorders'])) {
+                    $product->set_backorders(sanitize_text_field($default['backorders']));
+                }
+                if (isset($default['purchase_price'])) {
+                    update_post_meta($product_id, '_purchase_price', wc_format_decimal($default['purchase_price']));
+                }
+                if (isset($default['purchase_quantity'])) {
+                    update_post_meta($product_id, '_purchase_quantity', intval($default['purchase_quantity']));
+                }
+                $product->save();
+            }
+
+            // Save location data
+            if (isset($_POST['locations']) && is_array($_POST['locations'])) {
+                foreach ($_POST['locations'] as $location_data) {
+                    $location_id = isset($location_data['id']) ? intval($location_data['id']) : 0;
+                    if (!$location_id) {
+                        continue;
+                    }
+
+                    $old_stock = get_post_meta($product_id, '_location_stock_' . $location_id, true);
+
+                    if (isset($location_data['stock'])) {
+                        $new_stock = intval($location_data['stock']);
+                        update_post_meta($product_id, '_location_stock_' . $location_id, $new_stock);
+
+                        // Notify when crossing thresholds
+                        $location_term = get_term($location_id, 'mulopimfwc_store_location');
+                        if ($location_term && !is_wp_error($location_term)) {
+                            $low_threshold = mulopimfwc_get_location_threshold($location_id, 'low');
+                            $out_threshold = mulopimfwc_get_location_threshold($location_id, 'out');
+
+                            $old_stock_int = ($old_stock === '' || $old_stock === null) ? null : (int) $old_stock;
+
+                            // Out of stock alert
+                            if ($new_stock <= $out_threshold && ($old_stock_int === null || $old_stock_int > $out_threshold)) {
+                                mulopimfwc_send_location_stock_alert($product_id, $location_term, $new_stock, $out_threshold, 'out');
+                            }
+                            // Low stock alert (only if not already out-of-stock)
+                            elseif ($new_stock <= $low_threshold && ($old_stock_int === null || $old_stock_int > $low_threshold)) {
+                                mulopimfwc_send_location_stock_alert($product_id, $location_term, $new_stock, $low_threshold, 'low');
+                            }
+                        }
+                    }
+                    if (isset($location_data['regular_price'])) {
+                        update_post_meta($product_id, '_location_regular_price_' . $location_id, wc_format_decimal($location_data['regular_price']));
+                    }
+                    if (isset($location_data['sale_price'])) {
+                        update_post_meta($product_id, '_location_sale_price_' . $location_id, wc_format_decimal($location_data['sale_price']));
+                    }
+                    if (isset($location_data['backorders'])) {
+                        update_post_meta($product_id, '_location_backorders_' . $location_id, sanitize_text_field($location_data['backorders']));
+                    }
+                }
+            }
+
+            // Set assigned locations (queue add/remove)
+            if (isset($_POST['location_ids'])) {
+                $location_ids = array_map('intval', (array) $_POST['location_ids']);
+                wp_set_object_terms($product_id, $location_ids, 'mulopimfwc_store_location');
+
+                $removed_location_ids = isset($_POST['removed_location_ids']) ? array_map('intval', (array) $_POST['removed_location_ids']) : [];
+                if (!empty($removed_location_ids)) {
+                    $removed_location_ids = array_diff($removed_location_ids, $location_ids);
+                    foreach ($removed_location_ids as $location_id) {
+                        delete_post_meta($product_id, '_location_stock_' . $location_id);
+                        delete_post_meta($product_id, '_location_regular_price_' . $location_id);
+                        delete_post_meta($product_id, '_location_sale_price_' . $location_id);
+                        delete_post_meta($product_id, '_location_backorders_' . $location_id);
+                        delete_post_meta($product_id, '_location_disabled_' . $location_id);
+
+                        if ($product->get_type() === 'variable') {
+                            $variation_ids = $product->get_children();
+                            foreach ($variation_ids as $variation_id) {
+                                delete_post_meta($variation_id, '_location_stock_' . $location_id);
+                                delete_post_meta($variation_id, '_location_regular_price_' . $location_id);
+                                delete_post_meta($variation_id, '_location_sale_price_' . $location_id);
+                                delete_post_meta($variation_id, '_location_backorders_' . $location_id);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Save variation data
+            if (isset($_POST['variations']) && is_array($_POST['variations'])) {
+                foreach ($_POST['variations'] as $variation_data) {
+                    $variation_id = isset($variation_data['id']) ? intval($variation_data['id']) : 0;
+                    if (!$variation_id) {
+                        continue;
+                    }
+
+                    $variation = wc_get_product($variation_id);
+                    if (!$variation) {
+                        continue;
+                    }
+
+                    // Save default variation data
+                    if (isset($variation_data['default'])) {
+                        $default = $variation_data['default'];
+                        if (isset($default['stock_quantity'])) {
+                            $variation->set_stock_quantity(intval($default['stock_quantity']));
+                        }
+                        if (isset($default['regular_price'])) {
+                            $variation->set_regular_price(wc_format_decimal($default['regular_price']));
+                        }
+                        if (isset($default['sale_price'])) {
+                            $variation->set_sale_price(wc_format_decimal($default['sale_price']));
+                        }
+                        if (isset($default['backorders'])) {
+                            $variation->set_backorders(sanitize_text_field($default['backorders']));
+                        }
+                        if (isset($default['purchase_price'])) {
+                            update_post_meta($variation_id, '_purchase_price', wc_format_decimal($default['purchase_price']));
+                        }
+                        $variation->save();
+                    }
+
+                    // Save location data for variation
+                    if (isset($variation_data['locations']) && is_array($variation_data['locations'])) {
+                        foreach ($variation_data['locations'] as $location_data) {
+                            $location_id = isset($location_data['id']) ? intval($location_data['id']) : 0;
+                            if (!$location_id) {
+                                continue;
+                            }
+
+                            if (isset($location_data['stock'])) {
+                                update_post_meta($variation_id, '_location_stock_' . $location_id, intval($location_data['stock']));
+                            }
+                            if (isset($location_data['regular_price'])) {
+                                update_post_meta($variation_id, '_location_regular_price_' . $location_id, wc_format_decimal($location_data['regular_price']));
+                            }
+                            if (isset($location_data['sale_price'])) {
+                                update_post_meta($variation_id, '_location_sale_price_' . $location_id, wc_format_decimal($location_data['sale_price']));
+                            }
+                            if (isset($location_data['backorders'])) {
+                                update_post_meta($variation_id, '_location_backorders_' . $location_id, sanitize_text_field($location_data['backorders']));
+                            }
+                        }
+                    }
+                }
+            }
+
+            wp_send_json_success(['message' => __('Product data saved successfully.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        /**
+         * Remove location from product via AJAX
+         */
+        public function cymulopimfwc_remove_product_location()
+        {
+            // Check nonce
+            check_ajax_referer('location_wise_products_nonce', 'security');
+
+            // Check permissions
+            if (!current_user_can('manage_woocommerce')) {
+                wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Get product ID and location ID
+            $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+            $location_id = isset($_POST['location_id']) ? intval($_POST['location_id']) : 0;
+
+            if (!$product_id || !$location_id) {
+                wp_send_json_error(['message' => __('Invalid parameters.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Remove location from product
+            wp_remove_object_terms($product_id, $location_id, 'mulopimfwc_store_location');
+
+            // Delete location-specific meta
+            delete_post_meta($product_id, '_location_stock_' . $location_id);
+            delete_post_meta($product_id, '_location_regular_price_' . $location_id);
+            delete_post_meta($product_id, '_location_sale_price_' . $location_id);
+            delete_post_meta($product_id, '_location_backorders_' . $location_id);
+            delete_post_meta($product_id, '_location_disabled_' . $location_id);
+
+            // If variable product, remove from variations too
+            $product = wc_get_product($product_id);
+            if ($product && $product->get_type() === 'variable') {
+                $variation_ids = $product->get_children();
+                foreach ($variation_ids as $variation_id) {
+                    delete_post_meta($variation_id, '_location_stock_' . $location_id);
+                    delete_post_meta($variation_id, '_location_regular_price_' . $location_id);
+                    delete_post_meta($variation_id, '_location_sale_price_' . $location_id);
+                    delete_post_meta($variation_id, '_location_backorders_' . $location_id);
+                }
+            }
+
+            wp_send_json_success(['message' => __('Location removed successfully.', 'multi-location-product-and-inventory-management')]);
+        }
+
         /**
          * Enqueue admin scripts
          */
@@ -2714,7 +3145,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.0.6',
+                '1.0.6.5',
                 true
             );
 
@@ -2734,7 +3165,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.0.6'
+                '1.0.6.5'
             );
         }
 
@@ -2755,6 +3186,20 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $order->save();
                 }
             }
+        }
+
+        /**
+         * Trigger social notifications for new orders.
+         */
+        public function handle_social_new_order_notification($order_id)
+        {
+            if (empty($order_id)) {
+                return;
+            }
+
+            // Ensure the order has the location meta saved before notifying
+            $this->save_location_to_order_meta($order_id);
+            mulopimfwc_handle_social_new_order($order_id);
         }
         private function get_all_store_locations()
         {
@@ -2839,9 +3284,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? (int)$mulopimfwc_options["location_cookie_expiry"]
                 : 30;
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6.5');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6.5', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
             // Check if cart grouping is enabled
@@ -2867,7 +3312,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.0.6',
+                    '1.0.6.5',
                     true
                 );
 
@@ -3442,13 +3887,18 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.6");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.6.5");
         }
     }
 
     function mulopimfwc_location_wise_products_init()
     {
         new mulopimfwc_Location_Wise_Products();
+        
+        // Initialize frontend product filter
+        if (class_exists('Location_Wise_Products_Filter')) {
+            new Location_Wise_Products_Filter();
+        }
     }
 
     add_action('plugins_loaded', 'mulopimfwc_location_wise_products_init', 100);
@@ -3586,14 +4036,590 @@ if (!function_exists('mulopimfwc_get_values')) {
         wp_send_json_success(array('message' => 'Location deleted successfully'));
     }
 
+    /**
+     * Get per-location threshold with fallback to global settings.
+     */
+    function mulopimfwc_get_location_threshold($location_id, $type = 'low')
+    {
+        $meta_key = $type === 'out' ? 'out_of_stock_threshold' : 'low_stock_threshold';
+        $value = get_term_meta($location_id, $meta_key, true);
+        $value = ($value === '' || $value === null) ? null : (int) $value;
 
+        if ($value === null) {
+            $options = get_option('mulopimfwc_display_options', []);
+            if ($type === 'out') {
+                $value = isset($options['out_of_stock_threshold']) ? (int) $options['out_of_stock_threshold'] : 0;
+            } else {
+                $value = isset($options['low_stock_threshold']) ? (int) $options['low_stock_threshold'] : 5;
+            }
+        }
 
+        return max(0, (int) $value);
+    }
 
+    /**
+     * Get users assigned to a location slug.
+     */
+    function mulopimfwc_get_location_managers_for_slug($location_slug)
+    {
+        $args = [
+            'role' => 'mulopimfwc_location_manager',
+            'meta_query' => [
+                [
+                    'key' => 'mulopimfwc_assigned_locations',
+                    'value' => $location_slug,
+                    'compare' => 'LIKE',
+                ],
+            ],
+            'fields' => 'all',
+        ];
 
+        $users = get_users($args);
+        return is_array($users) ? $users : [];
+    }
 
+    /**
+     * Get social notification settings merged with defaults.
+     */
+    function mulopimfwc_get_social_settings()
+    {
+        $options = get_option('mulopimfwc_display_options', []);
+        $defaults = [
+            'enabled' => 'off',
+            'new_order' => 'on',
+            'low_stock' => 'on',
+            'out_of_stock' => 'on',
+            'daily_digest' => 'off',
+            'site_status' => 'off',
+            'daily_digest_time' => '07:00',
+            'admin_slack_webhook' => '',
+            'admin_custom_webhook' => '',
+            'admin_telegram_chat_id' => '',
+            'telegram_bot_token' => '',
+            'channels' => [],
+        ];
 
+        if (isset($options['social_notifications']) && is_array($options['social_notifications'])) {
+            return wp_parse_args($options['social_notifications'], $defaults);
+        }
 
+        return $defaults;
+    }
 
+    /**
+     * Normalize social channels for a user.
+     */
+    function mulopimfwc_get_user_social_channels($user_id)
+    {
+        $channels = get_user_meta($user_id, 'mulopimfwc_social_channels', true);
+        if (!is_array($channels)) {
+            $channels = [];
+        }
+
+        if (empty($channels['slack_webhook'])) {
+            $legacy_slack = get_user_meta($user_id, 'mulopimfwc_slack_webhook', true);
+            if (!empty($legacy_slack)) {
+                $channels['slack_webhook'] = $legacy_slack;
+            }
+        }
+
+        return [
+            'slack_webhook' => isset($channels['slack_webhook']) ? $channels['slack_webhook'] : '',
+            'custom_webhook' => isset($channels['custom_webhook']) ? $channels['custom_webhook'] : '',
+            'telegram_chat_id' => isset($channels['telegram_chat_id']) ? $channels['telegram_chat_id'] : '',
+        ];
+    }
+
+    /**
+     * Collect unique social channels for a location (managers + admin fallbacks).
+     */
+    function mulopimfwc_collect_social_channels($location_slug, $settings)
+    {
+        $channels = [];
+        $add_channel = function ($channel) use (&$channels) {
+            if (!isset($channel['type'])) {
+                return;
+            }
+            $key = $channel['type'] . '|' . ($channel['type'] === 'telegram' ? ($channel['chat_id'] ?? '') : ($channel['url'] ?? ''));
+            if (!empty($key)) {
+                $channels[$key] = $channel;
+            }
+        };
+
+        // Admin/global channels - from new multi-channel list first
+        if (isset($settings['channels']) && is_array($settings['channels'])) {
+            foreach ($settings['channels'] as $chan) {
+                if (!is_array($chan)) {
+                    continue;
+                }
+                $type = isset($chan['type']) ? sanitize_text_field($chan['type']) : '';
+                $webhook = isset($chan['webhook']) ? esc_url_raw($chan['webhook']) : '';
+                $chat_id = isset($chan['chat_id']) ? sanitize_text_field($chan['chat_id']) : '';
+                $bot_token = isset($chan['bot_token']) ? sanitize_text_field($chan['bot_token']) : '';
+                if (in_array($type, ['slack', 'teams', 'discord', 'whatsapp', 'facebook_messenger', 'imo', 'custom'], true) && !empty($webhook)) {
+                    $add_channel([
+                        'type' => 'webhook',
+                        'url' => $webhook,
+                        'label' => isset($chan['label']) ? sanitize_text_field($chan['label']) : '',
+                    ]);
+                }
+                if ($type === 'telegram' && !empty($chat_id)) {
+                    $add_channel([
+                        'type' => 'telegram',
+                        'chat_id' => $chat_id,
+                        'bot_token' => !empty($bot_token) ? $bot_token : (isset($settings['telegram_bot_token']) ? $settings['telegram_bot_token'] : ''),
+                        'label' => isset($chan['label']) ? sanitize_text_field($chan['label']) : '',
+                    ]);
+                }
+            }
+        }
+
+        // Admin/global legacy fields
+        if (!empty($settings['admin_slack_webhook'])) {
+            $add_channel([
+                'type' => 'webhook',
+                'url' => esc_url_raw($settings['admin_slack_webhook']),
+            ]);
+        }
+
+        if (!empty($settings['admin_custom_webhook'])) {
+            $add_channel([
+                'type' => 'webhook',
+                'url' => esc_url_raw($settings['admin_custom_webhook']),
+            ]);
+        }
+
+        if (!empty($settings['admin_telegram_chat_id']) && !empty($settings['telegram_bot_token'])) {
+            $add_channel([
+                'type' => 'telegram',
+                'chat_id' => sanitize_text_field($settings['admin_telegram_chat_id']),
+                'bot_token' => sanitize_text_field($settings['telegram_bot_token']),
+            ]);
+        }
+
+        // Location managers
+        if (!empty($location_slug)) {
+            $managers = mulopimfwc_get_location_managers_for_slug($location_slug);
+            if (!empty($managers)) {
+                foreach ($managers as $manager) {
+                    $user_channels = mulopimfwc_get_user_social_channels($manager->ID);
+
+                    if (!empty($user_channels['slack_webhook'])) {
+                        $add_channel([
+                            'type' => 'webhook',
+                            'url' => esc_url_raw($user_channels['slack_webhook']),
+                        ]);
+                    }
+
+                    if (!empty($user_channels['custom_webhook'])) {
+                        $add_channel([
+                            'type' => 'webhook',
+                            'url' => esc_url_raw($user_channels['custom_webhook']),
+                        ]);
+                    }
+
+                    if (!empty($user_channels['telegram_chat_id']) && !empty($settings['telegram_bot_token'])) {
+                        $add_channel([
+                            'type' => 'telegram',
+                            'chat_id' => sanitize_text_field($user_channels['telegram_chat_id']),
+                            'bot_token' => sanitize_text_field($settings['telegram_bot_token']),
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return array_values($channels);
+    }
+
+    /**
+     * Send a message to the provided social channels.
+     */
+    function mulopimfwc_send_social_message($title, $message, $channels, $settings, $link = '')
+    {
+        if (empty($channels)) {
+            return;
+        }
+
+        $text_lines = array_filter([$title, $message, $link]);
+        $text = wp_strip_all_tags(implode("\n", $text_lines));
+
+        foreach ($channels as $channel) {
+            if (!is_array($channel) || empty($channel['type'])) {
+                continue;
+            }
+
+            if ($channel['type'] === 'webhook' && !empty($channel['url'])) {
+                wp_remote_post(
+                    esc_url_raw($channel['url']),
+                    [
+                        'timeout' => 8,
+                        'headers' => ['Content-Type' => 'application/json'],
+                        'body' => wp_json_encode(['text' => $text]),
+                    ]
+                );
+            }
+
+            if ($channel['type'] === 'telegram' && !empty($channel['chat_id']) && !empty($channel['bot_token'])) {
+                $telegram_api = 'https://api.telegram.org/bot' . rawurlencode($channel['bot_token']) . '/sendMessage';
+                wp_remote_post(
+                    $telegram_api,
+                    [
+                        'timeout' => 8,
+                        'body' => [
+                            'chat_id' => $channel['chat_id'],
+                            'text' => $text,
+                            'parse_mode' => 'Markdown',
+                            'disable_web_page_preview' => true,
+                        ],
+                    ]
+                );
+            }
+        }
+    }
+
+    /**
+     * Send low/out-of-stock notification to assigned location managers (email + optional Slack webhook per user).
+     */
+    function mulopimfwc_send_location_stock_alert($product_id, $location_term, $current_stock, $threshold, $type = 'low')
+    {
+        if (!$location_term || is_wp_error($location_term)) {
+            return;
+        }
+
+        $managers = mulopimfwc_get_location_managers_for_slug($location_term->slug);
+        $product = wc_get_product($product_id);
+        if (!$product) {
+            return;
+        }
+
+        $product_name = $product->get_name();
+        $location_name = $location_term->name;
+        $site_name = get_bloginfo('name');
+        $type_label = ($type === 'out') ? __('Out of Stock', 'multi-location-product-and-inventory-management') : __('Low Stock', 'multi-location-product-and-inventory-management');
+        $subject = sprintf('[%s] %s: %s @ %s', $site_name, $type_label, $product_name, $location_name);
+
+        $admin_link = admin_url('post.php?post=' . $product_id . '&action=edit');
+        $message = sprintf(
+            "%s\r\n\r\nProduct: %s\r\nLocation: %s\r\nCurrent Stock: %d\r\nThreshold: %d\r\nProduct Admin: %s",
+            $type_label,
+            $product_name,
+            $location_name,
+            (int) $current_stock,
+            (int) $threshold,
+            $admin_link
+        );
+
+        if (!empty($managers)) {
+            foreach ($managers as $manager) {
+                if (!empty($manager->user_email)) {
+                    wp_mail($manager->user_email, $subject, $message);
+                }
+
+                $webhook = get_user_meta($manager->ID, 'mulopimfwc_slack_webhook', true);
+                if (!empty($webhook)) {
+                    wp_remote_post(
+                        esc_url_raw($webhook),
+                        [
+                            'timeout' => 5,
+                            'headers' => ['Content-Type' => 'application/json'],
+                            'body' => wp_json_encode([
+                                'text' => sprintf(
+                                    '*%s* %s @ %s' . "\n" . 'Stock: %d | Threshold: %d' . "\n" . '<%s|Edit product>',
+                                    $site_name,
+                                    $type_label . ': ' . $product_name,
+                                    $location_name,
+                                    (int) $current_stock,
+                                    (int) $threshold,
+                                    $admin_link
+                                ),
+                            ]),
+                        ]
+                    );
+                }
+            }
+        }
+
+        // Social notifications
+        $social_settings = mulopimfwc_get_social_settings();
+        $event_key = ($type === 'out') ? 'out_of_stock' : 'low_stock';
+
+        if (
+            isset($social_settings['enabled']) && $social_settings['enabled'] === 'on' &&
+            isset($social_settings[$event_key]) && $social_settings[$event_key] === 'on'
+        ) {
+            $channels = mulopimfwc_collect_social_channels($location_term->slug, $social_settings);
+            if (!empty($channels)) {
+                $social_message = sprintf(
+                    "%s @ %s\nStock: %d | Threshold: %d",
+                    $product_name,
+                    $location_name,
+                    (int) $current_stock,
+                    (int) $threshold
+                );
+                mulopimfwc_send_social_message($type_label, $social_message, $channels, $social_settings, $admin_link);
+            }
+        }
+    }
+
+    /**
+     * Send social notification for a new order (location-aware).
+     */
+    function mulopimfwc_handle_social_new_order($order_id)
+    {
+        $settings = mulopimfwc_get_social_settings();
+        if (
+            empty($order_id) ||
+            !isset($settings['enabled'], $settings['new_order']) ||
+            $settings['enabled'] !== 'on' ||
+            $settings['new_order'] !== 'on'
+        ) {
+            return;
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+
+        $location_slug = (string) $order->get_meta('_store_location');
+        $location_term = !empty($location_slug) ? get_term_by('slug', $location_slug, 'mulopimfwc_store_location') : null;
+        $location_name = $location_term && !is_wp_error($location_term) ? $location_term->name : __('Unassigned location', 'multi-location-product-and-inventory-management');
+
+        $items = [];
+        foreach ($order->get_items() as $item) {
+            $items[] = $item->get_name();
+        }
+
+        $order_total = wp_strip_all_tags($order->get_formatted_order_total());
+        $status_label = wc_get_order_status_name($order->get_status());
+        $customer_name = trim($order->get_formatted_billing_full_name());
+        $title = sprintf(__('New order #%s at %s', 'multi-location-product-and-inventory-management'), $order->get_order_number(), $location_name);
+
+        $lines = [];
+        $lines[] = sprintf(__('Total: %s | Status: %s | Items: %d', 'multi-location-product-and-inventory-management'), $order_total, $status_label, $order->get_item_count());
+        if (!empty($customer_name)) {
+            $lines[] = sprintf(__('Customer: %s', 'multi-location-product-and-inventory-management'), $customer_name);
+        }
+        if (!empty($items)) {
+            $lines[] = sprintf(__('Items: %s', 'multi-location-product-and-inventory-management'), implode(', ', array_slice($items, 0, 3)));
+        }
+
+        $channels = mulopimfwc_collect_social_channels($location_slug, $settings);
+        if (!empty($channels)) {
+            mulopimfwc_send_social_message($title, implode("\n", $lines), $channels, $settings, $order->get_edit_order_url());
+        }
+    }
+
+    /**
+     * Calculate the next daily digest timestamp based on store timezone.
+     */
+    function mulopimfwc_get_next_digest_timestamp($time_string)
+    {
+        $now = current_time('timestamp');
+        $parts = explode(':', $time_string);
+        $hour = isset($parts[0]) ? max(0, min(23, (int) $parts[0])) : 7;
+        $minute = isset($parts[1]) ? max(0, min(59, (int) $parts[1])) : 0;
+
+        $next = mktime($hour, $minute, 0, (int) wp_date('n', $now), (int) wp_date('j', $now), (int) wp_date('Y', $now));
+        if ($next <= $now) {
+            $next = strtotime('+1 day', $next);
+        }
+
+        return $next;
+    }
+
+    /**
+     * Send the daily performance digest per location.
+     */
+    function mulopimfwc_send_daily_social_digest()
+    {
+        $settings = mulopimfwc_get_social_settings();
+        if (
+            !isset($settings['enabled'], $settings['daily_digest']) ||
+            $settings['enabled'] !== 'on' ||
+            $settings['daily_digest'] !== 'on'
+        ) {
+            return;
+        }
+
+        $now = current_time('timestamp');
+        $start = strtotime('today', $now);
+        $end = strtotime('tomorrow', $now);
+
+        $orders = wc_get_orders([
+            'limit' => -1,
+            'status' => array_keys(wc_get_order_statuses()),
+            'date_created' => [
+                'after' => gmdate('Y-m-d H:i:s', $start),
+                'before' => gmdate('Y-m-d H:i:s', $end),
+                'inclusive' => true,
+            ],
+            'meta_query' => [
+                [
+                    'key' => '_store_location',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ]);
+
+        if (empty($orders)) {
+            return;
+        }
+
+        $stats = [];
+        foreach ($orders as $order) {
+            if (!$order instanceof WC_Order) {
+                continue;
+            }
+
+            $slug = (string) $order->get_meta('_store_location');
+            if (empty($slug)) {
+                $slug = 'unassigned';
+            }
+
+            if (!isset($stats[$slug])) {
+                $term = $slug === 'unassigned' ? null : get_term_by('slug', $slug, 'mulopimfwc_store_location');
+                $stats[$slug] = [
+                    'name' => ($term && !is_wp_error($term)) ? $term->name : __('Unassigned location', 'multi-location-product-and-inventory-management'),
+                    'orders' => 0,
+                    'items' => 0,
+                    'revenue' => 0,
+                ];
+            }
+
+            $stats[$slug]['orders']++;
+            $stats[$slug]['items'] += $order->get_item_count();
+            $stats[$slug]['revenue'] += (float) $order->get_total();
+        }
+
+        // Per-location notifications for managers
+        foreach ($stats as $slug => $data) {
+            if ($slug === 'unassigned') {
+                continue;
+            }
+            $channels = mulopimfwc_collect_social_channels($slug, $settings);
+            if (empty($channels)) {
+                continue;
+            }
+
+            $title = sprintf(__("Today's performance - %s", 'multi-location-product-and-inventory-management'), $data['name']);
+            $message = sprintf(
+                __('Orders: %d | Items: %d | Revenue: %s', 'multi-location-product-and-inventory-management'),
+                $data['orders'],
+                $data['items'],
+                wp_strip_all_tags(wc_price($data['revenue']))
+            );
+            $orders_link = admin_url('edit.php?post_type=shop_order&filter_by_location=' . urlencode($slug));
+            mulopimfwc_send_social_message($title, $message, $channels, $settings, $orders_link);
+        }
+
+        // Admin summary across all locations
+        $admin_channels = mulopimfwc_collect_social_channels('', $settings);
+        if (!empty($admin_channels)) {
+            $lines = [];
+            foreach ($stats as $data) {
+                $lines[] = sprintf(
+                    '%s — %d %s, %d %s, %s',
+                    $data['name'],
+                    $data['orders'],
+                    __('orders', 'multi-location-product-and-inventory-management'),
+                    $data['items'],
+                    __('items', 'multi-location-product-and-inventory-management'),
+                    wp_strip_all_tags(wc_price($data['revenue']))
+                );
+            }
+
+            mulopimfwc_send_social_message(
+                __("Today's location performance", 'multi-location-product-and-inventory-management'),
+                implode("\n", $lines),
+                $admin_channels,
+                $settings,
+                admin_url('edit.php?post_type=shop_order')
+            );
+        }
+    }
+
+    /**
+     * Simple uptime monitor to announce down/up events.
+     */
+    function mulopimfwc_check_site_status_for_social()
+    {
+        $settings = mulopimfwc_get_social_settings();
+        if (
+            !isset($settings['enabled'], $settings['site_status']) ||
+            $settings['enabled'] !== 'on' ||
+            $settings['site_status'] !== 'on'
+        ) {
+            return;
+        }
+
+        $last_state = get_option('mulopimfwc_social_site_state', 'up');
+        $response = wp_remote_get(home_url(), ['timeout' => 5]);
+        $is_down = is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) >= 500;
+        $current_state = $is_down ? 'down' : 'up';
+
+        if ($current_state === $last_state) {
+            return;
+        }
+
+        update_option('mulopimfwc_social_site_state', $current_state);
+
+        $channels = mulopimfwc_collect_social_channels('', $settings);
+        $site_name = get_bloginfo('name');
+
+        if ($current_state === 'down') {
+            mulopimfwc_send_social_message(
+                __('Site down alert', 'multi-location-product-and-inventory-management'),
+                sprintf(__('We could not reach %s at %s.', 'multi-location-product-and-inventory-management'), $site_name, home_url()),
+                $channels,
+                $settings,
+                home_url()
+            );
+        } else {
+            mulopimfwc_send_social_message(
+                __('Site back online', 'multi-location-product-and-inventory-management'),
+                sprintf(__('Monitoring shows %s is reachable again.', 'multi-location-product-and-inventory-management'), $site_name),
+                $channels,
+                $settings,
+                home_url()
+            );
+        }
+    }
+
+    // Cron schedules & hooks for social notifications
+    add_filter('cron_schedules', function ($schedules) {
+        $schedules['mulopimfwc_five_minutes'] = [
+            'interval' => 300,
+            'display' => __('Every 5 Minutes', 'multi-location-product-and-inventory-management')
+        ];
+        return $schedules;
+    });
+
+    add_action('init', function () {
+        $settings = mulopimfwc_get_social_settings();
+
+        // Daily digest
+        if (isset($settings['enabled'], $settings['daily_digest']) && $settings['enabled'] === 'on' && $settings['daily_digest'] === 'on') {
+            if (!wp_next_scheduled('mulopimfwc_social_daily_digest')) {
+                wp_schedule_event(mulopimfwc_get_next_digest_timestamp($settings['daily_digest_time']), 'daily', 'mulopimfwc_social_daily_digest');
+            }
+        } else {
+            wp_clear_scheduled_hook('mulopimfwc_social_daily_digest');
+        }
+
+        // Site status monitor
+        if (isset($settings['enabled'], $settings['site_status']) && $settings['enabled'] === 'on' && $settings['site_status'] === 'on') {
+            if (!wp_next_scheduled('mulopimfwc_social_site_check')) {
+                wp_schedule_event(time() + 60, 'mulopimfwc_five_minutes', 'mulopimfwc_social_site_check');
+            }
+        } else {
+            wp_clear_scheduled_hook('mulopimfwc_social_site_check');
+        }
+    });
+
+    add_action('mulopimfwc_social_daily_digest', 'mulopimfwc_send_daily_social_digest');
+    add_action('mulopimfwc_social_site_check', 'mulopimfwc_check_site_status_for_social');
 
     require_once plugin_dir_path(__FILE__) . 'includes/analytics.php';
 
@@ -3608,7 +4634,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.0.6",
+                "1.0.6.5",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );
