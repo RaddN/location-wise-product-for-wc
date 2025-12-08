@@ -4,7 +4,7 @@
  * Location Managers Admin Page
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.0.6
+ * @since 1.0.6.10
  */
 
 if (!defined('ABSPATH')) exit;
@@ -324,6 +324,17 @@ class MULOPIMFWC_Location_Managers
                                 <?php
                                 $assigned_locations = get_user_meta($manager->ID, 'mulopimfwc_assigned_locations', true);
                                 $manager_capabilities = get_user_meta($manager->ID, 'mulopimfwc_manager_capabilities', true);
+                                $social_channels = get_user_meta($manager->ID, 'mulopimfwc_social_channels', true);
+                                if (!is_array($social_channels)) {
+                                    $social_channels = [];
+                                }
+                                // Backfill legacy Slack field so existing managers keep receiving alerts
+                                if (empty($social_channels['slack_webhook'])) {
+                                    $legacy_slack = get_user_meta($manager->ID, 'mulopimfwc_slack_webhook', true);
+                                    if (!empty($legacy_slack)) {
+                                        $social_channels['slack_webhook'] = $legacy_slack;
+                                    }
+                                }
                                 if (!is_array($assigned_locations)) $assigned_locations = [];
                                 if (!is_array($manager_capabilities)) $manager_capabilities = $global_capabilities;
                                 ?>
@@ -376,7 +387,7 @@ class MULOPIMFWC_Location_Managers
                                     </div>
 
                                     <div class="manager-actions">
-                                        <button type="button" class="button button-small <?php echo esc_attr(mulopimfwc_get_pro_class(false, 'mulopimfwc-edit-manager', ' ')); ?> mulopimfwc-btn-primary" data-manager-id="<?php echo esc_attr($manager->ID); ?>" data-assign-locations=<?php echo wp_json_encode($assigned_locations); ?> data-assign-capabilities=<?php echo wp_json_encode($manager_capabilities); ?>>
+                                        <button type="button" class="button button-small <?php echo esc_attr(mulopimfwc_get_pro_class(false, 'mulopimfwc-edit-manager', ' ')); ?> mulopimfwc-btn-primary" data-manager-id="<?php echo esc_attr($manager->ID); ?>" data-assign-locations=<?php echo wp_json_encode($assigned_locations); ?> data-assign-capabilities=<?php echo wp_json_encode($manager_capabilities); ?> data-social-channels="<?php echo esc_attr(wp_json_encode($social_channels)); ?>">
                                             <svg class="svg-inline--fa fa-pencil" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="pencil" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="">
                                                 <path fill="currentColor" d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"></path>
                                             </svg> <?php echo esc_html__('Edit', 'multi-location-product-and-inventory-management'); ?>
@@ -433,6 +444,11 @@ class MULOPIMFWC_Location_Managers
                                 <label for="new-last-name"><?php echo esc_html__('Last Name:', 'multi-location-product-and-inventory-management'); ?></label>
                                 <input type="text" id="new-last-name" name="new_last_name" value="">
                             </div>
+                            <div class="mulopimfwc-form-row">
+                                <label for="new-password"><?php echo esc_html__('Password:', 'multi-location-product-and-inventory-management'); ?></label>
+                                <input type="password" id="new-password" name="new_password" value="">
+                                <p class="description"><?php echo esc_html__('Optional: set an initial password. Leave empty to auto-generate.', 'multi-location-product-and-inventory-management'); ?></p>
+                            </div>
                         </div>
                         <button type="button" id="toggle-create-user" class="button button-secondary">
                             <?php echo esc_html__('Create New User Instead', 'multi-location-product-and-inventory-management'); ?>
@@ -468,6 +484,27 @@ class MULOPIMFWC_Location_Managers
                                     <?php endif; ?>
                                 </label>
                             <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="mulopimfwc-form-row">
+                        <label><?php echo esc_html__('Social Notifications', 'multi-location-product-and-inventory-management'); ?></label>
+                        <div class="mulopimfwc-social-grid">
+                            <div class="mulopimfwc-social-field">
+                                <label for="social_slack_webhook"><?php echo esc_html__('Slack / Discord / Teams Webhook', 'multi-location-product-and-inventory-management'); ?></label>
+                                <input type="url" id="social_slack_webhook" name="social_slack_webhook" placeholder="<?php echo esc_attr__('https://hooks.slack.com/services/...', 'multi-location-product-and-inventory-management'); ?>">
+                                <p class="description"><?php echo esc_html__('Use any incoming webhook URL to receive alerts for this manager.', 'multi-location-product-and-inventory-management'); ?></p>
+                            </div>
+                            <div class="mulopimfwc-social-field">
+                                <label for="social_custom_webhook"><?php echo esc_html__('Custom Webhook', 'multi-location-product-and-inventory-management'); ?></label>
+                                <input type="url" id="social_custom_webhook" name="social_custom_webhook" placeholder="<?php echo esc_attr__('https://example.com/webhook', 'multi-location-product-and-inventory-management'); ?>">
+                                <p class="description"><?php echo esc_html__('Any other platform that accepts a JSON POST payload.', 'multi-location-product-and-inventory-management'); ?></p>
+                            </div>
+                            <div class="mulopimfwc-social-field">
+                                <label for="social_telegram_chat"><?php echo esc_html__('Telegram Chat ID', 'multi-location-product-and-inventory-management'); ?></label>
+                                <input type="text" id="social_telegram_chat" name="social_telegram_chat" placeholder="<?php echo esc_attr__('@username or chat ID', 'multi-location-product-and-inventory-management'); ?>">
+                                <p class="description"><?php echo esc_html__('Requires the bot token configured in Advanced → Social Notifications.', 'multi-location-product-and-inventory-management'); ?></p>
+                            </div>
                         </div>
                     </div>
 
@@ -538,6 +575,21 @@ class MULOPIMFWC_Location_Managers
                 width: 15px;
                 height: 15px;
                 margin-right: 6px;
+            }
+
+            .mulopimfwc-social-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 16px;
+            }
+
+            .mulopimfwc-social-field input {
+                width: 100%;
+            }
+
+            .mulopimfwc-social-field .description {
+                margin-top: 6px;
+                color: #475569;
             }
 
             .mulopimfwc-managers-list {
@@ -732,6 +784,7 @@ class MULOPIMFWC_Location_Managers
             }
 
             .mulopimfwc-form-row input[type="text"],
+            .mulopimfwc-form-row input[type="password"],
             .mulopimfwc-form-row input[type="email"] {
                 width: 100%;
                 padding: 8px;
@@ -828,7 +881,8 @@ class MULOPIMFWC_Location_Managers
                     const managerId = $(this).data('manager-id');
                     const assign_locations = $(this).data('assign-locations');
                     const assign_capabilities = $(this).data('assign-capabilities');
-                    loadManagerData(managerId, assign_locations, assign_capabilities);
+                    const social_channels = $(this).data('social-channels') || {};
+                    loadManagerData(managerId, assign_locations, assign_capabilities, social_channels);
                 });
 
                 // Delete manager button
@@ -879,10 +933,11 @@ class MULOPIMFWC_Location_Managers
                     $('#selected-user-id').val('');
                     $('#user-search-results').empty().hide();
                     $('#create-new-user').hide();
+                    $('#social_slack_webhook, #social_custom_webhook, #social_telegram_chat').val('');
                     $('#toggle-create-user').text('<?php echo esc_js(esc_html_e('Create New User Instead', 'multi-location-product-and-inventory-management')); ?>');
                 }
 
-                function loadManagerData(managerId, assign_locations, assign_capabilities) {
+                function loadManagerData(managerId, assign_locations, assign_capabilities, social_channels) {
                     // Update modal title and form fields
                     $('#mulopimfwc-modal-title').text('<?php echo esc_js(esc_html_e('Edit Location Manager', 'multi-location-product-and-inventory-management')); ?>');
                     $('#manager-id').val(managerId);
@@ -906,6 +961,12 @@ class MULOPIMFWC_Location_Managers
                             $('input[name="manager_capabilities[]"][value="' + capability + '"]').prop('checked', true);
                         });
                     }
+
+                    // Social channels
+                    const social = social_channels || {};
+                    $('#social_slack_webhook').val(social.slack_webhook || '');
+                    $('#social_custom_webhook').val(social.custom_webhook || '');
+                    $('#social_telegram_chat').val(social.telegram_chat_id || '');
 
                     // Show the modal
                     $('#mulopimfwc-manager-modal').show();
@@ -1050,6 +1111,12 @@ class MULOPIMFWC_Location_Managers
         $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
         $assigned_locations = isset($_POST['assigned_locations']) ? array_map('sanitize_text_field', $_POST['assigned_locations']) : [];
         $manager_capabilities = isset($_POST['manager_capabilities']) ? array_map('sanitize_text_field', $_POST['manager_capabilities']) : [];
+        $social_channels = [
+            'slack_webhook' => isset($_POST['social_slack_webhook']) ? esc_url_raw(trim($_POST['social_slack_webhook'])) : '',
+            'custom_webhook' => isset($_POST['social_custom_webhook']) ? esc_url_raw(trim($_POST['social_custom_webhook'])) : '',
+            'telegram_chat_id' => isset($_POST['social_telegram_chat']) ? sanitize_text_field($_POST['social_telegram_chat']) : '',
+        ];
+        $notify_email = '';
 
         try {
             if ($action_type === 'create') {
@@ -1059,6 +1126,8 @@ class MULOPIMFWC_Location_Managers
                     $email = sanitize_email($_POST['new_email']);
                     $first_name = sanitize_text_field($_POST['new_first_name']);
                     $last_name = sanitize_text_field($_POST['new_last_name']);
+                    $password = isset($_POST['new_password']) && $_POST['new_password'] !== '' ? $_POST['new_password'] : wp_generate_password();
+                    $notify_email = $email;
 
                     // Check if username or email already exists
                     if (username_exists($username) || email_exists($email)) {
@@ -1066,7 +1135,7 @@ class MULOPIMFWC_Location_Managers
                     }
 
                     // Create new user
-                    $user_id = wp_create_user($username, wp_generate_password(), $email);
+                    $user_id = wp_create_user($username, $password, $email);
 
                     if (is_wp_error($user_id)) {
                         wp_send_json_error(['message' => $user_id->get_error_message()]);
@@ -1080,8 +1149,18 @@ class MULOPIMFWC_Location_Managers
                         'display_name' => trim($first_name . ' ' . $last_name)
                     ]);
 
-                    // Send password reset email
-                    wp_send_new_user_notifications($user_id, 'user');
+                    // Send welcome email with password info
+                    wp_mail(
+                        $email,
+                        sprintf(__('Your Location Manager account on %s', 'multi-location-product-and-inventory-management'), get_bloginfo('name')),
+                        sprintf(
+                            __("Hello %s,\n\nAn account has been created for you.\nUsername: %s\nPassword: %s\nLogin: %s\n\nPlease change your password after logging in.", 'multi-location-product-and-inventory-management'),
+                            trim($first_name . ' ' . $last_name),
+                            $username,
+                            $password,
+                            wp_login_url()
+                        )
+                    );
                 }
 
                 if (empty($user_id)) {
@@ -1104,12 +1183,62 @@ class MULOPIMFWC_Location_Managers
 
             // Save manager capabilities
             update_user_meta($user_id, 'mulopimfwc_manager_capabilities', $manager_capabilities);
+            update_user_meta($user_id, 'mulopimfwc_social_channels', $social_channels);
+            update_user_meta($user_id, 'mulopimfwc_slack_webhook', $social_channels['slack_webhook']);
 
-            wp_send_json_success(['message' => esc_html_e('Location manager saved successfully', 'multi-location-product-and-inventory-management')]);
-        } catch (Exception $e) {
-            wp_send_json_error(['message' => $e->getMessage()]);
+            // Notify on creation or permission changes
+            if (empty($notify_email)) {
+                $user_obj = get_user_by('id', $user_id);
+                $notify_email = $user_obj && !empty($user_obj->user_email) ? $user_obj->user_email : '';
+            }
+
+            if (!empty($notify_email)) {
+                $site_name = get_bloginfo('name');
+                $subject = sprintf(__('Location Manager update on %s', 'multi-location-product-and-inventory-management'), $site_name);
+                $body_lines = [];
+                if ($action_type === 'create') {
+                    $body_lines[] = __('Your Location Manager account has been created or updated.', 'multi-location-product-and-inventory-management');
+                } else {
+                    $body_lines[] = __('Your Location Manager permissions or assigned locations have been updated.', 'multi-location-product-and-inventory-management');
+                }
+                if (!empty($assigned_locations)) {
+                    $body_lines[] = sprintf(__('Assigned Locations: %s', 'multi-location-product-and-inventory-management'), implode(', ', $assigned_locations));
+                }
+            if (!empty($manager_capabilities)) {
+                $body_lines[] = sprintf(__('Capabilities: %s', 'multi-location-product-and-inventory-management'), implode(', ', $manager_capabilities));
+            }
+            $body_lines[] = sprintf(__('Login: %s', 'multi-location-product-and-inventory-management'), wp_login_url());
+            wp_mail($notify_email, $subject, implode("\n", $body_lines));
         }
+
+        // Social alert for manager change
+        if (function_exists('mulopimfwc_get_social_settings') && function_exists('mulopimfwc_send_social_message') && function_exists('mulopimfwc_collect_social_channels')) {
+            $settings = mulopimfwc_get_social_settings();
+            if (isset($settings['enabled'], $settings['manager_change_alert']) && $settings['enabled'] === 'on' && $settings['manager_change_alert'] === 'on') {
+                $channels = mulopimfwc_collect_social_channels('', $settings);
+                if (!empty($channels)) {
+                    $user_obj = get_user_by('id', $user_id);
+                    mulopimfwc_send_social_message(
+                        __('Manager updated', 'multi-location-product-and-inventory-management'),
+                        sprintf(
+                            __('%s was %s. Locations: %s', 'multi-location-product-and-inventory-management'),
+                            $user_obj ? $user_obj->display_name : __('Manager', 'multi-location-product-and-inventory-management'),
+                            $action_type === 'create' ? __('created', 'multi-location-product-and-inventory-management') : __('updated', 'multi-location-product-and-inventory-management'),
+                            !empty($assigned_locations) ? implode(', ', $assigned_locations) : __('none', 'multi-location-product-and-inventory-management')
+                        ),
+                        $channels,
+                        $settings,
+                        admin_url('users.php')
+                    );
+                }
+            }
+        }
+
+        wp_send_json_success(['message' => esc_html_e('Location manager saved successfully', 'multi-location-product-and-inventory-management')]);
+    } catch (Exception $e) {
+        wp_send_json_error(['message' => $e->getMessage()]);
     }
+}
 
     /**
      * Delete location manager AJAX handler
@@ -1351,6 +1480,14 @@ class MULOPIMFWC_Location_Managers
         global $mulopimfwc_locations;
         $assigned_locations = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
         $manager_capabilities = get_user_meta($user->ID, 'mulopimfwc_manager_capabilities', true);
+        $social_channels = get_user_meta($user->ID, 'mulopimfwc_social_channels', true);
+        if (!is_array($social_channels)) {
+            $social_channels = [];
+        }
+        $legacy_slack = get_user_meta($user->ID, 'mulopimfwc_slack_webhook', true);
+        if (empty($social_channels['slack_webhook']) && !empty($legacy_slack)) {
+            $social_channels['slack_webhook'] = $legacy_slack;
+        }
         $capabilities = $this->get_available_capabilities();
 
         if (!is_array($assigned_locations)) $assigned_locations = [];
@@ -1388,6 +1525,29 @@ class MULOPIMFWC_Location_Managers
                     <p class="description"><?php echo esc_html__('Individual permissions for this manager. Leave unchecked to use global defaults.', 'multi-location-product-and-inventory-management'); ?></p>
                 </td>
             </tr>
+
+            <tr>
+                <th><label><?php echo esc_html__('Social Notification Channels', 'multi-location-product-and-inventory-management'); ?></label></th>
+                <td>
+                    <div class="mulopimfwc-social-grid" style="margin-top: 4px;">
+                        <div class="mulopimfwc-social-field">
+                            <label for="mulopimfwc_slack_webhook"><?php echo esc_html__('Slack / Discord / Teams Webhook', 'multi-location-product-and-inventory-management'); ?></label>
+                            <input type="url" name="mulopimfwc_slack_webhook" id="mulopimfwc_slack_webhook" value="<?php echo esc_attr(isset($social_channels['slack_webhook']) ? $social_channels['slack_webhook'] : ''); ?>" class="regular-text" />
+                            <p class="description"><?php echo esc_html__('Paste an incoming webhook URL to receive alerts for this manager.', 'multi-location-product-and-inventory-management'); ?></p>
+                        </div>
+                        <div class="mulopimfwc-social-field">
+                            <label for="mulopimfwc_custom_webhook"><?php echo esc_html__('Custom Webhook', 'multi-location-product-and-inventory-management'); ?></label>
+                            <input type="url" name="mulopimfwc_custom_webhook" id="mulopimfwc_custom_webhook" value="<?php echo esc_attr(isset($social_channels['custom_webhook']) ? $social_channels['custom_webhook'] : ''); ?>" class="regular-text" />
+                            <p class="description"><?php echo esc_html__('Any HTTPS endpoint that accepts JSON payloads.', 'multi-location-product-and-inventory-management'); ?></p>
+                        </div>
+                        <div class="mulopimfwc-social-field">
+                            <label for="mulopimfwc_telegram_chat_id"><?php echo esc_html__('Telegram Chat ID', 'multi-location-product-and-inventory-management'); ?></label>
+                            <input type="text" name="mulopimfwc_telegram_chat_id" id="mulopimfwc_telegram_chat_id" value="<?php echo esc_attr(isset($social_channels['telegram_chat_id']) ? $social_channels['telegram_chat_id'] : ''); ?>" class="regular-text" />
+                            <p class="description"><?php echo esc_html__('Use @username or numeric chat ID. Requires bot token in Advanced → Social Notifications.', 'multi-location-product-and-inventory-management'); ?></p>
+                        </div>
+                    </div>
+                </td>
+            </tr>
         </table>
 
 <?php
@@ -1404,9 +1564,38 @@ class MULOPIMFWC_Location_Managers
 
         $assigned_locations = isset($_POST['mulopimfwc_assigned_locations']) ? array_map('sanitize_text_field', $_POST['mulopimfwc_assigned_locations']) : [];
         $manager_capabilities = isset($_POST['mulopimfwc_manager_capabilities']) ? array_map('sanitize_text_field', $_POST['mulopimfwc_manager_capabilities']) : [];
+        $social_channels = [
+            'slack_webhook' => isset($_POST['mulopimfwc_slack_webhook']) ? esc_url_raw(trim($_POST['mulopimfwc_slack_webhook'])) : '',
+            'custom_webhook' => isset($_POST['mulopimfwc_custom_webhook']) ? esc_url_raw(trim($_POST['mulopimfwc_custom_webhook'])) : '',
+            'telegram_chat_id' => isset($_POST['mulopimfwc_telegram_chat_id']) ? sanitize_text_field($_POST['mulopimfwc_telegram_chat_id']) : '',
+        ];
 
         update_user_meta($user_id, 'mulopimfwc_assigned_locations', $assigned_locations);
         update_user_meta($user_id, 'mulopimfwc_manager_capabilities', $manager_capabilities);
+        update_user_meta($user_id, 'mulopimfwc_social_channels', $social_channels);
+        update_user_meta($user_id, 'mulopimfwc_slack_webhook', $social_channels['slack_webhook']);
+
+        // Social alert for manager change (profile save)
+        if (function_exists('mulopimfwc_get_social_settings') && function_exists('mulopimfwc_send_social_message') && function_exists('mulopimfwc_collect_social_channels')) {
+            $settings = mulopimfwc_get_social_settings();
+            if (isset($settings['enabled'], $settings['manager_change_alert']) && $settings['enabled'] === 'on' && $settings['manager_change_alert'] === 'on') {
+                $channels = mulopimfwc_collect_social_channels('', $settings);
+                if (!empty($channels)) {
+                    $user_obj = get_user_by('id', $user_id);
+                    mulopimfwc_send_social_message(
+                        __('Manager updated', 'multi-location-product-and-inventory-management'),
+                        sprintf(
+                            __('%s profile was updated. Locations: %s', 'multi-location-product-and-inventory-management'),
+                            $user_obj ? $user_obj->display_name : __('Manager', 'multi-location-product-and-inventory-management'),
+                            !empty($assigned_locations) ? implode(', ', $assigned_locations) : __('none', 'multi-location-product-and-inventory-management')
+                        ),
+                        $channels,
+                        $settings,
+                        admin_url('user-edit.php?user_id=' . $user_id)
+                    );
+                }
+            }
+        }
     }
 
     /**

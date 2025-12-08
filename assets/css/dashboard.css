@@ -3,162 +3,349 @@
  */
 
 .lwp-dashboard {
-    border: 2px solid #d1d1d4;
-    border-radius: 8px;
-    background-color: #f9fafb;
-    margin: 20px 20px 0px 0px;
+  border: 2px solid #d1d1d4;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  margin: 20px 20px 0px 0px;
 }
 .lwp-dashboard-overview {
-    box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;
-    padding: 20px;
-    background-color: #ffffff;
-    margin-bottom: 20px;
-    border-radius: 8px;
+  box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;
+  padding: 20px;
+  background-color: #ffffff;
+  margin-bottom: 20px;
+  border-radius: 8px;
 }
 .lwp-dashboard-overview h1 {
-    font-weight: 600;
-    font-size: 26px;
-    padding: 0;
-    margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 26px;
+  padding: 0;
+  margin-bottom: 20px;
+}
+.lwp-filter-bar {
+  margin: 12px 0 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px;
+}
+.lwp-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+.lwp-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+.lwp-filter-field label {
+  font-weight: 600;
+  color: #334155;
+}
+.lwp-filter-field input,
+.lwp-filter-field select {
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+.lwp-filter-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+.lwp-filter-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.lwp-filter-actions {
+  display: flex;
+  gap: 10px;
+}
+.lwp-reset-filters {
+  border-color: #e5e7eb !important;
+  background: #fff !important;
+  color: #334155 !important;
 }
 .lwp-dashboard-charts {
-    padding: 10px 20px 0px;
+  padding: 10px 20px 0px;
 }
 table.lwp-low-stock-table a {
-    color: #2563eb;
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 14px;
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
 }
 
 /* Grid layout */
 .lwp-row {
-    display: flex;
-    margin: 0 -15px;
-    flex-wrap: wrap;
+  display: flex;
+  margin: 0 -15px;
+  flex-wrap: wrap;
 }
 
 .lwp-col {
-    padding: 0 15px;
-    flex: 1;
-    min-width: 48%;
-    margin-bottom: 20px;
+  padding: 0 15px;
+  flex: 1;
+  min-width: 48%;
+  margin-bottom: 20px;
 }
 
 /* Card styling */
 .lwp-card {
-    background: white;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    padding: 20px;
-    margin-bottom: 20px;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
 .lwp-card h2 {
-    margin-top: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    font-size: 18px;
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  font-size: 18px;
 }
 
 /* Chart containers */
 .lwp-chart-container {
-    position: relative;
-    height: 300px;
+  position: relative;
+  height: 300px;
 }
 
 /* Stats grid */
 .lwp-stats-grid {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .lwp-stat-item {
-    display: flex;
-    align-items: center;
-    border: 1px solid #f3f4f6;
-    border-radius: 8px;
-    padding: 15px;
-    flex: 1;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  display: flex;
+  align-items: center;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  padding: 15px;
+  flex: 1;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  text-decoration: none;
 }
 .lwp-stat-item-icon {
-    color: #2563eb;
-    background: #dbeafe;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    border-radius: 6px;
-    margin-right: 15px;
+  color: #2563eb;
+  background: #dbeafe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 6px;
+  margin-right: 15px;
 }
 
 .lwp-stat-value {
-    display: block;
-    font-size: 26px;
-    font-weight: bold;
-    color: #111827;
+  display: block;
+  font-size: 26px;
+  font-weight: bold;
+  color: #111827;
 }
 
 .lwp-stat-label {
-    display: block;
-    color: #666;
-        font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 7px;
+  display: block;
+  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 7px;
 }
 
 /* Low stock table */
 .lwp-low-stock-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-weight: 600;
+  width: 100%;
+  border-collapse: collapse;
+  font-weight: 600;
 }
 
 .lwp-low-stock-table th,
 .lwp-low-stock-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
 }
 
 .lwp-low-stock-table th {
-    font-weight: 600;
-    font-size: 18px;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 /* Responsive styles */
 @media screen and (max-width: 782px) {
-    .lwp-col {
-        min-width: 100%;
-    }
-    
-    .lwp-stats-grid {
-        flex-direction: column;
-    }
-    
-    .lwp-stat-item {
-        margin-bottom: 15px;
-    }
-}
+  .lwp-col {
+    min-width: 100%;
+  }
+  .lwp-filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .lwp-filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
+  .lwp-stats-grid {
+    flex-direction: column;
+  }
+
+  .lwp-stat-item {
+    margin-bottom: 15px;
+  }
+}
 
 /* New Style */
 /* Out of Stock */
 .stock-status.out-of-stock {
-    color: #991b1b;
-    background-color: #fee2e2;
-    padding: 4px 8px;
-    border-radius: 50px;
-    font-weight: 600;
+  color: #991b1b;
+  background-color: #fee2e2;
+  padding: 4px 8px;
+  border-radius: 50px;
+  font-weight: 600;
 }
 
 /* Low Stock */
 .stock-status.low-stock {
-    color: #854d0e;
-    background-color: #fef9c3;
-    padding: 4px 8px;
-    border-radius: 50px;
-    font-weight: 600;
+  color: #854d0e;
+  background-color: #fef9c3;
+  padding: 4px 8px;
+  border-radius: 50px;
+  font-weight: 600;
+}
+
+/* Filter Toggle Button */
+.filter_toggle_btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter_toggle_btn:hover {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+}
+
+.filter_toggle_btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.filter_toggle_btn.active svg {
+  stroke: white;
+}
+
+/* Dashboard Filters Container */
+.lwp-dashboard-filters {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.5s ease;
+  margin-bottom: 0;
+}
+
+.lwp-dashboard-filters.show {
+  max-height: 800px;
+  opacity: 1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Export Dropdown */
+.export_report_dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown_icon {
+  font-size: 12px;
+  margin-left: 5px;
+  transition: transform 0.2s ease;
+}
+
+.export_report_dropdown.active .dropdown_icon {
+  transform: rotate(180deg);
+}
+
+.dropdown_menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  display: none;
+  min-width: 220px;
+  overflow: hidden;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.dropdown_menu.show {
+  display: block;
+}
+
+.dropdown_menu button {
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdown_menu button:hover {
+  background-color: #f3f4f6;
+  color: #1e40af;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Filter Active Badge */
+.lwp-filter-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 12px;
+  padding: 4px 12px;
+  background: #dcfce7;
+  color: #16a34a;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.lwp-filter-active-badge svg {
+  stroke: #16a34a;
 }

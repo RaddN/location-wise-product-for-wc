@@ -1,0 +1,130 @@
+/**
+ * Frontend Product Filter Styles
+ */
+
+.mulopimfwc-product-filter {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+}
+
+.mulopimfwc-filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.mulopimfwc-filter-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+.mulopimfwc-filter-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+}
+
+.mulopimfwc-filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #fff;
+    color: #495057;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.mulopimfwc-filter-select:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.mulopimfwc-filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.mulopimfwc-filter-button,
+.mulopimfwc-clear-button {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.mulopimfwc-filter-button {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.mulopimfwc-filter-button:hover {
+    background-color: #0056b3;
+}
+
+.mulopimfwc-filter-button:active {
+    transform: translateY(1px);
+}
+
+.mulopimfwc-clear-button {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.mulopimfwc-clear-button:hover {
+    background-color: #545b62;
+}
+
+.mulopimfwc-filter-loading {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    text-align: center;
+    font-weight: 600;
+    color: #007bff;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .mulopimfwc-filter-container {
+        flex-direction: column;
+    }
+
+    .mulopimfwc-filter-field {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .mulopimfwc-filter-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .mulopimfwc-filter-button,
+    .mulopimfwc-clear-button {
+        flex: 1;
+    }
+}
+
+/* Integration with WooCommerce shop page */
+.woocommerce .mulopimfwc-product-filter {
+    margin-top: 20px;
+}
+
+/* Ensure filter appears above products */
+.woocommerce-products-header + .mulopimfwc-product-filter,
+.woocommerce-archive-description + .mulopimfwc-product-filter {
+    margin-top: 30px;
+}
+

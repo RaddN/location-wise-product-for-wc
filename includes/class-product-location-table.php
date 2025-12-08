@@ -106,10 +106,50 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     public function column_title($item)
     {
-        $title = '<strong><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . esc_html($item['title']) . '</a></strong>';
+        $edit_link = get_edit_post_link($item['id']);
+        $view_link = get_permalink($item['id']);
+        $trash_link = get_delete_post_link($item['id'], '', true);
+        $duplicate_link = wp_nonce_url(
+            admin_url('edit.php?post_type=product&action=duplicate_product&post=' . $item['id']),
+            'woocommerce-duplicate-product_' . $item['id']
+        );
+
+        // Prepare data for quick edit (Manage Stock) popup
+        $nonce = wp_create_nonce('location_product_action_nonce');
+        $locations = $item['location_terms'];
+        $product_location_slugs = wp_list_pluck($locations, 'slug');
+
+        global $mulopimfwc_locations;
+        $all_locations_data = [];
+        if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+            foreach ($mulopimfwc_locations as $location) {
+                $all_locations_data[] = [
+                    'id' => $location->term_id,
+                    'name' => $location->name,
+                    'parent' => $location->parent,
+                    'selected' => in_array($location->slug, $product_location_slugs),
+                ];
+            }
+        }
+
+        $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
+
+        $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . esc_html($item['title']) . '</a></strong>';
         $title .= '<div class="row-actions">';
-        $title .= '<span class="edit"><a href="' . esc_url(get_edit_post_link($item['id'])) . '">' . __('Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
-        $title .= '<span class="view"><a href="' . esc_url(get_permalink($item['id'])) . '">' . __('View', 'multi-location-product-and-inventory-management') . '</a></span>';
+        $title .= '<span class="edit"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . __('Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
+        $title .= '<span class="view"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . __('View', 'multi-location-product-and-inventory-management') . '</a> | </span>';
+
+        $manage_attrs = 'class="row-quick-edit manage-product-location" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-nonce="' . esc_attr($nonce) . '"';
+        if ($quick_edit_data) {
+            $manage_attrs .= ' data-product-data="' . esc_attr(wp_json_encode($quick_edit_data)) . '"';
+        }
+        if (!empty($all_locations_data)) {
+            $manage_attrs .= ' data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '"';
+        }
+
+        $title .= '<span class="quick-edit"><a href="#" ' . $manage_attrs . '>' . __('Quick Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
+        $title .= '<span class="trash"><a href="' . esc_url($trash_link) . '">' . __('Trash', 'multi-location-product-and-inventory-management') . '</a> | </span>';
+        $title .= '<span class="duplicate"><a href="' . esc_url($duplicate_link) . '">' . __('Duplicate', 'multi-location-product-and-inventory-management') . '</a></span>';
         $title .= '</div>';
         return $title;
     }
@@ -386,8 +426,32 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $nonce = wp_create_nonce('location_product_action_nonce');
 
         $locations = $item['location_terms'];
+        $product_location_slugs = wp_list_pluck($locations, 'slug');
+
+        global $mulopimfwc_locations;
+        $all_locations_data = [];
+        if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+            foreach ($mulopimfwc_locations as $location) {
+                $all_locations_data[] = [
+                    'id' => $location->term_id,
+                    'name' => $location->name,
+                    'parent' => $location->parent,
+                    'selected' => in_array($location->slug, $product_location_slugs),
+                ];
+            }
+        }
+
         if (empty($locations)) {
-            return '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Add to Location', 'multi-location-product-and-inventory-management') . '</a>';
+            $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
+            $button = '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-nonce="' . esc_attr($nonce) . '"';
+            if ($quick_edit_data) {
+                $button .= ' data-product-data="' . esc_attr(wp_json_encode($quick_edit_data)) . '"';
+            }
+            if (!empty($all_locations_data)) {
+                $button .= ' data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '"';
+            }
+            $button .= '>' . __('Add to Location', 'multi-location-product-and-inventory-management') . '</a>';
+            return $button;
         }
         $output = '<div class="location-actions">';
         foreach ($locations as $location) {
@@ -406,7 +470,16 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 esc_html($action_text) . '</a>';
             $output .= '</div>';
         }
-        $output .= '<a href="#" style="text-align: center; background: #2271b1; color: #fff;" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Edit Location', 'multi-location-product-and-inventory-management') . '</a>';
+        // Prepare location data for Edit Location popup
+        // Store complete product data in data attribute for instant popup
+        $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
+        
+        // Single button for both edit location and quick edit
+        if ($quick_edit_data) {
+            $output .= '<a href="#" class="button button-small manage-product-location" style="margin-top: 5px; display: block;" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-product-data="' . esc_attr(wp_json_encode($quick_edit_data)) . '" data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Manage Stock', 'multi-location-product-and-inventory-management') . '</a>';
+        } else {
+            $output .= '<a href="#" class="button button-small manage-product-location" style="margin-top: 5px; display: block;" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Manage Stock', 'multi-location-product-and-inventory-management') . '</a>';
+        }
         $output .= '</div>';
         return $output;
     }
@@ -500,6 +573,102 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     }
                 }
 
+                // Collect all product data for quick edit popup
+                $product_data = [
+                    'id' => $product_id,
+                    'name' => $product->get_name(),
+                    'type' => $product_type,
+                    'default' => [
+                        'stock_quantity' => $product->get_stock_quantity(),
+                        'regular_price' => $product->get_regular_price(),
+                        'sale_price' => $product->get_sale_price(),
+                        'backorders' => $product->get_backorders(),
+                        'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
+                        'purchase_quantity' => get_post_meta($product_id, '_purchase_quantity', true),
+                    ],
+                    'locations' => [],
+                    'variations' => [],
+                ];
+
+                // Get only assigned/activated locations data for this product
+                $assigned_location_ids = [];
+                if (!is_wp_error($location_terms) && !empty($location_terms)) {
+                    $assigned_location_ids = array_map(function($term) {
+                        return $term->term_id;
+                    }, $location_terms);
+                }
+                
+                if (!empty($assigned_location_ids)) {
+                    foreach ($assigned_location_ids as $location_id) {
+                        $location_term = get_term($location_id, 'mulopimfwc_store_location');
+                        if (!$location_term || is_wp_error($location_term)) {
+                            continue;
+                        }
+                        
+                        $product_data['locations'][] = [
+                            'id' => $location_id,
+                            'name' => $location_term->name,
+                            'stock' => get_post_meta($product_id, '_location_stock_' . $location_id, true),
+                            'regular_price' => get_post_meta($product_id, '_location_regular_price_' . $location_id, true),
+                            'sale_price' => get_post_meta($product_id, '_location_sale_price_' . $location_id, true),
+                            'backorders' => get_post_meta($product_id, '_location_backorders_' . $location_id, true),
+                        ];
+                    }
+                }
+
+                // Get variation data for variable products
+                if ($product_type === 'variable') {
+                    $variation_ids = $product->get_children();
+                    if (!empty($variation_ids)) {
+                        foreach ($variation_ids as $variation_id) {
+                            $variation = wc_get_product($variation_id);
+                            if (!$variation) {
+                                continue;
+                            }
+
+                            // Format attributes for display
+                            $attributes = [];
+                            foreach ($variation->get_attributes() as $key => $value) {
+                                $attributes[$key] = $value;
+                            }
+
+                            $variation_data = [
+                                'id' => $variation_id,
+                                'attributes' => $attributes,
+                                'default' => [
+                                    'stock_quantity' => $variation->get_stock_quantity(),
+                                    'regular_price' => $variation->get_regular_price(),
+                                    'sale_price' => $variation->get_sale_price(),
+                                    'backorders' => $variation->get_backorders(),
+                                    'purchase_price' => get_post_meta($variation_id, '_purchase_price', true),
+                                ],
+                                'locations' => [],
+                            ];
+
+                            // Get location data for variation - only assigned locations
+                            if (!empty($assigned_location_ids)) {
+                                foreach ($assigned_location_ids as $location_id) {
+                                    $location_term = get_term($location_id, 'mulopimfwc_store_location');
+                                    if (!$location_term || is_wp_error($location_term)) {
+                                        continue;
+                                    }
+                                    
+                                    $variation_data['locations'][] = [
+                                        'id' => $location_id,
+                                        'name' => $location_term->name,
+                                        'stock' => get_post_meta($variation_id, '_location_stock_' . $location_id, true),
+                                        'regular_price' => get_post_meta($variation_id, '_location_regular_price_' . $location_id, true),
+                                        'sale_price' => get_post_meta($variation_id, '_location_sale_price_' . $location_id, true),
+                                        'backorders' => get_post_meta($variation_id, '_location_backorders_' . $location_id, true),
+                                    ];
+                                }
+                            }
+
+                            $product_data['variations'][] = $variation_data;
+                        }
+                    }
+                }
+
                 $this->items[] = [
                     'id' => $product_id,
                     'title' => $product->get_name(),
@@ -508,6 +677,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     'type' => $product_type,
                     'variations' => $product_type === 'variable' ? $variations : [],
                     'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
+                    'quick_edit_data' => $product_data, // Store complete data for popup
                 ];
             }
             wp_reset_postdata();

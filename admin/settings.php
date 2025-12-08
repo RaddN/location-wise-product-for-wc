@@ -1862,237 +1862,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_advanced_settings_section'
         );
 
-        add_settings_field(
-            'social_notifications',
-            __('Social Notifications', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', []);
-                $defaults = [
-                    'enabled' => 'off',
-                    'new_order' => 'on',
-                    'low_stock' => 'on',
-                    'out_of_stock' => 'on',
-                    'daily_digest' => 'off',
-                    'site_status' => 'off',
-                    'daily_digest_time' => '07:00',
-                    'admin_slack_webhook' => '',
-                    'admin_custom_webhook' => '',
-                    'admin_telegram_chat_id' => '',
-                    'telegram_bot_token' => '',
-                    'channels' => [],
-                ];
-                $social = isset($options['social_notifications']) && is_array($options['social_notifications'])
-                    ? wp_parse_args($options['social_notifications'], $defaults)
-                    : $defaults;
-        ?>
-            <div class="lwp-settings-section">
-                <div class="lwp-settings-box">
-                    <div class="lwp-filter-settings">
-                        <h3 style="margin-top:0;"><?php echo esc_html__('Social Notifications', 'multi-location-product-and-inventory-management'); ?></h3>
-            <div class="mulopimfwc-social-card" style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:10px;max-width:980px;">
-                <p style="margin-top:0;color:#475569;"><?php echo esc_html__('Push updates to Slack/Telegram/webhook channels for each store location. Location managers only receive alerts for the locations assigned to them.', 'multi-location-product-and-inventory-management'); ?></p>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
-                    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;background:#fff;">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                            <strong><?php echo esc_html__('Enable', 'multi-location-product-and-inventory-management'); ?></strong>
-                            <label class="mulopimfwc_switch social-master-toggle">
-                                <input type="checkbox" name="mulopimfwc_display_options[social_notifications][enabled]" <?php checked($social['enabled'], 'on'); ?>>
-                                <span class="mulopimfwc_slider round"></span>
-                                <span class="mulopimfwc_switch-on">On</span>
-                                <span class="mulopimfwc_switch-off">Off</span>
-                            </label>
-                        </div>
-                        <p class="description"><?php echo esc_html__('Turn the social notification pipeline on/off.', 'multi-location-product-and-inventory-management'); ?></p>
-                        <div class="mulopimfwc-social-events">
-                            <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][new_order]" <?php checked($social['new_order'], 'on'); ?>> <?php echo esc_html__('New order alerts (location-scoped)', 'multi-location-product-and-inventory-management'); ?></label><br>
-                            <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][low_stock]" <?php checked($social['low_stock'], 'on'); ?>> <?php echo esc_html__('Low stock alerts', 'multi-location-product-and-inventory-management'); ?></label><br>
-                            <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][out_of_stock]" <?php checked($social['out_of_stock'], 'on'); ?>> <?php echo esc_html__('Out of stock alerts', 'multi-location-product-and-inventory-management'); ?></label><br>
-                            <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][daily_digest]" <?php checked($social['daily_digest'], 'on'); ?>> <?php echo esc_html__("Today's location performance digest", 'multi-location-product-and-inventory-management'); ?></label><br>
-                            <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][site_status]" <?php checked($social['site_status'], 'on'); ?>> <?php echo esc_html__('Site down / site up monitor', 'multi-location-product-and-inventory-management'); ?></label>
-                        </div>
-                        <div style="margin-top:10px;">
-                            <label style="display:block;font-weight:600;"><?php echo esc_html__('Digest send time', 'multi-location-product-and-inventory-management'); ?></label>
-                            <input type="time" name="mulopimfwc_display_options[social_notifications][daily_digest_time]" value="<?php echo esc_attr($social['daily_digest_time']); ?>" />
-                            <p class="description"><?php echo esc_html__('Uses site timezone; applies to the daily performance digest.', 'multi-location-product-and-inventory-management'); ?></p>
-                        </div>
-                    </div>
-                    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;background:#fff;">
-                        <strong><?php echo esc_html__('Admin channels', 'multi-location-product-and-inventory-management'); ?></strong>
-                        <p class="description"><?php echo esc_html__('Managers use their own connections (set on their profile). Configure global fallbacks for owners/admins here.', 'multi-location-product-and-inventory-management'); ?></p>
-                        <label style="display:block;margin-top:8px;"><?php echo esc_html__('Slack / Teams / Discord webhook', 'multi-location-product-and-inventory-management'); ?></label>
-                        <input type="url" class="regular-text" name="mulopimfwc_display_options[social_notifications][admin_slack_webhook]" value="<?php echo esc_attr($social['admin_slack_webhook']); ?>" placeholder="<?php echo esc_attr__('https://hooks.slack.com/services/...', 'multi-location-product-and-inventory-management'); ?>">
-                        <label style="display:block;margin-top:10px;"><?php echo esc_html__('Custom webhook', 'multi-location-product-and-inventory-management'); ?></label>
-                        <input type="url" class="regular-text" name="mulopimfwc_display_options[social_notifications][admin_custom_webhook]" value="<?php echo esc_attr($social['admin_custom_webhook']); ?>" placeholder="<?php echo esc_attr__('https://example.com/webhook', 'multi-location-product-and-inventory-management'); ?>">
-                        <label style="display:block;margin-top:10px;"><?php echo esc_html__('Telegram chat ID for admins', 'multi-location-product-and-inventory-management'); ?></label>
-                        <input type="text" class="regular-text" name="mulopimfwc_display_options[social_notifications][admin_telegram_chat_id]" value="<?php echo esc_attr($social['admin_telegram_chat_id']); ?>" placeholder="<?php echo esc_attr__('@owner or 123456789', 'multi-location-product-and-inventory-management'); ?>">
-                        <label style="display:block;margin-top:10px;"><?php echo esc_html__('Telegram bot token', 'multi-location-product-and-inventory-management'); ?></label>
-                        <input type="text" class="regular-text" name="mulopimfwc_display_options[social_notifications][telegram_bot_token]" value="<?php echo esc_attr($social['telegram_bot_token']); ?>" placeholder="<?php echo esc_attr__('123456:ABCDEF-TOKEN', 'multi-location-product-and-inventory-management'); ?>">
-                        <p class="description"><?php echo esc_html__('Required to send Telegram messages to both managers and admin chats.', 'multi-location-product-and-inventory-management'); ?></p>
-                    </div>
-                </div>
-
-                <div style="margin-top:16px;border:1px solid #e2e8f0;border-radius:10px;padding:14px;background:#fff;">
-                    <strong style="display:block;margin-bottom:8px;"><?php echo esc_html__('How to connect Microsoft Teams', 'multi-location-product-and-inventory-management'); ?></strong>
-                    <ol style="margin-left:18px; color:#334155;">
-                        <li><?php echo esc_html__('In Teams, open the channel → More options (...) → Connectors/Apps → search “Incoming Webhook”.', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Click Add/Create, give it a name (e.g., “Store Alerts”), optionally upload an icon, then click Create.', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Copy the webhook URL Teams provides.', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Paste that URL into the “Slack / Teams / Discord webhook” field here (or in each manager profile) and save settings.', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Enable the events you want (new orders, stock alerts, digest, site monitor), then save.', 'multi-location-product-and-inventory-management'); ?></li>
-                    </ol>
-                    <p class="description" style="margin-top:8px;"><?php echo esc_html__('Tip: Use admin webhook for all-locations alerts, and manager-specific webhooks for location-scoped alerts.', 'multi-location-product-and-inventory-management'); ?></p>
-                    <p class="description" style="margin-top:4px;">
-                        <a href="https://www.youtube.com/embed/VIDEO_ID_TEAMS" target="_blank" rel="noopener"><?php echo esc_html__('Watch: Teams social notification setup', 'multi-location-product-and-inventory-management'); ?></a>
-                        &nbsp;|&nbsp;
-                        <a href="https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook" target="_blank" rel="noopener"><?php echo esc_html__('Microsoft Docs: Incoming Webhook', 'multi-location-product-and-inventory-management'); ?></a>
-                    </p>
-                    <hr style="margin:14px 0;border-color:#e2e8f0;">
-                    <strong style="display:block;margin-bottom:8px;"><?php echo esc_html__('How to connect Slack', 'multi-location-product-and-inventory-management'); ?></strong>
-                    <ol style="margin-left:18px; color:#334155;">
-                        <li><?php echo esc_html__('In Slack, go to Settings & administration → Manage apps → Search “Incoming WebHooks” and click Add.', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Choose the channel for alerts and click Add Incoming Webhook Integration (or “Add Configuration”).', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Slack generates a webhook URL — copy it.', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Paste the URL into “Slack / Teams / Discord webhook” here (or in each manager profile) and save settings.', 'multi-location-product-and-inventory-management'); ?></li>
-                        <li><?php echo esc_html__('Enable the events you want (orders, stock alerts, digest, site monitor), then save.', 'multi-location-product-and-inventory-management'); ?></li>
-                    </ol>
-                    <p class="description" style="margin-top:8px;">
-                        <a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener"><?php echo esc_html__('Slack Docs: Incoming Webhooks', 'multi-location-product-and-inventory-management'); ?></a>
-                    </p>
-                </div>
-            </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lwp-settings-section">
-                <div class="lwp-settings-box">
-                    <div class="lwp-filter-settings">
-                        <h3 style="margin-top:0;display:flex;align-items:center;gap:10px;">
-                            <?php echo esc_html__('Social Channels (multiple)', 'multi-location-product-and-inventory-management'); ?>
-                            <button type="button" class="button button-secondary" id="mulopimfwc-add-social-channel"><?php echo esc_html__('Add Social Media', 'multi-location-product-and-inventory-management'); ?></button>
-                        </h3>
-                        <p class="description" style="margin-top:-4px;"><?php echo esc_html__('Add one or more destinations. Use webhooks for Slack/Teams/Discord/Facebook/WhatsApp/IMO, or Telegram chat IDs.', 'multi-location-product-and-inventory-management'); ?></p>
-                        <div id="mulopimfwc-social-channels">
-                            <?php
-                            $channels = isset($social['channels']) && is_array($social['channels']) ? $social['channels'] : [];
-                            if (empty($channels)) {
-                                $channels[] = ['type' => '', 'label' => '', 'webhook' => '', 'chat_id' => '', 'bot_token' => ''];
-                            }
-                            foreach ($channels as $index => $channel) :
-                                $type = isset($channel['type']) ? $channel['type'] : '';
-                                $label = isset($channel['label']) ? $channel['label'] : '';
-                                $webhook = isset($channel['webhook']) ? $channel['webhook'] : '';
-                                $chat_id = isset($channel['chat_id']) ? $channel['chat_id'] : '';
-                                $bot_token = isset($channel['bot_token']) ? $channel['bot_token'] : '';
-                            ?>
-                                <div class="mulopimfwc-social-channel-row" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px;background:#fff;">
-                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
-                                        <div>
-                                            <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <select name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
-                                                <?php
-                                                $types = [
-                                                    '' => __('Select...', 'multi-location-product-and-inventory-management'),
-                                                    'slack' => __('Slack', 'multi-location-product-and-inventory-management'),
-                                                    'teams' => __('Microsoft Teams', 'multi-location-product-and-inventory-management'),
-                                                    'discord' => __('Discord', 'multi-location-product-and-inventory-management'),
-                                                    'telegram' => __('Telegram', 'multi-location-product-and-inventory-management'),
-                                                    'whatsapp' => __('WhatsApp', 'multi-location-product-and-inventory-management'),
-                                                    'facebook_messenger' => __('Facebook Messenger', 'multi-location-product-and-inventory-management'),
-                                                    'imo' => __('IMO', 'multi-location-product-and-inventory-management'),
-                                                    'custom' => __('Custom Webhook', 'multi-location-product-and-inventory-management'),
-                                                ];
-                                                foreach ($types as $value => $label_option) {
-                                                    printf('<option value="%s" %s>%s</option>', esc_attr($value), selected($type, $value, false), esc_html($label_option));
-                                                }
-                                                ?>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label style="font-weight:600;"><?php echo esc_html__('Label (optional)', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][label]" value="<?php echo esc_attr($label); ?>" placeholder="<?php echo esc_attr__('e.g., Admin alerts', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                        </div>
-                                        <div>
-                                            <label style="font-weight:600;"><?php echo esc_html__('Webhook URL', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="url" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][webhook]" value="<?php echo esc_attr($webhook); ?>" placeholder="<?php echo esc_attr__('https://hooks.slack.com/...', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                        </div>
-                                        <div>
-                                            <label style="font-weight:600;"><?php echo esc_html__('Telegram Chat ID', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][chat_id]" value="<?php echo esc_attr($chat_id); ?>" placeholder="<?php echo esc_attr__('@username or 123456789', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                        </div>
-                                        <div>
-                                            <label style="font-weight:600;"><?php echo esc_html__('Bot Token (Telegram override)', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][bot_token]" value="<?php echo esc_attr($bot_token); ?>" placeholder="<?php echo esc_attr__('Optional: token for this channel', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                        </div>
-                                        <div style="align-self:end; text-align:right;">
-                                            <button type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <script type="text/template" id="mulopimfwc-social-channel-template">
-                            <div class="mulopimfwc-social-channel-row" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px;background:#fff;">
-                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
-                                    <div>
-                                        <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management'); ?></label>
-                                        <select name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][type]" class="mulopimfwc-channel-type" style="width:100%;">
-                                            <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="slack"><?php echo esc_html__('Slack', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="teams"><?php echo esc_html__('Microsoft Teams', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="discord"><?php echo esc_html__('Discord', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="telegram"><?php echo esc_html__('Telegram', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="whatsapp"><?php echo esc_html__('WhatsApp', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="facebook_messenger"><?php echo esc_html__('Facebook Messenger', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="imo"><?php echo esc_html__('IMO', 'multi-location-product-and-inventory-management'); ?></option>
-                                            <option value="custom"><?php echo esc_html__('Custom Webhook', 'multi-location-product-and-inventory-management'); ?></option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="font-weight:600;"><?php echo esc_html__('Label (optional)', 'multi-location-product-and-inventory-management'); ?></label>
-                                        <input type="text" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][label]" value="" placeholder="<?php echo esc_attr__('e.g., Admin alerts', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                    </div>
-                                    <div>
-                                        <label style="font-weight:600;"><?php echo esc_html__('Webhook URL', 'multi-location-product-and-inventory-management'); ?></label>
-                                        <input type="url" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][webhook]" value="" placeholder="<?php echo esc_attr__('https://hooks.slack.com/...', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                    </div>
-                                    <div>
-                                        <label style="font-weight:600;"><?php echo esc_html__('Telegram Chat ID', 'multi-location-product-and-inventory-management'); ?></label>
-                                        <input type="text" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][chat_id]" value="" placeholder="<?php echo esc_attr__('@username or 123456789', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                    </div>
-                                    <div>
-                                        <label style="font-weight:600;"><?php echo esc_html__('Bot Token (Telegram override)', 'multi-location-product-and-inventory-management'); ?></label>
-                                        <input type="text" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][bot_token]" value="" placeholder="<?php echo esc_attr__('Optional: token for this channel', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
-                                    </div>
-                                    <div style="align-self:end; text-align:right;">
-                                        <button type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </script>
-                        <script>
-                            jQuery(function($) {
-                                const container = $('#mulopimfwc-social-channels');
-                                const tmpl = $('#mulopimfwc-social-channel-template').html();
-                                $('#mulopimfwc-add-social-channel').on('click', function(e) {
-                                    e.preventDefault();
-                                    const index = container.children('.mulopimfwc-social-channel-row').length;
-                                    container.append(tmpl.replace(/__INDEX__/g, index));
-                                });
-                                container.on('click', '.remove-social-channel', function(e) {
-                                    e.preventDefault();
-                                    $(this).closest('.mulopimfwc-social-channel-row').remove();
-                                });
-                            });
-                        </script>
-                    </div>
-                </div>
-            </div>
-        <?php
-            },
-            'location-advance-settings',
-            'mulopimfwc_advanced_settings_section'
-        );
+                // );
 
         // Add "Contribute to Plugincy" field
         add_settings_field(
@@ -2169,6 +1939,366 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             },
             'lwp-import-export-settings',
             'mulopimfwc_import_export_section'
+        );
+
+        // Social Notifications (dedicated section after Import/Export)
+        add_settings_section(
+            'mulopimfwc_social_notifications_section',
+            __('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#0284c7" style="margin-right:6px;vertical-align:middle;background-color:#def4ff;padding:10px;border-radius:6px" viewBox="0 0 20 20" xml:space="preserve"><path d="M14 11.4c-.96 0-1.78.68-1.96 1.6H9.4c-.12 0-.2.1-.2.22v.18c0 .2-.02.38-.06.56-.02.12.08.24.2.24h2.82c.3.7 1.02 1.2 1.84 1.2 1.1 0 2-.9 2-2s-.9-2-2-2M8.66 9.1C8.42 9 8.2 8.86 8 8.7c-.1-.08-.24-.04-.3.06l-1.42 2.66c-.08-.02-.18-.02-.28-.02-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2c0-.58-.24-1.08-.62-1.46l1.38-2.56c.04-.1 0-.22-.1-.28M10 8.2c.2 0 .38-.02.56-.08l1.38 2.54c.06.1.18.14.28.08.22-.14.44-.26.68-.34a.19.19 0 0 0 .1-.28l-1.44-2.68c.26-.34.44-.78.44-1.24 0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2"/></svg>Social Notifications', 'multi-location-product-and-inventory-management'),
+            function () {
+                echo '<p>' . esc_html__('Manage social/webhook alerts per platform. Add multiple destinations and test instantly.', 'multi-location-product-and-inventory-management') . '</p>';
+            },
+            'lwp-social-notifications-settings'
+        );
+
+        add_settings_section(
+            'social_notifications',
+            "",
+            function () {
+                $options = get_option('mulopimfwc_display_options', []);
+                $defaults = [
+                    'enabled' => 'off',
+                    'new_order' => 'on',
+                    'low_stock' => 'on',
+                    'out_of_stock' => 'on',
+                    'daily_digest' => 'off',
+                    'site_status' => 'off',
+                    'daily_digest_time' => '07:00',
+                    'telegram_bot_token' => '',
+                    'channels' => [],
+                ];
+                $social = isset($options['social_notifications']) && is_array($options['social_notifications'])
+                    ? wp_parse_args($options['social_notifications'], $defaults)
+                    : $defaults;
+                $test_nonce = wp_create_nonce('mulopimfwc_test_social_channel');
+        ?>
+            <div class="mulopimfwc-social-card" style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:10px;max-width:1100px;">
+                <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+                    <div>
+                        <h3 style="margin:0;"><?php echo esc_html__('Social Notifications', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <p class="description" style="margin:4px 0 0 0;"><?php echo esc_html__('Enable alerts and choose which events to send to your social/webhook destinations.', 'multi-location-product-and-inventory-management'); ?></p>
+                    </div>
+                    <label class="mulopimfwc_switch social-master-toggle">
+                        <input type="checkbox" name="mulopimfwc_display_options[social_notifications][enabled]" <?php checked($social['enabled'], 'on'); ?>>
+                        <span class="mulopimfwc_slider round"></span>
+                        <span class="mulopimfwc_switch-on">On</span>
+                        <span class="mulopimfwc_switch-off">Off</span>
+                    </label>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px;">
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][new_order]" <?php checked($social['new_order'], 'on'); ?>> <?php echo esc_html__('New order alerts', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][low_stock]" <?php checked($social['low_stock'], 'on'); ?>> <?php echo esc_html__('Low stock alerts', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][out_of_stock]" <?php checked($social['out_of_stock'], 'on'); ?>> <?php echo esc_html__('Out of stock alerts', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][daily_digest]" <?php checked($social['daily_digest'], 'on'); ?>> <?php echo esc_html__("Today's performance digest", 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][site_status]" <?php checked($social['site_status'], 'on'); ?>> <?php echo esc_html__('Site down / up monitor', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][payment_failed]" <?php checked(isset($social['payment_failed']) ? $social['payment_failed'] : 'off', 'on'); ?>> <?php echo esc_html__('Payment failed', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][order_refunded]" <?php checked(isset($social['order_refunded']) ? $social['order_refunded'] : 'off', 'on'); ?>> <?php echo esc_html__('Order refunded', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][order_cancelled]" <?php checked(isset($social['order_cancelled']) ? $social['order_cancelled'] : 'off', 'on'); ?>> <?php echo esc_html__('Order cancelled', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][order_completed]" <?php checked(isset($social['order_completed']) ? $social['order_completed'] : 'off', 'on'); ?>> <?php echo esc_html__('Order completed', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][high_value_order]" <?php checked(isset($social['high_value_order']) ? $social['high_value_order'] : 'off', 'on'); ?>> <?php echo esc_html__('High-value order', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][restocked]" <?php checked(isset($social['restocked']) ? $social['restocked'] : 'off', 'on'); ?>> <?php echo esc_html__('Restocked (back above low threshold)', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][low_review_alert]" <?php checked(isset($social['low_review_alert']) ? $social['low_review_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Low-rating product review', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][manager_change_alert]" <?php checked(isset($social['manager_change_alert']) ? $social['manager_change_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Manager change (added/updated)', 'multi-location-product-and-inventory-management'); ?></label>
+                </div>
+                <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                    <label style="font-weight:600;"><?php echo esc_html__('Digest time', 'multi-location-product-and-inventory-management'); ?></label>
+                    <input type="time" name="mulopimfwc_display_options[social_notifications][daily_digest_time]" value="<?php echo esc_attr($social['daily_digest_time']); ?>" />
+                    <label style="font-weight:600;"><?php echo esc_html__('Default Telegram bot token', 'multi-location-product-and-inventory-management'); ?></label>
+                    <input type="text" name="mulopimfwc_display_options[social_notifications][telegram_bot_token]" value="<?php echo esc_attr($social['telegram_bot_token']); ?>" placeholder="<?php echo esc_attr__('123456:ABCDEF-TOKEN (optional global fallback)', 'multi-location-product-and-inventory-management'); ?>" style="min-width:260px;">
+                    <label style="font-weight:600;"><?php echo esc_html__('High value threshold', 'multi-location-product-and-inventory-management'); ?></label>
+                    <input type="number" step="0.01" min="0" name="mulopimfwc_display_options[social_notifications][high_value_threshold]" value="<?php echo esc_attr(isset($social['high_value_threshold']) ? $social['high_value_threshold'] : '500'); ?>" style="width:120px;">
+                    <label style="font-weight:600;"><?php echo esc_html__('Low review rating threshold', 'multi-location-product-and-inventory-management'); ?></label>
+                    <input type="number" step="0.1" min="1" max="5" name="mulopimfwc_display_options[social_notifications][low_review_threshold]" value="<?php echo esc_attr(isset($social['low_review_threshold']) ? $social['low_review_threshold'] : '3'); ?>" style="width:80px;">
+                </div>
+            </div>
+
+            <div class="lwp-settings-section" style="margin-top:16px;">
+                <div class="lwp-settings-box">
+                    <div class="lwp-filter-settings">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                            <div>
+                                <h4 style="margin:0;"><?php echo esc_html__('Social Channels', 'multi-location-product-and-inventory-management'); ?></h4>
+                        <p class="description" style="margin:4px 0 0 0;"><?php echo esc_html__('Add one or more destinations. Use webhook URL for Slack/Teams/Discord/Custom; use chat ID/token for Telegram.', 'multi-location-product-and-inventory-management'); ?></p>
+                            </div>
+                            <button type="button" class="button button-primary" id="mulopimfwc-add-social-channel"><?php echo esc_html__('Add Social Media', 'multi-location-product-and-inventory-management'); ?></button>
+                        </div>
+                        <div id="mulopimfwc-social-empty" class="description" style="margin-top:10px;<?php echo empty($social['channels']) ? '' : 'display:none;'; ?>">
+                            <?php echo esc_html__('No social media added yet. Click “Add Social Media” to create one.', 'multi-location-product-and-inventory-management'); ?>
+                        </div>
+                        <div id="mulopimfwc-social-channels" style="margin-top:10px;">
+                            <?php
+                            $channels = isset($social['channels']) && is_array($social['channels']) ? $social['channels'] : [];
+                            foreach ($channels as $index => $channel) :
+                                $type = isset($channel['type']) ? $channel['type'] : '';
+                                $label = isset($channel['label']) ? $channel['label'] : '';
+                                $webhook = isset($channel['webhook']) ? $channel['webhook'] : '';
+                                $chat_id = isset($channel['chat_id']) ? $channel['chat_id'] : '';
+                                $bot_token = isset($channel['bot_token']) ? $channel['bot_token'] : '';
+                            ?>
+                                <div class="mulopimfwc-social-channel-row" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px;background:#fff;">
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
+                                        <div>
+                                            <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management'); ?></label>
+                                            <select name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
+                                                <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management'); ?></option>
+                                                <option value="slack" <?php selected($type, 'slack'); ?>>Slack</option>
+                                                <option value="teams" <?php selected($type, 'teams'); ?>>Microsoft Teams</option>
+                                                <option value="discord" <?php selected($type, 'discord'); ?>>Discord</option>
+                                                <option value="telegram" <?php selected($type, 'telegram'); ?>>Telegram</option>
+                                                <option value="custom" <?php selected($type, 'custom'); ?>>Custom Webhook</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="font-weight:600;"><?php echo esc_html__('Label (optional)', 'multi-location-product-and-inventory-management'); ?></label>
+                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][label]" value="<?php echo esc_attr($label); ?>" placeholder="<?php echo esc_attr__('e.g., Admin alerts', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                        </div>
+                                        <div class="mulopimfwc-field-webhook">
+                                            <label style="font-weight:600;"><?php echo esc_html__('Webhook URL', 'multi-location-product-and-inventory-management'); ?></label>
+                                            <input type="url" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][webhook]" value="<?php echo esc_attr($webhook); ?>" placeholder="<?php echo esc_attr__('https://hooks.slack.com/...', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                        </div>
+                                        <div class="mulopimfwc-field-telegram">
+                                            <label style="font-weight:600;"><?php echo esc_html__('Telegram Chat ID', 'multi-location-product-and-inventory-management'); ?></label>
+                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][chat_id]" value="<?php echo esc_attr($chat_id); ?>" placeholder="<?php echo esc_attr__('@username or 123456789', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                        </div>
+                                        <div class="mulopimfwc-field-telegram">
+                                            <label style="font-weight:600;"><?php echo esc_html__('Bot Token (Telegram override)', 'multi-location-product-and-inventory-management'); ?></label>
+                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][bot_token]" value="<?php echo esc_attr($bot_token); ?>" placeholder="<?php echo esc_attr__('Optional: token for this channel', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                        </div>
+                                        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+                                            <button type="button" class="button test-social-channel" data-nonce="<?php echo esc_attr($test_nonce); ?>"><?php echo esc_html__('Test', 'multi-location-product-and-inventory-management'); ?></button>
+                                            <button type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <script type="text/template" id="mulopimfwc-social-channel-template">
+                            <div class="mulopimfwc-social-channel-row" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px;background:#fff;">
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
+                                    <div>
+                                        <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management'); ?></label>
+                                        <select name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][type]" class="mulopimfwc-channel-type" style="width:100%;">
+                                            <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management'); ?></option>
+                                            <option value="slack">Slack</option>
+                                            <option value="teams">Microsoft Teams</option>
+                                            <option value="discord">Discord</option>
+                                            <option value="telegram">Telegram</option>
+                                            <option value="custom">Custom Webhook</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight:600;"><?php echo esc_html__('Label (optional)', 'multi-location-product-and-inventory-management'); ?></label>
+                                        <input type="text" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][label]" value="" placeholder="<?php echo esc_attr__('e.g., Admin alerts', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                    </div>
+                                    <div class="mulopimfwc-field-webhook">
+                                        <label style="font-weight:600;"><?php echo esc_html__('Webhook URL', 'multi-location-product-and-inventory-management'); ?></label>
+                                        <input type="url" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][webhook]" value="" placeholder="<?php echo esc_attr__('https://hooks.slack.com/...', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                    </div>
+                                    <div class="mulopimfwc-field-telegram">
+                                        <label style="font-weight:600;"><?php echo esc_html__('Telegram Chat ID', 'multi-location-product-and-inventory-management'); ?></label>
+                                        <input type="text" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][chat_id]" value="" placeholder="<?php echo esc_attr__('@username or 123456789', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                    </div>
+                                    <div class="mulopimfwc-field-telegram">
+                                        <label style="font-weight:600;"><?php echo esc_html__('Bot Token (Telegram override)', 'multi-location-product-and-inventory-management'); ?></label>
+                                        <input type="text" name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][bot_token]" value="" placeholder="<?php echo esc_attr__('Optional: token for this channel', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                    </div>
+                                    <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+                                        <button type="button" class="button test-social-channel" data-nonce="<?php echo esc_attr($test_nonce); ?>"><?php echo esc_html__('Test', 'multi-location-product-and-inventory-management'); ?></button>
+                                        <button type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </script>
+                        <script>
+                            jQuery(function($) {
+                                const container = $('#mulopimfwc-social-channels');
+                                const tmpl = $('#mulopimfwc-social-channel-template').html();
+                                const emptyRow = $('#mulopimfwc-social-empty');
+                                const ajaxAction = 'mulopimfwc_test_social_channel';
+
+                                function toggleChannelFields(row) {
+                                    const type = row.find('.mulopimfwc-channel-type').val();
+                                    const isTelegram = type === 'telegram';
+                                    row.find('.mulopimfwc-field-webhook')[isTelegram ? 'hide' : 'show']();
+                                    row.find('.mulopimfwc-field-telegram')[isTelegram ? 'show' : 'hide']();
+                                }
+
+                                function refreshEmptyState() {
+                                    if (container.children('.mulopimfwc-social-channel-row').length === 0) {
+                                        emptyRow.show();
+                                    } else {
+                                        emptyRow.hide();
+                                    }
+                                }
+
+                                $('#mulopimfwc-add-social-channel').on('click', function(e) {
+                                    e.preventDefault();
+                                    const index = container.children('.mulopimfwc-social-channel-row').length;
+                                    container.append(tmpl.replace(/__INDEX__/g, index));
+                                    const row = container.children('.mulopimfwc-social-channel-row').last();
+                                    toggleChannelFields(row);
+                                    refreshEmptyState();
+                                });
+
+                                container.on('click', '.remove-social-channel', function(e) {
+                                    e.preventDefault();
+                                    $(this).closest('.mulopimfwc-social-channel-row').remove();
+                                    refreshEmptyState();
+                                });
+
+                                container.on('change', '.mulopimfwc-channel-type', function() {
+                                    const row = $(this).closest('.mulopimfwc-social-channel-row');
+                                    toggleChannelFields(row);
+                                });
+
+                                container.on('click', '.test-social-channel', function(e) {
+                                    e.preventDefault();
+                                    const row = $(this).closest('.mulopimfwc-social-channel-row');
+                                    const data = {
+                                        action: ajaxAction,
+                                        nonce: $(this).data('nonce'),
+                                        type: row.find('.mulopimfwc-channel-type').val(),
+                                        label: row.find('input[name*=\"[label]\"]').val(),
+                                        webhook: row.find('input[name*=\"[webhook]\"]').val(),
+                                        chat_id: row.find('input[name*=\"[chat_id]\"]').val(),
+                                        bot_token: row.find('input[name*=\"[bot_token]\"]').val()
+                                    };
+                                    const btn = $(this);
+                                    btn.prop('disabled', true).text('<?php echo esc_js(__('Testing...', 'multi-location-product-and-inventory-management')); ?>');
+                                    $.post(ajaxurl, data, function(res) {
+                                        const ok = res && res.success;
+                                        alert(ok ? '<?php echo esc_js(__('Test sent! Check your channel.', 'multi-location-product-and-inventory-management')); ?>' : (res?.data?.message || '<?php echo esc_js(__('Test failed. Check the details and try again.', 'multi-location-product-and-inventory-management')); ?>'));
+                                    }).fail(function() {
+                                        alert('<?php echo esc_js(__('Test failed. Check the details and try again.', 'multi-location-product-and-inventory-management')); ?>');
+                                    }).always(function() {
+                                        btn.prop('disabled', false).text('<?php echo esc_js(__('Test', 'multi-location-product-and-inventory-management')); ?>');
+                                    });
+                                });
+
+                                // Initial toggle for existing rows
+                                container.find('.mulopimfwc-social-channel-row').each(function() {
+                                    toggleChannelFields($(this));
+                                });
+
+                                refreshEmptyState();
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lwp-settings-section" style="margin-top:12px;">
+                <div class="lwp-settings-box">
+                    <div class="lwp-filter-settings">
+                        <?php
+                        $guides = [
+                            'teams' => [
+                                'title' => __('How to connect Microsoft Teams', 'multi-location-product-and-inventory-management'),
+                                'steps' => [
+                                    __('In Teams, open the channel → More options (...) → Connectors/Apps → search “Incoming Webhook”.', 'multi-location-product-and-inventory-management'),
+                                    __('Click Add/Create, name it (e.g., “Store Alerts”), optionally upload an icon, then click Create.', 'multi-location-product-and-inventory-management'),
+                                    __('Copy the webhook URL, paste it into the Webhook URL field above, and save settings.', 'multi-location-product-and-inventory-management'),
+                                    __('Enable the events you want (orders, stock alerts, digest, site monitor), then click Test.', 'multi-location-product-and-inventory-management'),
+                                ],
+                                'links' => [
+                                    ['https://www.youtube.com/embed/VIDEO_ID_TEAMS', __('Watch: Teams setup', 'multi-location-product-and-inventory-management')],
+                                    ['https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook', __('Microsoft Docs: Incoming Webhook', 'multi-location-product-and-inventory-management')],
+                                ],
+                            ],
+                            'slack' => [
+                                'title' => __('How to connect Slack', 'multi-location-product-and-inventory-management'),
+                                'steps' => [
+                                    __('In Slack, go to Settings & administration → Manage apps → search “Incoming WebHooks” and click Add.', 'multi-location-product-and-inventory-management'),
+                                    __('Choose the channel for alerts and click Add Incoming Webhook Integration (or Add Configuration).', 'multi-location-product-and-inventory-management'),
+                                    __('Copy the webhook URL, paste it into the Webhook URL field above, and save.', 'multi-location-product-and-inventory-management'),
+                                    __('Enable desired events and click Test.', 'multi-location-product-and-inventory-management'),
+                                ],
+                                'links' => [
+                                    ['https://api.slack.com/messaging/webhooks', __('Slack Docs: Incoming Webhooks', 'multi-location-product-and-inventory-management')],
+                                ],
+                            ],
+                            'discord' => [
+                                'title' => __('How to connect Discord', 'multi-location-product-and-inventory-management'),
+                                'steps' => [
+                                    __('In Discord, Server Settings → Integrations → Webhooks → New Webhook.', 'multi-location-product-and-inventory-management'),
+                                    __('Select the target channel and copy the webhook URL.', 'multi-location-product-and-inventory-management'),
+                                    __('Paste the URL into the Webhook field above and save settings.', 'multi-location-product-and-inventory-management'),
+                                    __('Enable events and click Test.', 'multi-location-product-and-inventory-management'),
+                                ],
+                                'links' => [],
+                            ],
+                            'telegram' => [
+                                'title' => __('How to connect Telegram', 'multi-location-product-and-inventory-management'),
+                                'steps' => [
+                                    __('Create a bot via @BotFather and copy the bot token.', 'multi-location-product-and-inventory-management'),
+                                    __('Start a chat with @userinfobot (or add the bot to a group) to get chat ID.', 'multi-location-product-and-inventory-management'),
+                                    __('Enter chat ID and bot token above (or use the global token), then save.', 'multi-location-product-and-inventory-management'),
+                                    __('Enable events and click Test.', 'multi-location-product-and-inventory-management'),
+                                ],
+                                'links' => [],
+                            ],
+                            'custom' => [
+                                'title' => __('How to connect a Custom Webhook', 'multi-location-product-and-inventory-management'),
+                                'steps' => [
+                                    __('Use any HTTPS endpoint that accepts a JSON POST payload with a “text” field.', 'multi-location-product-and-inventory-management'),
+                                    __('Paste the endpoint URL above and save.', 'multi-location-product-and-inventory-management'),
+                                    __('Enable events and click Test.', 'multi-location-product-and-inventory-management'),
+                                ],
+                                'links' => [],
+                            ],
+                        ];
+
+                        foreach ($guides as $platform => $guide) :
+                        ?>
+                            <details class="mulopimfwc-accordion mulopimfwc-guide" data-platform="<?php echo esc_attr($platform); ?>" style="margin-top:10px;">
+                                <summary style="font-weight:700;"><?php echo esc_html($guide['title']); ?></summary>
+                                <ol style="margin-left:18px; color:#334155;">
+                                    <?php foreach ($guide['steps'] as $step) : ?>
+                                        <li><?php echo esc_html($step); ?></li>
+                                    <?php endforeach; ?>
+                                </ol>
+                                <?php if (!empty($guide['links'])) : ?>
+                                    <p class="description">
+                                        <?php
+                                        $links_html = [];
+                                        foreach ($guide['links'] as $link) {
+                                            $links_html[] = '<a href="' . esc_url($link[0]) . '" target="_blank" rel="noopener">' . esc_html($link[1]) . '</a>';
+                                        }
+                                        echo wp_kses_post(implode(' &nbsp;|&nbsp; ', $links_html));
+                                        ?>
+                                    </p>
+                                <?php endif; ?>
+                            </details>
+                        <?php endforeach; ?>
+                        <script>
+                            jQuery(function($) {
+                                function openGuideFor(type) {
+                                    $('.mulopimfwc-guide').each(function() {
+                                        const isMatch = $(this).data('platform') === type;
+                                        $(this).attr('open', isMatch ? 'open' : null);
+                                    });
+                                }
+                                $('#mulopimfwc-social-channels').on('change', '.mulopimfwc-channel-type', function() {
+                                    const type = $(this).val();
+                                    if (type) {
+                                        openGuideFor(type);
+                                    }
+                                });
+                                // Open guide for first existing selection
+                                const firstType = $('#mulopimfwc-social-channels .mulopimfwc-channel-type').first().val();
+                                if (firstType) {
+                                    openGuideFor(firstType);
+                                }
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+        <?php
+            },
+            'lwp-social-notifications-settings',
+            'mulopimfwc_social_notifications_section'
         );
 
         // Add "Export Products with Location Data" field
@@ -2980,7 +3110,22 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         if (isset($input['social_notifications']) && is_array($input['social_notifications'])) {
             $social_input = $input['social_notifications'];
             $social = [];
-            $checkbox_keys = ['enabled', 'new_order', 'low_stock', 'out_of_stock', 'daily_digest', 'site_status'];
+            $checkbox_keys = [
+                'enabled',
+                'new_order',
+                'low_stock',
+                'out_of_stock',
+                'daily_digest',
+                'site_status',
+                'payment_failed',
+                'order_refunded',
+                'order_cancelled',
+                'order_completed',
+                'restocked',
+                'low_review_alert',
+                'manager_change_alert',
+                'high_value_order',
+            ];
             foreach ($checkbox_keys as $key) {
                 if (isset($social_input[$key]) && $social_input[$key] === 'on') {
                     $social[$key] = 'on';
@@ -3000,6 +3145,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             }
             if (!empty($social_input['daily_digest_time'])) {
                 $social['daily_digest_time'] = sanitize_text_field($social_input['daily_digest_time']);
+            }
+
+            if (isset($social_input['high_value_threshold'])) {
+                $social['high_value_threshold'] = sanitize_text_field($social_input['high_value_threshold']);
+            }
+            if (isset($social_input['low_review_threshold'])) {
+                $social['low_review_threshold'] = sanitize_text_field($social_input['low_review_threshold']);
             }
 
             if (isset($social_input['channels']) && is_array($social_input['channels'])) {
@@ -3688,6 +3840,11 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 <div class="lwp-settings-section">
                                     <div class="lwp-settings-box">
                                         <?php do_settings_sections('lwp-import-export-settings'); ?>
+                                    </div>
+                                </div>
+                                <div class="lwp-settings-section">
+                                    <div class="lwp-settings-box">
+                                        <?php do_settings_sections('lwp-social-notifications-settings'); ?>
                                     </div>
                                 </div>
                                 <div class="lwp-settings-section">

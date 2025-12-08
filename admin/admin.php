@@ -265,6 +265,18 @@ class MULOPIMFWC_Admin
             <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
+        <div class="form-field">
+            <label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="number" name="low_stock_threshold" id="low_stock_threshold" value="" min="0" step="1" />
+            <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label>
+            <input type="number" name="out_of_stock_threshold" id="out_of_stock_threshold" value="" min="0" step="1" />
+            <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
         <!-- Latitude / Longitude -->
         <div class="form-field">
             <label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management'); ?></label>
@@ -454,6 +466,8 @@ class MULOPIMFWC_Admin
         $email = get_term_meta($term->term_id, 'email', true);
         $phone = get_term_meta($term->term_id, 'phone', true);
         $display_order = get_term_meta($term->term_id, 'display_order', true);
+        $low_stock_threshold = get_term_meta($term->term_id, 'low_stock_threshold', true);
+        $out_of_stock_threshold = get_term_meta($term->term_id, 'out_of_stock_threshold', true);
 
         $latitude      = get_term_meta($term->term_id, 'latitude', true);
         $longitude     = get_term_meta($term->term_id, 'longitude', true);
@@ -532,6 +546,22 @@ class MULOPIMFWC_Admin
             <td>
                 <input type="tel" name="phone" id="phone" value="<?php echo esc_attr($phone); ?>" />
                 <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="number" name="low_stock_threshold" id="low_stock_threshold" value="<?php echo esc_attr($low_stock_threshold); ?>" min="0" step="1" />
+                <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <input type="number" name="out_of_stock_threshold" id="out_of_stock_threshold" value="<?php echo esc_attr($out_of_stock_threshold); ?>" min="0" step="1" />
+                <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
@@ -759,6 +789,14 @@ class MULOPIMFWC_Admin
 
         if (isset($_POST['phone'])) {
             update_term_meta($term_id, 'phone', sanitize_text_field($_POST['phone']));
+        }
+
+        if (isset($_POST['low_stock_threshold'])) {
+            update_term_meta($term_id, 'low_stock_threshold', max(0, (int) $_POST['low_stock_threshold']));
+        }
+
+        if (isset($_POST['out_of_stock_threshold'])) {
+            update_term_meta($term_id, 'out_of_stock_threshold', max(0, (int) $_POST['out_of_stock_threshold']));
         }
 
         // Latitude / Longitude
@@ -1355,3 +1393,5 @@ class MULOPIMFWC_Admin
         return $out;
     }
 }
+
+

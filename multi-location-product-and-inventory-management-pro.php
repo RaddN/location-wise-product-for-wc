@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.6.5
+ * Version: 1.0.6.10
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -23,7 +23,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.0.6.5");
+    define("mulopimfwc_VERSION", "1.0.6.10");
 }
 
 // Check if the free version is installed and deactivate it if active
@@ -1234,6 +1234,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Use these specific hooks for HPOS orders table
             add_action('woocommerce_order_list_table_restrict_manage_orders', array($this, 'add_store_location_filter'));
             add_filter('woocommerce_order_query_args', array($this, 'filter_orders_by_location'));
+            add_action('woocommerce_order_status_failed', 'mulopimfwc_social_order_failed', 20, 1);
+            add_action('woocommerce_order_status_refunded', 'mulopimfwc_social_order_refunded', 20, 1);
+            add_action('woocommerce_order_status_cancelled', 'mulopimfwc_social_order_cancelled', 20, 1);
+            add_action('woocommerce_order_status_completed', 'mulopimfwc_social_order_completed', 20, 1);
 
             require_once plugin_dir_path(__FILE__) . 'includes/stock-price-backorder-manage.php';
 
@@ -2981,6 +2985,35 @@ if (!function_exists('mulopimfwc_get_values')) {
                             elseif ($new_stock <= $low_threshold && ($old_stock_int === null || $old_stock_int > $low_threshold)) {
                                 mulopimfwc_send_location_stock_alert($product_id, $location_term, $new_stock, $low_threshold, 'low');
                             }
+
+                            // Restocked (back above low threshold)
+                            $settings = mulopimfwc_get_social_settings();
+                            if (
+                                isset($settings['enabled'], $settings['restocked']) &&
+                                $settings['enabled'] === 'on' &&
+                                $settings['restocked'] === 'on' &&
+                                $low_threshold > 0 &&
+                                $old_stock_int !== null &&
+                                $old_stock_int <= $low_threshold &&
+                                $new_stock > $low_threshold
+                            ) {
+                                $channels = mulopimfwc_collect_social_channels($location_term->slug, $settings);
+                                if (!empty($channels)) {
+                                    mulopimfwc_send_social_message(
+                                        __('Restocked', 'multi-location-product-and-inventory-management'),
+                                        sprintf(
+                                            __('%s @ %s is back above low threshold. Stock: %d (threshold %d)', 'multi-location-product-and-inventory-management'),
+                                            $product->get_name(),
+                                            $location_term->name,
+                                            (int) $new_stock,
+                                            (int) $low_threshold
+                                        ),
+                                        $channels,
+                                        $settings,
+                                        admin_url('post.php?post=' . $product_id . '&action=edit')
+                                    );
+                                }
+                            }
                         }
                     }
                     if (isset($location_data['regular_price'])) {
@@ -3145,7 +3178,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.0.6.5',
+                '1.0.6.10',
                 true
             );
 
@@ -3165,7 +3198,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.0.6.5'
+                '1.0.6.10'
             );
         }
 
@@ -3284,9 +3317,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? (int)$mulopimfwc_options["location_cookie_expiry"]
                 : 30;
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6.5');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6.10');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6.5', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6.10', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
             // Check if cart grouping is enabled
@@ -3312,7 +3345,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.0.6.5',
+                    '1.0.6.10',
                     true
                 );
 
@@ -3887,7 +3920,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.6.5");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.6.10");
         }
     }
 
@@ -4097,6 +4130,16 @@ if (!function_exists('mulopimfwc_get_values')) {
             'admin_telegram_chat_id' => '',
             'telegram_bot_token' => '',
             'channels' => [],
+            'payment_failed' => 'off',
+            'order_refunded' => 'off',
+            'order_cancelled' => 'off',
+            'order_completed' => 'off',
+            'high_value_order' => 'off',
+            'high_value_threshold' => '500',
+            'restocked' => 'off',
+            'low_review_alert' => 'off',
+            'low_review_threshold' => '3',
+            'manager_change_alert' => 'off',
         ];
 
         if (isset($options['social_notifications']) && is_array($options['social_notifications'])) {
@@ -4156,7 +4199,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $webhook = isset($chan['webhook']) ? esc_url_raw($chan['webhook']) : '';
                 $chat_id = isset($chan['chat_id']) ? sanitize_text_field($chan['chat_id']) : '';
                 $bot_token = isset($chan['bot_token']) ? sanitize_text_field($chan['bot_token']) : '';
-                if (in_array($type, ['slack', 'teams', 'discord', 'whatsapp', 'facebook_messenger', 'imo', 'custom'], true) && !empty($webhook)) {
+                if (in_array($type, ['slack', 'teams', 'discord', 'custom'], true) && !empty($webhook)) {
                     $add_channel([
                         'type' => 'webhook',
                         'url' => $webhook,
@@ -4409,6 +4452,25 @@ if (!function_exists('mulopimfwc_get_values')) {
         if (!empty($channels)) {
             mulopimfwc_send_social_message($title, implode("\n", $lines), $channels, $settings, $order->get_edit_order_url());
         }
+
+        // High value order alert
+        if (
+            isset($settings['high_value_order']) && $settings['high_value_order'] === 'on' &&
+            isset($settings['high_value_threshold']) && floatval($order->get_total()) >= floatval($settings['high_value_threshold'])
+        ) {
+            mulopimfwc_send_social_message(
+                __('High value order', 'multi-location-product-and-inventory-management'),
+                sprintf(
+                    __('Order #%s | Total: %s | Location: %s', 'multi-location-product-and-inventory-management'),
+                    $order->get_order_number(),
+                    $order_total,
+                    $location_name
+                ),
+                $channels,
+                $settings,
+                $order->get_edit_order_url()
+            );
+        }
     }
 
     /**
@@ -4540,6 +4602,61 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
     }
 
+    function mulopimfwc_social_order_failed($order_id)
+    {
+        mulopimfwc_social_order_status_alert($order_id, 'payment_failed', __('Payment failed', 'multi-location-product-and-inventory-management'));
+    }
+    function mulopimfwc_social_order_refunded($order_id)
+    {
+        mulopimfwc_social_order_status_alert($order_id, 'order_refunded', __('Order refunded', 'multi-location-product-and-inventory-management'));
+    }
+    function mulopimfwc_social_order_cancelled($order_id)
+    {
+        mulopimfwc_social_order_status_alert($order_id, 'order_cancelled', __('Order cancelled', 'multi-location-product-and-inventory-management'));
+    }
+    function mulopimfwc_social_order_completed($order_id)
+    {
+        mulopimfwc_social_order_status_alert($order_id, 'order_completed', __('Order completed', 'multi-location-product-and-inventory-management'));
+    }
+
+    function mulopimfwc_social_order_status_alert($order_id, $setting_key, $title)
+    {
+        $settings = mulopimfwc_get_social_settings();
+        if (
+            empty($order_id) ||
+            empty($setting_key) ||
+            !isset($settings['enabled']) ||
+            $settings['enabled'] !== 'on' ||
+            !isset($settings[$setting_key]) ||
+            $settings[$setting_key] !== 'on'
+        ) {
+            return;
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+
+        $location_slug = (string) $order->get_meta('_store_location');
+        $location_term = !empty($location_slug) ? get_term_by('slug', $location_slug, 'mulopimfwc_store_location') : null;
+        $location_name = $location_term && !is_wp_error($location_term) ? $location_term->name : __('Unassigned location', 'multi-location-product-and-inventory-management');
+        $order_total = wp_strip_all_tags($order->get_formatted_order_total());
+        $status_label = wc_get_order_status_name($order->get_status());
+
+        $lines = [
+            sprintf(__('Order #%s', 'multi-location-product-and-inventory-management'), $order->get_order_number()),
+            sprintf(__('Status: %s', 'multi-location-product-and-inventory-management'), $status_label),
+            sprintf(__('Total: %s', 'multi-location-product-and-inventory-management'), $order_total),
+            sprintf(__('Location: %s', 'multi-location-product-and-inventory-management'), $location_name),
+        ];
+
+        $channels = mulopimfwc_collect_social_channels($location_slug, $settings);
+        if (!empty($channels)) {
+            mulopimfwc_send_social_message($title, implode("\n", $lines), $channels, $settings, $order->get_edit_order_url());
+        }
+    }
+
     /**
      * Simple uptime monitor to announce down/up events.
      */
@@ -4620,6 +4737,119 @@ if (!function_exists('mulopimfwc_get_values')) {
 
     add_action('mulopimfwc_social_daily_digest', 'mulopimfwc_send_daily_social_digest');
     add_action('mulopimfwc_social_site_check', 'mulopimfwc_check_site_status_for_social');
+    add_action('wp_ajax_mulopimfwc_test_social_channel', 'mulopimfwc_test_social_channel');
+    add_action('comment_post', 'mulopimfwc_social_low_review_alert', 20, 3);
+
+    /**
+     * AJAX: Test a social channel connection.
+     */
+    function mulopimfwc_test_social_channel()
+    {
+        check_ajax_referer('mulopimfwc_test_social_channel', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $type = isset($_POST['type']) ? sanitize_text_field(wp_unslash($_POST['type'])) : '';
+        $webhook = isset($_POST['webhook']) ? esc_url_raw(wp_unslash($_POST['webhook'])) : '';
+        $chat_id = isset($_POST['chat_id']) ? sanitize_text_field(wp_unslash($_POST['chat_id'])) : '';
+        $bot_token = isset($_POST['bot_token']) ? sanitize_text_field(wp_unslash($_POST['bot_token'])) : '';
+        $settings = mulopimfwc_get_social_settings();
+
+        if (empty($type)) {
+            wp_send_json_error(['message' => __('Select a platform to test.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        if ($type === 'telegram' && empty($chat_id) && empty($webhook)) {
+            wp_send_json_error(['message' => __('Telegram requires a chat ID (and bot token).', 'multi-location-product-and-inventory-management')]);
+        }
+
+        if ($type !== 'telegram' && empty($webhook)) {
+            wp_send_json_error(['message' => __('Webhook URL is required for this platform.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $channel = [];
+        if ($type === 'telegram') {
+            $channel = [
+                'type' => 'telegram',
+                'chat_id' => $chat_id,
+                'bot_token' => !empty($bot_token) ? $bot_token : (isset($settings['telegram_bot_token']) ? $settings['telegram_bot_token'] : ''),
+            ];
+        } else {
+            $channel = [
+                'type' => 'webhook',
+                'url' => $webhook,
+            ];
+        }
+
+        mulopimfwc_send_social_message(
+            __('Test notification', 'multi-location-product-and-inventory-management'),
+            __('This is a test from Multi Location Product & Inventory Management.', 'multi-location-product-and-inventory-management'),
+            [$channel],
+            $settings,
+            home_url()
+        );
+
+        wp_send_json_success(['message' => __('Test sent (check your channel).', 'multi-location-product-and-inventory-management')]);
+    }
+
+    /**
+     * Alert on low-rating product reviews.
+     */
+    function mulopimfwc_social_low_review_alert($comment_id, $comment_approved, $commentdata)
+    {
+        $settings = mulopimfwc_get_social_settings();
+        if (
+            !isset($settings['enabled'], $settings['low_review_alert']) ||
+            $settings['enabled'] !== 'on' ||
+            $settings['low_review_alert'] !== 'on'
+        ) {
+            return;
+        }
+
+        // Only run on approved reviews
+        if ($comment_approved === 'spam' || intval($comment_approved) === 0) {
+            return;
+        }
+
+        $comment = get_comment($comment_id);
+        if (!$comment || 'review' !== get_comment_type($comment)) {
+            return;
+        }
+
+        $post_id = $comment->comment_post_ID;
+        if (get_post_type($post_id) !== 'product') {
+            return;
+        }
+
+        $rating = get_comment_meta($comment_id, 'rating', true);
+        $rating = $rating !== '' ? floatval($rating) : 0;
+        $threshold = isset($settings['low_review_threshold']) ? floatval($settings['low_review_threshold']) : 3.0;
+
+        if ($rating >= $threshold || $rating <= 0) {
+            return;
+        }
+
+        $product = wc_get_product($post_id);
+        $product_name = $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management');
+
+        $channels = mulopimfwc_collect_social_channels('', $settings);
+        if (!empty($channels)) {
+            mulopimfwc_send_social_message(
+                __('Low rating review', 'multi-location-product-and-inventory-management'),
+                sprintf(
+                    __('%s received a %s★ review: "%s"', 'multi-location-product-and-inventory-management'),
+                    $product_name,
+                    $rating,
+                    wp_trim_words(wp_strip_all_tags($comment->comment_content), 20, '...')
+                ),
+                $channels,
+                $settings,
+                get_edit_post_link($post_id, '')
+            );
+        }
+    }
 
     require_once plugin_dir_path(__FILE__) . 'includes/analytics.php';
 
@@ -4634,7 +4864,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.0.6.5",
+                "1.0.6.10",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

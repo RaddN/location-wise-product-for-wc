@@ -101,7 +101,7 @@ class mulopimfwc_Stock_Central
     color: #15803d;
     border-color: #bbf7d0;
 }
-.mlsctock-cenral-main form .add-location {
+.mlsctock-cenral-main form .add-location, a.button.button-small.manage-product-location {
     background: #2563eb ! important;
     border-color: #2563eb !important;
     color: #ffffff;
