@@ -4,7 +4,7 @@
  * Location Managers Admin Page
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.0.6.10
+ * @since 1.0.6.15
  */
 
 if (!defined('ABSPATH')) exit;

@@ -2002,7 +2002,17 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][manager_change_alert]" <?php checked(isset($social['manager_change_alert']) ? $social['manager_change_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Manager change (added/updated)', 'multi-location-product-and-inventory-management'); ?></label>
                 </div>
                 <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                    <label style="font-weight:600;"><?php echo esc_html__('Digest time', 'multi-location-product-and-inventory-management'); ?></label>
+                    <?php
+                    $tz_string = get_option('timezone_string');
+                    $gmt_offset = floatval(get_option('gmt_offset'));
+                    $tz_label = $tz_string ? $tz_string : 'UTC' . ($gmt_offset ? ' ' . $gmt_offset : '');
+                    $now_utc = current_time('timestamp', true);
+                    ?>
+                    <label style="font-weight:600;">
+                        <?php echo esc_html__('Digest time (Current time: ', 'multi-location-product-and-inventory-management'); ?>
+                        <span id="mulopimfwc-digest-clock" data-start-utc="<?php echo esc_attr($now_utc); ?>" data-gmt-offset="<?php echo esc_attr($gmt_offset); ?>" data-tz-label="<?php echo esc_attr($tz_label); ?>">--:--:--</span>
+                        <?php echo esc_html(')'); ?>
+                    </label>
                     <input type="time" name="mulopimfwc_display_options[social_notifications][daily_digest_time]" value="<?php echo esc_attr($social['daily_digest_time']); ?>" />
                     <label style="font-weight:600;"><?php echo esc_html__('Default Telegram bot token', 'multi-location-product-and-inventory-management'); ?></label>
                     <input type="text" name="mulopimfwc_display_options[social_notifications][telegram_bot_token]" value="<?php echo esc_attr($social['telegram_bot_token']); ?>" placeholder="<?php echo esc_attr__('123456:ABCDEF-TOKEN (optional global fallback)', 'multi-location-product-and-inventory-management'); ?>" style="min-width:260px;">
@@ -2113,14 +2123,32 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                         <script>
                             jQuery(function($) {
                                 const container = $('#mulopimfwc-social-channels');
-                                const tmpl = $('#mulopimfwc-social-channel-template').html();
-                                const emptyRow = $('#mulopimfwc-social-empty');
-                                const ajaxAction = 'mulopimfwc_test_social_channel';
+                        const tmpl = $('#mulopimfwc-social-channel-template').html();
+                        const emptyRow = $('#mulopimfwc-social-empty');
+                        const ajaxAction = 'mulopimfwc_test_social_channel';
+                        const digestClock = $('#mulopimfwc-digest-clock');
+                        if (digestClock.length) {
+                            const startUtcMs = parseInt(digestClock.data('start-utc'), 10) * 1000;
+                            const offsetHours = parseFloat(digestClock.data('gmt-offset')) || 0;
+                            const offsetMs = offsetHours * 3600 * 1000;
+                            const startClient = Date.now();
+                            const tzLabel = digestClock.data('tz-label') || 'UTC';
 
-                                function toggleChannelFields(row) {
-                                    const type = row.find('.mulopimfwc-channel-type').val();
-                                    const isTelegram = type === 'telegram';
-                                    row.find('.mulopimfwc-field-webhook')[isTelegram ? 'hide' : 'show']();
+                            const pad = (n) => (n < 10 ? '0' + n : n);
+                            const tick = () => {
+                                const nowMs = startUtcMs + offsetMs + (Date.now() - startClient);
+                                const d = new Date(nowMs);
+                                const label = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' ' + tzLabel;
+                                digestClock.text(label);
+                            };
+                            tick();
+                            setInterval(tick, 1000);
+                        }
+
+                        function toggleChannelFields(row) {
+                            const type = row.find('.mulopimfwc-channel-type').val();
+                            const isTelegram = type === 'telegram';
+                            row.find('.mulopimfwc-field-webhook')[isTelegram ? 'hide' : 'show']();
                                     row.find('.mulopimfwc-field-telegram')[isTelegram ? 'show' : 'hide']();
                                 }
 
