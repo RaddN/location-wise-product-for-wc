@@ -31,8 +31,10 @@ class MULOPIMFWC_Admin
 
 
 
-        // Add AJAX actions for export
-        add_action('wp_ajax_mulopimfwc_export_dashboard_report', array(new MULOPIMFWC_Dashboard(), 'export_dashboard_report'));
+        // Add AJAX actions for export and live data
+        $dashboard_instance = new MULOPIMFWC_Dashboard();
+        add_action('wp_ajax_mulopimfwc_export_dashboard_report', array($dashboard_instance, 'export_dashboard_report'));
+        add_action('wp_ajax_mulopimfwc_dashboard_live_data', array($dashboard_instance, 'handle_live_dashboard_data'));
 
         // Shortcode for location status
         // [mulopimfwc_location_status id="123"]

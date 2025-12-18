@@ -1,18 +1,23 @@
 /**
  * Location Wise Products Dashboard JavaScript
  */
-(function ($) {
+ (function ($) {
     'use strict';
+    const LIVE_POLL_INTERVAL = 30000;
 
     // Store chart instances globally for updates
+    window.locationProductsChart = null;
+    window.locationStockChart = null;
     window.ordersByLocationChart = null;
     window.revenueByLocationChart = null;
     window.newProductsChart = null;
+    window.investmentChart = null;
 
     $(document).ready(function () {
         initDashboardCharts();
         initFilterHandlers();
         initExportHandlers();
+        startRealtimeSync();
     });
 
     /**
@@ -225,37 +230,46 @@
      * Update dashboard with filtered data
      */
     function updateDashboardData(data) {
-        // Update summary statistics
-        $('.lwp-stat-item').each(function () {
-            const label = $(this).find('.lwp-stat-label').text();
+        if (data.summary) {
+            $('.lwp-stat-item').each(function () {
+                const label = $(this).find('.lwp-stat-label').text();
 
-            if (label.includes('Orders') || label.includes('orders')) {
-                $(this).find('.lwp-stat-value').text(data.summary.total_orders.toLocaleString());
-            } else if (label.includes('Revenue') || label.includes('revenue')) {
-                $(this).find('.lwp-stat-value').html(formatCurrency(data.summary.total_revenue));
-            }
-        });
-
-        // Update orders chart
-        if (window.ordersByLocationChart && data.orders) {
-            window.ordersByLocationChart.data.datasets[0].data = Object.values(data.orders);
-            window.ordersByLocationChart.update();
+                if (label.toLowerCase().includes('orders') && data.summary.total_orders !== undefined) {
+                    $(this).find('.lwp-stat-value').text(data.summary.total_orders.toLocaleString());
+                } else if (label.toLowerCase().includes('revenue') && data.summary.total_revenue !== undefined) {
+                    $(this).find('.lwp-stat-value').html(formatCurrency(data.summary.total_revenue));
+                } else if (label.toLowerCase().includes('stock') && data.summary.total_stock !== undefined) {
+                    $(this).find('.lwp-stat-value').text(data.summary.total_stock.toLocaleString());
+                } else if (label.toLowerCase().includes('investment') && data.summary.total_investment !== undefined) {
+                    $(this).find('.lwp-stat-value').html(formatCurrency(data.summary.total_investment));
+                }
+            });
         }
 
-        // Update revenue chart
-        if (window.revenueByLocationChart && data.revenue) {
-            window.revenueByLocationChart.data.datasets[0].data = Object.values(data.revenue);
-            window.revenueByLocationChart.update();
+        if (data.productCounts) {
+            refreshProductsChart(data.productCounts);
         }
 
-        // Update new products chart
-        if (window.newProductsChart && data.recent_products) {
-            window.newProductsChart.data.labels = data.recent_products.labels;
-            window.newProductsChart.data.datasets[0].data = data.recent_products.counts;
-            window.newProductsChart.update();
+        if (data.stockLevels) {
+            refreshStockChart(data.stockLevels);
         }
 
-        // Update low stock table
+        if (data.orders) {
+            refreshOrdersChart(data.orders);
+        }
+
+        if (data.revenue) {
+            refreshRevenueChart(data.revenue);
+        }
+
+        if (data.dateLabels && data.dateCounts) {
+            refreshNewProductsChart(data);
+        }
+
+        if (data.monthlyInvestmentLabels && data.monthlyInvestmentData) {
+            refreshInvestmentChart(data);
+        }
+
         if (data.low_stock) {
             updateLowStockTable(data.low_stock);
         }
@@ -340,6 +354,110 @@
         return text.replace(/[&<>"']/g, function (m) { return map[m]; });
     }
 
+    function startRealtimeSync() {
+        if (!mulopimfwc_DashboardData || !mulopimfwc_DashboardData.realtime_nonce) {
+            return;
+        }
+
+        fetchRealtimeData();
+
+        if (!window.mulopimfwcDashboardRealtimeTimer) {
+            window.mulopimfwcDashboardRealtimeTimer = setInterval(fetchRealtimeData, LIVE_POLL_INTERVAL);
+        }
+    }
+
+    function fetchRealtimeData() {
+        if (window.mulopimfwcRealtimeActive) {
+            return;
+        }
+
+        window.mulopimfwcRealtimeActive = true;
+
+        $.post(mulopimfwc_DashboardData.ajaxurl, {
+            action: 'mulopimfwc_dashboard_live_data',
+            nonce: mulopimfwc_DashboardData.realtime_nonce
+        })
+            .done(function (response) {
+                if (response.success && response.data) {
+                    updateDashboardData(response.data);
+                    document.dispatchEvent(new CustomEvent('mulopimfwcRealtimeData', { detail: response.data }));
+                }
+            })
+            .always(function () {
+                window.mulopimfwcRealtimeActive = false;
+            });
+    }
+
+    function refreshProductsChart(counts) {
+        if (!window.locationProductsChart) {
+            return;
+        }
+
+        const labels = Object.keys(counts);
+        const values = Object.values(counts);
+        window.locationProductsChart.data.labels = labels;
+        window.locationProductsChart.data.datasets[0].data = values;
+        window.locationProductsChart.update();
+    }
+
+    function refreshStockChart(levels) {
+        if (!window.locationStockChart) {
+            return;
+        }
+
+        const labels = Object.keys(levels);
+        const values = Object.values(levels);
+        window.locationStockChart.data.labels = labels;
+        window.locationStockChart.data.datasets[0].data = values;
+        window.locationStockChart.update();
+    }
+
+    function refreshOrdersChart(orders) {
+        if (!window.ordersByLocationChart) {
+            return;
+        }
+
+        const labels = Object.keys(orders);
+        const values = Object.values(orders);
+        window.ordersByLocationChart.data.labels = labels;
+        window.ordersByLocationChart.data.datasets[0].data = values;
+        window.ordersByLocationChart.update();
+    }
+
+    function refreshRevenueChart(revenue) {
+        if (!window.revenueByLocationChart) {
+            return;
+        }
+
+        const labels = Object.keys(revenue);
+        const values = Object.values(revenue);
+        window.revenueByLocationChart.data.labels = labels;
+        window.revenueByLocationChart.data.datasets[0].data = values;
+        window.revenueByLocationChart.update();
+    }
+
+    function refreshNewProductsChart(data) {
+        if (!window.newProductsChart) {
+            return;
+        }
+
+        window.newProductsChart.data.labels = data.dateLabels;
+        window.newProductsChart.data.datasets[0].data = data.dateCounts;
+        window.newProductsChart.update();
+    }
+
+    function refreshInvestmentChart(data) {
+        if (!window.investmentChart) {
+            return;
+        }
+
+        window.investmentChart.data.labels = data.monthlyInvestmentLabels;
+        window.investmentChart.data.datasets[0].data = data.monthlyInvestmentData;
+        window.investmentChart.update();
+    }
+
+    window.mulopimfwc_update_dashboard = updateDashboardData;
+
     /**
      * Initialize Products by Location Chart
      */
@@ -352,10 +470,7 @@
         const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label]);
         const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label]);
 
-        const total = values.reduce((a, b) => a + b, 0);
-        const percentages = values.map(v => ((v / total) * 100).toFixed(1));
-
-        new Chart(ctx, {
+        window.locationProductsChart = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: labels,
@@ -402,7 +517,11 @@
                         (chartArea.bottom - chartArea.top) / 2
                     );
 
-                    chart.data.datasets[0].data.forEach((value, index) => {
+                    const dataValues = chart.data.datasets[0].data;
+                    const total = dataValues.reduce((sum, value) => sum + value, 0);
+                    const percentages = dataValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
+
+                    dataValues.forEach((value, index) => {
                         const meta = chart.getDatasetMeta(0);
                         const arc = meta.data[index];
                         const angle = (arc.startAngle + arc.endAngle) / 2;
@@ -457,7 +576,7 @@
         gradient.addColorStop(0, 'rgba(255, 77, 77, 0.6)');
         gradient.addColorStop(1, 'rgba(255, 242, 242, 0)');
 
-        new Chart(ctx, {
+        window.locationStockChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -601,7 +720,7 @@
             maximumFractionDigits: 0
         }).format(0).replace(/\d/g, '').trim();
 
-        new Chart(ctx, {
+        window.investmentChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: mulopimfwc_DashboardData.monthlyInvestmentLabels,
@@ -681,9 +800,6 @@
         const values = Object.values(mulopimfwc_DashboardData.ordersByLocation);
         const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(153, 102, 255, 0.7)');
 
-        const total = values.reduce((a, b) => a + b, 0);
-        const percentages = values.map(v => ((v / total) * 100).toFixed(1));
-
         window.ordersByLocationChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -725,7 +841,11 @@
                         (chartArea.bottom - chartArea.top) / 2
                     );
 
-                    chart.data.datasets[0].data.forEach((value, index) => {
+                    const dataValues = chart.data.datasets[0].data;
+                    const total = dataValues.reduce((sum, value) => sum + value, 0);
+                    const percentages = dataValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
+
+                    dataValues.forEach((value, index) => {
                         const meta = chart.getDatasetMeta(0);
                         const arc = meta.data[index];
                         const angle = (arc.startAngle + arc.endAngle) / 2;

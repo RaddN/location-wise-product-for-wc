@@ -1941,6 +1941,153 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_import_export_section'
         );
 
+        // Admin & browser notification settings
+        add_settings_section(
+            'mulopimfwc_admin_notifications_section',
+            __('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#f0f9ff;padding:10px;border-radius:6px"><path fill="#1d4ed8" d="M12 3a5 5 0 0 0-5 5v3.586L5.293 13.293a1 1 0 0 0 1.414 1.414L9 12.414V12a3 3 0 1 1 6 0v.414l2.293 2.293a1 1 0 1 0 1.414-1.414L17 11.586V8a5 5 0 0 0-5-5zm0 17a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3z"/></svg>Admin Notifications', 'multi-location-product-and-inventory-management'),
+            function () {
+                echo '<p>' . esc_html__('Keep admins and browsers in sync with live status alerts, PWA notices, and floating summaries.', 'multi-location-product-and-inventory-management') . '</p>';
+            },
+            'lwp-admin-notification-settings'
+        );
+
+        add_settings_field(
+            'notification_realtime_enabled',
+            __('Real-time alerts', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['realtime_enabled']) ? $notif['realtime_enabled'] : 'on';
+            ?>
+                <label class="mulopimfwc_switch">
+                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                    <span class="mulopimfwc_slider round"></span>
+                    <span class="mulopimfwc_switch-on">On</span>
+                    <span class="mulopimfwc_switch-off">Off</span>
+                </label>
+                <p class="description"><?php echo esc_html__('Enable background polling for live dashboard metrics and alerts.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_floating_enabled',
+            __('Floating notifications', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['floating_enabled']) ? $notif['floating_enabled'] : 'on';
+            ?>
+                <label class="mulopimfwc_switch">
+                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                    <span class="mulopimfwc_slider round"></span>
+                    <span class="mulopimfwc_switch-on">On</span>
+                    <span class="mulopimfwc_switch-off">Off</span>
+                </label>
+                <p class="description"><?php echo esc_html__('Show brief floating toasts in the admin header when new alerts arrive.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_floating_position',
+            __('Floating position', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['floating_position']) ? $notif['floating_position'] : 'top-right';
+            ?>
+                <select name="mulopimfwc_display_options[notification_settings][floating_position]">
+                    <option value="top-right" <?php selected($value, 'top-right'); ?>><?php echo esc_html__('Top right', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="top-left" <?php selected($value, 'top-left'); ?>><?php echo esc_html__('Top left', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="bottom-right" <?php selected($value, 'bottom-right'); ?>><?php echo esc_html__('Bottom right', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="bottom-left" <?php selected($value, 'bottom-left'); ?>><?php echo esc_html__('Bottom left', 'multi-location-product-and-inventory-management'); ?></option>
+                </select>
+                <p class="description"><?php echo esc_html__('Choose where floating alerts should appear.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_floating_duration',
+            __('Floating duration (milliseconds)', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['floating_duration']) ? $notif['floating_duration'] : '6000';
+            ?>
+                <input type="number" min="2000" step="500" name="mulopimfwc_display_options[notification_settings][floating_duration]" value="<?php echo esc_attr($value); ?>">
+                <p class="description"><?php echo esc_html__('How long floating alerts remain visible.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_template',
+            __('Notification template', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['notification_template']) ? $notif['notification_template'] : '[{event}] {message}';
+            ?>
+                <textarea name="mulopimfwc_display_options[notification_settings][notification_template]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
+                <p class="description"><?php echo esc_html__('Use {event} and {message} placeholders to customize floating and PWA text.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_pwa_enabled',
+            __('Browser push (PWA)', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['pwa_enabled']) ? $notif['pwa_enabled'] : 'off';
+            ?>
+                <label class="mulopimfwc_switch">
+                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][pwa_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                    <span class="mulopimfwc_slider round"></span>
+                    <span class="mulopimfwc_switch-on">On</span>
+                    <span class="mulopimfwc_switch-off">Off</span>
+                </label>
+                <p class="description"><?php echo esc_html__('Send desktop/mobile notifications through a registered service worker.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_admin_notice',
+            __('Show admin notices', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['show_admin_notice']) ? $notif['show_admin_notice'] : 'on';
+            ?>
+                <label class="mulopimfwc_switch">
+                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][show_admin_notice]" value="on" <?php checked($value, 'on'); ?>>
+                    <span class="mulopimfwc_slider round"></span>
+                    <span class="mulopimfwc_switch-on">On</span>
+                    <span class="mulopimfwc_switch-off">Off</span>
+                </label>
+                <p class="description"><?php echo esc_html__('Display persistent admin notices along with floating alerts.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
         // Social Notifications (dedicated section after Import/Export)
         add_settings_section(
             'mulopimfwc_social_notifications_section',
@@ -3212,6 +3359,33 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $sanitized['social_notifications'] = $social;
         }
 
+        if (isset($input['notification_settings']) && is_array($input['notification_settings'])) {
+            $notification_input = $input['notification_settings'];
+            $notification = [];
+            $checkbox_keys = [
+                'realtime_enabled',
+                'floating_enabled',
+                'pwa_enabled',
+                'show_admin_notice',
+            ];
+            foreach ($checkbox_keys as $key) {
+                $notification[$key] = (isset($notification_input[$key]) && $notification_input[$key] === 'on') ? 'on' : 'off';
+            }
+
+            $position = sanitize_text_field($notification_input['floating_position'] ?? 'top-right');
+            $valid_positions = ['top-right', 'top-left', 'bottom-right', 'bottom-left'];
+            if (!in_array($position, $valid_positions, true)) {
+                $position = 'top-right';
+            }
+            $notification['floating_position'] = $position;
+
+            $duration = preg_replace('/[^0-9]/', '', $notification_input['floating_duration'] ?? '');
+            $notification['floating_duration'] = $duration !== '' ? $duration : '6000';
+            $notification['notification_template'] = sanitize_textarea_field($notification_input['notification_template'] ?? '[{event}] {message}');
+
+            $sanitized['notification_settings'] = $notification;
+        }
+
         // Handle enable_location_backorder option
         if (isset($input['enable_location_backorder'])) {
             $sanitized['enable_location_backorder'] = sanitize_text_field($input['enable_location_backorder']);
@@ -3681,6 +3855,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                             echo $this->mls_nav_tabs("#cross-order-settings", "nav-tab", '<svg class="svg-inline--fa fa-truck" aria-hidden="true" data-prefix="fas" data-icon="truck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#f97316" d="M1.5 0A1.5 1.5 0 0 0 0 1.5v10A1.5 1.5 0 0 0 1.5 13H2a3.001 3.001 0 0 0 6 0h4a3.001 3.001 0 0 0 6 0h1a1 1 0 1 0 0-2V7.416c0-.531-.209-1.041-.584-1.416L16 3.584A2 2 0 0 0 14.584 3H13V1.5A1.5 1.5 0 0 0 11.5 0zM13 5h1.584L17 7.416V8h-4zm-9.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0M15 11.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3"/></svg>', esc_html__('Order Fulfill', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#inventory-settings", "nav-tab", '<svg class="svg-inline--fa fa-chart-bar" aria-hidden="true" data-prefix="fas" data-icon="chart-bar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#22c55e" d="M1 1a1 1 0 0 1 1 1v10.5c0 .275.225.5.5.5H15a1 1 0 1 1 0 2H2.5A2.5 2.5 0 0 1 0 12.5V2a1 1 0 0 1 1-1m3 3a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1m1 2h4a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2m0 3h8a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2"/></svg>', esc_html__('Inventory', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#location-wise-everything", "nav-tab", '<svg class="svg-inline--fa fa-map-location-dot" aria-hidden="true" data-prefix="fas" data-icon="map-location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="#ef4444" d="M12.75 3.75c0 1.706-2.284 4.747-3.288 6-.241.3-.688.3-.925 0-1.003-1.253-3.287-4.294-3.287-6C5.25 1.678 6.928 0 9 0s3.75 1.678 3.75 3.75M13 6.263q.163-.324.3-.644l.047-.116 3.625-1.45A.75.75 0 0 1 18 4.75v8.463a.755.755 0 0 1-.472.697L13 15.719zM4.3 4.322c.075.441.225.884.4 1.297q.136.319.3.644v7.856l-3.972 1.59A.75.75 0 0 1 0 15.012V6.55c0-.306.188-.581.472-.697l3.831-1.531zm5.944 6.053A33 33 0 0 0 12 7.969v7.791l-6-1.716V7.969a33 33 0 0 0 1.756 2.406c.641.8 1.847.8 2.487 0M9 4.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 1 0 0 2.5"/></svg>', esc_html__('Location Wise Everything', 'multi-location-product-and-inventory-management'));
+                            echo $this->mls_nav_tabs("#notification-settings", "nav-tab", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle"><path fill="#f97316" d="M12 2a5 5 0 0 0-5 5v5.586L5.293 14.293a1 1 0 0 0 1.414 1.414L9 13.414V12a3 3 0 1 1 6 0v1.414l2.293 2.293a1 1 0 0 0 1.414-1.414L17 12.586V7a5 5 0 0 0-5-5zm0 18a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3z"/></svg>', esc_html__('Notifications', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#customer-experience", "nav-tab", '<svg class="svg-inline--fa fa-users" aria-hidden="true" data-prefix="fas" data-icon="users" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#06b6d4" d="M4.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M16 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M0 9.334A3.336 3.336 0 0 1 3.334 6h1.334c.497 0 .969.109 1.394.303A4 4 0 0 0 7.356 10H.666A.67.67 0 0 1 0 9.334M12.666 10h-.022a4 4 0 0 0 1.353-3q-.002-.355-.059-.697A3.3 3.3 0 0 1 15.332 6h1.334A3.335 3.335 0 0 1 20 9.334c0 .369-.3.666-.666.666zM7 7a3 3 0 1 1 6 0 3 3 0 1 1-6 0m-3 8.166C4 12.866 5.866 11 8.166 11h3.669c2.3 0 4.166 1.866 4.166 4.166a.834.834 0 0 1-.834.834H4.834A.834.834 0 0 1 4 15.166"/></svg>', esc_html__('User Experience', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#extensions", "nav-tab", '<svg width="16" height="16" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M.04.418V.329h.044A.044.044 0 0 0 .128.277.046.046 0 0 0 .082.24H.04V.151A.02.02 0 0 1 .062.129h.089V.084A.044.044 0 0 1 .203.04.046.046 0 0 1 .24.087v.042h.089a.02.02 0 0 1 .022.022V.24h.042a.046.046 0 0 1 .046.037.044.044 0 0 1-.044.052H.351v.089A.02.02 0 0 1 .329.44H.262V.396A.044.044 0 0 0 .21.352a.046.046 0 0 0-.037.046V.44H.062A.02.02 0 0 1 .04.418"/></svg>', esc_html__('Extensions', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#advance-settings", "nav-tab", '<svg class="svg-inline--fa fa-gear" aria-hidden="true" data-prefix="fas" data-icon="gear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#6366f1" d="M15.497 5.206c.1.272.016.575-.2.769l-1.353 1.231a6 6 0 0 1 0 1.588l1.353 1.231c.216.194.3.497.2.769a8 8 0 0 1-.494 1.072l-.147.253a8 8 0 0 1-.691.975.71.71 0 0 1-.766.212l-1.741-.553a6 6 0 0 1-1.375.794l-.391 1.784a.71.71 0 0 1-.569.556 8 8 0 0 1-2.656 0 .71.71 0 0 1-.569-.556l-.391-1.784a6 6 0 0 1-1.375-.794l-1.738.556a.72.72 0 0 1-.766-.212 8 8 0 0 1-.691-.975l-.147-.253a8 8 0 0 1-.494-1.072.71.71 0 0 1 .2-.769l1.353-1.231Q1.997 8.403 1.996 8c-.001-.403.019-.534.053-.794L.696 5.975a.71.71 0 0 1-.2-.769A8 8 0 0 1 .99 4.134l.147-.253q.31-.516.691-.975a.71.71 0 0 1 .766-.212l1.741.553a6 6 0 0 1 1.375-.794L6.101.669A.71.71 0 0 1 6.67.113Q7.32 0 8 0c.68 0 .897.037 1.328.109a.71.71 0 0 1 .569.556l.391 1.784c.494.203.956.472 1.375.794l1.741-.553a.72.72 0 0 1 .766.212q.38.459.691.975l.147.253q.287.515.494 1.072zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 1 0 0 5"/></svg>', esc_html__('Advance', 'multi-location-product-and-inventory-management'));
@@ -3812,6 +3987,18 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         <div id="lwp-subtab-others" class="lwp-subtab-content" style="display:none;">
                                             <?php do_settings_sections('lwp-location-others-settings'); ?>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="notification-settings" class="lwp-tab-content" style="display:none;">
+                                <div class="lwp-settings-section">
+                                    <div class="lwp-settings-box">
+                                        <?php do_settings_sections('lwp-admin-notification-settings'); ?>
+                                    </div>
+                                </div>
+                                <div class="lwp-settings-section">
+                                    <div class="lwp-settings-box">
+                                        <?php do_settings_sections('lwp-social-notifications-settings'); ?>
                                     </div>
                                 </div>
                             </div>

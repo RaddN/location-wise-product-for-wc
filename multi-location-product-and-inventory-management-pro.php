@@ -26,6 +26,40 @@ if (!defined('mulopimfwc_VERSION')) {
     define("mulopimfwc_VERSION", "1.0.6.15");
 }
 
+if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
+    /**
+     * Return the configured number of days for location cookies (default: 30).
+     *
+     * @return int
+     */
+    function mulopimfwc_get_location_cookie_expiry_days(): int
+    {
+        $options = get_option('mulopimfwc_display_options', []);
+        $value = isset($options['location_cookie_expiry']) && is_numeric($options['location_cookie_expiry'])
+            ? (int)$options['location_cookie_expiry']
+            : 30;
+
+        if ($value < 1) {
+            $value = 1;
+        }
+
+        return $value;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_location_cookie_expiry_seconds')) {
+    /**
+     * Return the configured cookie expiry interval in seconds, honoring WP's DAY_IN_SECONDS.
+     *
+     * @return int
+     */
+    function mulopimfwc_get_location_cookie_expiry_seconds(): int
+    {
+        $day_in_seconds = defined('DAY_IN_SECONDS') ? DAY_IN_SECONDS : 86400;
+        return mulopimfwc_get_location_cookie_expiry_days() * $day_in_seconds;
+    }
+}
+
 // Check if the free version is installed and deactivate it if active
 add_action('init', function () {
     if (is_plugin_active('multi-location-product-and-inventory-management/multi-location-product-and-inventory-management.php')) {
@@ -111,6 +145,15 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'daily_digest' => 'off',
                     'site_status' => 'off',
                     'daily_digest_time' => '07:00',
+                ],
+                'notification_settings' => [
+                    'realtime_enabled' => 'on',
+                    'floating_enabled' => 'on',
+                    'floating_position' => 'top-right',
+                    'floating_duration' => '6000',
+                    'notification_template' => '[{event}] {message}',
+                    'pwa_enabled' => 'off',
+                    'show_admin_notice' => 'on',
                 ],
 
             ];
@@ -3313,9 +3356,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             global $mulopimfwc_options;
 
-            $cookie_expiry = isset($mulopimfwc_options["location_cookie_expiry"]) && is_numeric($mulopimfwc_options["location_cookie_expiry"])
-                ? (int)$mulopimfwc_options["location_cookie_expiry"]
-                : 30;
+            $cookie_expiry_days = mulopimfwc_get_location_cookie_expiry_days();
 
             wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6.15');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
@@ -3358,7 +3399,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'location_change_notification' => isset($mulopimfwc_options["location_change_notification"]) || (isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] === "prompt_user"),
                 'nonce' => wp_create_nonce('multi-location-product-and-inventory-management'),
-                'cookie_expiry' => $cookie_expiry,
+                'cookie_expiry' => $cookie_expiry_days,
                 'allow_mixed_in_cart' => isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                     ? $mulopimfwc_options['allow_mixed_location_cart']
                     : 'off',
@@ -3669,7 +3710,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (count($filtered_products) !== count($viewed_products)) {
                 $filtered_cookie = implode('|', $filtered_products);
-                wc_setcookie('woocommerce_recently_viewed', $filtered_cookie, time() + 60 * 60 * 24 * 30);
+                wc_setcookie('woocommerce_recently_viewed', $filtered_cookie, time() + mulopimfwc_get_location_cookie_expiry_seconds());
             }
         }
 
@@ -3940,11 +3981,11 @@ if (!function_exists('mulopimfwc_get_values')) {
     // Add this to the main plugin file after the class definition
 
     // AJAX handler for saving user location
-    add_action('wp_ajax_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
-    add_action('wp_ajax_nopriv_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
+add_action('wp_ajax_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
+add_action('wp_ajax_nopriv_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
 
-    function mulopimfwc_save_user_location()
-    {
+function mulopimfwc_save_user_location()
+{
         // Check nonce
         check_ajax_referer('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce');
 
@@ -4014,7 +4055,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             ));
         } else {
             // For non-logged-in users, we can't save the location permanently.
-            wc_setcookie('mulopimfwc_user_location', $location_data['address'], time() + 60 * 60 * 24 * 30);
+            wc_setcookie('mulopimfwc_user_location', $location_data['address'], time() + mulopimfwc_get_location_cookie_expiry_seconds());
             wp_send_json_success(array(
                 'logged_in' => false,
                 'location_id' => $location_id,
@@ -4915,6 +4956,70 @@ if (!function_exists('mulopimfwc_get_values')) {
     }
 
     new mulopimfwc_analytics_main();
+}
+
+add_action('admin_enqueue_scripts', 'mulopimfwc_enqueue_admin_notifications_assets');
+
+function mulopimfwc_enqueue_admin_notifications_assets()
+{
+    if (!current_user_can('manage_woocommerce')) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'mulopimfwc-admin-notifications',
+        plugin_dir_url(__FILE__) . 'assets/js/admin-notifications.js',
+        ['jquery'],
+        mulopimfwc_VERSION,
+        true
+    );
+
+    $options = get_option('mulopimfwc_display_options', []);
+    $defaults = [
+        'realtime_enabled' => 'on',
+        'floating_enabled' => 'on',
+        'floating_position' => 'top-right',
+        'floating_duration' => '6000',
+        'notification_template' => '[{event}] {message}',
+        'pwa_enabled' => 'off',
+        'show_admin_notice' => 'on',
+    ];
+    $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings']) ? wp_parse_args($options['notification_settings'], $defaults) : $defaults;
+
+    wp_localize_script('mulopimfwc-admin-notifications', 'mulopimfwcNotificationConfig', [
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('mulopimfwc_dashboard_realtime_nonce'),
+        'realtime_enabled' => $notification_settings['realtime_enabled'],
+        'floating_enabled' => $notification_settings['floating_enabled'],
+        'floating_position' => $notification_settings['floating_position'],
+        'floating_duration' => $notification_settings['floating_duration'],
+        'notification_template' => $notification_settings['notification_template'],
+        'pwa_enabled' => $notification_settings['pwa_enabled'],
+        'show_admin_notice' => $notification_settings['show_admin_notice'],
+        'pwa_sw_url' => plugin_dir_url(__FILE__) . 'assets/js/pwa-sw.js',
+        'pwa_icon' => '',
+        'poll_interval' => 30000,
+    ]);
+}
+
+add_action('user_register', 'mulopimfwc_flag_manager_change');
+add_action('profile_update', 'mulopimfwc_flag_manager_change');
+
+function mulopimfwc_flag_manager_change($user_id)
+{
+    $user = get_userdata($user_id);
+    if (!$user || empty($user->roles)) {
+        return;
+    }
+
+    if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+        return;
+    }
+
+    update_option('mulopimfwc_manager_change_pending', [
+        'user_id' => $user_id,
+        'timestamp' => current_time('timestamp', true),
+    ]);
 }
 
 
