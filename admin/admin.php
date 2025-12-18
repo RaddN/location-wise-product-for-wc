@@ -35,6 +35,9 @@ class MULOPIMFWC_Admin
         $dashboard_instance = new MULOPIMFWC_Dashboard();
         add_action('wp_ajax_mulopimfwc_export_dashboard_report', array($dashboard_instance, 'export_dashboard_report'));
         add_action('wp_ajax_mulopimfwc_dashboard_live_data', array($dashboard_instance, 'handle_live_dashboard_data'));
+        
+        // Add admin bar notification icon
+        add_action('admin_bar_menu', array($this, 'add_admin_bar_notification_icon'), 100);
 
         // Shortcode for location status
         // [mulopimfwc_location_status id="123"]
@@ -1393,6 +1396,37 @@ class MULOPIMFWC_Admin
         }
 
         return $out;
+    }
+    
+    /**
+     * Add notification icon to admin bar
+     */
+    public function add_admin_bar_notification_icon($wp_admin_bar)
+    {
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+        
+        // Add main notification menu item to top-secondary (right side of admin bar)
+        $wp_admin_bar->add_node(array(
+            'id' => 'mulopimfwc-notifications',
+            'parent' => 'top-secondary',
+            'title' => '<span class="ab-icon dashicons-bell" aria-hidden="true"></span><span class="ab-label mulopimfwc-notification-count" data-count="0">0</span>',
+            'meta' => array(
+                'class' => 'mulopimfwc-admin-bar-notification',
+                'title' => __('Notifications', 'multi-location-product-and-inventory-management'),
+            ),
+        ));
+        
+        // Add dropdown container as child
+        $wp_admin_bar->add_node(array(
+            'parent' => 'mulopimfwc-notifications',
+            'id' => 'mulopimfwc-notifications-dropdown',
+            'title' => '<div id="mulopimfwc-notifications-list" class="mulopimfwc-notifications-dropdown-content"><div class="mulopimfwc-notifications-loading">' . __('Loading notifications...', 'multi-location-product-and-inventory-management') . '</div></div>',
+            'meta' => array(
+                'class' => 'mulopimfwc-notifications-dropdown',
+            ),
+        ));
     }
 }
 

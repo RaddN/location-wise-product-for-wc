@@ -24,13 +24,14 @@ class mulopimfwc_Stock_Central
 
 ?>
         <div class="wrap mlsctock-cenral-main">
+            <h1 style="display: none !important;"><?php echo esc_html__('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management'); ?></h1>
             <div class="mlsctock-cenral-header">
-                <h1><?php echo esc_html_e('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management'); ?></h1>
-            <p><?php echo esc_html_e('Manage stock levels and prices for each product by location.', 'multi-location-product-and-inventory-management'); ?></p>
+                <h1><?php echo esc_html__('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management'); ?></h1>
+            <p><?php echo esc_html__('Manage stock levels and prices for each product by location.', 'multi-location-product-and-inventory-management'); ?></p>
             </div>            
 
             <form method="post">
-                <?php $product_table->search_box('Search Products', 'search_products'); ?>
+                <?php $product_table->search_box(__('Search Products', 'multi-location-product-and-inventory-management'), 'search_products'); ?>
                 <?php $product_table->display(); ?>
             </form>
         </div>

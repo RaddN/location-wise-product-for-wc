@@ -215,6 +215,27 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'popup_shortcode_manage_section'
         );
 
+        // add template selection field
+        add_settings_field(
+            'template_selection',
+            __('Template Selection', 'multi-location-product-and-inventory-management'),
+            function () {
+                if (mulopimfwc_premium_feature()) {
+                    $this->render_advance_select("template_selection", __("Select the template for location selector.", 'multi-location-product-and-inventory-management'), [
+                        "default" => "Default",
+                        "modern" => "Modern",
+                    ]);
+                } else {
+                    $this->render_advance_select('pro', __("Select the template for location selector.", 'multi-location-product-and-inventory-management'), [
+                        "default" => "Default",
+                        "modern" => "Modern"
+                    ], true, false);
+                }
+            },
+            'location-popup-shortcode-settings',
+            'popup_shortcode_manage_section'
+        );
+
         add_settings_field(
             'use_select2',
             __('Use Select2', 'multi-location-product-and-inventory-management'),
@@ -304,7 +325,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
 
         add_settings_field(
             'herichical',
-            __('Herichical Option', 'multi-location-product-and-inventory-management'),
+            __('Hierarchical Option', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $value = isset($options['herichical']) ? $options['herichical'] : 'off';
@@ -1862,7 +1883,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_advanced_settings_section'
         );
 
-                // );
+        // );
 
         // Add "Contribute to Plugincy" field
         add_settings_field(
@@ -1889,6 +1910,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'location-advance-settings',
             'mulopimfwc_advanced_settings_section'
         );
+
         // Add section for Import/Export Settings
         add_settings_section(
             'mulopimfwc_import_export_section',
@@ -1941,6 +1963,28 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_import_export_section'
         );
 
+        // Add section for API & Webhooks Settings
+        add_settings_section(
+            'mulopimfwc_api_webhooks_section',
+            __('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0e7ff;padding:10px;border-radius:6px"><path fill="#6366f1" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>API & Webhooks', 'multi-location-product-and-inventory-management'),
+            function () {
+                echo '<p>' . esc_html__('Configure REST API endpoints and webhooks for syncing inventory data from external systems like WMS or POS.', 'multi-location-product-and-inventory-management') . '</p>';
+            },
+            'lwp-api-webhooks-settings'
+        );
+
+        // Add API & Webhooks Settings field
+        add_settings_section(
+            'api_webhooks_settings',
+            __('API & Webhooks Configuration', 'multi-location-product-and-inventory-management'),
+            function () {
+                $api_settings = new MULOPIMFWC_API_Settings();
+                $api_settings->render_api_settings_field();
+            },
+            'lwp-api-webhooks-settings',
+            'mulopimfwc_api_webhooks_section'
+        );
+
         // Admin & browser notification settings
         add_settings_section(
             'mulopimfwc_admin_notifications_section',
@@ -1958,15 +2002,15 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['realtime_enabled']) ? $notif['realtime_enabled'] : 'on';
-            ?>
-                <label class="mulopimfwc_switch">
-                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
-                    <span class="mulopimfwc_slider round"></span>
-                    <span class="mulopimfwc_switch-on">On</span>
-                    <span class="mulopimfwc_switch-off">Off</span>
-                </label>
-                <p class="description"><?php echo esc_html__('Enable background polling for live dashboard metrics and alerts.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php
+        ?>
+            <label class="mulopimfwc_switch">
+                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                <span class="mulopimfwc_slider round"></span>
+                <span class="mulopimfwc_switch-on">On</span>
+                <span class="mulopimfwc_switch-off">Off</span>
+            </label>
+            <p class="description"><?php echo esc_html__('Enable background polling for live dashboard metrics and alerts.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -1979,15 +2023,15 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['floating_enabled']) ? $notif['floating_enabled'] : 'on';
-            ?>
-                <label class="mulopimfwc_switch">
-                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
-                    <span class="mulopimfwc_slider round"></span>
-                    <span class="mulopimfwc_switch-on">On</span>
-                    <span class="mulopimfwc_switch-off">Off</span>
-                </label>
-                <p class="description"><?php echo esc_html__('Show brief floating toasts in the admin header when new alerts arrive.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php
+        ?>
+            <label class="mulopimfwc_switch">
+                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                <span class="mulopimfwc_slider round"></span>
+                <span class="mulopimfwc_switch-on">On</span>
+                <span class="mulopimfwc_switch-off">Off</span>
+            </label>
+            <p class="description"><?php echo esc_html__('Show brief floating toasts in the admin header when new alerts arrive.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -2000,15 +2044,326 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['floating_position']) ? $notif['floating_position'] : 'top-right';
-            ?>
-                <select name="mulopimfwc_display_options[notification_settings][floating_position]">
-                    <option value="top-right" <?php selected($value, 'top-right'); ?>><?php echo esc_html__('Top right', 'multi-location-product-and-inventory-management'); ?></option>
-                    <option value="top-left" <?php selected($value, 'top-left'); ?>><?php echo esc_html__('Top left', 'multi-location-product-and-inventory-management'); ?></option>
-                    <option value="bottom-right" <?php selected($value, 'bottom-right'); ?>><?php echo esc_html__('Bottom right', 'multi-location-product-and-inventory-management'); ?></option>
-                    <option value="bottom-left" <?php selected($value, 'bottom-left'); ?>><?php echo esc_html__('Bottom left', 'multi-location-product-and-inventory-management'); ?></option>
-                </select>
+                $positions = [
+                    'bottom-right' => __('Bottom right', 'multi-location-product-and-inventory-management'),
+                    'top-right' => __('Top right', 'multi-location-product-and-inventory-management'),
+                    'bottom-left' => __('Bottom left', 'multi-location-product-and-inventory-management'),
+                    'top-left' => __('Top left', 'multi-location-product-and-inventory-management'),
+                ];
+        ?>
+            <div class="mulopimfwc-position-selector">
+                <div class="mulopimfwc-position-grid">
+                    <?php foreach ($positions as $pos_key => $pos_label): ?>
+                        <label class="mulopimfwc-position-card <?php echo $value === $pos_key ? 'selected' : ''; ?>">
+                            <input type="radio" name="mulopimfwc_display_options[notification_settings][floating_position]" value="<?php echo esc_attr($pos_key); ?>" <?php checked($value, $pos_key); ?>>
+                            <div class="mulopimfwc-position-visual">
+                                <div class="mulopimfwc-screen-preview">
+                                    <?php
+                                    $is_top = strpos($pos_key, 'top') !== false;
+                                    $is_right = strpos($pos_key, 'right') !== false;
+                                    $is_bottom = strpos($pos_key, 'bottom') !== false;
+                                    $is_left = strpos($pos_key, 'left') !== false;
+                                    ?>
+                                    <div class="mulopimfwc-notification-preview" style="
+                                            <?php echo $is_top ? 'top: 8px;' : 'bottom: 8px;'; ?>
+                                            <?php echo $is_right ? 'right: 8px;' : 'left: 8px;'; ?>
+                                        "></div>
+                                </div>
+                            </div>
+                            <div class="mulopimfwc-position-label"><?php echo esc_html($pos_label); ?></div>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
                 <p class="description"><?php echo esc_html__('Choose where floating alerts should appear.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php
+            </div>
+            <style>
+                .mulopimfwc-position-selector {
+                    margin: 15px 0;
+                }
+
+                .mulopimfwc-position-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 15px;
+                    margin-bottom: 15px;
+                }
+
+                .mulopimfwc-position-card {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 15px;
+                    border: 2px solid #ddd;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    background: #fff;
+                    position: relative;
+                }
+
+                .mulopimfwc-position-card:hover {
+                    border-color: #2271b1;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .mulopimfwc-position-card.selected {
+                    border-color: #2271b1;
+                    background: #f0f6ff;
+                }
+
+                .mulopimfwc-position-card input[type="radio"] {
+                    position: absolute;
+                    opacity: 0;
+                    pointer-events: none;
+                }
+
+                .mulopimfwc-position-visual {
+                    width: 100%;
+                    margin-bottom: 10px;
+                }
+
+                .mulopimfwc-screen-preview {
+                    width: 100%;
+                    height: 80px;
+                    background: #f5f5f5;
+                    border-radius: 4px;
+                    position: relative;
+                    border: 1px solid #ddd;
+                }
+
+                .mulopimfwc-notification-preview {
+                    width: 30px;
+                    height: 20px;
+                    background: <?php echo $value === 'bottom-right' ? '#2271b1' : '#999'; ?>;
+                    border-radius: 3px;
+                    position: absolute;
+                    transition: background 0.2s;
+                }
+
+                .mulopimfwc-position-card.selected .mulopimfwc-notification-preview {
+                    background: #2271b1;
+                }
+
+                .mulopimfwc-position-label {
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: #1d2327;
+                    text-align: center;
+                }
+
+                .mulopimfwc-position-card.selected .mulopimfwc-position-label {
+                    color: #2271b1;
+                    font-weight: 600;
+                }
+            </style>
+            <script>
+                jQuery(document).ready(function($) {
+                    $('.mulopimfwc-position-card').on('click', function() {
+                        $('.mulopimfwc-position-card').removeClass('selected');
+                        $(this).addClass('selected');
+                        $(this).find('input[type="radio"]').prop('checked', true);
+                        // Update preview colors
+                        $('.mulopimfwc-notification-preview').css('background', '#999');
+                        $('.mulopimfwc-position-card.selected .mulopimfwc-notification-preview').css('background', '#2271b1');
+                    });
+                });
+            </script>
+        <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_floating_size',
+            __('Size', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['floating_size']) ? $notif['floating_size'] : 'comfy';
+                $sizes = [
+                    'comfy' => __('Comfy', 'multi-location-product-and-inventory-management'),
+                    'compact' => __('Compact', 'multi-location-product-and-inventory-management'),
+                ];
+        ?>
+            <div class="mulopimfwc-size-selector">
+                <div class="mulopimfwc-size-grid">
+                    <?php foreach ($sizes as $size_key => $size_label): ?>
+                        <label class="mulopimfwc-size-card <?php echo $value === $size_key ? 'selected' : ''; ?>">
+                            <input type="radio" name="mulopimfwc_display_options[notification_settings][floating_size]" value="<?php echo esc_attr($size_key); ?>" <?php checked($value, $size_key); ?>>
+                            <div class="mulopimfwc-size-visual">
+                                <div class="mulopimfwc-size-preview <?php echo $size_key; ?>">
+                                    <div class="mulopimfwc-size-icon"></div>
+                                    <div class="mulopimfwc-size-lines">
+                                        <div class="mulopimfwc-size-line line-1"></div>
+                                        <div class="mulopimfwc-size-line line-2"></div>
+                                        <?php if ($size_key === 'comfy'): ?>
+                                            <div class="mulopimfwc-size-line line-3"></div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mulopimfwc-size-label"><?php echo esc_html($size_label); ?></div>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <p class="description"><?php echo esc_html__('Choose the size of floating notifications.', 'multi-location-product-and-inventory-management'); ?></p>
+            </div>
+            <style>
+                .mulopimfwc-size-selector {
+                    margin: 15px 0;
+                }
+
+                .mulopimfwc-size-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 15px;
+                    margin-bottom: 15px;
+                    max-width: 400px;
+                }
+
+                .mulopimfwc-size-card {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 15px;
+                    border: 2px solid #ddd;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    background: #fff;
+                    position: relative;
+                }
+
+                .mulopimfwc-size-card:hover {
+                    border-color: #2271b1;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .mulopimfwc-size-card.selected {
+                    border-color: #2271b1;
+                    background: #f0f6ff;
+                }
+
+                .mulopimfwc-size-card input[type="radio"] {
+                    position: absolute;
+                    opacity: 0;
+                    pointer-events: none;
+                }
+
+                .mulopimfwc-size-visual {
+                    width: 100%;
+                    margin-bottom: 10px;
+                }
+
+                .mulopimfwc-size-preview {
+                    width: 100%;
+                    height: 60px;
+                    background: <?php echo $value === 'comfy' ? '#e8f0fe' : '#f5f5f5'; ?>;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    padding: 10px;
+                    gap: 10px;
+                    transition: all 0.2s;
+                    box-sizing: border-box;
+                }
+
+                .mulopimfwc-size-card.selected .mulopimfwc-size-preview {
+                    background: #e8f0fe;
+                }
+
+                .mulopimfwc-size-icon {
+                    width: <?php echo $value === 'comfy' ? '24px' : '16px'; ?>;
+                    height: <?php echo $value === 'comfy' ? '24px' : '16px'; ?>;
+                    background: <?php echo $value === 'comfy' ? '#2271b1' : '#999'; ?>;
+                    border-radius: 50%;
+                    flex-shrink: 0;
+                    transition: all 0.2s;
+                }
+
+                .mulopimfwc-size-card.selected .mulopimfwc-size-icon {
+                    background: #2271b1;
+                }
+
+                .mulopimfwc-size-lines {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .mulopimfwc-size-line {
+                    height: <?php echo $value === 'comfy' ? '6px' : '4px'; ?>;
+                    background: <?php echo $value === 'comfy' ? '#a0c4ff' : '#ccc'; ?>;
+                    border-radius: 2px;
+                    transition: all 0.2s;
+                }
+
+                .mulopimfwc-size-card.selected .mulopimfwc-size-line {
+                    background: #a0c4ff;
+                }
+
+                .mulopimfwc-size-preview.comfy .mulopimfwc-size-line.line-1 {
+                    width: 90%;
+                }
+
+                .mulopimfwc-size-preview.comfy .mulopimfwc-size-line.line-2 {
+                    width: 70%;
+                }
+
+                .mulopimfwc-size-preview.comfy .mulopimfwc-size-line.line-3 {
+                    width: 50%;
+                }
+
+                .mulopimfwc-size-preview.compact .mulopimfwc-size-line.line-1 {
+                    width: 80%;
+                }
+
+                .mulopimfwc-size-preview.compact .mulopimfwc-size-line.line-2 {
+                    width: 60%;
+                }
+
+                .mulopimfwc-size-preview.compact .mulopimfwc-size-line.line-3 {
+                    width: 40%;
+                }
+
+                .mulopimfwc-size-label {
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: #1d2327;
+                    text-align: center;
+                }
+
+                .mulopimfwc-size-card.selected .mulopimfwc-size-label {
+                    color: #2271b1;
+                    font-weight: 600;
+                }
+            </style>
+            <script>
+                jQuery(document).ready(function($) {
+                    $('.mulopimfwc-size-card').on('click', function() {
+                        $('.mulopimfwc-size-card').removeClass('selected');
+                        $(this).addClass('selected');
+                        $(this).find('input[type="radio"]').prop('checked', true);
+                        // Update preview colors
+                        const isComfy = $(this).find('input').val() === 'comfy';
+                        $('.mulopimfwc-size-preview').css('background', '#f5f5f5');
+                        $('.mulopimfwc-size-icon').css('background', '#999');
+                        $('.mulopimfwc-size-line').css('background', '#ccc');
+                        if (isComfy) {
+                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-preview').css('background', '#e8f0fe');
+                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-icon').css('background', '#2271b1');
+                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-line').css('background', '#a0c4ff');
+                        } else {
+                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-preview').css('background', '#f5f5f5');
+                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-icon').css('background', '#999');
+                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-line').css('background', '#ccc');
+                        }
+                    });
+                });
+            </script>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -2021,10 +2376,10 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['floating_duration']) ? $notif['floating_duration'] : '6000';
-            ?>
-                <input type="number" min="2000" step="500" name="mulopimfwc_display_options[notification_settings][floating_duration]" value="<?php echo esc_attr($value); ?>">
-                <p class="description"><?php echo esc_html__('How long floating alerts remain visible.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php
+        ?>
+            <input type="number" min="2000" step="500" name="mulopimfwc_display_options[notification_settings][floating_duration]" value="<?php echo esc_attr($value); ?>">
+            <p class="description"><?php echo esc_html__('How long floating alerts remain visible.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -2037,10 +2392,10 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['notification_template']) ? $notif['notification_template'] : '[{event}] {message}';
-            ?>
-                <textarea name="mulopimfwc_display_options[notification_settings][notification_template]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
-                <p class="description"><?php echo esc_html__('Use {event} and {message} placeholders to customize floating and PWA text.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php
+        ?>
+            <textarea name="mulopimfwc_display_options[notification_settings][notification_template]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
+            <p class="description"><?php echo esc_html__('Use {event} and {message} placeholders to customize floating and PWA text.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -2053,36 +2408,72 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['pwa_enabled']) ? $notif['pwa_enabled'] : 'off';
-            ?>
-                <label class="mulopimfwc_switch">
-                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][pwa_enabled]" value="on" <?php checked($value, 'on'); ?>>
-                    <span class="mulopimfwc_slider round"></span>
-                    <span class="mulopimfwc_switch-on">On</span>
-                    <span class="mulopimfwc_switch-off">Off</span>
-                </label>
-                <p class="description"><?php echo esc_html__('Send desktop/mobile notifications through a registered service worker.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php
+        ?>
+            <label class="mulopimfwc_switch">
+                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][pwa_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                <span class="mulopimfwc_slider round"></span>
+                <span class="mulopimfwc_switch-on">On</span>
+                <span class="mulopimfwc_switch-off">Off</span>
+            </label>
+            <p class="description"><?php echo esc_html__('Send desktop/mobile notifications through a registered service worker.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
         );
 
         add_settings_field(
-            'notification_admin_notice',
-            __('Show admin notices', 'multi-location-product-and-inventory-management'),
+            'notification_poll_interval',
+            __('Poll interval (milliseconds)', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
-                $value = isset($notif['show_admin_notice']) ? $notif['show_admin_notice'] : 'on';
-            ?>
-                <label class="mulopimfwc_switch">
-                    <input type="checkbox" name="mulopimfwc_display_options[notification_settings][show_admin_notice]" value="on" <?php checked($value, 'on'); ?>>
-                    <span class="mulopimfwc_slider round"></span>
-                    <span class="mulopimfwc_switch-on">On</span>
-                    <span class="mulopimfwc_switch-off">Off</span>
-                </label>
-                <p class="description"><?php echo esc_html__('Display persistent admin notices along with floating alerts.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php
+                $value = isset($notif['poll_interval']) ? $notif['poll_interval'] : '30000';
+        ?>
+            <input type="number" min="5000" step="5000" name="mulopimfwc_display_options[notification_settings][poll_interval]" value="<?php echo esc_attr($value); ?>">
+            <p class="description"><?php echo esc_html__('How often to check for new alerts (minimum 5000ms). Lower values increase server load.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_style',
+            __('Notification style', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['notification_style']) ? $notif['notification_style'] : 'modern';
+        ?>
+            <select name="mulopimfwc_display_options[notification_settings][notification_style]">
+                <option value="modern" <?php selected($value, 'modern'); ?>><?php echo esc_html__('Modern', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="minimal" <?php selected($value, 'minimal'); ?>><?php echo esc_html__('Minimal', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="classic" <?php selected($value, 'classic'); ?>><?php echo esc_html__('Classic', 'multi-location-product-and-inventory-management'); ?></option>
+            </select>
+            <p class="description"><?php echo esc_html__('Choose the visual style for floating notifications.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        add_settings_field(
+            'notification_sound_enabled',
+            __('Enable notification sound', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
+                $value = isset($notif['sound_enabled']) ? $notif['sound_enabled'] : 'off';
+        ?>
+            <label class="mulopimfwc_switch">
+                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][sound_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                <span class="mulopimfwc_slider round"></span>
+                <span class="mulopimfwc_switch-on">On</span>
+                <span class="mulopimfwc_switch-off">Off</span>
+            </label>
+            <p class="description"><?php echo esc_html__('Play a sound when new notifications arrive.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -2176,7 +2567,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
                             <div>
                                 <h4 style="margin:0;"><?php echo esc_html__('Social Channels', 'multi-location-product-and-inventory-management'); ?></h4>
-                        <p class="description" style="margin:4px 0 0 0;"><?php echo esc_html__('Add one or more destinations. Use webhook URL for Slack/Teams/Discord/Custom; use chat ID/token for Telegram.', 'multi-location-product-and-inventory-management'); ?></p>
+                                <p class="description" style="margin:4px 0 0 0;"><?php echo esc_html__('Add one or more destinations. Use webhook URL for Slack/Teams/Discord/Custom; use chat ID/token for Telegram.', 'multi-location-product-and-inventory-management'); ?></p>
                             </div>
                             <button type="button" class="button button-primary" id="mulopimfwc-add-social-channel"><?php echo esc_html__('Add Social Media', 'multi-location-product-and-inventory-management'); ?></button>
                         </div>
@@ -2270,32 +2661,32 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                         <script>
                             jQuery(function($) {
                                 const container = $('#mulopimfwc-social-channels');
-                        const tmpl = $('#mulopimfwc-social-channel-template').html();
-                        const emptyRow = $('#mulopimfwc-social-empty');
-                        const ajaxAction = 'mulopimfwc_test_social_channel';
-                        const digestClock = $('#mulopimfwc-digest-clock');
-                        if (digestClock.length) {
-                            const startUtcMs = parseInt(digestClock.data('start-utc'), 10) * 1000;
-                            const offsetHours = parseFloat(digestClock.data('gmt-offset')) || 0;
-                            const offsetMs = offsetHours * 3600 * 1000;
-                            const startClient = Date.now();
-                            const tzLabel = digestClock.data('tz-label') || 'UTC';
+                                const tmpl = $('#mulopimfwc-social-channel-template').html();
+                                const emptyRow = $('#mulopimfwc-social-empty');
+                                const ajaxAction = 'mulopimfwc_test_social_channel';
+                                const digestClock = $('#mulopimfwc-digest-clock');
+                                if (digestClock.length) {
+                                    const startUtcMs = parseInt(digestClock.data('start-utc'), 10) * 1000;
+                                    const offsetHours = parseFloat(digestClock.data('gmt-offset')) || 0;
+                                    const offsetMs = offsetHours * 3600 * 1000;
+                                    const startClient = Date.now();
+                                    const tzLabel = digestClock.data('tz-label') || 'UTC';
 
-                            const pad = (n) => (n < 10 ? '0' + n : n);
-                            const tick = () => {
-                                const nowMs = startUtcMs + offsetMs + (Date.now() - startClient);
-                                const d = new Date(nowMs);
-                                const label = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' ' + tzLabel;
-                                digestClock.text(label);
-                            };
-                            tick();
-                            setInterval(tick, 1000);
-                        }
+                                    const pad = (n) => (n < 10 ? '0' + n : n);
+                                    const tick = () => {
+                                        const nowMs = startUtcMs + offsetMs + (Date.now() - startClient);
+                                        const d = new Date(nowMs);
+                                        const label = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' ' + tzLabel;
+                                        digestClock.text(label);
+                                    };
+                                    tick();
+                                    setInterval(tick, 1000);
+                                }
 
-                        function toggleChannelFields(row) {
-                            const type = row.find('.mulopimfwc-channel-type').val();
-                            const isTelegram = type === 'telegram';
-                            row.find('.mulopimfwc-field-webhook')[isTelegram ? 'hide' : 'show']();
+                                function toggleChannelFields(row) {
+                                    const type = row.find('.mulopimfwc-channel-type').val();
+                                    const isTelegram = type === 'telegram';
+                                    row.find('.mulopimfwc-field-webhook')[isTelegram ? 'hide' : 'show']();
                                     row.find('.mulopimfwc-field-telegram')[isTelegram ? 'show' : 'hide']();
                                 }
 
@@ -3022,6 +3413,17 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'mulopimfwc_customer_experience_section'
         );
 
+        // Add Allow Location Change in Cart field
+        add_settings_field(
+            'allow_location_change_in_cart',
+            __('Allow Location Change in Cart', 'multi-location-product-and-inventory-management'),
+            function () {
+                $this->render_advance_checkbox("allow_location_change_in_cart", __("Allow customers to change the location for products in their cart if the product is available in multiple locations.", 'multi-location-product-and-inventory-management'));
+            },
+            'location-customer-experience-settings',
+            'mulopimfwc_customer_experience_section'
+        );
+
         // Add Location Notification Note field
         add_settings_section(
             'location_notification_note',
@@ -3379,6 +3781,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             }
             $notification['floating_position'] = $position;
 
+            $size = sanitize_text_field($notification_input['floating_size'] ?? 'comfy');
+            $valid_sizes = ['comfy', 'compact'];
+            if (!in_array($size, $valid_sizes, true)) {
+                $size = 'comfy';
+            }
+            $notification['floating_size'] = $size;
+
             $duration = preg_replace('/[^0-9]/', '', $notification_input['floating_duration'] ?? '');
             $notification['floating_duration'] = $duration !== '' ? $duration : '6000';
             $notification['notification_template'] = sanitize_textarea_field($notification_input['notification_template'] ?? '[{event}] {message}');
@@ -3453,6 +3862,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     {
     ?>
         <div class="wrap">
+            <h1 style="display: none !important;"><?php echo esc_html__('Settings', 'multi-location-product-and-inventory-management'); ?></h1>
             <!-- welcome box here -->
             <div class="plugincy-filter-welcome-container">
                 <div class="welcome-header">
@@ -4059,7 +4469,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 </div>
                                 <div class="lwp-settings-section">
                                     <div class="lwp-settings-box">
-                                        <?php do_settings_sections('lwp-social-notifications-settings'); ?>
+                                        <?php do_settings_sections('lwp-api-webhooks-settings'); ?>
                                     </div>
                                 </div>
                                 <div class="lwp-settings-section">
@@ -4572,6 +4982,201 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                         'difficulty' => 'intermediate',
                         'topics' => ['Teams', 'Webhooks', 'Notifications', 'Slack/Discord/Teams'],
                     ],
+                    [
+                        'number' => 14,
+                        'title' => __('API & Webhook Integration: Bulk Inventory Sync', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Complete guide to integrating your WMS, POS, or ERP systems with the plugin using REST API endpoints and webhooks. Learn how to sync inventory in bulk via CSV or API, set up real-time webhook updates, generate API keys, configure authentication, and automate inventory management across multiple locations. This tutorial covers bulk operations, single product updates, CSV import/export, webhook configuration, and best practices for external system integration.', 'multi-location-product-and-inventory-management'),
+                        'url' => 'https://www.youtube.com/embed/VIDEO_ID_API_WEBHOOK',
+                        'duration' => '12:45',
+                        'difficulty' => 'advanced',
+                        'topics' => ['REST API', 'Webhooks', 'WMS Integration', 'POS Integration', 'Bulk Sync', 'CSV Import', 'Inventory Automation', 'API Authentication'],
+                        'example_requests' => [
+                            'get_api_keys' => [
+                                'title' => __('How to Get API Key & Webhook Secret', 'multi-location-product-and-inventory-management'),
+                                'method' => 'GET',
+                                'url' => 'WordPress Admin → Multi Location Products → API & Webhooks',
+                                'headers' => null,
+                                'body' => [
+                                    'step_1' => 'Navigate to WordPress Admin Dashboard',
+                                    'step_2' => 'Go to: Multi Location Products → API & Webhooks',
+                                    'step_3' => 'Scroll to "API Authentication" section',
+                                    'step_4' => 'Click "Generate API Key" button (if no key exists)',
+                                    'step_5' => 'Copy the generated API key immediately',
+                                    'step_6' => 'Click "Generate Webhook Secret" button (if no secret exists)',
+                                    'step_7' => 'Copy the generated webhook secret immediately',
+                                    'step_8' => 'Store both keys securely (they are shown only once)',
+                                    'important_note' => 'If you lose your keys, you must generate new ones. Old keys will no longer work.',
+                                ],
+                                'response' => [
+                                    'api_key_location' => 'Displayed in "API Key" field after generation',
+                                    'webhook_secret_location' => 'Displayed in "Webhook Secret" field after generation',
+                                    'security_warning' => 'Keys are displayed only once for security. Copy them immediately.',
+                                    'usage_api_key' => 'Use in X-API-Key header for REST API requests',
+                                    'usage_webhook_secret' => 'Use in X-Webhook-Secret header for webhook requests',
+                                ]
+                            ],
+                            'bulk_sync' => [
+                                'title' => __('Bulk Sync Example', 'multi-location-product-and-inventory-management'),
+                                'method' => 'POST',
+                                'url' => '/mulopimfwc/v1/inventory/bulk-sync',
+                                'headers' => [
+                                    'Content-Type: application/json',
+                                    'X-API-Key: your-api-key-here'
+                                ],
+                                'body' => [
+                                    'items' => [
+                                        [
+                                            'sku' => 'PROD-001',
+                                            'location_slug' => 'main-store',
+                                            'stock' => 100,
+                                            'regular_price' => '29.99',
+                                            'sale_price' => '24.99'
+                                        ],
+                                        [
+                                            'product_id' => 123,
+                                            'location_id' => 5,
+                                            'stock' => 50,
+                                            'regular_price' => '19.99'
+                                        ]
+                                    ]
+                                ],
+                                'response' => [
+                                    'success' => true,
+                                    'message' => 'Processed 2 items. 2 succeeded, 0 failed.',
+                                    'results' => [
+                                        'success' => 2,
+                                        'failed' => 0,
+                                        'errors' => []
+                                    ]
+                                ]
+                            ],
+                            'single_update' => [
+                                'title' => __('Single Product Update Example', 'multi-location-product-and-inventory-management'),
+                                'method' => 'POST',
+                                'url' => '/mulopimfwc/v1/inventory/update',
+                                'headers' => [
+                                    'Content-Type: application/json',
+                                    'X-API-Key: your-api-key-here'
+                                ],
+                                'body' => [
+                                    'product_id' => 456,
+                                    'location_id' => 3,
+                                    'stock' => 25,
+                                    'regular_price' => '39.99',
+                                    'sale_price' => '34.99',
+                                    'backorders' => 'no',
+                                    'disabled' => false
+                                ],
+                                'response' => [
+                                    'success' => true,
+                                    'message' => 'Inventory updated successfully.',
+                                    'data' => [
+                                        'product_id' => 456,
+                                        'location_id' => 3,
+                                        'sku' => 'PROD-456'
+                                    ]
+                                ]
+                            ],
+                            'export_csv' => [
+                                'title' => __('Export Inventory CSV Example', 'multi-location-product-and-inventory-management'),
+                                'method' => 'GET',
+                                'url' => '/mulopimfwc/v1/inventory/export?format=csv&location_id=5',
+                                'headers' => [
+                                    'X-API-Key: your-api-key-here'
+                                ],
+                                'body' => null,
+                                'response' => [
+                                    'note' => 'Returns CSV file download with headers: product_id, sku, product_name, location_id, location_slug, location_name, stock, regular_price, sale_price, backorders, disabled'
+                                ]
+                            ],
+                            'export_json' => [
+                                'title' => __('Export Inventory JSON Example', 'multi-location-product-and-inventory-management'),
+                                'method' => 'GET',
+                                'url' => '/mulopimfwc/v1/inventory/export?format=json',
+                                'headers' => [
+                                    'X-API-Key: your-api-key-here'
+                                ],
+                                'body' => null,
+                                'response' => [
+                                    'success' => true,
+                                    'count' => 150,
+                                    'data' => [
+                                        [
+                                            'product_id' => 123,
+                                            'sku' => 'PROD-001',
+                                            'product_name' => 'Sample Product',
+                                            'location_id' => 5,
+                                            'location_slug' => 'main-store',
+                                            'location_name' => 'Main Store',
+                                            'stock' => 100,
+                                            'regular_price' => '29.99',
+                                            'sale_price' => '24.99',
+                                            'backorders' => 'no',
+                                            'disabled' => false
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            'webhook' => [
+                                'title' => __('Webhook Example', 'multi-location-product-and-inventory-management'),
+                                'method' => 'POST',
+                                'url' => '/mulopimfwc/v1/webhook/inventory-update',
+                                'headers' => [
+                                    'Content-Type: application/json',
+                                    'X-Webhook-Secret: your-webhook-secret-here'
+                                ],
+                                'body' => [
+                                    'sku' => 'PROD-001',
+                                    'location_slug' => 'main-store',
+                                    'stock' => 75
+                                ],
+                                'response' => [
+                                    'success' => true,
+                                    'message' => 'Inventory updated via webhook.',
+                                    'data' => [
+                                        'product_id' => 123,
+                                        'location_id' => 5,
+                                        'sku' => 'PROD-001'
+                                    ]
+                                ]
+                            ],
+                            'get_locations' => [
+                                'title' => __('Get Locations Example', 'multi-location-product-and-inventory-management'),
+                                'method' => 'GET',
+                                'url' => '/mulopimfwc/v1/locations',
+                                'headers' => [
+                                    'X-API-Key: your-api-key-here'
+                                ],
+                                'body' => null,
+                                'response' => [
+                                    'success' => true,
+                                    'count' => 3,
+                                    'data' => [
+                                        [
+                                            'id' => 5,
+                                            'slug' => 'main-store',
+                                            'name' => 'Main Store',
+                                            'description' => 'Our primary retail location'
+                                        ],
+                                        [
+                                            'id' => 6,
+                                            'slug' => 'warehouse',
+                                            'name' => 'Warehouse',
+                                            'description' => 'Distribution center'
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            'products' => [
+                                'title' => __('Get Products Example', 'multi-location-product-and-inventory-management'),
+                                'method' => 'GET',
+                                'url' => '/mulopimfwc/v1/products',
+                                'headers' => [
+                                    'X-API-Key: your-api-key-here'
+                                ],
+                            ],
+                        ],
+                    ],
                 ];
 
                 // Calculate total minutes from tutorial durations (safely handle missing or different formats)
@@ -4722,6 +5327,72 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                                 </div>
                                             <?php } ?>
                                         </div>
+                                    </div>
+                                <?php } ?>
+
+                                <!-- Usage Examples Section -->
+                                <?php if (isset($tutorial['example_requests']) && !empty($tutorial['example_requests'])) { ?>
+                                    <div class="lwp-tutorial-examples-section">
+                                        <div class="lwp-tutorial-section-label">
+                                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                                                <path d="M9.4 16.6L4.8 12l4.6-4.6M14.6 16.6l4.6-4.6-4.6-4.6" fill="none" stroke="currentColor" stroke-width="2" />
+                                            </svg>
+                                            <?php echo esc_html__('Usage Examples', 'multi-location-product-and-inventory-management'); ?>
+                                        </div>
+                                        <?php foreach ($tutorial['example_requests'] as $example_key => $example) { ?>
+                                            <div class="lwp-example-item">
+                                                <div class="lwp-example-header" onclick="toggleExample(this)">
+                                                    <div class="lwp-example-title">
+                                                        <strong><?php echo esc_html($example['title'] ?? ''); ?></strong>
+                                                        <span class="lwp-example-method"><?php echo esc_html($example['method'] ?? 'POST'); ?></span>
+                                                    </div>
+                                                    <div class="lwp-example-toggle">
+                                                        <svg class="lwp-example-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div class="lwp-example-content">
+                                                    <div class="lwp-example-url">
+                                                        <span class="lwp-example-label"><?php echo esc_html__('Endpoint:', 'multi-location-product-and-inventory-management'); ?></span>
+                                                        <code><?php echo esc_html($example['url'] ?? ''); ?></code>
+                                                    </div>
+                                                    <?php if (isset($example['headers']) && !empty($example['headers'])) { ?>
+                                                        <div class="lwp-example-headers">
+                                                            <span class="lwp-example-label"><?php echo esc_html__('Headers:', 'multi-location-product-and-inventory-management'); ?></span>
+                                                            <pre><code><?php echo esc_html(implode("\n", $example['headers'])); ?></code></pre>
+                                                        </div>
+                                                    <?php } ?>
+                                                    <?php if (isset($example['body']) && !empty($example['body']) && $example['body'] !== null) { ?>
+                                                        <div class="lwp-example-body">
+                                                            <span class="lwp-example-label"><?php echo esc_html__('Steps / Request Body:', 'multi-location-product-and-inventory-management'); ?></span>
+                                                            <?php
+                                                            if (is_array($example['body']) && isset($example['body']['step_1'])) {
+                                                                echo '<div class="lwp-example-steps">';
+                                                                foreach ($example['body'] as $key => $value) {
+                                                                    if (strpos($key, 'step_') === 0 || strpos($key, 'important_') === 0) {
+                                                                        echo '<div class="lwp-example-step-item">';
+                                                                        echo '<strong>' . esc_html(ucfirst(str_replace('_', ' ', $key))) . ':</strong>';
+                                                                        echo '<span>' . esc_html($value) . '</span>';
+                                                                        echo '</div>';
+                                                                    }
+                                                                }
+                                                                echo '</div>';
+                                                            } else {
+                                                                echo '<pre><code>' . esc_html(json_encode($example['body'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</code></pre>';
+                                                            }
+                                                            ?>
+                                                        </div>
+                                                    <?php } ?>
+                                                    <?php if (isset($example['response']) && !empty($example['response'])) { ?>
+                                                        <div class="lwp-example-response">
+                                                            <span class="lwp-example-label"><?php echo esc_html__('Response:', 'multi-location-product-and-inventory-management'); ?></span>
+                                                            <pre><code><?php echo esc_html(json_encode($example['response'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)); ?></code></pre>
+                                                        </div>
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                        <?php } ?>
                                     </div>
                                 <?php } ?>
                             </div>
@@ -5233,7 +5904,199 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 .lwp-support-item svg {
                     flex-shrink: 0;
                 }
+
+                /* Usage Examples Section */
+                .lwp-tutorial-examples-section {
+                    margin-top: 20px;
+                    border-top: 1px solid #e2e8f0;
+                    padding-top: 20px;
+                }
+
+                .lwp-example-item {
+                    margin-bottom: 16px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    background: #fff;
+                    transition: all 0.3s ease;
+                }
+
+                .lwp-example-item:hover {
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .lwp-example-header {
+                    padding: 14px 16px;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #f8fafc;
+                    transition: background 0.2s ease;
+                }
+
+                .lwp-example-header:hover {
+                    background: #f1f5f9;
+                }
+
+                .lwp-example-header.active {
+                    background: #e0f2fe;
+                }
+
+                .lwp-example-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    flex: 1;
+                }
+
+                .lwp-example-method {
+                    padding: 4px 8px;
+                    background: #3b82f6;
+                    color: #fff;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                }
+
+                .lwp-example-toggle {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #64748b;
+                    font-size: 13px;
+                }
+
+                .lwp-example-preview {
+                    font-family: monospace;
+                    color: #64748b;
+                }
+
+                .lwp-example-arrow {
+                    width: 16px;
+                    height: 16px;
+                    transition: transform 0.3s ease;
+                }
+
+                .lwp-example-header.active .lwp-example-arrow {
+                    transform: rotate(180deg);
+                }
+
+                .lwp-example-content {
+                    max-height: 0;
+                    overflow: hidden;
+                    transition: max-height 0.3s ease;
+                    background: #fff;
+                }
+
+                .lwp-example-header.active+.lwp-example-content {
+                    max-height: 2000px;
+                }
+
+                .lwp-example-content>div {
+                    padding: 16px;
+                    border-top: 1px solid #e2e8f0;
+                }
+
+                .lwp-example-content>div:first-child {
+                    border-top: none;
+                }
+
+                .lwp-example-label {
+                    display: block;
+                    font-weight: 600;
+                    color: #334155;
+                    margin-bottom: 8px;
+                    font-size: 13px;
+                }
+
+                .lwp-example-url code {
+                    display: block;
+                    padding: 10px;
+                    background: #f1f5f9;
+                    border-radius: 6px;
+                    color: #1e293b;
+                    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                    font-size: 13px;
+                    word-break: break-all;
+                }
+
+                .lwp-example-headers pre,
+                .lwp-example-body pre,
+                .lwp-example-response pre {
+                    margin: 0;
+                    padding: 12px;
+                    background: #1e293b;
+                    border-radius: 6px;
+                    overflow-x: auto;
+                }
+
+                .lwp-example-headers code,
+                .lwp-example-body code,
+                .lwp-example-response code {
+                    color: #e2e8f0;
+                    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                    font-size: 12px;
+                    line-height: 1.6;
+                }
+
+                .lwp-example-steps {
+                    padding: 12px;
+                    background: #f8fafc;
+                    border-radius: 6px;
+                    border-left: 3px solid #3b82f6;
+                }
+
+                .lwp-example-step-item {
+                    padding: 8px 0;
+                    border-bottom: 1px solid #e2e8f0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .lwp-example-step-item:last-child {
+                    border-bottom: none;
+                }
+
+                .lwp-example-step-item strong {
+                    color: #1e293b;
+                    font-size: 13px;
+                }
+
+                .lwp-example-step-item span {
+                    color: #64748b;
+                    font-size: 13px;
+                    padding-left: 12px;
+                }
             </style>
+
+            <script>
+                function toggleExample(header) {
+                    const item = header.closest('.lwp-example-item');
+                    const content = item.querySelector('.lwp-example-content');
+                    const isActive = header.classList.contains('active');
+
+                    // Close all other examples in the same section
+                    const section = item.closest('.lwp-tutorial-examples-section');
+                    if (section) {
+                        const allItems = section.querySelectorAll('.lwp-example-item');
+                        allItems.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.querySelector('.lwp-example-header').classList.remove('active');
+                            }
+                        });
+                    }
+
+                    // Toggle current example
+                    if (isActive) {
+                        header.classList.remove('active');
+                    } else {
+                        header.classList.add('active');
+                    }
+                }
+            </script>
         </div>
 
     <?php
@@ -5308,6 +6171,23 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             <span class="mulopimfwc_switch-on">On</span>
             <span class="mulopimfwc_switch-off">Off</span>
         </label>
+        <?php
+        if (isset($message) && !empty($message)) {
+            echo "<p class='description' style='max-width: 800px;'>" . wp_kses($message, $mulopimfwc_allowed_tags) . "</p>";
+        }
+    }
+
+    public function render_advance_select($key, $message = null, $options = [], $disabled = false, $is_free = true)
+    {
+        global $mulopimfwc_allowed_tags, $mulopimfwc_options;
+        ?> <select <?php echo $disabled ? 'disabled' : ''; ?> name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]'>
+            <?php
+            foreach ($options as $value => $label) {
+                $selected = (isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] == $value) ? 'selected' : '';
+                echo "<option value='" . esc_attr($value) . "' " . esc_attr($selected) . ">" . esc_html($label) . "</option>";
+            }
+            ?>
+        </select>
 <?php
         if (isset($message) && !empty($message)) {
             echo "<p class='description' style='max-width: 800px;'>" . wp_kses($message, $mulopimfwc_allowed_tags) . "</p>";

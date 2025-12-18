@@ -278,7 +278,7 @@ add_action('woocommerce_product_after_variable_attributes', function ($loop, $va
                         $location_sale_price = get_post_meta($variation->ID, '_location_sale_price_' . $location->term_id, true);
                         $location_backorders = get_post_meta($variation->ID, '_location_backorders_' . $location->term_id, true);
                     ?>
-                        <tr>
+                        <tr id="location-<?php echo esc_attr($location->term_id); ?>">
                             <td><?php echo esc_html($location->name); ?></td>
                             <td>
                                 <input type="number"
@@ -1109,7 +1109,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.6.15');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.6.20');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -1129,7 +1129,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.6.15');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.0.6.20');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }

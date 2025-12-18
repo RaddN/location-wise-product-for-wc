@@ -181,9 +181,14 @@
         }
 
         setLocationCookie(location) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
+            const expires = new Date(Date.now() + this.getCookieExpiryMs());
             document.cookie = `mulopimfwc_store_location=${location}; expires=${expires.toUTCString()}; path=/; samesite=lax`;
+        }
+
+        getCookieExpiryMs() {
+            const days = parseInt(this.cfg.cookieExpiryDays, 10);
+            const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
+            return safeDays * 24 * 60 * 60 * 1000;
         }
 
         getCookie(name) {

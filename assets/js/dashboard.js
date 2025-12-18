@@ -12,6 +12,7 @@
     window.revenueByLocationChart = null;
     window.newProductsChart = null;
     window.investmentChart = null;
+    window.mulopimfwcFiltersApplied = false;
 
     $(document).ready(function () {
         initDashboardCharts();
@@ -84,7 +85,7 @@
             if (days) {
                 dateTo = formatDate(today);
                 const fromDate = new Date(today);
-                fromDate.setDate(today.getDate() - days);
+                fromDate.setDate(today.getDate() - (days - 1));
                 dateFrom = formatDate(fromDate);
             } else if (period === 'this-month') {
                 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -107,6 +108,7 @@
             const dateTo = $('#filter-date-to').val();
             const location = $('#filter-location').val();
             const status = $('#filter-status').val();
+            const filtersActive = isFilterActiveInput(dateFrom, dateTo, location, status);
 
             if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
                 alert('Date From cannot be later than Date To');
@@ -129,7 +131,18 @@
                 success: function (response) {
                     if (response.success) {
                         updateDashboardData(response.data);
-                        showFilterBadge();
+                        if (response.data && response.data.comparison) {
+                            updateComparisonIndicators(response.data.comparison);
+                        } else {
+                            clearComparisonIndicators();
+                        }
+                        window.mulopimfwcFiltersApplied = filtersActive;
+                        if (filtersActive) {
+                            showFilterBadge();
+                            updateConnectionStatus('paused');
+                        } else {
+                            $('.lwp-filter-active-badge').remove();
+                        }
                     }
                 },
                 error: function (xhr, status, error) {
@@ -149,6 +162,8 @@
             $('#filter-status').val('all');
             $('.lwp-quick-btn').removeClass('active');
             $('.lwp-filter-active-badge').remove();
+            clearComparisonIndicators();
+            window.mulopimfwcFiltersApplied = false;
             location.reload();
         });
     }
@@ -233,33 +248,38 @@
         if (data.summary) {
             $('.lwp-stat-item').each(function () {
                 const label = $(this).find('.lwp-stat-label').text();
+                const labelText = label.toLowerCase();
 
-                if (label.toLowerCase().includes('orders') && data.summary.total_orders !== undefined) {
+                if (labelText.includes('products') && data.summary.total_products !== undefined) {
+                    $(this).find('.lwp-stat-value').text(data.summary.total_products.toLocaleString());
+                } else if (labelText.includes('locations') && data.summary.total_locations !== undefined) {
+                    $(this).find('.lwp-stat-value').text(data.summary.total_locations.toLocaleString());
+                } else if (labelText.includes('orders') && data.summary.total_orders !== undefined) {
                     $(this).find('.lwp-stat-value').text(data.summary.total_orders.toLocaleString());
-                } else if (label.toLowerCase().includes('revenue') && data.summary.total_revenue !== undefined) {
+                } else if (labelText.includes('revenue') && data.summary.total_revenue !== undefined) {
                     $(this).find('.lwp-stat-value').html(formatCurrency(data.summary.total_revenue));
-                } else if (label.toLowerCase().includes('stock') && data.summary.total_stock !== undefined) {
+                } else if (labelText.includes('stock') && data.summary.total_stock !== undefined) {
                     $(this).find('.lwp-stat-value').text(data.summary.total_stock.toLocaleString());
-                } else if (label.toLowerCase().includes('investment') && data.summary.total_investment !== undefined) {
+                } else if (labelText.includes('investment') && data.summary.total_investment !== undefined) {
                     $(this).find('.lwp-stat-value').html(formatCurrency(data.summary.total_investment));
                 }
             });
         }
 
         if (data.productCounts) {
-            refreshProductsChart(data.productCounts);
+            refreshProductsChart(data.productCounts, data.previousProductCounts);
         }
 
         if (data.stockLevels) {
-            refreshStockChart(data.stockLevels);
+            refreshStockChart(data.stockLevels, data.previousStockLevels);
         }
 
         if (data.orders) {
-            refreshOrdersChart(data.orders);
+            refreshOrdersChart(data.orders, data.previousOrders);
         }
 
         if (data.revenue) {
-            refreshRevenueChart(data.revenue);
+            refreshRevenueChart(data.revenue, data.previousRevenue);
         }
 
         if (data.dateLabels && data.dateCounts) {
@@ -323,6 +343,99 @@
         }
     }
 
+    function updateComparisonIndicators(comparison) {
+        if (!comparison) {
+            return;
+        }
+
+        const label = comparison.label || '';
+        setComparisonMetric('products', comparison.products, label);
+        setComparisonMetric('locations', comparison.locations, label);
+        setComparisonMetric('orders', comparison.orders, label);
+        setComparisonMetric('revenue', comparison.revenue, label);
+        setComparisonMetric('investment', comparison.investment, label);
+    }
+
+    function setComparisonMetric(metric, data, label) {
+        const $el = $(`.lwp-stat-progress[data-metric="${metric}"]`);
+
+        if ($el.length === 0) {
+            return;
+        }
+
+        if (!data) {
+            $el.removeClass('is-visible').empty().removeAttr('title').removeAttr('aria-label');
+            return;
+        }
+
+        let badgeText = '';
+        let badgeClass = 'is-flat';
+        let iconType = 'flat';
+
+        if (data.direction === 'new') {
+            badgeText = 'New';
+            badgeClass = 'is-new';
+            iconType = 'new';
+        } else {
+            const percent = typeof data.percent === 'number' ? data.percent.toFixed(1) : null;
+
+            if (data.direction === 'down') {
+                badgeClass = 'is-down';
+                badgeText = percent !== null ? `-${percent}%` : '-';
+                iconType = 'down';
+            } else if (data.direction === 'up') {
+                badgeClass = 'is-up';
+                badgeText = percent !== null ? `+${percent}%` : '+';
+                iconType = 'up';
+            } else {
+                badgeClass = 'is-flat';
+                badgeText = percent !== null ? `${percent}%` : '0.0%';
+                iconType = 'flat';
+            }
+        }
+
+        const cleanedLabel = label ? label.replace(/^vs\s+/i, '') : '';
+        const fallbackLabel = mulopimfwc_DashboardData.i18n.previousPeriod || 'previous period';
+        const tooltipText = cleanedLabel
+            ? `Based on ${cleanedLabel}`
+            : `Based on ${fallbackLabel.toLowerCase()}`;
+
+        $el.attr('title', tooltipText);
+        $el.attr('aria-label', tooltipText);
+        $el.html(`
+            <span class="lwp-stat-progress-badge ${badgeClass}">
+                ${getProgressIcon(iconType)}
+                <span class="lwp-stat-progress-value">${badgeText}</span>
+            </span>
+        `);
+        $el.addClass('is-visible');
+    }
+
+    function clearComparisonIndicators() {
+        $('.lwp-stat-progress').removeClass('is-visible').empty().removeAttr('title').removeAttr('aria-label');
+    }
+
+    function getProgressIcon(type) {
+        switch (type) {
+            case 'up':
+                return '<svg class="lwp-stat-progress-icon" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 2L10 6H7V10H5V6H2L6 2Z" fill="currentColor"/></svg>';
+            case 'down':
+                return '<svg class="lwp-stat-progress-icon" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 10L2 6H5V2H7V6H10L6 10Z" fill="currentColor"/></svg>';
+            case 'new':
+                return '<svg class="lwp-stat-progress-icon" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M5 2H7V5H10V7H7V10H5V7H2V5H5V2Z" fill="currentColor"/></svg>';
+            default:
+                return '<svg class="lwp-stat-progress-icon" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 6H10V7H2V6Z" fill="currentColor"/></svg>';
+        }
+    }
+
+    function isFilterActiveInput(dateFrom, dateTo, location, status) {
+        return Boolean(dateFrom || dateTo || location !== 'all' || status !== 'all');
+    }
+
+    function filtersAreActive() {
+        return window.mulopimfwcFiltersApplied === true;
+    }
+
     /**
      * Format currency
      */
@@ -359,80 +472,308 @@
             return;
         }
 
+        // Initial fetch
         fetchRealtimeData();
 
+        // Set up interval polling
+        const pollInterval = parseInt(mulopimfwc_DashboardData.poll_interval || LIVE_POLL_INTERVAL, 10);
+        
         if (!window.mulopimfwcDashboardRealtimeTimer) {
-            window.mulopimfwcDashboardRealtimeTimer = setInterval(fetchRealtimeData, LIVE_POLL_INTERVAL);
+            window.mulopimfwcDashboardRealtimeTimer = setInterval(function () {
+                fetchRealtimeData();
+            }, pollInterval);
         }
+
+        // Add connection status indicator
+        addConnectionStatusIndicator();
+
+        // Handle visibility change - pause when tab is hidden, resume when visible
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                // Tab is hidden, can pause or reduce frequency
+                if (window.mulopimfwcDashboardRealtimeTimer) {
+                    clearInterval(window.mulopimfwcDashboardRealtimeTimer);
+                    window.mulopimfwcDashboardRealtimeTimer = null;
+                }
+            } else {
+                // Tab is visible, resume polling
+                if (!window.mulopimfwcDashboardRealtimeTimer) {
+                    fetchRealtimeData(); // Immediate fetch
+                    window.mulopimfwcDashboardRealtimeTimer = setInterval(function () {
+                        fetchRealtimeData();
+                    }, pollInterval);
+                }
+            }
+        });
     }
 
     function fetchRealtimeData() {
+        if (filtersAreActive()) {
+            updateConnectionStatus('paused');
+            return;
+        }
+
         if (window.mulopimfwcRealtimeActive) {
             return;
         }
 
         window.mulopimfwcRealtimeActive = true;
+        updateConnectionStatus('syncing');
+
+        const startTime = Date.now();
 
         $.post(mulopimfwc_DashboardData.ajaxurl, {
             action: 'mulopimfwc_dashboard_live_data',
             nonce: mulopimfwc_DashboardData.realtime_nonce
         })
             .done(function (response) {
+                const duration = Date.now() - startTime;
+                
                 if (response.success && response.data) {
                     updateDashboardData(response.data);
                     document.dispatchEvent(new CustomEvent('mulopimfwcRealtimeData', { detail: response.data }));
+                    updateConnectionStatus('connected', duration);
+                } else {
+                    updateConnectionStatus('error');
+                    console.warn('Dashboard sync failed:', response);
                 }
+            })
+            .fail(function (xhr, status, error) {
+                updateConnectionStatus('error');
+                console.error('Dashboard sync error:', error);
             })
             .always(function () {
                 window.mulopimfwcRealtimeActive = false;
             });
     }
 
-    function refreshProductsChart(counts) {
+    function addConnectionStatusIndicator() {
+        if ($('#mulopimfwc-connection-status').length > 0) {
+            return;
+        }
+
+        const indicator = $('<div id="mulopimfwc-connection-status" style="position: fixed; bottom: 20px; right: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 10000; display: flex; align-items: center; gap: 8px;">' +
+            '<span class="status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>' +
+            '<span class="status-text">Connected</span>' +
+            '</div>');
+
+        $('body').append(indicator);
+
+        // Hide after 3 seconds if connected
+        setTimeout(function () {
+            if (indicator.find('.status-dot').css('background-color') === 'rgb(16, 185, 129)') {
+                indicator.fadeOut();
+            }
+        }, 3000);
+    }
+
+    function updateConnectionStatus(status, duration) {
+        const indicator = $('#mulopimfwc-connection-status');
+        if (indicator.length === 0) {
+            return;
+        }
+
+        const dot = indicator.find('.status-dot');
+        const text = indicator.find('.status-text');
+
+        indicator.show();
+
+        switch (status) {
+            case 'connected':
+                dot.css('background', '#10b981');
+                text.text(duration ? `Synced (${duration}ms)` : 'Connected');
+                setTimeout(function () {
+                    indicator.fadeOut();
+                }, 2000);
+                break;
+            case 'syncing':
+                dot.css('background', '#f59e0b');
+                text.text('Syncing...');
+                break;
+            case 'paused':
+                dot.css('background', '#6b7280');
+                text.text('Paused (filters)');
+                break;
+            case 'error':
+                dot.css('background', '#ef4444');
+                text.text('Connection error');
+                setTimeout(function () {
+                    indicator.fadeOut();
+                }, 5000);
+                break;
+            default:
+                dot.css('background', '#6b7280');
+                text.text('Disconnected');
+        }
+    }
+
+    function refreshProductsChart(counts, previousCounts) {
         if (!window.locationProductsChart) {
             return;
         }
 
         const labels = Object.keys(counts);
-        const values = Object.values(counts);
+        const originalValues = getValuesForLabels(counts, labels);
+        const values = addValueOffsets(originalValues);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(37, 99, 235, 0.7)');
+        const previousColors = labels.map(label => {
+            const color = mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(37, 99, 235, 1)';
+            return hexToRgba(color, 0.35);
+        });
         window.locationProductsChart.data.labels = labels;
         window.locationProductsChart.data.datasets[0].data = values;
+        window.locationProductsChart.data.datasets[0].backgroundColor = bgColors;
+        // Store original values in dataset for tooltip/display
+        window.locationProductsChart.data.datasets[0].originalValues = originalValues;
+
+        if (previousCounts) {
+            const previousValues = getValuesForLabels(previousCounts, labels);
+            const previousOffsets = addValueOffsets(previousValues);
+            if (!window.locationProductsChart.data.datasets[1]) {
+                window.locationProductsChart.data.datasets[1] = {
+                    data: [],
+                    backgroundColor: previousColors,
+                    borderColor: '#f8f9fa',
+                    borderWidth: 1,
+                    hoverOffset: 0,
+                    weight: 0.6,
+                    originalValues: [],
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period'
+                };
+            }
+            window.locationProductsChart.data.datasets[1].data = previousOffsets;
+            window.locationProductsChart.data.datasets[1].backgroundColor = previousColors;
+            window.locationProductsChart.data.datasets[1].originalValues = previousValues;
+            window.locationProductsChart.data.datasets[1].hidden = false;
+        } else if (window.locationProductsChart.data.datasets[1]) {
+            window.locationProductsChart.data.datasets[1].data = [];
+            window.locationProductsChart.data.datasets[1].originalValues = [];
+            window.locationProductsChart.data.datasets[1].hidden = true;
+        }
         window.locationProductsChart.update();
     }
 
-    function refreshStockChart(levels) {
+    function refreshStockChart(levels, previousLevels) {
         if (!window.locationStockChart) {
             return;
         }
 
         const labels = Object.keys(levels);
-        const values = Object.values(levels);
+        const values = getValuesForLabels(levels, labels);
         window.locationStockChart.data.labels = labels;
         window.locationStockChart.data.datasets[0].data = values;
+
+        if (previousLevels) {
+            const previousValues = getValuesForLabels(previousLevels, labels);
+            if (!window.locationStockChart.data.datasets[1]) {
+                window.locationStockChart.data.datasets[1] = {
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period',
+                    data: [],
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                    borderDash: [6, 4],
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointBackgroundColor: '#94a3b8',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: false,
+                    hidden: false
+                };
+            }
+            window.locationStockChart.data.datasets[1].data = previousValues;
+            window.locationStockChart.data.datasets[1].hidden = false;
+        } else if (window.locationStockChart.data.datasets[1]) {
+            window.locationStockChart.data.datasets[1].data = [];
+            window.locationStockChart.data.datasets[1].hidden = true;
+        }
         window.locationStockChart.update();
     }
 
-    function refreshOrdersChart(orders) {
+    function refreshOrdersChart(orders, previousOrders) {
         if (!window.ordersByLocationChart) {
             return;
         }
 
         const labels = Object.keys(orders);
-        const values = Object.values(orders);
+        const originalValues = getValuesForLabels(orders, labels);
+        const values = addValueOffsets(originalValues);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(153, 102, 255, 0.7)');
+        const previousColors = labels.map(label => {
+            const color = mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(153, 102, 255, 0.7)';
+            return hexToRgba(color, 0.35);
+        });
         window.ordersByLocationChart.data.labels = labels;
         window.ordersByLocationChart.data.datasets[0].data = values;
+        window.ordersByLocationChart.data.datasets[0].backgroundColor = bgColors;
+        // Store original values in dataset for tooltip/display
+        window.ordersByLocationChart.data.datasets[0].originalValues = originalValues;
+
+        if (previousOrders) {
+            const previousValues = getValuesForLabels(previousOrders, labels);
+            const previousOffsets = addValueOffsets(previousValues);
+            if (!window.ordersByLocationChart.data.datasets[1]) {
+                window.ordersByLocationChart.data.datasets[1] = {
+                    data: [],
+                    backgroundColor: previousColors,
+                    borderColor: '#f8f9fa',
+                    borderWidth: 1,
+                    hoverOffset: 0,
+                    weight: 0.6,
+                    originalValues: [],
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period'
+                };
+            }
+            window.ordersByLocationChart.data.datasets[1].data = previousOffsets;
+            window.ordersByLocationChart.data.datasets[1].backgroundColor = previousColors;
+            window.ordersByLocationChart.data.datasets[1].originalValues = previousValues;
+            window.ordersByLocationChart.data.datasets[1].hidden = false;
+        } else if (window.ordersByLocationChart.data.datasets[1]) {
+            window.ordersByLocationChart.data.datasets[1].data = [];
+            window.ordersByLocationChart.data.datasets[1].originalValues = [];
+            window.ordersByLocationChart.data.datasets[1].hidden = true;
+        }
         window.ordersByLocationChart.update();
     }
 
-    function refreshRevenueChart(revenue) {
+    function refreshRevenueChart(revenue, previousRevenue) {
         if (!window.revenueByLocationChart) {
             return;
         }
 
         const labels = Object.keys(revenue);
-        const values = Object.values(revenue);
+        const values = getValuesForLabels(revenue, labels);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(75, 192, 192, 0.7)');
+        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(75, 192, 192, 1)');
         window.revenueByLocationChart.data.labels = labels;
         window.revenueByLocationChart.data.datasets[0].data = values;
+        window.revenueByLocationChart.data.datasets[0].backgroundColor = bgColors;
+        window.revenueByLocationChart.data.datasets[0].borderColor = borderColors;
+
+        if (previousRevenue) {
+            const previousValues = getValuesForLabels(previousRevenue, labels);
+            const previousColors = borderColors.map(color => hexToRgba(color, 0.35));
+            if (!window.revenueByLocationChart.data.datasets[1]) {
+                window.revenueByLocationChart.data.datasets[1] = {
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period',
+                    data: [],
+                    backgroundColor: previousColors,
+                    borderColor: previousColors,
+                    borderWidth: 1,
+                    barThickness: 30,
+                    maxBarThickness: 40
+                };
+            }
+            window.revenueByLocationChart.data.datasets[1].data = previousValues;
+            window.revenueByLocationChart.data.datasets[1].backgroundColor = previousColors;
+            window.revenueByLocationChart.data.datasets[1].borderColor = previousColors;
+            window.revenueByLocationChart.data.datasets[1].hidden = false;
+        } else if (window.revenueByLocationChart.data.datasets[1]) {
+            window.revenueByLocationChart.data.datasets[1].data = [];
+            window.revenueByLocationChart.data.datasets[1].hidden = true;
+        }
         window.revenueByLocationChart.update();
     }
 
@@ -443,6 +784,28 @@
 
         window.newProductsChart.data.labels = data.dateLabels;
         window.newProductsChart.data.datasets[0].data = data.dateCounts;
+        if (data.previousDateCounts) {
+            if (!window.newProductsChart.data.datasets[1]) {
+                window.newProductsChart.data.datasets[1] = {
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period',
+                    data: [],
+                    fill: false,
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                    borderDash: [6, 4],
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    borderWidth: 2,
+                    hidden: false
+                };
+            }
+            window.newProductsChart.data.datasets[1].data = data.previousDateCounts;
+            window.newProductsChart.data.datasets[1].hidden = false;
+        } else if (window.newProductsChart.data.datasets[1]) {
+            window.newProductsChart.data.datasets[1].data = [];
+            window.newProductsChart.data.datasets[1].hidden = true;
+        }
         window.newProductsChart.update();
     }
 
@@ -453,10 +816,107 @@
 
         window.investmentChart.data.labels = data.monthlyInvestmentLabels;
         window.investmentChart.data.datasets[0].data = data.monthlyInvestmentData;
+        if (data.previousInvestmentData) {
+            if (!window.investmentChart.data.datasets[1]) {
+                window.investmentChart.data.datasets[1] = {
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period',
+                    data: [],
+                    fill: false,
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                    borderDash: [6, 4],
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    borderWidth: 2,
+                    hidden: false
+                };
+            }
+            window.investmentChart.data.datasets[1].data = data.previousInvestmentData;
+            window.investmentChart.data.datasets[1].hidden = false;
+        } else if (window.investmentChart.data.datasets[1]) {
+            window.investmentChart.data.datasets[1].data = [];
+            window.investmentChart.data.datasets[1].hidden = true;
+        }
         window.investmentChart.update();
     }
 
     window.mulopimfwc_update_dashboard = updateDashboardData;
+
+    /**
+     * Add small offsets to duplicate values to prevent overlapping in charts
+     */
+    function addValueOffsets(values) {
+        const valueMap = {};
+        const offsetValues = [...values];
+        
+        // Group indices by value
+        values.forEach((value, index) => {
+            if (!valueMap[value]) {
+                valueMap[value] = [];
+            }
+            valueMap[value].push(index);
+        });
+        
+        // Add tiny offsets to duplicate values
+        Object.keys(valueMap).forEach(value => {
+            const indices = valueMap[value];
+            if (indices.length > 1) {
+                // Multiple items with same value - add small offsets
+                indices.forEach((index, offsetIndex) => {
+                    // Add very small offset (0.0001 * offsetIndex) to ensure different angles
+                    offsetValues[index] = parseFloat(value) + (offsetIndex * 0.0001);
+                });
+            }
+        });
+        
+        return offsetValues;
+    }
+
+    function getValuesForLabels(source, labels) {
+        if (!source) {
+            return labels.map(() => 0);
+        }
+
+        return labels.map(label => {
+            const value = source[label];
+            return value !== undefined ? value : 0;
+        });
+    }
+
+    function hexToRgba(color, alpha) {
+        if (!color || typeof color !== 'string') {
+            return color;
+        }
+
+        if (color.startsWith('rgba')) {
+            return color;
+        }
+
+        if (color.startsWith('rgb')) {
+            return color.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+        }
+
+        if (color[0] !== '#') {
+            return color;
+        }
+
+        let hex = color.slice(1);
+        if (hex.length === 3) {
+            hex = hex.split('').map(char => char + char).join('');
+        }
+
+        if (hex.length !== 6) {
+            return color;
+        }
+
+        const num = parseInt(hex, 16);
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
 
     /**
      * Initialize Products by Location Chart
@@ -466,33 +926,52 @@
         if (!ctx) return;
 
         const labels = Object.keys(mulopimfwc_DashboardData.productCounts);
-        const values = Object.values(mulopimfwc_DashboardData.productCounts);
-        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label]);
-        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label]);
+        const originalValues = Object.values(mulopimfwc_DashboardData.productCounts);
+        const values = addValueOffsets(originalValues);
+        const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(37, 99, 235, 0.7)');
+        const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(37, 99, 235, 1)');
+        const previousColors = borderColors.map(color => hexToRgba(color, 0.35));
 
         window.locationProductsChart = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
                     data: values,
                     backgroundColor: bgColors,
                     borderColor: '#f8f9fa',
-                    borderWidth: 2
+                    borderWidth: 2,
+                    // Store original values in dataset metadata
+                    originalValues: originalValues
+                }, {
+                    data: [],
+                    backgroundColor: previousColors,
+                    borderColor: '#f8f9fa',
+                    borderWidth: 1,
+                    hoverOffset: 0,
+                    weight: 0.6,
+                    originalValues: [],
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period',
+                    hidden: true
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '45%',
                 plugins: {
                     legend: { display: false },
                     title: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                const value = context.raw;
-                                const percentage = percentages[context.dataIndex];
-                                return `${context.label}: ${value} (${percentage}%)`;
+                                // Use original value for display, not the offset value
+                                const origValues = context.dataset.originalValues || originalValues;
+                                const value = origValues[context.dataIndex];
+                                const total = origValues.reduce((sum, v) => sum + v, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                const datasetLabel = context.dataset.label ? `${context.dataset.label} - ` : '';
+                                return `${datasetLabel}${context.label}: ${value} (${percentage}%)`;
                             }
                         },
                         bodyFont: { size: 14 },
@@ -517,11 +996,15 @@
                         (chartArea.bottom - chartArea.top) / 2
                     );
 
-                    const dataValues = chart.data.datasets[0].data;
-                    const total = dataValues.reduce((sum, value) => sum + value, 0);
-                    const percentages = dataValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
+                    // Use original values for percentage calculation
+                    const origValues = chart.data.datasets[0].originalValues || originalValues;
+                    const total = origValues.reduce((sum, value) => sum + value, 0);
+                    const percentages = origValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
+                    const datasetColors = chart.data.datasets[0].backgroundColor || bgColors;
 
-                    dataValues.forEach((value, index) => {
+                    // Use chart data for arc positions (with offsets)
+                    const chartData = chart.data.datasets[0].data;
+                    chartData.forEach((value, index) => {
                         const meta = chart.getDatasetMeta(0);
                         const arc = meta.data[index];
                         const angle = (arc.startAngle + arc.endAngle) / 2;
@@ -538,7 +1021,7 @@
                         const y3 = y2;
 
                         ctx.beginPath();
-                        ctx.strokeStyle = bgColors[index];
+                        ctx.strokeStyle = datasetColors[index];
                         ctx.lineWidth = 1;
                         ctx.moveTo(x1, y1);
                         ctx.lineTo(x2, y2);
@@ -593,6 +1076,21 @@
                     pointBorderWidth: 2,
                     pointRadius: 5,
                     pointHoverRadius: 7
+                }, {
+                    label: mulopimfwc_DashboardData.i18n.previousPeriod || 'Previous period',
+                    data: [],
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                    borderDash: [6, 4],
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3,
+                    pointBackgroundColor: '#94a3b8',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    hidden: true
                 }]
             },
             options: {
@@ -696,7 +1194,10 @@
                             label: function (context) {
                                 const count = context.raw;
                                 const label = mulopimfwc_DashboardData.i18n.newProducts || 'Products';
-                                return label + ': ' + count + (count === 1 ? ' product' : ' products');
+                                const datasetLabel = context.dataset.label && context.dataset.label !== label
+                                    ? context.dataset.label + ' - '
+                                    : '';
+                                return datasetLabel + label + ': ' + count + (count === 1 ? ' product' : ' products');
                             }
                         }
                     }
@@ -776,7 +1277,11 @@
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                return mulopimfwc_DashboardData.i18n.investment + ': ' +
+                                const baseLabel = mulopimfwc_DashboardData.i18n.investment || 'Investment';
+                                const datasetLabel = context.dataset.label && context.dataset.label !== baseLabel
+                                    ? context.dataset.label + ' - '
+                                    : '';
+                                return datasetLabel + baseLabel + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
                                         currency: currency_code
@@ -797,7 +1302,8 @@
         if (!ctx) return;
 
         const labels = Object.keys(mulopimfwc_DashboardData.ordersByLocation);
-        const values = Object.values(mulopimfwc_DashboardData.ordersByLocation);
+        const originalValues = Object.values(mulopimfwc_DashboardData.ordersByLocation);
+        const values = addValueOffsets(originalValues);
         const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(153, 102, 255, 0.7)');
 
         window.ordersByLocationChart = new Chart(ctx, {
@@ -809,7 +1315,9 @@
                     backgroundColor: bgColors,
                     borderColor: '#f8f9fa',
                     borderWidth: 2,
-                    hoverOffset: 10
+                    hoverOffset: 10,
+                    // Store original values in dataset metadata
+                    originalValues: originalValues
                 }]
             },
             options: {
@@ -821,9 +1329,13 @@
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                const value = context.raw;
-                                const percentage = percentages[context.dataIndex];
-                                return `${context.label}: ${value} ${mulopimfwc_DashboardData.i18n.orders} (${percentage}%)`;
+                                // Use original value for display, not the offset value
+                                const origValues = context.dataset.originalValues || originalValues;
+                                const value = origValues[context.dataIndex];
+                                const total = origValues.reduce((sum, v) => sum + v, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                const datasetLabel = context.dataset.label ? `${context.dataset.label} - ` : '';
+                                return `${datasetLabel}${context.label}: ${value} ${mulopimfwc_DashboardData.i18n.orders} (${percentage}%)`;
                             }
                         }
                     }
@@ -841,11 +1353,15 @@
                         (chartArea.bottom - chartArea.top) / 2
                     );
 
-                    const dataValues = chart.data.datasets[0].data;
-                    const total = dataValues.reduce((sum, value) => sum + value, 0);
-                    const percentages = dataValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
+                    // Use original values for percentage calculation
+                    const origValues = chart.data.datasets[0].originalValues || originalValues;
+                    const total = origValues.reduce((sum, value) => sum + value, 0);
+                    const percentages = origValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
+                    const datasetColors = chart.data.datasets[0].backgroundColor || bgColors;
 
-                    dataValues.forEach((value, index) => {
+                    // Use chart data for arc positions (with offsets)
+                    const chartData = chart.data.datasets[0].data;
+                    chartData.forEach((value, index) => {
                         const meta = chart.getDatasetMeta(0);
                         const arc = meta.data[index];
                         const angle = (arc.startAngle + arc.endAngle) / 2;
@@ -860,7 +1376,7 @@
                         const y3 = y2;
 
                         ctx.beginPath();
-                        ctx.strokeStyle = bgColors[index];
+                        ctx.strokeStyle = datasetColors[index];
                         ctx.lineWidth = 1;
                         ctx.moveTo(x1, y1);
                         ctx.lineTo(x2, y2);
@@ -950,7 +1466,11 @@
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                return mulopimfwc_DashboardData.i18n.revenue + ': ' +
+                                const baseLabel = mulopimfwc_DashboardData.i18n.revenue || 'Revenue';
+                                const datasetLabel = context.dataset.label && context.dataset.label !== baseLabel
+                                    ? context.dataset.label + ' - '
+                                    : '';
+                                return datasetLabel + baseLabel + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
                                         currency: currency_code

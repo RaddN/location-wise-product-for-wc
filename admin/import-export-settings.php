@@ -26,7 +26,7 @@ class mulopimfwc_Import_Export
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '1.0.6.15',
+            '1.0.6.20',
             true
         );
 
@@ -192,6 +192,7 @@ new mulopimfwc_Import_Export();
 
 
 add_action('wp_ajax_mulopimfwc_export_products_csv', 'mulopimfwc_export_products_csv_handler');
+add_action('wp_ajax_mulopimfwc_import_inventory_csv', 'mulopimfwc_import_inventory_csv_handler');
 
 function mulopimfwc_export_products_csv_handler() {
     // Verify nonce
@@ -316,5 +317,155 @@ function mulopimfwc_export_products_csv_handler() {
         'locations' => $locations_formatted,
         'count' => count($products_data),
     ]);
+}
+
+/**
+ * Handle CSV import for inventory
+ */
+function mulopimfwc_import_inventory_csv_handler() {
+    // Verify nonce
+    check_ajax_referer('mulopimfwc_import_export_nonce', 'nonce');
+    
+    // Check user permissions
+    if (!current_user_can('manage_woocommerce')) {
+        wp_send_json_error(['message' => __('You do not have permission to import inventory.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    // Check if file was uploaded
+    if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+        wp_send_json_error(['message' => __('Please select a valid CSV file.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    $file = $_FILES['csv_file'];
+    $file_path = $file['tmp_name'];
+    
+    // Validate file type
+    $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if ($file_ext !== 'csv') {
+        wp_send_json_error(['message' => __('Invalid file type. Please upload a CSV file.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    // Parse CSV
+    $handle = fopen($file_path, 'r');
+    if ($handle === false) {
+        wp_send_json_error(['message' => __('Failed to read CSV file.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    // Read headers
+    $headers = fgetcsv($handle);
+    if ($headers === false) {
+        fclose($handle);
+        wp_send_json_error(['message' => __('Invalid CSV format.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    // Normalize headers (remove BOM if present)
+    $headers = array_map(function($header) {
+        return trim(str_replace("\xEF\xBB\xBF", '', $header));
+    }, $headers);
+    
+    // Expected columns
+    $expected_columns = ['product_id', 'sku', 'location_id', 'location_slug', 'stock', 'regular_price', 'sale_price', 'backorders', 'disabled'];
+    
+    // Validate headers
+    $missing_columns = array_diff(['product_id', 'sku', 'location_id', 'location_slug'], $headers);
+    if (count($missing_columns) === 4) {
+        fclose($handle);
+        wp_send_json_error(['message' => __('CSV must contain at least one of: product_id, sku, location_id, or location_slug.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    $results = array(
+        'success' => 0,
+        'failed' => 0,
+        'errors' => array(),
+    );
+    
+    $line_number = 1;
+    
+    // Process rows
+    while (($row = fgetcsv($handle)) !== false) {
+        $line_number++;
+        
+        if (count($row) !== count($headers)) {
+            $results['failed']++;
+            $results['errors'][] = sprintf(__('Line %d: Column count mismatch.', 'multi-location-product-and-inventory-management'), $line_number);
+            continue;
+        }
+        
+        // Combine headers with row data
+        $data = array_combine($headers, $row);
+        
+        // Prepare item for API processing
+        $item = array();
+        
+        // Product identification
+        if (!empty($data['product_id'])) {
+            $item['product_id'] = intval($data['product_id']);
+        } elseif (!empty($data['sku'])) {
+            $item['sku'] = sanitize_text_field($data['sku']);
+        } else {
+            $results['failed']++;
+            $results['errors'][] = sprintf(__('Line %d: Product ID or SKU is required.', 'multi-location-product-and-inventory-management'), $line_number);
+            continue;
+        }
+        
+        // Location identification
+        if (!empty($data['location_id'])) {
+            $item['location_id'] = intval($data['location_id']);
+        } elseif (!empty($data['location_slug'])) {
+            $item['location_slug'] = sanitize_text_field($data['location_slug']);
+        } else {
+            $results['failed']++;
+            $results['errors'][] = sprintf(__('Line %d: Location ID or slug is required.', 'multi-location-product-and-inventory-management'), $line_number);
+            continue;
+        }
+        
+        // Stock
+        if (isset($data['stock']) && $data['stock'] !== '') {
+            $item['stock'] = floatval($data['stock']);
+        }
+        
+        // Prices
+        if (isset($data['regular_price']) && $data['regular_price'] !== '') {
+            $item['regular_price'] = floatval($data['regular_price']);
+        }
+        
+        if (isset($data['sale_price']) && $data['sale_price'] !== '') {
+            $item['sale_price'] = floatval($data['sale_price']);
+        }
+        
+        // Backorders
+        if (isset($data['backorders']) && $data['backorders'] !== '') {
+            $item['backorders'] = sanitize_text_field($data['backorders']);
+        }
+        
+        // Disabled
+        if (isset($data['disabled']) && $data['disabled'] !== '') {
+            $item['disabled'] = in_array(strtolower($data['disabled']), ['yes', '1', 'true', 'y'], true);
+        }
+        
+        // Process the item using the API class
+        $api_instance = new MULOPIMFWC_Inventory_Sync_API();
+        $result = $api_instance->process_inventory_item($item);
+        
+        if ($result['success']) {
+            $results['success']++;
+        } else {
+            $results['failed']++;
+            $results['errors'][] = sprintf(__('Line %d: %s', 'multi-location-product-and-inventory-management'), $line_number, $result['error']);
+        }
+    }
+    
+    fclose($handle);
+    
+    wp_send_json_success(array(
+        'message' => sprintf(__('Import completed. %d succeeded, %d failed.', 'multi-location-product-and-inventory-management'), $results['success'], $results['failed']),
+        'results' => $results,
+    ));
 }
 

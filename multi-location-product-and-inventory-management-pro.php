@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.6.15
+ * Version: 1.0.6.20
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -22,8 +22,12 @@ if (!defined('MULTI_LOCATION_PLUGIN_URL')) {
     define('MULTI_LOCATION_PLUGIN_URL', plugin_dir_url(__FILE__));
 }
 
+if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
+    define('MULTI_LOCATION_PLUGIN_BASE_NAME', plugin_basename(__FILE__));
+}
+
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.0.6.15");
+    define("mulopimfwc_VERSION", "1.0.6.20");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -1206,6 +1210,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'admin/location-managers.php';
     require_once plugin_dir_path(__FILE__) . 'includes/product-location-selector-single.php';
     require_once plugin_dir_path(__FILE__) . 'admin/import-export-settings.php';
+    require_once plugin_dir_path(__FILE__) . 'admin/api-settings.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-based-shipping.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-shipping-payment-tax.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-coupons.php';
@@ -1217,8 +1222,8 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'includes/location-hours-restriction.php';
     require_once plugin_dir_path(__FILE__) . 'includes/customer-location-insights.php';
     require_once plugin_dir_path(__FILE__) . 'includes/frontend-product-filter.php';
-
-
+    require_once plugin_dir_path(__FILE__) . 'includes/cash-on-pickup-payment-gateway.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/api/inventory-sync-api.php';
 
     class mulopimfwc_Location_Wise_Products
     {
@@ -1297,6 +1302,13 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_filter('woocommerce_add_cart_item_data', [$this, 'add_location_to_cart_item'], 10, 3);
             add_filter('woocommerce_get_item_data', [$this, 'display_location_in_cart'], 10, 2);
             add_action('woocommerce_checkout_create_order_line_item', [$this, 'save_location_to_order_item'], 10, 4);
+
+            // Allow location change in cart
+            add_action('woocommerce_after_cart_item_name', [$this, 'display_cart_location_selector'], 10, 2);
+            add_action('wp_ajax_update_cart_item_location', [$this, 'update_cart_item_location']);
+            add_action('wp_ajax_nopriv_update_cart_item_location', [$this, 'update_cart_item_location']);
+            add_action('wp_ajax_get_cart_item_locations', [$this, 'get_cart_item_locations']);
+            add_action('wp_ajax_nopriv_get_cart_item_locations', [$this, 'get_cart_item_locations']);
             add_action('woocommerce_before_order_itemmeta', [$this, 'display_location_in_order_items'], 10, 3);
             add_action('woocommerce_check_cart_items', [$this, 'validate_mixed_cart_locations']);
             add_action('woocommerce_before_cart_table', [$this, 'display_cart_location_summary']);
@@ -1328,6 +1340,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('woocommerce_checkout_order_processed', [$this, 'save_transfer_costs_to_order'], 10, 1);
             // Display transfer costs in admin order details
             add_action('woocommerce_admin_order_data_after_order_details', [$this, 'display_transfer_costs_in_order'], 10, 1);
+            add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
         }
 
         /**
@@ -1565,6 +1578,15 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
+            // enabled per location shipping methods
+            $enabled_per_location_shipping = isset($mulopimfwc_options['shipping_calculation_method']) && mulopimfwc_premium_feature()
+                ? $mulopimfwc_options['shipping_calculation_method']
+                : 'per_location';
+
+            if ($enabled_per_location_shipping === 'per_location') {
+                return;
+            }
+
             // Get user's selected location (destination)
             $selected_location = $this->get_current_location();
 
@@ -1663,6 +1685,15 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return $packages;
             }
 
+            // enabled per location shipping methods
+            $enabled_per_location_shipping = isset($mulopimfwc_options['shipping_calculation_method']) && mulopimfwc_premium_feature()
+                ? $mulopimfwc_options['shipping_calculation_method']
+                : 'per_location';
+
+            if ($enabled_per_location_shipping !== 'per_location') {
+                return $packages;
+            }
+
             // Get cart items grouped by location
             $items_by_location = $this->get_cart_items_by_location();
 
@@ -1687,7 +1718,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $package_contents_cost += $cart_item['line_total'];
                 }
 
-                $new_packages['location_' . $location_slug . '_' . $package_index] = [
+                $new_packages[] = [
+                    'package_key' => 'location_' . $location_slug . '_' . $package_index,
                     'contents' => $package_contents,
                     'contents_cost' => $package_contents_cost,
                     'applied_coupons' => WC()->cart->get_applied_coupons(),
@@ -2069,6 +2101,282 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                 echo '</div>';
             }
+        }
+
+        /**
+         * Check if product is available in multiple locations
+         */
+        private function is_product_available_in_multiple_locations($product_id, $variation_id = 0)
+        {
+            $options = get_option('mulopimfwc_display_options', []);
+            
+            $product_to_check = $variation_id > 0 ? $variation_id : $product_id;
+            $terms = wp_get_object_terms($product_to_check, 'mulopimfwc_store_location', ['fields' => 'all']);
+            
+            if (is_wp_error($terms) || empty($terms)) {
+                // Check if enable_all_locations is on
+                $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
+                if ($enable_all_locations === 'on') {
+                    // Get all locations
+                    global $mulopimfwc_locations;
+                    if (empty($mulopimfwc_locations)) {
+                        $mulopimfwc_locations = get_terms([
+                            'taxonomy' => 'mulopimfwc_store_location',
+                            'hide_empty' => false,
+                        ]);
+                    }
+                    return !empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations) && count($mulopimfwc_locations) > 1;
+                }
+                return false;
+            }
+            
+            // Filter out disabled locations
+            $active_locations = array_filter($terms, function($term) use ($product_to_check) {
+                $is_disabled = get_post_meta($product_to_check, '_location_disabled_' . $term->term_id, true);
+                return empty($is_disabled);
+            });
+            
+            return count($active_locations) > 1;
+        }
+
+        /**
+         * Display location selector in cart for products available in multiple locations
+         */
+        public function display_cart_location_selector($cart_item, $cart_item_key)
+        {
+            // Get options directly to ensure we have the latest value
+            $options = get_option('mulopimfwc_display_options', []);
+            
+            // Check if feature is enabled
+            $allow_location_change = isset($options['allow_location_change_in_cart']) 
+                ? $options['allow_location_change_in_cart'] 
+                : 'off';
+            
+            if ($allow_location_change !== 'on') {
+                return;
+            }
+            
+            $product_id = isset($cart_item['product_id']) ? $cart_item['product_id'] : 0;
+            $variation_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : 0;
+            
+            if (!$product_id) {
+                return;
+            }
+            
+            // Check if product is available in multiple locations
+            if (!$this->is_product_available_in_multiple_locations($product_id, $variation_id)) {
+                return;
+            }
+            
+            // Get current location from cart item
+            $current_location_slug = isset($cart_item['mulopimfwc_location']) ? $cart_item['mulopimfwc_location'] : '';
+            
+            // Get all available locations for this product
+            $product_to_check = $variation_id > 0 ? $variation_id : $product_id;
+            $terms = wp_get_object_terms($product_to_check, 'mulopimfwc_store_location', ['fields' => 'all']);
+            
+            if (is_wp_error($terms) || empty($terms)) {
+                // If product has no specific locations, check if enable_all_locations is on
+                $options = get_option('mulopimfwc_display_options', []);
+                $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
+                
+                if ($enable_all_locations === 'on') {
+                    // Get all locations
+                    global $mulopimfwc_locations;
+                    if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
+                        $mulopimfwc_locations = get_terms([
+                            'taxonomy' => 'mulopimfwc_store_location',
+                            'hide_empty' => false,
+                        ]);
+                    }
+                    $terms = !empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations) ? $mulopimfwc_locations : [];
+                } else {
+                    // Product has no locations assigned and enable_all_locations is off
+                    return;
+                }
+            }
+            
+            // Filter out disabled locations
+            $available_locations = array_filter($terms, function($term) use ($product_to_check) {
+                if (is_wp_error($term) || !is_object($term)) {
+                    return false;
+                }
+                $is_disabled = get_post_meta($product_to_check, '_location_disabled_' . $term->term_id, true);
+                return empty($is_disabled);
+            });
+            
+            // Reset array keys after filtering
+            $available_locations = array_values($available_locations);
+            
+            if (count($available_locations) <= 1) {
+                return;
+            }
+            
+            // Display location selector
+            ?>
+            <div class="mulopimfwc-cart-location-selector" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" data-product-id="<?php echo esc_attr($product_id); ?>" data-variation-id="<?php echo esc_attr($variation_id); ?>">
+                <label for="cart-location-<?php echo esc_attr($cart_item_key); ?>" style="font-size: 0.9em; font-weight: 600; display: block; margin-top: 8px; margin-bottom: 4px;">
+                    <?php esc_html_e('Change Location:', 'multi-location-product-and-inventory-management'); ?>
+                </label>
+                <select name="cart_location[<?php echo esc_attr($cart_item_key); ?>]" id="cart-location-<?php echo esc_attr($cart_item_key); ?>" class="mulopimfwc-cart-location-select" style="width: 100%; max-width: 300px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <?php foreach ($available_locations as $location): ?>
+                        <option value="<?php echo esc_attr($location->slug); ?>" <?php selected($current_location_slug, $location->slug); ?>>
+                            <?php echo esc_html($location->name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php
+        }
+
+        /**
+         * Update cart item location via AJAX
+         */
+        public function update_cart_item_location()
+        {
+            // Verify nonce
+            if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'mulopimfwc_update_cart_location')) {
+                wp_send_json_error(['message' => __('Security check failed.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field(wp_unslash($_POST['cart_item_key'])) : '';
+            $new_location_slug = isset($_POST['location_slug']) ? sanitize_text_field(wp_unslash($_POST['location_slug'])) : '';
+            
+            if (empty($cart_item_key) || empty($new_location_slug)) {
+                wp_send_json_error(['message' => __('Invalid parameters.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            if (!function_exists('WC') || !WC()->cart) {
+                wp_send_json_error(['message' => __('Cart not available.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            $cart = WC()->cart;
+            $cart_item = $cart->get_cart_item($cart_item_key);
+            
+            if (!$cart_item) {
+                wp_send_json_error(['message' => __('Cart item not found.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            // Get location term
+            $location_term = get_term_by('slug', $new_location_slug, 'mulopimfwc_store_location');
+            if (!$location_term || is_wp_error($location_term)) {
+                wp_send_json_error(['message' => __('Invalid location.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            // Update cart item data
+            $cart_item['mulopimfwc_location'] = $new_location_slug;
+            $cart_item['mulopimfwc_location_name'] = $location_term->name;
+            
+            // Update cart item
+            $cart->cart_contents[$cart_item_key] = $cart_item;
+            
+            // Clear cart cache
+            $this->clear_cart_cache();
+            
+            // Recalculate totals
+            $cart->calculate_totals();
+            
+            // Get updated cart item for response
+            $updated_cart_item = $cart->get_cart_item($cart_item_key);
+            
+            wp_send_json_success([
+                'message' => __('Location updated successfully.', 'multi-location-product-and-inventory-management'),
+                'location_name' => $location_term->name,
+                'cart_item_key' => $cart_item_key,
+                'cart_total' => $cart->get_cart_total(),
+                'cart_subtotal' => $cart->get_cart_subtotal(),
+            ]);
+        }
+
+        /**
+         * Get available locations for a cart item (for cart blocks)
+         */
+        public function get_cart_item_locations()
+        {
+            // Verify nonce
+            if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'mulopimfwc_update_cart_location')) {
+                wp_send_json_error(['message' => __('Security check failed.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field(wp_unslash($_POST['cart_item_key'])) : '';
+            $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+            $variation_id = isset($_POST['variation_id']) ? intval($_POST['variation_id']) : 0;
+            
+            if (empty($cart_item_key) || !$product_id) {
+                wp_send_json_error(['message' => __('Invalid parameters.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            if (!function_exists('WC') || !WC()->cart) {
+                wp_send_json_error(['message' => __('Cart not available.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            $cart = WC()->cart;
+            $cart_item = $cart->get_cart_item($cart_item_key);
+            
+            if (!$cart_item) {
+                wp_send_json_error(['message' => __('Cart item not found.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            // Get current location
+            $current_location_slug = isset($cart_item['mulopimfwc_location']) ? $cart_item['mulopimfwc_location'] : '';
+            
+            // Check if product is available in multiple locations
+            if (!$this->is_product_available_in_multiple_locations($product_id, $variation_id)) {
+                wp_send_json_error(['message' => __('Product is not available in multiple locations.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            // Get all available locations for this product
+            $product_to_check = $variation_id > 0 ? $variation_id : $product_id;
+            $terms = wp_get_object_terms($product_to_check, 'mulopimfwc_store_location', ['fields' => 'all']);
+            
+            if (is_wp_error($terms) || empty($terms)) {
+                // Check if enable_all_locations is on
+                $options = get_option('mulopimfwc_display_options', []);
+                $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
+                
+                if ($enable_all_locations === 'on') {
+                    global $mulopimfwc_locations;
+                    if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
+                        $mulopimfwc_locations = get_terms([
+                            'taxonomy' => 'mulopimfwc_store_location',
+                            'hide_empty' => false,
+                        ]);
+                    }
+                    $terms = !empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations) ? $mulopimfwc_locations : [];
+                } else {
+                    wp_send_json_error(['message' => __('Product has no locations assigned.', 'multi-location-product-and-inventory-management')]);
+                }
+            }
+            
+            // Filter out disabled locations
+            $available_locations = array_filter($terms, function($term) use ($product_to_check) {
+                if (is_wp_error($term) || !is_object($term)) {
+                    return false;
+                }
+                $is_disabled = get_post_meta($product_to_check, '_location_disabled_' . $term->term_id, true);
+                return empty($is_disabled);
+            });
+            
+            // Reset array keys
+            $available_locations = array_values($available_locations);
+            
+            if (count($available_locations) <= 1) {
+                wp_send_json_error(['message' => __('Product is not available in multiple locations.', 'multi-location-product-and-inventory-management')]);
+            }
+            
+            // Format locations for response
+            $locations_data = array_map(function($term) {
+                return [
+                    'slug' => $term->slug,
+                    'name' => $term->name,
+                    'term_id' => $term->term_id,
+                ];
+            }, $available_locations);
+            
+            wp_send_json_success([
+                'locations' => $locations_data,
+                'current_location' => $current_location_slug,
+            ]);
         }
 
         /**
@@ -3221,7 +3529,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.0.6.15',
+                '1.0.6.20',
                 true
             );
 
@@ -3241,7 +3549,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.0.6.15'
+                '1.0.6.20'
             );
         }
 
@@ -3347,9 +3655,48 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!is_array($links)) {
                 $links = [];
             }
+            $old_links = $links;
+            $links = [];
             $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=multi-location-product-and-inventory-management-settings')) . '">' . esc_html__('Settings', 'multi-location-product-and-inventory-management') . '</a>';
+            $create_location = '<a href="' . esc_url(admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product')) . '">' . esc_html__('Manage Locations', 'multi-location-product-and-inventory-management') . '</a>';
+            $support_link = '<a href="' . esc_url("https://www.plugincy.com/support/") . '">' . esc_html__('Support', 'multi-location-product-and-inventory-management') . '</a>';
+            $documentation_link = '<a href="' . esc_url("https://www.plugincy.com/documentation/multi-location-product-and-inventory-management/") . '">' . esc_html__('Documentation', 'multi-location-product-and-inventory-management') . '</a>';
+            $our_plugins_link = '<a href="' . esc_url(admin_url('admin.php?page=plugincy-plugins')) . '">' . esc_html__('Our Plugins', 'multi-location-product-and-inventory-management') . '</a>';
+            $links[] = $create_location;
             $links[] = $settings_link;
-            return $links;
+            $links[] = $support_link;
+            $links[] = $documentation_link;
+            $links[] = $our_plugins_link;
+            $links = array_merge($links, $old_links);
+            return array_filter($links);
+        }
+
+        /**
+         * Show row meta on the plugin screen.
+         *
+         * @param mixed $links Plugin Row Meta.
+         * @param mixed $file  Plugin Base file.
+         *
+         * @return array
+         */
+        public static function plugin_row_meta( $links, $file ) {
+            if ( MULTI_LOCATION_PLUGIN_BASE_NAME !== $file ) {
+                return $links;
+            }
+
+            $docs_url = 'https://plugincy.com/documentations/multi-location-product-and-inventory-management/';
+
+            $community_support_url = 'https://wordpress.org/support/plugin/multi-location-product-and-inventory-management/';
+
+            $support_url = 'https://www.plugincy.com/support/';
+
+            $row_meta = array(
+                'docs'    => '<a href="' . esc_url( $docs_url ) . '" aria-label="' . esc_attr__( 'View documentation', 'multi-location-product-and-inventory-management' ) . '">' . esc_html__( 'Docs', 'multi-location-product-and-inventory-management' ) . '</a>',
+                'support' => '<a href="' . esc_url( $support_url ) . '" aria-label="' . esc_attr__( 'Support', 'multi-location-product-and-inventory-management' ) . '">' . esc_html__( 'Support', 'multi-location-product-and-inventory-management' ) . '</a>',
+                'community_support' => '<a href="' . esc_url( $community_support_url ) . '" aria-label="' . esc_attr__( 'Visit community forums', 'multi-location-product-and-inventory-management' ) . '">' . esc_html__( 'Community support', 'multi-location-product-and-inventory-management' ) . '</a>',
+            );
+
+            return array_merge( $links, $row_meta );
         }
 
         public function enqueue_scripts()
@@ -3358,9 +3705,9 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             $cookie_expiry_days = mulopimfwc_get_location_cookie_expiry_days();
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6.15');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6.20');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6.15', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6.20', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
 
             // Check if cart grouping is enabled
@@ -3386,13 +3733,74 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.0.6.15',
+                    '1.0.6.20',
                     true
                 );
 
                 wp_add_inline_style('mulopimfwc_style', '.wc-block-components-product-details__location{display:none !important;}');
             }
 
+
+            // Check if allow location change in cart is enabled
+            $options = get_option('mulopimfwc_display_options', []);
+            $allow_location_change_in_cart = isset($options['allow_location_change_in_cart']) 
+                ? $options['allow_location_change_in_cart'] 
+                : 'off';
+            
+            if ($allow_location_change_in_cart === 'on' && (is_cart() || is_checkout())) {
+                wp_enqueue_script(
+                    'mulopimfwc-cart-location-change',
+                    plugins_url('assets/js/cart-location-change.js', __FILE__),
+                    ['jquery'],
+                    '1.0.6.20',
+                    true
+                );
+                
+                wp_localize_script('mulopimfwc-cart-location-change', 'mulopimfwcCartLocationChange', [
+                    'ajaxUrl' => admin_url('admin-ajax.php'),
+                    'nonce' => wp_create_nonce('mulopimfwc_update_cart_location'),
+                    'updatingText' => __('Updating...', 'multi-location-product-and-inventory-management'),
+                    'errorText' => __('Error updating location. Please try again.', 'multi-location-product-and-inventory-management'),
+                ]);
+                
+                // Add inline CSS
+                wp_add_inline_style('mulopimfwc_style', '
+                    .mulopimfwc-cart-location-selector {
+                        margin-top: 8px;
+                        margin-bottom: 8px;
+                    }
+                    .mulopimfwc-cart-location-selector label {
+                        display: block;
+                        font-size: 0.9em;
+                        font-weight: 600;
+                        margin-bottom: 4px;
+                        color: #333;
+                    }
+                    .mulopimfwc-cart-location-select {
+                        width: 100%;
+                        max-width: 300px;
+                        padding: 6px 10px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        font-size: 0.9em;
+                        background-color: #fff;
+                        cursor: pointer;
+                        transition: border-color 0.3s ease;
+                    }
+                    .mulopimfwc-cart-location-select:hover {
+                        border-color: #999;
+                    }
+                    .mulopimfwc-cart-location-select:focus {
+                        outline: none;
+                        border-color: #0073aa;
+                        box-shadow: 0 0 0 1px #0073aa;
+                    }
+                    .mulopimfwc-cart-location-selector.updating .mulopimfwc-cart-location-select {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+                ');
+            }
 
             wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
                 'cartHasProducts' => !WC()->cart->is_empty(),
@@ -3678,7 +4086,17 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return $cart_contents;
             }
 
+            // Ensure $cart_contents is an array
+            if (!is_array($cart_contents)) {
+                return $cart_contents;
+            }
+
             foreach ($cart_contents as $key => $item) {
+                // Ensure $item is an array and has product_id
+                if (!is_array($item) || !isset($item['product_id'])) {
+                    continue;
+                }
+                
                 if (!$this->product_belongs_to_location($item['product_id'])) {
                     $cart_contents[$key]['hidden_by_location'] = true;
                 }
@@ -3961,7 +4379,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.6.15");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.6.20");
         }
     }
 
@@ -4905,7 +5323,7 @@ function mulopimfwc_save_user_location()
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.0.6.15",
+                "1.0.6.20",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );
@@ -4979,26 +5397,42 @@ function mulopimfwc_enqueue_admin_notifications_assets()
         'realtime_enabled' => 'on',
         'floating_enabled' => 'on',
         'floating_position' => 'top-right',
+        'floating_size' => 'comfy',
         'floating_duration' => '6000',
         'notification_template' => '[{event}] {message}',
         'pwa_enabled' => 'off',
         'show_admin_notice' => 'on',
+        'poll_interval' => '30000',
+        'notification_style' => 'modern',
+        'sound_enabled' => 'off',
     ];
     $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings']) ? wp_parse_args($options['notification_settings'], $defaults) : $defaults;
 
+    // Get plugin icon URL
+    $icon_url = plugin_dir_url(__FILE__) . 'assets/images/icon-192x192.png';
+    if (!file_exists(plugin_dir_path(__FILE__) . 'assets/images/icon-192x192.png')) {
+        $icon_url = '';
+    }
+
     wp_localize_script('mulopimfwc-admin-notifications', 'mulopimfwcNotificationConfig', [
         'ajaxurl' => admin_url('admin-ajax.php'),
+        'adminurl' => admin_url(),
         'nonce' => wp_create_nonce('mulopimfwc_dashboard_realtime_nonce'),
         'realtime_enabled' => $notification_settings['realtime_enabled'],
         'floating_enabled' => $notification_settings['floating_enabled'],
         'floating_position' => $notification_settings['floating_position'],
+        'floating_size' => isset($notification_settings['floating_size']) ? $notification_settings['floating_size'] : 'comfy',
         'floating_duration' => $notification_settings['floating_duration'],
         'notification_template' => $notification_settings['notification_template'],
         'pwa_enabled' => $notification_settings['pwa_enabled'],
         'show_admin_notice' => $notification_settings['show_admin_notice'],
-        'pwa_sw_url' => plugin_dir_url(__FILE__) . 'assets/js/pwa-sw.js',
-        'pwa_icon' => '',
-        'poll_interval' => 30000,
+        'pwa_sw_url' => plugin_dir_url(__FILE__) . 'assets/js/service-worker.js',
+        'manifest_url' => plugin_dir_url(__FILE__) . 'assets/manifest.json',
+        'pwa_icon' => $icon_url,
+        'pwa_badge' => $icon_url,
+        'poll_interval' => isset($notification_settings['poll_interval']) ? $notification_settings['poll_interval'] : '30000',
+        'notification_style' => isset($notification_settings['notification_style']) ? $notification_settings['notification_style'] : 'modern',
+        'sound_enabled' => isset($notification_settings['sound_enabled']) ? $notification_settings['sound_enabled'] : 'off',
     ]);
 }
 

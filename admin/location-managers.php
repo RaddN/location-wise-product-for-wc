@@ -290,7 +290,7 @@ class MULOPIMFWC_Location_Managers
 
 ?>
         <div class="wrap mulopimfwc-location-managers-main <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', 'mulopimfwc_pro_only mulopimfwc_pro_only_blur1')); ?>">
-
+            <h1 style="display: none !important;"><?php echo esc_html__('Location Managers', 'multi-location-product-and-inventory-management'); ?></h1>
 
             <div class="mulopimfwc-location-managers">
                 <div class="mulopimfwc-manager-header">

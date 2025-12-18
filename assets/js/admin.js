@@ -1332,19 +1332,19 @@ jQuery(document).ready(function ($) {
         // Default section
         htmlParts.push('<div class="quick-edit-section">');
         htmlParts.push('<h3>Default Settings</h3>');
-        htmlParts.push('<div class="quick-edit-row">');
+        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
         htmlParts.push('<label>Stock Quantity:</label>');
         htmlParts.push('<input type="number" name="default[stock_quantity]" value="' + (data.default.stock_quantity || '') + '" min="0" step="1">');
         htmlParts.push('</div>');
-        htmlParts.push('<div class="quick-edit-row">');
+        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
         htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
         htmlParts.push('<input type="number" name="default[regular_price]" value="' + (data.default.regular_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
-        htmlParts.push('<div class="quick-edit-row">');
+        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
         htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
         htmlParts.push('<input type="number" name="default[sale_price]" value="' + (data.default.sale_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
-        htmlParts.push('<div class="quick-edit-row">');
+        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
         htmlParts.push('<label>Backorders:</label>');
         htmlParts.push('<select name="default[backorders]">');
         htmlParts.push('<option value="no"' + (data.default.backorders === 'no' ? ' selected' : '') + '>Do not allow</option>');
@@ -1352,11 +1352,11 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<option value="yes"' + (data.default.backorders === 'yes' ? ' selected' : '') + '>Allow</option>');
         htmlParts.push('</select>');
         htmlParts.push('</div>');
-        htmlParts.push('<div class="quick-edit-row">');
+        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
         htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
         htmlParts.push('<input type="number" name="default[purchase_price]" value="' + (data.default.purchase_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
-        htmlParts.push('<div class="quick-edit-row">');
+        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
         htmlParts.push('<label>Purchase Quantity:</label>');
         htmlParts.push('<input type="number" name="default[purchase_quantity]" value="' + (data.default.purchase_quantity || '') + '" min="0" step="1">');
         htmlParts.push('</div>');
@@ -1369,19 +1369,19 @@ jQuery(document).ready(function ($) {
             data.locations.forEach(function (location) {
                 htmlParts.push('<div class="quick-edit-location-group">');
                 htmlParts.push('<h4>' + escapeHtml(location.name) + '</h4>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Stock Quantity:</label>');
                 htmlParts.push('<input type="number" name="locations[' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1">');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="locations[' + location.id + '][regular_price]" value="' + (location.regular_price || '') + '" min="0" step="0.01">');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="locations[' + location.id + '][sale_price]" value="' + (location.sale_price || '') + '" min="0" step="0.01">');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Backorders:</label>');
                 htmlParts.push('<select name="locations[' + location.id + '][backorders]">');
                 htmlParts.push('<option value="off"' + (location.backorders === 'off' ? ' selected' : '') + '>Do not allow</option>');
@@ -1406,19 +1406,19 @@ jQuery(document).ready(function ($) {
                 // Default variation settings
                 htmlParts.push('<div class="quick-edit-subsection">');
                 htmlParts.push('<h5>Default</h5>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Stock Quantity:</label>');
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][stock_quantity]" value="' + (variation.default.stock_quantity || '') + '" min="0" step="1">');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][regular_price]" value="' + (variation.default.regular_price || '') + '" min="0" step="0.01">');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][sale_price]" value="' + (variation.default.sale_price || '') + '" min="0" step="0.01">');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Backorders:</label>');
                 htmlParts.push('<select name="variations[' + variation.id + '][default][backorders]">');
                 htmlParts.push('<option value="no"' + (variation.default.backorders === 'no' ? ' selected' : '') + '>Do not allow</option>');
@@ -1426,7 +1426,7 @@ jQuery(document).ready(function ($) {
                 htmlParts.push('<option value="yes"' + (variation.default.backorders === 'yes' ? ' selected' : '') + '>Allow</option>');
                 htmlParts.push('</select>');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="quick-edit-row">');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_price]" value="' + (variation.default.purchase_price || '') + '" min="0" step="0.01">');
                 htmlParts.push('</div>');
@@ -1439,19 +1439,19 @@ jQuery(document).ready(function ($) {
                     variation.locations.forEach(function (location) {
                         htmlParts.push('<div class="quick-edit-location-group">');
                         htmlParts.push('<h6>' + escapeHtml(location.name) + '</h6>');
-                        htmlParts.push('<div class="quick-edit-row">');
+                        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                         htmlParts.push('<label>Stock Quantity:</label>');
                         htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1">');
                         htmlParts.push('</div>');
-                        htmlParts.push('<div class="quick-edit-row">');
+                        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                         htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
                         htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][regular_price]" value="' + (location.regular_price || '') + '" min="0" step="0.01">');
                         htmlParts.push('</div>');
-                        htmlParts.push('<div class="quick-edit-row">');
+                        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                         htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
                         htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][sale_price]" value="' + (location.sale_price || '') + '" min="0" step="0.01">');
                         htmlParts.push('</div>');
-                        htmlParts.push('<div class="quick-edit-row">');
+                        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                         htmlParts.push('<label>Backorders:</label>');
                         htmlParts.push('<select name="variations[' + variation.id + '][locations][' + location.id + '][backorders]">');
                         htmlParts.push('<option value="off"' + (location.backorders === 'off' ? ' selected' : '') + '>Do not allow</option>');
@@ -1508,7 +1508,7 @@ jQuery(document).ready(function ($) {
         // Remove previous error states on input
         $('#quick-edit-form').on('input change', 'input, select', function() {
             $(this).removeClass('quick-edit-error');
-            $(this).closest('.quick-edit-row').find('.validation-error').remove();
+            $(this).closest('.mulopimfwc-quick-edit-row').find('.validation-error').remove();
         });
 
         // Validate on blur
@@ -1628,7 +1628,7 @@ jQuery(document).ready(function ($) {
 
     // Function to show field error
     function showFieldError($field, message) {
-        var $row = $field.closest('.quick-edit-row');
+        var $row = $field.closest('.mulopimfwc-quick-edit-row');
         $row.find('.validation-error').remove();
         $row.append('<span class="validation-error">' + escapeHtml(message) + '</span>');
     }
@@ -2173,6 +2173,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const checkedLocations = Array.from(document.querySelectorAll('#mulopimfwc_store_locationchecklist input[type="checkbox"]:checked'))
             .map(checkbox => checkbox.value);
 
+        // Hide all location rows (both simple product and variation tables)
         const allRows = document.querySelectorAll('tr[id^="location-"]');
         allRows.forEach(row => {
             row.style.display = 'none';
@@ -2188,11 +2189,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (plugincyMessage) {
                 plugincyMessage.style.display = 'none';
             }
+            
+            // Show rows for checked locations (works for both simple product and variation tables)
             checkedLocations.forEach(locationId => {
-                const row = document.getElementById(`location-${locationId}`);
-                if (row) {
+                // Use querySelectorAll to get all rows with this location ID (including variations)
+                const rows = document.querySelectorAll(`tr[id="location-${locationId}"]`);
+                rows.forEach(row => {
                     row.style.display = '';
-                }
+                });
             });
         }
     }
@@ -2221,6 +2225,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const highlightButton = document.getElementById('highlightButton');
     if (highlightButton) {
         highlightButton.addEventListener('click', highlightChecklist);
+    }
+    
+    // Handle WooCommerce variation loading events
+    if (typeof jQuery !== 'undefined') {
+        // When variations are loaded/added
+        jQuery(document).on('woocommerce_variations_loaded', function() {
+            updateLocationRows();
+        });
+        
+        // When a variation is added
+        jQuery(document).on('woocommerce_variations_added', function() {
+            updateLocationRows();
+        });
+        
+        // When variation panel is shown
+        jQuery(document).on('woocommerce_variations_loaded', function() {
+            updateLocationRows();
+        });
     }
 });
 

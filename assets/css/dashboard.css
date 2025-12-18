@@ -134,6 +134,7 @@ table.lwp-low-stock-table a {
   flex: 1;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   text-decoration: none;
+  position: relative;
 }
 .lwp-stat-item-icon {
   color: #2563eb;
@@ -161,6 +162,79 @@ table.lwp-low-stock-table a {
   margin-bottom: 7px;
 }
 
+.lwp-stat-progress {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  color: #64748b;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.lwp-stat-progress.is-visible {
+  display: inline-flex;
+}
+
+.lwp-stat-progress-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-weight: 600;
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.lwp-stat-progress-icon {
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.lwp-stat-progress-value {
+  display: inline-block;
+}
+
+.lwp-stat-progress-badge.is-up {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.lwp-stat-progress-badge.is-down {
+  background: #fff1f2;
+  color: #9f1239;
+  border-color: #fecdd3;
+}
+
+.lwp-stat-progress-badge.is-flat {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.lwp-stat-progress-badge.is-new {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.lwp-stat-progress-label {
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
 /* Low stock table */
 .lwp-low-stock-table {
   width: 100%;
@@ -178,6 +252,42 @@ table.lwp-low-stock-table a {
 .lwp-low-stock-table th {
   font-weight: 600;
   font-size: 18px;
+}
+
+.lwp-table-responsive {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.lwp-profitability-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.lwp-profitability-table th,
+.lwp-profitability-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.lwp-profitability-table th {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+
+.lwp-profitability-table td {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.lwp-profitability-description {
+  margin: 0;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #475569;
 }
 
 /* Responsive styles */

@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.0.6.15
+ * @since 1.0.6.20
  */
 
 if (!defined('ABSPATH')) {
@@ -517,14 +517,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.0.6.15'
+                '1.0.6.20'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.0.6.15',
+                '1.0.6.20',
                 true
             );
 
@@ -689,6 +689,157 @@ class Mulopimfwc_Customer_Location_Insights
             'mulopimfwc-analytics',
             [$this, 'render_analytics_page']
         );
+
+        add_submenu_page(
+            'multi-location-product-and-inventory-management',
+            __('Our Plugins', 'multi-location-product-and-inventory-management'),
+            __('Our Plugins', 'multi-location-product-and-inventory-management'),
+            'install_plugins',
+            'plugincy-plugins',
+            array($this, 'render_plugincy_plugins_page')
+        );
+
+    }
+
+    public function render_plugincy_plugins_page()
+    {
+        if (!current_user_can('install_plugins')) {
+            wp_die(esc_html__('You do not have sufficient permissions to install plugins on this site.', 'ultimate-product-table-for-woocommerce'));
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+        wp_enqueue_style('plugin-install');
+        wp_enqueue_script('plugin-install');
+        wp_enqueue_script('updates');
+        add_thickbox();
+
+        $api = plugins_api('query_plugins', array(
+            'author' => 'plugincy',
+            'page' => 1,
+            'per_page' => 30,
+            'fields' => array(
+                'short_description' => true,
+                'icons' => true,
+                'active_installs' => true,
+                'sections' => false,
+            ),
+        ));
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('Plugincy Plugins', 'ultimate-product-table-for-woocommerce') . '</h1>';
+
+        if (is_wp_error($api)) {
+            echo '<div class="notice notice-error"><p>' . esc_html($api->get_error_message()) . '</p></div></div>';
+            return;
+        }
+
+        $plugins = !empty($api->plugins) ? $api->plugins : array();
+
+        if (empty($plugins)) {
+            echo '<p>' . esc_html__('No plugins found for this author.', 'ultimate-product-table-for-woocommerce') . '</p></div>';
+            return;
+        }
+
+        echo '<div class="wp-list-table widefat plugin-install-grid">';
+
+        foreach ($plugins as $plugin) {
+            $plugin_obj = is_array($plugin) ? (object) $plugin : $plugin;
+
+            $status = install_plugin_install_status($plugin_obj);
+            $action_class = 'button';
+            $action_url = '';
+            $action_text = '';
+            $action_disabled = false;
+
+            switch ($status['status']) {
+                case 'install':
+                    $action_class = 'install-now button button-primary';
+                    $action_text = esc_html__('Install Now', 'ultimate-product-table-for-woocommerce');
+                    $action_url = $status['url'];
+                    break;
+                case 'update_available':
+                    $action_class = 'update-now button';
+                    $action_text = esc_html__('Update Now', 'ultimate-product-table-for-woocommerce');
+                    $action_url = $status['url'];
+                    break;
+                default:
+                    if (!empty($status['file']) && is_plugin_active($status['file'])) {
+                        $action_class = 'button disabled';
+                        $action_text = esc_html__('Active', 'ultimate-product-table-for-woocommerce');
+                        $action_disabled = true;
+                    } elseif (!empty($status['file']) && current_user_can('activate_plugin', $status['file'])) {
+                        $action_class = 'activate-now button button-primary';
+                        $action_text = esc_html__('Activate', 'ultimate-product-table-for-woocommerce');
+                        $action_url = wp_nonce_url(self_admin_url('plugins.php?action=activate&plugin=' . $status['file']), 'activate-plugin_' . $status['file']);
+                    } else {
+                        $action_class = 'button disabled';
+                        $action_text = esc_html__('Installed', 'ultimate-product-table-for-woocommerce');
+                        $action_disabled = true;
+                    }
+            }
+
+            $icon = '';
+            $icons = (!empty($plugin_obj->icons) && is_array($plugin_obj->icons)) ? $plugin_obj->icons : array();
+            if (!empty($icons)) {
+                $preferred = array('svg', '2x', '1x', 'default');
+                foreach ($preferred as $size) {
+                    if (!empty($icons[$size])) {
+                        $icon = esc_url($icons[$size]);
+                        break;
+                    }
+                }
+            }
+
+            $name = isset($plugin_obj->name) ? $plugin_obj->name : '';
+            $short_description = isset($plugin_obj->short_description) ? $plugin_obj->short_description : '';
+            $version = isset($plugin_obj->version) ? $plugin_obj->version : '';
+            $active_installs = isset($plugin_obj->active_installs) ? $plugin_obj->active_installs : null;
+            $author = isset($plugin_obj->author) ? $plugin_obj->author : '';
+            $slug = !empty($plugin_obj->slug) ? sanitize_title($plugin_obj->slug) : sanitize_title($name);
+            $details_url = $slug ? self_admin_url('plugin-install.php?tab=plugin-information&plugin=' . $slug . '&TB_iframe=true&width=600&height=550') : '';
+
+            if ($action_url && !$action_disabled) {
+                $action_html = '<a class="' . esc_attr($action_class) . '" href="' . esc_url($action_url) . '" data-slug="' . esc_attr($slug) . '" data-name="' . esc_attr($name) . '">' . esc_html($action_text) . '</a>';
+            } else {
+                $action_html = '<span class="' . esc_attr($action_class) . '" aria-disabled="true">' . esc_html($action_text) . '</span>';
+            }
+
+            echo '<div class="plugin-card plugin-card-' . esc_attr($slug) . '">';
+            echo '<div class="plugin-card-top">';
+            echo '<div class="name column-name">';
+            if ($icon) {
+                echo '<img class="plugin-icon" src="' . $icon . '" alt="" />';
+            }
+            if ($details_url) {
+                echo '<h3><a class="thickbox open-plugin-details-modal" href="' . esc_url($details_url) . '" aria-label="' . esc_attr(sprintf(__('More details about %s', 'ultimate-product-table-for-woocommerce'), $name)) . '">' . esc_html($name) . '</a></h3>';
+            } else {
+                echo '<h3>' . esc_html($name) . '</h3>';
+            }
+            if (!empty($author)) {
+                echo '<p class="author">' . sprintf(esc_html__('By %s', 'ultimate-product-table-for-woocommerce'), wp_kses_post($author)) . '</p>';
+            }
+            echo '</div>';
+            echo '<div class="action-links"><ul class="plugin-action-buttons"><li>' . $action_html . '</li></ul></div>';
+            echo '<div class="desc column-description"><p>' . wp_kses_post($short_description) . '</p></div>';
+            echo '</div>';
+
+            echo '<div class="plugin-card-bottom">';
+            echo '<div class="vers column-rating">';
+            echo '<span>' . sprintf(esc_html__('Version %s', 'ultimate-product-table-for-woocommerce'), esc_html($version)) . '</span>';
+            if ($active_installs !== null) {
+                $installs = number_format_i18n((int) $active_installs);
+                echo '<span style="margin-left:10px;">' . sprintf(esc_html__('%s+ active installs', 'ultimate-product-table-for-woocommerce'), esc_html($installs)) . '</span>';
+            }
+            echo '</div>';
+            echo '<div class="column-compatibility"><span class="compatibility-compatible">' . esc_html__('Compatible with your version of WordPress', 'ultimate-product-table-for-woocommerce') . '</span></div>';
+            echo '</div>';
+            echo '</div>';
+        }
+
+        echo '</div>';
+        echo '</div>';
     }
 
     /**
@@ -787,7 +938,8 @@ class Mulopimfwc_Customer_Location_Insights
 
     ?>
         <div class="wrap mulopimfwc-analytics-wrap <?php echo mulopimfwc_premium_feature() ? '' : ' mulopimfwc_pro_only_blur mulopimfwc_pro_only'; ?>">
-            <h1>
+            <h1 style="display: none !important;"><?php echo esc_html__('Location Analytics Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
+        <h1>
                 <span class="dashicons dashicons-chart-area"></span>
                 <?php esc_html_e('Location Analytics Dashboard', 'multi-location-product-and-inventory-management'); ?>
             </h1>

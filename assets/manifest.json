@@ -1,0 +1,62 @@
+{
+  "name": "Multi Location Product & Inventory Management",
+  "short_name": "Location Manager",
+  "description": "Manage products and inventory across multiple locations",
+  "start_url": "/wp-admin/admin.php?page=multi-location-product-and-inventory-management",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+

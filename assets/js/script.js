@@ -1,6 +1,21 @@
 jQuery(document).ready(function ($) {
     const modal = document.getElementById('lwp-store-selector-modal');
     const modalSubmit = document.getElementById('lwp-store-selector-submit');
+    const COOKIE_MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+    function getLocationCookieExpiryDays() {
+        if (typeof mulopimfwc_locationWiseProducts === 'undefined') {
+            return 30;
+        }
+
+        const value = parseInt(mulopimfwc_locationWiseProducts.cookie_expiry, 10);
+        return Number.isFinite(value) && value > 0 ? value : 30;
+    }
+
+    function setPluginCookie(name, value) {
+        const expiryDate = new Date(Date.now() + getLocationCookieExpiryDays() * COOKIE_MS_PER_DAY);
+        document.cookie = `${name}=${value};expires=${expiryDate.toUTCString()};path=/;samesite=lax`;
+    }
 
     // Function to check if the cart has products
     function checkCartHasProducts(callback) {
@@ -24,6 +39,96 @@ jQuery(document).ready(function ($) {
         return selectedItem.length ? selectedItem.data('location-id') : null;
     }
 
+    function hasSavedLocationItems() {
+        return $('.saved-location-item').length > 0;
+    }
+
+    function normalizeLocationText(value) {
+        return (value || '')
+            .toString()
+            .toLowerCase()
+            .replace(/[-_]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function savedLocationMatchesStore($item, storeValue, storeLabel) {
+        if (!$item || !$item.length) {
+            return false;
+        }
+
+        const normalizedValue = normalizeLocationText(storeValue);
+        const normalizedLabel = normalizeLocationText(storeLabel);
+        const address = ($item.data('address') || '').toString();
+        const addressParts = address
+            .split(',')
+            .map(normalizeLocationText)
+            .filter(Boolean);
+
+        if (normalizedValue && addressParts.includes(normalizedValue)) {
+            return true;
+        }
+
+        if (normalizedLabel && addressParts.some((part) => normalizedLabel.includes(part))) {
+            return true;
+        }
+
+        const fields = [
+            address,
+            $item.data('street'),
+            $item.data('city'),
+            $item.data('state'),
+            $item.data('postal'),
+            $item.data('country'),
+            $item.data('label')
+        ]
+            .filter(Boolean)
+            .join(' ');
+        const haystack = normalizeLocationText(fields);
+
+        return (
+            (normalizedValue && haystack.includes(normalizedValue)) ||
+            (normalizedLabel && haystack.includes(normalizedLabel))
+        );
+    }
+
+    function findMatchingSavedLocationId(storeValue, storeLabel) {
+        if (!storeValue || !hasSavedLocationItems()) {
+            return null;
+        }
+
+        if (storeValue === 'all-products') {
+            const $allProducts = $('.saved-location-item[data-location-id="all-products"]').first();
+            return $allProducts.length ? $allProducts.data('location-id') : 'all-products';
+        }
+
+        const $currentSelected = $('.saved-location-item.selected').first();
+        if ($currentSelected.length && savedLocationMatchesStore($currentSelected, storeValue, storeLabel)) {
+            return $currentSelected.data('location-id');
+        }
+
+        let matchId = null;
+
+        $('.saved-location-item').each(function () {
+            const $item = $(this);
+            const itemId = $item.data('location-id');
+            if (itemId === 'all-products') {
+                return;
+            }
+
+            if (savedLocationMatchesStore($item, storeValue, storeLabel)) {
+                matchId = itemId;
+                return false;
+            }
+        });
+
+        return matchId;
+    }
+
+    function clearPluginCookie(name) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;samesite=lax`;
+    }
+
     // Function to clear the cart and reload the page
     function clearCartAndReload() {
         $.ajax({
@@ -45,7 +150,7 @@ jQuery(document).ready(function ($) {
             const modalDropdown = document.getElementById('lwp-selected-store');
             const selectedStore = modalDropdown.value;
             if (selectedStore) {
-                document.cookie = "mulopimfwc_store_location=" + selectedStore + "; path=/";
+                setPluginCookie('mulopimfwc_store_location', selectedStore);
                 modal.style.display = 'none';
                 location.reload();
             } else {
@@ -57,7 +162,8 @@ jQuery(document).ready(function ($) {
     $('#lwp-shortcode-selector-form').on('change', function () {
         const dropdown = $(this).find('#lwp-shortcode-selector');
         const selectedStore = dropdown.val();
-        var locationId = getSelectedLocationId();
+        const selectedStoreLabel = dropdown.find('option:selected').text() || '';
+        const matchedLocationId = findMatchingSavedLocationId(selectedStore, selectedStoreLabel);
 
 
         if (!selectedStore) {
@@ -66,7 +172,8 @@ jQuery(document).ready(function ($) {
         }
 
         if (selectedStore === 'all-products') {
-            document.cookie = "mulopimfwc_store_location=all-products; path=/";
+            setPluginCookie('mulopimfwc_store_location', 'all-products');
+            setPluginCookie('mulopimfwc_user_location', 'all-products');
             location.reload();
             return;
         }
@@ -91,17 +198,21 @@ jQuery(document).ready(function ($) {
                 }
 
                 // Set the cookie and clear the cart
-                document.cookie = "mulopimfwc_store_location=" + selectedStore + "; path=/";
-                if (locationId) {
-                    document.cookie = `mulopimfwc_user_location=${locationId};path=/`;
+                setPluginCookie('mulopimfwc_store_location', selectedStore);
+                if (matchedLocationId) {
+                    setPluginCookie('mulopimfwc_user_location', matchedLocationId);
+                } else if (hasSavedLocationItems()) {
+                    clearPluginCookie('mulopimfwc_user_location');
                 }
                 clearCartAndReload();
             });
         } else {
             // Set the cookie without clearing the cart
-            document.cookie = "mulopimfwc_store_location=" + selectedStore + "; path=/";
-            if (locationId) {
-                document.cookie = `mulopimfwc_user_location=${locationId};path=/`;
+            setPluginCookie('mulopimfwc_store_location', selectedStore);
+            if (matchedLocationId) {
+                setPluginCookie('mulopimfwc_user_location', matchedLocationId);
+            } else if (hasSavedLocationItems()) {
+                clearPluginCookie('mulopimfwc_user_location');
             }
             window.location.href = window.location.href.split('?')[0];
         }

@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.0.6.15
+ * @version 1.0.6.20
  * @author Your Name
- * @since 1.0.6.15
+ * @since 1.0.6.20
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.0.6.15';
+    const VERSION = '1.0.6.20';
 
     /**
      * Available display positions
@@ -160,6 +160,7 @@ class MULOPIMFWC_Product_Location_Selector
             'window.MULOPIMFWC_LOC_SELECTOR = ' . wp_json_encode([
                 'position' => $this->position,
                 'targets'  => $targets,
+                'cookieExpiryDays' => mulopimfwc_get_location_cookie_expiry_days(),
             ]) . ';',
             'before'
         );
@@ -724,7 +725,7 @@ class MULOPIMFWC_Product_Location_Selector
     private function set_location_cookie(string $location): void
     {
         $cookie_options = [
-            'expires' => time() + (86400 * 30), // 30 days
+            'expires' => time() + mulopimfwc_get_location_cookie_expiry_seconds(),
             'path' => '/',
             'domain' => '',
             'secure' => is_ssl(),

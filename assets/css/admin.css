@@ -1151,7 +1151,7 @@ input.disabled + .mulopimfwc_slider {
   color: #6b7280;
 }
 
-.quick-edit-row {
+.mulopimfwc-quick-edit-row {
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 15px;
@@ -1159,14 +1159,14 @@ input.disabled + .mulopimfwc_slider {
   margin-bottom: 15px;
 }
 
-.quick-edit-row label {
+.mulopimfwc-quick-edit-row label {
   font-weight: 500;
   color: #374151;
   font-size: 14px;
 }
 
-.quick-edit-row input[type="number"],
-.quick-edit-row select {
+.mulopimfwc-quick-edit-row input[type="number"],
+.mulopimfwc-quick-edit-row select {
   padding: 10px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -1175,8 +1175,8 @@ input.disabled + .mulopimfwc_slider {
   background: #ffffff;
 }
 
-.quick-edit-row input[type="number"]:focus,
-.quick-edit-row select:focus {
+.mulopimfwc-quick-edit-row input[type="number"]:focus,
+.mulopimfwc-quick-edit-row select:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -1262,12 +1262,12 @@ input.disabled + .mulopimfwc_slider {
     padding: 20px;
   }
 
-  .quick-edit-row {
+  .mulopimfwc-quick-edit-row {
     grid-template-columns: 1fr;
     gap: 8px;
   }
 
-  .quick-edit-row label {
+  .mulopimfwc-quick-edit-row label {
     margin-bottom: 5px;
   }
 
