@@ -224,11 +224,21 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     $this->render_advance_select("template_selection", __("Select the template for location selector.", 'multi-location-product-and-inventory-management'), [
                         "default" => "Default",
                         "modern" => "Modern",
+                        "modern-simple" => "Modern Simple",
+                        "classic" => "Classic",
+                        "tabs" => "Tabs",
+                        "compact" => "Compact",
+                        "grid" => "Grid",
                     ]);
                 } else {
                     $this->render_advance_select('pro', __("Select the template for location selector.", 'multi-location-product-and-inventory-management'), [
                         "default" => "Default",
-                        "modern" => "Modern"
+                        "modern" => "Modern",
+                        "modern-simple" => "Modern Simple",
+                        "classic" => "Classic",
+                        "tabs" => "Tabs",
+                        "compact" => "Compact",
+                        "grid" => "Grid"
                     ], true, false);
                 }
             },

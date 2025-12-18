@@ -11,12 +11,29 @@ if (!defined('ABSPATH')) exit;
 
 class MULOPIMFWC_Frontend_Location_Information
 {
+    /**
+     * Store the current instance for reuse.
+     *
+     * @var MULOPIMFWC_Frontend_Location_Information|null
+     */
+    private static $instance = null;
+
+    /**
+     * Retrieve the current instance (if initialized).
+     *
+     * @return MULOPIMFWC_Frontend_Location_Information|null
+     */
+    public static function get_instance()
+    {
+        return self::$instance;
+    }
 
     /**
      * Constructor
      */
     public function __construct()
     {
+        self::$instance = $this;
         // Enqueue scripts and styles
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         global $mulopimfwc_options;
@@ -119,13 +136,15 @@ class MULOPIMFWC_Frontend_Location_Information
         $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['enable_store_locator']
             : 'off';
+        $template_selection = isset($mulopimfwc_options['template_selection']) ? $mulopimfwc_options['template_selection'] : 'default';
+        $force_popup_assets = in_array($template_selection, ['tabs', 'compact', 'grid'], true);
 
         // mulopimfwc_display_options[default_map_zoom]
         $default_map_zoom = isset($mulopimfwc_options['default_map_zoom']) && mulopimfwc_premium_feature()
             ? intval($mulopimfwc_options['default_map_zoom'])
             : 15;
 
-        if ($enable_locator !== 'on') {
+        if ($enable_locator !== 'on' && !$force_popup_assets) {
             return;
         }
 
@@ -1022,6 +1041,34 @@ class MULOPIMFWC_Frontend_Location_Information
     }
 
     /**
+     * Render location info layouts inside popup templates.
+     *
+     * @param array  $locations
+     * @param string $layout
+     */
+    public function render_popup_locations($locations, $layout = 'tabs')
+    {
+        if (empty($locations) || is_wp_error($locations)) {
+            echo '<p class="mulopimfwc-no-locations">' .
+                esc_html__('No locations found.', 'multi-location-product-and-inventory-management') .
+                '</p>';
+            return;
+        }
+
+        $layout = in_array($layout, ['tabs', 'grid', 'compact'], true) ? $layout : 'tabs';
+
+        switch ($layout) {
+            case 'tabs':
+                $this->render_shortcode_tabbed_locations($locations, true);
+                break;
+            case 'grid':
+            case 'compact':
+                $this->render_shortcode_grid_locations($locations, true);
+                break;
+        }
+    }
+
+    /**
      * Render tabbed locations for shortcode with search
      */
     private function render_shortcode_tabbed_locations($locations, $enable_search = false)
@@ -1073,6 +1120,7 @@ class MULOPIMFWC_Frontend_Location_Information
                         $search_data = strtolower($location->name . ' ' . $street_address . ' ' . $city . ' ' . $state);
                     ?>
                         <div class="mulopimfwc-tab-item <?php echo esc_attr($is_active); ?>"
+                            data-location-slug="<?php echo esc_attr($location->slug); ?>"
                             data-tab="location-<?php echo esc_attr($term_id); ?>"
                             data-lat="<?php echo esc_attr($latitude); ?>"
                             data-lng="<?php echo esc_attr($longitude); ?>"
@@ -1212,7 +1260,9 @@ class MULOPIMFWC_Frontend_Location_Information
                     get_term_meta($term_id, 'city', true) . ' ' .
                     get_term_meta($term_id, 'state', true));
             ?>
-                <div class="mulopimfwc-grid-location-item" data-search="<?php echo esc_attr($search_data); ?>">
+                <div class="mulopimfwc-grid-location-item"
+                    data-location-slug="<?php echo esc_attr($location->slug); ?>"
+                    data-search="<?php echo esc_attr($search_data); ?>">
                     <?php $this->render_location_details($term_id, 'grid', true); ?>
                 </div>
             <?php endforeach; ?>

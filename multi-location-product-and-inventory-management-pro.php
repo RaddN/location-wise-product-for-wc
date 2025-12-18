@@ -3704,11 +3704,38 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             $cookie_expiry_days = mulopimfwc_get_location_cookie_expiry_days();
+            $options = get_option('mulopimfwc_display_options', []);
 
             wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.6.20');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.6.20', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
+            $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
+            if (in_array($template_selection, ['modern', 'modern-simple'], true)) {
+                wp_enqueue_script(
+                    'mulopimfwc-modern-popup',
+                    plugins_url('assets/js/modern-popup.js', __FILE__),
+                    ['jquery'],
+                    '1.0.6.20',
+                    true
+                );
+            } elseif ($template_selection === 'classic') {
+                wp_enqueue_script(
+                    'mulopimfwc-classic-popup',
+                    plugins_url('assets/js/classic-popup.js', __FILE__),
+                    ['jquery'],
+                    '1.0.6.20',
+                    true
+                );
+            } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
+                wp_enqueue_script(
+                    'mulopimfwc-popup-layouts',
+                    plugins_url('assets/js/popup-layouts.js', __FILE__),
+                    ['jquery'],
+                    '1.0.6.20',
+                    true
+                );
+            }
 
             // Check if cart grouping is enabled
             $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
@@ -3742,7 +3769,6 @@ if (!function_exists('mulopimfwc_get_values')) {
 
 
             // Check if allow location change in cart is enabled
-            $options = get_option('mulopimfwc_display_options', []);
             $allow_location_change_in_cart = isset($options['allow_location_change_in_cart']) 
                 ? $options['allow_location_change_in_cart'] 
                 : 'off';
@@ -3889,9 +3915,25 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             $locations = $mulopimfwc_locations;
 
+            $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
+            if ($template_selection === 'modern') {
+                $template_file = 'templates/modern-modal.php';
+            } elseif ($template_selection === 'modern-simple') {
+                $template_file = 'templates/modern-simple-modal.php';
+            } elseif ($template_selection === 'classic') {
+                $template_file = 'templates/classic-modal.php';
+            } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
+                $template_file = 'templates/location-info-modal.php';
+                $popup_layout = $template_selection;
+            } else {
+                $template_file = 'templates/modal.php';
+            }
+            $template_path = plugin_dir_path(__FILE__) . $template_file;
+            if (!file_exists($template_path)) {
+                $template_path = plugin_dir_path(__FILE__) . 'templates/modal.php';
+            }
 
-
-            include plugin_dir_path(__FILE__) . 'templates/modal.php';
+            include $template_path;
         }
 
         public function location_selector_shortcode($atts)
