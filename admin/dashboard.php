@@ -876,8 +876,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.6.20", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.6.20");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.0.6.100.30", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.0.6.100.30");
 
         $payload = $this->build_dashboard_payload();
 
@@ -2781,7 +2781,8 @@ class MULOPIMFWC_Dashboard
             'profitabilityByLocation' => $payload['profitability_by_location'],
             'deadStockDays' => $payload['dead_stock_days'],
             'totalInvestment' => $payload['total_investment'],
-            'low_stock' => array_slice($payload['low_stock_products'], 0, 8),
+            // Return the full low stock list so the live sync view matches initial render
+            'low_stock' => $payload['low_stock_products'],
             'alerts' => $alerts,
             'site_status' => $site_status,
         ]);
@@ -2846,9 +2847,13 @@ class MULOPIMFWC_Dashboard
                 $order_total = $order->get_total();
                 $order_date = $order->get_date_created();
                 
+                // Format price and decode HTML entities for plain text notification
+                $formatted_price = wp_strip_all_tags(wc_price($order_total));
+                $formatted_price = html_entity_decode($formatted_price, ENT_QUOTES, 'UTF-8');
+                
                 $alerts[] = $this->format_alert(
                     'new_order',
-                    sprintf(__('New order #%s placed - %s', 'multi-location-product-and-inventory-management'), $order_number, wc_price($order_total)),
+                    sprintf(__('New order #%s placed - %s', 'multi-location-product-and-inventory-management'), $order_number, $formatted_price),
                     'info',
                     [
                         'order_id' => $order_id,
@@ -2908,9 +2913,13 @@ class MULOPIMFWC_Dashboard
 
         if (!empty($high_value_orders)) {
             $order = reset($high_value_orders);
+            // Format price and decode HTML entities for plain text notification
+            $formatted_price = wp_strip_all_tags(wc_price($order->get_total()));
+            $formatted_price = html_entity_decode($formatted_price, ENT_QUOTES, 'UTF-8');
+            
             $alerts[] = $this->format_alert(
                 'high_value_order',
-                sprintf(__('High-value order: #%s (%s)', 'multi-location-product-and-inventory-management'), $order->get_order_number(), wc_price($order->get_total())),
+                sprintf(__('High-value order: #%s (%s)', 'multi-location-product-and-inventory-management'), $order->get_order_number(), $formatted_price),
                 'info',
                 ['url' => $order->get_edit_order_url()]
             );
@@ -3037,6 +3046,10 @@ class MULOPIMFWC_Dashboard
      */
     private function format_alert(string $type, string $message, string $severity = 'info', array $data = []): array
     {
+        // Strip HTML tags and decode HTML entities for plain text notifications
+        $message = wp_strip_all_tags($message);
+        $message = html_entity_decode($message, ENT_QUOTES, 'UTF-8');
+        
         // Create unique ID based on type and relevant identifiers
         $unique_id = $type;
         

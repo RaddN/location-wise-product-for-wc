@@ -479,7 +479,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $options = get_option('mulopimfwc_display_options', ['low_stock_notification_recipients' => 'admin']);
                 $value = isset($options['low_stock_notification_recipients']) ? $options['low_stock_notification_recipients'] : 'admin';
         ?>
-            <select disabled name="mulopimfwc_display_options[low_stock_notification_recipients]">
+            <select name="mulopimfwc_display_options[low_stock_notification_recipients]">
                 <option value="admin" <?php selected($value, 'admin'); ?>><?php echo esc_html_e('Admin Only', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="location_manager" <?php selected($value, 'location_manager'); ?>><?php echo esc_html_e('Location Manager', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="both" <?php selected($value, 'both'); ?>><?php echo esc_html_e('Both Admin and Location Manager', 'multi-location-product-and-inventory-management'); ?></option>
@@ -765,26 +765,6 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     });
                 });
             </script>
-        <?php
-            },
-            'lwp-location-shipping-settings',
-            'mulopimfwc_shipping_section'
-        );
-
-        // Add "Local Pickup Priority" field
-        add_settings_field(
-            'local_pickup_priority',
-            __('Local Pickup Priority', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = get_option('mulopimfwc_display_options', ['local_pickup_priority' => 'normal']);
-                $value = isset($options['local_pickup_priority']) ? $options['local_pickup_priority'] : 'normal';
-        ?>
-            <select disabled name="mulopimfwc_display_options[local_pickup_priority]">
-                <option value="normal" <?php selected($value, 'normal'); ?>><?php echo esc_html_e('Normal (Show with other shipping options)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="highlighted" <?php selected($value, 'highlighted'); ?>><?php echo esc_html_e('Highlighted (Emphasize local pickup option)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="preferred" <?php selected($value, 'preferred'); ?>><?php echo esc_html_e('Preferred (Show at top of shipping options)', 'multi-location-product-and-inventory-management'); ?></option>
-            </select>
-            <p class="description"><?php echo esc_html_e('How to prioritize local pickup options at checkout.', 'multi-location-product-and-inventory-management'); ?></p>
             <?php
             },
             'lwp-location-shipping-settings',
@@ -2427,6 +2407,18 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             </label>
             <p class="description"><?php echo esc_html__('Send desktop/mobile notifications through a registered service worker.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
+        // add test PWA notification field
+        add_settings_field(
+            'test_pwa_notification',
+            __('Test PWA Notification', 'multi-location-product-and-inventory-management'),
+            function () {
+                // In your settings page
+                echo '<button type="button" id="test-push-notification" class="button">Test Push Notification</button>';
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'

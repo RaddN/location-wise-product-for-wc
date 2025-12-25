@@ -17,6 +17,35 @@
         overlayVisible: true,
 
         /**
+         * Validate latitude/longitude pair
+         */
+        isValidLatLng: function (lat, lng) {
+            return Number.isFinite(lat) && Number.isFinite(lng);
+        },
+
+        /**
+         * Find the first tab with valid coordinates within a scope
+         */
+        findFirstValidTab: function ($scope) {
+            const self = this;
+            const $tabs = $scope ? $scope.find('.mulopimfwc-tab-item') : $('.mulopimfwc-tab-item');
+            let $validTab = $();
+
+            $tabs.each(function () {
+                const $tab = $(this);
+                const lat = parseFloat($tab.data('lat'));
+                const lng = parseFloat($tab.data('lng'));
+
+                if (self.isValidLatLng(lat, lng)) {
+                    $validTab = $tab;
+                    return false;
+                }
+            });
+
+            return $validTab;
+        },
+
+        /**
          * Initialize
          */
         init: function () {
@@ -42,7 +71,7 @@
                 const name = $map.data('name');
                 const address = $map.data('address');
 
-                if (!lat || !lng || !mapId) {
+                if (!mapId || !self.isValidLatLng(lat, lng)) {
                     return;
                 }
 
@@ -140,13 +169,22 @@
                 const $map = $(this);
                 const mapId = $map.attr('id');
                 const $container = $map.closest('.mulopimfwc-locations-tabs-container');
-                const $firstTab = $container.find('.mulopimfwc-tab-item.active').first();
+                const $activeTab = $container.find('.mulopimfwc-tab-item.active').first();
+                const $firstValidTab = self.isValidLatLng(
+                    parseFloat($activeTab.data('lat')),
+                    parseFloat($activeTab.data('lng'))
+                ) ? $activeTab : self.findFirstValidTab($container);
 
-                if ($firstTab.length) {
-                    const lat = parseFloat($firstTab.data('lat'));
-                    const lng = parseFloat($firstTab.data('lng'));
-                    const name = $firstTab.data('name');
-                    const address = $firstTab.data('address');
+                if ($firstValidTab.length) {
+                    const lat = parseFloat($firstValidTab.data('lat'));
+                    const lng = parseFloat($firstValidTab.data('lng'));
+                    const name = $firstValidTab.data('name');
+                    const address = $firstValidTab.data('address');
+
+                    if (!$activeTab.is($firstValidTab)) {
+                        $container.find('.mulopimfwc-tab-item').removeClass('active');
+                        $firstValidTab.addClass('active');
+                    }
 
                     self.waitForLeaflet(function () {
                         self.createShortcodeMap(mapId, lat, lng, name, address, $container);
@@ -160,6 +198,10 @@
          */
         createShortcodeMap: function (mapId, lat, lng, name, address, $container) {
             const self = this;
+
+            if (!mapId || !self.isValidLatLng(lat, lng)) {
+                return;
+            }
 
             try {
                 const map = L.map(mapId, {
@@ -226,6 +268,15 @@
 
             const map = mapData.map;
 
+            // If coordinates are invalid, remove marker and keep current view
+            if (!this.isValidLatLng(lat, lng)) {
+                if (mapData.marker) {
+                    map.removeLayer(mapData.marker);
+                    mapData.marker = null;
+                }
+                return;
+            }
+
             // Animate to new location
             map.flyTo([lat, lng], 15, {
                 duration: 1.5,
@@ -259,17 +310,26 @@
 
             // Initialize map
             self.waitForLeaflet(function () {
-                const $firstTab = $('.mulopimfwc-tab-item.active').first();
+                const $activeTab = $('.mulopimfwc-tab-item.active').first();
+                const $firstValidTab = self.isValidLatLng(
+                    parseFloat($activeTab.data('lat')),
+                    parseFloat($activeTab.data('lng'))
+                ) ? $activeTab : self.findFirstValidTab();
 
-                if ($firstTab.length) {
-                    const lat = parseFloat($firstTab.data('lat'));
-                    const lng = parseFloat($firstTab.data('lng'));
-                    const name = $firstTab.data('name');
-                    const address = $firstTab.data('address');
-                    const locationId = $firstTab.data('tab').replace('location-', '');
+                if ($firstValidTab && $firstValidTab.length) {
+                    const lat = parseFloat($firstValidTab.data('lat'));
+                    const lng = parseFloat($firstValidTab.data('lng'));
+                    const name = $firstValidTab.data('name');
+                    const address = $firstValidTab.data('address');
+                    const locationId = $firstValidTab.data('tab').replace('location-', '');
+
+                    if (!$activeTab.is($firstValidTab)) {
+                        $('.mulopimfwc-tab-item').removeClass('active');
+                        $firstValidTab.addClass('active');
+                    }
 
                     self.createTabbedMap(lat, lng, name, address);
-                    self.currentTab = $firstTab.data('tab');
+                    self.currentTab = $firstValidTab.data('tab');
 
                     // Show overlay by default
                     $('.mulopimfwc-map-info-overlay').addClass('visible');
@@ -323,6 +383,10 @@
         createTabbedMap: function (lat, lng, name, address) {
             const mapId = 'mulopimfwc-tabbed-map';
             const self = this;
+
+            if (!self.isValidLatLng(lat, lng)) {
+                return;
+            }
 
             try {
                 this.tabbedMap = L.map(mapId, {
@@ -383,6 +447,15 @@
                 return;
             }
 
+            // If coordinates are invalid, remove marker and keep existing view
+            if (!this.isValidLatLng(lat, lng)) {
+                if (this.tabbedMapMarker) {
+                    this.tabbedMap.removeLayer(this.tabbedMapMarker);
+                    this.tabbedMapMarker = null;
+                }
+                return;
+            }
+
             // Animate to new location
             this.tabbedMap.flyTo([lat, lng], 15, {
                 duration: 1.5,
@@ -421,8 +494,9 @@
             // Get data from tab
             const name = $tab.data('name');
             const address = $tab.data('address');
-            const lat = $tab.data('lat');
-            const lng = $tab.data('lng');
+            const lat = parseFloat($tab.data('lat'));
+            const lng = parseFloat($tab.data('lng'));
+            const hasValidCoords = this.isValidLatLng(lat, lng);
 
             // Get additional details from tab content
             const $tabInfo = $tab.find('.mulopimfwc-tab-details');
@@ -492,15 +566,17 @@
 
                 newContent += `
             <div class="mulopimfwc-overlay-actions">
-                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-primary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor"/>
-                    </svg>
-                    Get Directions
-                </a>
+                ${hasValidCoords ? `
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor"/>
+                        </svg>
+                        Get Directions
+                    </a>
+                ` : ''}
                 <a href="${$tab.find('.mulopimfwc-tab-title a').attr('href')}" 
                    class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-secondary">
                     View Details
