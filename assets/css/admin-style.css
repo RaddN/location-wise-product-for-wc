@@ -39,8 +39,10 @@
 .fixed .column-locations div {
     margin-bottom: 5px; /* Space between location entries */
 }
-.fixed .column-locations{
+.fixed .column-locations {
     width: max-content !important;
+    word-break: keep-all;
+    white-space: nowrap;
 }
 .outofstock {
     background: #f8d7da;

@@ -1,7 +1,7 @@
 /**
  * Location Wise Products Dashboard JavaScript
  */
- (function ($) {
+(function ($) {
     'use strict';
     const LIVE_POLL_INTERVAL = 30000;
 
@@ -477,7 +477,7 @@
 
         // Set up interval polling
         const pollInterval = parseInt(mulopimfwc_DashboardData.poll_interval || LIVE_POLL_INTERVAL, 10);
-        
+
         if (!window.mulopimfwcDashboardRealtimeTimer) {
             window.mulopimfwcDashboardRealtimeTimer = setInterval(function () {
                 fetchRealtimeData();
@@ -528,7 +528,7 @@
         })
             .done(function (response) {
                 const duration = Date.now() - startTime;
-                
+
                 if (response.success && response.data) {
                     updateDashboardData(response.data);
                     document.dispatchEvent(new CustomEvent('mulopimfwcRealtimeData', { detail: response.data }));
@@ -849,7 +849,7 @@
     function addValueOffsets(values) {
         const valueMap = {};
         const offsetValues = [...values];
-        
+
         // Group indices by value
         values.forEach((value, index) => {
             if (!valueMap[value]) {
@@ -857,7 +857,7 @@
             }
             valueMap[value].push(index);
         });
-        
+
         // Add tiny offsets to duplicate values
         Object.keys(valueMap).forEach(value => {
             const indices = valueMap[value];
@@ -869,7 +869,7 @@
                 });
             }
         });
-        
+
         return offsetValues;
     }
 
@@ -996,46 +996,67 @@
                         (chartArea.bottom - chartArea.top) / 2
                     );
 
-                    // Use original values for percentage calculation
                     const origValues = chart.data.datasets[0].originalValues || originalValues;
                     const total = origValues.reduce((sum, value) => sum + value, 0);
                     const percentages = origValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
                     const datasetColors = chart.data.datasets[0].backgroundColor || bgColors;
-
-                    // Use chart data for arc positions (with offsets)
                     const chartData = chart.data.datasets[0].data;
+
+                    // Calculate initial label positions
+                    const labelPositions = [];
                     chartData.forEach((value, index) => {
                         const meta = chart.getDatasetMeta(0);
                         const arc = meta.data[index];
                         const angle = (arc.startAngle + arc.endAngle) / 2;
 
-                        const x1 = centerX + Math.cos(angle) * radius;
-                        const y1 = centerY + Math.sin(angle) * radius;
-
                         const lineLength = 30;
                         const x2 = centerX + Math.cos(angle) * (radius + lineLength);
                         const y2 = centerY + Math.sin(angle) * (radius + lineLength);
-
                         const horizontalLength = 20;
                         const x3 = x2 + (Math.cos(angle) > 0 ? horizontalLength : -horizontalLength);
-                        const y3 = y2;
 
+                        labelPositions.push({
+                            index,
+                            angle,
+                            x1: centerX + Math.cos(angle) * radius,
+                            y1: centerY + Math.sin(angle) * radius,
+                            x2, y2, x3,
+                            y3: y2,
+                            label: `${chart.data.labels[index]}: ${percentages[index]}%`,
+                            color: datasetColors[index],
+                            side: Math.cos(angle) > 0 ? 'right' : 'left'
+                        });
+                    });
+
+                    // Adjust overlapping labels
+                    const leftLabels = labelPositions.filter(p => p.side === 'left').sort((a, b) => a.y3 - b.y3);
+                    const rightLabels = labelPositions.filter(p => p.side === 'right').sort((a, b) => a.y3 - b.y3);
+                    const minSpacing = 20;
+
+                    [leftLabels, rightLabels].forEach(labels => {
+                        for (let i = 1; i < labels.length; i++) {
+                            if (labels[i].y3 - labels[i - 1].y3 < minSpacing) {
+                                labels[i].y3 = labels[i - 1].y3 + minSpacing;
+                                labels[i].y2 = labels[i].y3;
+                            }
+                        }
+                    });
+
+                    // Draw all labels
+                    [...leftLabels, ...rightLabels].forEach(pos => {
                         ctx.beginPath();
-                        ctx.strokeStyle = datasetColors[index];
+                        ctx.strokeStyle = pos.color;
                         ctx.lineWidth = 1;
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                        ctx.lineTo(x3, y3);
+                        ctx.moveTo(pos.x1, pos.y1);
+                        ctx.lineTo(pos.x2, pos.y2);
+                        ctx.lineTo(pos.x3, pos.y3);
                         ctx.stroke();
 
-                        const label = `${chart.data.labels[index]}: ${percentages[index]}%`;
                         ctx.fillStyle = '#333';
                         ctx.font = '12px Arial, sans-serif';
-                        ctx.textAlign = Math.cos(angle) > 0 ? 'left' : 'right';
+                        ctx.textAlign = pos.side === 'right' ? 'left' : 'right';
                         ctx.textBaseline = 'middle';
-
-                        const labelX = x3 + (Math.cos(angle) > 0 ? 5 : -5);
-                        ctx.fillText(label, labelX, y3);
+                        ctx.fillText(pos.label, pos.x3 + (pos.side === 'right' ? 5 : -5), pos.y3);
                     });
                 }
             }]
@@ -1353,43 +1374,67 @@
                         (chartArea.bottom - chartArea.top) / 2
                     );
 
-                    // Use original values for percentage calculation
                     const origValues = chart.data.datasets[0].originalValues || originalValues;
                     const total = origValues.reduce((sum, value) => sum + value, 0);
                     const percentages = origValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
                     const datasetColors = chart.data.datasets[0].backgroundColor || bgColors;
-
-                    // Use chart data for arc positions (with offsets)
                     const chartData = chart.data.datasets[0].data;
+
+                    // Calculate initial label positions
+                    const labelPositions = [];
                     chartData.forEach((value, index) => {
                         const meta = chart.getDatasetMeta(0);
                         const arc = meta.data[index];
                         const angle = (arc.startAngle + arc.endAngle) / 2;
 
-                        const x1 = centerX + Math.cos(angle) * radius;
-                        const y1 = centerY + Math.sin(angle) * radius;
                         const lineLength = 30;
                         const x2 = centerX + Math.cos(angle) * (radius + lineLength);
                         const y2 = centerY + Math.sin(angle) * (radius + lineLength);
                         const horizontalLength = 20;
                         const x3 = x2 + (Math.cos(angle) > 0 ? horizontalLength : -horizontalLength);
-                        const y3 = y2;
 
+                        labelPositions.push({
+                            index,
+                            angle,
+                            x1: centerX + Math.cos(angle) * radius,
+                            y1: centerY + Math.sin(angle) * radius,
+                            x2, y2, x3,
+                            y3: y2,
+                            label: `${chart.data.labels[index]}: ${percentages[index]}%`,
+                            color: datasetColors[index],
+                            side: Math.cos(angle) > 0 ? 'right' : 'left'
+                        });
+                    });
+
+                    // Adjust overlapping labels
+                    const leftLabels = labelPositions.filter(p => p.side === 'left').sort((a, b) => a.y3 - b.y3);
+                    const rightLabels = labelPositions.filter(p => p.side === 'right').sort((a, b) => a.y3 - b.y3);
+                    const minSpacing = 20;
+
+                    [leftLabels, rightLabels].forEach(labels => {
+                        for (let i = 1; i < labels.length; i++) {
+                            if (labels[i].y3 - labels[i - 1].y3 < minSpacing) {
+                                labels[i].y3 = labels[i - 1].y3 + minSpacing;
+                                labels[i].y2 = labels[i].y3;
+                            }
+                        }
+                    });
+
+                    // Draw all labels
+                    [...leftLabels, ...rightLabels].forEach(pos => {
                         ctx.beginPath();
-                        ctx.strokeStyle = datasetColors[index];
+                        ctx.strokeStyle = pos.color;
                         ctx.lineWidth = 1;
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                        ctx.lineTo(x3, y3);
+                        ctx.moveTo(pos.x1, pos.y1);
+                        ctx.lineTo(pos.x2, pos.y2);
+                        ctx.lineTo(pos.x3, pos.y3);
                         ctx.stroke();
 
-                        const label = `${chart.data.labels[index]}: ${percentages[index]}%`;
                         ctx.fillStyle = '#333';
                         ctx.font = '12px Arial, sans-serif';
-                        ctx.textAlign = Math.cos(angle) > 0 ? 'left' : 'right';
+                        ctx.textAlign = pos.side === 'right' ? 'left' : 'right';
                         ctx.textBaseline = 'middle';
-                        const labelX = x3 + (Math.cos(angle) > 0 ? 5 : -5);
-                        ctx.fillText(label, labelX, y3);
+                        ctx.fillText(pos.label, pos.x3 + (pos.side === 'right' ? 5 : -5), pos.y3);
                     });
                 }
             }]

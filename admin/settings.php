@@ -587,7 +587,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <select name="mulopimfwc_display_options[shipping_calculation_method]">
+                <select name="mulopimfwc_display_options[shipping_calculation_method]" id="mulopimfwc_shipping_calculation_method">
                     <option value="per_location" <?php selected($value, 'per_location'); ?>><?php echo esc_html_e('Per Location (Each location has its own rates)', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="nearest_with_transfer" <?php selected($value, 'nearest_with_transfer'); ?>><?php echo esc_html_e('Nearest with inter-hub transfer cost', 'multi-location-product-and-inventory-management'); ?></option>
                 </select>
@@ -744,12 +744,30 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
 
             <script>
                 jQuery(document).ready(function($) {
-                    // Fill default cost for all empty fields
+                    // Helper: Enable or disable cost inputs based on shipping calculation method
+                    function toggleTransferCostInputs() {
+                        var $select = $('#mulopimfwc_shipping_calculation_method');
+                        var $inputs = $('.mulopimfwc-cost-table input[type="number"]');
+                        if ($select.length && $select.val() !== 'nearest_with_transfer') {
+                            $inputs.prop('disabled', true);
+                        } else {
+                            $inputs.prop('disabled', false);
+                        }
+                    }
+
+                    // Initial check on page load
+                    toggleTransferCostInputs();
+
+                    // Watch for changes to the calculation method dropdown
+                    $(document).on('change', '#mulopimfwc_shipping_calculation_method', function() {
+                        toggleTransferCostInputs();
+                    });
+
+                    // Fill default cost for all empty and enabled fields only
                     $('.mulopimfwc-fill-default').on('click', function() {
                         const defaultCost = prompt('<?php echo esc_js(__('Enter default transfer cost for all locations:', 'multi-location-product-and-inventory-management')); ?>', '0');
-
                         if (defaultCost !== null && !isNaN(defaultCost)) {
-                            $('.mulopimfwc-cost-table input[type="number"]').each(function() {
+                            $('.mulopimfwc-cost-table input[type="number"]:enabled').each(function() {
                                 if (!$(this).val() || $(this).val() === '0') {
                                     $(this).val(parseFloat(defaultCost).toFixed(2));
                                 }
@@ -757,10 +775,10 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                         }
                     });
 
-                    // Clear all costs
+                    // Clear all costs (on enabled fields only)
                     $('.mulopimfwc-clear-all').on('click', function() {
                         if (confirm('<?php echo esc_js(__('Are you sure you want to clear all transfer costs?', 'multi-location-product-and-inventory-management')); ?>')) {
-                            $('.mulopimfwc-cost-table input[type="number"]').val('');
+                            $('.mulopimfwc-cost-table input[type="number"]:enabled').val('');
                         }
                     });
                 });
@@ -1010,6 +1028,42 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 </label>
             <?php } ?>
             <p class="description"><?php echo esc_html_e('Allow coupon codes to be restricted to specific store locations.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-location-discount-settings',
+            'mulopimfwc_location_discounts_section'
+        );
+
+        // Add coupon behavior toggle for mixed-location carts
+        add_settings_field(
+            'cross_location_coupon_behavior',
+            __('Coupon Behavior for Cross Location', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = get_option('mulopimfwc_display_options', ['cross_location_coupon_behavior' => 'restrict']);
+                $value = isset($options['cross_location_coupon_behavior']) ? $options['cross_location_coupon_behavior'] : 'restrict';
+                $choices = [
+                    'restrict' => __('Totally restrict (default)', 'multi-location-product-and-inventory-management'),
+                    'applicable_products' => __('Apply coupon only applicable product', 'multi-location-product-and-inventory-management'),
+                    'full_cart' => __('Apply on full cart', 'multi-location-product-and-inventory-management'),
+                ];
+
+                if (mulopimfwc_premium_feature()) {
+            ?>
+                <select name="mulopimfwc_display_options[cross_location_coupon_behavior]">
+                    <?php foreach ($choices as $key => $label) : ?>
+                        <option value="<?php echo esc_attr($key); ?>" <?php selected($value, $key); ?>><?php echo esc_html($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php } else { ?>
+                <label class="mulopimfwc_pro_only">
+                    <select disabled name="_pro[cross_location_coupon_behavior]">
+                        <?php foreach ($choices as $key => $label) : ?>
+                            <option value="<?php echo esc_attr($key); ?>" <?php selected($value, $key); ?>><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+            <?php } ?>
+            <p class="description"><?php echo esc_html__('Control how coupons behave when carts contain products from multiple locations.', 'multi-location-product-and-inventory-management'); ?></p>
             <?php
             },
             'lwp-location-discount-settings',
@@ -1343,7 +1397,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                     )
                                 )
                             ),
-                            esc_url('https://plugincy.com/documentations/multi-location-product-and-inventory-management/')
+                            esc_url('https://plugincy.com/documentations/multi-location-product-inventory-management-for-woocommerce/')
                         );
                         ?>
                     </p>
@@ -3914,7 +3968,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 <span class="dashicons dashicons-visibility"></span>
                                 <?php echo esc_html__('View Demo', 'multi-location-product-and-inventory-management'); ?>
                             </a>
-                            <a href="https://plugincy.com/documentations/multi-location-product-and-inventory-management/"
+                            <a href="https://plugincy.com/documentations/multi-location-product-inventory-management-for-woocommerce/"
                                 target="_blank" class="btn btn-primary">
                                 <span class="dashicons dashicons-book"></span>
                                 <?php echo esc_html__('View Documentation', 'multi-location-product-and-inventory-management'); ?>
@@ -4977,7 +5031,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     ],
                     [
                         'number' => 13,
-                        'title' => __('Social Notifications: Microsoft Teams Webhook', 'multi-location-product-and-inventory-management'),
+                        'title' => __('Social Notifications', 'multi-location-product-and-inventory-management'),
                         'description' => __('Configure social alerts (orders, stock, digests) using a Microsoft Teams incoming webhook. Covers creating the webhook in Teams and pasting it into this plugin.', 'multi-location-product-and-inventory-management'),
                         'url' => 'https://www.youtube.com/embed/VIDEO_ID_TEAMS',
                         'duration' => '4:10',
@@ -5176,6 +5230,28 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 'headers' => [
                                     'X-API-Key: your-api-key-here'
                                 ],
+                            ],
+                        ],
+                    ],
+                    [
+                        'number' => 15,
+                        'title' => __('Location Status Badge Shortcode', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Show the open/closed status badge for a single location anywhere on your site. Useful for headers, sidebars, or location detail pages.', 'multi-location-product-and-inventory-management'),
+                        'url' => 'https://www.youtube.com/embed/VIDEO_ID_LOCATION_STATUS',
+                        'duration' => '3:20',
+                        'difficulty' => 'beginner',
+                        'shortcode' => '[mulopimfwc_location_status slug="new-york"]',
+                        'topics' => ['Shortcodes', 'Location Status', 'Status Badge'],
+                        'parameters' => [
+                            [
+                                'key' => 'id',
+                                'desc' => __('Location term ID', 'multi-location-product-and-inventory-management'),
+                                'value' => 'id="123"'
+                            ],
+                            [
+                                'key' => 'slug',
+                                'desc' => __('Location term slug', 'multi-location-product-and-inventory-management'),
+                                'value' => 'slug="new-york"'
                             ],
                         ],
                     ],
@@ -5416,7 +5492,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                         </div>
                     </div>
                     <div class="lwp-tutorial-cta-buttons">
-                        <a href="https://plugincy.com/documentations/multi-location-product-and-inventory-management/" target="_blank" class="lwp-btn lwp-btn-primary">
+                        <a href="https://plugincy.com/documentations/multi-location-product-inventory-management-for-woocommerce/" target="_blank" class="lwp-btn lwp-btn-primary">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
                                 <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="currentColor" />
                             </svg>

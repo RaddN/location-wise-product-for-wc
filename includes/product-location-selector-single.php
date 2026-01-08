@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.0.6.100.30
+ * @version 1.0.7
  * @author Your Name
- * @since 1.0.6.100.30
+ * @since 1.0.7
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.0.6.100.30';
+    const VERSION = '1.0.7';
 
     /**
      * Available display positions
@@ -600,7 +600,7 @@ class MULOPIMFWC_Product_Location_Selector
                 <?php foreach ($locations as $location): ?>
                     <button
                         type="button"
-                        class="mulopimfwc-location-button <?php echo $current_location === $location->slug ? 'active' : ''; ?>"
+                        class="mulopimfwc-location-button <?php echo $current_location === $location->slug ? 'active button-primary btn-primary' : 'button-secondary btn-secondary plugincy-btn-secondary'; ?>"
                         data-location="<?php echo esc_attr($location->slug); ?>"
                         data-location-id="<?php echo esc_attr($location->term_id); ?>"
                         title="<?php echo esc_attr($location->description); ?>">

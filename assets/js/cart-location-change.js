@@ -3,11 +3,14 @@ jQuery(document).ready(function ($) {
 
     // Track which cart items already have selectors to prevent duplicates
     const processedCartItems = new Set();
+    const inFlightCartItems = new Set();
     
     // Function to inject location selectors into cart blocks
     function injectLocationSelectorsIntoBlocks() {
         // Find cart item rows in blocks - try multiple selectors
-        const cartRows = document.querySelectorAll('.wc-block-cart-item, .wc-block-cart-items__row, tr.wc-block-cart-items__row');
+        const cartRows = document.querySelectorAll(
+            '.wc-block-cart-item, .wc-block-cart-items__row, tr.wc-block-cart-items__row, .wc-block-mini-cart__item, li.wc-block-mini-cart__item'
+        );
         
         cartRows.forEach(function(row) {
             // Check if selector already exists in this row
@@ -16,16 +19,19 @@ jQuery(document).ready(function ($) {
             }
 
             // Try to find product name element or product details container
-            const productNameEl = row.querySelector('.wc-block-components-product-name, .wc-block-cart-item__product-name, .wc-block-components-product-details__name');
-            const productDetails = row.querySelector('.wc-block-components-product-details');
+            const productNameEl = row.querySelector('.wc-block-components-product-name, .wc-block-cart-item__product-name, .wc-block-components-product-details__name, .wc-block-mini-cart__product-name, .wc-block-mini-cart__item-name');
+            const productDetails = row.querySelector('.wc-block-components-product-details, .wc-block-mini-cart__item-content, .wc-block-mini-cart__product');
             
             if (!productNameEl && !productDetails) {
                 return;
             }
 
             // Try to get cart item key from various sources
-            let cartItemKey = row.getAttribute('data-cart-item-key') || 
-                            row.closest('[data-cart-item-key]')?.getAttribute('data-cart-item-key');
+            let cartItemKey = row.getAttribute('data-cart-item-key') ||
+                            row.getAttribute('data-cart_item_key') ||
+                            (row.dataset ? (row.dataset.cartItemKey || row.dataset.cart_item_key) : null) ||
+                            row.closest('[data-cart-item-key]')?.getAttribute('data-cart-item-key') ||
+                            row.closest('[data-cart_item_key]')?.getAttribute('data-cart_item_key');
             
             // If not found, try to extract from WooCommerce cart data
             if (!cartItemKey && window.wp && window.wp.data) {
@@ -53,14 +59,14 @@ jQuery(document).ready(function ($) {
             // If still no cart item key, try to get from the row's data attributes or class
             if (!cartItemKey) {
                 // Try to find a link or element with cart item key
-                const removeLink = row.querySelector('a[href*="remove-item"], button[data-cart-item-key]');
+                const removeLink = row.querySelector('a[href*="remove-item"], button[data-cart-item-key], button[data-cart_item_key], [data-cart-item-key], [data-cart_item_key]');
                 if (removeLink) {
                     const href = removeLink.getAttribute('href') || '';
                     const match = href.match(/remove-item[\/=]([^&\/\?]+)/);
                     if (match && match[1]) {
                         cartItemKey = decodeURIComponent(match[1]);
                     } else {
-                        cartItemKey = removeLink.getAttribute('data-cart-item-key');
+                        cartItemKey = removeLink.getAttribute('data-cart-item-key') || removeLink.getAttribute('data-cart_item_key');
                     }
                 }
             }
@@ -70,8 +76,8 @@ jQuery(document).ready(function ($) {
             }
 
             // Get product ID - try multiple methods
-            let productId = row.getAttribute('data-product-id');
-            let variationId = row.getAttribute('data-variation-id') || '0';
+            let productId = row.getAttribute('data-product-id') || row.getAttribute('data-product_id');
+            let variationId = row.getAttribute('data-variation-id') || row.getAttribute('data-variation_id') || '0';
             
             // Try to get from WooCommerce cart data
             if (!productId && window.wp && window.wp.data) {
@@ -96,7 +102,7 @@ jQuery(document).ready(function ($) {
 
             // Try to extract from product link
             if (!productId && productNameEl) {
-                const productLink = productNameEl.querySelector('a');
+                const productLink = productNameEl.tagName === 'A' ? productNameEl : productNameEl.querySelector('a');
                 if (productLink) {
                     const href = productLink.getAttribute('href');
                     const match = href ? href.match(/product[\/=]([^&\/\?]+)/) : null;
@@ -107,17 +113,25 @@ jQuery(document).ready(function ($) {
             }
 
             if (!productId) {
-                return;
+                productId = 0;
             }
 
             // Check if we've already processed this cart item (after we have all the IDs)
             const itemKey = cartItemKey + '_' + (productId || '') + '_' + (variationId || '0');
             if (processedCartItems.has(itemKey)) {
+                if (!row.querySelector('.mulopimfwc-cart-location-selector')) {
+                    processedCartItems.delete(itemKey);
+                } else {
+                    return;
+                }
+            }
+
+            if (inFlightCartItems.has(itemKey)) {
                 return;
             }
 
             // Mark as processing to prevent duplicate AJAX calls
-            processedCartItems.add(itemKey);
+            inFlightCartItems.add(itemKey);
 
             // Fetch available locations via AJAX
             $.ajax({
@@ -135,6 +149,7 @@ jQuery(document).ready(function ($) {
                         // Double-check selector doesn't already exist (race condition protection)
                         const existingSelector = row.querySelector('.mulopimfwc-cart-location-selector');
                         if (existingSelector) {
+                            processedCartItems.add(itemKey);
                             return;
                         }
 
@@ -156,8 +171,12 @@ jQuery(document).ready(function ($) {
                         const targetContainer = productDetails || productNameEl.parentElement;
                         if (targetContainer) {
                             $(targetContainer).append(selectorHtml);
+                            processedCartItems.add(itemKey);
                         } else if (productNameEl) {
                             $(productNameEl).after(selectorHtml);
+                            processedCartItems.add(itemKey);
+                        } else {
+                            processedCartItems.delete(itemKey);
                         }
                     } else {
                         // Remove from processed set if failed, so we can retry later
@@ -167,6 +186,9 @@ jQuery(document).ready(function ($) {
                 error: function() {
                     // Remove from processed set on error, so we can retry later
                     processedCartItems.delete(itemKey);
+                },
+                complete: function() {
+                    inFlightCartItems.delete(itemKey);
                 }
             });
         });
@@ -201,8 +223,8 @@ jQuery(document).ready(function ($) {
                 // Check if any added node is a cart item row
                 mutation.addedNodes.forEach(function(node) {
                     if (node.nodeType === 1) { // Element node
-                        if (node.matches && (node.matches('.wc-block-cart-item, .wc-block-cart-items__row, tr.wc-block-cart-items__row') || 
-                            node.querySelector('.wc-block-cart-item, .wc-block-cart-items__row, tr.wc-block-cart-items__row'))) {
+                        if (node.matches && (node.matches('.wc-block-cart-item, .wc-block-cart-items__row, tr.wc-block-cart-items__row, .wc-block-mini-cart__item') || 
+                            node.querySelector('.wc-block-cart-item, .wc-block-cart-items__row, tr.wc-block-cart-items__row, .wc-block-mini-cart__item'))) {
                             shouldInject = true;
                         }
                     }
@@ -214,10 +236,17 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    // Observe cart container
+    // Observe cart and mini cart containers
     const cartContainer = document.querySelector('.wc-block-cart, .wp-block-woocommerce-cart');
+    const miniCartContainer = document.querySelector('.wc-block-mini-cart, .wc-block-mini-cart__drawer, .wc-block-mini-cart__items');
     if (cartContainer) {
         observer.observe(cartContainer, { childList: true, subtree: true });
+    }
+    if (miniCartContainer) {
+        observer.observe(miniCartContainer, { childList: true, subtree: true });
+    }
+    if (document.body && (!cartContainer || !miniCartContainer)) {
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
     // Handle location change in cart
@@ -318,6 +347,7 @@ jQuery(document).ready(function ($) {
     $(document.body).on('wc_fragment_refresh', function () {
         // Clear processed items when cart is refreshed to allow re-injection
         processedCartItems.clear();
+        inFlightCartItems.clear();
         
         // Re-initialize if needed
         $('.mulopimfwc-cart-location-select').each(function () {
@@ -333,6 +363,7 @@ jQuery(document).ready(function ($) {
     // Clear processed items when cart items are removed
     $(document.body).on('removed_from_cart', function() {
         processedCartItems.clear();
+        inFlightCartItems.clear();
         debouncedInject();
     });
 });

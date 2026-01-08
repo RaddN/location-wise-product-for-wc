@@ -12,6 +12,8 @@
             this.retryCount = 0;
             this.maxRetries = 20; // ~4s with 200ms interval
             this.retryTimer = null;
+            this.isSwitching = false;
+            this.settings = window.mulopimfwc_locationWiseProducts || {};
 
             // Read PHP-provided hints for placement
             this.cfg = window.MULOPIMFWC_LOC_SELECTOR || {
@@ -55,8 +57,10 @@
             $(document).on('change', '.mulopimfwc-location-dropdown', (e) => {
                 const $el = $(e.target);
                 const newVal = $el.val();
+                
                 const current = $el.data('current-location');
                 if (String(newVal || '') === String(current || '')) return;
+                
                 this.handleLocationChange(newVal);
             });
         }
@@ -165,19 +169,182 @@
          * Location change
          * -------------------------- */
         handleLocationChange(location) {
-            if (!location) return;
+            if (!location || this.isSwitching) return;
 
-            // Update location cookie
-            this.setLocationCookie(location);
+            const previousLocation = this.getCurrentStoreLocation();
 
-            // For now, simplest & safest: reload to refresh price/stock/add-to-cart area
-            window.location.reload();
+            if (previousLocation && String(previousLocation) === String(location)) {
+                return;
+            }
+
+            const allowMixed = this.settings.allow_mixed_in_cart === 'on';
+            const behavior = this.settings.location_switching_behavior || 'update_cart';
+            const shouldUpdateCart = !allowMixed && behavior !== 'preserve_cart';
+
+            const proceed = () => this.performLocationSwitch(location, previousLocation);
+
+            if (!shouldUpdateCart) {
+                proceed();
+                return;
+            }
+
+            this.checkCartHasProducts()
+                .then((cartHasProducts) => {
+                    if (!cartHasProducts) {
+                        proceed();
+                        return;
+                    }
+
+                    const shouldPrompt = behavior === 'prompt_user' || !!this.settings.location_change_notification;
+                    if (shouldPrompt) {
+                        const message =
+                            this.settings.location_notification_text ||
+                            'Do you want to change the store location? Your cart will be updated.';
+                        const confirmed = window.confirm(message);
+                        if (!confirmed) {
+                            this.resetSelectorUI(previousLocation);
+                            return;
+                        }
+                    }
+
+                    proceed();
+                })
+                .catch(() => {
+                    proceed();
+                });
+        }
+
+        setLoadingState(isLoading) {
+            const $selector = $('.mulopimfwc-product-location-selector');
+            if (isLoading) {
+                $selector.addClass('loading');
+            } else {
+                this.hideLoadingState();
+            }
         }
 
         hideLoadingState() {
             $('.mulopimfwc-product-location-selector').removeClass('loading');
             $('.mulopimfwc-loading').removeClass('mulopimfwc-loading');
             $('.mulopimfwc-loader').remove();
+        }
+
+        performLocationSwitch(location, previousLocation) {
+            const ajaxUrl = this.settings.ajaxUrl;
+            const nonce = this.settings.nonce || '';
+            const behavior = this.settings.location_switching_behavior || 'update_cart';
+            const requiresCleanup = this.settings.allow_mixed_in_cart !== 'on' && behavior !== 'preserve_cart';
+
+            const fallbackReload = () => {
+                this.setLocationCookie(location);
+                window.location.reload();
+            };
+
+            if (!ajaxUrl) {
+                fallbackReload();
+                return;
+            }
+
+            this.isSwitching = true;
+            this.setLoadingState(true);
+
+            $.ajax({
+                url: ajaxUrl,
+                method: 'POST',
+                data: {
+                    action: 'mulopimfwc_switch_location',
+                    nonce: nonce,
+                    location: location
+                },
+                success: (response) => {
+                    this.isSwitching = false;
+
+                    if (response && response.success) {
+                        const removedItems = response.data && response.data.removed_items ? response.data.removed_items : [];
+
+                        if (removedItems && removedItems.length) {
+                            alert(
+                                'The following items were removed because they are not available at the selected location: ' +
+                                removedItems.join(', ')
+                            );
+                        }
+
+                        this.setLocationCookie(location);
+                        window.location.reload();
+                        return;
+                    }
+
+                    this.resetSelectorUI(previousLocation);
+                    this.setLoadingState(false);
+                    alert((response && response.data && response.data.message) || 'Unable to change location. Please try again.');
+                },
+                error: () => {
+                    this.isSwitching = false;
+                    this.resetSelectorUI(previousLocation);
+                    this.setLoadingState(false);
+                    if (requiresCleanup) {
+                        alert('Unable to change location right now. Please try again.');
+                        return;
+                    }
+
+                    fallbackReload();
+                }
+            });
+        }
+
+        checkCartHasProducts() {
+            const ajaxUrl = this.settings.ajaxUrl;
+
+            return new Promise((resolve) => {
+                if (!ajaxUrl) {
+                    resolve(false);
+                    return;
+                }
+
+                $.ajax({
+                    url: ajaxUrl,
+                    method: 'POST',
+                    data: { action: 'check_cart_products' },
+                    success: (response) => {
+                        const hasProducts = response && response.success && response.data
+                            ? !!response.data.cartHasProducts
+                            : false;
+                        resolve(hasProducts);
+                    },
+                    error: () => resolve(false)
+                });
+            });
+        }
+
+        getCurrentStoreLocation() {
+            const cookieLocation = this.getCookie('mulopimfwc_store_location');
+            if (cookieLocation) return cookieLocation;
+
+            return '';
+        }
+
+        resetSelectorUI(previousLocation) {
+            const targetLocation = previousLocation || this.getCurrentStoreLocation();
+
+            const $buttons = $('.mulopimfwc-location-button');
+            if ($buttons.length) {
+                $buttons.removeClass('active button-primary btn-primary').addClass('button-secondary btn-secondary plugincy-btn-secondary');
+                const $buttonToActivate = $buttons.filter(`[data-location="${targetLocation}"]`);
+                if ($buttonToActivate.length) {
+                    $buttonToActivate.addClass('active button-primary btn-primary').removeClass('button-secondary btn-secondary plugincy-btn-secondary');
+                }
+            }
+
+            const $radios = $('.mulopimfwc-location-checkbox');
+            if ($radios.length) {
+                $radios.prop('checked', false);
+                $radios.filter(`[value="${targetLocation}"]`).prop('checked', true);
+            }
+
+            const $dropdown = $('.mulopimfwc-location-dropdown');
+            if ($dropdown.length) {
+                $dropdown.val(targetLocation);
+            }
         }
 
         setLocationCookie(location) {

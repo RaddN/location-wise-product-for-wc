@@ -20,6 +20,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         // Frontend validation (product-level and cart-level)
         add_filter('woocommerce_coupon_is_valid_for_product', [$this, 'validate_product_level'], 10, 3);
         add_filter('woocommerce_coupon_is_valid', [$this, 'validate_cart_level'], 10, 2);
+        add_filter('woocommerce_coupon_get_items_to_apply', [$this, 'filter_items_to_apply'], 10, 3);
 
         // Improve error message (optional)
         add_filter('woocommerce_coupon_error', [$this, 'friendly_error_message'], 10, 3);
@@ -63,9 +64,9 @@ class MULOPIMFWC_Coupon_Location_Restrictions
             'custom_attributes' => [
                 'multiple' => 'multiple',
                 'data-placeholder' => __('Select locations…', 'woocommerce'),
-                'style' => 'width: 50%',
             ],
             'class'             => 'wc-enhanced-select',
+            'style'             => 'width:50%;',
         ]);
 
         // Exclude
@@ -81,6 +82,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
                 'data-placeholder' => __('Select locations to exclude…', 'woocommerce'),
             ],
             'class'             => 'wc-enhanced-select',
+            'style'             => 'width:50%;',
         ]);
         echo '</div>';
     }
@@ -123,6 +125,12 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         // If already invalid, keep it
         if (! $valid) return false;
 
+        $behavior = $this->get_cross_location_coupon_behavior();
+        if ($behavior === 'full_cart') {
+            // In "apply on full cart" mode we don't block any line items; cart-level check will ensure at least one qualifies.
+            return true;
+        }
+
         $coupon_id = $coupon instanceof WC_Coupon ? $coupon->get_id() : absint($coupon);
         $include = (array) get_post_meta($coupon_id, self::META_INCLUDE, true);
         $exclude = (array) get_post_meta($coupon_id, self::META_EXCLUDE, true);
@@ -133,8 +141,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         }
 
         $product_id = $product instanceof WC_Product ? ($product->is_type('variation') ? $product->get_parent_id() : $product->get_id()) : absint($product);
-        $loc_ids = wp_get_object_terms($product_id, self::TAX, ['fields' => 'ids']);
-        if (is_wp_error($loc_ids)) $loc_ids = [];
+        $loc_ids = $this->get_location_ids_for_product($product_id);
 
         // Exclusion first: any intersection => invalid
         if (! empty($exclude) && array_intersect($exclude, $loc_ids)) {
@@ -159,6 +166,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         $coupon_id = $coupon instanceof WC_Coupon ? $coupon->get_id() : absint($coupon);
         $include = (array) get_post_meta($coupon_id, self::META_INCLUDE, true);
         $exclude = (array) get_post_meta($coupon_id, self::META_EXCLUDE, true);
+        $behavior = $this->get_cross_location_coupon_behavior();
 
         if (empty($include) && empty($exclude)) {
             return true; // no location rules to enforce
@@ -168,6 +176,14 @@ class MULOPIMFWC_Coupon_Location_Restrictions
             return true; // nothing to validate (be lenient)
         }
 
+        if ($behavior === 'restrict' && ! empty($exclude)) {
+            $selected_location_ids = $this->get_selected_location_term_ids();
+            if (! empty($selected_location_ids) && array_intersect($exclude, $selected_location_ids)) {
+                wc_add_notice(__('This coupon is not valid for your selected store location.', 'woocommerce'), 'error');
+                return false;
+            }
+        }
+
         $has_qualifying_line = false;
 
         foreach (WC()->cart->get_cart() as $cart_item) {
@@ -175,8 +191,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
             if (! $product instanceof WC_Product) continue;
 
             $pid = $product->is_type('variation') ? $product->get_parent_id() : $product->get_id();
-            $loc_ids = wp_get_object_terms($pid, self::TAX, ['fields' => 'ids']);
-            if (is_wp_error($loc_ids)) $loc_ids = [];
+            $loc_ids = $this->get_location_ids_for_product($pid);
 
             // Exclusion: if product hits exclusion, it cannot qualify—but it doesn't kill the entire coupon
             $hits_exclusion = (! empty($exclude) && array_intersect($exclude, $loc_ids));
@@ -197,6 +212,123 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         }
 
         return true;
+    }
+
+    /**
+     * Filter the list of line items a coupon should apply to when only eligible products should be discounted.
+     */
+    public function filter_items_to_apply($items_to_apply, $coupon, $discounts)
+    {
+        $behavior = $this->get_cross_location_coupon_behavior();
+        if ($behavior !== 'applicable_products') {
+            return $items_to_apply;
+        }
+
+        $coupon_id = $coupon instanceof WC_Coupon ? $coupon->get_id() : absint($coupon);
+        $include = (array) get_post_meta($coupon_id, self::META_INCLUDE, true);
+        $exclude = (array) get_post_meta($coupon_id, self::META_EXCLUDE, true);
+
+        if (empty($include) && empty($exclude)) {
+            return $items_to_apply;
+        }
+
+        $filtered = [];
+
+        foreach ($items_to_apply as $item) {
+            if (! isset($item->product) || ! $item->product instanceof WC_Product) {
+                continue;
+            }
+
+            $pid = $item->product->is_type('variation') ? $item->product->get_parent_id() : $item->product->get_id();
+            $loc_ids = $this->get_location_ids_for_product($pid);
+
+            $hits_exclusion = (! empty($exclude) && array_intersect($exclude, $loc_ids));
+            $hits_inclusion = (empty($include) || array_intersect($include, $loc_ids));
+
+            if (! $hits_exclusion && $hits_inclusion) {
+                $filtered[] = $item;
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Fetch assigned location IDs for a product, including ancestor terms for hierarchical matches.
+     */
+    private function get_location_ids_for_product($product_id)
+    {
+        $terms = wp_get_object_terms($product_id, self::TAX, ['fields' => 'ids']);
+        if (is_wp_error($terms)) {
+            $terms = [];
+        }
+
+        return $this->expand_with_ancestors($terms);
+    }
+
+    /**
+     * Return selected location (cookie-driven) term IDs including ancestors for exclusion checks.
+     */
+    private function get_selected_location_term_ids()
+    {
+        $slug = '';
+        if (isset($_COOKIE['mulopimfwc_store_location'])) {
+            $slug = sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location']));
+        } elseif (isset($_COOKIE['mulopimfwc_user_location'])) {
+            $slug = sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_user_location']));
+        }
+
+        if ($slug === '') {
+            return [];
+        }
+
+        $term = get_term_by('slug', $slug, self::TAX);
+        if (! $term || is_wp_error($term)) {
+            return [];
+        }
+
+        return $this->expand_with_ancestors([$term->term_id]);
+    }
+
+    /**
+     * Determine saved behavior for mixed-location coupons.
+     */
+    private function get_cross_location_coupon_behavior()
+    {
+        $options = get_option('mulopimfwc_display_options', []);
+        $behavior = isset($options['cross_location_coupon_behavior']) ? $options['cross_location_coupon_behavior'] : 'restrict';
+        $allowed = ['restrict', 'applicable_products', 'full_cart'];
+
+        return in_array($behavior, $allowed, true) ? $behavior : 'restrict';
+    }
+
+    /**
+     * Given term IDs, append ancestors and de-duplicate.
+     */
+    private function expand_with_ancestors($term_ids)
+    {
+        $all_ids = [];
+
+        foreach ((array) $term_ids as $term_id) {
+            $term_id = absint($term_id);
+            if (! $term_id) {
+                continue;
+            }
+
+            $all_ids[] = $term_id;
+
+            $ancestors = get_ancestors($term_id, self::TAX, 'taxonomy');
+            if (! empty($ancestors) && is_array($ancestors)) {
+                foreach ($ancestors as $ancestor_id) {
+                    $ancestor_id = absint($ancestor_id);
+                    if ($ancestor_id) {
+                        $all_ids[] = $ancestor_id;
+                    }
+                }
+            }
+        }
+
+        return array_values(array_unique($all_ids));
     }
 
     /** Optional nicer error if WooCommerce surfaces a generic one */

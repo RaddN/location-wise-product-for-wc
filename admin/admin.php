@@ -12,6 +12,11 @@ class MULOPIMFWC_Admin
 
         // // Hook to add the settings page
         add_action('admin_menu', [$this, 'add_settings_page']);
+
+        // Allow adding locations to menus and link pickers.
+        add_filter('nav_menu_meta_box_object', [$this, 'filter_nav_menu_meta_box_object'], 10, 1);
+        add_action('admin_head-nav-menus.php', [$this, 'register_location_nav_menu_meta_box']);
+        add_filter('wp_link_query', [$this, 'add_locations_to_link_query'], 10, 2);
         // Add custom column to orders table
         add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'add_location_column'), 20);
         add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'display_location_column_content'), 20, 2);
@@ -35,7 +40,7 @@ class MULOPIMFWC_Admin
         $dashboard_instance = new MULOPIMFWC_Dashboard();
         add_action('wp_ajax_mulopimfwc_export_dashboard_report', array($dashboard_instance, 'export_dashboard_report'));
         add_action('wp_ajax_mulopimfwc_dashboard_live_data', array($dashboard_instance, 'handle_live_dashboard_data'));
-        
+
         // Add admin bar notification icon
         add_action('admin_bar_menu', array($this, 'add_admin_bar_notification_icon'), 100);
 
@@ -70,12 +75,51 @@ class MULOPIMFWC_Admin
 
     public function shortcode_location_status($atts)
     {
-        $atts = shortcode_atts(['id' => 0], $atts, 'mulopimfwc_location_status');
-        $term_id = absint($atts['id']);
-        if (!$term_id || !get_term($term_id, 'mulopimfwc_store_location')) return '';
+        $atts = shortcode_atts([
+            'id'       => 0,
+            'slug'     => '',
+            'taxonomy' => 'mulopimfwc_store_location',
+            'class'    => '',
+        ], $atts, 'mulopimfwc_location_status');
 
+        $taxonomy = sanitize_key($atts['taxonomy']);
+        $term_id  = absint($atts['id']);
+        $slug     = sanitize_title($atts['slug']);
+
+        $term = null;
+
+        // 1) Prefer ID if provided
+        if ($term_id > 0) {
+            $term = get_term($term_id, $taxonomy);
+            if (!$term || is_wp_error($term)) {
+                return '';
+            }
+        }
+        // 2) Fallback to slug
+        elseif (!empty($slug)) {
+            $term = get_term_by('slug', $slug, $taxonomy);
+            if (!$term || is_wp_error($term)) {
+                return '';
+            }
+            $term_id = (int) $term->term_id;
+        } else {
+            // neither id nor slug provided
+            return '';
+        }
+
+        // Render
         $badge = $this->render_status_badge($term_id);
-        return '<div class="mulopimfwc-location-status">' . $badge . '</div>';
+
+        $classes = array_filter([
+            'mulopimfwc-location-status',
+            sanitize_html_class($atts['class']),
+        ]);
+
+        return sprintf(
+            '<div class="%s">%s</div>',
+            esc_attr(implode(' ', $classes)),
+            $badge
+        );
     }
 
 
@@ -151,6 +195,119 @@ class MULOPIMFWC_Admin
         })(jQuery);
         ';
         wp_add_inline_script('jquery', $js);
+    }
+
+    public function filter_nav_menu_meta_box_object($object)
+    {
+        if ($object instanceof WP_Taxonomy && $object->name === 'mulopimfwc_store_location') {
+            return false;
+        }
+
+        return $object;
+    }
+
+    public function register_location_nav_menu_meta_box()
+    {
+        if (!taxonomy_exists('mulopimfwc_store_location')) {
+            return;
+        }
+
+        if (!function_exists('wp_nav_menu_item_taxonomy_meta_box')) {
+            return;
+        }
+
+        $taxonomy = get_taxonomy('mulopimfwc_store_location');
+        if (!$taxonomy) {
+            return;
+        }
+
+        $this->maybe_unhide_location_menu_box();
+
+        global $wp_meta_boxes;
+        if (isset($wp_meta_boxes['nav-menus']['side']['default']['add-' . $taxonomy->name])) {
+            return;
+        }
+
+        add_meta_box(
+            'add-' . $taxonomy->name,
+            $taxonomy->labels->name,
+            'wp_nav_menu_item_taxonomy_meta_box',
+            'nav-menus',
+            'side',
+            'default',
+            $taxonomy
+        );
+    }
+
+    private function maybe_unhide_location_menu_box()
+    {
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return;
+        }
+
+        $flag_key = 'mulopimfwc_location_menu_box_unhidden';
+        if (get_user_meta($user_id, $flag_key, true)) {
+            return;
+        }
+
+        $hidden = get_user_meta($user_id, 'metaboxhidden_nav-menus', true);
+        if (!is_array($hidden)) {
+            return;
+        }
+
+        $meta_box_id = 'add-mulopimfwc_store_location';
+        if (!in_array($meta_box_id, $hidden, true)) {
+            return;
+        }
+
+        $hidden = array_values(array_diff($hidden, [$meta_box_id]));
+        update_user_meta($user_id, 'metaboxhidden_nav-menus', $hidden);
+        update_user_meta($user_id, $flag_key, 1);
+    }
+
+    public function add_locations_to_link_query($results, $query)
+    {
+        if (!taxonomy_exists('mulopimfwc_store_location')) {
+            return $results;
+        }
+
+        if (empty($query['s'])) {
+            return $results;
+        }
+
+        $search = sanitize_text_field($query['s']);
+        $per_page = isset($query['per_page']) ? max(1, (int) $query['per_page']) : 20;
+        $page = isset($query['page']) ? max(1, (int) $query['page']) : 1;
+        $offset = ($page - 1) * $per_page;
+
+        $terms = get_terms([
+            'taxonomy' => 'mulopimfwc_store_location',
+            'hide_empty' => false,
+            'number' => $per_page,
+            'offset' => $offset,
+            'search' => $search,
+        ]);
+
+        if (is_wp_error($terms) || empty($terms)) {
+            return $results;
+        }
+
+        foreach ($terms as $term) {
+            $link = get_term_link($term);
+            if (is_wp_error($link)) {
+                continue;
+            }
+
+            $results[] = [
+                'ID' => 'mulopimfwc_store_location-' . $term->term_id,
+                'title' => $term->name,
+                'permalink' => $link,
+                'info' => __('Location', 'multi-location-product-and-inventory-management'),
+            ];
+        }
+
+        return $results;
     }
 
     /** =========================================
@@ -1397,7 +1554,7 @@ class MULOPIMFWC_Admin
 
         return $out;
     }
-    
+
     /**
      * Add notification icon to admin bar
      */
@@ -1406,7 +1563,7 @@ class MULOPIMFWC_Admin
         if (!current_user_can('manage_woocommerce')) {
             return;
         }
-        
+
         // Add main notification menu item to top-secondary (right side of admin bar)
         $wp_admin_bar->add_node(array(
             'id' => 'mulopimfwc-notifications',
@@ -1417,7 +1574,7 @@ class MULOPIMFWC_Admin
                 'title' => __('Notifications', 'multi-location-product-and-inventory-management'),
             ),
         ));
-        
+
         // Add dropdown container as child
         $wp_admin_bar->add_node(array(
             'parent' => 'mulopimfwc-notifications',
@@ -1429,5 +1586,3 @@ class MULOPIMFWC_Admin
         ));
     }
 }
-
-

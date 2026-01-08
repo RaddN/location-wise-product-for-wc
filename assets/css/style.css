@@ -2675,3 +2675,13 @@ form#lwp-store-selector-form-modal > div * {
 .mulopimfwc-lightbox-image.fade-in {
   opacity: 1;
 }
+.mulopimfwc-buttons-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+.plugincy-btn-secondary {
+    border: 1px solid;
+    background: none;
+    color: #334155;
+}

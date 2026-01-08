@@ -2125,17 +2125,6 @@ jQuery(document).ready(function ($) {
         mulopimfwc_toggleDisabledClass($(this).val() !== 'on', $location_discounts_related_settings);
     });
 
-
-    const $enable_location_reviews = $('select[name="mulopimfwc_display_options[location_specific_reviews]"]');
-    const $location_reviews_related_settings = $enable_location_reviews.closest('#lwp-subtab-reviews').find('input, select, textarea').not($enable_location_reviews);
-    // Set initial state
-    mulopimfwc_toggleDisabledClass($enable_location_reviews.val() !== 'on', $location_reviews_related_settings);
-    // Handle change event
-    $enable_location_reviews.on('change', function () {
-        mulopimfwc_toggleDisabledClass($(this).val() !== 'on', $location_reviews_related_settings);
-    });
-
-
     const $enable_store_locator = $('select[name="mulopimfwc_display_options[enable_store_locator]"]');
     const $store_locator_related_settings = $enable_store_locator.closest('table').find('input, select, textarea').not($enable_store_locator);
     // Set initial state
