@@ -461,7 +461,7 @@ class MULOPIMFWC_Location_Managers
                             <?php if (!empty($locations)): ?>
                                 <?php foreach ($locations as $location): ?>
                                     <label class="checkbox-label">
-                                        <input type="checkbox" name="assigned_locations[]" value="<?php echo esc_attr($location->slug); ?>">
+                                        <input type="checkbox" name="assigned_locations[]" value="<?php echo esc_attr(rawurldecode($location->slug)); ?>">
                                         <?php echo esc_html($location->name); ?>
                                     </label>
                                 <?php endforeach; ?>
@@ -1503,7 +1503,7 @@ class MULOPIMFWC_Location_Managers
                     <?php if (!empty($mulopimfwc_locations)): ?>
                         <?php foreach ($mulopimfwc_locations as $location): ?>
                             <label style="display: block; margin-bottom: 5px;">
-                                <input type="checkbox" name="mulopimfwc_assigned_locations[]" value="<?php echo esc_attr($location->slug); ?>" <?php checked(in_array($location->slug, $assigned_locations)); ?>>
+                                <input type="checkbox" name="mulopimfwc_assigned_locations[]" value="<?php echo esc_attr(rawurldecode($location->slug)); ?>" <?php checked(in_array($location->slug, $assigned_locations)); ?>>
                                 <?php echo esc_html($location->name); ?>
                             </label>
                         <?php endforeach; ?>
@@ -1820,8 +1820,8 @@ class MULOPIMFWC_Order_Filter
         foreach ($mulopimfwc_locations as $location) {
             printf(
                 '<option value="%s" %s>%s</option>',
-                esc_attr($location->slug),
-                selected($selected_location, $location->slug, false),
+                esc_attr(rawurldecode($location->slug)),
+                selected($selected_location, rawurldecode($location->slug), false),
                 esc_html($location->name)
             );
         }

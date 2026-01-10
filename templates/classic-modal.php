@@ -65,7 +65,7 @@ wp_add_inline_script($inline_handle, 'window.mulopimfwcClassicPopupData = ' . wp
                     $search_text = strtolower($location->name . ' ' . $address_line);
             ?>
                     <div class="lwp-classic-location"
-                        data-slug="<?php echo esc_attr($location->slug); ?>"
+                        data-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                         data-search="<?php echo esc_attr($search_text); ?>"
                         data-lat="<?php echo esc_attr($lat); ?>"
                         data-lng="<?php echo esc_attr($lng); ?>">
@@ -88,7 +88,7 @@ wp_add_inline_script($inline_handle, 'window.mulopimfwcClassicPopupData = ' . wp
                                 <p class="lwp-classic-location__address"><?php echo esc_html($address_line); ?></p>
                             <?php } ?>
                         </div>
-                        <button type="button" class="lwp-classic-select" data-slug="<?php echo esc_attr($location->slug); ?>">
+                        <button type="button" class="lwp-classic-select" data-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>">
                             <?php esc_html_e('Select', 'multi-location-product-and-inventory-management'); ?>
                         </button>
                     </div>

@@ -308,7 +308,7 @@ function mulopimfwc_export_products_csv_handler() {
         $locations_formatted[] = [
             'id' => $location->term_id,
             'name' => $location->name,
-            'slug' => $location->slug,
+            'slug' => rawurldecode($location->slug),
         ];
     }
     

@@ -100,7 +100,7 @@ $options = $this->get_display_options();
                                         $display_name .= ' (' . $child_count . ')';
                                     }
                                     ?>
-                                    <option value="<?php echo esc_attr($location->slug); ?>" data-term-id="<?php echo esc_attr($location->term_id); ?>">
+                                    <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>" data-term-id="<?php echo esc_attr($location->term_id); ?>">
                                         <?php echo esc_html($display_name); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -159,7 +159,7 @@ $options = $this->get_display_options();
                         } else {
                             // Display locations in flat list
                             foreach ($locations as $location) {
-                                echo '<option value="' . esc_attr($location->slug) . '">' . esc_html($location->name) . '</option>';
+                                echo '<option value="' . esc_attr(rawurldecode($location->slug)) . '">' . esc_html($location->name) . '</option>';
                             }
                         }
                     }

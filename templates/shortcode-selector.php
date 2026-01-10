@@ -542,9 +542,9 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                                 if ($show_count && $child_count > 0) {
                                     $display_name .= ' (' . $child_count . ')';
                                 }
-                                $selected = ($location->slug === $selected_location) ? 'selected' : '';
+                                $selected = (rawurldecode($location->slug) === $selected_location) ? 'selected' : '';
                                 ?>
-                                <option value="<?php echo esc_attr($location->slug); ?>"
+                                <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                                     data-term-id="<?php echo esc_attr($location->term_id); ?>"
                                     <?php echo esc_html($selected); ?>>
                                     <?php echo esc_html($display_name); ?>
@@ -605,8 +605,8 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                     } else {
                         // Display locations in flat list
                         foreach ($locations as $location) {
-                            $selected = ($location->slug === $selected_location) ? 'selected' : '';
-                            echo '<option value="' . esc_attr($location->slug) . '" ' . esc_html($selected) . '>' . esc_html($location->name) . '</option>';
+                            $selected = (rawurldecode($location->slug) === $selected_location) ? 'selected' : '';
+                            echo '<option value="' . esc_attr(rawurldecode($location->slug)) . '" ' . esc_html($selected) . '>' . esc_html($location->name) . '</option>';
                         }
                     }
                     ?>

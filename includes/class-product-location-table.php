@@ -127,7 +127,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     'id' => $location->term_id,
                     'name' => $location->name,
                     'parent' => $location->parent,
-                    'selected' => in_array($location->slug, $product_location_slugs),
+                    'selected' => in_array(rawurldecode($location->slug), $product_location_slugs),
                 ];
             }
         }
@@ -436,7 +436,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     'id' => $location->term_id,
                     'name' => $location->name,
                     'parent' => $location->parent,
-                    'selected' => in_array($location->slug, $product_location_slugs),
+                    'selected' => in_array(rawurldecode($location->slug), $product_location_slugs),
                 ];
             }
         }
@@ -722,11 +722,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         isset($_REQUEST['_wpnonce']) &&
                         wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'bulk-' . $this->_args['plural'])
                     ) {
-                        $selected = isset($_REQUEST['filter-by-location']) && $_REQUEST['filter-by-location'] == $location->slug ? 'selected="selected"' : '';
+                        $selected = isset($_REQUEST['filter-by-location']) && $_REQUEST['filter-by-location'] == rawurldecode($location->slug) ? 'selected="selected"' : '';
                     } else {
                         $selected =  '';
                     }
-                    echo '<option value="' . esc_attr($location->slug) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
+                    echo '<option value="' . esc_attr(rawurldecode($location->slug)) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
                 }
 
                 echo '</select>';

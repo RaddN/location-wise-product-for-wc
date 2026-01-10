@@ -179,14 +179,14 @@ class MULOPIMFWC_Location_Based_Shipping
             }
 
             $indent = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level);
-            $checked = in_array($location->slug, $selected_locations);
+            $checked = in_array(rawurldecode($location->slug), $selected_locations);
             
             ?>
             <label style="display: block; margin: 5px 0;">
                 <?php echo wp_kses_post($indent); ?>
                 <input type="checkbox" 
                        name="mulopimfwc_shipping_locations[]" 
-                       value="<?php echo esc_attr($location->slug); ?>"
+                       value="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                        <?php checked($checked); ?>>
                 <?php echo esc_html($location->name); ?>
                 <span class="description">(<?php echo esc_html($location->count); ?> <?php esc_html_e('products', 'multi-location-product-and-inventory-management'); ?>)</span>
@@ -518,7 +518,7 @@ class MULOPIMFWC_Location_Based_Shipping
                                 <label style="display: block; margin: 5px 0;">
                                     <input type="checkbox" 
                                            name="mulopimfwc_bulk_locations[]" 
-                                           value="<?php echo esc_attr($location->slug); ?>">
+                                           value="<?php echo esc_attr(rawurldecode($location->slug)); ?>">
                                     <?php echo esc_html($location->name); ?>
                                 </label>
                             <?php endforeach; ?>
@@ -677,7 +677,7 @@ function mulopimfwc_get_method_locations()
     $locations_data = array();
     foreach ($all_locations as $location) {
         $locations_data[] = array(
-            'slug' => $location->slug,
+            'slug' => rawurldecode($location->slug),
             'name' => $location->name,
             'count' => $location->count
         );

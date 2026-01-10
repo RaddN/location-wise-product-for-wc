@@ -1086,7 +1086,7 @@ class MULOPIMFWC_Dashboard
                                     <select id="filter-location" class="lwp-filter-input">
                                         <option value="all"><?php echo esc_html__('All Locations', 'multi-location-product-and-inventory-management'); ?></option>
                                         <?php foreach ($mulopimfwc_locations as $location): ?>
-                                            <option value="<?php echo esc_attr($location->slug); ?>">
+                                            <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>">
                                                 <?php echo esc_html($location->name); ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -1676,7 +1676,7 @@ class MULOPIMFWC_Dashboard
 
         $date_from = isset($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : '';
         $date_to = isset($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : '';
-        $location_filter = isset($_POST['location']) ? sanitize_text_field($_POST['location']) : 'all';
+        $location_filter = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : 'all';
         $status_filter = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : 'all';
 
         // Get filtered data
@@ -1934,7 +1934,7 @@ class MULOPIMFWC_Dashboard
         $location_slugs = ['Default' => 'default'];
 
         foreach ($mulopimfwc_locations as $location) {
-            $location_slugs[$location->name] = $location->slug;
+            $location_slugs[$location->name] = rawurldecode($location->slug);
             $orders_by_location[$location->name] = 0;
             $location_revenue[$location->name] = 0;
         }
@@ -2494,7 +2494,7 @@ class MULOPIMFWC_Dashboard
             foreach ($mulopimfwc_locations as $location) {
                 $locations[] = [
                     'name' => $location->name,
-                    'slug' => $location->slug,
+                    'slug' => rawurldecode($location->slug),
                     'term_id' => $location->term_id
                 ];
             }

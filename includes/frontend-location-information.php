@@ -1120,7 +1120,7 @@ class MULOPIMFWC_Frontend_Location_Information
                         $search_data = strtolower($location->name . ' ' . $street_address . ' ' . $city . ' ' . $state);
                     ?>
                         <div class="mulopimfwc-tab-item <?php echo esc_attr($is_active); ?>"
-                            data-location-slug="<?php echo esc_attr($location->slug); ?>"
+                            data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                             data-tab="location-<?php echo esc_attr($term_id); ?>"
                             data-lat="<?php echo esc_attr($latitude); ?>"
                             data-lng="<?php echo esc_attr($longitude); ?>"
@@ -1261,7 +1261,7 @@ class MULOPIMFWC_Frontend_Location_Information
                     get_term_meta($term_id, 'state', true));
             ?>
                 <div class="mulopimfwc-grid-location-item"
-                    data-location-slug="<?php echo esc_attr($location->slug); ?>"
+                    data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                     data-search="<?php echo esc_attr($search_data); ?>">
                     <?php $this->render_location_details($term_id, 'grid', true); ?>
                 </div>

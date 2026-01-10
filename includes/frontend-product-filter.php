@@ -178,7 +178,7 @@ class Location_Wise_Products_Filter
                     <select id="mulopimfwc-filter-location-select" name="location" class="mulopimfwc-filter-select">
                         <option value=""><?php esc_html_e('All Locations', 'multi-location-product-and-inventory-management'); ?></option>
                         <?php foreach ($locations as $location): ?>
-                            <option value="<?php echo esc_attr($location->slug); ?>" <?php selected($current_location, $location->slug); ?>>
+                            <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>" <?php selected($current_location, rawurldecode($location->slug)); ?>>
                                 <?php echo esc_html($location->name); ?>
                             </option>
                         <?php endforeach; ?>
@@ -266,7 +266,7 @@ class Location_Wise_Products_Filter
     {
         check_ajax_referer('mulopimfwc_filter_products', 'nonce');
 
-        $location_slug = isset($_POST['location']) ? sanitize_text_field($_POST['location']) : '';
+        $location_slug = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : '';
         $stock_status = isset($_POST['stock']) ? sanitize_text_field($_POST['stock']) : '';
         $page = isset($_POST['page']) ? absint($_POST['page']) : 1;
         $category = isset($_POST['category']) ? sanitize_text_field($_POST['category']) : '';
@@ -605,7 +605,7 @@ class Location_Wise_Products_Filter
         // Get location-specific stock
         global $mulopimfwc_options;
         $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
-        $terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+        $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
 
         // If enable_all_locations is on and product has no location terms, use global stock
         if ($enable_all_locations === 'on' && empty($terms)) {

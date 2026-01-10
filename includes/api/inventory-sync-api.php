@@ -319,7 +319,7 @@ class MULOPIMFWC_Inventory_Sync_API {
                     'sku' => $product->get_sku(),
                     'product_name' => $product->get_name(),
                     'location_id' => $location->term_id,
-                    'location_slug' => $location->slug,
+                    'location_slug' => rawurldecode($location->slug),
                     'location_name' => $location->name,
                     'stock' => get_post_meta($product_id, '_location_stock_' . $location->term_id, true),
                     'regular_price' => get_post_meta($product_id, '_location_regular_price_' . $location->term_id, true),
@@ -456,7 +456,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         foreach ($locations as $location) {
             $data[] = array(
                 'id' => $location->term_id,
-                'slug' => $location->slug,
+                'slug' => rawurldecode($location->slug),
                 'name' => $location->name,
                 'description' => $location->description,
             );

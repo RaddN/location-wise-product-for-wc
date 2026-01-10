@@ -71,7 +71,7 @@ if (!empty($locations) && !is_wp_error($locations)) {
 
         $locations_data[] = [
             'termId' => $term_id,
-            'slug' => $location->slug,
+            'slug' => rawurldecode($location->slug),
             'name' => $location->name,
             'lat' => $lat !== '' ? (float) $lat : null,
             'lng' => $lng !== '' ? (float) $lng : null,

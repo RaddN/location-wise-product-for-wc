@@ -426,11 +426,14 @@ class MULOPIMFWC_Product_Location_Selector
 
         $locations = $this->get_available_locations($this->current_product);
 
+        
+
         if (empty($locations)) {
             return;
         }
 
         $display_position = !empty($position) ? $position : $this->position;
+        
         $this->render_selector_wrapper($locations, $display_position, $atts);
 
         $location_selector_added[$product_id_key] = true;
@@ -454,6 +457,7 @@ class MULOPIMFWC_Product_Location_Selector
         }
 
         $product_locations = get_the_terms($product->get_id(), self::TAXONOMY);
+
 
         // If product has specific locations, filter to only those
         if (!empty($product_locations) && !is_wp_error($product_locations)) {
@@ -556,6 +560,7 @@ class MULOPIMFWC_Product_Location_Selector
     {
         $label = $this->get_selector_label();
         $product_id = $this->current_product->get_id();
+        
 ?>
         <div class="mulopimfwc-location-list">
             <div class="mulopimfwc-location-label">
@@ -569,8 +574,8 @@ class MULOPIMFWC_Product_Location_Selector
                             id="location-<?php echo esc_attr($location->term_id . $id_suffix); ?>"
                             name="mulopimfwc_location<?php echo esc_attr($id_suffix ? '_' . $product_id : ''); ?>"
                             class="mulopimfwc-location-checkbox"
-                            value="<?php echo esc_attr($location->slug); ?>"
-                            <?php checked($current_location, $location->slug); ?>
+                            value="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
+                            <?php checked($current_location, rawurldecode($location->slug)); ?>
                             data-location-id="<?php echo esc_attr($location->term_id); ?>" />
                         <label for="location-<?php echo esc_attr($location->term_id . $id_suffix); ?>">
                             <?php echo esc_html($location->name); ?>
@@ -600,8 +605,8 @@ class MULOPIMFWC_Product_Location_Selector
                 <?php foreach ($locations as $location): ?>
                     <button
                         type="button"
-                        class="mulopimfwc-location-button <?php echo $current_location === $location->slug ? 'active button-primary btn-primary' : 'button-secondary btn-secondary plugincy-btn-secondary'; ?>"
-                        data-location="<?php echo esc_attr($location->slug); ?>"
+                        class="mulopimfwc-location-button <?php echo $current_location === rawurldecode($location->slug) ? 'active button-primary btn-primary' : 'button-secondary btn-secondary plugincy-btn-secondary'; ?>"
+                        data-location="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                         data-location-id="<?php echo esc_attr($location->term_id); ?>"
                         title="<?php echo esc_attr($location->description); ?>">
                         <?php echo esc_html($location->name); ?>
@@ -630,9 +635,9 @@ class MULOPIMFWC_Product_Location_Selector
                 <option value=""><?php esc_html_e('Choose a location...', 'multi-location-product-and-inventory-management'); ?></option>
                 <?php foreach ($locations as $location): ?>
                     <option
-                        value="<?php echo esc_attr($location->slug); ?>"
+                        value="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                         data-location-id="<?php echo esc_attr($location->term_id); ?>"
-                        <?php selected($current_location, $location->slug); ?>>
+                        <?php selected($current_location, rawurldecode($location->slug)); ?>>
                         <?php echo esc_html($location->name); ?>
                     </option>
                 <?php endforeach; ?>
@@ -690,7 +695,7 @@ class MULOPIMFWC_Product_Location_Selector
      */
     private function sanitize_location_input(): string
     {
-        $location = isset($_POST['location']) ? sanitize_text_field($_POST['location']) : '';
+        $location = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : '';
 
         if (empty($location)) {
             throw new Exception(__('Invalid location', 'multi-location-product-and-inventory-management'));

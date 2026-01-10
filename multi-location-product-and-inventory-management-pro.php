@@ -1994,7 +1994,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $stored_location = $cart_item['mulopimfwc_location'];
 
                     // Check if product still belongs to stored location
-                    $terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+                    $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
 
                     if (!empty($terms) && !in_array($stored_location, $terms)) {
                         // Product no longer available at stored location
@@ -2255,7 +2255,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 </label>
                 <select name="cart_location[<?php echo esc_attr($cart_item_key); ?>]" id="cart-location-<?php echo esc_attr($cart_item_key); ?>" class="mulopimfwc-cart-location-select" style="width: 100%; max-width: 300px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">
                     <?php foreach ($available_locations as $location): ?>
-                        <option value="<?php echo esc_attr($location->slug); ?>" <?php selected($current_location_slug, $location->slug); ?>>
+                        <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>" <?php selected($current_location_slug, rawurldecode($location->slug)); ?>>
                             <?php echo esc_html($location->name); ?>
                         </option>
                     <?php endforeach; ?>
@@ -3016,7 +3016,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Get product ID
             $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
-            $location_selected = wp_get_object_terms($product_id, 'mulopimfwc_store_location', array('fields' => 'slugs'));
+            $location_selected = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
             if (!$product_id) {
                 wp_send_json_error(['message' => __('Invalid product ID.', 'multi-location-product-and-inventory-management')]);
             }
@@ -3032,7 +3032,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'id' => $location->term_id,
                     'name' => $location->name,
                     'parent' => $location->parent,
-                    'selected' => in_array($location->slug, $location_selected),
+                    'selected' => in_array(rawurldecode($location->slug), $location_selected),
                 ];
             }
 
@@ -4094,7 +4094,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return true;
             }
 
-            $terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+            $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
             if (empty($terms) && $enable_all_locations === 'on') {
                 return true; // Product is available in all locations
             }
@@ -4464,7 +4464,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Validate request
             check_ajax_referer('multi-location-product-and-inventory-management', 'nonce');
 
-            $location = isset($_POST['location']) ? sanitize_text_field(wp_unslash($_POST['location'])) : '';
+            $location = isset($_POST['location']) ? sanitize_text_field(wp_unslash(rawurldecode($_POST['location']))) : '';
 
             if (empty($location)) {
                 wp_send_json_error(['message' => __('Invalid location.', 'multi-location-product-and-inventory-management')]);
@@ -4582,7 +4582,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options['enable_all_locations']
                 : 'off';
 
-            $terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+            $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
 
             if (empty($terms)) {
                 return $enable_all_locations === 'on';
