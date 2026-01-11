@@ -3096,9 +3096,30 @@ if (!function_exists('mulopimfwc_get_values')) {
                 delete_post_meta($product_id, '_location_disabled_' . $location_id);
                 $message = __('Location activated successfully.', 'multi-location-product-and-inventory-management');
             } else {
-                // Deactivate location - add disabled meta
-                update_post_meta($product_id, '_location_disabled_' . $location_id, 1);
-                $message = __('Location deactivated successfully.', 'multi-location-product-and-inventory-management');
+                // Deactivate location - remove location from product
+                // Remove the taxonomy term relationship
+                wp_remove_object_terms($product_id, $location_id, 'mulopimfwc_store_location');
+                
+                // Clean up location-specific meta data
+                delete_post_meta($product_id, '_location_disabled_' . $location_id);
+                delete_post_meta($product_id, '_location_stock_' . $location_id);
+                delete_post_meta($product_id, '_location_regular_price_' . $location_id);
+                delete_post_meta($product_id, '_location_sale_price_' . $location_id);
+                delete_post_meta($product_id, '_location_backorders_' . $location_id);
+                
+                // Also clean up for variations if it's a variable product
+                $product = wc_get_product($product_id);
+                if ($product && $product->is_type('variable')) {
+                    $variation_ids = $product->get_children();
+                    foreach ($variation_ids as $variation_id) {
+                        delete_post_meta($variation_id, '_location_stock_' . $location_id);
+                        delete_post_meta($variation_id, '_location_regular_price_' . $location_id);
+                        delete_post_meta($variation_id, '_location_sale_price_' . $location_id);
+                        delete_post_meta($variation_id, '_location_backorders_' . $location_id);
+                    }
+                }
+                
+                $message = __('Location removed from product successfully.', 'multi-location-product-and-inventory-management');
             }
 
             wp_send_json_success(['message' => $message]);

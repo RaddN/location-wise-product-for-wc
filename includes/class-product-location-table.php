@@ -166,6 +166,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_location_stock_display($item)
     {
+        // Show -- for affiliate, external, and grouped products (they don't have stock management)
+        if ($item['type'] === 'affiliate' || $item['type'] === 'external' || $item['type'] === 'grouped') {
+            return '<span style="color: #9ca3af;">--</span>';
+        }
+
         $output = '<div class="location-stock-container">';
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
             $variation_index = 0;
@@ -226,6 +231,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_location_price_display($item)
     {
+        // Show -- for grouped products
+        if ($item['type'] === 'grouped') {
+            return '<span style="color: #9ca3af;">--</span>';
+        }
+
         $output = '<div class="location-price-container">';
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
             $variation_index = 0;
@@ -286,6 +296,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_purchase_price_display($item)
     {
+        // Show -- for grouped products
+        if ($item['type'] === 'grouped') {
+            return '<span style="color: #9ca3af;">--</span>';
+        }
+
         $output = '<div class="purchase-price-container">';
 
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
@@ -326,6 +341,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_gross_profit_display($item)
     {
+        // Show -- for grouped products
+        if ($item['type'] === 'grouped') {
+            return '<span style="color: #9ca3af;">--</span>';
+        }
+
         $output = '<div class="gross-profit-container '.esc_attr(mulopimfwc_get_pro_class()).'">';
 
         if ($item['type'] === 'variable' && !empty($item['variations'])) {

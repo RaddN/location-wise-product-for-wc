@@ -78,15 +78,17 @@ jQuery(document).ready(function ($) {
                             .removeClass('button-primary activate-location')
                             .addClass('button-secondary deactivate-location')
                             .data('action', 'deactivate');
+                        
+                        // Show success message
+                        showNotice(response.data.message, 'success');
                     } else {
-                        $button.text(mulopimfwc_locationWiseProducts.i18n.activate)
-                            .removeClass('button-secondary deactivate-location')
-                            .addClass('button-primary activate-location')
-                            .data('action', 'activate');
+                        // Deactivation removes the location from product - reload page
+                        showNotice(response.data.message, 'success');
+                        // Reload page after a short delay to show the message
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
                     }
-
-                    // Show success message
-                    showNotice(response.data.message, 'success');
                 } else {
                     // Show error message
                     showNotice(response.data.message, 'error');
