@@ -30,7 +30,8 @@ class mulopimfwc_Stock_Central
                 <p><?php echo esc_html__('Manage stock levels and prices for each product by location.', 'multi-location-product-and-inventory-management'); ?></p>
             </div>
 
-            <form method="post">
+            <form method="get" id="stock-central-form">
+                <input type="hidden" name="page" value="<?php echo isset($_REQUEST['page']) ? esc_attr(sanitize_text_field(wp_unslash($_REQUEST['page']))) : 'location-stock-management'; ?>" />
                 <?php $product_table->search_box(__('Search Products', 'multi-location-product-and-inventory-management'), 'search_products'); ?>
                 <?php $product_table->display(); ?>
             </form>
@@ -241,6 +242,52 @@ class mulopimfwc_Stock_Central
             .variation-gross-profit-item .accordion-content .location-gross-profit-item:last-child {
                 margin-bottom: 0;
             }
+
+            /* Filter styles */
+            .mlsctock-cenral-main form .alignleft.actions.filters-section {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+
+            .mlsctock-cenral-main form .alignleft.actions select {
+                min-width: 150px;
+                padding: 5px;
+            }
+
+            .mlsctock-cenral-main form .alignleft.actions #filter-submit {
+                margin-left: 0;
+            }
+
+            /* Bulk actions section - positioned near bulk actions dropdown */
+            .mlsctock-cenral-main form .alignleft.actions.bulk-actions-section {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-left: 10px;
+                margin-bottom: 15px;
+                padding: 8px 12px;
+                background-color: #f0f9ff;
+                border: 1px solid #bae6fd;
+                border-radius: 4px;
+                margin-top: -45px;
+            }
+
+            .mlsctock-cenral-main form .alignleft.actions.bulk-actions-section label {
+                font-weight: 500;
+                white-space: nowrap;
+            }
+
+            .mlsctock-cenral-main form .alignleft.actions.bulk-actions-section select {
+                min-width: 180px;
+            }
+
+            /* Bulk actions notice */
+            .mlsctock-cenral-main .notice {
+                margin: 15px 0;
+            }
         </style>
 
         <script>
@@ -276,6 +323,92 @@ class mulopimfwc_Stock_Central
                         $icon.text('+');
                     }
                 });
+
+                // Handle form submission - update URL on submit
+                var $form = $('#stock-central-form');
+                
+                // Update URL when form is submitted
+                function updateURL() {
+                    var formData = $form.serialize();
+                    var url = window.location.pathname + '?' + formData;
+                    window.history.pushState({path: url}, '', url);
+                }
+
+                // Handle form submission (Filter button or search)
+                $form.on('submit', function(e) {
+                    updateURL();
+                    // Form will submit normally
+                });
+
+                // Handle bulk action selection - validate but don't submit
+                $('select[name="action"], select[name="action2"]').on('change', function() {
+                    var action = $(this).val();
+                    // Just show/hide location selector, don't submit
+                    toggleBulkLocationSelector();
+                });
+
+                // Handle bulk action Apply button click
+                $('input#doaction, input#doaction2').on('click', function(e) {
+                    var $button = $(this);
+                    var action = $('select[name="action"]').val();
+                    var action2 = $('select[name="action2"]').val();
+                    var currentAction = (action && action !== '-1') ? action : ((action2 && action2 !== '-1') ? action2 : '');
+                    
+                    if (currentAction === 'bulk_assign_location' || currentAction === 'bulk_remove_location') {
+                        if (!$('#bulk-location-id').val()) {
+                            e.preventDefault();
+                            alert('<?php echo esc_js(__('Please select a location first', 'multi-location-product-and-inventory-management')); ?>');
+                            return false;
+                        }
+                    }
+                    // If validation passes, form will submit normally
+                });
+
+                // Show/hide bulk location selector based on selected bulk action
+                function toggleBulkLocationSelector() {
+                    var action = $('select[name="action"]').val();
+                    var action2 = $('select[name="action2"]').val();
+                    var currentAction = (action && action !== '-1') ? action : ((action2 && action2 !== '-1') ? action2 : '');
+                    
+                    if (currentAction === 'bulk_assign_location' || currentAction === 'bulk_remove_location') {
+                        $('.bulk-actions-section').fadeIn(200);
+                    } else {
+                        $('.bulk-actions-section').fadeOut(200);
+                    }
+                }
+                
+                // Move bulk actions section to be right after bulk actions dropdown
+                function positionBulkActionsSection() {
+                    var $bulkActions = $('.tablenav.top .bulkactions, .tablenav.top .alignleft.actions.bulkactions');
+                    var $bulkSection = $('.bulk-actions-section');
+                    
+                    if ($bulkActions.length && $bulkSection.length) {
+                        // Find the bulk actions container
+                        var $bulkContainer = $bulkActions.closest('.alignleft, .bulkactions').parent();
+                        if ($bulkContainer.length) {
+                            $bulkSection.detach().insertAfter($bulkContainer);
+                        } else {
+                            $bulkSection.detach().insertAfter($bulkActions);
+                        }
+                    }
+                }
+
+                // Position on load and after any DOM changes
+                positionBulkActionsSection();
+                
+                // Also position after table is ready
+                setTimeout(positionBulkActionsSection, 100);
+
+                // Initial state - hide by default
+                $('.bulk-actions-section').hide();
+                toggleBulkLocationSelector();
+
+                // Restore filters from URL on page load
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('s') || urlParams.has('filter-by-location') || urlParams.has('filter-by-category') || 
+                    urlParams.has('filter-by-type') || urlParams.has('filter-by-stock-status') || urlParams.has('filter-by-brand')) {
+                    // Filters are already in URL, form will auto-populate
+                }
             });
         })(jQuery);
         </script>

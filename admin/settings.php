@@ -220,8 +220,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'template_selection',
             __('Template Selection', 'multi-location-product-and-inventory-management'),
             function () {
+                $options = $this->get_display_options();
+                $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 if (mulopimfwc_premium_feature()) {
-                    $this->render_advance_select("template_selection", __("Select the template for location selector.", 'multi-location-product-and-inventory-management'), [
+                    echo '<select id="template_selection" name="mulopimfwc_display_options[template_selection]">';
+                    $template_options = [
                         "default" => "Default",
                         "modern" => "Modern",
                         "modern-simple" => "Modern Simple",
@@ -229,7 +232,13 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                         "tabs" => "Tabs",
                         "compact" => "Compact",
                         "grid" => "Grid",
-                    ]);
+                    ];
+                    foreach ($template_options as $value => $label) {
+                        $selected = ($current_template == $value) ? 'selected' : '';
+                        echo "<option value='" . esc_attr($value) . "' " . esc_attr($selected) . ">" . esc_html($label) . "</option>";
+                    }
+                    echo '</select>';
+                    echo "<p class='description' style='max-width: 800px;'>" . esc_html__("Select the template for location selector.", 'multi-location-product-and-inventory-management') . "</p>";
                 } else {
                     $this->render_advance_select('pro', __("Select the template for location selector.", 'multi-location-product-and-inventory-management'), [
                         "default" => "Default",
@@ -250,10 +259,18 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'use_select2',
             __('Use Select2', 'multi-location-product-and-inventory-management'),
             function () {
+                $options = $this->get_display_options();
+                $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
+                $is_default = ($current_template === 'default');
+                $style = $is_default ? '' : ' style="display: none;"';
                 if (mulopimfwc_premium_feature()) {
+                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . $style . '>';
                     $this->render_advance_checkbox("use_select2", __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management'));
+                    echo '</div>';
                 } else {
+                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . $style . '>';
                     $this->render_advance_checkbox('pro', __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management'), true, false);
+                    echo '</div>';
                 }
             },
             'location-popup-shortcode-settings',
@@ -297,8 +314,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Popup Placeholder', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
+                $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
+                $is_default = ($current_template === 'default');
+                $style = $is_default ? '' : ' style="display: none;"';
                 $mulopimfwc_popup_placeholder = isset($options['mulopimfwc_popup_placeholder']) ? $options['mulopimfwc_popup_placeholder'] : ' -- Select a Store -- ';
-
+                echo '<div data-field="mulopimfwc_popup_placeholder" class="mulopimfwc-default-template-only"' . $style . '>';
                 if (mulopimfwc_premium_feature()) { ?>
                 <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_placeholder]" value="<?php echo esc_attr($mulopimfwc_popup_placeholder); ?>" class="regular-text">
             <?php } else { ?>
@@ -306,6 +326,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     <input disabled type="text" name="_pro[pro]" value="" placeholder="-- Select a Store -- " class="regular-text">
                 </label>
             <?php }
+                echo '</div>';
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -338,8 +359,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Hierarchical Option', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
+                $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
+                $is_default = ($current_template === 'default');
+                $style = $is_default ? '' : ' style="display: none;"';
                 $value = isset($options['herichical']) ? $options['herichical'] : 'off';
-
+                echo '<div data-field="herichical" class="mulopimfwc-default-template-only"' . $style . '>';
                 if (mulopimfwc_premium_feature()) {
             ?>
                 <select id="herichical" name="mulopimfwc_display_options[herichical]">
@@ -356,6 +380,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     </select>
                 </label>
             <?php }
+                echo '</div>';
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -365,11 +390,17 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'show_count',
             __('Show Count', 'multi-location-product-and-inventory-management'),
             function () {
+                $options = $this->get_display_options();
+                $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
+                $is_default = ($current_template === 'default');
+                $style = $is_default ? '' : ' style="display: none;"';
+                echo '<div data-field="show_count" class="mulopimfwc-default-template-only"' . $style . '>';
                 if (mulopimfwc_premium_feature()) {
                     $this->render_advance_checkbox("show_count", __("Show count in popup", 'multi-location-product-and-inventory-management'));
                 } else {
                     $this->render_advance_checkbox('pro', __("Show count in popup", 'multi-location-product-and-inventory-management'), true, false);
                 }
+                echo '</div>';
             },
             'location-popup-shortcode-settings',
             'popup_shortcode_manage_section'
@@ -6174,6 +6205,38 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                         header.classList.add('active');
                     }
                 }
+            </script>
+
+            <script>
+                jQuery(document).ready(function($) {
+                    // Function to toggle visibility of default template only fields
+                    function toggleDefaultTemplateFields() {
+                        var templateSelection = $('#template_selection').val();
+                        var isDefault = (templateSelection === 'default');
+                        
+                        // Find all fields that should only show for default template
+                        $('.mulopimfwc-default-template-only').each(function() {
+                            var $field = $(this);
+                            var $row = $field.closest('tr');
+                            
+                            if (isDefault) {
+                                $row.show();
+                                $field.show();
+                            } else {
+                                $row.hide();
+                                $field.hide();
+                            }
+                        });
+                    }
+
+                    // Run on page load
+                    toggleDefaultTemplateFields();
+
+                    // Run when template selection changes
+                    $('#template_selection').on('change', function() {
+                        toggleDefaultTemplateFields();
+                    });
+                });
             </script>
         </div>
 

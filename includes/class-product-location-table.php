@@ -54,6 +54,20 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     }
 
     /**
+     * Get bulk actions
+     *
+     * @return array
+     */
+    protected function get_bulk_actions()
+    {
+        return [
+            'bulk_assign_location' => __('Assign to Location', 'multi-location-product-and-inventory-management'),
+            'bulk_remove_location' => __('Remove from Location', 'multi-location-product-and-inventory-management'),
+            'trash' => __('Move to Trash', 'multi-location-product-and-inventory-management'),
+        ];
+    }
+
+    /**
      * Default column rendering
      *
      * @param array $item Item data
@@ -600,10 +614,113 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     }
 
     /**
+     * Process bulk actions
+     */
+    public function process_bulk_action()
+    {
+        // Check if bulk action is set
+        if (!isset($_REQUEST['action']) && !isset($_REQUEST['action2'])) {
+            return;
+        }
+
+        $action = isset($_REQUEST['action']) && $_REQUEST['action'] != '-1' 
+            ? sanitize_text_field(wp_unslash($_REQUEST['action'])) 
+            : (isset($_REQUEST['action2']) && $_REQUEST['action2'] != '-1' 
+                ? sanitize_text_field(wp_unslash($_REQUEST['action2'])) 
+                : '');
+
+        if (empty($action)) {
+            return;
+        }
+
+        // Verify nonce
+        if (!isset($_REQUEST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'bulk-' . $this->_args['plural'])) {
+            wp_die(__('Security check failed', 'multi-location-product-and-inventory-management'));
+        }
+
+        // Check if products are selected
+        if (!isset($_REQUEST['product']) || !is_array($_REQUEST['product'])) {
+            return;
+        }
+
+        $product_ids = array_map('intval', $_REQUEST['product']);
+        $count = 0;
+
+        switch ($action) {
+            case 'bulk_assign_location':
+                if (isset($_REQUEST['bulk_location_id']) && !empty($_REQUEST['bulk_location_id'])) {
+                    $location_id = intval($_REQUEST['bulk_location_id']);
+                    foreach ($product_ids as $product_id) {
+                        $term = get_term($location_id, 'mulopimfwc_store_location');
+                        if ($term && !is_wp_error($term)) {
+                            wp_set_object_terms($product_id, [$location_id], 'mulopimfwc_store_location', true);
+                            $count++;
+                        }
+                    }
+                    add_action('admin_notices', function() use ($count) {
+                        echo '<div class="notice notice-success is-dismissible"><p>';
+                        printf(
+                            esc_html__('Successfully assigned %d products to location.', 'multi-location-product-and-inventory-management'),
+                            $count
+                        );
+                        echo '</p></div>';
+                    });
+                } else {
+                    // Store for modal selection
+                    set_transient('mulopimfwc_bulk_action_assign_location', $product_ids, 300);
+                }
+                break;
+
+            case 'bulk_remove_location':
+                if (isset($_REQUEST['bulk_location_id']) && !empty($_REQUEST['bulk_location_id'])) {
+                    $location_id = intval($_REQUEST['bulk_location_id']);
+                    foreach ($product_ids as $product_id) {
+                        wp_remove_object_terms($product_id, $location_id, 'mulopimfwc_store_location');
+                        $count++;
+                    }
+                    add_action('admin_notices', function() use ($count) {
+                        echo '<div class="notice notice-success is-dismissible"><p>';
+                        printf(
+                            esc_html__('Successfully removed %d products from location.', 'multi-location-product-and-inventory-management'),
+                            $count
+                        );
+                        echo '</p></div>';
+                    });
+                } else {
+                    // Store for modal selection
+                    set_transient('mulopimfwc_bulk_action_remove_location', $product_ids, 300);
+                }
+                break;
+
+            case 'trash':
+                foreach ($product_ids as $product_id) {
+                    if (current_user_can('delete_post', $product_id)) {
+                        wp_trash_post($product_id);
+                        $count++;
+                    }
+                }
+                if ($count > 0) {
+                    add_action('admin_notices', function() use ($count) {
+                        echo '<div class="notice notice-success is-dismissible"><p>';
+                        printf(
+                            esc_html__('Successfully moved %d product(s) to trash.', 'multi-location-product-and-inventory-management'),
+                            $count
+                        );
+                        echo '</p></div>';
+                    });
+                }
+                break;
+        }
+    }
+
+    /**
      * Prepare table items
      */
     public function prepare_items()
     {
+        // Process bulk actions first
+        $this->process_bulk_action();
+
         $columns = $this->get_columns();
         $hidden = [];
         $sortable = $this->get_sortable_columns();
@@ -624,33 +741,80 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $args['s'] = sanitize_text_field(wp_unslash($_REQUEST['s']));
         }
 
-        // Add location filter if set - verify nonce first if filter action is being submitted
-        if (isset($_REQUEST['filter_action']) && $_REQUEST['filter_action'] == __('Filter', 'multi-location-product-and-inventory-management')) {
-            // Verify the nonce
-            if (
-                isset($_REQUEST['_wpnonce']) &&
-                wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'bulk-' . $this->_args['plural'])
-            ) {
-                // Process filter
-                if (isset($_REQUEST['filter-by-location']) && !empty($_REQUEST['filter-by-location'])) {
-                    $args['tax_query'] = [
-                        [
-                            'taxonomy' => 'mulopimfwc_store_location',
-                            'field'    => 'slug',
-                            'terms'    => sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])),
-                        ],
-                    ];
-                }
-            }
-        } elseif (isset($_REQUEST['filter-by-location']) && !empty($_REQUEST['filter-by-location'])) {
-            // For direct URL access with filters
-            $args['tax_query'] = [
-                [
-                    'taxonomy' => 'mulopimfwc_store_location',
-                    'field'    => 'slug',
-                    'terms'    => sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])),
-                ],
+        // Build tax_query array for multiple filters
+        $tax_queries = [];
+
+        // Add location filter if set
+        if (isset($_REQUEST['filter-by-location']) && !empty($_REQUEST['filter-by-location'])) {
+            $tax_queries[] = [
+                'taxonomy' => 'mulopimfwc_store_location',
+                'field'    => 'slug',
+                'terms'    => sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])),
             ];
+        }
+
+        // Add category filter if set
+        if (isset($_REQUEST['filter-by-category']) && !empty($_REQUEST['filter-by-category'])) {
+            $tax_queries[] = [
+                'taxonomy' => 'product_cat',
+                'field'    => 'term_id',
+                'terms'    => intval($_REQUEST['filter-by-category']),
+            ];
+        }
+
+        // Add brand filter if set (check for common brand taxonomies)
+        $brand_taxonomies = ['product_brand', 'pa_brand', 'pwb-brand'];
+        foreach ($brand_taxonomies as $brand_tax) {
+            if (taxonomy_exists($brand_tax) && isset($_REQUEST['filter-by-brand']) && !empty($_REQUEST['filter-by-brand'])) {
+                $tax_queries[] = [
+                    'taxonomy' => $brand_tax,
+                    'field'    => 'term_id',
+                    'terms'    => intval($_REQUEST['filter-by-brand']),
+                ];
+                break; // Only use first available brand taxonomy
+            }
+        }
+
+        // Add tax_query if we have any tax queries
+        if (!empty($tax_queries)) {
+            if (count($tax_queries) > 1) {
+                $args['tax_query'] = [
+                    'relation' => 'AND',
+                ];
+                $args['tax_query'] = array_merge($args['tax_query'], $tax_queries);
+            } else {
+                $args['tax_query'] = $tax_queries;
+            }
+        }
+
+        // Add product type filter
+        if (isset($_REQUEST['filter-by-type']) && !empty($_REQUEST['filter-by-type'])) {
+            $product_type = sanitize_text_field(wp_unslash($_REQUEST['filter-by-type']));
+            if (in_array($product_type, ['simple', 'variable', 'grouped', 'external', 'affiliate'])) {
+                // WooCommerce stores product type in taxonomy
+                $tax_queries[] = [
+                    'taxonomy' => 'product_type',
+                    'field'    => 'slug',
+                    'terms'    => $product_type,
+                ];
+            }
+        }
+
+        // Add stock status filter
+        if (isset($_REQUEST['filter-by-stock-status']) && !empty($_REQUEST['filter-by-stock-status'])) {
+            $stock_status = sanitize_text_field(wp_unslash($_REQUEST['filter-by-stock-status']));
+            if (in_array($stock_status, ['instock', 'outofstock', 'onbackorder'])) {
+                $args['meta_query'][] = [
+                    'key' => '_stock_status',
+                    'value' => $stock_status,
+                    'compare' => '=',
+                ];
+            }
+        }
+
+        // Handle meta_query relation if we have multiple meta queries
+        if (isset($args['meta_query']) && count($args['meta_query']) > 1) {
+            $args['meta_query']['relation'] = 'AND';
         }
 
         // Enable ordering by location assignment
@@ -837,31 +1001,103 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     {
         global $mulopimfwc_locations;
         if ($which == 'top') {
+            // Filters section
+            echo '<div class="alignleft actions filters-section">';
+            
+            // Location filter
             if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
-                echo '<div class="alignleft actions">';
-                echo '<select name="filter-by-location">';
+                $selected_location = isset($_REQUEST['filter-by-location']) ? sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])) : '';
+                echo '<select name="filter-by-location" id="filter-by-location">';
                 echo '<option value="">' . esc_html__('All Locations', 'multi-location-product-and-inventory-management') . '</option>';
-
                 foreach ($mulopimfwc_locations as $location) {
-                    if (
-                        isset($_REQUEST['_wpnonce']) &&
-                        wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'bulk-' . $this->_args['plural'])
-                    ) {
-                        $selected = isset($_REQUEST['filter-by-location']) && $_REQUEST['filter-by-location'] == rawurldecode($location->slug) ? 'selected="selected"' : '';
-                    } else {
-                        $selected =  '';
-                    }
-                    echo '<option value="' . esc_attr(rawurldecode($location->slug)) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
+                    $location_slug = rawurldecode($location->slug);
+                    $selected = ($selected_location == $location_slug) ? 'selected="selected"' : '';
+                    echo '<option value="' . esc_attr($location_slug) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
                 }
-
                 echo '</select>';
-
-                // Add nonce field for the filter form - using the built-in WP_List_Table nonce
-                wp_nonce_field('bulk-' . $this->_args['plural']);
-
-                echo '<input type="submit" name="filter_action" id="filter-by-location-submit" class="button" value="' . esc_attr__('Filter', 'multi-location-product-and-inventory-management') . '">';
-                echo '</div>';
             }
+
+            // Category filter
+            $categories = get_terms([
+                'taxonomy' => 'product_cat',
+                'hide_empty' => false,
+            ]);
+            if (!is_wp_error($categories) && !empty($categories)) {
+                $selected_category = isset($_REQUEST['filter-by-category']) ? intval($_REQUEST['filter-by-category']) : '';
+                echo '<select name="filter-by-category" id="filter-by-category">';
+                echo '<option value="">' . esc_html__('All Categories', 'multi-location-product-and-inventory-management') . '</option>';
+                foreach ($categories as $category) {
+                    $selected = ($selected_category == $category->term_id) ? 'selected="selected"' : '';
+                    echo '<option value="' . esc_attr($category->term_id) . '" ' . esc_attr($selected) . '>' . esc_html($category->name) . '</option>';
+                }
+                echo '</select>';
+            }
+
+            // Product type filter
+            $selected_type = isset($_REQUEST['filter-by-type']) ? sanitize_text_field(wp_unslash($_REQUEST['filter-by-type'])) : '';
+            echo '<select name="filter-by-type" id="filter-by-type">';
+            echo '<option value="">' . esc_html__('All Product Types', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="simple" ' . selected($selected_type, 'simple', false) . '>' . esc_html__('Simple', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="variable" ' . selected($selected_type, 'variable', false) . '>' . esc_html__('Variable', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="grouped" ' . selected($selected_type, 'grouped', false) . '>' . esc_html__('Grouped', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="external" ' . selected($selected_type, 'external', false) . '>' . esc_html__('External', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '</select>';
+
+            // Stock status filter
+            $selected_stock = isset($_REQUEST['filter-by-stock-status']) ? sanitize_text_field(wp_unslash($_REQUEST['filter-by-stock-status'])) : '';
+            echo '<select name="filter-by-stock-status" id="filter-by-stock-status">';
+            echo '<option value="">' . esc_html__('All Stock Statuses', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="instock" ' . selected($selected_stock, 'instock', false) . '>' . esc_html__('In Stock', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="outofstock" ' . selected($selected_stock, 'outofstock', false) . '>' . esc_html__('Out of Stock', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="onbackorder" ' . selected($selected_stock, 'onbackorder', false) . '>' . esc_html__('On Backorder', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '</select>';
+
+            // Brand filter (check for common brand taxonomies)
+            $brand_taxonomies = ['product_brand', 'pa_brand', 'pwb-brand'];
+            $brand_taxonomy = null;
+            foreach ($brand_taxonomies as $tax) {
+                if (taxonomy_exists($tax)) {
+                    $brand_taxonomy = $tax;
+                    break;
+                }
+            }
+            if ($brand_taxonomy) {
+                $brands = get_terms([
+                    'taxonomy' => $brand_taxonomy,
+                    'hide_empty' => false,
+                ]);
+                if (!is_wp_error($brands) && !empty($brands)) {
+                    $selected_brand = isset($_REQUEST['filter-by-brand']) ? intval($_REQUEST['filter-by-brand']) : '';
+                    echo '<select name="filter-by-brand" id="filter-by-brand">';
+                    echo '<option value="">' . esc_html__('All Brands', 'multi-location-product-and-inventory-management') . '</option>';
+                    foreach ($brands as $brand) {
+                        $selected = ($selected_brand == $brand->term_id) ? 'selected="selected"' : '';
+                        echo '<option value="' . esc_attr($brand->term_id) . '" ' . esc_attr($selected) . '>' . esc_html($brand->name) . '</option>';
+                    }
+                    echo '</select>';
+                }
+            }
+
+            // Add nonce field for the filter form
+            wp_nonce_field('bulk-' . $this->_args['plural']);
+
+            echo '<input type="submit" name="filter_action" id="filter-submit" class="button" value="' . esc_attr__('Filter', 'multi-location-product-and-inventory-management') . '">';
+            echo '</div>';
+
+            // Bulk actions section - location selector for bulk actions
+            echo '<div class="alignleft actions bulk-actions-section">';
+            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                $selected_bulk_location = isset($_REQUEST['bulk_location_id']) ? intval($_REQUEST['bulk_location_id']) : '';
+                echo '<label for="bulk-location-id" style="margin-right: 5px;">' . esc_html__('Location for Bulk Actions:', 'multi-location-product-and-inventory-management') . '</label>';
+                echo '<select name="bulk_location_id" id="bulk-location-id">';
+                echo '<option value="">' . esc_html__('Select Location', 'multi-location-product-and-inventory-management') . '</option>';
+                foreach ($mulopimfwc_locations as $location) {
+                    $selected = ($selected_bulk_location == $location->term_id) ? 'selected="selected"' : '';
+                    echo '<option value="' . esc_attr($location->term_id) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
+                }
+                echo '</select>';
+            }
+            echo '</div>';
         }
     }
 
