@@ -430,23 +430,23 @@ class MULOPIMFWC_Location_Managers
                             <h4><?php echo esc_html__('Or Create New User:', 'multi-location-product-and-inventory-management'); ?></h4>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-username"><?php echo esc_html__('Username:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="text" id="new-username" name="new_username" value="">
+                                <input type="text" id="new-username" name="new_username" value="" required>
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-email"><?php echo esc_html__('Email:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="email" id="new-email" name="new_email" value="">
+                                <input type="email" id="new-email" name="new_email" value="" required>
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-first-name"><?php echo esc_html__('First Name:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="text" id="new-first-name" name="new_first_name" value="">
+                                <input type="text" id="new-first-name" name="new_first_name" value="" required>
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-last-name"><?php echo esc_html__('Last Name:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="text" id="new-last-name" name="new_last_name" value="">
+                                <input type="text" id="new-last-name" name="new_last_name" value="" required>
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-password"><?php echo esc_html__('Password:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="password" id="new-password" name="new_password" value="">
+                                <input type="password" id="new-password" name="new_password" value="" required>
                                 <p class="description"><?php echo esc_html__('Optional: set an initial password. Leave empty to auto-generate.', 'multi-location-product-and-inventory-management'); ?></p>
                             </div>
                         </div>

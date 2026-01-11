@@ -3690,6 +3690,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let isValid = true;
             let totalLocationStock = 0;
             const locationStocks = [];
+            const isStockManageable = $('#product-type').val() === 'variable' || $('#product-type').val() === 'simple';
+            if (!isStockManageable) return true;
 
             // Remove previous error states
             $('input[name^="location_stock"]').removeClass('product-field-error');
@@ -3761,6 +3763,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         checkManageStock() {
             const isManageStockEnabled = $('#_manage_stock').is(':checked');
+            const isStockManageable = $('#product-type').val() === 'variable' || $('#product-type').val() === 'simple';
             let hasLocationStock = false;
 
             // Check if any visible location has stock
@@ -3785,7 +3788,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            if (hasLocationStock && !isManageStockEnabled) {
+            if (hasLocationStock && !isManageStockEnabled && isStockManageable) {
                 NotificationSystem.show(
                     'Location-wise stock is set, but "Manage stock" is not enabled. Please enable stock management to track inventory properly.',
                     'warning',

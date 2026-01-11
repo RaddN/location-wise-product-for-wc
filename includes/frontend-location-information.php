@@ -1059,7 +1059,7 @@ class MULOPIMFWC_Frontend_Location_Information
 
         switch ($layout) {
             case 'tabs':
-                $this->render_shortcode_tabbed_locations($locations, true);
+                $this->render_shortcode_tabbed_locations($locations, true, false);
                 break;
             case 'grid':
             case 'compact':
@@ -1071,7 +1071,7 @@ class MULOPIMFWC_Frontend_Location_Information
     /**
      * Render tabbed locations for shortcode with search
      */
-    private function render_shortcode_tabbed_locations($locations, $enable_search = false)
+    private function render_shortcode_tabbed_locations($locations, $enable_search = false, $use_anchor = true)
     {
         global $MULOPIMFWC_Admin;
         $unique_id = 'shortcode-' . uniqid();
@@ -1137,12 +1137,18 @@ class MULOPIMFWC_Frontend_Location_Information
 
                                 <div class="mulopimfwc-tab-header" style="width: calc(100% - <?php echo $logo_id ? '80px' : '0px'; ?>);">
                                     <h4 class="mulopimfwc-tab-title">
-                                        <a href="<?php echo esc_url(get_term_link($location)); ?>" target="_blank">
+                                        <?php if ($use_anchor): ?>
+                                            <a href="<?php echo esc_url(rawurldecode(get_term_link($location))); ?>" target="_blank">
+                                        <?php endif; ?>
+                                        <span>
                                             <?php echo esc_html($location->name); ?>
+                                        </span>
+                                        <?php if ($use_anchor): ?>
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                 <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor" />
                                             </svg>
-                                        </a>
+                                            </a>
+                                        <?php endif; ?>
                                     </h4>
                                     <?php echo $this->render_status_badge($status, true); ?>
                                 </div>
