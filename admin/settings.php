@@ -176,7 +176,10 @@ General Settings', 'multi-location-product-and-inventory-management'),
                     if ($role_key === 'customer') {
                         continue;
                     }
-                    echo "<label><input type='checkbox' name='mulopimfwc_display_options[enable_location_by_user_role][]' value='" . esc_attr($role_key) . "' " . esc_attr($checked) . "> " . esc_html($role['name']) . "</label><br>";
+                    else if ($role_key === 'mulopimfwc_location_manager' && !mulopimfwc_premium_feature()) {
+                        continue;
+                    }
+                    echo "<label><input type='checkbox' name='mulopimfwc_display_options[enable_location_by_user_role][]' value='" . esc_attr($role_key) . "' " . esc_attr($checked) . "> " . esc_html($role['name'] ?? $role_key) . "</label><br>";
                 }
 ?>
             <p class="description"><?php echo esc_html__('Select user roles for which location-specific information is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
@@ -4636,7 +4639,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 <div class="shortcode-section">
                                     <div class="shortcode-header">
                                         <span class="shortcode-label">Shortcode</span>
-                                        <button class="copy-btn" onclick="copyToClipboard(event)">
+                                        <button class="copy-btn" onclick="copyToClipboard(event, '[mulopimfwc_store_location_selector<?php echo esc_attr(mulopimfwc_get_pro_class(false, ' enable_user_locations="on"', '')); ?>]')">
                                             <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -4769,11 +4772,11 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     </div>
 
                     <script>
-                        function copyToClipboard(event) {
-                            const shortcodeText = document.getElementById('shortcode-text').textContent;
+                        function copyToClipboard(event, shortcode) {
+                            const shortcodeText = shortcode;
                             const button = event.currentTarget;
-                            const buttonText = button.querySelector('.btn-text');
-                            const originalText = buttonText.textContent;
+                            const buttonText = (button && typeof button.querySelector === 'function') ? button.querySelector('.btn-text') : null;
+                            const originalText = buttonText ? buttonText.textContent : '';
 
                             // Fallback function for older browsers
                             function fallbackCopy(text) {
@@ -4804,12 +4807,20 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
                             copyPromise.then(() => {
                                 button.classList.add('copied');
-                                button.innerHTML = `
+                                if (originalText) {
+                                    button.innerHTML = `
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                     <span class="btn-text">Copied!</span>
                 `;
+                                } else {
+                                    button.innerHTML = `
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                `;
+                                }
 
                                 setTimeout(() => {
                                     button.classList.remove('copied');
@@ -5409,7 +5420,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         </div>
                                         <div class="lwp-shortcode-block">
                                             <code><?php echo esc_html($tutorial['shortcode']); ?></code>
-                                            <button class="lwp-copy-btn" onclick="copyShortcode(this, '<?php echo esc_attr($tutorial['shortcode']); ?>')" title="<?php echo esc_attr__('Copy shortcode', 'multi-location-product-and-inventory-management'); ?>">
+                                            <button class="copy-btn" onclick="copyToClipboard (event, '<?php echo esc_attr($tutorial['shortcode']); ?>')" title="<?php echo esc_attr__('Copy shortcode', 'multi-location-product-and-inventory-management'); ?>">
                                                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
                                                     <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor" />
                                                 </svg>
@@ -5573,6 +5584,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     padding: 40px 20px;
                     border-radius: 12px;
                     margin-top: 40px;
+                    display: none;
                 }
 
                 /* Header */
@@ -5840,24 +5852,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     gap: 8px;
                 }
 
-                .lwp-copy-btn {
-                    background: #2563eb;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    width: 24px;
-                    height: 24px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s;
-                    flex-shrink: 0;
-                }
 
-                .lwp-copy-btn:hover {
-                    background: #1d4ed8;
-                }
 
                 /* Parameters */
                 .lwp-tutorial-params-section {
@@ -6281,7 +6276,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         ];
 
         $all_sections = [
-            'shop' => __('Main Shop & Category Pages', 'multi-location-product-and-inventory-management'),
+            'shop' => __('Main Shop & Archive Pages', 'multi-location-product-and-inventory-management'),
             'search' => __('Search Results', 'multi-location-product-and-inventory-management'),
             'related' => __('Related Products', 'multi-location-product-and-inventory-management'),
             'recently_viewed' => __('Recently Viewed Products', 'multi-location-product-and-inventory-management'),

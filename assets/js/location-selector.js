@@ -237,7 +237,14 @@
 
             const fallbackReload = () => {
                 this.setLocationCookie(location);
-                window.location.reload();
+                // Perform a hard reload, ensuring any potential form data is not resubmitted
+                if (window.location.href.indexOf('//' + window.location.host + window.location.pathname) !== -1) {
+                    // Remove query and hash for a clean reload to prevent form resubmission prompt
+                    window.location.replace(window.location.origin + window.location.pathname);
+                } else {
+                    // Fallback: full page reload (hard reload)
+                    window.location.reload(true);
+                }
             };
 
             if (!ajaxUrl) {
@@ -270,7 +277,14 @@
                         }
 
                         this.setLocationCookie(location);
-                        window.location.reload();
+                        // Perform a hard reload, ensuring any potential form data is not resubmitted
+                        if (window.location.href.indexOf('//' + window.location.host + window.location.pathname) !== -1) {
+                            // Remove query and hash for a clean reload to prevent form resubmission prompt
+                            window.location.replace(window.location.origin + window.location.pathname);
+                        } else {
+                            // Fallback: full page reload (hard reload)
+                            window.location.reload(true);
+                        }
                         return;
                     }
 

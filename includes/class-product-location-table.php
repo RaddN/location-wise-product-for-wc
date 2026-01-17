@@ -775,18 +775,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             }
         }
 
-        // Add tax_query if we have any tax queries
-        if (!empty($tax_queries)) {
-            if (count($tax_queries) > 1) {
-                $args['tax_query'] = [
-                    'relation' => 'AND',
-                ];
-                $args['tax_query'] = array_merge($args['tax_query'], $tax_queries);
-            } else {
-                $args['tax_query'] = $tax_queries;
-            }
-        }
-
         // Add product type filter
         if (isset($_REQUEST['filter-by-type']) && !empty($_REQUEST['filter-by-type'])) {
             $product_type = sanitize_text_field(wp_unslash($_REQUEST['filter-by-type']));
@@ -797,6 +785,18 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     'field'    => 'slug',
                     'terms'    => $product_type,
                 ];
+            }
+        }
+
+        // Add tax_query if we have any tax queries
+        if (!empty($tax_queries)) {
+            if (count($tax_queries) > 1) {
+                $args['tax_query'] = [
+                    'relation' => 'AND',
+                ];
+                $args['tax_query'] = array_merge($args['tax_query'], $tax_queries);
+            } else {
+                $args['tax_query'] = $tax_queries;
             }
         }
 

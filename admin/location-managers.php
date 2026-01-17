@@ -178,7 +178,7 @@ class MULOPIMFWC_Location_Managers
 
             add_role(
                 'mulopimfwc_location_manager',
-                esc_html_e('Location Manager', 'multi-location-product-and-inventory-management'),
+                __('Location Manager', 'multi-location-product-and-inventory-management'),
                 $capabilities
             );
         }

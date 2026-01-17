@@ -20,11 +20,20 @@ $popup_data = [
     ],
 ];
 
-$inline_handle = wp_script_is('mulopimfwc-classic-popup', 'enqueued') ? 'mulopimfwc-classic-popup' : 'mulopimfwc_script';
-wp_add_inline_script($inline_handle, 'window.mulopimfwcClassicPopupData = ' . wp_json_encode($popup_data) . ';', 'before');
+$modal_id = isset($GLOBALS['mulopimfwc_modal_id']) ? $GLOBALS['mulopimfwc_modal_id'] : 'lwp-store-selector-modal';
+$instance_id = isset($GLOBALS['mulopimfwc_modal_instance_id']) ? $GLOBALS['mulopimfwc_modal_instance_id'] : '';
+$modal_class = 'lwp-classic-popup';
+if (!empty($instance_id)) {
+    $modal_class .= ' mulopimfwc-popup-instance-' . sanitize_html_class($instance_id);
+}
 
+// Store popup data in data attribute to avoid conflicts with multiple modals
+$popup_data_json = wp_json_encode($popup_data);
 ?>
-<div id="lwp-store-selector-modal" class="lwp-classic-popup" style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
+<div id="<?php echo esc_attr($modal_id); ?>" 
+     class="<?php echo esc_attr($modal_class); ?>" 
+     data-popup-data="<?php echo esc_attr($popup_data_json); ?>"
+     style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-classic-popup__panel">
         <div class="lwp-classic-popup__header">
             <?php if ($show_title) { ?>

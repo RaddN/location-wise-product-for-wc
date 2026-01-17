@@ -1,15 +1,100 @@
 jQuery(function ($) {
-    var $modal = $('#lwp-store-selector-modal.lwp-classic-popup');
-    if (!$modal.length) {
-        return;
+    // Function to initialize classic popup modals
+    function initializeClassicPopups() {
+        // Handle all classic popup modals (including instance-specific ones)
+        var $modals = $('#lwp-store-selector-modal.lwp-classic-popup, [id^="lwp-store-selector-modal-"].lwp-classic-popup').not('.mulopimfwc-initialized');
+        if (!$modals.length) {
+            return;
+        }
+        
+        // Process each modal
+        $modals.each(function() {
+            var $modal = $(this);
+            // Always initialize if modal exists, data will be read from attribute or global
+            try {
+                initClassicPopup($modal);
+                $modal.addClass('mulopimfwc-initialized');
+            } catch (e) {
+                console.warn('Error initializing classic popup:', e);
+            }
+        });
     }
-
-    var $search = $modal.find('#lwp-classic-search');
-    var $items = $modal.find('.lwp-classic-location');
-    var $empty = $modal.find('.lwp-classic-empty').last();
-    var $selected = $modal.find('#lwp-selected-store');
-    var $status = $modal.find('#lwp-classic-location-status');
-    var i18n = (window.mulopimfwcClassicPopupData && window.mulopimfwcClassicPopupData.i18n) || {};
+    
+    // Initialize on page load
+    initializeClassicPopups();
+    
+    // Use MutationObserver for better compatibility (DOMNodeInserted is deprecated)
+    if (typeof MutationObserver !== 'undefined') {
+        var observer = new MutationObserver(function(mutations) {
+            var shouldInit = false;
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length) {
+                    for (var i = 0; i < mutation.addedNodes.length; i++) {
+                        var node = mutation.addedNodes[i];
+                        if (node.nodeType === 1) { // Element node
+                            var $node = $(node);
+                            if ($node.is('#lwp-store-selector-modal.lwp-classic-popup, [id^="lwp-store-selector-modal-"].lwp-classic-popup') ||
+                                $node.find('#lwp-store-selector-modal.lwp-classic-popup, [id^="lwp-store-selector-modal-"].lwp-classic-popup').length) {
+                                shouldInit = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+            if (shouldInit) {
+                setTimeout(initializeClassicPopups, 100);
+            }
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    } else {
+        // Fallback for older browsers
+        $(document).on('DOMNodeInserted', function(e) {
+            var $target = $(e.target);
+            var $newModals = $target.find('#lwp-store-selector-modal.lwp-classic-popup, [id^="lwp-store-selector-modal-"].lwp-classic-popup').add(
+                $target.filter('#lwp-store-selector-modal.lwp-classic-popup, [id^="lwp-store-selector-modal-"].lwp-classic-popup')
+            ).not('.mulopimfwc-initialized');
+            if ($newModals.length) {
+                setTimeout(initializeClassicPopups, 100);
+            }
+        });
+    }
+    
+    // Also check after a delay to catch modals rendered in footer
+    setTimeout(initializeClassicPopups, 500);
+    
+    function initClassicPopup($modal) {
+        // Skip if already initialized
+        if ($modal.hasClass('mulopimfwc-initialized')) {
+            return;
+        }
+        
+        var $search = $modal.find('#lwp-classic-search');
+        var $items = $modal.find('.lwp-classic-location');
+        var $empty = $modal.find('.lwp-classic-empty').last();
+        var $selected = $modal.find('#lwp-selected-store');
+        var $status = $modal.find('#lwp-classic-location-status');
+        
+        // Get data from modal data attribute or fallback to global window object (for backward compatibility)
+        var popupDataAttr = $modal.attr('data-popup-data');
+        var popupData = {};
+        
+        if (popupDataAttr) {
+            try {
+                popupData = typeof popupDataAttr === 'string' ? JSON.parse(popupDataAttr) : popupDataAttr;
+            } catch (e) {
+                console.warn('Error parsing popup data:', e);
+                popupData = window.mulopimfwcClassicPopupData || {};
+            }
+        } else {
+            popupData = window.mulopimfwcClassicPopupData || {};
+        }
+        
+        var i18n = (popupData && popupData.i18n) || {};
 
     function applyFilter() {
         var query = ($search.val() || '').toString().toLowerCase().trim();
@@ -158,5 +243,32 @@ jQuery(function ($) {
         }
     });
 
-    attemptDetection();
+    // Handle submit button click
+    $modal.on('click', '#lwp-store-selector-submit', function (e) {
+        e.preventDefault();
+        var slug = $selected.val();
+        if (!slug) {
+            alert('Please select a store location.');
+            return;
+        }
+        
+        // Set cookie
+        var cookieDays = 30;
+        if (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookie_expiry) {
+            var override = parseInt(mulopimfwc_locationWiseProducts.cookie_expiry, 10);
+            if (Number.isFinite(override) && override > 0) {
+                cookieDays = override;
+            }
+        }
+        var expiryDate = new Date(Date.now() + cookieDays * 24 * 60 * 60 * 1000);
+        document.cookie = 'mulopimfwc_store_location=' + slug + ';expires=' + expiryDate.toUTCString() + ';path=/;samesite=lax';
+        
+        // Hide modal and reload
+        $modal.hide();
+        $('body').removeClass('mulopimfwc-modal-open');
+        window.location.href = window.location.href.split('?')[0];
+    });
+
+        attemptDetection();
+    }
 });

@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -60,7 +60,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.0.7");
+    define("mulopimfwc_VERSION", "1.0.8");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -1278,6 +1278,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('init', [$this, 'clear_cart_on_location_change']);
 
             add_shortcode('mulopimfwc_store_location_selector', [$this, 'location_selector_shortcode']);
+            add_shortcode('mulopimfwc_display_popup', [$this, 'display_popup_shortcode']);
 
             add_filter('the_title', [$this, 'add_location_to_product_title'], 10, 2);
             add_filter('woocommerce_product_title', [$this, 'add_location_to_wc_product_title'], 10, 2);
@@ -3587,7 +3588,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.0.7',
+                '1.0.8',
                 true
             );
 
@@ -3607,7 +3608,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.0.7'
+                '1.0.8'
             );
         }
 
@@ -3765,9 +3766,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             $cookie_expiry_days = mulopimfwc_get_location_cookie_expiry_days();
             $options = get_option('mulopimfwc_display_options', []);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.7');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.8');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.7', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.0.8', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
             if (in_array($template_selection, ['modern', 'modern-simple'], true)) {
@@ -3775,7 +3776,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.0.7',
+                    '1.0.8',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -3783,7 +3784,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.0.7',
+                    '1.0.8',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -3791,7 +3792,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.0.7',
+                    '1.0.8',
                     true
                 );
             }
@@ -3819,7 +3820,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.0.7',
+                    '1.0.8',
                     true
                 );
 
@@ -3837,7 +3838,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.0.7',
+                    '1.0.8',
                     true
                 );
 
@@ -3962,6 +3963,11 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function location_selector_modal()
         {
+            // Check if page has shortcode with on_click_button=false
+            if ($this->has_popup_shortcode_without_button()) {
+                return; // Don't show global popup if shortcode with on_click_button=false exists
+            }
+
             global $mulopimfwc_locations;
             $is_user_logged_in = is_user_logged_in();
             $current_user = wp_get_current_user();
@@ -3996,6 +4002,47 @@ if (!function_exists('mulopimfwc_get_values')) {
             include $template_path;
         }
 
+        /**
+         * Check if current page has popup shortcode with on_click_button=false
+         * 
+         * @return bool True if shortcode with on_click_button=false exists
+         */
+        private function has_popup_shortcode_without_button()
+        {
+            global $post;
+            
+            // Check global shortcode instances first (set during shortcode execution)
+            if (isset($GLOBALS['mulopimfwc_popup_shortcodes']) && is_array($GLOBALS['mulopimfwc_popup_shortcodes'])) {
+                foreach ($GLOBALS['mulopimfwc_popup_shortcodes'] as $shortcode_info) {
+                    if (isset($shortcode_info['on_click_button']) && !$shortcode_info['on_click_button']) {
+                        return true;
+                    }
+                }
+            }
+
+            // Fallback: Check post content for shortcode
+            if ($post && isset($post->post_content)) {
+                // Check if shortcode exists in content
+                if (has_shortcode($post->post_content, 'mulopimfwc_display_popup')) {
+                    // Parse shortcode attributes
+                    $pattern = get_shortcode_regex(['mulopimfwc_display_popup']);
+                    if (preg_match_all('/' . $pattern . '/s', $post->post_content, $matches)) {
+                        foreach ($matches[3] as $atts_string) {
+                            $atts = shortcode_parse_atts($atts_string);
+                            if (isset($atts['on_click_button'])) {
+                                $on_click_button = filter_var($atts['on_click_button'], FILTER_VALIDATE_BOOLEAN);
+                                if (!$on_click_button) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public function location_selector_shortcode($atts)
         {
             global $mulopimfwc_locations;
@@ -4025,6 +4072,203 @@ if (!function_exists('mulopimfwc_get_values')) {
             ob_start();
             include plugin_dir_path(__FILE__) . 'templates/shortcode-selector.php';
             return ob_get_clean();
+        }
+
+        /**
+         * Display popup shortcode handler
+         * 
+         * Usage: [mulopimfwc_display_popup layout="default/modern/modern-simple/classic/tabs/compact/grid" on_click_button="true/false" button_title="open modal"]
+         * 
+         * @param array $atts Shortcode attributes
+         * @return string Shortcode output
+         */
+        public function display_popup_shortcode($atts)
+        {
+            // Check if premium feature is enabled
+            if (!mulopimfwc_premium_feature()) {
+                return '';
+            }
+
+            global $mulopimfwc_locations;
+            
+            $atts = shortcode_atts([
+                'layout' => 'default',
+                'on_click_button' => 'true',
+                'button_title' => __('Open Modal', 'multi-location-product-and-inventory-management')
+            ], $atts);
+
+            // Normalize boolean values
+            $on_click_button = filter_var($atts['on_click_button'], FILTER_VALIDATE_BOOLEAN);
+            $layout = sanitize_text_field($atts['layout']);
+            $button_title = sanitize_text_field($atts['button_title']);
+
+            // Validate layout
+            $valid_layouts = ['default', 'modern', 'modern-simple', 'classic', 'tabs', 'compact', 'grid'];
+            if (!in_array($layout, $valid_layouts, true)) {
+                $layout = 'default';
+            }
+
+            // Store shortcode instance ID for unique identification
+            static $shortcode_instance = 0;
+            $shortcode_instance++;
+            $instance_id = 'mulopimfwc-popup-' . $shortcode_instance;
+
+            // Store shortcode info globally to check in modal function
+            if (!isset($GLOBALS['mulopimfwc_popup_shortcodes'])) {
+                $GLOBALS['mulopimfwc_popup_shortcodes'] = [];
+            }
+            $GLOBALS['mulopimfwc_popup_shortcodes'][] = [
+                'instance_id' => $instance_id,
+                'layout' => $layout,
+                'on_click_button' => $on_click_button,
+                'button_title' => $button_title
+            ];
+
+            ob_start();
+            
+            if ($on_click_button) {
+                // Show button that opens popup
+                echo '<div class="mulopimfwc-popup-shortcode-wrapper" data-instance-id="' . esc_attr($instance_id) . '" data-layout="' . esc_attr($layout) . '">';
+                echo '<button type="button" class="mulopimfwc-popup-trigger-button button" data-instance-id="' . esc_attr($instance_id) . '" data-layout="' . esc_attr($layout) . '">';
+                echo esc_html($button_title);
+                echo '</button>';
+                echo '</div>';
+                
+                // Render popup in footer but hidden (will be shown on button click)
+                add_action('wp_footer', function() use ($instance_id, $layout) {
+                    $this->render_popup_modal($instance_id, $layout, false);
+                }, 20);
+            } else {
+                // Render popup directly (will be shown if conditions are met)
+                echo '<div class="mulopimfwc-popup-shortcode-wrapper mulopimfwc-popup-auto-show" data-instance-id="' . esc_attr($instance_id) . '" data-layout="' . esc_attr($layout) . '">';
+                // Popup will be rendered in footer via action hook
+                echo '</div>';
+                
+                // Add popup to footer - will be shown automatically if conditions are met
+                add_action('wp_footer', function() use ($instance_id, $layout) {
+                    $this->render_popup_modal($instance_id, $layout, true);
+                }, 20);
+            }
+
+            // Enqueue scripts and styles if not already enqueued
+            $this->enqueue_popup_assets();
+
+            return ob_get_clean();
+        }
+
+        /**
+         * Render popup modal (reusable function)
+         * 
+         * @param string $instance_id Unique instance ID
+         * @param string $layout Layout type
+         * @param bool $show_modal Whether to show modal initially
+         */
+        private function render_popup_modal($instance_id = '', $layout = 'default', $show_modal = false)
+        {
+            global $mulopimfwc_locations;
+            
+            $is_user_logged_in = is_user_logged_in();
+            $current_user = wp_get_current_user();
+            $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles);
+            
+            $options = get_option('mulopimfwc_display_options', []);
+            $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
+            $selected_location = $this->get_current_location();
+            
+            // Determine if modal should be shown
+            $should_show = $show_modal || ($show_popup_admin === 'on' && empty($selected_location)) || (empty($selected_location) && !$is_admin_or_manager);
+            
+            $locations = $mulopimfwc_locations;
+
+            // Use provided layout or fallback to options
+            $template_selection = !empty($layout) && $layout !== 'default' ? $layout : (isset($options['template_selection']) ? $options['template_selection'] : 'default');
+            
+            if ($template_selection === 'modern') {
+                $template_file = 'templates/modern-modal.php';
+            } elseif ($template_selection === 'modern-simple') {
+                $template_file = 'templates/modern-simple-modal.php';
+            } elseif ($template_selection === 'classic') {
+                $template_file = 'templates/classic-modal.php';
+            } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
+                $template_file = 'templates/location-info-modal.php';
+                $popup_layout = $template_selection;
+            } else {
+                $template_file = 'templates/modal.php';
+            }
+            
+            $template_path = plugin_dir_path(__FILE__) . $template_file;
+            if (!file_exists($template_path)) {
+                $template_path = plugin_dir_path(__FILE__) . 'templates/modal.php';
+            }
+
+            // Set instance-specific variables
+            $show_modal = $should_show;
+            $modal_id = !empty($instance_id) ? 'lwp-store-selector-modal-' . sanitize_html_class($instance_id) : 'lwp-store-selector-modal';
+            
+            // Temporarily override modal ID for template
+            $GLOBALS['mulopimfwc_modal_id'] = $modal_id;
+            $GLOBALS['mulopimfwc_modal_instance_id'] = $instance_id;
+            $GLOBALS['mulopimfwc_modal_layout'] = $layout;
+            
+            include $template_path;
+            
+            // Clean up
+            unset($GLOBALS['mulopimfwc_modal_id']);
+            unset($GLOBALS['mulopimfwc_modal_instance_id']);
+            unset($GLOBALS['mulopimfwc_modal_layout']);
+        }
+
+        /**
+         * Enqueue popup assets
+         */
+        private function enqueue_popup_assets()
+        {
+            static $enqueued = false;
+            if ($enqueued) {
+                return;
+            }
+            $enqueued = true;
+
+            // Always enqueue all popup scripts and styles when shortcodes are used to support different layouts
+            $options = get_option('mulopimfwc_display_options', []);
+            
+            // Enqueue main style if not already enqueued
+            if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.0.8');
+            }
+            
+            // Enqueue modern popup script
+            if (!wp_script_is('mulopimfwc-modern-popup', 'enqueued')) {
+                wp_enqueue_script(
+                    'mulopimfwc-modern-popup',
+                    plugins_url('assets/js/modern-popup.js', __FILE__),
+                    ['jquery'],
+                    '1.0.8',
+                    true
+                );
+            }
+            
+            // Enqueue classic popup script
+            if (!wp_script_is('mulopimfwc-classic-popup', 'enqueued')) {
+                wp_enqueue_script(
+                    'mulopimfwc-classic-popup',
+                    plugins_url('assets/js/classic-popup.js', __FILE__),
+                    ['jquery'],
+                    '1.0.8',
+                    true
+                );
+            }
+            
+            // Enqueue popup layouts script
+            if (!wp_script_is('mulopimfwc-popup-layouts', 'enqueued')) {
+                wp_enqueue_script(
+                    'mulopimfwc-popup-layouts',
+                    plugins_url('assets/js/popup-layouts.js', __FILE__),
+                    ['jquery'],
+                    '1.0.8',
+                    true
+                );
+            }
         }
 
         public function add_location_to_product_title($title, $post_id = 0)
@@ -4271,7 +4515,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             $section = '';
-            if (is_shop() || is_product_category() || is_product_tag() || is_post_type_archive('product')) {
+            if (is_shop() || is_product_category() || is_product_tag() || is_post_type_archive('product') || is_product_taxonomy()) {
                 $section = 'shop';
             } elseif (is_search()) {
                 $section = 'search';
@@ -4626,7 +4870,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.7");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.0.8");
         }
     }
 
@@ -5570,7 +5814,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.0.7",
+                "1.0.8",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

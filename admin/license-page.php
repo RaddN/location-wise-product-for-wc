@@ -126,7 +126,7 @@ class mulopimfwc_License_Manager
                 wp_send_json_success(array(
                     'update_available' => true,
                     'new_version' => $update_info->new_version,
-                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.7'
+                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.8'
                 ));
             } else {
                 wp_send_json_success(array(
@@ -309,7 +309,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.7')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.8')
         ));
 
         if (is_wp_error($response)) {
@@ -344,7 +344,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.7')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.8')
         ));
 
         if (is_wp_error($response)) {
@@ -376,7 +376,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.7')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.8')
         ));
 
         if (is_wp_error($response)) {
@@ -409,7 +409,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.7')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.8')
         ));
 
         if (is_wp_error($response)) {
@@ -440,7 +440,7 @@ class mulopimfwc_License_Manager
             return false;
         }
 
-        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.7';
+        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.8';
         if (version_compare($current_version, $version_info->new_version, '<')) {
             return $version_info;
         }
@@ -461,7 +461,7 @@ class mulopimfwc_License_Manager
             wp_send_json_success(array(
                 'update_available' => true,
                 'new_version' => $update_info->new_version,
-                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.7'
+                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.8'
             ));
         } else {
             wp_send_json_success(array(
@@ -592,10 +592,10 @@ class mulopimfwc_License_Manager
                 </h2>
                 <p>Manage your license key, check status, and update to the latest version</p>
             </div>
-            <div  style="gap: 20px; display:flex;">
+            <div style="gap: 20px; display:flex;">
                 <div class="col-md-6 <?php echo !$is_valid ? '' : ' mulopimfwc-card'; ?>" style="<?php echo !$is_valid ? 'flex: 0 0 100%; max-width: 99%;' : ''; ?>">
 
-                    <div  style="gap: 5px;align-items: center;display:flex; margin-bottom: 10px;">
+                    <div style="gap: 5px;align-items: center;display:flex; margin-bottom: 10px;">
                         <div style=" background: #ffedd5; padding: 5px; border-radius: 5px; "><span class="dashicons dashicons-lock" style="color: #ea580c;"></span></div>
                         <h3 for="mulopimfwc_license_key" style="font-size: 16px;margin: 0;"><?php echo esc_html__('License Key', 'dynamic-ajax-product-filters-for-woocommerce'); ?></h3>
                     </div>
@@ -801,10 +801,10 @@ class mulopimfwc_License_Manager
                                             </span>
                                             <div>
                                                 <span style="color: #495057;">
-                                                    <?php echo esc_html($license_details->site_count); ?> of <?php echo $license_details->license_limit == 0? "Unlimited" : esc_html($license_details->license_limit); ?> sites used
+                                                    <?php echo esc_html($license_details->site_count); ?> of <?php echo $license_details->license_limit == 0 ? "Unlimited" : esc_html($license_details->license_limit); ?> sites used
                                                 </span>
                                                 <?php
-                                                if($license_details->license_limit == 0):?>
+                                                if ($license_details->license_limit == 0): ?>
                                                     <small style="color: #198754;">
                                                         (<?php echo esc_html($license_details->activations_left); ?>)
                                                     </small>
@@ -972,17 +972,19 @@ function mulopimfwc_is_license_valid()
     return $mulopimfwc_License_Manager->is_license_valid_cached();
 }
 
-function mulopimfwc_premium_feature()
-{
-    global $mulopimfwc_License_Manager;
+if (!function_exists('mulopimfwc_premium_feature')) {
+    function mulopimfwc_premium_feature()
+    {
+        global $mulopimfwc_License_Manager;
 
-    if (!$mulopimfwc_License_Manager->can_use_premium_features()) {
-        if (get_option('mulopimfwc_license_status') === 'expired') {
+        if (!$mulopimfwc_License_Manager->can_use_premium_features()) {
+            if (get_option('mulopimfwc_license_status') === 'expired') {
+                return false;
+            }
             return false;
         }
-        return false;
+        return true;
     }
-    return true;
 }
 
 
@@ -992,7 +994,8 @@ function mulopimfwc_premium_feature()
  * @param bool $blur Whether to include blur class.
  * @return string CSS class for pro-only elements.
  */
-function mulopimfwc_get_pro_class($blur = true, $selector = '', $not_licenced = 'mulopimfwc_pro_only') {
+function mulopimfwc_get_pro_class($blur = true, $selector = '', $not_licenced = 'mulopimfwc_pro_only')
+{
     $is_pro_user = mulopimfwc_premium_feature();
 
     if ($is_pro_user) {

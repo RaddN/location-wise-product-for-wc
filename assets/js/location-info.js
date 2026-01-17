@@ -75,6 +75,11 @@
                     return;
                 }
 
+                // Skip if map is already initialized
+                if (self.maps[mapId] || ($map[0] && $map[0]._leaflet_id)) {
+                    return;
+                }
+
                 $map.addClass('loading');
 
                 self.waitForLeaflet(function () {
@@ -203,6 +208,40 @@
                 return;
             }
 
+            // Check if map already exists for this container
+            if (this.maps[mapId]) {
+                // Map already exists, just update it if needed
+                const existingMapData = this.maps[mapId];
+                const existingMap = existingMapData.map || existingMapData;
+                if (existingMap && typeof existingMap.setView === 'function') {
+                    existingMap.setView([lat, lng], existingMap.getZoom());
+                    setTimeout(() => {
+                        if (existingMap && typeof existingMap.invalidateSize === 'function') {
+                            existingMap.invalidateSize();
+                        }
+                    }, 100);
+                }
+                return;
+            }
+
+            // Check if container already has a Leaflet map instance
+            const container = document.getElementById(mapId);
+            if (container && container._leaflet_id) {
+                // Container already has a map, remove it first
+                try {
+                    if (this.maps[mapId]) {
+                        const existingMapData = this.maps[mapId];
+                        const existingMap = existingMapData.map || existingMapData;
+                        if (existingMap && typeof existingMap.remove === 'function') {
+                            existingMap.remove();
+                        }
+                    }
+                    delete container._leaflet_id;
+                } catch (e) {
+                    console.warn('Error removing existing shortcode map:', e);
+                }
+            }
+
             try {
                 const map = L.map(mapId, {
                     center: [lat, lng],
@@ -248,7 +287,9 @@
 
                 // Invalidate size after delay
                 setTimeout(() => {
-                    map.invalidateSize();
+                    if (map && typeof map.invalidateSize === 'function') {
+                        map.invalidateSize();
+                    }
                 }, 100);
 
             } catch (error) {
@@ -647,6 +688,36 @@
          */
         createMap: function (mapId, lat, lng, name, address) {
             try {
+                // Check if map already exists for this container
+                if (this.maps[mapId]) {
+                    // Map already exists, just update it if needed
+                    const existingMap = this.maps[mapId];
+                    if (existingMap && typeof existingMap.setView === 'function') {
+                        existingMap.setView([lat, lng], existingMap.getZoom());
+                        // Invalidate size in case container was hidden/shown
+                        setTimeout(() => {
+                            if (existingMap && typeof existingMap.invalidateSize === 'function') {
+                                existingMap.invalidateSize();
+                            }
+                        }, 100);
+                    }
+                    return;
+                }
+
+                // Check if container already has a Leaflet map instance
+                const container = document.getElementById(mapId);
+                if (container && container._leaflet_id) {
+                    // Container already has a map, remove it first
+                    try {
+                        if (this.maps[mapId]) {
+                            this.maps[mapId].remove();
+                        }
+                        delete container._leaflet_id;
+                    } catch (e) {
+                        console.warn('Error removing existing map:', e);
+                    }
+                }
+
                 const map = L.map(mapId, {
                     center: [lat, lng],
                     zoom: mulopimfwcLocationInfo.defaultMapZoom,
@@ -668,7 +739,11 @@
 
                 // Handle resize
                 $(window).on('resize', () => {
-                    setTimeout(() => map.invalidateSize(), 100);
+                    setTimeout(() => {
+                        if (map && typeof map.invalidateSize === 'function') {
+                            map.invalidateSize();
+                        }
+                    }, 100);
                 });
 
             } catch (error) {
@@ -875,13 +950,25 @@
                     // Invalidate all map sizes
                     Object.keys(self.maps).forEach(function (mapId) {
                         if (self.maps[mapId]) {
-                            self.maps[mapId].invalidateSize();
+                            try {
+                                // Handle both direct map instances and objects with map property (shortcode maps)
+                                const mapInstance = self.maps[mapId].map || self.maps[mapId];
+                                if (mapInstance && typeof mapInstance.invalidateSize === 'function') {
+                                    mapInstance.invalidateSize();
+                                }
+                            } catch (e) {
+                                console.warn('Error invalidating map size for ' + mapId + ':', e);
+                            }
                         }
                     });
 
                     // Invalidate tabbed map
-                    if (self.tabbedMap) {
-                        self.tabbedMap.invalidateSize();
+                    if (self.tabbedMap && typeof self.tabbedMap.invalidateSize === 'function') {
+                        try {
+                            self.tabbedMap.invalidateSize();
+                        } catch (e) {
+                            console.warn('Error invalidating tabbed map size:', e);
+                        }
                     }
                 }, 250);
             });

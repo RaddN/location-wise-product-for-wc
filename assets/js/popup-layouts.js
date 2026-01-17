@@ -1,10 +1,74 @@
 jQuery(function ($) {
-    var $modal = $('#lwp-store-selector-modal.lwp-location-info-popup');
-    if (!$modal.length) {
-        return;
+    // Function to initialize popup layout modals
+    function initializePopupLayouts() {
+        // Handle all location info popup modals (including instance-specific ones)
+        var $modals = $('#lwp-store-selector-modal.lwp-location-info-popup, [id^="lwp-store-selector-modal-"].lwp-location-info-popup').not('.mulopimfwc-initialized');
+        if (!$modals.length) {
+            return;
+        }
+        
+        // Process each modal
+        $modals.each(function() {
+            var $modal = $(this);
+            initPopupLayouts($modal);
+            $modal.addClass('mulopimfwc-initialized');
+        });
     }
-
-    var $hidden = $modal.find('#lwp-selected-store');
+    
+    // Initialize on page load
+    initializePopupLayouts();
+    
+    // Use MutationObserver for better compatibility (DOMNodeInserted is deprecated)
+    if (typeof MutationObserver !== 'undefined') {
+        var observer = new MutationObserver(function(mutations) {
+            var shouldInit = false;
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length) {
+                    for (var i = 0; i < mutation.addedNodes.length; i++) {
+                        var node = mutation.addedNodes[i];
+                        if (node.nodeType === 1) { // Element node
+                            var $node = $(node);
+                            if ($node.is('#lwp-store-selector-modal.lwp-location-info-popup, [id^="lwp-store-selector-modal-"].lwp-location-info-popup') ||
+                                $node.find('#lwp-store-selector-modal.lwp-location-info-popup, [id^="lwp-store-selector-modal-"].lwp-location-info-popup').length) {
+                                shouldInit = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+            if (shouldInit) {
+                setTimeout(initializePopupLayouts, 100);
+            }
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    } else {
+        // Fallback for older browsers
+        $(document).on('DOMNodeInserted', function(e) {
+            var $target = $(e.target);
+            var $newModals = $target.find('#lwp-store-selector-modal.lwp-location-info-popup, [id^="lwp-store-selector-modal-"].lwp-location-info-popup').add(
+                $target.filter('#lwp-store-selector-modal.lwp-location-info-popup, [id^="lwp-store-selector-modal-"].lwp-location-info-popup')
+            ).not('.mulopimfwc-initialized');
+            if ($newModals.length) {
+                setTimeout(initializePopupLayouts, 100);
+            }
+        });
+    }
+    
+    // Also check after a delay to catch modals rendered in footer
+    setTimeout(initializePopupLayouts, 500);
+    
+    function initPopupLayouts($modal) {
+        // Skip if already initialized
+        if ($modal.hasClass('mulopimfwc-initialized')) {
+            return;
+        }
+        
+        var $hidden = $modal.find('#lwp-selected-store');
 
     function isInteractiveTarget(event) {
         return $(event.target).closest('a, button, input, select, textarea, .mulopimfwc-btn').length > 0;
@@ -69,4 +133,31 @@ jQuery(function ($) {
     });
 
     initSelection();
+
+    // Handle submit button click
+    $modal.on('click', '#lwp-store-selector-submit', function (e) {
+        e.preventDefault();
+        var slug = $hidden.val();
+        if (!slug) {
+            alert('Please select a store location.');
+            return;
+        }
+        
+        // Set cookie
+        var cookieDays = 30;
+        if (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookie_expiry) {
+            var override = parseInt(mulopimfwc_locationWiseProducts.cookie_expiry, 10);
+            if (Number.isFinite(override) && override > 0) {
+                cookieDays = override;
+            }
+        }
+        var expiryDate = new Date(Date.now() + cookieDays * 24 * 60 * 60 * 1000);
+        document.cookie = 'mulopimfwc_store_location=' + slug + ';expires=' + expiryDate.toUTCString() + ';path=/;samesite=lax';
+        
+        // Hide modal and reload
+        $modal.hide();
+        $('body').removeClass('mulopimfwc-modal-open');
+        window.location.href = window.location.href.split('?')[0];
+    });
+    }
 });

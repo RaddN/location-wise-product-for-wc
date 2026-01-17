@@ -2,7 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap');
 
 /* Modal Styles */
-#lwp-store-selector-modal {
+#lwp-store-selector-modal,
+.lwp-store-selector-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -49,7 +50,8 @@
 }
 
 /* Modern Popup Styles */
-#lwp-store-selector-modal.lwp-modern-popup {
+#lwp-store-selector-modal.lwp-modern-popup,
+.lwp-store-selector-modal.lwp-modern-popup {
   background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -423,7 +425,8 @@
 }
 
 /* Classic Popup Styles */
-#lwp-store-selector-modal.lwp-classic-popup {
+#lwp-store-selector-modal.lwp-classic-popup,
+.lwp-store-selector-modal.lwp-classic-popup {
   background: rgba(10, 16, 24, 0.55);
 }
 
@@ -673,7 +676,8 @@
 }
 
 /* Location Info Popup (Tabs/Grid/Compact) */
-#lwp-store-selector-modal.lwp-location-info-popup {
+#lwp-store-selector-modal.lwp-location-info-popup,
+.lwp-store-selector-modal.lwp-location-info-popup {
   background: rgba(9, 15, 20, 0.6);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);

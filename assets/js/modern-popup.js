@@ -1,38 +1,92 @@
 jQuery(function ($) {
-    var $modal = $('#lwp-store-selector-modal.lwp-modern-popup');
-    if (!$modal.length || typeof window.mulopimfwcModernPopupData === 'undefined') {
-        return;
+    // Function to initialize modern popup modals
+    function initializeModernPopups() {
+        // Handle all modern popup modals (including instance-specific ones)
+        var $modals = $('#lwp-store-selector-modal.lwp-modern-popup, [id^="lwp-store-selector-modal-"].lwp-modern-popup').not('.mulopimfwc-initialized');
+        if (!$modals.length) {
+            return;
+        }
+        
+        // Process each modal
+        $modals.each(function() {
+            var $modal = $(this);
+            // Always initialize if modal exists, data will be read from attribute or global
+            try {
+                initModernPopup($modal);
+                $modal.addClass('mulopimfwc-initialized');
+            } catch (e) {
+                console.warn('Error initializing modern popup:', e);
+            }
+        });
     }
-
-    var data = window.mulopimfwcModernPopupData || {};
-    var locations = Array.isArray(data.locations) ? data.locations : [];
-    var i18n = data.i18n || {};
-    var variant = data.variant || ($modal.hasClass('lwp-modern-popup--simple') ? 'simple' : 'modern');
-    var cookieDays = parseInt(data.cookieExpiryDays, 10);
-    if (!Number.isFinite(cookieDays) || cookieDays < 1) {
-        cookieDays = 30;
+    
+    // Initialize on page load
+    initializeModernPopups();
+    
+    // Re-initialize when modals are added dynamically (e.g., via shortcode)
+    $(document).on('DOMNodeInserted', function(e) {
+        var $target = $(e.target);
+        var $newModals = $target.find('#lwp-store-selector-modal.lwp-modern-popup, [id^="lwp-store-selector-modal-"].lwp-modern-popup').add(
+            $target.filter('#lwp-store-selector-modal.lwp-modern-popup, [id^="lwp-store-selector-modal-"].lwp-modern-popup')
+        ).not('.mulopimfwc-initialized');
+        if ($newModals.length) {
+            setTimeout(initializeModernPopups, 100);
+        }
+    });
+    
+    // Also check on ready state changes
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeModernPopups);
     }
+    
+    function initModernPopup($modal) {
+        // Skip if already initialized
+        if ($modal.hasClass('mulopimfwc-initialized')) {
+            return;
+        }
+        
+        // Get data from modal data attribute or fallback to global window object (for backward compatibility)
+        var popupDataAttr = $modal.attr('data-popup-data');
+        var data = {};
+        
+        if (popupDataAttr) {
+            try {
+                data = typeof popupDataAttr === 'string' ? JSON.parse(popupDataAttr) : popupDataAttr;
+            } catch (e) {
+                console.warn('Error parsing popup data:', e);
+                data = window.mulopimfwcModernPopupData || {};
+            }
+        } else {
+            data = window.mulopimfwcModernPopupData || {};
+        }
+        var locations = Array.isArray(data.locations) ? data.locations : [];
+        var i18n = data.i18n || {};
+        var variant = data.variant || ($modal.hasClass('lwp-modern-popup--simple') ? 'simple' : 'modern');
+        var cookieDays = parseInt(data.cookieExpiryDays, 10);
+        if (!Number.isFinite(cookieDays) || cookieDays < 1) {
+            cookieDays = 30;
+        }
 
-    var $input = $modal.find('#lwp-modern-location-search');
-    var $status = $modal.find('#lwp-modern-status');
-    var $suggestions = $modal.find('#lwp-modern-suggestions');
-    var $featured = $modal.find('#lwp-modern-featured');
-    var $list = $modal.find('#lwp-modern-list');
-    var $origin = $modal.find('#lwp-modern-origin');
-    var $detect = $modal.find('#lwp-modern-detect');
-    var $searchBtn = $modal.find('#lwp-modern-search-btn');
-    var activeRequest = null;
+        var $input = $modal.find('#lwp-modern-location-search');
+        var $status = $modal.find('#lwp-modern-status');
+        var $suggestions = $modal.find('#lwp-modern-suggestions');
+        var $featured = $modal.find('#lwp-modern-featured');
+        var $list = $modal.find('#lwp-modern-list');
+        var $origin = $modal.find('#lwp-modern-origin');
+        var $detect = $modal.find('#lwp-modern-detect');
+        var $searchBtn = $modal.find('#lwp-modern-search-btn');
+        var activeRequest = null;
 
-    function escapeHtml(value) {
-        return String(value || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
-    function setStatus(message, state) {
+        function setStatus(message, state) {
         $status.text(message || '');
         if (state) {
             $status.attr('data-state', state);
@@ -209,7 +263,7 @@ jQuery(function ($) {
 
         var sorted = computeSortedLocations(lat, lng);
         if (sorted[0] && sorted[0].slug) {
-            $('#lwp-selected-store').val(sorted[0].slug);
+            $modal.find('#lwp-selected-store').val(sorted[0].slug);
         }
 
         $featured.html(sorted[0] ? buildCard(sorted[0], true, 0) : '');
@@ -368,48 +422,50 @@ jQuery(function ($) {
         });
     }
 
-    $detect.on('click', function () {
-        attemptLocationDetection();
-    });
+        $detect.on('click', function () {
+            attemptLocationDetection();
+        });
 
-    $searchBtn.on('click', function () {
-        searchByQuery($input.val().trim());
-    });
-
-    $input.on('keydown', function (event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
+        $searchBtn.on('click', function () {
             searchByQuery($input.val().trim());
-        }
-    });
+        });
 
-    $modal.on('click', '.lwp-modern-location-select', function () {
-        var slug = $(this).data('slug');
-        if (!slug) {
-            return;
-        }
-        setPluginCookie('mulopimfwc_store_location', slug);
-        $modal.hide();
-        window.location.href = window.location.href.split('?')[0];
-    });
+        $input.on('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchByQuery($input.val().trim());
+            }
+        });
 
-    $modal.on('click', '.lwp-modern-suggestion', function () {
-        var $item = $(this);
-        var lat = parseFloat($item.data('lat'));
-        var lng = parseFloat($item.data('lng'));
-        var label = $item.data('label') || '';
-        $suggestions.hide();
-        if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            updateFromCoordinates(lat, lng, label);
-        }
-    });
+        $modal.on('click', '.lwp-modern-location-select', function () {
+            var slug = $(this).data('slug');
+            if (!slug) {
+                return;
+            }
+            setPluginCookie('mulopimfwc_store_location', slug);
+            $modal.hide();
+            $('body').removeClass('mulopimfwc-modal-open');
+            window.location.href = window.location.href.split('?')[0];
+        });
 
-    $(document).on('click', function (event) {
-        if (!$(event.target).closest('.lwp-modern-popup__search').length) {
+        $modal.on('click', '.lwp-modern-suggestion', function () {
+            var $item = $(this);
+            var lat = parseFloat($item.data('lat'));
+            var lng = parseFloat($item.data('lng'));
+            var label = $item.data('label') || '';
             $suggestions.hide();
-        }
-    });
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                updateFromCoordinates(lat, lng, label);
+            }
+        });
 
-    renderLocations(null, null, '');
-    attemptLocationDetection();
+        $(document).on('click', function (event) {
+            if (!$(event.target).closest('.lwp-modern-popup__search').length) {
+                $suggestions.hide();
+            }
+        });
+
+        renderLocations(null, null, '');
+        attemptLocationDetection();
+    }
 });

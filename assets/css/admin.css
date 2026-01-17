@@ -293,6 +293,13 @@
   }
 }
 
+.mulopimfwc_pro_only_blur {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
 .mulopimfwc_pro_only_blur > * {
   filter: blur(3px);
 }

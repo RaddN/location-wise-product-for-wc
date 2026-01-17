@@ -15,9 +15,15 @@ $subtitle = __('Choose a store location to continue shopping with accurate avail
 $renderer = class_exists('MULOPIMFWC_Frontend_Location_Information')
     ? MULOPIMFWC_Frontend_Location_Information::get_instance()
     : null;
+$modal_id = isset($GLOBALS['mulopimfwc_modal_id']) ? $GLOBALS['mulopimfwc_modal_id'] : 'lwp-store-selector-modal';
+$instance_id = isset($GLOBALS['mulopimfwc_modal_instance_id']) ? $GLOBALS['mulopimfwc_modal_instance_id'] : '';
+$modal_class = 'lwp-location-info-popup lwp-location-info-popup--' . esc_attr($layout_class);
+if (!empty($instance_id)) {
+    $modal_class .= ' mulopimfwc-popup-instance-' . sanitize_html_class($instance_id);
+}
 ?>
-<div id="lwp-store-selector-modal"
-    class="lwp-location-info-popup lwp-location-info-popup--<?php echo esc_attr($layout_class); ?>"
+<div id="<?php echo esc_attr($modal_id); ?>"
+    class="<?php echo esc_attr($modal_class); ?>"
     data-layout="<?php echo esc_attr($layout_class); ?>"
     style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-location-info-popup__panel">

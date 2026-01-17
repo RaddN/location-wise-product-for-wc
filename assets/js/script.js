@@ -144,7 +144,28 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    // Modal logic for changing store location
+    // Modal logic for changing store location (works for both global and instance-specific modals)
+    function handleModalSubmit($modal) {
+        var $submitBtn = $modal.find('#lwp-store-selector-submit');
+        var $dropdown = $modal.find('#lwp-selected-store');
+        
+        if ($submitBtn.length && $dropdown.length) {
+            $submitBtn.off('click.mulopimfwc').on('click.mulopimfwc', function(e) {
+                e.preventDefault();
+                var selectedStore = $dropdown.val();
+                if (selectedStore) {
+                    setPluginCookie('mulopimfwc_store_location', selectedStore);
+                    $modal.css('display', 'none');
+                    $('body').removeClass('mulopimfwc-modal-open');
+                    location.reload();
+                } else {
+                    alert('Please select a store.');
+                }
+            });
+        }
+    }
+
+    // Handle global modal (backward compatibility)
     if (modal && modalSubmit) {
         modalSubmit.addEventListener('click', function () {
             const modalDropdown = document.getElementById('lwp-selected-store');
@@ -159,9 +180,22 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    // Handle instance-specific modals that are already in the DOM
+    setTimeout(function() {
+        $('#lwp-store-selector-modal').each(function() {
+            var $modal = $(this);
+            if (!$modal.data('mulopimfwc-handled')) {
+                handleModalSubmit($modal);
+                $modal.data('mulopimfwc-handled', true);
+            }
+        });
+    }, 100);
+
     $('#lwp-shortcode-selector-form').on('change', function () {
-        const dropdown = $(this).find('#lwp-shortcode-selector');
+        const dropdown = $(this).find('#lwp-selected-store-shortcode') || $(this).find('#lwp-selected-store');
         const selectedStore = dropdown.val();
+        console.log(dropdown);
+        console.log(selectedStore);
         const selectedStoreLabel = dropdown.find('option:selected').text() || '';
         const matchedLocationId = findMatchingSavedLocationId(selectedStore, selectedStoreLabel);
 
@@ -264,6 +298,82 @@ jQuery(document).ready(function ($) {
 
     $(document).on('change', '#lwp-shortcode-selector, #mulopimfwc_store_location, .mulopimfwc-location-selector', function () {
         setTimeout(updateSingleProductAddToCartState, 100);
+    });
+
+    // Handle popup shortcode button clicks
+    $(document).on('click', '.mulopimfwc-popup-trigger-button', function (e) {
+        e.preventDefault();
+        var $button = $(this);
+        var instanceId = $button.data('instance-id');
+        var layout = $button.data('layout') || 'default';
+        
+        // Find modal for this instance
+        var $modal = $('#lwp-store-selector-modal-' + instanceId);
+        
+        // Fallback to instance class selector
+        if (!$modal.length && instanceId) {
+            $modal = $('.mulopimfwc-popup-instance-' + instanceId.replace('mulopimfwc-popup-', ''));
+        }
+        
+        // If still not found, try to find any modal with matching layout
+        if (!$modal.length) {
+            // Check if modal exists in DOM but might not be loaded yet
+            $modal = $('#lwp-store-selector-modal');
+        }
+        
+        // Show the modal
+        if ($modal.length) {
+            // Ensure modal is initialized if not already
+            if (!$modal.hasClass('mulopimfwc-initialized')) {
+                // Trigger initialization based on layout
+                if ($modal.hasClass('lwp-modern-popup')) {
+                    if (typeof window.initModernPopup === 'function') {
+                        window.initModernPopup($modal);
+                    } else {
+                        // Trigger custom event for initialization
+                        $modal.trigger('mulopimfwc:init');
+                    }
+                } else if ($modal.hasClass('lwp-classic-popup')) {
+                    if (typeof window.initClassicPopup === 'function') {
+                        window.initClassicPopup($modal);
+                    } else {
+                        $modal.trigger('mulopimfwc:init');
+                    }
+                } else if ($modal.hasClass('lwp-location-info-popup')) {
+                    if (typeof window.initPopupLayouts === 'function') {
+                        window.initPopupLayouts($modal);
+                    } else {
+                        $modal.trigger('mulopimfwc:init');
+                    }
+                }
+            }
+            
+            $modal.css('display', 'flex');
+            $('body').addClass('mulopimfwc-modal-open');
+        } else {
+            console.warn('Popup modal not found for instance: ' + instanceId);
+        }
+    });
+
+    // Handle modal close clicks (backdrop and close buttons)
+    $(document).on('click', '#lwp-store-selector-modal', function (e) {
+        var $modal = $(this);
+        // Close if clicking on backdrop (the modal itself, not its children)
+        if ($(e.target).is($modal)) {
+            $modal.css('display', 'none');
+            $('body').removeClass('mulopimfwc-modal-open');
+        }
+    });
+
+    // Handle close button clicks
+    $(document).on('click', '.lwp-store-selector-close, .lwp-location-info-popup__close', function (e) {
+        e.preventDefault();
+        var $closeBtn = $(this);
+        var $modal = $closeBtn.closest('#lwp-store-selector-modal');
+        if ($modal.length) {
+            $modal.css('display', 'none');
+            $('body').removeClass('mulopimfwc-modal-open');
+        }
     });
 });
 
