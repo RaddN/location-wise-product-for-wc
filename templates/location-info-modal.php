@@ -21,10 +21,12 @@ $modal_class = 'lwp-location-info-popup lwp-location-info-popup--' . esc_attr($l
 if (!empty($instance_id)) {
     $modal_class .= ' mulopimfwc-popup-instance-' . sanitize_html_class($instance_id);
 }
+$allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']);
 ?>
 <div id="<?php echo esc_attr($modal_id); ?>"
     class="<?php echo esc_attr($modal_class); ?>"
     data-layout="<?php echo esc_attr($layout_class); ?>"
+    data-allow-backdrop-close="<?php echo $allow_backdrop_close ? '1' : '0'; ?>"
     style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-location-info-popup__panel">
         <div class="lwp-location-info-popup__header">

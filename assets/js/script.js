@@ -356,13 +356,19 @@ jQuery(document).ready(function ($) {
     });
 
     // Handle modal close clicks (backdrop and close buttons)
-    $(document).on('click', '#lwp-store-selector-modal', function (e) {
+    $(document).on('click', '[id^="lwp-store-selector-modal"]', function (e) {
         var $modal = $(this);
-        // Close if clicking on backdrop (the modal itself, not its children)
-        if ($(e.target).is($modal)) {
-            $modal.css('display', 'none');
-            $('body').removeClass('mulopimfwc-modal-open');
+        if (!$(e.target).is($modal)) {
+            return;
         }
+
+        var allowBackdropClose = $modal.data('allowBackdropClose');
+        if (!allowBackdropClose) {
+            return;
+        }
+
+        $modal.css('display', 'none');
+        $('body').removeClass('mulopimfwc-modal-open');
     });
 
     // Handle close button clicks

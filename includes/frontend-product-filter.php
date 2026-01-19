@@ -272,6 +272,21 @@ class Location_Wise_Products_Filter
         $category = isset($_POST['category']) ? sanitize_text_field($_POST['category']) : '';
         $tag = isset($_POST['tag']) ? sanitize_text_field($_POST['tag']) : '';
         $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+        $manager_locations = null;
+        $manager_id = 0;
+        if (is_user_logged_in() && class_exists('MULOPIMFWC_Location_Managers')) {
+            $user = wp_get_current_user();
+            if (
+                in_array('mulopimfwc_location_manager', $user->roles, true) &&
+                MULOPIMFWC_Location_Managers::user_has_capability('location_specific_products_frontend')
+            ) {
+                $manager_locations = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
+                if (!is_array($manager_locations)) {
+                    $manager_locations = [];
+                }
+                $manager_id = $user->ID;
+            }
+        }
 
         // Build cache key
         $cache_key = $this->build_cache_key([
@@ -281,6 +296,7 @@ class Location_Wise_Products_Filter
             'category' => $category,
             'tag' => $tag,
             'search' => $search,
+            'manager' => $manager_id,
             'posts_per_page' => wc_get_default_products_per_row() * wc_get_default_product_rows_per_page(),
         ]);
 
@@ -304,17 +320,30 @@ class Location_Wise_Products_Filter
         // Add taxonomy query for location
         // When filtering by location, show ONLY products from that specific location
         // Do NOT show products from other locations or products without location assignment
-        if (!empty($location_slug)) {
-            $tax_query = [
-                [
+        if (is_array($manager_locations)) {
+            if (empty($manager_locations)) {
+                $args['post__in'] = [0];
+            } elseif (!empty($location_slug)) {
+                if (!in_array($location_slug, $manager_locations, true)) {
+                    $args['post__in'] = [0];
+                }
+            } else {
+                $args['tax_query'][] = [
                     'taxonomy' => 'mulopimfwc_store_location',
                     'field' => 'slug',
-                    'terms' => $location_slug,
+                    'terms' => $manager_locations,
                     'operator' => 'IN',
-                ]
-            ];
+                ];
+            }
+        }
 
-            $args['tax_query'] = $tax_query;
+        if (!empty($location_slug) && empty($args['post__in'])) {
+            $args['tax_query'][] = [
+                'taxonomy' => 'mulopimfwc_store_location',
+                'field' => 'slug',
+                'terms' => $location_slug,
+                'operator' => 'IN',
+            ];
         }
 
         // Add category

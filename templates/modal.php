@@ -4,8 +4,9 @@ $options = $this->get_display_options();
 $modal_id = isset($GLOBALS['mulopimfwc_modal_id']) ? $GLOBALS['mulopimfwc_modal_id'] : 'lwp-store-selector-modal';
 $instance_id = isset($GLOBALS['mulopimfwc_modal_instance_id']) ? $GLOBALS['mulopimfwc_modal_instance_id'] : '';
 $modal_class = !empty($instance_id) ? ' mulopimfwc-popup-instance-' . sanitize_html_class($instance_id) : '';
+$allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']);
 ?>
-<div id="<?php echo esc_attr($modal_id); ?>" class="lwp-store-selector-modal<?php echo esc_attr($modal_class); ?>" style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
+<div id="<?php echo esc_attr($modal_id); ?>" class="lwp-store-selector-modal<?php echo esc_attr($modal_class); ?>" data-allow-backdrop-close="<?php echo $allow_backdrop_close ? '1' : '0'; ?>" style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-store-selector-content">
         <?php if (isset($options["title_show_popup"]) && $options["title_show_popup"] === "on") { ?>
             <h2><?php echo esc_html($options["mulopimfwc_popup_title"] ?? 'Select Your Location'); ?></h2><?php } ?>

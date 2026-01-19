@@ -2259,6 +2259,15 @@ class MULOPIMFWC_Dashboard
             }
         }
 
+        if (
+            $is_location_manager &&
+            class_exists('MULOPIMFWC_Location_Managers') &&
+            MULOPIMFWC_Location_Managers::user_has_capability('all_products')
+        ) {
+            $is_location_manager = false;
+            $assigned_location_slugs = [];
+        }
+
         // For location managers with assigned locations
         if ($is_location_manager && !empty($assigned_location_slugs)) {
             // Get term IDs from slugs
@@ -2800,12 +2809,41 @@ class MULOPIMFWC_Dashboard
         $alerts = [];
         $since = $since_timestamp ?: (current_time('timestamp', true) - 300);
         $date_from = gmdate('Y-m-d H:i:s', $since);
-        $order_ids = wc_get_orders([
+        $manager_locations = null;
+        if (is_user_logged_in() && class_exists('MULOPIMFWC_Location_Managers')) {
+            $user = wp_get_current_user();
+            if (
+                in_array('mulopimfwc_location_manager', $user->roles, true) &&
+                !MULOPIMFWC_Location_Managers::user_has_capability('all_orders')
+            ) {
+                $manager_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+                if (!is_array($manager_locations)) {
+                    $manager_locations = [];
+                }
+            }
+        }
+
+        $order_args = [
             'limit' => 25,
             'status' => ['pending', 'processing', 'on-hold', 'completed', 'failed', 'cancelled', 'refunded'],
             'date_created' => '>=' . $date_from,
             'return' => 'ids',
-        ]);
+        ];
+
+        if (is_array($manager_locations)) {
+            if (empty($manager_locations)) {
+                return [];
+            }
+            $order_args['meta_query'] = [
+                [
+                    'key' => '_store_location',
+                    'value' => $manager_locations,
+                    'compare' => 'IN',
+                ],
+            ];
+        }
+
+        $order_ids = wc_get_orders($order_args);
 
         $new_orders = [];
         $orders_by_status = [

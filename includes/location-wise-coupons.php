@@ -34,10 +34,23 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         $include_selected = (array) get_post_meta($coupon_id, self::META_INCLUDE, true);
         $exclude_selected = (array) get_post_meta($coupon_id, self::META_EXCLUDE, true);
 
-        $terms = get_terms([
+        $term_args = [
             'taxonomy'   => self::TAX,
             'hide_empty' => false,
-        ]);
+        ];
+
+        $allowed_term_ids = $this->get_location_manager_allowed_term_ids();
+        if (is_array($allowed_term_ids)) {
+            if (empty($allowed_term_ids)) {
+                $terms = [];
+            } else {
+                $term_args['include'] = $allowed_term_ids;
+            }
+        }
+
+        if (!isset($terms)) {
+            $terms = get_terms($term_args);
+        }
 
         $options = [];
         if (! is_wp_error($terms)) {
@@ -102,6 +115,41 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         return implode(' › ', $names);
     }
 
+    private function get_location_manager_allowed_term_ids()
+    {
+        if (!is_user_logged_in() || !class_exists('MULOPIMFWC_Location_Managers')) {
+            return null;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
+            return null;
+        }
+
+        $assigned_locations = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
+        if (!is_array($assigned_locations)) {
+            $assigned_locations = [];
+        }
+
+        $assigned_locations = array_values(array_filter($assigned_locations));
+        if (empty($assigned_locations)) {
+            return [];
+        }
+
+        $terms = get_terms([
+            'taxonomy'   => self::TAX,
+            'hide_empty' => false,
+            'slug'       => $assigned_locations,
+            'fields'     => 'ids',
+        ]);
+
+        if (is_wp_error($terms)) {
+            return [];
+        }
+
+        return array_values(array_map('absint', $terms));
+    }
+
     /** -------------------------
      * Admin: save fields
      * ------------------------*/
@@ -112,6 +160,21 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
         $include = array_values(array_unique(array_filter(array_map('absint', $include))));
         $exclude = array_values(array_unique(array_filter(array_map('absint', $exclude))));
+
+        $allowed_term_ids = $this->get_location_manager_allowed_term_ids();
+        if (is_array($allowed_term_ids)) {
+            $include = array_values(array_intersect($include, $allowed_term_ids));
+            $exclude = array_values(array_intersect($exclude, $allowed_term_ids));
+
+            $existing_include = (array) get_post_meta($post_id, self::META_INCLUDE, true);
+            $existing_exclude = (array) get_post_meta($post_id, self::META_EXCLUDE, true);
+
+            $existing_include = array_values(array_unique(array_filter(array_map('absint', $existing_include))));
+            $existing_exclude = array_values(array_unique(array_filter(array_map('absint', $existing_exclude))));
+
+            $include = array_values(array_unique(array_merge($include, array_diff($existing_include, $allowed_term_ids))));
+            $exclude = array_values(array_unique(array_merge($exclude, array_diff($existing_exclude, $allowed_term_ids))));
+        }
 
         update_post_meta($post_id, self::META_INCLUDE, $include);
         update_post_meta($post_id, self::META_EXCLUDE, $exclude);

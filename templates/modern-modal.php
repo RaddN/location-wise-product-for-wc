@@ -121,6 +121,7 @@ $modal_class = 'lwp-modern-popup';
 if (!empty($instance_id)) {
     $modal_class .= ' mulopimfwc-popup-instance-' . sanitize_html_class($instance_id);
 }
+$allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']);
 
 // Store popup data in data attribute to avoid conflicts with multiple modals
 $popup_data_json = wp_json_encode($popup_data);
@@ -128,6 +129,7 @@ $popup_data_json = wp_json_encode($popup_data);
 <div id="<?php echo esc_attr($modal_id); ?>" 
      class="<?php echo esc_attr($modal_class); ?>" 
      data-popup-data="<?php echo esc_attr($popup_data_json); ?>"
+     data-allow-backdrop-close="<?php echo $allow_backdrop_close ? '1' : '0'; ?>"
      style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-modern-popup__panel">
         <div class="lwp-modern-popup__hero">

@@ -3916,11 +3916,81 @@ if (!function_exists('mulopimfwc_get_values')) {
             return isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
         }
 
+        private function get_location_manager_frontend_locations()
+        {
+            if (!is_user_logged_in() || !class_exists('MULOPIMFWC_Location_Managers')) {
+                return null;
+            }
+
+            $user = wp_get_current_user();
+            if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
+                return null;
+            }
+
+            if (!MULOPIMFWC_Location_Managers::user_has_capability('location_specific_products_frontend')) {
+                return null;
+            }
+
+            $assigned_locations = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
+            if (!is_array($assigned_locations)) {
+                $assigned_locations = [];
+            }
+
+            return array_values(array_filter($assigned_locations));
+        }
+
+        private function build_location_tax_query($locations, $enable_all_locations, $strict = false)
+        {
+            $location_clause = [
+                'taxonomy' => 'mulopimfwc_store_location',
+                'field' => 'slug',
+                'terms' => $locations,
+                'operator' => 'IN',
+            ];
+
+            if ($strict) {
+                return $location_clause;
+            }
+
+            if ($enable_all_locations === 'on') {
+                return [
+                    'relation' => 'OR',
+                    $location_clause,
+                    [
+                        'taxonomy' => 'mulopimfwc_store_location',
+                        'operator' => 'NOT EXISTS',
+                    ],
+                ];
+            }
+
+            return $location_clause;
+        }
+
         public function filter_shortcode_products($query_args)
         {
             $location = $this->get_current_location();
             global $mulopimfwc_options;
             $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $manager_locations = $this->get_location_manager_frontend_locations();
+            if (is_array($manager_locations)) {
+                if (empty($manager_locations)) {
+                    $query_args['post__in'] = [0];
+                    return $query_args;
+                }
+
+                $target_locations = $manager_locations;
+                if (!empty($location) && $location !== 'all-products') {
+                    if (!in_array($location, $manager_locations, true)) {
+                        $query_args['post__in'] = [0];
+                        return $query_args;
+                    }
+                    $target_locations = [$location];
+                }
+
+                $query_args['tax_query'][] = $this->build_location_tax_query($target_locations, $enable_all_locations, true);
+                return $query_args;
+            }
+
             if (!$location || $location === 'all-products' || $enable_all_locations === 'on') {
                 return $query_args;
             }
@@ -3971,7 +4041,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_locations;
             $is_user_logged_in = is_user_logged_in();
             $current_user = wp_get_current_user();
-            $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles);
+             $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             // mulopimfwc_display_options[show_popup_admin]
             $options = get_option('mulopimfwc_display_options', []);
             $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
@@ -4064,7 +4134,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             // mulopimfwc_display_options[show_all_products_admin]
             $options = get_option('mulopimfwc_display_options', []);
             $show_all_products_admin = isset($options['show_all_products_admin']) ? $options['show_all_products_admin'] : 'off';
-            $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles);
+             $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             $selected_location = $this->get_current_location();
 
             $locations = $mulopimfwc_locations;
@@ -4169,7 +4239,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             $is_user_logged_in = is_user_logged_in();
             $current_user = wp_get_current_user();
-            $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles);
+            $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             
             $options = get_option('mulopimfwc_display_options', []);
             $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
@@ -4204,11 +4274,22 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Set instance-specific variables
             $show_modal = $should_show;
             $modal_id = !empty($instance_id) ? 'lwp-store-selector-modal-' . sanitize_html_class($instance_id) : 'lwp-store-selector-modal';
+
+            $allow_backdrop_close = false;
+            if (!empty($instance_id) && !empty($GLOBALS['mulopimfwc_popup_shortcodes']) && is_array($GLOBALS['mulopimfwc_popup_shortcodes'])) {
+                foreach ($GLOBALS['mulopimfwc_popup_shortcodes'] as $shortcode_info) {
+                    if (!empty($shortcode_info['instance_id']) && $shortcode_info['instance_id'] === $instance_id) {
+                        $allow_backdrop_close = !empty($shortcode_info['on_click_button']);
+                        break;
+                    }
+                }
+            }
             
             // Temporarily override modal ID for template
             $GLOBALS['mulopimfwc_modal_id'] = $modal_id;
             $GLOBALS['mulopimfwc_modal_instance_id'] = $instance_id;
             $GLOBALS['mulopimfwc_modal_layout'] = $layout;
+            $GLOBALS['mulopimfwc_modal_allow_backdrop_close'] = $allow_backdrop_close;
             
             include $template_path;
             
@@ -4216,6 +4297,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             unset($GLOBALS['mulopimfwc_modal_id']);
             unset($GLOBALS['mulopimfwc_modal_instance_id']);
             unset($GLOBALS['mulopimfwc_modal_layout']);
+            unset($GLOBALS['mulopimfwc_modal_allow_backdrop_close']);
         }
 
         /**
@@ -4354,12 +4436,33 @@ if (!function_exists('mulopimfwc_get_values')) {
             $location = $this->get_current_location();
             global $mulopimfwc_options;
             $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $manager_locations = $this->get_location_manager_frontend_locations();
+
+            if (is_array($manager_locations)) {
+                if (empty($manager_locations)) {
+                    return false;
+                }
+
+                $allowed_locations = $manager_locations;
+                if (!empty($location) && $location !== 'all-products') {
+                    if (!in_array($location, $manager_locations, true)) {
+                        return false;
+                    }
+                    $allowed_locations = [$location];
+                }
+
+                $terms = array_map('rawurldecode', wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
+                if (empty($terms)) {
+                    return false;
+                }
+                return (!is_wp_error($terms) && !empty(array_intersect($allowed_locations, $terms)));
+            }
 
             if (!$location || $location === 'all-products') {
                 return true;
             }
 
-            $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
+            $terms = array_map('rawurldecode', wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
             if (empty($terms) && $enable_all_locations === 'on') {
                 return true; // Product is available in all locations
             }
@@ -4379,8 +4482,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             $location = $this->get_current_location();
             global $mulopimfwc_options;
             $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $manager_locations = $this->get_location_manager_frontend_locations();
 
-            if (!$location || $location === 'all-products') {
+            if ($manager_locations === null && (!$location || $location === 'all-products')) {
                 return $products;
             }
 
@@ -4395,6 +4499,29 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function filter_rest_api_products($args, $request)
         {
+            global $mulopimfwc_options;
+            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $manager_locations = $this->get_location_manager_frontend_locations();
+            if (is_array($manager_locations)) {
+                if (empty($manager_locations)) {
+                    $args['post__in'] = [0];
+                    return $args;
+                }
+
+                $current_location = $this->get_current_location();
+                $target_locations = $manager_locations;
+                if (!empty($current_location) && $current_location !== 'all-products') {
+                    if (!in_array($current_location, $manager_locations, true)) {
+                        $args['post__in'] = [0];
+                        return $args;
+                    }
+                    $target_locations = [$current_location];
+                }
+
+                $args['tax_query'][] = $this->build_location_tax_query($target_locations, $enable_all_locations, true);
+                return $args;
+            }
+
             $location = $this->get_current_location();
 
             if (!$location || $location === 'all-products') {
@@ -4523,14 +4650,35 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
+            $tax_query = (array) $query->get('tax_query');
+            global $mulopimfwc_options;
+            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $manager_locations = $this->get_location_manager_frontend_locations();
+            if (is_array($manager_locations)) {
+                if (empty($manager_locations)) {
+                    $query->set('post__in', [0]);
+                    return;
+                }
+
+                $current_location = $this->get_current_location();
+                $target_locations = $manager_locations;
+                if (!empty($current_location) && $current_location !== 'all-products') {
+                    if (!in_array($current_location, $manager_locations, true)) {
+                        $query->set('post__in', [0]);
+                        return;
+                    }
+                    $target_locations = [$current_location];
+                }
+
+                $tax_query[] = $this->build_location_tax_query($target_locations, $enable_all_locations, true);
+                $query->set('tax_query', $tax_query);
+                return;
+            }
+
             $location = $this->get_filtered_location($section);
             if (!$location) {
                 return;
             }
-
-            $tax_query = (array) $query->get('tax_query');
-            global $mulopimfwc_options;
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
 
             if ($enable_all_locations === 'on') {
                 $tax_query[] = [
@@ -5126,7 +5274,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     /**
      * Collect unique social channels for a location (managers + admin fallbacks).
      */
-    function mulopimfwc_collect_social_channels($location_slug, $settings)
+    function mulopimfwc_collect_social_channels($location_slug, $settings, $include_all_orders = false)
     {
         $channels = [];
         $add_channel = function ($channel) use (&$channels) {
@@ -5195,6 +5343,45 @@ if (!function_exists('mulopimfwc_get_values')) {
             $managers = mulopimfwc_get_location_managers_for_slug($location_slug);
             if (!empty($managers)) {
                 foreach ($managers as $manager) {
+                    $user_channels = mulopimfwc_get_user_social_channels($manager->ID);
+
+                    if (!empty($user_channels['slack_webhook'])) {
+                        $add_channel([
+                            'type' => 'webhook',
+                            'url' => esc_url_raw($user_channels['slack_webhook']),
+                        ]);
+                    }
+
+                    if (!empty($user_channels['custom_webhook'])) {
+                        $add_channel([
+                            'type' => 'webhook',
+                            'url' => esc_url_raw($user_channels['custom_webhook']),
+                        ]);
+                    }
+
+                    if (!empty($user_channels['telegram_chat_id']) && !empty($settings['telegram_bot_token'])) {
+                        $add_channel([
+                            'type' => 'telegram',
+                            'chat_id' => sanitize_text_field($user_channels['telegram_chat_id']),
+                            'bot_token' => sanitize_text_field($settings['telegram_bot_token']),
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if ($include_all_orders && class_exists('MULOPIMFWC_Location_Managers')) {
+            $all_managers = get_users([
+                'role' => 'mulopimfwc_location_manager',
+                'fields' => 'all',
+            ]);
+
+            if (!empty($all_managers)) {
+                foreach ($all_managers as $manager) {
+                    if (!MULOPIMFWC_Location_Managers::user_has_capability('all_orders', $manager->ID)) {
+                        continue;
+                    }
+
                     $user_channels = mulopimfwc_get_user_social_channels($manager->ID);
 
                     if (!empty($user_channels['slack_webhook'])) {
@@ -5398,7 +5585,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $lines[] = sprintf(__('Items: %s', 'multi-location-product-and-inventory-management'), implode(', ', array_slice($items, 0, 3)));
         }
 
-        $channels = mulopimfwc_collect_social_channels($location_slug, $settings);
+        $channels = mulopimfwc_collect_social_channels($location_slug, $settings, true);
         if (!empty($channels)) {
             mulopimfwc_send_social_message($title, implode("\n", $lines), $channels, $settings, $order->get_edit_order_url());
         }

@@ -193,9 +193,12 @@ class MULOPIMFWC_Location_Managers
             'manage_inventory' => __('Manage Inventory', 'multi-location-product-and-inventory-management'),
             'view_orders' => __('View Orders', 'multi-location-product-and-inventory-management'),
             'manage_orders' => __('Manage Orders', 'multi-location-product-and-inventory-management'),
+            'all_orders' => __('Manage/View All Orders', 'multi-location-product-and-inventory-management'),
             'view_products' => __('View Products', 'multi-location-product-and-inventory-management'),
             'manage_products' => __('Manage Products', 'multi-location-product-and-inventory-management'),
+            'all_products' => __('Manage/View All Products', 'multi-location-product-and-inventory-management'),
             'run_reports' => __('Run Reports', 'multi-location-product-and-inventory-management'),
+            'location_specific_products_frontend' => __('Location Specific Products Frontend', 'multi-location-product-and-inventory-management'),
         ];
     }
 
@@ -430,23 +433,23 @@ class MULOPIMFWC_Location_Managers
                             <h4><?php echo esc_html__('Or Create New User:', 'multi-location-product-and-inventory-management'); ?></h4>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-username"><?php echo esc_html__('Username:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="text" id="new-username" name="new_username" value="" required>
+                                <input type="text" id="new-username" name="new_username" value="">
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-email"><?php echo esc_html__('Email:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="email" id="new-email" name="new_email" value="" required>
+                                <input type="email" id="new-email" name="new_email" value="">
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-first-name"><?php echo esc_html__('First Name:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="text" id="new-first-name" name="new_first_name" value="" required>
+                                <input type="text" id="new-first-name" name="new_first_name" value="">
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-last-name"><?php echo esc_html__('Last Name:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="text" id="new-last-name" name="new_last_name" value="" required>
+                                <input type="text" id="new-last-name" name="new_last_name" value="">
                             </div>
                             <div class="mulopimfwc-form-row">
                                 <label for="new-password"><?php echo esc_html__('Password:', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="password" id="new-password" name="new_password" value="" required>
+                                <input type="password" id="new-password" name="new_password" value="">
                                 <p class="description"><?php echo esc_html__('Optional: set an initial password. Leave empty to auto-generate.', 'multi-location-product-and-inventory-management'); ?></p>
                             </div>
                         </div>
@@ -1627,15 +1630,22 @@ class MULOPIMFWC_Location_Managers
     /**
      * Check if current user has specific capability
      */
-    public static function user_has_capability($capability)
+    public static function user_has_capability($capability, $user_id = null)
     {
-        if (!is_user_logged_in()) {
-            return false;
+        if ($user_id) {
+            $user = get_user_by('id', $user_id);
+            if (!$user) {
+                return false;
+            }
+        } else {
+            if (!is_user_logged_in()) {
+                return false;
+            }
+            $user = wp_get_current_user();
         }
 
-        $user = wp_get_current_user();
-        if (!in_array('mulopimfwc_location_manager', $user->roles)) {
-            return current_user_can('manage_woocommerce'); // Admin check
+        if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
+            return $user_id ? false : current_user_can('manage_woocommerce');
         }
 
         // Get individual capabilities
@@ -1646,7 +1656,7 @@ class MULOPIMFWC_Location_Managers
             $manager_capabilities = isset($options['location_manager_capabilities']) ? $options['location_manager_capabilities'] : [];
         }
 
-        return in_array($capability, $manager_capabilities);
+        return in_array($capability, $manager_capabilities, true);
     }
 
     /**
@@ -1724,6 +1734,9 @@ class MULOPIMFWC_Order_Filter
         if (!$this->is_current_user_location_manager()) {
             return;
         }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
+            return;
+        }
 
         // Get assigned locations for current user
         $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
@@ -1758,6 +1771,9 @@ class MULOPIMFWC_Order_Filter
 
         // Check if current user is a location manager
         if (!$this->is_current_user_location_manager()) {
+            return $query_args;
+        }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
             return $query_args;
         }
 
@@ -1900,6 +1916,9 @@ class MULOPIMFWC_Order_Filter
         if (!$this->is_current_user_location_manager()) {
             return;
         }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
+            return;
+        }
 
         $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
 
@@ -1954,6 +1973,9 @@ class MULOPIMFWC_Order_Count_Filter
         // Filter post counts for traditional WordPress posts
         add_filter('wp_count_posts', [$this, 'filter_order_count'], 10, 3);
 
+        // Filter HPOS list table counts (wc-orders screen)
+        add_filter('woocommerce_shop_order_list_table_order_count', [$this, 'filter_hpos_list_table_order_count'], 10, 2);
+
         // Filter WooCommerce HPOS order counts
         add_filter('woocommerce_order_query', [$this, 'filter_wc_order_count_query'], 10, 2);
 
@@ -1971,6 +1993,9 @@ class MULOPIMFWC_Order_Count_Filter
         }
 
         if (!$this->is_current_user_location_manager()) {
+            return $counts;
+        }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
             return $counts;
         }
 
@@ -2048,6 +2073,9 @@ class MULOPIMFWC_Order_Count_Filter
         if (!is_admin() || !$this->is_current_user_location_manager()) {
             return $query;
         }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
+            return $query;
+        }
 
         $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
 
@@ -2079,6 +2107,9 @@ class MULOPIMFWC_Order_Count_Filter
         if (!is_admin() || !$this->is_current_user_location_manager()) {
             return $count;
         }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
+            return $count;
+        }
 
         $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
 
@@ -2088,6 +2119,31 @@ class MULOPIMFWC_Order_Count_Filter
 
         // Get count of processing orders for assigned locations
         return $this->get_filtered_order_count('wc-processing', $assigned_locations);
+    }
+
+    /**
+     * Filter HPOS list table order counts for location managers.
+     */
+    public function filter_hpos_list_table_order_count($count, $statuses)
+    {
+        if (!is_admin() || !$this->is_current_user_location_manager()) {
+            return $count;
+        }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
+            return $count;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+        if (empty($assigned_locations)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ((array) $statuses as $status) {
+            $total += $this->get_filtered_order_count($status, $assigned_locations);
+        }
+
+        return $total;
     }
 
     /**
@@ -2145,6 +2201,9 @@ class MULOPIMFWC_Order_Count_Filter
         if (!$this->is_current_user_location_manager()) {
             return null;
         }
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
+            return null;
+        }
 
         $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
 
@@ -2192,13 +2251,349 @@ class MULOPIMFWC_Order_Count_Filter
 new MULOPIMFWC_Order_Count_Filter();
 
 /**
+ * Filter products in admin area for location managers without all_products capability.
+ */
+class MULOPIMFWC_Product_Filter
+{
+    public function __construct()
+    {
+        add_action('pre_get_posts', [$this, 'filter_admin_products_by_location_manager'], 999);
+    }
+
+    public function filter_admin_products_by_location_manager($query)
+    {
+        if (!is_admin() || !is_user_logged_in()) {
+            return;
+        }
+
+        $post_type = $query->get('post_type');
+        $targets_product = $post_type === 'product' || (is_array($post_type) && in_array('product', $post_type, true));
+        if (!$targets_product) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
+            return;
+        }
+
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
+            return;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+        if (empty($assigned_locations)) {
+            $query->set('post__in', [0]);
+            return;
+        }
+
+        $location_tax_query = $this->build_location_tax_query($assigned_locations);
+        $existing_tax_query = (array) $query->get('tax_query');
+        if (!empty($existing_tax_query)) {
+            $existing_tax_query[] = $location_tax_query;
+            if (!isset($existing_tax_query['relation'])) {
+                $existing_tax_query['relation'] = 'AND';
+            }
+            $query->set('tax_query', $existing_tax_query);
+        } else {
+            $query->set('tax_query', [$location_tax_query]);
+        }
+    }
+
+    private function build_location_tax_query($locations)
+    {
+        return [
+            'taxonomy' => 'mulopimfwc_store_location',
+            'field' => 'slug',
+            'terms' => $locations,
+            'operator' => 'IN',
+        ];
+    }
+}
+
+new MULOPIMFWC_Product_Filter();
+
+/**
+ * Filter product counts in admin lists for location managers without all_products capability.
+ */
+class MULOPIMFWC_Product_Count_Filter
+{
+    public function __construct()
+    {
+        add_filter('wp_count_posts', [$this, 'filter_product_count'], 10, 3);
+    }
+
+    public function filter_product_count($counts, $type, $perm)
+    {
+        if ($type !== 'product' || !is_admin()) {
+            return $counts;
+        }
+
+        if (!is_user_logged_in()) {
+            return $counts;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
+            return $counts;
+        }
+
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
+            return $counts;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+        if (empty($assigned_locations)) {
+            $empty_counts = new stdClass();
+            foreach ($counts as $status => $count) {
+                $empty_counts->$status = 0;
+            }
+            return $empty_counts;
+        }
+
+        $filtered_counts = $this->get_filtered_product_counts($assigned_locations, $perm);
+        $updated_counts = new stdClass();
+        foreach ($counts as $status => $count) {
+            $updated_counts->$status = isset($filtered_counts[$status]) ? $filtered_counts[$status] : 0;
+        }
+
+        return $updated_counts;
+    }
+
+    private function get_filtered_product_counts($assigned_locations, $perm)
+    {
+        global $wpdb;
+
+        $assigned_locations = array_values(array_filter($assigned_locations));
+        if (empty($assigned_locations)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($assigned_locations), '%s'));
+        $params = array_merge(['mulopimfwc_store_location'], $assigned_locations);
+
+        $where = "p.post_type = 'product'
+            AND tt.taxonomy = %s
+            AND t.slug IN ({$placeholders})";
+
+        $post_type_object = get_post_type_object('product');
+        $can_read_private = $post_type_object && current_user_can($post_type_object->cap->read_private_posts);
+
+        if ('readable' === $perm && is_user_logged_in() && !$can_read_private) {
+            $where .= " AND (p.post_status != 'private' OR (p.post_status = 'private' AND p.post_author = %d))";
+            $params[] = get_current_user_id();
+        }
+
+        $sql = $wpdb->prepare("
+            SELECT p.post_status, COUNT(DISTINCT p.ID) AS num_posts
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+            INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+            WHERE {$where}
+            GROUP BY p.post_status
+        ", $params);
+
+        $results = (array) $wpdb->get_results($sql, ARRAY_A);
+        $counts = [];
+
+        foreach ($results as $row) {
+            $counts[$row['post_status']] = (int) $row['num_posts'];
+        }
+
+        return $counts;
+    }
+}
+
+new MULOPIMFWC_Product_Count_Filter();
+
+/**
+ * Filter product term counts in taxonomy lists for location managers without all_products capability.
+ */
+class MULOPIMFWC_Product_Term_Count_Filter
+{
+    public function __construct()
+    {
+        add_filter('get_terms', [$this, 'filter_product_term_counts'], 10, 4);
+    }
+
+    public function filter_product_term_counts($terms, $taxonomies, $args, $term_query)
+    {
+        if (!is_admin() || !is_user_logged_in() || is_wp_error($terms)) {
+            return $terms;
+        }
+
+        if (!is_array($terms) || empty($terms)) {
+            return $terms;
+        }
+
+        if (!class_exists('MULOPIMFWC_Location_Managers')) {
+            return $terms;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
+            return $terms;
+        }
+
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
+            return $terms;
+        }
+
+        if (!$this->is_product_taxonomy_list_screen($taxonomies)) {
+            return $terms;
+        }
+
+        if (isset($args['fields']) && !in_array($args['fields'], ['all', 'all_with_object_id'], true)) {
+            return $terms;
+        }
+
+        $taxonomy = $this->resolve_taxonomy($taxonomies, $terms);
+        if (empty($taxonomy) || $taxonomy === 'mulopimfwc_store_location') {
+            return $terms;
+        }
+
+        if (!is_object_in_taxonomy('product', $taxonomy)) {
+            return $terms;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+        if (empty($assigned_locations)) {
+            foreach ($terms as $term) {
+                if (is_object($term)) {
+                    $term->count = 0;
+                }
+            }
+            return $terms;
+        }
+
+        $term_ids = array_values(array_unique(array_map('intval', wp_list_pluck($terms, 'term_id'))));
+        if (empty($term_ids)) {
+            return $terms;
+        }
+
+        $counts = $this->get_location_filtered_term_counts($taxonomy, $term_ids, $assigned_locations);
+        foreach ($terms as $term) {
+            if (is_object($term) && isset($term->term_id)) {
+                $term->count = isset($counts[$term->term_id]) ? $counts[$term->term_id] : 0;
+            }
+        }
+
+        return $terms;
+    }
+
+    private function is_product_taxonomy_list_screen($taxonomies)
+    {
+        if (!function_exists('get_current_screen')) {
+            return false;
+        }
+
+        $screen = get_current_screen();
+        if (!$screen) {
+            return false;
+        }
+
+        if ($screen->base !== 'edit-tags' || $screen->post_type !== 'product') {
+            return false;
+        }
+
+        $taxonomies = (array) $taxonomies;
+        if (empty($screen->taxonomy) || !in_array($screen->taxonomy, $taxonomies, true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function resolve_taxonomy($taxonomies, $terms)
+    {
+        $taxonomies = (array) $taxonomies;
+        if (count($taxonomies) === 1) {
+            return $taxonomies[0];
+        }
+
+        if (function_exists('get_current_screen')) {
+            $screen = get_current_screen();
+            if ($screen && !empty($screen->taxonomy) && in_array($screen->taxonomy, $taxonomies, true)) {
+                return $screen->taxonomy;
+            }
+        }
+
+        $first_term = reset($terms);
+        if (is_object($first_term) && !empty($first_term->taxonomy)) {
+            return $first_term->taxonomy;
+        }
+
+        return $taxonomies[0] ?? '';
+    }
+
+    private function get_location_filtered_term_counts($taxonomy, $term_ids, $assigned_locations)
+    {
+        global $wpdb;
+
+        $term_ids = array_values(array_filter(array_map('intval', $term_ids)));
+        $assigned_locations = array_values(array_filter($assigned_locations));
+
+        if (empty($term_ids) || empty($assigned_locations)) {
+            return [];
+        }
+
+        $taxonomy_object = get_taxonomy($taxonomy);
+        $post_statuses = ['publish'];
+        if ($taxonomy_object) {
+            $post_statuses = apply_filters('update_post_term_count_statuses', $post_statuses, $taxonomy_object);
+        }
+
+        $post_statuses = array_values(array_filter($post_statuses));
+        if (empty($post_statuses)) {
+            return [];
+        }
+
+        $status_placeholders = implode(',', array_fill(0, count($post_statuses), '%s'));
+        $term_placeholders = implode(',', array_fill(0, count($term_ids), '%d'));
+        $location_placeholders = implode(',', array_fill(0, count($assigned_locations), '%s'));
+
+        $sql = "
+            SELECT tt.term_id, COUNT(DISTINCT p.ID) AS term_count
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+            INNER JOIN {$wpdb->term_relationships} tr_loc ON p.ID = tr_loc.object_id
+            INNER JOIN {$wpdb->term_taxonomy} tt_loc ON tr_loc.term_taxonomy_id = tt_loc.term_taxonomy_id
+            INNER JOIN {$wpdb->terms} t_loc ON tt_loc.term_id = t_loc.term_id
+            WHERE p.post_type = 'product'
+                AND p.post_status IN ({$status_placeholders})
+                AND tt.taxonomy = %s
+                AND tt.term_id IN ({$term_placeholders})
+                AND tt_loc.taxonomy = 'mulopimfwc_store_location'
+                AND t_loc.slug IN ({$location_placeholders})
+            GROUP BY tt.term_id
+        ";
+
+        $params = array_merge($post_statuses, [$taxonomy], $term_ids, $assigned_locations);
+        $prepared = $wpdb->prepare($sql, ...$params);
+        $results = (array) $wpdb->get_results($prepared, ARRAY_A);
+
+        $counts = [];
+        foreach ($results as $row) {
+            $counts[(int) $row['term_id']] = (int) $row['term_count'];
+        }
+
+        return $counts;
+    }
+}
+
+new MULOPIMFWC_Product_Term_Count_Filter();
+
+/**
  * Alternative approach: Hook into WooCommerce reports and dashboard widgets
  */
 add_filter('woocommerce_reports_order_statuses', function ($order_statuses) {
     $filter = new MULOPIMFWC_Order_Count_Filter();
     if (
         method_exists($filter, 'is_current_user_location_manager') &&
-        $filter->is_current_user_location_manager()
+        $filter->is_current_user_location_manager() &&
+        !MULOPIMFWC_Location_Managers::user_has_capability('all_orders')
     ) {
         // This ensures reports also respect location filtering
         add_filter('woocommerce_reports_get_order_report_query', function ($query) {

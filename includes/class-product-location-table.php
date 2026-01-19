@@ -744,6 +744,26 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         // Build tax_query array for multiple filters
         $tax_queries = [];
 
+        // Limit products for location managers without all_products capability
+        if (is_user_logged_in() && class_exists('MULOPIMFWC_Location_Managers')) {
+            $user = wp_get_current_user();
+            if (in_array('mulopimfwc_location_manager', $user->roles, true)) {
+                if (!MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
+                    $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+                    if (empty($assigned_locations)) {
+                        $args['post__in'] = [0];
+                    } else {
+                        $tax_queries[] = [
+                            'taxonomy' => 'mulopimfwc_store_location',
+                            'field'    => 'slug',
+                            'terms'    => $assigned_locations,
+                            'operator' => 'IN',
+                        ];
+                    }
+                }
+            }
+        }
+
         // Add location filter if set
         if (isset($_REQUEST['filter-by-location']) && !empty($_REQUEST['filter-by-location'])) {
             $tax_queries[] = [
