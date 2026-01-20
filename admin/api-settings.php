@@ -168,9 +168,7 @@ class MULOPIMFWC_API_Settings {
         settings_errors('mulopimfwc_api_settings');
         ?>
         <div>           
-            <div class="card" style="margin-bottom: 20px;">
-                <h2 style="margin-top: 0;"><?php echo esc_html__('API Authentication', 'multi-location-product-and-inventory-management'); ?></h2>
-                
+            <div style="margin-bottom: 20px;">
                 <table class="form-table">
                     <tr>
                         <th style="width: 200px;"><?php echo esc_html__('API Key', 'multi-location-product-and-inventory-management'); ?></th>

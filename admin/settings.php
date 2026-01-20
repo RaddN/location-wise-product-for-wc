@@ -6258,7 +6258,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     }
 
                     // Run on page load
-                    toggleDefaultTemplateFields();
+                    setTimeout(function() {
+                        toggleDefaultTemplateFields();
+                    }, 2000);
 
                     // Run when template selection changes
                     $('#template_selection').on('change', function() {

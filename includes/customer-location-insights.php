@@ -484,12 +484,17 @@ class Mulopimfwc_Customer_Location_Insights
         $order_ids = wc_get_orders([
             'limit' => -1,
             'status' => $all_statuses,
+            'type' => ['shop_order'],
             'return' => 'ids'
         ]);
 
         foreach ($order_ids as $order_id) {
             $order = wc_get_order($order_id);
             if (!$order) {
+                continue;
+            }
+
+            if (is_callable([$order, 'get_type']) && $order->get_type() === 'shop_order_refund') {
                 continue;
             }
 
@@ -508,13 +513,18 @@ class Mulopimfwc_Customer_Location_Insights
 
             $this->order_stats_cache[$slug]['purchases']++;
 
-            $customer_id = $order->get_customer_id();
+            $customer_id = null;
+            if (is_callable([$order, 'get_customer_id'])) {
+                $customer_id = $order->get_customer_id();
+            } elseif (is_callable([$order, 'get_user_id'])) {
+                $customer_id = $order->get_user_id();
+            }
             if ($customer_id) {
                 $this->order_stats_cache[$slug]['unique_customers'][$customer_id] = true;
             }
 
             // Use order key as a pseudo-session identifier to avoid zero counts.
-            $order_key = $order->get_order_key();
+            $order_key = is_callable([$order, 'get_order_key']) ? $order->get_order_key() : '';
             if ($order_key) {
                 $this->order_stats_cache[$slug]['unique_sessions'][$order_key] = true;
             }
