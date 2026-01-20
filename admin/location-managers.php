@@ -1944,7 +1944,7 @@ class MULOPIMFWC_Order_Filter
                 sprintf(
                     // translators: %s: List of location names (e.g. "Sydney, Melbourne")
                     esc_html__('You are viewing orders for: %s', 'multi-location-product-and-inventory-management'),
-                    '<strong>' . implode(', ', esc_attr($location_names)) . '</strong>'
+                    '<strong>' . esc_attr(implode(', ', $location_names)) . '</strong>'
                 ) .
                 '</p></div>';
         }
