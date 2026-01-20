@@ -18,10 +18,15 @@ class MULOPIMFWC_Admin
         add_action('admin_head-nav-menus.php', [$this, 'register_location_nav_menu_meta_box']);
         add_filter('wp_link_query', [$this, 'add_locations_to_link_query'], 10, 2);
         // Add custom column to orders table
+        add_filter('woocommerce_shop_order_list_table_columns', array($this, 'add_location_column'), 20);
         add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'add_location_column'), 20);
         add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'display_location_column_content'), 20, 2);
+        add_filter('manage_edit-shop_order_columns', array($this, 'add_location_column'), 20);
+        add_filter('manage_shop_order_posts_columns', array($this, 'add_location_column'), 20);
+        add_action('manage_shop_order_posts_custom_column', array($this, 'display_location_column_content'), 20, 2);
         // Add metabox to order details
         add_action('add_meta_boxes', array($this, 'add_location_metabox'));
+        add_action('woocommerce_process_shop_order_meta', array($this, 'save_location_metabox'), 20, 2);
 
         // Add custom fields to location taxonomy
         add_action('mulopimfwc_store_location_add_form_fields', array($this, 'add_location_fields'));
@@ -1238,17 +1243,51 @@ class MULOPIMFWC_Admin
      */
     public function add_location_column($columns)
     {
+        if (isset($columns['mulopimfwc_store_location'])) {
+            return $columns;
+        }
+
         $new_columns = array();
+        $inserted = false;
 
         foreach ($columns as $column_name => $column_info) {
             $new_columns[$column_name] = $column_info;
 
-            if ('order_status' === $column_name) {
+            if (!$inserted && in_array($column_name, array('order_status', 'status'), true)) {
                 $new_columns['mulopimfwc_store_location'] = __('Store Location', 'multi-location-product-and-inventory-management');
+                $inserted = true;
             }
         }
 
+        if (!$inserted) {
+            $new_columns['mulopimfwc_store_location'] = __('Store Location', 'multi-location-product-and-inventory-management');
+        }
+
         return $new_columns;
+    }
+
+    private function get_location_label($location_slug)
+    {
+        $location_slug = (string) $location_slug;
+
+        if ($location_slug === '') {
+            return '';
+        }
+
+        if ($location_slug === 'all-products') {
+            return __('All Products', 'multi-location-product-and-inventory-management');
+        }
+
+        if ($location_slug === 'unassigned') {
+            return __('Unassigned location', 'multi-location-product-and-inventory-management');
+        }
+
+        $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+        if ($term && !is_wp_error($term)) {
+            return $term->name;
+        }
+
+        return str_replace(array('_', '-'), ' ', ucwords($location_slug));
     }
     /**
      * Display location in orders table column
@@ -1258,10 +1297,19 @@ class MULOPIMFWC_Admin
      */
     public function display_location_column_content($column, $order)
     {
-        if ($column == 'mulopimfwc_store_location') {
-            $location = $order->get_meta('_store_location');
-            echo esc_html($location ? ucfirst(strtolower($location)) : '—');
+        if ($column !== 'mulopimfwc_store_location') {
+            return;
         }
+
+        $order_obj = $order instanceof WC_Order ? $order : wc_get_order($order);
+        if (!$order_obj) {
+            echo esc_html('—');
+            return;
+        }
+
+        $location_slug = (string) $order_obj->get_meta('_store_location');
+        $location_label = $this->get_location_label($location_slug);
+        echo esc_html($location_label !== '' ? $location_label : '—');
     }
     /**
      * Add location metabox to order details
@@ -1315,17 +1363,101 @@ class MULOPIMFWC_Admin
             return;
         }
 
-        $location = $order->get_meta('_store_location');
+        $location_slug = (string) $order->get_meta('_store_location');
+        $locations = get_terms(array(
+            'taxonomy' => 'mulopimfwc_store_location',
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+        ));
+        $can_edit = current_user_can('edit_shop_order', $order->get_id()) || current_user_can('manage_woocommerce');
 
         echo '<div class="wc-store-location-container">';
 
-        if (!empty($location)) {
-            echo '<p>' . esc_html(ucfirst(strtolower($location))) . '</p>';
+        wp_nonce_field('mulopimfwc_store_location_metabox', 'mulopimfwc_store_location_nonce');
+
+        if (!is_wp_error($locations) && !empty($locations)) {
+            echo '<p>';
+            echo '<label for="mulopimfwc_store_location" class="screen-reader-text">' . esc_html__('Store Location', 'multi-location-product-and-inventory-management') . '</label>';
+            echo '<select name="mulopimfwc_store_location" id="mulopimfwc_store_location"' . disabled(!$can_edit, true, false) . '>';
+            echo '<option value="">' . esc_html__('Unassigned location', 'multi-location-product-and-inventory-management') . '</option>';
+
+            $has_current = false;
+            foreach ($locations as $location_term) {
+                if ($location_term->slug === $location_slug) {
+                    $has_current = true;
+                    break;
+                }
+            }
+
+            if (!$has_current && $location_slug !== '') {
+                echo '<option value="' . esc_attr($location_slug) . '" selected="selected">' . esc_html($this->get_location_label($location_slug)) . '</option>';
+            }
+
+            foreach ($locations as $location_term) {
+                echo '<option value="' . esc_attr($location_term->slug) . '" ' . selected($location_slug, $location_term->slug, false) . '>';
+                echo esc_html($location_term->name);
+                echo '</option>';
+            }
+
+            echo '</select>';
+            echo '</p>';
+            echo '<p class="description">' . esc_html__('Update the store location for this order.', 'multi-location-product-and-inventory-management') . '</p>';
         } else {
-            echo '<p>' . esc_html__('No location data available', 'multi-location-product-and-inventory-management') . '</p>';
+            $location_label = $this->get_location_label($location_slug);
+            if ($location_label !== '') {
+                echo '<p>' . esc_html($location_label) . '</p>';
+            }
+            echo '<p class="description">' . esc_html__('No locations found. Add a location to enable changes.', 'multi-location-product-and-inventory-management') . '</p>';
+        }
+
+        if (!$can_edit) {
+            echo '<p class="description">' . esc_html__('You do not have permission to change the location.', 'multi-location-product-and-inventory-management') . '</p>';
         }
 
         echo '</div>';
+    }
+
+    public function save_location_metabox($order_id, $post_or_order)
+    {
+        if (!isset($_POST['mulopimfwc_store_location_nonce'])) {
+            return;
+        }
+
+        $nonce = sanitize_text_field(wp_unslash($_POST['mulopimfwc_store_location_nonce']));
+        if (!wp_verify_nonce($nonce, 'mulopimfwc_store_location_metabox')) {
+            return;
+        }
+
+        if (!current_user_can('edit_shop_order', $order_id) && !current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        if (!isset($_POST['mulopimfwc_store_location'])) {
+            return;
+        }
+
+        $new_location = sanitize_text_field(wp_unslash($_POST['mulopimfwc_store_location']));
+
+        $order = $post_or_order instanceof WC_Order ? $post_or_order : wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
+        $current_location = (string) $order->get_meta('_store_location');
+        if ($new_location === '') {
+            if ($current_location === '') {
+                return;
+            }
+            $order->delete_meta_data('_store_location');
+        } else {
+            if ($new_location === $current_location) {
+                return;
+            }
+            $order->update_meta_data('_store_location', $new_location);
+        }
+
+        $order->save();
     }
     public function register_store_location_taxonomy()
     {
