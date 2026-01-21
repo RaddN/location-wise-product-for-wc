@@ -2527,6 +2527,67 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_admin_notifications_section'
         );
 
+        // Test Notifications panel (floating + email)
+        add_settings_field(
+            'mulopimfwc_test_notifications_panel',
+            __('Test Notifications', 'multi-location-product-and-inventory-management'),
+            function () {
+                global $mulopimfwc_locations;
+
+                $locations = (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) ? $mulopimfwc_locations : [];
+                ?>
+                <div id="mulopimfwc-test-notifications-panel" style="max-width: 900px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+                        <div>
+                            <strong style="display:block; margin-bottom:2px;"><?php echo esc_html__('Quick tests', 'multi-location-product-and-inventory-management'); ?></strong>
+                            <span class="description"><?php echo esc_html__('Use this to verify floating notifications and email delivery/routing.', 'multi-location-product-and-inventory-management'); ?></span>
+                        </div>
+                        <button type="button" id="mulopimfwc-test-floating-notification" class="button button-secondary">
+                            <?php echo esc_html__('Test Floating Notification', 'multi-location-product-and-inventory-management'); ?>
+                        </button>
+                    </div>
+
+                    <hr style="margin:14px 0; border:0; border-top:1px solid #e5e7eb;">
+
+                    <div style="display:grid; grid-template-columns: 220px 1fr; gap:10px; align-items:center;">
+                        <label for="mulopimfwc-test-email-recipient-type" style="font-weight:600;"><?php echo esc_html__('Send test email to', 'multi-location-product-and-inventory-management'); ?></label>
+                        <select id="mulopimfwc-test-email-recipient-type">
+                            <option value="admin_email"><?php echo esc_html__('Admin email', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="location_contact"><?php echo esc_html__('Location contact email', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="location_manager"><?php echo esc_html__('Location manager (assigned)', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="custom"><?php echo esc_html__('Custom email address', 'multi-location-product-and-inventory-management'); ?></option>
+                        </select>
+
+                        <label for="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location-label" style="font-weight:600;"><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></label>
+                        <select id="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location">
+                            <option value=""><?php echo esc_html__('Select a location…', 'multi-location-product-and-inventory-management'); ?></option>
+                            <?php foreach ($locations as $loc) : ?>
+                                <option value="<?php echo esc_attr(rawurldecode($loc->slug)); ?>"><?php echo esc_html($loc->name); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+
+                        <label for="mulopimfwc-test-email-manager" class="mulopimfwc-test-email-manager-label" style="font-weight:600;"><?php echo esc_html__('Location manager', 'multi-location-product-and-inventory-management'); ?></label>
+                        <select id="mulopimfwc-test-email-manager" class="mulopimfwc-test-email-manager">
+                            <option value="all"><?php echo esc_html__('All managers for selected location', 'multi-location-product-and-inventory-management'); ?></option>
+                        </select>
+
+                        <label for="mulopimfwc-test-email-custom" class="mulopimfwc-test-email-custom-label" style="font-weight:600;"><?php echo esc_html__('Email address', 'multi-location-product-and-inventory-management'); ?></label>
+                        <input type="email" id="mulopimfwc-test-email-custom" class="mulopimfwc-test-email-custom" placeholder="<?php echo esc_attr__('name@example.com', 'multi-location-product-and-inventory-management'); ?>" />
+                    </div>
+
+                    <div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" id="mulopimfwc-send-test-email" class="button button-primary"><?php echo esc_html__('Send Test Email', 'multi-location-product-and-inventory-management'); ?></button>
+                        <span class="description"><?php echo esc_html__('This sends a simple test email and reports the resolved recipient(s).', 'multi-location-product-and-inventory-management'); ?></span>
+                    </div>
+
+                    <div id="mulopimfwc-test-email-result" style="margin-top:10px;"></div>
+                </div>
+                <?php
+            },
+            'lwp-admin-notification-settings',
+            'mulopimfwc_admin_notifications_section'
+        );
+
         add_settings_field(
             'notification_poll_interval',
             __('Poll interval (milliseconds)', 'multi-location-product-and-inventory-management'),

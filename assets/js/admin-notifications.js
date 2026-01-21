@@ -326,6 +326,97 @@
             }
         });
 
+        // Test floating notification (settings page)
+        $('#mulopimfwc-test-floating-notification').on('click', function () {
+            try {
+                const alert = {
+                    id: 'test-floating-' + Date.now(),
+                    label: 'Test Notification',
+                    message: 'This is a test floating notification.',
+                    severity: 'info',
+                    type: 'test',
+                    data: {}
+                };
+                const msg = formatAlertMessage(alert);
+                showFloatingNotification(alert, msg);
+            } catch (e) {
+                alert('❌ Failed to show floating notification. Check console for details.');
+            }
+        });
+
+        // Test email UI behavior + actions
+        function updateTestEmailUI() {
+            const type = $('#mulopimfwc-test-email-recipient-type').val();
+            const needsLocation = (type === 'location_contact' || type === 'location_manager');
+            const needsManager = (type === 'location_manager');
+            const needsCustom = (type === 'custom');
+
+            $('.mulopimfwc-test-email-location, .mulopimfwc-test-email-location-label').toggle(needsLocation);
+            $('.mulopimfwc-test-email-manager, .mulopimfwc-test-email-manager-label').toggle(needsManager);
+            $('.mulopimfwc-test-email-custom, .mulopimfwc-test-email-custom-label').toggle(needsCustom);
+        }
+
+        $('#mulopimfwc-test-email-recipient-type').on('change', function () {
+            updateTestEmailUI();
+        });
+
+        // Fetch managers for selected location
+        $('#mulopimfwc-test-email-location').on('change', function () {
+            const slug = $(this).val();
+            const $mgr = $('#mulopimfwc-test-email-manager');
+            $mgr.empty().append('<option value="all">All managers for selected location</option>');
+            if (!slug) return;
+
+            $.post(config.ajaxurl, {
+                action: 'mulopimfwc_get_location_managers',
+                nonce: config.test_nonce,
+                location_slug: slug
+            }).done(function (resp) {
+                if (!resp || !resp.success || !resp.data || !Array.isArray(resp.data.managers)) {
+                    return;
+                }
+                resp.data.managers.forEach(function (m) {
+                    $mgr.append('<option value="' + escapeHtml(String(m.id)) + '">' + escapeHtml(m.label) + '</option>');
+                });
+            });
+        });
+
+        $('#mulopimfwc-send-test-email').on('click', function () {
+            const $btn = $(this);
+            const $result = $('#mulopimfwc-test-email-result');
+            const type = $('#mulopimfwc-test-email-recipient-type').val();
+            const locationSlug = $('#mulopimfwc-test-email-location').val();
+            const managerId = $('#mulopimfwc-test-email-manager').val();
+            const customEmail = $('#mulopimfwc-test-email-custom').val();
+
+            $result.empty();
+
+            $btn.prop('disabled', true).text('Sending...');
+            $.post(config.ajaxurl, {
+                action: 'mulopimfwc_send_test_notification_email',
+                nonce: config.test_nonce,
+                recipient_type: type,
+                location_slug: locationSlug,
+                manager_user_id: managerId,
+                custom_email: customEmail
+            }).done(function (resp) {
+                if (resp && resp.success) {
+                    const list = (resp.data && resp.data.recipients) ? resp.data.recipients : [];
+                    $result.html('<div class="notice notice-success inline"><p><strong>✓ Sent.</strong> Recipients: ' + escapeHtml(list.join(', ')) + '</p></div>');
+                } else {
+                    const msg = resp && resp.data && resp.data.message ? resp.data.message : 'Failed to send.';
+                    $result.html('<div class="notice notice-error inline"><p><strong>❌</strong> ' + escapeHtml(msg) + '</p></div>');
+                }
+            }).fail(function () {
+                $result.html('<div class="notice notice-error inline"><p><strong>❌</strong> Request failed.</p></div>');
+            }).always(function () {
+                $btn.prop('disabled', false).text('Send Test Email');
+            });
+        });
+
+        // Initialize visibility
+        updateTestEmailUI();
+
         if (config.realtime_enabled !== 'off' && !isDashboardView()) {
             startPolling();
         }

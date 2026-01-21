@@ -708,8 +708,31 @@ if (!is_admin()) {
             $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
 
             if ($current_stock !== '') {
-                $new_stock = max(0, (int)$current_stock - $quantity);
+                $old_stock_int = (int) $current_stock;
+                $new_stock = max(0, $old_stock_int - (int) $quantity);
                 update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
+
+                // Trigger low/out-of-stock alerts when crossing thresholds (order-time stock reduction)
+                if (function_exists('mulopimfwc_send_location_stock_alert')) {
+                    $location_term = get_term($location_id, 'mulopimfwc_store_location');
+                    if ($location_term && !is_wp_error($location_term)) {
+                        $low_threshold = function_exists('mulopimfwc_get_location_threshold')
+                            ? mulopimfwc_get_location_threshold($location_id, 'low')
+                            : 5;
+                        $out_threshold = function_exists('mulopimfwc_get_location_threshold')
+                            ? mulopimfwc_get_location_threshold($location_id, 'out')
+                            : 0;
+
+                        // Out of stock alert
+                        if ($new_stock <= $out_threshold && $old_stock_int > $out_threshold) {
+                            mulopimfwc_send_location_stock_alert($target_id, $location_term, $new_stock, $out_threshold, 'out');
+                        }
+                        // Low stock alert (only if not already out-of-stock)
+                        elseif ($new_stock <= $low_threshold && $old_stock_int > $low_threshold) {
+                            mulopimfwc_send_location_stock_alert($target_id, $location_term, $new_stock, $low_threshold, 'low');
+                        }
+                    }
+                }
             }
         }
     });
@@ -1110,7 +1133,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.0');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -1131,7 +1154,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.0');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }

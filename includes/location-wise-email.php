@@ -22,6 +22,7 @@ class MULOPIMFWC_Location_Wise_Email {
         add_filter('woocommerce_email_recipient_new_order',       [$this, 'maybe_location_recipient'], 10, 2);
         add_filter('woocommerce_email_recipient_cancelled_order', [$this, 'maybe_location_recipient'], 10, 2);
         add_filter('woocommerce_email_recipient_failed_order',    [$this, 'maybe_location_recipient'], 10, 2);
+        add_filter('woocommerce_email_recipient_on_hold_order',   [$this, 'maybe_location_recipient'], 10, 2);
         // Add more email IDs here if you also want routing for them:
         // add_filter('woocommerce_email_recipient_on_hold_order',  [$this, 'maybe_location_recipient'], 10, 2);
         // add_filter('woocommerce_email_recipient_completed_order',[$this, 'maybe_location_recipient'], 10, 2);
@@ -156,13 +157,49 @@ class MULOPIMFWC_Location_Wise_Email {
         $term     = $this->get_location_term($loc_slug);
         if (!$term) return $recipient;
 
-        $loc_email = sanitize_email((string) get_term_meta($term->term_id, 'email', true));
-        if (!$loc_email || !is_email($loc_email)) return $recipient;
+        $options = $this->opts();
+        $order_recips_mode = isset($options['order_notification_recipients']) ? $options['order_notification_recipients'] : 'admin';
 
-        // Append (keeps HQ recipients intact). To replace entirely, just: return $loc_email;
-        $parts = array_filter(array_map('trim', explode(',', (string) $recipient)));
-        $parts[] = $loc_email;
-        $parts = array_unique($parts);
+        $include_admin = ($order_recips_mode === 'admin' || $order_recips_mode === 'both');
+        $include_manager = ($order_recips_mode === 'location_manager' || $order_recips_mode === 'both');
+
+        // Start with existing recipients only if admin is included
+        $parts = $include_admin
+            ? array_filter(array_map('trim', explode(',', (string) $recipient)))
+            : [];
+
+        // Location contact email (term meta 'email')
+        $loc_email = sanitize_email((string) get_term_meta($term->term_id, 'email', true));
+        if ($loc_email && is_email($loc_email)) {
+            $parts[] = $loc_email;
+        }
+
+        // Assigned location managers (user meta mulopimfwc_assigned_locations contains location slug)
+        if ($include_manager && $loc_slug) {
+            $managers = function_exists('mulopimfwc_get_location_managers_for_slug')
+                ? mulopimfwc_get_location_managers_for_slug($loc_slug)
+                : get_users([
+                    'role' => 'mulopimfwc_location_manager',
+                    'meta_query' => [
+                        [
+                            'key' => 'mulopimfwc_assigned_locations',
+                            'value' => $loc_slug,
+                            'compare' => 'LIKE',
+                        ],
+                    ],
+                    'fields' => 'all',
+                ]);
+
+            if (is_array($managers)) {
+                foreach ($managers as $m) {
+                    if (is_object($m) && !empty($m->user_email) && is_email($m->user_email)) {
+                        $parts[] = sanitize_email($m->user_email);
+                    }
+                }
+            }
+        }
+
+        $parts = array_values(array_unique(array_filter($parts)));
 
         return implode(',', $parts);
     }
