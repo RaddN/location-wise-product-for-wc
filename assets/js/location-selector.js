@@ -277,14 +277,11 @@
                         }
 
                         this.setLocationCookie(location);
-                        // Perform a hard reload, ensuring any potential form data is not resubmitted
-                        if (window.location.href.indexOf('//' + window.location.host + window.location.pathname) !== -1) {
-                            // Remove query and hash for a clean reload to prevent form resubmission prompt
-                            window.location.replace(window.location.origin + window.location.pathname);
-                        } else {
-                            // Fallback: full page reload (hard reload)
-                            window.location.reload(true);
-                        }
+                        // Perform a hard reload with cache-busting parameter
+                        var url = window.location.origin + window.location.pathname;
+                        var separator = '?';
+                        url += separator + 'mulopimfwc_loc=' + encodeURIComponent(location) + '&_t=' + Date.now();
+                        window.location.replace(url);
                         return;
                     }
 

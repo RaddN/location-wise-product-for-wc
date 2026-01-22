@@ -1451,7 +1451,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#f3e8ff;padding:10px;border-radius:6px">
-  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.2.1.1.2.2.2.3.1.1.1.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.2-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
+  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.2.1.1.2.2.2.3.1.1.1.9.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.2-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
 </svg>Location Hours & Availability', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure business hours and availability for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
@@ -1750,6 +1750,58 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'lwp-location-selection-settings',
             'mulopimfwc_product_filter_section'
         );
+
+        // Add "Default Location/Warehouse" section (separate panel)
+        add_settings_section(
+            'mulopimfwc_default_location_section',
+            __('<svg viewBox="0 0 24 24" 
+     xmlns="http://www.w3.org/2000/svg"
+     width="20" height="20" 
+     style="margin-right:6px;vertical-align:middle;background-color:#fef3c7;padding:10px;border-radius:6px">
+  <path fill="#f59e0b" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+</svg>Default Location/Warehouse', 'multi-location-product-and-inventory-management'),
+            function () {
+                echo '<p>' . esc_html__('Set a default location/warehouse that will be used when popup is not enabled and no location is selected.', 'multi-location-product-and-inventory-management') . '</p>';
+            },
+            'lwp-default-location-settings'
+        );
+
+        // Add "Default Location/Warehouse" field
+        add_settings_field(
+            'default_location',
+            __('Default Location/Warehouse', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = get_option('mulopimfwc_display_options', ['default_location' => '']);
+                $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+                
+                // Get all locations
+                $locations = get_terms([
+                    'taxonomy' => 'mulopimfwc_store_location',
+                    'hide_empty' => false,
+                ]);
+                
+                if (is_wp_error($locations)) {
+                    $locations = [];
+                }
+            ?>
+                <select name="mulopimfwc_display_options[default_location]" id="default_location_select">
+                    <option value=""><?php echo esc_html__('None', 'multi-location-product-and-inventory-management'); ?></option>
+                    <?php
+                    if (!empty($locations)) {
+                        foreach ($locations as $location) {
+                            $selected = selected($default_location, $location->slug, false);
+                            echo '<option value="' . esc_attr($location->slug) . '" ' . $selected . '>' . esc_html($location->name) . '</option>';
+                        }
+                    }
+                    ?>
+                </select>
+                <p class="description"><?php echo esc_html__('Select a default location/warehouse. This location will be used automatically when popup is disabled and no location cookie is set.', 'multi-location-product-and-inventory-management'); ?></p>
+            <?php
+            },
+            'lwp-default-location-settings',
+            'mulopimfwc_default_location_section'
+        );
+
 
 
         // Add "Store Locator Integration" section
@@ -2094,7 +2146,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
-                $value = isset($notif['realtime_enabled']) ? $notif['realtime_enabled'] : 'on';
+                $value = isset($notif['realtime_enabled']) ? $notif['realtime_enabled'] : '';
         ?>
             <label class="mulopimfwc_switch">
                 <input type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
@@ -2115,7 +2167,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
-                $value = isset($notif['floating_enabled']) ? $notif['floating_enabled'] : 'on';
+                $value = isset($notif['floating_enabled']) ? $notif['floating_enabled'] : '';
         ?>
             <label class="mulopimfwc_switch">
                 <input type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
@@ -4612,6 +4664,11 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 <div class="lwp-settings-section">
                                     <div class="lwp-settings-box">
                                         <?php do_settings_sections('lwp-location-selection-settings'); ?>
+                                    </div>
+                                </div>
+                                <div class="lwp-settings-section">
+                                    <div class="lwp-settings-box">
+                                        <?php do_settings_sections('lwp-default-location-settings'); ?>
                                     </div>
                                 </div>
                                 <div class="lwp-settings-section">

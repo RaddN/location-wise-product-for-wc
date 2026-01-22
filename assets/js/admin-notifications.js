@@ -142,7 +142,12 @@
 
     // Check if notification is seen (for floating)
     function isSeen(alertId) {
-        return getSeenNotifications().includes(alertId);
+        if (!alertId) {
+            return false;
+        }
+        const seen = getSeenNotifications();
+        // Also check if it's in the current session history
+        return seen.includes(alertId) || alertHistory.has(alertId);
     }
 
     // Get cleared notifications
@@ -477,29 +482,42 @@
         allNotifications = activeAlerts;
         updateAdminBarNotifications(activeAlerts);
 
+        // Get seen notifications once at the start to avoid multiple localStorage reads
+        // This improves performance and ensures consistency
+        const seenNotificationsSet = new Set(getSeenNotifications());
+
         activeAlerts.forEach(function (alert) {
             if (config.realtime_enabled === 'off') {
                 return;
             }
-            if (!alert.id || alertHistory.has(alert.id)) {
+            if (!alert.id) {
                 return;
             }
 
-            // Only show floating notification if it's NEW (not seen before)
-            const isNewNotification = !isSeen(alert.id);
+            // Check if notification has been seen before (persists across page reloads)
+            // Check both localStorage (via Set) and in-memory history
+            const hasBeenSeenInStorage = seenNotificationsSet.has(alert.id);
+            const hasBeenSeenInSession = alertHistory.has(alert.id);
 
-            if (isNewNotification) {
-                alertHistory.add(alert.id);
-                markAsSeen(alert.id); // Mark as seen so it won't show again on reload
-                const message = formatAlertMessage(alert);
+            // Skip if already seen in either storage or session
+            if (hasBeenSeenInStorage || hasBeenSeenInSession) {
+                return;
+            }
 
-                if (config.floating_enabled !== 'off') {
-                    showFloatingNotification(alert, message);
-                }
+            // This is a truly new notification - mark it immediately BEFORE showing
+            // Mark in both storage and session to prevent any race conditions
+            alertHistory.add(alert.id);
+            markAsSeen(alert.id); // Mark as seen immediately so it won't show again on reload
+            seenNotificationsSet.add(alert.id); // Also add to our local Set for this iteration
+            
+            const message = formatAlertMessage(alert);
 
-                if (config.pwa_enabled === 'on') {
-                    sendPushNotification(alert, message);
-                }
+            if (config.floating_enabled !== 'off') {
+                showFloatingNotification(alert, message);
+            }
+
+            if (config.pwa_enabled === 'on') {
+                sendPushNotification(alert, message);
             }
         });
     }
@@ -543,6 +561,26 @@
     }
 
     function showFloatingNotification(alert, message) {
+        if (!alert || !alert.id) {
+            return;
+        }
+
+        // Triple-check: storage, session, and DOM
+        // This prevents race conditions where the same notification might be processed twice
+        const seenInStorage = getSeenNotifications().includes(alert.id);
+        const seenInSession = alertHistory.has(alert.id);
+        const alreadyInDOM = floatContainer.find('.mulopimfwc-floating-notification[data-alert-id="' + alert.id + '"]').length > 0;
+        
+        if (seenInStorage || seenInSession || alreadyInDOM) {
+            // Already seen or already displayed, don't show again
+            return;
+        }
+
+        // Mark as seen IMMEDIATELY before creating DOM elements
+        // This ensures that even if there's a race condition, we won't show duplicates
+        markAsSeen(alert.id);
+        alertHistory.add(alert.id);
+
         const severity = alert.severity || 'info';
         const url = getNotificationUrl(alert);
         const size = config.floating_size || 'comfy';
@@ -590,6 +628,10 @@
         // Close button handler
         item.find('.mulopimfwc-notification-close').on('click', function (e) {
             e.stopPropagation();
+            // Mark as seen when user closes the notification
+            if (alert.id) {
+                markAsSeen(alert.id);
+            }
             item.removeClass('show');
             setTimeout(function () {
                 item.remove();
@@ -613,6 +655,10 @@
             clearTimeout(autoCloseTimeout);
             autoCloseTimeout = setTimeout(function () {
                 if (!item.is(':hover')) {
+                    // Mark as seen when notification auto-closes
+                    if (alert.id) {
+                        markAsSeen(alert.id);
+                    }
                     item.removeClass('show');
                     setTimeout(function () {
                         item.remove();

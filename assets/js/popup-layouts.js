@@ -154,10 +154,15 @@ jQuery(function ($) {
         var expiryDate = new Date(Date.now() + cookieDays * 24 * 60 * 60 * 1000);
         document.cookie = 'mulopimfwc_store_location=' + slug + ';expires=' + expiryDate.toUTCString() + ';path=/;samesite=lax';
         
-        // Hide modal and reload
+        // Hide modal and reload with cache-busting parameter
         $modal.hide();
         $('body').removeClass('mulopimfwc-modal-open');
-        window.location.href = window.location.href.split('?')[0];
+        
+        // Add cache-busting parameter to force fresh page load
+        var url = window.location.href.split('?')[0];
+        var separator = url.indexOf('?') !== -1 ? '&' : '?';
+        url += separator + 'mulopimfwc_loc=' + encodeURIComponent(slug) + '&_t=' + Date.now();
+        window.location.href = url;
     });
     }
 });

@@ -1645,7 +1645,16 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 },
 
                 reloadPage: function() {
-                    window.location.reload();
+                    // Reload with cache-busting parameter to bypass cache
+                    var url = window.location.href.split('?')[0];
+                    var separator = '?';
+                    var location = this.getUserLocation() || '';
+                    if (location) {
+                        url += separator + 'mulopimfwc_loc=' + encodeURIComponent(location) + '&_t=' + Date.now();
+                    } else {
+                        url += separator + '_t=' + Date.now();
+                    }
+                    window.location.href = url;
                 },
 
                 showAlert: function(message) {

@@ -136,7 +136,11 @@ jQuery(document).ready(function ($) {
             method: 'POST',
             data: { action: 'clear_cart' },
             success: function () {
-                window.location.href = window.location.href.split('?')[0];
+                // Reload with cache-busting parameter
+                var url = window.location.href.split('?')[0];
+                var separator = '?';
+                url += separator + '_t=' + Date.now();
+                window.location.href = url;
             },
             error: function () {
                 alert('Failed to clear the cart. Please try again.');
@@ -194,8 +198,6 @@ jQuery(document).ready(function ($) {
     $('#lwp-shortcode-selector-form').on('change', function () {
         const dropdown = $(this).find('#lwp-selected-store-shortcode') || $(this).find('#lwp-selected-store');
         const selectedStore = dropdown.val();
-        console.log(dropdown);
-        console.log(selectedStore);
         const selectedStoreLabel = dropdown.find('option:selected').text() || '';
         const matchedLocationId = findMatchingSavedLocationId(selectedStore, selectedStoreLabel);
 
@@ -248,7 +250,11 @@ jQuery(document).ready(function ($) {
             } else if (hasSavedLocationItems()) {
                 clearPluginCookie('mulopimfwc_user_location');
             }
-            window.location.href = window.location.href.split('?')[0];
+            // Reload with cache-busting parameter
+            var url = window.location.href.split('?')[0];
+            var separator = '?';
+            url += separator + 'mulopimfwc_loc=' + encodeURIComponent(selectedStore) + '&_t=' + Date.now();
+            window.location.href = url;
         }
     });
 

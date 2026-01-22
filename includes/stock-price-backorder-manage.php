@@ -361,7 +361,26 @@ add_action('woocommerce_save_product_variation', function ($variation_id, $loop)
 // Get current location
 function mulopimfwc_get_current_store_location()
 {
-    return isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
+    // First check if cookie is set
+    $cookie_location = isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
+    
+    if (!empty($cookie_location)) {
+        return $cookie_location;
+    }
+    
+    // If cookie is empty, check if popup is enabled
+    $options = get_option('mulopimfwc_display_options', []);
+    $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
+    
+    // If popup is disabled, use default location
+    if ($enable_popup === 'off') {
+        $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+        if (!empty($default_location)) {
+            return $default_location;
+        }
+    }
+    
+    return '';
 }
 
 // Get location term ID from slug
@@ -1133,7 +1152,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.9');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -1154,7 +1173,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.9');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }

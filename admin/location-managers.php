@@ -47,141 +47,276 @@ class MULOPIMFWC_Location_Managers
 
 
     /**
+     * Get expected capabilities for location manager role
+     * 
+     * @return array Expected capabilities array
+     */
+    private function get_expected_location_manager_capabilities()
+    {
+        // Get shop manager capabilities as base
+        $shop_manager = get_role('shop_manager');
+        $shop_manager_caps = $shop_manager ? $shop_manager->capabilities : [];
+
+        // Base capabilities for location manager (similar to shop manager)
+        $base_caps = [
+            // Core WordPress capabilities
+            'read' => true,
+            'level_0' => true,
+            'level_1' => true,
+            'level_2' => true,
+            'level_3' => true,
+            'level_4' => true,
+            'level_5' => true,
+
+            // Dashboard and admin access
+            'view_admin_dashboard' => true,
+            'access_dashboard' => true,
+
+            // Admin bar visibility (IMPORTANT for wp admin bar)
+            'show_admin_bar_front' => true,
+            'read_private_pages' => true,
+            'read_private_posts' => true,
+
+            // Profile management
+            'edit_profile' => true,
+            'read_profile' => true,
+
+            // WooCommerce capabilities (same as shop manager)
+            'view_woocommerce_reports' => false,
+            'read_shop_orders' => true,
+            'edit_shop_orders' => true,
+            'publish_shop_orders' => true,
+            'read_private_shop_orders' => true,
+            'edit_shop_order' => true,
+            'edit_others_shop_orders' => true,
+            'edit_published_shop_orders' => true,
+            'delete_shop_orders' => true,
+            'delete_published_shop_orders' => true,
+            'delete_others_shop_orders' => true,
+            'manage_woocommerce' => true,
+
+            // Product capabilities
+            'read_products' => true,
+            'edit_products' => true,
+            'publish_products' => true,
+            'edit_published_products' => true,
+            'edit_others_products' => true,
+            'delete_products' => true,
+            'delete_published_products' => true,
+            'delete_others_products' => true,
+            'manage_product_terms' => true,
+            'edit_product_terms' => true,
+            'delete_product_terms' => true,
+            'assign_product_terms' => true,
+
+            // Media capabilities
+            'upload_files' => true,
+            'edit_files' => true,
+
+            // Customer/User management (limited)
+            'list_users' => false,
+            'edit_users' => false,
+            'create_users' => false,
+
+            // Coupon capabilities
+            'read_shop_coupons' => true,
+            'edit_shop_coupons' => true,
+            'publish_shop_coupons' => true,
+            'edit_published_shop_coupons' => true,
+            'delete_shop_coupons' => true,
+
+            // our plugin page access
+            'manage_multi_location_inventory' => true,
+            'manage_location_stock' => true,
+            'access_location_management' => true,
+
+            // Prevent dangerous capabilities
+            'manage_options' => true,
+            'activate_plugins' => false,
+            'edit_theme_options' => false,
+            'update_core' => false,
+            'update_plugins' => false,
+            'update_themes' => false,
+            'install_plugins' => false,
+            'install_themes' => false,
+            'delete_themes' => false,
+            'delete_plugins' => false,
+            'edit_files' => false,
+            'delete_users' => false,
+            'remove_users' => false,
+            'promote_users' => false,
+            'edit_dashboard' => false,
+        ];
+
+        // Merge with shop manager capabilities if available
+        if (!empty($shop_manager_caps)) {
+            $capabilities = array_merge($shop_manager_caps, $base_caps);
+
+            // Remove dangerous capabilities
+            $dangerous_caps = [
+                'activate_plugins',
+                'edit_theme_options',
+                'update_core',
+                'update_plugins',
+                'update_themes',
+                'install_plugins',
+                'install_themes',
+                'delete_themes',
+                'delete_plugins',
+                'edit_files',
+                'delete_users',
+                'remove_users',
+                'promote_users',
+                'edit_dashboard'
+            ];
+
+            foreach ($dangerous_caps as $cap) {
+                $capabilities[$cap] = false;
+            }
+        } else {
+            $capabilities = $base_caps;
+        }
+
+        return $capabilities;
+    }
+
+    /**
+     * Validate location manager role
+     * Checks if role exists, has correct name, and all required capabilities
+     * 
+     * @return bool True if role is valid, false otherwise
+     */
+    private function validate_location_manager_role()
+    {
+        $role = get_role('mulopimfwc_location_manager');
+        
+        // Check if role exists
+        if (!$role) {
+            return false;
+        }
+
+        // Get expected role name
+        $expected_name = __('Location Manager', 'multi-location-product-and-inventory-management');
+        $wp_roles = wp_roles();
+        $actual_name = isset($wp_roles->roles['mulopimfwc_location_manager']['name']) 
+            ? $wp_roles->roles['mulopimfwc_location_manager']['name'] 
+            : '';
+
+        // Check if role name is correct (allow for translation variations)
+        if (empty($actual_name) && empty($expected_name)) {
+            // Both empty is acceptable (translation might not be loaded)
+        } elseif (empty($actual_name)) {
+            return false;
+        }
+
+        // Get expected capabilities
+        $expected_caps = $this->get_expected_location_manager_capabilities();
+        $actual_caps = $role->capabilities;
+
+        // Check if role has capabilities
+        if (empty($actual_caps) || !is_array($actual_caps)) {
+            return false;
+        }
+
+        // Check critical capabilities that must exist
+        $critical_caps = [
+            'read',
+            'manage_multi_location_inventory',
+            'manage_location_stock',
+            'access_location_management',
+        ];
+
+        foreach ($critical_caps as $cap) {
+            if (!isset($actual_caps[$cap]) || $actual_caps[$cap] !== true) {
+                return false;
+            }
+        }
+
+        // Role is valid if it exists, has a name, and has all critical capabilities
+        return true;
+    }
+
+    /**
+     * Remove location manager role
+     * 
+     * @return bool True if role was removed, false otherwise
+     */
+    private function remove_location_manager_role()
+    {
+        $role = get_role('mulopimfwc_location_manager');
+        
+        if (!$role) {
+            return true; // Already removed
+        }
+
+        // Get all users with this role
+        $users = get_users(['role' => 'mulopimfwc_location_manager']);
+        
+        // Mark users who had this role so we can restore them after recreation
+        foreach ($users as $user) {
+            // Store a flag that this user should have location manager role
+            update_user_meta($user->ID, '_mulopimfwc_should_be_location_manager', true);
+            // Temporarily change their role to customer to prevent data loss
+            $user->set_role('customer');
+        }
+
+        // Remove the role
+        remove_role('mulopimfwc_location_manager');
+        
+        return true;
+    }
+
+    /**
      * Create location manager role
+     * Validates existing role and recreates if invalid
      */
     public function create_location_manager_role()
     {
-        if (!get_role('mulopimfwc_location_manager')) {
-            // Get shop manager capabilities as base
-            $shop_manager = get_role('shop_manager');
-            $shop_manager_caps = $shop_manager ? $shop_manager->capabilities : [];
-
-            // Base capabilities for location manager (similar to shop manager)
-            $base_caps = [
-                // Core WordPress capabilities
-                'read' => true,
-                'level_0' => true,
-                'level_1' => true,
-                'level_2' => true,
-                'level_3' => true,
-                'level_4' => true,
-                'level_5' => true,
-
-                // Dashboard and admin access
-                'view_admin_dashboard' => true,
-                'access_dashboard' => true,
-
-                // Admin bar visibility (IMPORTANT for wp admin bar)
-                'show_admin_bar_front' => true,
-                'read_private_pages' => true,
-                'read_private_posts' => true,
-
-                // Profile management
-                'edit_profile' => true,
-                'read_profile' => true,
-
-                // WooCommerce capabilities (same as shop manager)
-                'view_woocommerce_reports' => false,
-                'read_shop_orders' => true,
-                'edit_shop_orders' => true,
-                'publish_shop_orders' => true,
-                'read_private_shop_orders' => true,
-                'edit_shop_order' => true,
-                'edit_others_shop_orders' => true,
-                'edit_published_shop_orders' => true,
-                'delete_shop_orders' => true,
-                'delete_published_shop_orders' => true,
-                'delete_others_shop_orders' => true,
-                'manage_woocommerce' => true,
-
-                // Product capabilities
-                'read_products' => true,
-                'edit_products' => true,
-                'publish_products' => true,
-                'edit_published_products' => true,
-                'edit_others_products' => true,
-                'delete_products' => true,
-                'delete_published_products' => true,
-                'delete_others_products' => true,
-                'manage_product_terms' => true,
-                'edit_product_terms' => true,
-                'delete_product_terms' => true,
-                'assign_product_terms' => true,
-
-                // Media capabilities
-                'upload_files' => true,
-                'edit_files' => true,
-
-                // Customer/User management (limited)
-                'list_users' => false,
-                'edit_users' => false,
-                'create_users' => false,
-
-                // Coupon capabilities
-                'read_shop_coupons' => true,
-                'edit_shop_coupons' => true,
-                'publish_shop_coupons' => true,
-                'edit_published_shop_coupons' => true,
-                'delete_shop_coupons' => true,
-
-                // our plugin page access
-                'manage_multi_location_inventory' => true,
-                'manage_location_stock' => true,
-                'access_location_management' => true,
-
-                // Prevent dangerous capabilities
-                'manage_options' => true,
-                'activate_plugins' => false,
-                'edit_theme_options' => false,
-                'update_core' => false,
-                'update_plugins' => false,
-                'update_themes' => false,
-                'install_plugins' => false,
-                'install_themes' => false,
-                'delete_themes' => false,
-                'delete_plugins' => false,
-                'edit_files' => false,
-                'delete_users' => false,
-                'remove_users' => false,
-                'promote_users' => false,
-                'edit_dashboard' => false,
-            ];
-
-            // Merge with shop manager capabilities if available
-            if (!empty($shop_manager_caps)) {
-                $capabilities = array_merge($shop_manager_caps, $base_caps);
-
-                // Remove dangerous capabilities
-                $dangerous_caps = [
-                    'activate_plugins',
-                    'edit_theme_options',
-                    'update_core',
-                    'update_plugins',
-                    'update_themes',
-                    'install_plugins',
-                    'install_themes',
-                    'delete_themes',
-                    'delete_plugins',
-                    'edit_files',
-                    'delete_users',
-                    'remove_users',
-                    'promote_users',
-                    'edit_dashboard'
-                ];
-
-                foreach ($dangerous_caps as $cap) {
-                    $capabilities[$cap] = false;
-                }
-            } else {
-                $capabilities = $base_caps;
-            }
-
-            add_role(
-                'mulopimfwc_location_manager',
-                __('Location Manager', 'multi-location-product-and-inventory-management'),
-                $capabilities
-            );
+        $role = get_role('mulopimfwc_location_manager');
+        
+        // If role doesn't exist, create it
+        if (!$role) {
+            $this->add_location_manager_role();
+            return;
         }
+
+        // Validate existing role
+        if (!$this->validate_location_manager_role()) {
+            // Role exists but is invalid - remove and recreate
+            $this->remove_location_manager_role();
+            $this->add_location_manager_role();
+            
+            // Restore users who had this role
+            $users = get_users([
+                'meta_key' => '_mulopimfwc_should_be_location_manager',
+                'meta_value' => true,
+            ]);
+            
+            foreach ($users as $user) {
+                // Remove the flag
+                delete_user_meta($user->ID, '_mulopimfwc_should_be_location_manager');
+                // Restore location manager role
+                $user->set_role('mulopimfwc_location_manager');
+            }
+        }
+    }
+
+    /**
+     * Add location manager role with all capabilities
+     * 
+     * @return bool True if role was added successfully
+     */
+    private function add_location_manager_role()
+    {
+        $capabilities = $this->get_expected_location_manager_capabilities();
+        
+        $result = add_role(
+            'mulopimfwc_location_manager',
+            __('Location Manager', 'multi-location-product-and-inventory-management'),
+            $capabilities
+        );
+
+        return $result !== null;
     }
 
     /**

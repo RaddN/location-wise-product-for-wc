@@ -26,7 +26,7 @@ class mulopimfwc_Import_Export
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '1.1.1',
+            '1.1.1.14',
             true
         );
 
