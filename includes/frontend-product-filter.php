@@ -379,18 +379,30 @@ class Location_Wise_Products_Filter
         $query = new WP_Query($args);
 
         // Filter by stock status if needed
-        // Note: For better performance with stock filtering, we need to query all matching products first
+        // Note: For better performance with stock filtering, we need to query matching products in batches
         // then filter by stock, then paginate. This is necessary because stock is stored in postmeta.
         if (!empty($stock_status)) {
-            // Get all matching products (not paginated) to filter by stock
-            $all_args = $args;
-            $all_args['posts_per_page'] = -1;
-            $all_args['paged'] = 1;
-            $all_query = new WP_Query($all_args);
+            // Process products in batches to prevent memory exhaustion
+            // Use a reasonable batch size (500 products per batch)
+            $batch_size = 500;
+            $batch_page = 1;
+            $filtered_posts = [];
+            $location_term = !empty($location_slug) ? get_term_by('slug', $location_slug, 'mulopimfwc_store_location') : null;
             
-            if ($all_query->have_posts()) {
-                $filtered_posts = [];
-                $location_term = !empty($location_slug) ? get_term_by('slug', $location_slug, 'mulopimfwc_store_location') : null;
+            // Increase memory limit for stock filtering
+            if (function_exists('ini_set')) {
+                @ini_set('memory_limit', '256M');
+            }
+            
+            do {
+                $all_args = $args;
+                $all_args['posts_per_page'] = $batch_size;
+                $all_args['paged'] = $batch_page;
+                $all_query = new WP_Query($all_args);
+                
+                if (!$all_query->have_posts()) {
+                    break;
+                }
 
                 while ($all_query->have_posts()) {
                     $all_query->the_post();
@@ -409,41 +421,44 @@ class Location_Wise_Products_Filter
                 }
 
                 wp_reset_postdata();
+                
+                // Safety check: limit total batches to prevent infinite loops
+                // Max 10,000 products (500 * 20 batches)
+                if ($batch_page >= 20) {
+                    break;
+                }
+                
+                $batch_page++;
+                
+            } while ($all_query->found_posts >= $batch_size);
 
-                // Re-query with filtered IDs and proper pagination
-                if (!empty($filtered_posts)) {
-                    $posts_per_page = $args['posts_per_page'];
-                    $offset = ($page - 1) * $posts_per_page;
-                    $paginated_posts = array_slice($filtered_posts, $offset, $posts_per_page);
+            // Re-query with filtered IDs and proper pagination
+            if (!empty($filtered_posts)) {
+                $posts_per_page = $args['posts_per_page'];
+                $offset = ($page - 1) * $posts_per_page;
+                $paginated_posts = array_slice($filtered_posts, $offset, $posts_per_page);
+                
+                if (!empty($paginated_posts)) {
+                    // Update args for paginated query
+                    $args['post__in'] = $paginated_posts;
+                    $args['orderby'] = isset($_POST['orderby']) && $_POST['orderby'] !== 'menu_order' 
+                        ? sanitize_text_field($_POST['orderby']) 
+                        : 'post__in';
+                    $args['paged'] = 1; // Already paginated via array_slice
                     
-                    if (!empty($paginated_posts)) {
-                        // Update args for paginated query
-                        $args['post__in'] = $paginated_posts;
-                        $args['orderby'] = isset($_POST['orderby']) && $_POST['orderby'] !== 'menu_order' 
-                            ? sanitize_text_field($_POST['orderby']) 
-                            : 'post__in';
-                        $args['paged'] = 1; // Already paginated via array_slice
-                        
-                        $query = new WP_Query($args);
-                        // Update found_posts to reflect filtered total
-                        $query->found_posts = count($filtered_posts);
-                        $query->max_num_pages = ceil(count($filtered_posts) / $posts_per_page);
-                    } else {
-                        // No products on this page
-                        $query->posts = [];
-                        $query->post_count = 0;
-                        $query->found_posts = count($filtered_posts);
-                        $query->max_num_pages = ceil(count($filtered_posts) / $posts_per_page);
-                    }
+                    $query = new WP_Query($args);
+                    // Update found_posts to reflect filtered total
+                    $query->found_posts = count($filtered_posts);
+                    $query->max_num_pages = ceil(count($filtered_posts) / $posts_per_page);
                 } else {
-                    // No products match stock filter
+                    // No products on this page
                     $query->posts = [];
                     $query->post_count = 0;
-                    $query->found_posts = 0;
-                    $query->max_num_pages = 0;
+                    $query->found_posts = count($filtered_posts);
+                    $query->max_num_pages = ceil(count($filtered_posts) / $posts_per_page);
                 }
             } else {
-                // No products match base query
+                // No products match stock filter
                 $query->posts = [];
                 $query->post_count = 0;
                 $query->found_posts = 0;

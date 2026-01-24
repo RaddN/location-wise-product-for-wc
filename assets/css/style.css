@@ -3,7 +3,10 @@
 
 /* Modal Styles */
 #lwp-store-selector-modal,
-.lwp-store-selector-modal {
+.lwp-store-selector-modal,
+.lwp-modern-popup,
+.lwp-classic-popup,
+.lwp-location-info-popup {
   position: fixed;
   top: 0;
   left: 0;
@@ -337,6 +340,7 @@
   box-shadow: 0 10px 24px rgba(31, 41, 55, 0.08);
   animation: lwpModernFadeUp 0.4s ease both;
   animation-delay: calc(var(--stagger) * 0.05s);
+  overflow: hidden;
 }
 
 .lwp-modern-card--simple {

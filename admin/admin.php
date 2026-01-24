@@ -930,59 +930,112 @@ class MULOPIMFWC_Admin
      */
     public function save_location_fields($term_id, $tt_id)
     {
+        // Security: Check user capabilities first
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        // Validate term_id
+        if (empty($term_id) || !is_numeric($term_id)) {
+            return;
+        }
+
+        // Security: Verify nonce (WordPress taxonomy forms use _wpnonce)
+        // For new terms: 'add-tag', for existing terms: 'update-tag_' . $term_id
+        $nonce_action = 'add-tag';
+        if ($term_id > 0) {
+            $nonce_action = 'update-tag_' . $term_id;
+        }
+
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), $nonce_action)) {
+            // Also check for add-tag in case it's a new term
+            if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'add-tag')) {
+                return;
+            }
+        }
+
         if (isset($_POST['street_address'])) {
-            update_term_meta($term_id, 'street_address', sanitize_text_field($_POST['street_address']));
+            update_term_meta($term_id, 'street_address', sanitize_text_field(wp_unslash($_POST['street_address'])));
         }
 
         if (isset($_POST['city'])) {
-            update_term_meta($term_id, 'city', sanitize_text_field($_POST['city']));
+            update_term_meta($term_id, 'city', sanitize_text_field(wp_unslash($_POST['city'])));
         }
 
         if (isset($_POST['state'])) {
-            update_term_meta($term_id, 'state', sanitize_text_field($_POST['state']));
+            update_term_meta($term_id, 'state', sanitize_text_field(wp_unslash($_POST['state'])));
         }
 
         if (isset($_POST['postal_code'])) {
-            update_term_meta($term_id, 'postal_code', sanitize_text_field($_POST['postal_code']));
+            update_term_meta($term_id, 'postal_code', sanitize_text_field(wp_unslash($_POST['postal_code'])));
         }
 
         if (isset($_POST['country'])) {
-            update_term_meta($term_id, 'country', sanitize_text_field($_POST['country']));
+            update_term_meta($term_id, 'country', sanitize_text_field(wp_unslash($_POST['country'])));
         }
 
         if (isset($_POST['email'])) {
-            update_term_meta($term_id, 'email', sanitize_email($_POST['email']));
+            $email = sanitize_email(wp_unslash($_POST['email']));
+            if (!empty($email) && is_email($email)) {
+                update_term_meta($term_id, 'email', $email);
+            }
         }
 
         if (isset($_POST['phone'])) {
-            update_term_meta($term_id, 'phone', sanitize_text_field($_POST['phone']));
+            update_term_meta($term_id, 'phone', sanitize_text_field(wp_unslash($_POST['phone'])));
         }
 
         if (isset($_POST['low_stock_threshold'])) {
-            update_term_meta($term_id, 'low_stock_threshold', max(0, (int) $_POST['low_stock_threshold']));
+            $threshold = absint($_POST['low_stock_threshold']);
+            update_term_meta($term_id, 'low_stock_threshold', $threshold);
         }
 
         if (isset($_POST['out_of_stock_threshold'])) {
-            update_term_meta($term_id, 'out_of_stock_threshold', max(0, (int) $_POST['out_of_stock_threshold']));
+            $threshold = absint($_POST['out_of_stock_threshold']);
+            update_term_meta($term_id, 'out_of_stock_threshold', $threshold);
         }
 
-        // Latitude / Longitude
+        // Latitude / Longitude - validate numeric ranges
         if (isset($_POST['latitude'])) {
-            update_term_meta($term_id, 'latitude', sanitize_text_field($_POST['latitude']));
+            $latitude = sanitize_text_field(wp_unslash($_POST['latitude']));
+            // Validate latitude range (-90 to 90)
+            if (is_numeric($latitude) && $latitude >= -90 && $latitude <= 90) {
+                update_term_meta($term_id, 'latitude', $latitude);
+            }
         }
         if (isset($_POST['longitude'])) {
-            update_term_meta($term_id, 'longitude', sanitize_text_field($_POST['longitude']));
+            $longitude = sanitize_text_field(wp_unslash($_POST['longitude']));
+            // Validate longitude range (-180 to 180)
+            if (is_numeric($longitude) && $longitude >= -180 && $longitude <= 180) {
+                update_term_meta($term_id, 'longitude', $longitude);
+            }
         }
 
-        // Logo (attachment ID)
+        // Logo (attachment ID) - validate attachment exists
         if (isset($_POST['logo_id'])) {
-            update_term_meta($term_id, 'logo_id', absint($_POST['logo_id']));
+            $logo_id = absint($_POST['logo_id']);
+            if ($logo_id > 0 && wp_attachment_is_image($logo_id)) {
+                update_term_meta($term_id, 'logo_id', $logo_id);
+            } elseif ($logo_id === 0) {
+                delete_term_meta($term_id, 'logo_id');
+            }
         }
 
-        // Gallery (CSV of IDs)
+        // Gallery (CSV of IDs) - validate attachments exist and limit count
         if (isset($_POST['gallery_ids'])) {
-            $ids = array_filter(array_map('absint', explode(',', (string) $_POST['gallery_ids'])));
-            update_term_meta($term_id, 'gallery_ids', $ids); // store as array for convenience
+            $ids = array_filter(array_map('absint', explode(',', (string) wp_unslash($_POST['gallery_ids']))));
+            // Validate each ID is a valid attachment and limit to 50 images
+            $valid_ids = [];
+            foreach ($ids as $id) {
+                if ($id > 0 && wp_attachment_is_image($id) && count($valid_ids) < 50) {
+                    $valid_ids[] = $id;
+                }
+            }
+            if (!empty($valid_ids)) {
+                update_term_meta($term_id, 'gallery_ids', $valid_ids);
+            } else {
+                delete_term_meta($term_id, 'gallery_ids');
+            }
         }
 
         // Business Hours
@@ -1028,8 +1081,13 @@ class MULOPIMFWC_Admin
 
         // Shipping Zones (array of IDs)
         if (isset($_POST['shipping_zones'])) {
-            $zones = array_map('absint', (array) $_POST['shipping_zones']);
-            update_term_meta($term_id, 'shipping_zones', $zones);
+            $zones = array_map('absint', (array) wp_unslash($_POST['shipping_zones']));
+            $zones = array_filter($zones); // Remove zeros
+            if (!empty($zones)) {
+                update_term_meta($term_id, 'shipping_zones', array_values(array_unique($zones)));
+            } else {
+                delete_term_meta($term_id, 'shipping_zones');
+            }
         } else {
             delete_term_meta($term_id, 'shipping_zones');
         }
@@ -1037,24 +1095,32 @@ class MULOPIMFWC_Admin
         // Shipping Methods (array of "zoneId:instanceId")
         if (isset($_POST['shipping_methods'])) {
             $methods = array();
-            foreach ((array) $_POST['shipping_methods'] as $val) {
+            foreach ((array) wp_unslash($_POST['shipping_methods']) as $val) {
                 // keep "zoneId:instanceId" pattern safe
                 $val = preg_replace('/[^0-9:]/', '', (string) $val);
                 if (preg_match('/^\d+:\d+$/', $val)) {
                     $methods[] = $val;
                 }
             }
-            $methods = array_values(array_unique($methods));
-            update_term_meta($term_id, 'shipping_methods', $methods);
+            if (!empty($methods)) {
+                $methods = array_values(array_unique($methods));
+                update_term_meta($term_id, 'shipping_methods', $methods);
+            } else {
+                delete_term_meta($term_id, 'shipping_methods');
+            }
         } else {
             delete_term_meta($term_id, 'shipping_methods');
         }
 
         // Payment Methods (gateway IDs)
         if (isset($_POST['payment_methods'])) {
-            $payments = array_map('wc_clean', (array) $_POST['payment_methods']);
-            $payments = array_values(array_unique($payments));
-            update_term_meta($term_id, 'payment_methods', $payments);
+            $payments = array_map('sanitize_text_field', array_map('wp_unslash', (array) $_POST['payment_methods']));
+            $payments = array_filter($payments); // Remove empty values
+            if (!empty($payments)) {
+                update_term_meta($term_id, 'payment_methods', array_values(array_unique($payments)));
+            } else {
+                delete_term_meta($term_id, 'payment_methods');
+            }
         } else {
             delete_term_meta($term_id, 'payment_methods');
         }
@@ -1062,14 +1128,18 @@ class MULOPIMFWC_Admin
         // Pickup Locations
         if (isset($_POST['pickup_locations']) && is_array($_POST['pickup_locations'])) {
             $pickup_locs = array();
-            foreach ($_POST['pickup_locations'] as $pickup_loc) {
+            foreach (wp_unslash($_POST['pickup_locations']) as $pickup_loc) {
                 $sanitized = sanitize_text_field($pickup_loc);
-                if (!empty($sanitized)) {
+                if (!empty($sanitized) && strlen($sanitized) <= 255) { // Limit length
                     $pickup_locs[] = $sanitized;
                 }
             }
-            $pickup_locs = array_values(array_unique($pickup_locs));
-            update_term_meta($term_id, 'pickup_locations', $pickup_locs);
+            if (!empty($pickup_locs)) {
+                $pickup_locs = array_values(array_unique($pickup_locs));
+                update_term_meta($term_id, 'pickup_locations', $pickup_locs);
+            } else {
+                delete_term_meta($term_id, 'pickup_locations');
+            }
         } else {
             delete_term_meta($term_id, 'pickup_locations');
         }
@@ -1080,7 +1150,7 @@ class MULOPIMFWC_Admin
         }
 
         if (isset($_POST['display_order'])) {
-            $display_order = intval($_POST['display_order']);
+            $display_order = absint($_POST['display_order']);
             update_term_meta($term_id, 'display_order', $display_order);
         }
     }

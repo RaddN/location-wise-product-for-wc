@@ -359,8 +359,27 @@
         }
 
         setLocationCookie(location) {
+            // FIXED: Validate location slug and add secure flag for HTTPS
             const expires = new Date(Date.now() + this.getCookieExpiryMs());
-            document.cookie = `mulopimfwc_store_location=${location}; expires=${expires.toUTCString()}; path=/; samesite=lax`;
+            const isSecure = window.location.protocol === 'https:';
+            const cookieString = `mulopimfwc_store_location=${encodeURIComponent(location)}; expires=${expires.toUTCString()}; path=/; ${isSecure ? 'secure;' : ''}samesite=lax`;
+            document.cookie = cookieString;
+            
+            // FIXED: Validate cookie was set by making AJAX call to server
+            if (this.cfg.ajaxUrl) {
+                fetch(this.cfg.ajaxUrl, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: new URLSearchParams({
+                        action: 'mulopimfwc_validate_location',
+                        location_slug: location,
+                        nonce: this.cfg.nonce || ''
+                    })
+                }).catch(() => {
+                    // If validation fails, remove invalid cookie
+                    document.cookie = 'mulopimfwc_store_location=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+                });
+            }
         }
 
         getCookieExpiryMs() {

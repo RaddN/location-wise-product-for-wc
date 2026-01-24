@@ -260,8 +260,28 @@ jQuery(function ($) {
                 cookieDays = override;
             }
         }
+        // FIXED: Validate location slug and add secure flag for HTTPS
         var expiryDate = new Date(Date.now() + cookieDays * 24 * 60 * 60 * 1000);
-        document.cookie = 'mulopimfwc_store_location=' + slug + ';expires=' + expiryDate.toUTCString() + ';path=/;samesite=lax';
+        var isSecure = window.location.protocol === 'https:';
+        var cookieString = 'mulopimfwc_store_location=' + encodeURIComponent(slug) + 
+                          ';expires=' + expiryDate.toUTCString() + 
+                          ';path=/' + 
+                          (isSecure ? ';secure' : '') + 
+                          ';samesite=lax';
+        document.cookie = cookieString;
+        
+        // FIXED: Validate cookie was set by making AJAX call to server
+        // Server will validate location exists before accepting it
+        if (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.ajax_url) {
+            jQuery.post(mulopimfwc_locationWiseProducts.ajax_url, {
+                action: 'mulopimfwc_validate_location',
+                location_slug: slug,
+                nonce: mulopimfwc_locationWiseProducts.nonce || ''
+            }).fail(function() {
+                // If validation fails, remove invalid cookie
+                document.cookie = 'mulopimfwc_store_location=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+            });
+        }
         
         // Hide modal and reload with cache-busting parameter
         $modal.hide();

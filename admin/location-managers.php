@@ -1498,9 +1498,27 @@ class MULOPIMFWC_Location_Managers
 
     public function restrict_location_manager_menus()
     {
-        if (!current_user_can('mulopimfwc_location_manager')) return;
+        // Don't restrict menus in network admin
+        if (is_network_admin()) {
+            return;
+        }
 
+        // Don't restrict menus for administrators or super admins
+        if (current_user_can('administrator') || (is_multisite() && is_super_admin())) {
+            return;
+        }
+
+        // Only restrict menus for location managers
         $manager = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', $manager->roles)) {
+            return;
+        }
+
+        // Double-check capability
+        if (!current_user_can('mulopimfwc_location_manager')) {
+            return;
+        }
+
         $manager_capabilities = get_user_meta($manager->ID, 'mulopimfwc_manager_capabilities', true);
 
         // If no capabilities are set, deny access to everything except dashboard and profile

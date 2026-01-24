@@ -138,20 +138,46 @@ class MULOPIMFWC_Inventory_Sync_API {
         }
         
         $items = $data['items'];
+        
+        // FIXED: Add input size limit to prevent DoS attacks and memory exhaustion
+        $max_items = apply_filters('mulopimfwc_max_bulk_sync_items', 1000);
+        if (count($items) > $max_items) {
+            return new WP_Error('too_many_items', sprintf(__('Too many items. Maximum %d items per request. Please split your request into smaller batches.', 'multi-location-product-and-inventory-management'), $max_items), array('status' => 400));
+        }
+        
+        // FIXED: Use database transaction for data integrity
+        global $wpdb;
+        $wpdb->query('START TRANSACTION');
+        
         $results = array(
             'success' => 0,
             'failed' => 0,
             'errors' => array(),
         );
         
-        foreach ($items as $item) {
+        $transaction_failed = false;
+        
+        foreach ($items as $index => $item) {
             $result = $this->process_inventory_item($item);
             if ($result['success']) {
                 $results['success']++;
             } else {
                 $results['failed']++;
-                $results['errors'][] = $result['error'];
+                $results['errors'][] = sprintf(__('Item %d: %s', 'multi-location-product-and-inventory-management'), $index + 1, $result['error']);
+                
+                // If too many failures, rollback transaction
+                if ($results['failed'] > ($max_items * 0.5)) { // More than 50% failures
+                    $transaction_failed = true;
+                    break;
+                }
             }
+        }
+        
+        if ($transaction_failed) {
+            $wpdb->query('ROLLBACK');
+            return new WP_Error('bulk_sync_failed', __('Bulk sync failed due to too many errors. All changes have been rolled back.', 'multi-location-product-and-inventory-management'), array('status' => 500));
+        } else {
+            $wpdb->query('COMMIT');
         }
         
         return rest_ensure_response(array(
@@ -227,14 +253,36 @@ class MULOPIMFWC_Inventory_Sync_API {
         $product_id = $product->get_id();
         $is_variation = $product->is_type('variation');
         
+        // FIXED: Use database locking to prevent race conditions in stock updates
+        global $wpdb;
+        
         // Update stock if provided
         if (isset($item['stock'])) {
             $stock = floatval($item['stock']);
+            
+            // Use row-level locking to prevent race conditions
+            $wpdb->query($wpdb->prepare("
+                SELECT meta_value 
+                FROM {$wpdb->postmeta} 
+                WHERE post_id = %d 
+                AND meta_key = %s 
+                FOR UPDATE
+            ", $product_id, '_location_stock_' . $location_id));
+            
             update_post_meta($product_id, '_location_stock_' . $location_id, $stock);
             
             // Update main stock if this is the primary location
             $primary_location = get_option('mulopimfwc_primary_location', '');
             if ($primary_location == $location_id || empty($primary_location)) {
+                // Also lock main stock update
+                $wpdb->query($wpdb->prepare("
+                    SELECT meta_value 
+                    FROM {$wpdb->postmeta} 
+                    WHERE post_id = %d 
+                    AND meta_key = '_stock' 
+                    FOR UPDATE
+                ", $product_id));
+                
                 wc_update_product_stock($product_id, $stock);
             }
         }
@@ -282,15 +330,33 @@ class MULOPIMFWC_Inventory_Sync_API {
     public function export_inventory($request) {
         $location_id = $request->get_param('location_id');
         $format = $request->get_param('format') ?: 'json'; // json or csv
+        $page = absint($request->get_param('page')) ?: 1;
+        $per_page = absint($request->get_param('per_page')) ?: 100; // Default batch size
+        
+        // Limit per_page to prevent memory issues (max 500 per request)
+        $per_page = min($per_page, 500);
+        
+        // Increase memory and time limits for export operations
+        if (function_exists('ini_set')) {
+            @ini_set('memory_limit', '512M');
+        }
+        @set_time_limit(300);
         
         $args = array(
             'post_type' => 'product',
-            'posts_per_page' => -1,
+            'posts_per_page' => $per_page,
+            'paged' => $page,
             'post_status' => 'publish',
             'fields' => 'ids',
+            'orderby' => 'ID',
+            'order' => 'ASC',
         );
         
-        $product_ids = get_posts($args);
+        $query = new WP_Query($args);
+        $product_ids = $query->posts;
+        $total_pages = $query->max_num_pages;
+        $total_products = $query->found_posts;
+        
         $data = array();
         
         foreach ($product_ids as $product_id) {
@@ -355,36 +421,64 @@ class MULOPIMFWC_Inventory_Sync_API {
             }
         }
         
+        // For CSV format, we need to handle pagination differently
         if ($format === 'csv') {
-            return $this->send_csv_response($data);
+            // If this is the first page, send headers and start CSV
+            if ($page === 1) {
+                return $this->send_csv_response($data, true, $total_products, $total_pages);
+            } else {
+                // For subsequent pages, append to CSV (requires special handling)
+                return $this->send_csv_response($data, false, $total_products, $total_pages, $page);
+            }
         }
         
+        // For JSON format, return paginated response
         return rest_ensure_response(array(
             'success' => true,
             'count' => count($data),
+            'total' => $total_products,
+            'total_pages' => $total_pages,
+            'current_page' => $page,
+            'per_page' => $per_page,
+            'has_more' => $page < $total_pages,
             'data' => $data,
         ));
     }
     
     /**
-     * Send CSV response
+     * Send CSV response with pagination support
      */
-    private function send_csv_response($data) {
-        if (empty($data)) {
+    private function send_csv_response($data, $is_first_page = true, $total_items = 0, $total_pages = 1, $current_page = 1) {
+        if (empty($data) && $is_first_page) {
             return new WP_Error('no_data', __('No data to export.', 'multi-location-product-and-inventory-management'), array('status' => 404));
         }
         
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=inventory-export-' . date('Y-m-d-His') . '.csv');
-        
-        $output = fopen('php://output', 'w');
-        
-        // Add BOM for UTF-8
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Headers
-        $headers = array('product_id', 'sku', 'product_name', 'location_id', 'location_slug', 'location_name', 'stock', 'regular_price', 'sale_price', 'backorders', 'disabled');
-        fputcsv($output, $headers);
+        // For CSV, we'll stream all data in batches
+        // If this is a paginated request, we need to handle it differently
+        if ($is_first_page) {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=inventory-export-' . date('Y-m-d-His') . '.csv');
+            
+            $output = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Headers
+            $headers = array('product_id', 'sku', 'product_name', 'location_id', 'location_slug', 'location_name', 'stock', 'regular_price', 'sale_price', 'backorders', 'disabled');
+            fputcsv($output, $headers);
+        } else {
+            // For subsequent pages, we can't append to already-sent CSV
+            // Return JSON with pagination info instead
+            return rest_ensure_response(array(
+                'success' => true,
+                'message' => __('CSV export requires all data. Please use JSON format for paginated exports, or increase per_page parameter.', 'multi-location-product-and-inventory-management'),
+                'count' => count($data),
+                'total' => $total_items,
+                'total_pages' => $total_pages,
+                'current_page' => $current_page,
+            ));
+        }
         
         // Data rows
         foreach ($data as $row) {
@@ -519,9 +613,66 @@ class MULOPIMFWC_Inventory_Sync_API {
      * Log webhook request
      */
     private function log_webhook($data) {
-        $log_file = WP_CONTENT_DIR . '/uploads/mulopimfwc-webhook-log-' . date('Y-m-d') . '.log';
-        $log_entry = date('Y-m-d H:i:s') . ' - ' . json_encode($data) . PHP_EOL;
-        @file_put_contents($log_file, $log_entry, FILE_APPEND);
+        // Validate uploads directory exists and is writable
+        $upload_dir = wp_upload_dir();
+        if (isset($upload_dir['error']) && $upload_dir['error'] !== false) {
+            error_log('Mulopimfwc: Cannot write webhook log - upload directory error: ' . $upload_dir['error']);
+            return;
+        }
+
+        $log_dir = $upload_dir['basedir'];
+        if (!is_dir($log_dir) || !is_writable($log_dir)) {
+            error_log('Mulopimfwc: Cannot write webhook log - directory not writable: ' . $log_dir);
+            return;
+        }
+
+        // Sanitize filename
+        $log_filename = 'mulopimfwc-webhook-log-' . date('Y-m-d') . '.log';
+        $log_file = trailingslashit($log_dir) . sanitize_file_name($log_filename);
+
+        // Validate file path is within uploads directory (security check)
+        $real_log_file = realpath($log_file);
+        $real_log_dir = realpath($log_dir);
+        if ($real_log_file === false || strpos($real_log_file, $real_log_dir) !== 0) {
+            error_log('Mulopimfwc: Invalid webhook log file path: ' . $log_file);
+            return;
+        }
+
+        // Limit log entry size (prevent huge logs)
+        $log_entry = date('Y-m-d H:i:s') . ' - ' . json_encode($data, JSON_UNESCAPED_SLASHES) . PHP_EOL;
+        if (strlen($log_entry) > 10000) {
+            $log_entry = date('Y-m-d H:i:s') . ' - [Log entry too large, truncated]' . PHP_EOL;
+        }
+
+        // Check disk space (at least 1MB free)
+        $free_space = disk_free_space($log_dir);
+        if ($free_space !== false && $free_space < 1048576) { // 1MB in bytes
+            error_log('Mulopimfwc: Cannot write webhook log - insufficient disk space');
+            return;
+        }
+
+        // Write log file with proper error handling
+        $result = file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+        if ($result === false) {
+            error_log('Mulopimfwc: Failed to write webhook log file: ' . $log_file);
+        }
+
+        // Rotate log if it gets too large (10MB limit)
+        if (file_exists($log_file) && filesize($log_file) > 10485760) { // 10MB
+            $rotated_file = $log_file . '.' . time() . '.old';
+            if (rename($log_file, $rotated_file)) {
+                // Keep only last 5 rotated logs
+                $old_logs = glob($log_dir . '/mulopimfwc-webhook-log-*.old');
+                if (count($old_logs) > 5) {
+                    usort($old_logs, function($a, $b) {
+                        return filemtime($a) - filemtime($b);
+                    });
+                    foreach (array_slice($old_logs, 0, -5) as $old_log) {
+                        @unlink($old_log);
+                    }
+                }
+            }
+        }
     }
 }
 

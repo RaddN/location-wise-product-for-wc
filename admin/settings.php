@@ -164,6 +164,111 @@ General Settings', 'multi-location-product-and-inventory-management'),
             'location_stock_general_section'
         );
 
+        // Add Branding Settings Section (in General tab)
+        add_settings_section(
+            'mulopimfwc_branding_settings_section',
+            __('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#fef3c7;padding:10px;border-radius:6px">
+  <path fill="#f59e0b" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+</svg>
+Branding & Styling Settings', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_settings_section_callback'],
+            'multi-location-product-and-inventory-management'
+        );
+
+        // Popup/Modal Colors
+        add_settings_field(
+            'branding_popup_background',
+            __('Popup Background Color', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_popup_background_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        add_settings_field(
+            'branding_popup_text',
+            __('Popup Text Color', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_popup_text_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        add_settings_field(
+            'branding_popup_overlay',
+            __('Popup Overlay Background', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_popup_overlay_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        // Primary & Secondary Colors
+        add_settings_field(
+            'branding_primary_color',
+            __('Primary Color', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_primary_color_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        add_settings_field(
+            'branding_secondary_color',
+            __('Secondary Color', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_secondary_color_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        add_settings_field(
+            'branding_border_color',
+            __('Border Color', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_border_color_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        // Button Colors
+        add_settings_field(
+            'branding_button_text',
+            __('Button Text Color', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_button_text_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        // Typography
+        add_settings_field(
+            'branding_font_size',
+            __('Base Font Size', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_font_size_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        add_settings_field(
+            'branding_font_family',
+            __('Font Family', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_font_family_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        // Box Shadow
+        add_settings_field(
+            'branding_box_shadow',
+            __('Box Shadow', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_box_shadow_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
+        // Border Radius
+        add_settings_field(
+            'branding_border_radius',
+            __('Border Radius', 'multi-location-product-and-inventory-management'),
+            [$this, 'branding_border_radius_field_callback'],
+            'multi-location-product-and-inventory-management',
+            'mulopimfwc_branding_settings_section'
+        );
+
         add_settings_field(
             'enable_location_by_user_role',
             __('Enable Location by User Role', 'multi-location-product-and-inventory-management'),
@@ -1451,7 +1556,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#f3e8ff;padding:10px;border-radius:6px">
-  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.2.1.1.2.2.2.3.1.1.1.30.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.2-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
+  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.2.1.1.2.2.2.3.1.1.1.50.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.2-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
 </svg>Location Hours & Availability', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure business hours and availability for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
@@ -4037,6 +4142,41 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $sanitized['enable_location_information'] = sanitize_text_field($input['enable_location_information']);
         }
 
+        // Handle branding options
+        if (isset($input['branding_popup_background'])) {
+            $sanitized['branding_popup_background'] = sanitize_text_field($input['branding_popup_background']);
+        }
+        if (isset($input['branding_popup_text'])) {
+            $sanitized['branding_popup_text'] = sanitize_text_field($input['branding_popup_text']);
+        }
+        if (isset($input['branding_popup_overlay'])) {
+            $sanitized['branding_popup_overlay'] = sanitize_text_field($input['branding_popup_overlay']);
+        }
+        if (isset($input['branding_primary_color'])) {
+            $sanitized['branding_primary_color'] = sanitize_text_field($input['branding_primary_color']);
+        }
+        if (isset($input['branding_secondary_color'])) {
+            $sanitized['branding_secondary_color'] = sanitize_text_field($input['branding_secondary_color']);
+        }
+        if (isset($input['branding_border_color'])) {
+            $sanitized['branding_border_color'] = sanitize_text_field($input['branding_border_color']);
+        }
+        if (isset($input['branding_button_text'])) {
+            $sanitized['branding_button_text'] = sanitize_text_field($input['branding_button_text']);
+        }
+        if (isset($input['branding_font_size'])) {
+            $sanitized['branding_font_size'] = sanitize_text_field($input['branding_font_size']);
+        }
+        if (isset($input['branding_font_family'])) {
+            $sanitized['branding_font_family'] = sanitize_text_field($input['branding_font_family']);
+        }
+        if (isset($input['branding_box_shadow'])) {
+            $sanitized['branding_box_shadow'] = sanitize_text_field($input['branding_box_shadow']);
+        }
+        if (isset($input['branding_border_radius'])) {
+            $sanitized['branding_border_radius'] = sanitize_text_field($input['branding_border_radius']);
+        }
+
         return $sanitized;
     }
 
@@ -4514,6 +4654,58 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                     <div class="lwp-settings-box">
                                         <div class="lwp-filter-settings lwp-location-show-title">
                                             <?php do_settings_sections('multi-location-product-and-inventory-management'); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lwp-settings-section">
+                                    <div class="lwp-settings-box">
+                                        <style>
+                                            .mulopimfwc-color-picker {
+                                                width: 80px;
+                                                height: 40px;
+                                                border: 1px solid #ddd;
+                                                border-radius: 4px;
+                                                cursor: pointer;
+                                                padding: 2px;
+                                            }
+                                            .mulopimfwc-branding-preview {
+                                                background: #f9fafb;
+                                                border: 1px solid #e5e7eb;
+                                                border-radius: 8px;
+                                                padding: 20px;
+                                                margin-top: 20px;
+                                            }
+                                            .mulopimfwc-branding-preview h3 {
+                                                margin-top: 0;
+                                                color: #1f2937;
+                                            }
+                                            .mulopimfwc-preview-box {
+                                                background: #fff;
+                                                border-radius: 12px;
+                                                padding: 20px;
+                                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                                margin-top: 15px;
+                                            }
+                                            .mulopimfwc-preview-button {
+                                                display: inline-block;
+                                                padding: 10px 20px;
+                                                border-radius: 6px;
+                                                margin-top: 10px;
+                                                cursor: default;
+                                            }
+                                        </style>
+                                        <?php 
+                                        $options = $this->get_display_options();
+                                        ?>
+                                        <div class="mulopimfwc-branding-preview">
+                                            <h3><?php echo esc_html__('Branding Preview', 'multi-location-product-and-inventory-management'); ?></h3>
+                                            <p class="description"><?php echo esc_html__('Your branding settings will be applied to all popups, buttons, and frontend elements. Changes take effect immediately after saving.', 'multi-location-product-and-inventory-management'); ?></p>
+                                            <div class="mulopimfwc-preview-box">
+                                                <p><strong><?php echo esc_html__('Sample Button:', 'multi-location-product-and-inventory-management'); ?></strong></p>
+                                                <button type="button" class="mulopimfwc-preview-button" style="background: <?php echo esc_attr(isset($options['branding_primary_color']) ? $options['branding_primary_color'] : '#2a9d8f'); ?>; color: <?php echo esc_attr(isset($options['branding_button_text']) ? $options['branding_button_text'] : '#ffffff'); ?>; border: none; padding: 10px 20px; border-radius: <?php echo esc_attr(isset($options['branding_border_radius']) ? $options['branding_border_radius'] : '20px'); ?>;">
+                                                    <?php echo esc_html__('Sample Button', 'multi-location-product-and-inventory-management'); ?>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -6481,5 +6673,245 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         if (isset($message) && !empty($message)) {
             echo "<p class='description' style='max-width: 800px;'>" . wp_kses($message, $mulopimfwc_allowed_tags) . "</p>";
         }
+    }
+
+    /**
+     * Branding Settings Section Callback
+     */
+    public function branding_settings_section_callback()
+    {
+        echo '<p>' . esc_html__('Customize the appearance and styling of popups, buttons, and other frontend elements to match your brand identity.', 'multi-location-product-and-inventory-management') . '</p>';
+    }
+
+    /**
+     * Color Picker UI Helper
+     */
+    private function render_color_picker($field_name, $current_value, $default_value, $recommended_colors = [])
+    {
+        $field_id = 'branding_' . $field_name;
+        $input_name = 'mulopimfwc_display_options[branding_' . $field_name . ']';
+        $value = !empty($current_value) ? $current_value : $default_value;
+        
+        // Default recommended colors if not provided
+        if (empty($recommended_colors)) {
+            $recommended_colors = ['#000000', '#ffffff', '#f5f5f5', '#e0e0e0', '#808080', '#6366f1'];
+        }
+        ?>
+        <div class="mulopimfwc-color-picker-wrapper" data-field-id="<?php echo esc_attr($field_id); ?>" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div class="mulopimfwc-color-preview" style="width: 48px; height: 48px; border-radius: 8px; background: <?php echo esc_attr($value); ?>; border: 2px solid #d1d5db; flex-shrink: 0; cursor: pointer;"></div>
+                <input type="color" id="<?php echo esc_attr($field_id); ?>_color" name="<?php echo esc_attr($input_name); ?>" value="<?php echo esc_attr($value); ?>" style="display: none;" />
+                <input type="text" id="<?php echo esc_attr($field_id); ?>_hex" value="<?php echo esc_attr($value); ?>" style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; font-size: 13px;" placeholder="#000000" />
+                <button type="button" class="button mulopimfwc-color-reset" data-default="<?php echo esc_attr($default_value); ?>" style="padding: 8px 16px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;"><?php echo esc_html__('Reset', 'multi-location-product-and-inventory-management'); ?></button>
+            </div>
+            <div class="mulopimfwc-color-swatches" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <?php foreach ($recommended_colors as $rec_color) : ?>
+                    <div class="mulopimfwc-color-swatch" data-color="<?php echo esc_attr($rec_color); ?>" style="width: 32px; height: 32px; border-radius: 50%; background: <?php echo esc_attr($rec_color); ?>; border: 2px solid <?php echo ($rec_color === $value) ? '#6366f1' : '#d1d5db'; ?>; cursor: pointer; transition: all 0.2s;" title="<?php echo esc_attr($rec_color); ?>"></div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <script>
+        (function() {
+            var wrapper = document.querySelector('[data-field-id="<?php echo esc_js($field_id); ?>"]');
+            if (!wrapper) return;
+            
+            var colorInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_color');
+            var hexInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_hex');
+            var preview = wrapper.querySelector('.mulopimfwc-color-preview');
+            var resetBtn = wrapper.querySelector('.mulopimfwc-color-reset');
+            var swatches = wrapper.querySelectorAll('.mulopimfwc-color-swatch');
+            
+            // Update preview and hex input when color input changes
+            colorInput.addEventListener('change', function() {
+                preview.style.background = this.value;
+                hexInput.value = this.value;
+                updateSwatchBorders();
+            });
+            
+            // Update color input and preview when hex input changes
+            hexInput.addEventListener('change', function() {
+                var val = this.value.trim();
+                if (/^#[0-9A-F]{6}$/i.test(val)) {
+                    colorInput.value = val;
+                    preview.style.background = val;
+                    updateSwatchBorders();
+                }
+            });
+            
+            // Click preview to open color picker
+            preview.addEventListener('click', function() {
+                colorInput.click();
+            });
+            
+            // Reset button
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    var defaultVal = this.getAttribute('data-default');
+                    colorInput.value = defaultVal;
+                    hexInput.value = defaultVal;
+                    preview.style.background = defaultVal;
+                    updateSwatchBorders();
+                });
+            }
+            
+            // Swatch selection
+            swatches.forEach(function(swatch) {
+                swatch.addEventListener('click', function() {
+                    var color = this.getAttribute('data-color');
+                    colorInput.value = color;
+                    hexInput.value = color;
+                    preview.style.background = color;
+                    updateSwatchBorders();
+                });
+            });
+            
+            // Update swatch borders based on current value
+            function updateSwatchBorders() {
+                var currentVal = colorInput.value.toLowerCase();
+                swatches.forEach(function(swatch) {
+                    var swatchColor = swatch.getAttribute('data-color').toLowerCase();
+                    swatch.style.borderColor = (swatchColor === currentVal) ? '#6366f1' : '#d1d5db';
+                });
+            }
+        })();
+        </script>
+        <?php
+    }
+
+    /**
+     * Branding Field Callbacks
+     */
+    public function branding_popup_background_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_popup_background']) ? $options['branding_popup_background'] : '#ffffff';
+        $recommended = ['#ffffff', '#f9fafb', '#f5f5f5', '#fef3c7', '#e0f2fe', '#fce7f3'];
+        $this->render_color_picker('popup_background', $value, '#ffffff', $recommended);
+        ?>
+        <p class="description"><?php echo esc_html__('Background color for popup/modal panels.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_popup_text_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_popup_text']) ? $options['branding_popup_text'] : '#1d1b16';
+        $recommended = ['#1d1b16', '#000000', '#1f2937', '#374151', '#4b5563', '#6b7280'];
+        $this->render_color_picker('popup_text', $value, '#1d1b16', $recommended);
+        ?>
+        <p class="description"><?php echo esc_html__('Text color for popup/modal content.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_popup_overlay_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_popup_overlay']) ? $options['branding_popup_overlay'] : 'rgba(15, 23, 42, 0.65)';
+        ?>
+        <input type="text" name="mulopimfwc_display_options[branding_popup_overlay]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="rgba(15, 23, 42, 0.65)" />
+        <p class="description"><?php echo esc_html__('Background color for popup overlay (supports rgba format).', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_primary_color_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_primary_color']) ? $options['branding_primary_color'] : '#2a9d8f';
+        $recommended = ['#2a9d8f', '#2563eb', '#059669', '#0d9488', '#14b8a6', '#6366f1'];
+        $this->render_color_picker('primary_color', $value, '#2a9d8f', $recommended);
+        ?>
+        <p class="description"><?php echo esc_html__('Primary color used for buttons, gradients, and main interactive elements. This replaces the button background color.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_secondary_color_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_secondary_color']) ? $options['branding_secondary_color'] : '#f4a261';
+        $recommended = ['#f4a261', '#f26419', '#f59e0b', '#ea580c', '#dc2626', '#ef4444'];
+        $this->render_color_picker('secondary_color', $value, '#f4a261', $recommended);
+        ?>
+        <p class="description"><?php echo esc_html__('Secondary color used for button hover states, gradients, and complementary elements. This replaces the button hover background color.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_border_color_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_border_color']) ? $options['branding_border_color'] : '#e7e0d6';
+        $recommended = ['#e7e0d6', '#e5e7eb', '#d1d5db', '#9ca3af', '#6b7280', '#4b5563'];
+        $this->render_color_picker('border_color', $value, '#e7e0d6', $recommended);
+        ?>
+        <p class="description"><?php echo esc_html__('Border color for popups, cards, inputs, and other bordered elements.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_button_text_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_button_text']) ? $options['branding_button_text'] : '#ffffff';
+        $recommended = ['#ffffff', '#f9fafb', '#f3f4f6', '#e5e7eb', '#ffffff', '#ffffff'];
+        $this->render_color_picker('button_text', $value, '#ffffff', $recommended);
+        ?>
+        <p class="description"><?php echo esc_html__('Text color for buttons.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_font_size_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_font_size']) ? $options['branding_font_size'] : '15px';
+        ?>
+        <input type="text" name="mulopimfwc_display_options[branding_font_size]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="15px" />
+        <p class="description"><?php echo esc_html__('Base font size (e.g., 15px, 16px, 1rem).', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_font_family_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_font_family']) ? $options['branding_font_family'] : 'Space Grotesk';
+        $font_options = [
+            'Space Grotesk' => 'Space Grotesk',
+            'Libre Baskerville' => 'Libre Baskerville',
+            'Arial' => 'Arial',
+            'Helvetica' => 'Helvetica',
+            'Georgia' => 'Georgia',
+            'Times New Roman' => 'Times New Roman',
+            'Verdana' => 'Verdana',
+            'Roboto' => 'Roboto',
+            'Open Sans' => 'Open Sans',
+            'Lato' => 'Lato',
+            'Montserrat' => 'Montserrat',
+            'Poppins' => 'Poppins',
+        ];
+        ?>
+        <select name="mulopimfwc_display_options[branding_font_family]" class="regular-text">
+            <?php foreach ($font_options as $font => $label) : ?>
+                <option value="<?php echo esc_attr($font); ?>" <?php selected($value, $font); ?>><?php echo esc_html($label); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <p class="description"><?php echo esc_html__('Font family for popup and frontend elements.', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_box_shadow_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_box_shadow']) ? $options['branding_box_shadow'] : '0 18px 45px rgba(24, 24, 24, 0.18)';
+        ?>
+        <input type="text" name="mulopimfwc_display_options[branding_box_shadow]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="0 18px 45px rgba(24, 24, 24, 0.18)" />
+        <p class="description"><?php echo esc_html__('Box shadow for popups and cards (e.g., 0 18px 45px rgba(24, 24, 24, 0.18)).', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
+    }
+
+    public function branding_border_radius_field_callback()
+    {
+        $options = $this->get_display_options();
+        $value = isset($options['branding_border_radius']) ? $options['branding_border_radius'] : '20px';
+        ?>
+        <input type="text" name="mulopimfwc_display_options[branding_border_radius]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="20px" />
+        <p class="description"><?php echo esc_html__('Border radius for popups and buttons (e.g., 20px, 10px, 5px).', 'multi-location-product-and-inventory-management'); ?></p>
+        <?php
     }
 }

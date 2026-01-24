@@ -152,8 +152,16 @@ add_action('pre_get_posts', 'mulopimfwc_hide_out_of_stock_products');
  */
 function mulopimfwc_filter_out_of_stock_products_where($where, $query)
 {
+    // FIXED: Added static flag to prevent infinite loops even if filter is added multiple times
+    static $filter_removed = false;
+    
+    if ($filter_removed) {
+        return $where;
+    }
+    
     if (!is_admin() && $query->is_main_query() && (is_shop() || is_product_category() || is_product_tag())) {
         // Remove this filter to prevent infinite loops
+        $filter_removed = true;
         remove_filter('posts_where', 'mulopimfwc_filter_out_of_stock_products_where', 10);
 
         global $wpdb;

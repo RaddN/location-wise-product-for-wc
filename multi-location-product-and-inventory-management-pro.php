@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.1.30
+ * Version: 1.1.1.50
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -21,9 +21,29 @@ if (!defined('ABSPATH')) exit;
 
 // Serve service worker at the very beginning to avoid any redirects
 // Check BEFORE WordPress loads to prevent any redirects
+// SECURITY: Added path validation and plugin activation check
 if (isset($_SERVER['REQUEST_URI'])) {
     $request_uri = filter_var($_SERVER['REQUEST_URI'], FILTER_SANITIZE_URL);
     if (preg_match('/\/mulopimfwc-sw\.js(\?.*)?$/i', $request_uri)) {
+        // SECURITY: Verify plugin is actually active by checking if plugin file exists
+        // This prevents serving service worker if plugin is deactivated
+        $plugin_file = __DIR__ . '/multi-location-product-and-inventory-management-pro.php';
+        if (!file_exists($plugin_file)) {
+            http_response_code(404);
+            exit;
+        }
+        
+        // SECURITY: Validate file path to prevent path traversal
+        $sw_file = __DIR__ . '/assets/js/service-worker.js';
+        $plugin_dir = realpath(__DIR__);
+        $sw_file_real = realpath($sw_file);
+        
+        // Ensure the service worker file is within the plugin directory
+        if (!$sw_file_real || strpos($sw_file_real, $plugin_dir) !== 0) {
+            http_response_code(404);
+            exit;
+        }
+        
         // Disable any output buffering
         while (ob_get_level()) {
             ob_end_clean();
@@ -39,7 +59,6 @@ if (isset($_SERVER['REQUEST_URI'])) {
         header('X-Content-Type-Options: nosniff');
 
         // Read and serve service worker file
-        $sw_file = __DIR__ . '/assets/js/service-worker.js';
         if (file_exists($sw_file) && is_readable($sw_file)) {
             readfile($sw_file);
         } else {
@@ -60,7 +79,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.1.1.30");
+    define("mulopimfwc_VERSION", "1.1.1.50");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -81,6 +100,231 @@ if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
         }
 
         return $value;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_branding_css')) {
+    /**
+     * Generate custom CSS based on branding settings
+     *
+     * @return string Custom CSS
+     */
+    function mulopimfwc_get_branding_css(): string
+    {
+        $options = get_option('mulopimfwc_display_options', []);
+        $css = '';
+
+        // Popup/Modal Colors
+        if (!empty($options['branding_popup_background'])) {
+            $css .= ".lwp-modern-popup { --lwp-modern-bg: {$options['branding_popup_background']}; }\n";
+            $css .= ".lwp-classic-popup { --lwp-classic-bg: {$options['branding_popup_background']}; }\n";
+            $css .= ".lwp-location-info-popup { --lwp-layout-bg: {$options['branding_popup_background']}; }\n";
+        }
+
+        if (!empty($options['branding_popup_text'])) {
+            $css .= ".lwp-modern-popup { --lwp-modern-ink: {$options['branding_popup_text']}; }\n";
+            $css .= ".lwp-classic-popup { --lwp-classic-ink: {$options['branding_popup_text']}; }\n";
+            $css .= ".lwp-location-info-popup { --lwp-layout-ink: {$options['branding_popup_text']}; }\n";
+        }
+
+        if (!empty($options['branding_popup_overlay'])) {
+            $css .= "#lwp-store-selector-modal.lwp-modern-popup,\n";
+            $css .= ".lwp-store-selector-modal.lwp-modern-popup { background: {$options['branding_popup_overlay']}; }\n";
+            $css .= "#lwp-store-selector-modal.lwp-classic-popup,\n";
+            $css .= ".lwp-store-selector-modal.lwp-classic-popup { background: {$options['branding_popup_overlay']}; }\n";
+            $css .= "#lwp-store-selector-modal.lwp-location-info-popup,\n";
+            $css .= ".lwp-store-selector-modal.lwp-location-info-popup { background: {$options['branding_popup_overlay']}; }\n";
+        }
+
+        // Primary & Secondary Colors (replaces button background/hover)
+        $primary_color = !empty($options['branding_primary_color']) ? $options['branding_primary_color'] : '#2a9d8f';
+        $secondary_color = !empty($options['branding_secondary_color']) ? $options['branding_secondary_color'] : '#f4a261';
+        $border_color = !empty($options['branding_border_color']) ? $options['branding_border_color'] : '#e7e0d6';
+
+        // Button Colors (using primary/secondary)
+        $css .= ".lwp-modern-button { background: {$primary_color} !important; }\n";
+        $css .= "#lwp-store-selector-submit { background: {$primary_color} !important; }\n";
+        $css .= ".lwp-classic-popup__footer #lwp-store-selector-submit { background: {$primary_color} !important; }\n";
+        $css .= ".lwp-location-info-popup__footer #lwp-store-selector-submit { background: {$primary_color} !important; }\n";
+
+        if (!empty($options['branding_button_text'])) {
+            $css .= ".lwp-modern-button { color: {$options['branding_button_text']} !important; }\n";
+            $css .= "#lwp-store-selector-submit { color: {$options['branding_button_text']} !important; }\n";
+            $css .= ".lwp-classic-popup__footer #lwp-store-selector-submit { color: {$options['branding_button_text']} !important; }\n";
+            $css .= ".lwp-location-info-popup__footer #lwp-store-selector-submit { color: {$options['branding_button_text']} !important; }\n";
+        }
+
+        // Button Hover (using secondary color)
+        $css .= ".lwp-modern-button:hover { background: {$secondary_color} !important; }\n";
+        $css .= "#lwp-store-selector-submit:hover { background: {$secondary_color} !important; }\n";
+        $css .= ".lwp-classic-popup__footer #lwp-store-selector-submit:hover { background: {$secondary_color} !important; }\n";
+        $css .= ".lwp-location-info-popup__footer #lwp-store-selector-submit:hover { background: {$secondary_color} !important; }\n";
+
+        // Gradient Background (using primary & secondary)
+        $css .= ".lwp-modern-popup__hero { background: linear-gradient(135deg, {$primary_color} 0%, {$secondary_color} 100%) !important; }\n";
+
+        // Border Color
+        $css .= ".lwp-modern-popup { --lwp-modern-border: {$border_color}; }\n";
+        $css .= ".lwp-classic-popup { --lwp-classic-border: {$border_color}; }\n";
+        $css .= ".lwp-modern-search-row input { border-color: {$border_color} !important; }\n";
+        $css .= ".lwp-classic-popup__search input { border-color: {$border_color} !important; }\n";
+        $css .= ".lwp-classic-popup__list { border-color: {$border_color} !important; }\n";
+        $css .= ".lwp-modern-ghost-button { border-color: {$border_color} !important; }\n";
+        
+        // Card Logo (using primary color)
+        $css .= ".lwp-modern-card__logo { color: {$primary_color} !important; }\n";
+        
+        // Location Select (using primary color)
+        $css .= ".lwp-modern-popup:not(.lwp-modern-popup--simple) .lwp-modern-location-select { background: {$primary_color} !important; }\n";
+        
+        // Classic Location Logo (using primary color)
+        $css .= ".lwp-classic-location__logo { background: {$primary_color}47 !important; color: {$primary_color} !important; }\n";
+        
+        // Classic Location Distance (using primary color)
+        $css .= ".lwp-classic-location__distance.has-distance { color: {$primary_color} !important; }\n";
+        
+        // Classic Select (using primary color)
+        $css .= ".lwp-classic-select { color: {$primary_color} !important; }\n";
+        
+        // Directions Button (using primary color)
+        $css .= ".mulopimfwc-btn-directions { background: {$primary_color} !important; color: #fff !important; }\n";
+        
+        // Overlay Item SVG (using primary color)
+        $css .= ".mulopimfwc-overlay-item svg { color: {$primary_color} !important; }\n";
+        
+        // Compact Item SVG and Links (using primary color)
+        $css .= ".mulopimfwc-compact-item svg { color: {$primary_color} !important; }\n";
+        $css .= ".mulopimfwc-compact-item a { color: {$primary_color} !important; }\n";
+        
+        // Primary Button (using primary color)
+        $css .= ".mulopimfwc-btn-primary { background: {$primary_color} !important; color: #fff !important; }\n";
+        
+        // Status Badge Colors (using secondary color variations)
+        if (function_exists('mulopimfwc_hex_to_rgb') && function_exists('mulopimfwc_rgb_to_hex') && function_exists('mulopimfwc_darken_color')) {
+            $secondary_rgb = mulopimfwc_hex_to_rgb($secondary_color);
+            if (is_array($secondary_rgb) && count($secondary_rgb) === 3) {
+                $secondary_light = mulopimfwc_rgb_to_hex($secondary_rgb[0], $secondary_rgb[1], $secondary_rgb[2], 0.15);
+                $secondary_dark = mulopimfwc_darken_color($secondary_color, 20);
+                $css .= ".lwp-modern-status-badge--open { background: {$secondary_light} !important; color: {$secondary_dark} !important; }\n";
+                
+                // Classic Location Status Open (using secondary color)
+                $css .= ".lwp-classic-location__status--open { background: {$secondary_light} !important; color: {$secondary_dark} !important; }\n";
+                
+                // Status Open (using secondary color)
+                $css .= ".mulopimfwc-status-open { background: {$secondary_light} !important; color: {$secondary_dark} !important; }\n";
+                
+                // Classic Location Hover (using secondary color with opacity)
+                $secondary_hover_bg = mulopimfwc_rgb_to_hex($secondary_rgb[0], $secondary_rgb[1], $secondary_rgb[2], 0.05);
+                $css .= ".lwp-classic-location:hover { background: {$secondary_hover_bg} !important; }\n";
+            }
+            
+            $primary_rgb = mulopimfwc_hex_to_rgb($primary_color);
+            if (is_array($primary_rgb) && count($primary_rgb) === 3) {
+                $primary_dark = mulopimfwc_darken_color($primary_color, 20);
+                
+                // Featured Card (using primary color)
+                $css .= ".lwp-modern-card--featured { border-color: rgba({$primary_rgb[0]}, {$primary_rgb[1]}, {$primary_rgb[2]}, 0.4) !important; box-shadow: 0 16px 34px rgba({$primary_rgb[0]}, {$primary_rgb[1]}, {$primary_rgb[2]}, 0.18) !important; }\n";
+                
+                // Status Ready (using primary dark)
+                $css .= ".lwp-modern-status[data-state=\"ready\"] { color: {$primary_dark} !important; }\n";
+            }
+            
+            // Logo Placeholder (using border color with opacity)
+            $border_rgb = mulopimfwc_hex_to_rgb($border_color);
+            if (is_array($border_rgb) && count($border_rgb) === 3) {
+                $logo_bg = mulopimfwc_rgb_to_hex($border_rgb[0], $border_rgb[1], $border_rgb[2], 0.1);
+                $css .= ".lwp-modern-card__logo--placeholder { background: {$logo_bg} !important; }\n";
+                
+                // Chip Background (using border color with opacity)
+                $chip_bg = mulopimfwc_rgb_to_hex($border_rgb[0], $border_rgb[1], $border_rgb[2], 0.15);
+                $css .= ".lwp-modern-chip { background: {$chip_bg} !important; }\n";
+            }
+            
+            // Classic Popup Status Approximate (using secondary color dark)
+            $secondary_dark = mulopimfwc_darken_color($secondary_color, 30);
+            if ($secondary_dark) {
+                $css .= ".lwp-classic-popup__status[data-state=\"approximate\"] { color: {$secondary_dark} !important; }\n";
+            }
+        }
+        
+        // Location Info Popup Tab Active/Selected (using secondary color)
+        $css .= ".lwp-location-info-popup .mulopimfwc-tab-item.active { border-left-color: {$secondary_color} !important; }\n";
+        $css .= ".lwp-location-info-popup .mulopimfwc-tab-item.is-selected { box-shadow: inset 4px 0 0 {$secondary_color} !important; }\n";
+        $css .= ".lwp-location-info-popup .mulopimfwc-tab-item::before { background: {$secondary_color} !important; }\n";
+
+        // Typography
+        if (!empty($options['branding_font_size'])) {
+            $css .= ".lwp-modern-popup__body,\n";
+            $css .= ".lwp-classic-popup__panel,\n";
+            $css .= ".lwp-location-info-popup__panel { font-size: {$options['branding_font_size']}; }\n";
+        }
+
+        if (!empty($options['branding_font_family'])) {
+            $font_family = esc_attr($options['branding_font_family']);
+            $css .= ".lwp-modern-popup { --lwp-modern-font: '{$font_family}', 'Trebuchet MS', sans-serif; }\n";
+            $css .= ".lwp-classic-popup { --lwp-classic-font-body: '{$font_family}', 'Trebuchet MS', sans-serif; }\n";
+            $css .= ".lwp-location-info-popup { --lwp-layout-font: '{$font_family}', 'Trebuchet MS', sans-serif; }\n";
+        }
+
+        // Box Shadow
+        if (!empty($options['branding_box_shadow'])) {
+            $css .= ".lwp-modern-popup__panel { box-shadow: {$options['branding_box_shadow']} !important; }\n";
+            $css .= ".lwp-classic-popup__panel { box-shadow: {$options['branding_box_shadow']} !important; }\n";
+            $css .= ".lwp-location-info-popup__panel { box-shadow: {$options['branding_box_shadow']} !important; }\n";
+        }
+
+        // Border Radius
+        if (!empty($options['branding_border_radius'])) {
+            $css .= ".lwp-modern-popup__panel { border-radius: {$options['branding_border_radius']} !important; }\n";
+            $css .= ".lwp-classic-popup__panel { border-radius: {$options['branding_border_radius']} !important; }\n";
+            $css .= ".lwp-location-info-popup__panel { border-radius: {$options['branding_border_radius']} !important; }\n";
+            $css .= ".lwp-modern-button { border-radius: {$options['branding_border_radius']} !important; }\n";
+            $css .= "#lwp-store-selector-submit { border-radius: {$options['branding_border_radius']} !important; }\n";
+        }
+
+        return $css;
+    }
+}
+
+/**
+ * Helper function to convert hex to RGB
+ */
+if (!function_exists('mulopimfwc_hex_to_rgb')) {
+    function mulopimfwc_hex_to_rgb($hex) {
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) == 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        return [
+            hexdec(substr($hex, 0, 2)),
+            hexdec(substr($hex, 2, 2)),
+            hexdec(substr($hex, 4, 2))
+        ];
+    }
+}
+
+/**
+ * Helper function to convert RGB to hex with opacity
+ */
+if (!function_exists('mulopimfwc_rgb_to_hex')) {
+    function mulopimfwc_rgb_to_hex($r, $g, $b, $opacity = 1) {
+        if ($opacity < 1) {
+            return "rgba({$r}, {$g}, {$b}, {$opacity})";
+        }
+        return sprintf("#%02x%02x%02x", $r, $g, $b);
+    }
+}
+
+/**
+ * Helper function to darken a color
+ */
+if (!function_exists('mulopimfwc_darken_color')) {
+    function mulopimfwc_darken_color($hex, $percent) {
+        $rgb = mulopimfwc_hex_to_rgb($hex);
+        $r = max(0, min(255, round($rgb[0] * (1 - $percent / 100))));
+        $g = max(0, min(255, round($rgb[1] * (1 - $percent / 100))));
+        $b = max(0, min(255, round($rgb[2] * (1 - $percent / 100))));
+        return sprintf("#%02x%02x%02x", $r, $g, $b);
     }
 }
 
@@ -125,9 +369,13 @@ if (!function_exists('mulopimfwc_set_location_cookie')) {
             return false;
         }
 
-        // Get location object if not provided
+        // FIXED: Validate location exists before setting cookie
         if ($location_obj === null && $location_slug !== 'all-products') {
             $location_obj = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+            if (!$location_obj || is_wp_error($location_obj)) {
+                // Invalid location - don't set cookie
+                return false;
+            }
         }
 
         // Get cookie name (filterable)
@@ -194,12 +442,124 @@ add_action('init', function () {
     }
 }, 1);
 
-if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+// Enhanced WooCommerce dependency check
+// Check if WooCommerce is active (including network-activated in multisite)
+function mulopimfwc_is_woocommerce_active() {
+    // Check regular active plugins
+    if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+        return true;
+    }
+    
+    // Check network-activated plugins (multisite)
+    if (is_multisite()) {
+        $network_plugins = get_site_option('active_sitewide_plugins', array());
+        if (isset($network_plugins['woocommerce/woocommerce.php'])) {
+            return true;
+        }
+    }
+    
+    // Check if WooCommerce class exists (actually loaded)
+    if (class_exists('WooCommerce')) {
+        return true;
+    }
+    
+    return false;
+}
+
+// Check WooCommerce version compatibility
+// FIXED: Use multiple methods to get WooCommerce version reliably
+function mulopimfwc_check_woocommerce_version() {
+    $wc_version = null;
+    
+    // Method 1: Check WC_VERSION constant (most reliable, defined by WooCommerce)
+    if (defined('WC_VERSION')) {
+        $wc_version = WC_VERSION;
+    } 
+    // Method 2: Get from WooCommerce plugin data (works even if constant not defined yet)
+    elseif (function_exists('get_plugin_data')) {
+        $wc_plugin_path = WP_PLUGIN_DIR . '/woocommerce/woocommerce.php';
+        if (file_exists($wc_plugin_path)) {
+            $wc_plugin_data = get_plugin_data($wc_plugin_path, false, false);
+            if (isset($wc_plugin_data['Version']) && !empty($wc_plugin_data['Version'])) {
+                $wc_version = $wc_plugin_data['Version'];
+            }
+        }
+    }
+    // Method 3: Try to get from WooCommerce class instance
+    if (empty($wc_version) && class_exists('WooCommerce')) {
+        if (function_exists('WC')) {
+            $wc_instance = WC();
+            if (is_object($wc_instance) && property_exists($wc_instance, 'version')) {
+                $wc_version = $wc_instance->version;
+            }
+        }
+    }
+    
+    // If we still don't have a version, return true to avoid false positives
+    // (better to allow plugin to work than block it incorrectly)
+    if (empty($wc_version)) {
+        return true; // Assume compatible if we can't determine version
+    }
+    
+    // Ensure we have a valid version string
+    if (!is_string($wc_version)) {
+        return true; // Assume compatible if version is not a string
+    }
+    
+    $min_version = '4.0';
+    
+    // Use version_compare to check compatibility
+    $is_compatible = version_compare($wc_version, $min_version, '>=');
+    
+    return $is_compatible;
+}
+
+// Check if WooCommerce is active first
+if (!mulopimfwc_is_woocommerce_active()) {
     add_action('admin_notices', function () {
-        echo '<div class="error"><p>' . esc_html_e('Location Wise Products requires WooCommerce to be installed and active.', 'multi-location-product-and-inventory-management') . '</p></div>';
+        echo '<div class="error"><p>' . esc_html__('Location Wise Products requires WooCommerce to be installed and active.', 'multi-location-product-and-inventory-management') . '</p></div>';
     });
     return;
 }
+
+// FIXED: Check version after plugins_loaded to ensure WooCommerce constants are defined
+// The version check now runs after WooCommerce loads, so WC_VERSION will be available
+// We don't block plugin loading, just show a warning if version is truly incompatible
+add_action('plugins_loaded', function() {
+    // Only check version if WooCommerce is actually loaded
+    if (!class_exists('WooCommerce') && !defined('WC_VERSION')) {
+        // WooCommerce not loaded yet, skip check
+        return;
+    }
+    
+    if (!mulopimfwc_check_woocommerce_version()) {
+        add_action('admin_notices', function () {
+            $wc_version = 'unknown';
+            // Try multiple methods to get actual version for display
+            if (defined('WC_VERSION')) {
+                $wc_version = WC_VERSION;
+            } elseif (function_exists('get_plugin_data')) {
+                $wc_plugin_path = WP_PLUGIN_DIR . '/woocommerce/woocommerce.php';
+                if (file_exists($wc_plugin_path)) {
+                    $wc_plugin_data = get_plugin_data($wc_plugin_path, false, false);
+                    $wc_version = isset($wc_plugin_data['Version']) ? $wc_plugin_data['Version'] : 'unknown';
+                }
+            } elseif (class_exists('WooCommerce') && function_exists('WC')) {
+                $wc_instance = WC();
+                if (is_object($wc_instance) && property_exists($wc_instance, 'version')) {
+                    $wc_version = $wc_instance->version;
+                }
+            }
+            
+            echo '<div class="error"><p>';
+            echo esc_html__('Location Wise Products requires WooCommerce version 4.0 or higher. ', 'multi-location-product-and-inventory-management');
+            if ($wc_version !== 'unknown') {
+                echo esc_html(sprintf(__('Detected WooCommerce version: %s', 'multi-location-product-and-inventory-management'), $wc_version));
+            }
+            echo '</p></div>';
+        }, 10);
+    }
+}, 20); // Priority 20 to ensure WooCommerce has fully loaded and defined all constants
 
 
 if (!function_exists('mulopimfwc_get_values')) {
@@ -3676,7 +4036,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.1.1.30',
+                '1.1.1.50',
                 true
             );
 
@@ -3696,7 +4056,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.1.1.30'
+                '1.1.1.50'
             );
         }
 
@@ -3855,9 +4215,15 @@ if (!function_exists('mulopimfwc_get_values')) {
             $cookie_expiry_days = mulopimfwc_get_location_cookie_expiry_days();
             $options = get_option('mulopimfwc_display_options', []);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.30');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.50');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.1.30', true);
+            
+            // Add custom branding CSS
+            $branding_css = mulopimfwc_get_branding_css();
+            if (!empty($branding_css)) {
+                wp_add_inline_style('mulopimfwc_style', $branding_css);
+            }
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.1.50', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
             if (in_array($template_selection, ['modern', 'modern-simple'], true)) {
@@ -3865,7 +4231,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -3873,7 +4239,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -3881,7 +4247,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
             }
@@ -3909,7 +4275,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
 
@@ -3927,7 +4293,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
 
@@ -4425,7 +4791,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.30');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.50');
             }
             
             // Enqueue modern popup script
@@ -4434,7 +4800,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
             }
@@ -4445,7 +4811,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
             }
@@ -4456,7 +4822,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.30',
+                    '1.1.1.50',
                     true
                 );
             }
@@ -5136,7 +5502,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.1.30");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.1.50");
         }
     }
 
@@ -5155,13 +5521,43 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
     }
 
-    add_action('plugins_loaded', 'mulopimfwc_location_wise_products_init', 100);
+    // FIXED: Changed priority from 100 to 20 to ensure proper initialization timing
+    // Priority 20 is early enough to avoid conflicts but late enough for WooCommerce to load
+    add_action('plugins_loaded', 'mulopimfwc_location_wise_products_init', 20);
 
 
     // Add this to the main plugin file after the class definition
 
     // AJAX handler for saving user location
     add_action('wp_ajax_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
+    
+    // FIXED: Add AJAX handler to validate location cookies set by JavaScript
+    add_action('wp_ajax_mulopimfwc_validate_location', 'mulopimfwc_validate_location');
+    add_action('wp_ajax_nopriv_mulopimfwc_validate_location', 'mulopimfwc_validate_location');
+    
+    function mulopimfwc_validate_location() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'mulopimfwc_location_validation')) {
+            wp_send_json_error(array('message' => __('Invalid security token.', 'multi-location-product-and-inventory-management')));
+            return;
+        }
+        
+        $location_slug = isset($_POST['location_slug']) ? sanitize_text_field(wp_unslash($_POST['location_slug'])) : '';
+        
+        if (empty($location_slug)) {
+            wp_send_json_error(array('message' => __('Location slug is required.', 'multi-location-product-and-inventory-management')));
+            return;
+        }
+        
+        // Validate location exists
+        $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+        if (!$term || is_wp_error($term)) {
+            wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management')));
+            return;
+        }
+        
+        wp_send_json_success(array('message' => __('Location validated.', 'multi-location-product-and-inventory-management')));
+    }
     add_action('wp_ajax_nopriv_mulopimfwc_save_user_location', 'mulopimfwc_save_user_location');
 
     function mulopimfwc_save_user_location()
@@ -5784,28 +6180,51 @@ if (!function_exists('mulopimfwc_get_values')) {
         $start = strtotime('today', $now);
         $end = strtotime('tomorrow', $now);
 
-        $orders = wc_get_orders([
-            'limit' => -1,
-            'status' => array_keys(wc_get_order_statuses()),
-            'date_created' => [
-                'after' => gmdate('Y-m-d H:i:s', $start),
-                'before' => gmdate('Y-m-d H:i:s', $end),
-                'inclusive' => true,
-            ],
-            'meta_query' => [
-                [
-                    'key' => '_store_location',
-                    'compare' => 'EXISTS',
+        // Process orders in batches to prevent memory exhaustion
+        // For daily digest, we only need orders from today, so limit is reasonable
+        $batch_size = 1000;
+        $page = 1;
+        $all_orders = [];
+        
+        do {
+            $orders = wc_get_orders([
+                'limit' => $batch_size,
+                'offset' => ($page - 1) * $batch_size,
+                'status' => array_keys(wc_get_order_statuses()),
+                'date_created' => [
+                    'after' => gmdate('Y-m-d H:i:s', $start),
+                    'before' => gmdate('Y-m-d H:i:s', $end),
+                    'inclusive' => true,
                 ],
-            ],
-        ]);
+                'meta_query' => [
+                    [
+                        'key' => '_store_location',
+                        'compare' => 'EXISTS',
+                    ],
+                ],
+            ]);
+            
+            if (empty($orders)) {
+                break;
+            }
+            
+            $all_orders = array_merge($all_orders, $orders);
+            
+            // Safety check: limit to 10 batches (10,000 orders max per day)
+            if ($page >= 10) {
+                break;
+            }
+            
+            $page++;
+            
+        } while (count($orders) === $batch_size);
 
-        if (empty($orders)) {
+        if (empty($all_orders)) {
             return;
         }
 
         $stats = [];
-        foreach ($orders as $order) {
+        foreach ($all_orders as $order) {
             if (!$order instanceof WC_Order) {
                 continue;
             }
@@ -6139,7 +6558,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.1.30",
+                "1.1.1.50",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );
@@ -6356,14 +6775,15 @@ function mulopimfwc_add_favicon()
     }
 }
 
-// Flush rewrite rules on activation
-register_activation_hook(__FILE__, 'mulopimfwc_activation');
+// FIXED: Combine activation hooks into single function to prevent conflicts
 function mulopimfwc_activation()
 {
     mulopimfwc_register_manifest_endpoint();
     mulopimfwc_register_sw_endpoint();
     flush_rewrite_rules();
 }
+
+register_activation_hook(__FILE__, 'mulopimfwc_activation');
 
 
 /**
@@ -6560,8 +6980,27 @@ function mulopimfwc_send_test_notification_email_ajax()
     ]);
 }
 
-register_activation_hook(__FILE__, 'flush_rewrite_rules');
-register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
+// FIXED: Removed duplicate activation hook - already handled in mulopimfwc_activation()
+// FIXED: Add cleanup on deactivation
+register_deactivation_hook(__FILE__, 'mulopimfwc_deactivation');
+function mulopimfwc_deactivation() {
+    // Flush rewrite rules
+    flush_rewrite_rules();
+    
+    // Clean up tracking data if option is enabled
+    $cleanup_on_deactivate = apply_filters('mulopimfwc_cleanup_on_deactivate', false);
+    if ($cleanup_on_deactivate) {
+        // Delete tracking options to prevent database bloat
+        delete_option('mulopimfwc_customer_location_tracking');
+        delete_option('mulopimfwc_customer_location_popularity');
+        delete_option('mulopimfwc_customer_location_stats');
+        
+        // Clear transients
+        global $wpdb;
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_mulopimfwc_%'");
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_mulopimfwc_%'");
+    }
+}
 
 
 // Serve service worker directly before WordPress processes the request

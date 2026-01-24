@@ -26,7 +26,7 @@ class mulopimfwc_Import_Export
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '1.1.1.30',
+            '1.1.1.50',
             true
         );
 
@@ -92,8 +92,8 @@ class mulopimfwc_Import_Export
             ]);
         }
 
-        // Get the JSON data from POST
-        $json_data = isset($_POST['import_data']) ? stripslashes($_POST['import_data']) : '';
+        // Get the JSON data from POST - use wp_unslash instead of stripslashes
+        $json_data = isset($_POST['import_data']) ? wp_unslash($_POST['import_data']) : '';
 
         if (empty($json_data)) {
             wp_send_json_error([
@@ -214,93 +214,127 @@ function mulopimfwc_export_products_csv_handler() {
         $locations = [];
     }
     
-    // Get all products
-    $args = [
-        'post_type' => 'product',
-        'posts_per_page' => -1,
-        'post_status' => 'publish',
-        'fields' => 'ids',
-    ];
-    
-    $product_ids = get_posts($args);
+    // Get products in batches to prevent memory exhaustion
+    // Use a reasonable batch size (500 products per batch)
+    $batch_size = 500;
+    $page = 1;
     $products_data = [];
     
-    foreach ($product_ids as $product_id) {
-        $product = wc_get_product($product_id);
-        
-        if (!$product) {
-            continue;
-        }
-        
-        $product_type = $product->get_type();
-        
-        // Get location data for the product
-        $location_data = [];
-        foreach ($locations as $location) {
-            $location_data[$location->term_id] = [
-                'stock' => get_post_meta($product_id, '_location_stock_' . $location->term_id, true),
-                'price' => get_post_meta($product_id, '_location_sale_price_' . $location->term_id, true),
-                'disabled' => get_post_meta($product_id, '_location_disabled_' . $location->term_id, true),
-            ];
-        }
-        
-        $product_info = [
-            'id' => $product_id,
-            'title' => $product->get_name(),
-            'type' => $product_type,
-            'sku' => $product->get_sku(),
-            'default_stock' => get_post_meta($product_id, '_stock', true),
-            'default_price' => get_post_meta($product_id, '_price', true),
-            'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
-            'purchase_quantity' => get_post_meta($product_id, '_purchase_quantity', true),
-            'location_data' => $location_data,
-            'variations' => [],
+    // Increase memory limit for export
+    if (function_exists('ini_set')) {
+        @ini_set('memory_limit', '512M');
+    }
+    @set_time_limit(300);
+    
+    do {
+        $args = [
+            'post_type' => 'product',
+            'posts_per_page' => $batch_size,
+            'paged' => $page,
+            'post_status' => 'publish',
+            'fields' => 'ids',
+            'orderby' => 'ID',
+            'order' => 'ASC',
         ];
         
-        // Handle variable products
-        if ($product_type === 'variable') {
-            $available_variations = $product->get_available_variations();
-            
-            foreach ($available_variations as $variation) {
-                $variation_id = $variation['variation_id'];
-                $variation_obj = wc_get_product($variation_id);
-                
-                if (!$variation_obj) {
-                    continue;
-                }
-                
-                // Get location data for variation
-                $variation_location_data = [];
-                foreach ($locations as $location) {
-                    $variation_location_data[$location->term_id] = [
-                        'stock' => get_post_meta($variation_id, '_location_stock_' . $location->term_id, true),
-                        'price' => get_post_meta($variation_id, '_location_sale_price_' . $location->term_id, true),
-                        'disabled' => get_post_meta($variation_id, '_location_disabled_' . $location->term_id, true),
-                    ];
-                }
-                
-                // Format attributes for display
-                $attributes_label = [];
-                foreach ($variation['attributes'] as $key => $value) {
-                    $attr_name = ucfirst(str_replace('attribute_pa_', '', $key));
-                    $attributes_label[] = $attr_name . ': ' . $value;
-                }
-                
-                $product_info['variations'][] = [
-                    'id' => $variation_id,
-                    'attributes' => $variation['attributes'],
-                    'attributes_label' => implode(', ', $attributes_label),
-                    'price' => $variation['display_price'],
-                    'stock' => $variation['is_in_stock'] ? $variation['max_qty'] : 0,
-                    'sku' => $variation_obj->get_sku(),
-                    'purchase_price' => get_post_meta($variation_id, '_purchase_price', true),
-                    'location_data' => $variation_location_data,
-                ];
-            }
+        $product_ids = get_posts($args);
+        
+        if (empty($product_ids)) {
+            break;
         }
         
-        $products_data[] = $product_info;
-    }
+        foreach ($product_ids as $product_id) {
+            $product = wc_get_product($product_id);
+            
+            if (!$product) {
+                continue;
+            }
+            
+            $product_type = $product->get_type();
+            
+            // Get location data for the product
+            $location_data = [];
+            foreach ($locations as $location) {
+                $location_data[$location->term_id] = [
+                    'stock' => get_post_meta($product_id, '_location_stock_' . $location->term_id, true),
+                    'price' => get_post_meta($product_id, '_location_sale_price_' . $location->term_id, true),
+                    'disabled' => get_post_meta($product_id, '_location_disabled_' . $location->term_id, true),
+                ];
+            }
+            
+            $product_info = [
+                'id' => $product_id,
+                'title' => $product->get_name(),
+                'type' => $product_type,
+                'sku' => $product->get_sku(),
+                'default_stock' => get_post_meta($product_id, '_stock', true),
+                'default_price' => get_post_meta($product_id, '_price', true),
+                'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
+                'purchase_quantity' => get_post_meta($product_id, '_purchase_quantity', true),
+                'location_data' => $location_data,
+                'variations' => [],
+            ];
+            
+            // Handle variable products
+            if ($product_type === 'variable') {
+                $available_variations = $product->get_available_variations();
+                
+                foreach ($available_variations as $variation) {
+                    $variation_id = $variation['variation_id'];
+                    $variation_obj = wc_get_product($variation_id);
+                    
+                    if (!$variation_obj) {
+                        continue;
+                    }
+                    
+                    // Get location data for variation
+                    $variation_location_data = [];
+                    foreach ($locations as $location) {
+                        $variation_location_data[$location->term_id] = [
+                            'stock' => get_post_meta($variation_id, '_location_stock_' . $location->term_id, true),
+                            'price' => get_post_meta($variation_id, '_location_sale_price_' . $location->term_id, true),
+                            'disabled' => get_post_meta($variation_id, '_location_disabled_' . $location->term_id, true),
+                        ];
+                    }
+                    
+                    // Format attributes for display
+                    $attributes_label = [];
+                    foreach ($variation['attributes'] as $key => $value) {
+                        $attr_name = ucfirst(str_replace('attribute_pa_', '', $key));
+                        $attributes_label[] = $attr_name . ': ' . $value;
+                    }
+                    
+                    $product_info['variations'][] = [
+                        'id' => $variation_id,
+                        'attributes' => $variation['attributes'],
+                        'attributes_label' => implode(', ', $attributes_label),
+                        'price' => $variation['display_price'],
+                        'stock' => $variation['is_in_stock'] ? $variation['max_qty'] : 0,
+                        'sku' => $variation_obj->get_sku(),
+                        'purchase_price' => get_post_meta($variation_id, '_purchase_price', true),
+                        'location_data' => $variation_location_data,
+                    ];
+                }
+            }
+            
+            $products_data[] = $product_info;
+        }
+        
+        // Store count before unsetting for while condition
+        $batch_count = count($product_ids);
+        
+        // Clear memory after each batch
+        unset($product_ids);
+        
+        // Increment page for next batch
+        $page++;
+        
+        // Safety check: limit total batches to prevent infinite loops
+        if ($page > 1000) { // Max 500,000 products (500 * 1000)
+            break;
+        }
+        
+    } while ($batch_count === $batch_size);
     
     // Format locations for frontend
     $locations_formatted = [];
@@ -339,6 +373,25 @@ function mulopimfwc_import_inventory_csv_handler() {
     }
     
     $file = $_FILES['csv_file'];
+    
+    // FIXED: Validate file size to prevent memory exhaustion
+    $max_file_size = apply_filters('mulopimfwc_max_csv_import_size', 10 * 1024 * 1024); // Default 10MB
+    if ($file['size'] > $max_file_size) {
+        wp_send_json_error([
+            'message' => sprintf(
+                __('File size exceeds maximum allowed size of %s. Please split your file into smaller chunks.', 'multi-location-product-and-inventory-management'),
+                size_format($max_file_size)
+            )
+        ]);
+        return;
+    }
+    
+    // Additional validation: check if file is actually a CSV
+    $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if ($file_ext !== 'csv') {
+        wp_send_json_error(['message' => __('Invalid file type. Please upload a CSV file.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
     $file_path = $file['tmp_name'];
     
     // Validate file type
@@ -387,9 +440,19 @@ function mulopimfwc_import_inventory_csv_handler() {
     
     $line_number = 1;
     
+    // FIXED: Add validation for location existence before processing
+    $validated_locations = array(); // Cache validated locations
+    
     // Process rows
     while (($row = fgetcsv($handle)) !== false) {
         $line_number++;
+        
+        // FIXED: Limit number of rows to prevent memory exhaustion
+        $max_rows = apply_filters('mulopimfwc_max_csv_import_rows', 10000);
+        if ($line_number > $max_rows) {
+            $results['errors'][] = sprintf(__('Import stopped at row %d. Maximum %d rows allowed per import.', 'multi-location-product-and-inventory-management'), $line_number, $max_rows);
+            break;
+        }
         
         if (count($row) !== count($headers)) {
             $results['failed']++;
@@ -399,6 +462,40 @@ function mulopimfwc_import_inventory_csv_handler() {
         
         // Combine headers with row data
         $data = array_combine($headers, $row);
+        
+        // FIXED: Validate location exists before processing
+        $location_id = null;
+        $location_slug = null;
+        
+        if (!empty($data['location_id'])) {
+            $location_id = absint($data['location_id']);
+            $term = get_term($location_id, 'mulopimfwc_store_location');
+            if (!$term || is_wp_error($term)) {
+                $results['failed']++;
+                $results['errors'][] = sprintf(__('Line %d: Invalid location ID %d.', 'multi-location-product-and-inventory-management'), $line_number, $location_id);
+                continue;
+            }
+        } elseif (!empty($data['location_slug'])) {
+            $location_slug = sanitize_text_field($data['location_slug']);
+            if (!isset($validated_locations[$location_slug])) {
+                $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+                if (!$term || is_wp_error($term)) {
+                    $validated_locations[$location_slug] = false;
+                    $results['failed']++;
+                    $results['errors'][] = sprintf(__('Line %d: Invalid location slug "%s".', 'multi-location-product-and-inventory-management'), $line_number, $location_slug);
+                    continue;
+                }
+                $validated_locations[$location_slug] = $term->term_id;
+            }
+            if ($validated_locations[$location_slug] === false) {
+                continue; // Already logged error
+            }
+            $location_id = $validated_locations[$location_slug];
+        } else {
+            $results['failed']++;
+            $results['errors'][] = sprintf(__('Line %d: Missing location_id or location_slug.', 'multi-location-product-and-inventory-management'), $line_number);
+            continue;
+        }
         
         // Prepare item for API processing
         $item = array();

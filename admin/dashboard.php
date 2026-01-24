@@ -245,6 +245,9 @@ class MULOPIMFWC_Dashboard
             ini_set('memory_limit', '512M');
         }
         set_time_limit(300);
+        
+        // FIXED: Add error handling wrapper
+        try {
 
         // ---------- Build location lists (names & IDs) ----------
         $locations = [];
@@ -684,6 +687,14 @@ class MULOPIMFWC_Dashboard
         </html>
     <?php
         exit;
+    } catch (Exception $e) {
+        // FIXED: Added catch block for error handling
+        error_log('Mulopimfwc: Error in export_dashboard_report_html - ' . $e->getMessage());
+        wp_send_json_error(array(
+            'message' => __('An error occurred while generating the export. Please try again.', 'multi-location-product-and-inventory-management'),
+            'error' => defined('WP_DEBUG') && WP_DEBUG ? $e->getMessage() : ''
+        ));
+    }
     }
 
     /**
@@ -876,8 +887,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.1.30", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.1.30");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.1.50", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.1.50");
 
         $payload = $this->build_dashboard_payload();
 
@@ -1939,31 +1950,59 @@ class MULOPIMFWC_Dashboard
             $location_revenue[$location->name] = 0;
         }
 
-        // Build order query args
-        $args = array(
-            'limit' => -1,
-            'return' => 'ids'
-        );
-
-        // Status filter
-        if ($status_filter === 'all') {
-            $args['status'] = ['completed', 'pending', 'processing', 'on-hold'];
-        } else {
-            $args['status'] = $status_filter;
+        // Build order query args with pagination to prevent memory exhaustion
+        // Process orders in batches (1000 per batch)
+        $batch_size = 1000;
+        $page = 1;
+        $all_order_ids = [];
+        
+        // Increase memory and time limits for dashboard operations
+        if (function_exists('ini_set')) {
+            @ini_set('memory_limit', '512M');
         }
+        @set_time_limit(300);
+        
+        do {
+            $args = array(
+                'limit' => $batch_size,
+                'offset' => ($page - 1) * $batch_size,
+                'return' => 'ids'
+            );
 
-        // Date filter
-        if (!empty($date_from) && !empty($date_to)) {
-            $args['date_created'] = $date_from . '...' . $date_to;
-        } elseif (!empty($date_from)) {
-            $args['date_created'] = '>=' . $date_from;
-        } elseif (!empty($date_to)) {
-            $args['date_created'] = '<=' . $date_to;
-        }
+            // Status filter
+            if ($status_filter === 'all') {
+                $args['status'] = ['completed', 'pending', 'processing', 'on-hold'];
+            } else {
+                $args['status'] = $status_filter;
+            }
 
-        $order_ids = wc_get_orders($args);
+            // Date filter
+            if (!empty($date_from) && !empty($date_to)) {
+                $args['date_created'] = $date_from . '...' . $date_to;
+            } elseif (!empty($date_from)) {
+                $args['date_created'] = '>=' . $date_from;
+            } elseif (!empty($date_to)) {
+                $args['date_created'] = '<=' . $date_to;
+            }
 
-        foreach ($order_ids as $order_id) {
+            $order_ids = wc_get_orders($args);
+            
+            if (empty($order_ids)) {
+                break;
+            }
+            
+            $all_order_ids = array_merge($all_order_ids, $order_ids);
+            
+            // Safety check: limit total batches to prevent infinite loops
+            if ($page > 200) { // Max 200,000 orders (1000 * 200)
+                break;
+            }
+            
+            $page++;
+            
+        } while (count($order_ids) === $batch_size);
+
+        foreach ($all_order_ids as $order_id) {
             $order = wc_get_order($order_id);
             if (!$order) continue;
 
@@ -2313,11 +2352,39 @@ class MULOPIMFWC_Dashboard
     {
         $since_date = gmdate('Y-m-d', $since_timestamp);
 
+        // Process orders in batches to prevent memory exhaustion
+        $batch_size = 1000;
+        $page = 1;
+        $all_order_ids = [];
+        
+        do {
+            $args = [
+                'limit' => $batch_size,
+                'offset' => ($page - 1) * $batch_size,
+                'status' => ['completed', 'processing', 'on-hold', 'pending'],
+                'date_created' => '>=' . $since_date,
+                'return' => 'ids'
+            ];
+            
+            $order_ids = wc_get_orders($args);
+            
+            if (empty($order_ids)) {
+                break;
+            }
+            
+            $all_order_ids = array_merge($all_order_ids, $order_ids);
+            
+            // Safety check
+            if ($page > 200) {
+                break;
+            }
+            
+            $page++;
+            
+        } while (count($order_ids) === $batch_size);
+        
         $args = [
-            'limit' => -1,
-            'status' => ['completed', 'processing', 'on-hold', 'pending'],
-            'date_created' => '>=' . $since_date,
-            'return' => 'ids'
+            'order_ids' => $all_order_ids, // Use collected IDs
         ];
 
         $meta_query = [];
@@ -2346,16 +2413,33 @@ class MULOPIMFWC_Dashboard
             ];
         }
 
-        if (!empty($meta_query)) {
-            $args['meta_query'] = $meta_query;
+        // Filter collected order IDs by location meta query
+        $filtered_order_ids = [];
+        
+        foreach ($all_order_ids as $order_id) {
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                continue;
+            }
+            
+            $order_location = $order->get_meta('_store_location');
+            
+            // Apply location filter
+            if ($location_slug === 'default') {
+                if (empty($order_location) || $order_location === 'default') {
+                    $filtered_order_ids[] = $order_id;
+                }
+            } else {
+                if ($order_location === $location_slug) {
+                    $filtered_order_ids[] = $order_id;
+                }
+            }
         }
 
         $last_sale_dates = [];
         $sold_quantities = [];
 
-        $order_ids = wc_get_orders($args);
-
-        foreach ($order_ids as $order_id) {
+        foreach ($filtered_order_ids as $order_id) {
             $order = wc_get_order($order_id);
             if (!$order) {
                 continue;
@@ -2435,11 +2519,24 @@ class MULOPIMFWC_Dashboard
         $prepare_params[] = $stock_meta_key;
 
         $results = $wpdb->get_results($wpdb->prepare($query, ...$prepare_params));
-        
-        // Return empty array if query fails
+
+        // FIXED: Enhanced error handling with user feedback
         if ($wpdb->last_error) {
             error_log('Mulopimfwc: Error fetching inventory records - ' . $wpdb->last_error);
-            return [];
+            
+            // Log detailed error information for debugging
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Mulopimfwc: Query was - ' . $query);
+                error_log('Mulopimfwc: Prepare params - ' . print_r($prepare_params, true));
+            }
+            
+            // Return error information instead of silently failing
+            // This allows calling code to handle errors appropriately
+            return array(
+                'error' => true,
+                'message' => __('Error fetching inventory records. Please try again or contact support.', 'multi-location-product-and-inventory-management'),
+                'data' => array()
+            );
         }
 
         return $results ? $results : [];
@@ -2621,26 +2718,30 @@ class MULOPIMFWC_Dashboard
 
         global $wpdb;
 
+        // FIXED: Use prepared statement for security
         // Calculate investment based on _purchase_price and _purchase_quantity
-        $total_investment = $wpdb->get_var("
+        $total_investment = $wpdb->get_var($wpdb->prepare("
         SELECT COALESCE(SUM(
             CAST(pm1.meta_value AS DECIMAL(10,2)) * 
             COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
         ), 0) as total
         FROM {$wpdb->postmeta} pm1
         INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
-        WHERE pm1.meta_key = '_purchase_price'
-        AND pm2.meta_key = '_purchase_quantity'
+        INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
+        WHERE pm1.meta_key = %s
+        AND pm2.meta_key = %s
+        AND p.post_type = %s
+        AND p.post_status = %s
         AND pm1.meta_value != ''
         AND pm1.meta_value > 0
         AND pm2.meta_value != ''
         AND pm2.meta_value > 0
         AND pm1.post_id IN (
             SELECT ID FROM {$wpdb->posts} 
-            WHERE post_type = 'product' 
-            AND post_status = 'publish'
+            WHERE post_type = %s 
+            AND post_status = %s
         )
-    ");
+        ", '_purchase_price', '_purchase_quantity', 'product', 'publish', 'product', 'publish'));
 
         $total_investment = floatval($total_investment);
 

@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.1.30
+ * @since 1.1.1.50
  */
 
 if (!defined('ABSPATH')) {
@@ -255,7 +255,8 @@ class Mulopimfwc_Customer_Location_Insights
     /**
      * Log tracking action to options
      */
-    private function log_action($action_type, $location, $product_id = null, $order_id = null)
+    // FIXED: Changed from private to protected to allow proper access without Reflection
+    protected function log_action($action_type, $location, $product_id = null, $order_id = null)
     {
         $options = get_option('mulopimfwc_display_options', []);
         $history_setting = isset($options['customer_location_history']) ?
@@ -481,14 +482,37 @@ class Mulopimfwc_Customer_Location_Insights
 
         $all_statuses = function_exists('wc_get_order_statuses') ? array_keys(wc_get_order_statuses()) : ['wc-completed', 'wc-processing', 'wc-on-hold', 'wc-pending'];
 
-        $order_ids = wc_get_orders([
-            'limit' => -1,
-            'status' => $all_statuses,
-            'type' => ['shop_order'],
-            'return' => 'ids'
-        ]);
+        // Process orders in batches to prevent memory exhaustion
+        // Use a reasonable batch size (1000 orders per batch)
+        $batch_size = 1000;
+        $page = 1;
+        $all_order_ids = [];
+        
+        do {
+            $order_ids = wc_get_orders([
+                'limit' => $batch_size,
+                'offset' => ($page - 1) * $batch_size,
+                'status' => $all_statuses,
+                'type' => ['shop_order'],
+                'return' => 'ids'
+            ]);
+            
+            if (empty($order_ids)) {
+                break;
+            }
+            
+            $all_order_ids = array_merge($all_order_ids, $order_ids);
+            
+            // Safety check: limit total batches
+            if ($page > 100) { // Max 100,000 orders
+                break;
+            }
+            
+            $page++;
+            
+        } while (count($order_ids) === $batch_size);
 
-        foreach ($order_ids as $order_id) {
+        foreach ($all_order_ids as $order_id) {
             $order = wc_get_order($order_id);
             if (!$order) {
                 continue;
@@ -626,14 +650,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.1.30'
+                '1.1.1.50'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.1.30',
+                '1.1.1.50',
                 true
             );
 
@@ -1091,13 +1115,41 @@ class Mulopimfwc_Customer_Location_Insights
             return 0;
         }
 
+        // Use a count query instead of loading all orders into memory
+        // This is much more memory-efficient
         $orders = wc_get_orders([
-            'limit' => -1,
+            'limit' => 1, // We only need the count
             'status' => ['processing'],
             'return' => 'ids'
         ]);
+        
+        // Get total count using a more efficient method
+        $count = 0;
+        $page = 1;
+        $batch_size = 1000;
+        
+        do {
+            $batch = wc_get_orders([
+                'limit' => $batch_size,
+                'offset' => ($page - 1) * $batch_size,
+                'status' => ['processing'],
+                'return' => 'ids'
+            ]);
+            
+            if (empty($batch)) {
+                break;
+            }
+            
+            $count += count($batch);
+            $page++;
+            
+            // Safety limit
+            if ($page > 100) {
+                break;
+            }
+        } while (count($batch) === $batch_size);
 
-        return is_array($orders) ? count($orders) : 0;
+        return $count;
     }
 
     /**
@@ -2237,20 +2289,46 @@ function mulopimfwc_ajax_track_location_selection()
 {
     check_ajax_referer('mulopimfwc_tracking', 'nonce');
 
+    // FIXED: Add rate limiting to prevent DoS attacks
+    $rate_limit_key = 'mulopimfwc_track_rate_' . (is_user_logged_in() ? get_current_user_id() : $_SERVER['REMOTE_ADDR']);
+    $rate_limit_count = get_transient($rate_limit_key);
+    $rate_limit_max = apply_filters('mulopimfwc_track_rate_limit', 60); // 60 requests per minute
+    $rate_limit_window = 60; // 1 minute
+    
+    if ($rate_limit_count !== false && $rate_limit_count >= $rate_limit_max) {
+        wp_send_json_error(['message' => __('Rate limit exceeded. Please try again later.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    // Increment rate limit counter
+    if ($rate_limit_count === false) {
+        set_transient($rate_limit_key, 1, $rate_limit_window);
+    } else {
+        set_transient($rate_limit_key, $rate_limit_count + 1, $rate_limit_window);
+    }
+
     $location_slug = isset($_POST['location_slug']) ? sanitize_text_field(wp_unslash($_POST['location_slug'])) : '';
     $location_name = isset($_POST['location_name']) ? sanitize_text_field(wp_unslash($_POST['location_name'])) : '';
 
     if (empty($location_slug) || empty($location_name)) {
         wp_send_json_error(['message' => __('Invalid location data', 'multi-location-product-and-inventory-management')]);
+        return;
     }
 
+    // FIXED: Validate location exists before tracking
+    $location_term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+    if (!$location_term || is_wp_error($location_term)) {
+        wp_send_json_error(['message' => __('Invalid location. Location does not exist.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+    
+    // Use validated location name
+    $location_name = $location_term->name;
+    
     $instance = Mulopimfwc_Customer_Location_Insights::get_instance();
 
-    // Use reflection to call private method
-    $reflection = new ReflectionClass($instance);
-    $method = $reflection->getMethod('log_action');
-    $method->setAccessible(true);
-    $method->invoke($instance, 'selection', [
+    // FIXED: No longer need Reflection - method is now protected
+    $instance->log_action('selection', [
         'slug' => $location_slug,
         'name' => $location_name
     ]);

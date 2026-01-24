@@ -72,6 +72,12 @@ class mulopimfwc_License_Manager
         });
 
         add_action('wp_ajax_mulopimfwc_remove_license', function () {
+            // FIXED: Added capability check for security
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error(array('message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro')));
+                return;
+            }
+            
             check_ajax_referer('mulopimfwc_remove_license_nonce', 'nonce');
             delete_option('mulopimfwc_license_key');
             delete_option('mulopimfwc_license_status');
@@ -126,7 +132,7 @@ class mulopimfwc_License_Manager
                 wp_send_json_success(array(
                     'update_available' => true,
                     'new_version' => $update_info->new_version,
-                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.30'
+                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50'
                 ));
             } else {
                 wp_send_json_success(array(
@@ -309,7 +315,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.30')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
         ));
 
         if (is_wp_error($response)) {
@@ -344,7 +350,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.30')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
         ));
 
         if (is_wp_error($response)) {
@@ -376,7 +382,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.30')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
         ));
 
         if (is_wp_error($response)) {
@@ -409,7 +415,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.30')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
         ));
 
         if (is_wp_error($response)) {
@@ -440,7 +446,7 @@ class mulopimfwc_License_Manager
             return false;
         }
 
-        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.30';
+        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50';
         if (version_compare($current_version, $version_info->new_version, '<')) {
             return $version_info;
         }
@@ -461,7 +467,7 @@ class mulopimfwc_License_Manager
             wp_send_json_success(array(
                 'update_available' => true,
                 'new_version' => $update_info->new_version,
-                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.30'
+                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50'
             ));
         } else {
             wp_send_json_success(array(
