@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.1.1.14
+ * @version 1.1.1.30
  * @author Your Name
- * @since 1.1.1.14
+ * @since 1.1.1.30
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.1.1.14';
+    const VERSION = '1.1.1.30';
 
     /**
      * Available display positions
@@ -729,28 +729,24 @@ class MULOPIMFWC_Product_Location_Selector
      */
     private function set_location_cookie(string $location): void
     {
-        $cookie_options = [
-            'expires' => time() + mulopimfwc_get_location_cookie_expiry_seconds(),
-            'path' => '/',
-            'domain' => '',
-            'secure' => is_ssl(),
-            'httponly' => false, // Need JS access
-            'samesite' => 'Lax'
-        ];
-
-        if (version_compare(PHP_VERSION, '7.3.0', '>=')) {
-            setcookie(self::COOKIE_NAME, $location, $cookie_options);
-        } else {
-            setcookie(
-                self::COOKIE_NAME,
-                $location,
-                $cookie_options['expires'],
-                $cookie_options['path'],
-                $cookie_options['domain'],
-                $cookie_options['secure'],
-                $cookie_options['httponly']
-            );
+        // Sanitize location slug
+        $location = sanitize_title($location);
+        
+        if (empty($location)) {
+            return;
         }
+
+        // Get location term object for hooks
+        $location_obj = null;
+        if ($location !== 'all-products') {
+            $location_obj = get_term_by('slug', $location, self::TAXONOMY);
+        }
+
+        // Set cookie using standardized helper function
+        mulopimfwc_set_location_cookie($location, self::COOKIE_NAME, $location_obj);
+
+        // Fire action hook after location is selected
+        do_action('mulopimfwc_location_selected', $location, $location_obj);
     }
 
     /**

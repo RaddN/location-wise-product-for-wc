@@ -21,7 +21,7 @@ class MULOPIMFWC_Dashboard
         // Verify nonce for security
         check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
 
-        if (isset($_POST['format']) & $_POST['format'] === "html") {
+        if (isset($_POST['format']) && $_POST['format'] === "html") {
             $this->export_dashboard_report_html();
         } else {
             $this->export_dashboard_report_csv();
@@ -876,8 +876,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.1.14", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.1.14");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.1.30", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.1.30");
 
         $payload = $this->build_dashboard_payload();
 
