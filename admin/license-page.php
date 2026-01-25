@@ -103,20 +103,82 @@ class mulopimfwc_License_Manager
             return;
         }
 
-
-
         $license_data = $this->check_license_status($license_key);
 
-        if ($license_data && $license_data->license !== 'valid') {
-            $this->handle_remote_deactivation($license_data);
-        } elseif ($license_data && $license_data->license === 'valid' && $license_status === 'expired') {
-            update_option('mulopimfwc_license_status', 'valid');
-            delete_transient('mulopimfwc_license_deactivated_remotely');
+        // Validate API response before processing
+        if (!$license_data || !is_object($license_data)) {
+            // API error or invalid response - don't treat as deactivation
+            return;
         }
 
-        if ($license_data) {
-            wp_cache_set($this->cache_key, $license_data, '', 3600);
-            set_transient($this->cache_key, $license_data, 7200);
+        // If license is valid, clear any remote deactivation transient and update status
+        if (isset($license_data->license) && $license_data->license === 'valid') {
+            update_option('mulopimfwc_license_status', 'valid');
+            delete_transient('mulopimfwc_license_deactivated_remotely');
+            
+            // Cache the valid license data
+            if ($license_data) {
+                wp_cache_set($this->cache_key, $license_data, '', 3600);
+                set_transient($this->cache_key, $license_data, 7200);
+            }
+            return;
+        }
+
+        // Only handle deactivation for specific statuses that indicate actual problems
+        // Don't treat 'site_inactive' as a permanent deactivation - it might be temporary
+        if (isset($license_data->license)) {
+            $invalid_statuses = array('disabled', 'revoked', 'no_activations_left');
+            
+            // Handle expired separately
+            if ($license_data->license === 'expired') {
+                update_option('mulopimfwc_license_status', 'expired');
+                // Don't set remote deactivation transient for expired - it's handled separately
+                if ($license_data) {
+                    wp_cache_set($this->cache_key, $license_data, '', 3600);
+                    set_transient($this->cache_key, $license_data, 7200);
+                }
+                return;
+            }
+            
+            // Only set remote deactivation for truly invalid states
+            if (in_array($license_data->license, $invalid_statuses)) {
+                $this->handle_remote_deactivation($license_data);
+            } elseif ($license_data->license === 'site_inactive') {
+                // For site_inactive, update status but don't set the persistent alert
+                // This might be temporary - let the user see it in the license page but don't show persistent alert
+                update_option('mulopimfwc_license_status', 'site_inactive');
+                // Clear the remote deactivation transient if it exists - might be a false positive
+                delete_transient('mulopimfwc_license_deactivated_remotely');
+                
+                if ($license_data) {
+                    wp_cache_set($this->cache_key, $license_data, '', 3600);
+                    set_transient($this->cache_key, $license_data, 7200);
+                }
+            } else {
+                // For other statuses (invalid, missing, etc.), update status but be cautious
+                // Only set remote deactivation if we're certain it's a real problem
+                $current_status = get_option('mulopimfwc_license_status', '');
+                // If we previously had a valid license and now it's invalid, that's concerning
+                if ($current_status === 'valid') {
+                    // Double-check by verifying the response has proper structure
+                    if (isset($license_data->success) && $license_data->success === false) {
+                        // This seems like a real deactivation
+                        $this->handle_remote_deactivation($license_data);
+                    } else {
+                        // Might be a temporary issue - just update status
+                        update_option('mulopimfwc_license_status', $license_data->license);
+                        delete_transient('mulopimfwc_license_deactivated_remotely');
+                    }
+                } else {
+                    // Status was already not valid, just update it
+                    update_option('mulopimfwc_license_status', $license_data->license);
+                }
+                
+                if ($license_data) {
+                    wp_cache_set($this->cache_key, $license_data, '', 3600);
+                    set_transient($this->cache_key, $license_data, 7200);
+                }
+            }
         }
     }
 
@@ -132,7 +194,7 @@ class mulopimfwc_License_Manager
                 wp_send_json_success(array(
                     'update_available' => true,
                     'new_version' => $update_info->new_version,
-                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50'
+                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.96'
                 ));
             } else {
                 wp_send_json_success(array(
@@ -144,14 +206,21 @@ class mulopimfwc_License_Manager
 
     private function handle_remote_deactivation($license_data)
     {
-        if ($license_data->license === 'expired') {
-            update_option('mulopimfwc_license_status', 'expired');
-            return;
+        // Only set remote deactivation transient for statuses that indicate actual deactivation
+        // Don't set it for expired (handled separately) or site_inactive (might be temporary)
+        $deactivation_statuses = array('disabled', 'revoked', 'no_activations_left');
+        
+        if (isset($license_data->license) && in_array($license_data->license, $deactivation_statuses)) {
+            update_option('mulopimfwc_license_status', $license_data->license);
+            set_transient('mulopimfwc_license_deactivated_remotely', $license_data->license, WEEK_IN_SECONDS);
+            $this->clear_all_cache();
+        } else {
+            // For other statuses, just update the option without setting persistent alert
+            if (isset($license_data->license)) {
+                update_option('mulopimfwc_license_status', $license_data->license);
+            }
+            $this->clear_all_cache();
         }
-
-        update_option('mulopimfwc_license_status', $license_data->license);
-        set_transient('mulopimfwc_license_deactivated_remotely', $license_data->license, WEEK_IN_SECONDS);
-        $this->clear_all_cache();
     }
 
     public function clear_all_cache()
@@ -315,7 +384,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.96')
         ));
 
         if (is_wp_error($response)) {
@@ -350,7 +419,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.96')
         ));
 
         if (is_wp_error($response)) {
@@ -382,14 +451,30 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.96')
         ));
 
         if (is_wp_error($response)) {
+            // Return false on network/API errors - don't treat as deactivation
             return false;
         }
 
-        return json_decode(wp_remote_retrieve_body($response));
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+
+        // Check for HTTP errors
+        if ($response_code !== 200 || empty($response_body)) {
+            return false;
+        }
+
+        $license_data = json_decode($response_body);
+
+        // Validate the decoded response
+        if (!is_object($license_data) || !isset($license_data->license)) {
+            return false;
+        }
+
+        return $license_data;
     }
 
     public function get_version_info($license_key)
@@ -415,7 +500,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.96')
         ));
 
         if (is_wp_error($response)) {
@@ -446,7 +531,7 @@ class mulopimfwc_License_Manager
             return false;
         }
 
-        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50';
+        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.96';
         if (version_compare($current_version, $version_info->new_version, '<')) {
             return $version_info;
         }
@@ -467,7 +552,7 @@ class mulopimfwc_License_Manager
             wp_send_json_success(array(
                 'update_available' => true,
                 'new_version' => $update_info->new_version,
-                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.50'
+                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.96'
             ));
         } else {
             wp_send_json_success(array(
@@ -500,15 +585,27 @@ class mulopimfwc_License_Manager
 
     public function show_license_notices()
     {
-
         $remote_deactivation_status = get_transient('mulopimfwc_license_deactivated_remotely');
         if ($remote_deactivation_status) {
-            $message = $this->get_remote_deactivation_message($remote_deactivation_status);
-            echo '<div class="notice notice-error is-dismissible">';
-            echo '<p><strong>License Alert:</strong> ' . esc_html($message) . '</p>';
-            echo '<p><a href="' . admin_url('admin.php?page=your-license-page') . '">Manage License</a> | ';
-            echo '<a href="https://plugincy.com/support" target="_blank">Contact Support</a></p>';
-            echo '</div>';
+            // Verify the license is still actually invalid before showing persistent alert
+            $current_status = get_option('mulopimfwc_license_status', '');
+            
+            // If license status is now valid, clear the transient and don't show alert
+            if ($current_status === 'valid') {
+                delete_transient('mulopimfwc_license_deactivated_remotely');
+                return;
+            }
+            
+            // Only show alert for statuses that warrant a persistent notification
+            $alert_statuses = array('disabled', 'revoked', 'no_activations_left');
+            if (in_array($remote_deactivation_status, $alert_statuses) || in_array($current_status, $alert_statuses)) {
+                $message = $this->get_remote_deactivation_message($remote_deactivation_status);
+                echo '<div class="notice notice-error is-dismissible">';
+                echo '<p><strong>License Alert:</strong> ' . esc_html($message) . '</p>';
+                echo '<p><a href="' . admin_url('admin.php?page=multi-location-product-and-inventory-management-settings#license-settings') . '">Manage License</a> | ';
+                echo '<a href="https://plugincy.com/support" target="_blank">Contact Support</a></p>';
+                echo '</div>';
+            }
         }
 
         $this->show_expiry_notice();

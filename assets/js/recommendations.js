@@ -23,10 +23,36 @@
          * Bind event listeners
          */
         bindEvents: function() {
-            // Refresh recommendations when location changes
-            $(document).on('change', '.mulopimfwc-location-selector, #mulopimfwc_store_location', 
+            // Refresh recommendations when location changes via various selectors
+            $(document).on('change', '.mulopimfwc-location-selector, #mulopimfwc_store_location, .mulopimfwc-location-checkbox, .mulopimfwc-location-dropdown', 
                 this.handleLocationChange.bind(this)
             );
+            
+            // Handle location change via buttons
+            $(document).on('click', '.mulopimfwc-location-button', 
+                (e) => {
+                    const location = $(e.currentTarget).data('location');
+                    if (location && location !== 'all-products') {
+                        // Delay to allow cookie to be set
+                        setTimeout(() => {
+                            this.refreshRecommendations(location);
+                        }, 300);
+                    } else {
+                        this.hideRecommendations();
+                    }
+                }
+            );
+            
+            // Listen for custom location change events
+            $(document).on('mulopimfwc:location-changed', (e, locationSlug) => {
+                if (locationSlug && locationSlug !== 'all-products') {
+                    setTimeout(() => {
+                        this.refreshRecommendations(locationSlug);
+                    }, 300);
+                } else {
+                    this.hideRecommendations();
+                }
+            });
 
             // Handle add to cart from recommendations
             $(document).on('click', '.mulopimfwc-recommendation-actions .add_to_cart_button', 
@@ -138,15 +164,74 @@
          * Refresh on location change from cookie
          */
         refreshOnLocationChange: function() {
+            const $containers = $('.mulopimfwc-recommendations-container');
+            
+            // If no containers exist, nothing to do
+            if ($containers.length === 0) {
+                return;
+            }
+            
+            // Check if recommendations are already rendered with actual content (items, not just notices)
+            let hasRenderedItems = false;
+            $containers.each(function() {
+                const $container = $(this);
+                const $grid = $container.find('.mulopimfwc-recommendations-grid');
+                const $items = $grid.find('.mulopimfwc-recommendation-item');
+                
+                // If there are recommendation items, content is already rendered server-side
+                if ($items.length > 0) {
+                    hasRenderedItems = true;
+                    return false; // Break out of each loop
+                }
+            });
+            
+            // If recommendations are already rendered with items, don't interfere
+            // Server-side rendering already handled it correctly
+            if (hasRenderedItems) {
+                // Just enhance the display, don't hide or modify
+                this.enhanceRecommendations();
+                return;
+            }
+            
+            // Only check cookie and potentially hide if there are no rendered items
+            // This means either:
+            // 1. No location was set when page loaded (showing "select location" message)
+            // 2. Location was set but no products available (showing "no recommendations" message)
+            
             // Check if location cookie changed
-            const currentLocation = this.getCookie('mulopimfwc_store_location');
+            let currentLocation = this.getCookie('mulopimfwc_store_location');
+            
+            // Decode URL-encoded cookie value
+            if (currentLocation) {
+                try {
+                    currentLocation = decodeURIComponent(currentLocation);
+                } catch (e) {
+                    // If decoding fails, use original value
+                }
+            }
             
             if (currentLocation && currentLocation !== 'all-products') {
-                // Location is set, recommendations should be visible
+                // Location is set but no items rendered - might be "no recommendations" message
+                // Don't hide it, server-side already handled it correctly
+                // Just enhance if there's any content
                 this.enhanceRecommendations();
             } else {
-                // No location set
-                this.hideRecommendations();
+                // No location set - check if we need to show "select location" message
+                // Only update if there's a grid that doesn't already have the message
+                $containers.each(function() {
+                    const $container = $(this);
+                    const $grid = $container.find('.mulopimfwc-recommendations-grid');
+                    const $notice = $grid.find('.mulopimfwc-recommendations-notice');
+                    
+                    // Only hide/replace if there's content that's not already the "select location" message
+                    if ($notice.length === 0 || !$notice.text().toLowerCase().includes('please select a location')) {
+                        // Check if there are any items (shouldn't be, but double-check)
+                        if ($grid.find('.mulopimfwc-recommendation-item').length === 0) {
+                            // No items and not already showing "select location" - show the message
+                            $grid.html('<div class="mulopimfwc-recommendations-notice">Please select a location to see recommendations.</div>');
+                        }
+                    }
+                });
             }
         },
 

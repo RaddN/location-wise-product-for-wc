@@ -19,6 +19,41 @@ class MULOPIMFWC_Frontend_Location_Information
     private static $instance = null;
 
     /**
+     * Validate if coordinates are valid numeric values
+     *
+     * @param mixed $lat Latitude value
+     * @param mixed $lng Longitude value
+     * @return bool True if both are valid coordinates
+     */
+    private function are_valid_coordinates($lat, $lng)
+    {
+        // Check if values are not empty
+        if (empty($lat) || empty($lng)) {
+            return false;
+        }
+
+        // Convert to float and validate
+        $lat_float = filter_var($lat, FILTER_VALIDATE_FLOAT);
+        $lng_float = filter_var($lng, FILTER_VALIDATE_FLOAT);
+
+        // Check if both are valid floats
+        if ($lat_float === false || $lng_float === false) {
+            return false;
+        }
+
+        // Validate ranges: latitude -90 to 90, longitude -180 to 180
+        if ($lat_float < -90 || $lat_float > 90) {
+            return false;
+        }
+
+        if ($lng_float < -180 || $lng_float > 180) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Retrieve the current instance (if initialized).
      *
      * @return MULOPIMFWC_Frontend_Location_Information|null
@@ -174,6 +209,14 @@ class MULOPIMFWC_Frontend_Location_Information
             true
         );
 
+        // Get map animation settings
+        $map_animation_type = isset($mulopimfwc_options['map_animation_type']) && mulopimfwc_premium_feature()
+            ? $mulopimfwc_options['map_animation_type']
+            : 'setview';
+        $map_animation_duration = isset($mulopimfwc_options['map_animation_duration']) && mulopimfwc_premium_feature()
+            ? floatval($mulopimfwc_options['map_animation_duration'])
+            : 1.5;
+
         // Localize script
         wp_localize_script('mulopimfwc-location-info', 'mulopimfwcLocationInfo', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -181,6 +224,8 @@ class MULOPIMFWC_Frontend_Location_Information
             'mapTileUrl' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             'mapAttribution' => '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             'defaultMapZoom' => $default_map_zoom,
+            'mapAnimationType' => $map_animation_type,
+            'mapAnimationDuration' => $map_animation_duration,
         ]);
     }
 
@@ -398,7 +443,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 <div class="mulopimfwc-location-main">
 
                     <!-- Map Section -->
-                    <?php if ($latitude && $longitude): ?>
+                    <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
                         <div class="mulopimfwc-map-card">
                             <h3 class="mulopimfwc-card-title">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -409,8 +454,8 @@ class MULOPIMFWC_Frontend_Location_Information
                             <div class="mulopimfwc-map-container">
                                 <div id="mulopimfwc-map-<?php echo esc_attr($term_id); ?>"
                                     class="mulopimfwc-location-map mulopimfwc-map-large"
-                                    data-lat="<?php echo esc_attr($latitude); ?>"
-                                    data-lng="<?php echo esc_attr($longitude); ?>"
+                                    data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
+                                    data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
                                     data-name="<?php echo esc_attr($location->name); ?>"
                                     data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>">
                                 </div>
@@ -492,10 +537,13 @@ class MULOPIMFWC_Frontend_Location_Information
                         ?>
                             <div class="mulopimfwc-tab-item <?php echo esc_attr($is_active); ?>"
                                 data-tab="location-<?php echo esc_attr($term_id); ?>"
-                                data-lat="<?php echo esc_attr($latitude); ?>"
-                                data-lng="<?php echo esc_attr($longitude); ?>"
+                                <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
+                                data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
+                                data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
+                                <?php endif; ?>
                                 data-name="<?php echo esc_attr($location->name); ?>"
-                                data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>">
+                                data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>"
+                                data-url="<?php echo esc_url(get_term_link($location)); ?>">
 
                                 <?php if ($logo_id): ?>
                                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -619,29 +667,59 @@ class MULOPIMFWC_Frontend_Location_Information
                 </div>
             <?php endif; ?>
 
+            <?php 
+            // Check if there's any actual address content (not just empty strings)
+            $has_address = false;
+            $address_parts = array_filter([
+                trim($street_address),
+                trim($city),
+                trim($state),
+                trim($postal_code)
+            ], function($part) {
+                return !empty($part);
+            });
+            
+            if (!empty($address_parts)) {
+                $has_address = true;
+            }
+            
+            // Check if phone and email have actual content
+            $has_phone = !empty(trim($phone));
+            $has_email = !empty(trim($email));
+            
+            // Only render overlay-details if there's at least one item to display
+            $has_details = $has_address || $has_phone || $has_email;
+            ?>
+            <?php if ($has_details): ?>
             <div class="mulopimfwc-overlay-details">
-                <?php if ($street_address || $city): ?>
+                <?php if ($has_address): ?>
                     <div class="mulopimfwc-overlay-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" />
                         </svg>
                         <div>
-                            <?php if ($street_address): ?>
+                            <?php if (!empty(trim($street_address))): ?>
                                 <div><?php echo esc_html($street_address); ?></div>
                             <?php endif; ?>
-                            <?php if ($city || $state || $postal_code): ?>
+                            <?php 
+                            $address_line = array_filter([
+                                trim($city),
+                                trim($state),
+                                trim($postal_code)
+                            ], function($part) {
+                                return !empty($part);
+                            });
+                            if (!empty($address_line)): 
+                            ?>
                                 <div>
-                                    <?php
-                                    $address_line = array_filter([$city, $state, $postal_code]);
-                                    echo esc_html(implode(', ', $address_line));
-                                    ?>
+                                    <?php echo esc_html(implode(', ', $address_line)); ?>
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
                 <?php endif; ?>
 
-                <?php if ($phone): ?>
+                <?php if ($has_phone): ?>
                     <div class="mulopimfwc-overlay-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                             <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" fill="currentColor" />
@@ -650,7 +728,7 @@ class MULOPIMFWC_Frontend_Location_Information
                     </div>
                 <?php endif; ?>
 
-                <?php if ($email): ?>
+                <?php if ($has_email): ?>
                     <div class="mulopimfwc-overlay-item">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                             <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
@@ -659,6 +737,7 @@ class MULOPIMFWC_Frontend_Location_Information
                     </div>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
 
             <div class="mulopimfwc-overlay-actions">
                 <?php if ($latitude && $longitude): ?>
@@ -889,15 +968,17 @@ class MULOPIMFWC_Frontend_Location_Information
                         </a>
                     </div>
             </div>
+            <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
             <div class="mulopimfwc-map-wrapper">
                 <div id="mulopimfwc-map-<?php echo esc_attr($term_id); ?>"
                     class="mulopimfwc-location-map mulopimfwc-map-small"
-                    data-lat="<?php echo esc_attr($latitude); ?>"
-                    data-lng="<?php echo esc_attr($longitude); ?>"
+                    data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
+                    data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
                     data-name="<?php echo esc_attr($location->name); ?>"
                     data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>" style="height: 100%;">
                 </div>
             </div>
+            <?php endif; ?>
         <?php else: ?>
         </div>
     <?php endif; ?>
@@ -1122,10 +1203,13 @@ class MULOPIMFWC_Frontend_Location_Information
                         <div class="mulopimfwc-tab-item <?php echo esc_attr($is_active); ?>"
                             data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                             data-tab="location-<?php echo esc_attr($term_id); ?>"
-                            data-lat="<?php echo esc_attr($latitude); ?>"
-                            data-lng="<?php echo esc_attr($longitude); ?>"
+                            <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
+                            data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
+                            data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
+                            <?php endif; ?>
                             data-name="<?php echo esc_attr($location->name); ?>"
                             data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>"
+                            data-url="<?php echo esc_url(get_term_link($location)); ?>"
                             data-search="<?php echo esc_attr($search_data); ?>">
 
                             <div style="display: flex; align-items: center; gap: 10px;">

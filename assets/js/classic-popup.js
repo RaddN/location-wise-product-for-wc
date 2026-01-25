@@ -186,20 +186,100 @@ jQuery(function ($) {
     }
 
     function detectByIp() {
+        // Check cache first (24 hour cache)
+        var cacheKey = 'mulopimfwc_ip_location';
+        var cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            try {
+                var cachedData = JSON.parse(cached);
+                var cacheTime = cachedData.timestamp || 0;
+                var now = Date.now();
+                // Cache valid for 24 hours
+                if (now - cacheTime < 24 * 60 * 60 * 1000 && cachedData.data && cachedData.data.latitude && cachedData.data.longitude) {
+                    var data = cachedData.data;
+                    var labelParts = [data.city, data.region, data.country_name].filter(Boolean).join(', ');
+                    var label = labelParts ? (i18n.distanceApproximate || 'Approximate distances') + ': ' + labelParts : (i18n.distanceApproximate || 'Approximate distances');
+                    updateDistances(parseFloat(data.latitude), parseFloat(data.longitude), label, true);
+                    return;
+                }
+            } catch (e) {
+                // Invalid cache, continue to API call
+            }
+        }
+
+        // Check rate limit cooldown (1 hour cooldown after 429 error)
+        var rateLimitKey = 'mulopimfwc_ip_ratelimit';
+        var rateLimitData = localStorage.getItem(rateLimitKey);
+        if (rateLimitData) {
+            try {
+                var rateLimitInfo = JSON.parse(rateLimitData);
+                var rateLimitTime = rateLimitInfo.timestamp || 0;
+                var now = Date.now();
+                // Cooldown period: 1 hour
+                if (now - rateLimitTime < 60 * 60 * 1000) {
+                    setStatus(i18n.detectFailed || 'Location service is temporarily unavailable. Please try again later.', 'error');
+                    return;
+                }
+            } catch (e) {
+                // Invalid rate limit data, continue
+            }
+        }
+
+        // Check if we're already making a request (prevent multiple simultaneous calls)
+        if (window.mulopimfwc_ipRequestInProgress) {
+            // Don't retry - just show error message
+            setStatus(i18n.detectFailed || 'Location detection is already in progress. Please wait.', 'loading');
+            return;
+        }
+
+        window.mulopimfwc_ipRequestInProgress = true;
+
         $.ajax({
             url: 'https://ipapi.co/jsonp/',
             dataType: 'jsonp',
             timeout: 5000
         }).done(function (data) {
+            window.mulopimfwc_ipRequestInProgress = false;
+            
             if (data && data.latitude && data.longitude) {
+                // Cache the result
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        timestamp: Date.now(),
+                        data: data
+                    }));
+                } catch (e) {
+                    // localStorage might be disabled, ignore
+                }
+                
                 var labelParts = [data.city, data.region, data.country_name].filter(Boolean).join(', ');
                 var label = labelParts ? (i18n.distanceApproximate || 'Approximate distances') + ': ' + labelParts : (i18n.distanceApproximate || 'Approximate distances');
                 updateDistances(parseFloat(data.latitude), parseFloat(data.longitude), label, true);
             } else {
                 setStatus(i18n.detectFailed || 'We could not detect your location. Distances may be unavailable.', 'error');
             }
-        }).fail(function () {
-            setStatus(i18n.detectFailed || 'We could not detect your location. Distances may be unavailable.', 'error');
+        }).fail(function (xhr, status, error) {
+            window.mulopimfwc_ipRequestInProgress = false;
+            
+            // For JSONP, xhr.status might not be available, but we can check the error message
+            // Rate limit errors often show as "abort" or "timeout" status, or status 429
+            var isRateLimit = (status === 'abort' || status === 'timeout' || 
+                              (xhr && (xhr.status === 429 || xhr.status === 0)));
+            
+            if (isRateLimit) {
+                // Store rate limit timestamp for cooldown
+                try {
+                    localStorage.setItem(rateLimitKey, JSON.stringify({
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {
+                    // localStorage might be disabled, ignore
+                }
+                
+                setStatus(i18n.detectFailed || 'Location service is temporarily unavailable. Please try again later.', 'error');
+            } else {
+                setStatus(i18n.detectFailed || 'We could not detect your location. Distances may be unavailable.', 'error');
+            }
         });
     }
 

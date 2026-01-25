@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.1.50
+ * @since 1.1.1.96
  */
 
 if (!defined('ABSPATH')) {
@@ -126,24 +126,112 @@ class Mulopimfwc_Customer_Location_Insights
      */
     private function get_current_location()
     {
-        if (!isset($_COOKIE['mulopimfwc_store_location'])) {
-            return null;
+        // First check cookie (may be URL-encoded)
+        $location_slug = '';
+        
+        if (isset($_COOKIE['mulopimfwc_store_location'])) {
+            $location_slug = sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location']));
+            // Trim whitespace
+            $location_slug = trim($location_slug);
+            // Decode URL-encoded cookie value (in case it was encoded)
+            $decoded = rawurldecode($location_slug);
+            // Only use decoded if it's different and not empty
+            if ($decoded !== $location_slug && !empty($decoded)) {
+                $location_slug = trim($decoded);
+            }
         }
-
-        $location_slug = sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location']));
-
+        
+        // If no cookie, check if there's a default location set
+        if (empty($location_slug) || $location_slug === 'all-products') {
+            $options = get_option('mulopimfwc_display_options', []);
+            $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
+            
+            // If popup is disabled, use default location
+            if ($enable_popup === 'off') {
+                $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+                if (!empty($default_location)) {
+                    $location_slug = trim($default_location);
+                }
+            }
+        }
+        
+        // Still empty or 'all-products', return null
         if (empty($location_slug) || $location_slug === 'all-products') {
             return null;
         }
 
+        // Try multiple methods to find the location term
+        $location = null;
+        
+        // Normalize the slug for comparison
+        $location_slug_normalized = strtolower(trim($location_slug));
+        
+        // Method 1: Try exact slug match (case-sensitive first, as WordPress stores them)
         $location = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+        
+        // Method 2: If not found, try with normalized (lowercase) version
+        if (!$location || is_wp_error($location)) {
+            $location = get_term_by('slug', $location_slug_normalized, 'mulopimfwc_store_location');
+        }
+        
+        // Method 3: If still not found, try by term ID (in case slug is actually an ID)
+        if ((!$location || is_wp_error($location)) && is_numeric($location_slug)) {
+            $term = get_term(absint($location_slug), 'mulopimfwc_store_location');
+            // Verify it's the correct taxonomy and not an error
+            if ($term && !is_wp_error($term) && $term->taxonomy === 'mulopimfwc_store_location') {
+                $location = $term;
+            }
+        }
+        
+        // Method 4: Get all terms and search manually (most reliable - handles all edge cases)
+        if (!$location || is_wp_error($location)) {
+            $terms = get_terms([
+                'taxonomy' => 'mulopimfwc_store_location',
+                'hide_empty' => false,
+                'number' => 0, // Get all terms
+            ]);
+            
+            if (!is_wp_error($terms) && !empty($terms)) {
+                foreach ($terms as $term) {
+                    // Normalize term slug for comparison
+                    $term_slug_normalized = strtolower(trim($term->slug));
+                    
+                    // Exact match (case-insensitive)
+                    if ($term_slug_normalized === $location_slug_normalized) {
+                        $location = $term;
+                        break;
+                    }
+                    
+                    // Try URL-decoded versions
+                    $decoded_term_slug = strtolower(trim(rawurldecode($term->slug)));
+                    $decoded_location_slug = strtolower(trim(rawurldecode($location_slug)));
+                    
+                    if ($decoded_term_slug === $decoded_location_slug || 
+                        $decoded_term_slug === $location_slug_normalized ||
+                        $term_slug_normalized === $decoded_location_slug) {
+                        $location = $term;
+                        break;
+                    }
+                    
+                    // Match 3: Try matching slug with name (in case cookie has name instead of slug)
+                    $term_name_normalized = strtolower(trim($term->name));
+                    // Convert name to slug-like format for comparison
+                    $term_name_as_slug = sanitize_title($term_name_normalized);
+                    if ($term_name_as_slug === $location_slug_normalized || 
+                        $term_name_normalized === $location_slug_normalized) {
+                        $location = $term;
+                        break;
+                    }
+                }
+            }
+        }
 
         if (!$location || is_wp_error($location)) {
             return null;
         }
 
         return [
-            'slug' => rawurldecode($location->slug),
+            'slug' => $location->slug,
             'name' => $location->name,
             'id' => $location->term_id
         ];
@@ -650,14 +738,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.1.50'
+                '1.1.1.96'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.1.50',
+                '1.1.1.96',
                 true
             );
 
@@ -682,6 +770,13 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         $location = $this->get_current_location();
+
+        // Debug: Log the location detection (remove in production if needed)
+        if (!$location && defined('WP_DEBUG') && WP_DEBUG) {
+            $cookie_value = isset($_COOKIE['mulopimfwc_store_location']) ? $_COOKIE['mulopimfwc_store_location'] : 'not set';
+            error_log('Mulopimfwc Recommendations: Cookie value = ' . $cookie_value);
+            error_log('Mulopimfwc Recommendations: Location not found for slug: ' . $cookie_value);
+        }
 
         if (!$location) {
             return '<div class="mulopimfwc-recommendations-notice">' .

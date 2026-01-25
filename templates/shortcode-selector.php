@@ -1364,17 +1364,97 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                 // Replace getLocationByIP() implementation with HTTPS provider
                 getLocationByIP: function(callback) {
+                    // Check cache first (24 hour cache)
+                    const cacheKey = 'mulopimfwc_ip_location';
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) {
+                        try {
+                            const cachedData = JSON.parse(cached);
+                            const cacheTime = cachedData.timestamp || 0;
+                            const now = Date.now();
+                            // Cache valid for 24 hours
+                            if (now - cacheTime < 24 * 60 * 60 * 1000 && cachedData.data && cachedData.data.latitude && cachedData.data.longitude) {
+                                const data = cachedData.data;
+                                this.reverseGeocode(data.latitude, data.longitude, callback);
+                                return;
+                            }
+                        } catch (e) {
+                            // Invalid cache, continue to API call
+                        }
+                    }
+
+                    // Check rate limit cooldown (1 hour cooldown after 429 error)
+                    const rateLimitKey = 'mulopimfwc_ip_ratelimit';
+                    const rateLimitData = localStorage.getItem(rateLimitKey);
+                    if (rateLimitData) {
+                        try {
+                            const rateLimitInfo = JSON.parse(rateLimitData);
+                            const rateLimitTime = rateLimitInfo.timestamp || 0;
+                            const now = Date.now();
+                            // Cooldown period: 1 hour
+                            if (now - rateLimitTime < 60 * 60 * 1000) {
+                                // Rate limited, fall back to timezone
+                                this.getLocationByTimezone(callback);
+                                return;
+                            }
+                        } catch (e) {
+                            // Invalid rate limit data, continue
+                        }
+                    }
+
+                    // Check if we're already making a request (prevent multiple simultaneous calls)
+                    if (window.mulopimfwc_ipRequestInProgress) {
+                        // Don't retry - fall back to timezone
+                        this.getLocationByTimezone(callback);
+                        return;
+                    }
+
+                    window.mulopimfwc_ipRequestInProgress = true;
+
                     $.ajax({
                         url: 'https://ipapi.co/jsonp/', // <- JSONP endpoint (not /json/)
                         dataType: 'jsonp',
                         timeout: 5000
                     }).done((data) => {
+                        window.mulopimfwc_ipRequestInProgress = false;
+                        
                         if (data && data.latitude && data.longitude) {
+                            // Cache the result
+                            try {
+                                localStorage.setItem(cacheKey, JSON.stringify({
+                                    timestamp: Date.now(),
+                                    data: data
+                                }));
+                            } catch (e) {
+                                // localStorage might be disabled, ignore
+                            }
+                            
                             this.reverseGeocode(data.latitude, data.longitude, callback);
                         } else {
                             this.getLocationByTimezone(callback);
                         }
-                    }).fail(() => this.getLocationByTimezone(callback));
+                    }).fail((xhr, status, error) => {
+                        window.mulopimfwc_ipRequestInProgress = false;
+                        
+                        // For JSONP, xhr.status might not be available, but we can check the error message
+                        // Rate limit errors often show as "abort" or "timeout" status, or status 429
+                        const isRateLimit = (status === 'abort' || status === 'timeout' || 
+                                            (xhr && (xhr.status === 429 || xhr.status === 0)));
+                        
+                        if (isRateLimit) {
+                            // Store rate limit timestamp for cooldown
+                            try {
+                                localStorage.setItem(rateLimitKey, JSON.stringify({
+                                    timestamp: Date.now()
+                                }));
+                            } catch (e) {
+                                // localStorage might be disabled, ignore
+                            }
+                        }
+                        
+                        // Always fall back to timezone on failure
+                        this.getLocationByTimezone(callback);
+                    });
                 },
 
 

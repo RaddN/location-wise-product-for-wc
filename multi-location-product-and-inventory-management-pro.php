@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.1.50
+ * Version: 1.1.1.96
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -79,7 +79,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.1.1.50");
+    define("mulopimfwc_VERSION", "1.1.1.96");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -146,6 +146,8 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
         $css .= "#lwp-store-selector-submit { background: {$primary_color} !important; }\n";
         $css .= ".lwp-classic-popup__footer #lwp-store-selector-submit { background: {$primary_color} !important; }\n";
         $css .= ".lwp-location-info-popup__footer #lwp-store-selector-submit { background: {$primary_color} !important; }\n";
+        $css .= ".lwp-classic-popup__status[data-state='ready'] { color: {$primary_color} !important; }\n";
+        $css .= ".lwp-classic-location.selected { background: {$primary_color}1c !important; border-color: {$primary_color} !important; }\n";
 
         if (!empty($options['branding_button_text'])) {
             $css .= ".lwp-modern-button { color: {$options['branding_button_text']} !important; }\n";
@@ -211,7 +213,7 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
                 $css .= ".lwp-classic-location__status--open { background: {$secondary_light} !important; color: {$secondary_dark} !important; }\n";
                 
                 // Status Open (using secondary color)
-                $css .= ".mulopimfwc-status-open { background: {$secondary_light} !important; color: {$secondary_dark} !important; }\n";
+                $css .= ".lwp-modern-popup .mulopimfwc-status-open, .lwp-classic-popup .mulopimfwc-status-open, .lwp-location-info-popup .mulopimfwc-status-open { background: {$secondary_light} !important; color: {$secondary_dark} !important; }\n";
                 
                 // Classic Location Hover (using secondary color with opacity)
                 $secondary_hover_bg = mulopimfwc_rgb_to_hex($secondary_rgb[0], $secondary_rgb[1], $secondary_rgb[2], 0.05);
@@ -4036,7 +4038,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.1.1.50',
+                '1.1.1.96',
                 true
             );
 
@@ -4056,7 +4058,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.1.1.50'
+                '1.1.1.96'
             );
         }
 
@@ -4215,7 +4217,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $cookie_expiry_days = mulopimfwc_get_location_cookie_expiry_days();
             $options = get_option('mulopimfwc_display_options', []);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.50');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.96');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
             // Add custom branding CSS
@@ -4223,7 +4225,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.1.50', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.1.96', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
             if (in_array($template_selection, ['modern', 'modern-simple'], true)) {
@@ -4231,7 +4233,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -4239,7 +4241,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -4247,7 +4249,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
             }
@@ -4275,7 +4277,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
 
@@ -4293,7 +4295,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
 
@@ -4791,7 +4793,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.50');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.96');
             }
             
             // Enqueue modern popup script
@@ -4800,7 +4802,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
             }
@@ -4811,7 +4813,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
             }
@@ -4822,7 +4824,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.50',
+                    '1.1.1.96',
                     true
                 );
             }
@@ -5502,7 +5504,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.1.50");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.1.96");
         }
     }
 
@@ -6558,7 +6560,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.1.50",
+                "1.1.1.96",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

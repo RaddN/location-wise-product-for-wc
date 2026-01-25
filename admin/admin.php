@@ -139,6 +139,10 @@ class MULOPIMFWC_Admin
         // WordPress media library
         wp_enqueue_media();
 
+        // Enqueue Select2
+        wp_enqueue_style('select2', plugin_dir_url(__FILE__) . '../assets/css/select2.min.css', array(), '4.0.13');
+        wp_enqueue_script('select2', plugin_dir_url(__FILE__) . '../assets/js/select2.min.js', array('jquery'), '4.0.13', true);
+
         // Small inline script (no separate file needed)
         $js = '
         (function($){
@@ -196,6 +200,21 @@ class MULOPIMFWC_Admin
             const $wrap = $(this).closest(".mulopimfwc-media-wrap");
             $wrap.find(".mulopimfwc-gallery-ids").val("");
             $wrap.find(".mulopimfwc-gallery-preview").empty();
+            });
+
+            // Initialize Select2 for all select fields with common class
+            $(document).ready(function(){
+                if(typeof $.fn.select2 !== "undefined"){
+                    $(".mulopimfwc-select2").each(function(){
+                        var $select = $(this);
+                        var placeholder = $select.data("placeholder") || "";
+                        $select.select2({
+                            width: "100%",
+                            placeholder: placeholder,
+                            allowClear: true
+                        });
+                    });
+                }
             });
         })(jQuery);
         ';
@@ -511,28 +530,57 @@ class MULOPIMFWC_Admin
 
                 <table class="form-table" style="width:auto;border-collapse:collapse;">
                     <tbody>
-                        <?php foreach ($def['days'] as $key => $vals): ?>
+                        <?php foreach ($def['days'] as $key => $vals): 
+                            // Determine default selection (custom is default if neither closed nor all_day)
+                            $default_mode = (!empty($vals['closed']) ? 'closed' : (!empty($vals['all_day']) ? 'all_day' : 'custom'));
+                        ?>
                             <tr>
                                 <th style="text-align:left;padding:6px 8px;width:140px;"><?php echo esc_html($days_labels[$key]); ?></th>
                                 <td style="padding:6px 8px;">
-                                    <label style="margin-right:10px;">
-                                        <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][closed]" value="1">
-                                        <?php _e('Closed', 'multi-location-product-and-inventory-management'); ?>
-                                    </label>
-                                    <label style="margin-right:10px;">
-                                        <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][all_day]" value="1">
-                                        <?php _e('24 hours', 'multi-location-product-and-inventory-management'); ?>
-                                    </label>
-                                    <span style="margin-left:10px;">
-                                        <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>">
-                                        &nbsp;–&nbsp;
-                                        <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][close]" value="<?php echo esc_attr($vals['close']); ?>">
-                                    </span>
+                                    <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                                        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                            <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="closed" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'closed'); ?>>
+                                            <span><?php _e('Closed', 'multi-location-product-and-inventory-management'); ?></span>
+                                        </label>
+                                        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                            <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="all_day" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'all_day'); ?>>
+                                            <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                        </label>
+                                        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                            <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="custom" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'custom'); ?>>
+                                            <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                        </label>
+                                        <span class="mulopimfwc-bh-times" data-day="<?php echo esc_attr($key); ?>" style="margin-left:10px;<?php echo ($default_mode !== 'custom') ? 'display:none;' : ''; ?>">
+                                            <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>" style="margin-right:4px;">
+                                            <span style="margin:0 4px;">–</span>
+                                            <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][close]" value="<?php echo esc_attr($vals['close']); ?>">
+                                        </span>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                <script type="text/javascript">
+                (function($){
+                    $(document).ready(function(){
+                        $('.mulopimfwc-bh-mode').on('change', function(){
+                            var day = $(this).data('day');
+                            var mode = $(this).val();
+                            var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
+                            
+                            if(mode === 'custom'){
+                                $times.show();
+                            } else {
+                                $times.hide();
+                            }
+                        });
+                        
+                        // Trigger on page load to set initial state
+                        $('.mulopimfwc-bh-mode:checked').trigger('change');
+                    });
+                })(jQuery);
+                </script>
             </div>
         </div>
 
@@ -540,7 +588,7 @@ class MULOPIMFWC_Admin
         <?php $zones = $this->get_shipping_zones_options(); ?>
         <div class="form-field">
             <label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management'); ?></label>
-            <select name="shipping_zones[]" id="shipping_zones" multiple style="min-width: 320px;">
+            <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management'); ?>">
                 <?php foreach ($zones as $zid => $zname): ?>
                     <option value="<?php echo esc_attr($zid); ?>"><?php echo esc_html($zname); ?></option>
                 <?php endforeach; ?>
@@ -552,7 +600,7 @@ class MULOPIMFWC_Admin
         <?php $zone_methods = $this->get_shipping_methods_grouped_by_zone(); ?>
         <div class="form-field">
             <label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management'); ?></label>
-            <select name="shipping_methods[]" id="shipping_methods" multiple style="min-width: 420px;">
+            <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management'); ?>">
                 <?php foreach ($zone_methods as $zid => $methods): ?>
                     <?php if (!empty($methods)): ?>
                         <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management'), $zones[$zid] ?? $zid)); ?>">
@@ -570,7 +618,7 @@ class MULOPIMFWC_Admin
         <?php $payments = $this->get_payment_method_options(); ?>
         <div class="form-field">
             <label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management'); ?></label>
-            <select name="payment_methods[]" id="payment_methods" multiple style="min-width: 320px;">
+            <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management'); ?>">
                 <?php foreach ($payments as $pid => $ptitle): ?>
                     <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
                 <?php endforeach; ?>
@@ -583,7 +631,7 @@ class MULOPIMFWC_Admin
         <?php if (!empty($pickup_locations)): ?>
             <div class="form-field">
                 <label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management'); ?></label>
-                <select name="pickup_locations[]" id="pickup_locations" multiple style="min-width: 320px;">
+                <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management'); ?>">
                     <?php foreach ($pickup_locations as $pid => $ptitle): ?>
                         <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
                     <?php endforeach; ?>
@@ -806,28 +854,57 @@ class MULOPIMFWC_Admin
 
                     <table class="form-table" style="width:auto;border-collapse:collapse;">
                         <tbody>
-                            <?php foreach ($bh['days'] as $key => $vals): ?>
+                            <?php foreach ($bh['days'] as $key => $vals): 
+                                // Determine current selection (closed, all_day, or custom)
+                                $current_mode = (!empty($vals['closed']) ? 'closed' : (!empty($vals['all_day']) ? 'all_day' : 'custom'));
+                            ?>
                                 <tr>
                                     <th style="text-align:left;padding:6px 8px;width:140px;"><?php echo esc_html($days_labels[$key]); ?></th>
                                     <td style="padding:6px 8px;">
-                                        <label style="margin-right:10px;">
-                                            <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][closed]" value="1" <?php checked(!empty($vals['closed'])); ?>>
-                                            <?php _e('Closed', 'multi-location-product-and-inventory-management'); ?>
-                                        </label>
-                                        <label style="margin-right:10px;">
-                                            <input type="checkbox" name="bh[days][<?php echo esc_attr($key); ?>][all_day]" value="1" <?php checked(!empty($vals['all_day'])); ?>>
-                                            <?php _e('24 hours', 'multi-location-product-and-inventory-management'); ?>
-                                        </label>
-                                        <span style="margin-left:10px;">
-                                            <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>">
-                                            &nbsp;–&nbsp;
-                                            <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][close]" value="<?php echo esc_attr($vals['close']); ?>">
-                                        </span>
+                                        <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                                <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="closed" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'closed'); ?>>
+                                                <span><?php _e('Closed', 'multi-location-product-and-inventory-management'); ?></span>
+                                            </label>
+                                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                                <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="all_day" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'all_day'); ?>>
+                                                <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                            </label>
+                                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                                <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="custom" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'custom'); ?>>
+                                                <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                            </label>
+                                            <span class="mulopimfwc-bh-times" data-day="<?php echo esc_attr($key); ?>" style="margin-left:10px;<?php echo ($current_mode !== 'custom') ? 'display:none;' : ''; ?>">
+                                                <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>" style="margin-right:4px;">
+                                                <span style="margin:0 4px;">–</span>
+                                                <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][close]" value="<?php echo esc_attr($vals['close']); ?>">
+                                            </span>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    <script type="text/javascript">
+                    (function($){
+                        $(document).ready(function(){
+                            $('.mulopimfwc-bh-mode').on('change', function(){
+                                var day = $(this).data('day');
+                                var mode = $(this).val();
+                                var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
+                                
+                                if(mode === 'custom'){
+                                    $times.show();
+                                } else {
+                                    $times.hide();
+                                }
+                            });
+                            
+                            // Trigger on page load to set initial state
+                            $('.mulopimfwc-bh-mode:checked').trigger('change');
+                        });
+                    })(jQuery);
+                    </script>
                 </div>
             </td>
         </tr>
@@ -835,7 +912,7 @@ class MULOPIMFWC_Admin
         <tr class="form-field">
             <th scope="row"><label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
-                <select name="shipping_zones[]" id="shipping_zones" multiple style="min-width: 320px;">
+                <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management'); ?>">
                     <?php foreach ($zones as $zid => $zname): ?>
                         <option value="<?php echo esc_attr($zid); ?>" <?php selected(in_array((string)$zid, array_map('strval', (array)$sel_zones), true)); ?>>
                             <?php echo esc_html($zname); ?>
@@ -849,7 +926,7 @@ class MULOPIMFWC_Admin
         <tr class="form-field">
             <th scope="row"><label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
-                <select name="shipping_methods[]" id="shipping_methods" multiple style="min-width: 420px;">
+                <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management'); ?>">
                     <?php foreach ($zone_methods as $zid => $methods): if (empty($methods)) continue; ?>
                         <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management'), $zones[$zid] ?? $zid)); ?>">
                             <?php foreach ($methods as $instance_id => $label):
@@ -869,7 +946,7 @@ class MULOPIMFWC_Admin
         <tr class="form-field">
             <th scope="row"><label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
-                <select name="payment_methods[]" id="payment_methods" multiple style="min-width: 320px;">
+                <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management'); ?>">
                     <?php foreach ($payments as $pid => $ptitle): ?>
                         <option value="<?php echo esc_attr($pid); ?>" <?php selected(in_array($pid, (array)$sel_payments, true)); ?>>
                             <?php echo esc_html($ptitle); ?>
@@ -889,7 +966,7 @@ class MULOPIMFWC_Admin
             <tr class="form-field">
                 <th scope="row"><label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management'); ?></label></th>
                 <td>
-                    <select name="pickup_locations[]" id="pickup_locations" multiple style="min-width: 320px;">
+                    <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management'); ?>">
                         <?php foreach ($pickup_locations as $pid => $ptitle): ?>
                             <option value="<?php echo esc_attr($pid); ?>" <?php selected(in_array($pid, (array)$sel_pickup, true)); ?>>
                                 <?php echo esc_html($ptitle); ?>
@@ -1051,8 +1128,13 @@ class MULOPIMFWC_Admin
             $keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
             foreach ($keys as $k) {
                 $row = isset($raw['days'][$k]) ? (array) $raw['days'][$k] : [];
-                $closed  = empty($row['closed']) ? 0 : 1;
-                $all_day = empty($row['all_day']) ? 0 : 1;
+                
+                // Get the mode from radio button (closed, all_day, or custom)
+                $mode = isset($row['mode']) ? sanitize_text_field($row['mode']) : 'custom';
+                
+                // Set closed and all_day based on mode
+                $closed = ($mode === 'closed') ? 1 : 0;
+                $all_day = ($mode === 'all_day') ? 1 : 0;
 
                 // Time strings like 09:00, 18:00
                 $open  = isset($row['open'])  ? preg_replace('/[^0-9:]/', '', (string) $row['open'])  : '09:00';
@@ -1062,6 +1144,10 @@ class MULOPIMFWC_Admin
                 if ($all_day) {
                     $open = '00:00';
                     $close = '23:59';
+                } elseif ($closed) {
+                    // If closed, set default times (they won't be used but keep structure consistent)
+                    $open = '00:00';
+                    $close = '00:00';
                 }
 
                 $days_clean[$k] = [
