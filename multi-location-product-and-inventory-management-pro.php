@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.1.96
+ * Version: 1.1.1.100
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -79,7 +79,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.1.1.96");
+    define("mulopimfwc_VERSION", "1.1.1.100");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -90,7 +90,10 @@ if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
      */
     function mulopimfwc_get_location_cookie_expiry_days(): int
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $value = isset($options['location_cookie_expiry']) && is_numeric($options['location_cookie_expiry'])
             ? (int)$options['location_cookie_expiry']
             : 30;
@@ -111,7 +114,10 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
      */
     function mulopimfwc_get_branding_css(): string
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $css = '';
 
         // Popup/Modal Colors
@@ -340,6 +346,55 @@ if (!function_exists('mulopimfwc_get_location_cookie_expiry_seconds')) {
     {
         $day_in_seconds = defined('DAY_IN_SECONDS') ? DAY_IN_SECONDS : 86400;
         return mulopimfwc_get_location_cookie_expiry_days() * $day_in_seconds;
+    }
+}
+
+if (!function_exists('mulopimfwc_validate_location_slug')) {
+    /**
+     * FIXED: Validate location slug exists before use (Issue #13)
+     * 
+     * Validates that a location slug exists and returns the term object if valid.
+     * Uses caching to improve performance for repeated lookups.
+     *
+     * @param string $location_slug The location slug to validate
+     * @param bool $use_cache Whether to use cached results (default: true)
+     * @return WP_Term|false Term object if valid, false otherwise
+     */
+    function mulopimfwc_validate_location_slug($location_slug, $use_cache = true)
+    {
+        if (empty($location_slug) || !is_string($location_slug)) {
+            return false;
+        }
+        
+        // Sanitize the slug
+        $location_slug = sanitize_title($location_slug);
+        
+        // Check cache first (Issue #12 - Performance optimization)
+        if ($use_cache) {
+            $cache_key = 'mulopimfwc_location_' . md5($location_slug);
+            $cached = wp_cache_get($cache_key, 'mulopimfwc_locations');
+            if ($cached !== false) {
+                return $cached === 'invalid' ? false : $cached;
+            }
+        }
+        
+        // Validate location exists
+        $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+        
+        if (!$term || is_wp_error($term)) {
+            // Cache invalid result to avoid repeated queries
+            if ($use_cache) {
+                wp_cache_set($cache_key, 'invalid', 'mulopimfwc_locations', HOUR_IN_SECONDS);
+            }
+            return false;
+        }
+        
+        // Cache valid result (Issue #12 - Performance optimization)
+        if ($use_cache) {
+            wp_cache_set($cache_key, $term, 'mulopimfwc_locations', HOUR_IN_SECONDS);
+        }
+        
+        return $term;
     }
 }
 
@@ -1711,15 +1766,63 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         private $cart_items_cache = null;
         private $should_group_cache = null;
+        
+        /**
+         * Cache for product location relationships (per request)
+         * Key: product_id, Value: array of location slugs
+         * 
+         * @var array|null
+         */
+        private static $product_locations_cache = null;
+        
+        /**
+         * Set of product IDs that have been requested in this request
+         * Used to batch load location relationships
+         * 
+         * @var array
+         */
+        private static $requested_product_ids = [];
+        
+        /**
+         * Flag to track if batch loading has been performed
+         * 
+         * @var bool
+         */
+        private static $batch_loaded = false;
 
         public function __construct()
         {
             add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
             add_action('pre_get_posts', [$this, 'filter_products_by_location']);
+            
+            // FIXED: Comprehensive product filtering for all display methods
             add_filter('woocommerce_shortcode_products_query', [$this, 'filter_shortcode_products']);
             add_filter('woocommerce_products_widget_query_args', [$this, 'filter_widget_products']);
             add_filter('woocommerce_related_products_args', [$this, 'filter_related_products']);
-            $options = get_option('mulopimfwc_display_options', ['enable_popup' => 'off']);
+            
+            // FIXED: WooCommerce Blocks (Gutenberg) support
+            add_filter('woocommerce_blocks_product_grid_query_args', [$this, 'filter_shortcode_products'], 10, 1);
+            
+            // FIXED: Add location-first ordering and filtering for ALL product queries
+            add_filter('posts_clauses', [$this, 'add_location_filtering_and_ordering_to_all_queries'], 10, 2);
+            add_filter('woocommerce_rest_product_query', [$this, 'filter_rest_api_products'], 10, 2);
+            
+            // Handle single product pages when product is not available in selected location
+            // Hook into pre_get_posts to prevent 404 when setting is show_message
+            add_action('pre_get_posts', [$this, 'handle_single_product_query'], 20);
+            // Also hook into template_redirect as fallback
+            add_action('template_redirect', [$this, 'handle_single_product_unavailable'], 5);
+            
+            // OPTIMIZED: Clear product locations cache when products or locations are updated
+            add_action('save_post_product', [$this, 'clear_cache_on_product_update'], 10, 2);
+            add_action('edited_term', [$this, 'clear_cache_on_term_update'], 10, 3);
+            add_action('created_term', [$this, 'clear_cache_on_term_update'], 10, 3);
+            add_action('delete_term', [$this, 'clear_cache_on_term_delete'], 10, 4);
+            add_action('set_object_terms', [$this, 'clear_cache_on_object_terms_update'], 10, 6);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', ['enable_popup' => 'off']);
             if (isset($options['enable_popup']) && $options['enable_popup'] === 'on' && mulopimfwc_premium_feature()) {
                 add_action('wp_footer', [$this, 'location_selector_modal']);
             }
@@ -1995,7 +2098,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Get transfer costs settings
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $transfer_costs = isset($options['inter_location_transfer_costs']) && mulopimfwc_premium_feature()
                 ? $options['inter_location_transfer_costs']
                 : [];
@@ -2081,7 +2187,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Get transfer costs settings
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $transfer_costs = isset($options['inter_location_transfer_costs']) && mulopimfwc_premium_feature()
                 ? $options['inter_location_transfer_costs']
                 : [];
@@ -2258,7 +2367,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Get transfer costs settings
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $transfer_costs = isset($options['inter_location_transfer_costs']) && mulopimfwc_premium_feature()
                 ? $options['inter_location_transfer_costs']
                 : [];
@@ -2594,7 +2706,10 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         private function is_product_available_in_multiple_locations($product_id, $variation_id = 0)
         {
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
 
             $product_to_check = $variation_id > 0 ? $variation_id : $product_id;
             $terms = wp_get_object_terms($product_to_check, 'mulopimfwc_store_location', ['fields' => 'all']);
@@ -2631,7 +2746,10 @@ if (!function_exists('mulopimfwc_get_values')) {
         public function display_cart_location_selector($cart_item, $cart_item_key)
         {
             // Get options directly to ensure we have the latest value
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
 
             // Check if feature is enabled
             $allow_location_change = isset($options['allow_location_change_in_cart'])
@@ -2663,7 +2781,10 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (is_wp_error($terms) || empty($terms)) {
                 // If product has no specific locations, check if enable_all_locations is on
-                $options = get_option('mulopimfwc_display_options', []);
+                global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
                 $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
 
                 if ($enable_all_locations === 'on') {
@@ -2817,7 +2938,10 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (is_wp_error($terms) || empty($terms)) {
                 // Check if enable_all_locations is on
-                $options = get_option('mulopimfwc_display_options', []);
+                global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
                 $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
 
                 if ($enable_all_locations === 'on') {
@@ -4038,7 +4162,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.1.1.96',
+                '1.1.1.100',
                 true
             );
 
@@ -4058,7 +4182,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.1.1.96'
+                '1.1.1.100'
             );
         }
 
@@ -4215,9 +4339,12 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             $cookie_expiry_days = mulopimfwc_get_location_cookie_expiry_days();
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.96');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.100');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
             // Add custom branding CSS
@@ -4225,7 +4352,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.1.96', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.1.100', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
             if (in_array($template_selection, ['modern', 'modern-simple'], true)) {
@@ -4233,7 +4360,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -4241,7 +4368,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -4249,7 +4376,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
             }
@@ -4277,7 +4404,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
 
@@ -4295,7 +4422,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
 
@@ -4379,7 +4506,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // If cookie is empty, check if popup is enabled
             global $mulopimfwc_options;
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
             
             // If popup is disabled, use default location
@@ -4443,12 +4573,57 @@ if (!function_exists('mulopimfwc_get_values')) {
             return $location_clause;
         }
 
+        /**
+         * FIXED: Enhanced product filtering to respect visibility settings and handle all scenarios
+         * Now respects strict_filtering and filtered_sections settings
+         * FIXED: Always filters [products] shortcode when strict_filtering is enabled
+         */
         public function filter_shortcode_products($query_args)
         {
+            // Check if filtering should be applied based on settings
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            
+            // If strict filtering is disabled, don't filter
+            if ($strict_filtering === 'disabled') {
+                return $query_args;
+            }
+            
+            // FIXED: Get filtered_sections with proper default handling
+            // If filtered_sections is not set or empty, default to all sections (backward compatibility)
+            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : null;
+            
+            // If filtered_sections is not configured yet, default to all sections
+            if ($filtered_sections === null || (is_array($filtered_sections) && empty($filtered_sections))) {
+                $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
+            }
+            
+            // Determine which section this is
+            $current_section = $this->detect_current_section($query_args);
+            
+            // FIXED: Always filter shortcodes/blocks if strict_filtering is enabled
+            // This ensures [products] shortcode always works regardless of filtered_sections setting
+            // The woocommerce_shortcode_products_query filter is ONLY called for shortcodes
+            // So if we're in this filter, it's definitely a shortcode query
+            $is_shortcode_query = true; // This filter is only called for shortcodes
+            
+            // Always filter shortcodes when strict_filtering is enabled
+            // Also check other sections against filtered_sections
+            if ($current_section !== 'blocks' && !in_array($current_section, (array)$filtered_sections, true)) {
+                return $query_args;
+            }
+            
             $location = $this->get_current_location();
             global $mulopimfwc_options;
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $options_for_all_locations = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $enable_all_locations = isset($options_for_all_locations['enable_all_locations']) ? $options_for_all_locations['enable_all_locations'] : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
+            
             if (is_array($manager_locations)) {
                 if (empty($manager_locations)) {
                     $query_args['post__in'] = [0];
@@ -4465,24 +4640,372 @@ if (!function_exists('mulopimfwc_get_values')) {
                 }
 
                 $query_args['tax_query'][] = $this->build_location_tax_query($target_locations, $enable_all_locations, true);
+                
+                // FIXED: Also filter out-of-stock products if setting requires it
+                $this->apply_stock_filtering($query_args, $target_locations);
+                
+                // FIXED: Mark this query for location-first ordering
+                if (!empty($location) && $location !== 'all-products') {
+                    $query_args['mulopimfwc_location_priority'] = true;
+                    $query_args['mulopimfwc_location_slug'] = $location;
+                }
+                
                 return $query_args;
             }
 
-            if (!$location || $location === 'all-products' || $enable_all_locations === 'on') {
+            // FIXED: When strict_filtering is enabled, always filter by location if one is selected
+            // Only skip filtering if location is empty or 'all-products'
+            if (!$location || $location === 'all-products') {
+                // No location selected - don't filter
+                return $query_args;
+            }
+            
+            // FIXED: enable_all_locations means "show products without location assignment in all locations"
+            // But we still need to filter products that HAVE location assignments
+            // So we always apply location filtering when a location is selected and strict_filtering is enabled
+
+            // Initialize tax_query if needed
+            if (!isset($query_args['tax_query'])) {
+                $query_args['tax_query'] = [];
+            }
+
+            // FIXED: Validate location exists before filtering
+            $location_term = mulopimfwc_validate_location_slug($location);
+            if (!$location_term) {
+                // Invalid location - return empty results
+                $query_args['post__in'] = [0];
                 return $query_args;
             }
 
-            // if (!isset($query_args['tax_query'])) {
-            //     $query_args['tax_query'] = [];
-            // }
-
-            $query_args['tax_query'][] = [
-                'taxonomy' => 'mulopimfwc_store_location',
-                'field' => 'slug',
-                'terms' => $location,
-            ];
+            // FIXED: Use build_location_tax_query to handle enable_all_locations properly
+            // When enable_all_locations is 'on', it will include products without location assignments
+            // When it's 'off', it will only show products assigned to the selected location
+            $query_args['tax_query'][] = $this->build_location_tax_query([$location], $enable_all_locations, false);
+            
+            // FIXED: Also filter out-of-stock products if setting requires it
+            $this->apply_stock_filtering($query_args, [$location]);
+            
+            // FIXED: Mark this query for location-first ordering
+            // We'll use this flag in posts_clauses filter
+            $query_args['mulopimfwc_location_priority'] = true;
+            $query_args['mulopimfwc_location_slug'] = $location;
 
             return $query_args;
+        }
+        
+        /**
+         * FIXED: Add location filtering and ordering to ALL frontend product queries
+         * This ensures ALL database product queries respect location filtering and ordering
+         */
+        public function add_location_filtering_and_ordering_to_all_queries($clauses, $query)
+        {
+            global $wpdb;
+            
+            // Only apply to frontend product queries
+            if (is_admin() || 
+                !isset($query->query_vars['post_type']) || 
+                $query->query_vars['post_type'] !== 'product') {
+                return $clauses;
+            }
+            
+            // Get settings
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
+            $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
+            $single_product_behavior = isset($options['single_product_unavailable_behavior']) 
+                ? $options['single_product_unavailable_behavior'] 
+                : 'show_404';
+            
+            // Check if we should skip location filtering for this query
+            // This flag is set in handle_single_product_query when setting is "show_message"
+            $skip_location_filtering = false;
+            if (isset($query->query_vars['mulopimfwc_skip_location_filter']) && $query->query_vars['mulopimfwc_skip_location_filter']) {
+                $skip_location_filtering = true;
+            }
+            
+            // Get current location
+            $location_slug = '';
+            if (isset($query->query_vars['mulopimfwc_location_slug'])) {
+                $location_slug = $query->query_vars['mulopimfwc_location_slug'];
+            } else {
+                $location_slug = $this->get_current_location();
+            }
+            
+            // Check location manager restrictions
+            $manager_locations = $this->get_location_manager_frontend_locations();
+            if (is_array($manager_locations)) {
+                if (empty($manager_locations)) {
+                    // Manager has no locations - return empty results
+                    $clauses['where'] .= " AND {$wpdb->posts}.ID = 0";
+                    return $clauses;
+                }
+                if (!empty($location_slug) && $location_slug !== 'all-products') {
+                    if (!in_array($location_slug, $manager_locations, true)) {
+                        // Manager doesn't have access to this location
+                        $clauses['where'] .= " AND {$wpdb->posts}.ID = 0";
+                        return $clauses;
+                    }
+                }
+            }
+            
+            // Apply location filtering if strict_filtering is enabled
+            // BUT skip if this is a single product query with show_message setting
+            if ($strict_filtering === 'enabled' && !empty($location_slug) && $location_slug !== 'all-products' && !$skip_location_filtering) {
+                // Get location term
+                $location_term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+                if ($location_term && !is_wp_error($location_term)) {
+                    // Get term_taxonomy_id for the location
+                    $term_taxonomy_id = $wpdb->get_var($wpdb->prepare(
+                        "SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id = %d AND taxonomy = %s",
+                        $location_term->term_id,
+                        'mulopimfwc_store_location'
+                    ));
+                    
+                    if ($term_taxonomy_id) {
+                        // Check if location filtering is already applied via tax_query
+                        $has_location_tax_query = false;
+                        if (isset($query->query_vars['tax_query']) && is_array($query->query_vars['tax_query'])) {
+                            foreach ($query->query_vars['tax_query'] as $tax_query) {
+                                if (isset($tax_query['taxonomy']) && $tax_query['taxonomy'] === 'mulopimfwc_store_location') {
+                                    $has_location_tax_query = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Apply location filtering if not already applied
+                        if (!$has_location_tax_query) {
+                            // Add JOIN to check location assignment
+                            $clauses['join'] .= " LEFT JOIN {$wpdb->term_relationships} AS location_filter_tr 
+                                    ON ({$wpdb->posts}.ID = location_filter_tr.object_id AND location_filter_tr.term_taxonomy_id = " . intval($term_taxonomy_id) . ") ";
+                            
+                            if ($enable_all_locations === 'on') {
+                                // Show products assigned to location OR products without location assignment
+                                $clauses['where'] .= " AND (location_filter_tr.object_id IS NOT NULL OR 
+                                    NOT EXISTS (
+                                        SELECT 1 FROM {$wpdb->term_relationships} tr2
+                                        INNER JOIN {$wpdb->term_taxonomy} tt2 ON tr2.term_taxonomy_id = tt2.term_taxonomy_id
+                                        WHERE tr2.object_id = {$wpdb->posts}.ID 
+                                        AND tt2.taxonomy = 'mulopimfwc_store_location'
+                                    ))";
+                            } else {
+                                // Only show products assigned to location
+                                $clauses['where'] .= " AND location_filter_tr.object_id IS NOT NULL";
+                            }
+                            
+                            // Store term_taxonomy_id for ordering
+                            $query->query_vars['_mulopimfwc_term_taxonomy_id'] = $term_taxonomy_id;
+                        } else {
+                            // Get term_taxonomy_id from existing tax_query for ordering
+                            $query->query_vars['_mulopimfwc_term_taxonomy_id'] = $term_taxonomy_id;
+                        }
+                    }
+                }
+            } elseif ($skip_location_filtering && !empty($location_slug) && $location_slug !== 'all-products') {
+                // We're skipping filtering but still need term_taxonomy_id for potential ordering
+                $location_term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+                if ($location_term && !is_wp_error($location_term)) {
+                    $term_taxonomy_id = $wpdb->get_var($wpdb->prepare(
+                        "SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id = %d AND taxonomy = %s",
+                        $location_term->term_id,
+                        'mulopimfwc_store_location'
+                    ));
+                    if ($term_taxonomy_id) {
+                        $query->query_vars['_mulopimfwc_term_taxonomy_id'] = $term_taxonomy_id;
+                    }
+                }
+            }
+            
+            // Apply location-first ordering if enabled
+            if ($product_priority_display === 'location_first' || $product_priority_display === 'global_first') {
+                $term_taxonomy_id = isset($query->query_vars['_mulopimfwc_term_taxonomy_id']) ? $query->query_vars['_mulopimfwc_term_taxonomy_id'] : null;
+                
+                if ($term_taxonomy_id || !empty($location_slug)) {
+                    // Check if JOIN already exists (from filtering)
+                    $join_alias = 'location_priority_tr';
+                    if (strpos($clauses['join'], 'location_filter_tr') !== false) {
+                        $join_alias = 'location_filter_tr';
+                    } elseif (strpos($clauses['join'], $join_alias) === false) {
+                        if ($term_taxonomy_id === null && !empty($location_slug) && $location_slug !== 'all-products') {
+                            $location_term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+                            if ($location_term && !is_wp_error($location_term)) {
+                                $term_taxonomy_id = $wpdb->get_var($wpdb->prepare(
+                                    "SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id = %d AND taxonomy = %s",
+                                    $location_term->term_id,
+                                    'mulopimfwc_store_location'
+                                ));
+                            }
+                        }
+                        
+                        if ($term_taxonomy_id) {
+                            // Add LEFT JOIN to check if product is assigned to location
+                            $clauses['join'] .= " LEFT JOIN {$wpdb->term_relationships} AS {$join_alias} 
+                                    ON ({$wpdb->posts}.ID = {$join_alias}.object_id AND {$join_alias}.term_taxonomy_id = " . intval($term_taxonomy_id) . ") ";
+                        } else {
+                            return $clauses;
+                        }
+                    }
+                    
+                    // Determine priority values
+                    if ($product_priority_display === 'location_first') {
+                        $priority_value_for_location = 1;
+                        $priority_value_for_global = 2;
+                    } else { // global_first
+                        $priority_value_for_location = 2;
+                        $priority_value_for_global = 1;
+                    }
+                    
+                    // Add custom ORDER BY clause
+                    $priority_orderby = "CASE WHEN {$join_alias}.object_id IS NOT NULL THEN {$priority_value_for_location} ELSE {$priority_value_for_global} END";
+                    
+                    // Prepend priority ordering to existing orderby
+                    if (!empty($clauses['orderby'])) {
+                        $clauses['orderby'] = $priority_orderby . ', ' . $clauses['orderby'];
+                    } else {
+                        $clauses['orderby'] = $priority_orderby . ', ' . $wpdb->posts . '.post_date DESC';
+                    }
+                }
+            }
+            
+            return $clauses;
+        }
+        
+        /**
+         * Detect which section the current query is for
+         * FIXED: Better detection for [products] shortcode and other display methods
+         */
+        private function detect_current_section($query_args)
+        {
+            // Check if it's a widget query (has highest priority for detection)
+            if (isset($query_args['widget']) || doing_action('woocommerce_products_widget_query_args')) {
+                return 'widgets';
+            }
+            
+            // Check for related products
+            if (isset($query_args['related']) || doing_action('woocommerce_output_related_products_args')) {
+                return 'related';
+            }
+            
+            // Check for upsells
+            if (isset($query_args['upsells']) || doing_action('woocommerce_upsell_display_args')) {
+                return 'upsells';
+            }
+            
+            // Check for cross-sells
+            if (isset($query_args['cross_sells']) || doing_action('woocommerce_cross_sell_display_args')) {
+                return 'cross_sells';
+            }
+            
+            // Check for recently viewed
+            if (isset($query_args['recently_viewed']) || doing_action('woocommerce_recently_viewed_products_widget_query_args')) {
+                return 'recently_viewed';
+            }
+            
+            // Check for REST API
+            if (defined('REST_REQUEST') && REST_REQUEST) {
+                return 'rest_api';
+            }
+            
+            // FIXED: Check if it's a shortcode query (woocommerce_shortcode_products_query filter)
+            // This filter is used by [products], [recent_products], [sale_products], etc.
+            if (doing_filter('woocommerce_shortcode_products_query') || 
+                isset($query_args['shortcode']) || 
+                (isset($query_args['orderby']) && !isset($query_args['post__in']))) {
+                // Check if it's a Gutenberg block (has shortcode key) or regular shortcode
+                if (isset($query_args['shortcode'])) {
+                    return 'blocks'; // Gutenberg blocks
+                }
+                // Regular shortcodes like [products]
+                return 'blocks'; // Treat shortcodes as blocks for filtering purposes
+            }
+            
+            // Default to blocks/shortcodes (most common case for woocommerce_shortcode_products_query)
+            return 'blocks';
+        }
+        
+        /**
+         * Filter main WooCommerce product query
+         * FIXED: Added to handle product queries that don't go through shortcode/widget filters
+         */
+        public function filter_product_query($query_args, $query)
+        {
+            // Only apply to frontend product queries
+            if (is_admin() || !isset($query_args['post_type']) || $query_args['post_type'] !== 'product') {
+                return $query_args;
+            }
+            
+            // Use the same filtering logic as shortcodes
+            return $this->filter_shortcode_products($query_args);
+        }
+        
+        /**
+         * Apply stock filtering based on location and settings
+         * FIXED: Properly filters out-of-stock products based on location-specific stock
+         */
+        private function apply_stock_filtering(&$query_args, $locations)
+        {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $show_out_of_stock = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
+            
+            // If setting is to hide out-of-stock, add meta query
+            if ($show_out_of_stock === 'hide') {
+                if (!isset($query_args['meta_query'])) {
+                    $query_args['meta_query'] = [];
+                }
+                
+                // Build stock status query for each location
+                $stock_queries = [];
+                foreach ($locations as $location_slug) {
+                    $location_term = mulopimfwc_validate_location_slug($location_slug);
+                    if (!$location_term) {
+                        continue;
+                    }
+                    
+                    $location_id = $location_term->term_id;
+                    
+                    // Product is in stock if:
+                    // 1. Location stock > 0, OR
+                    // 2. Backorders are enabled (not 'off'), OR
+                    // 3. No location stock meta exists (use global stock)
+                    $stock_queries[] = [
+                        'relation' => 'OR',
+                        [
+                            'key' => '_location_stock_' . $location_id,
+                            'value' => '0',
+                            'compare' => '>',
+                            'type' => 'NUMERIC',
+                        ],
+                        [
+                            'key' => '_location_backorders_' . $location_id,
+                            'value' => 'off',
+                            'compare' => '!=',
+                        ],
+                        [
+                            'key' => '_location_stock_' . $location_id,
+                            'compare' => 'NOT EXISTS',
+                        ],
+                    ];
+                }
+                
+                if (!empty($stock_queries)) {
+                    // If multiple locations, combine with OR (product can be in stock at any location)
+                    if (count($stock_queries) > 1) {
+                        $query_args['meta_query'][] = [
+                            'relation' => 'OR',
+                            $stock_queries,
+                        ];
+                    } else {
+                        $query_args['meta_query'][] = $stock_queries[0];
+                    }
+                }
+            }
         }
 
         public function filter_widget_products($query_args)
@@ -4520,7 +5043,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $current_user = wp_get_current_user();
              $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             // mulopimfwc_display_options[show_popup_admin]
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
             $selected_location = $this->get_current_location();
             $locationSelected = isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
@@ -4609,7 +5135,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $is_user_logged_in = is_user_logged_in();
             $current_user = wp_get_current_user();
             // mulopimfwc_display_options[show_all_products_admin]
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $show_all_products_admin = isset($options['show_all_products_admin']) ? $options['show_all_products_admin'] : 'off';
              $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             $selected_location = $this->get_current_location();
@@ -4718,7 +5247,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $current_user = wp_get_current_user();
             $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
             $selected_location = $this->get_current_location();
             
@@ -4789,11 +5321,14 @@ if (!function_exists('mulopimfwc_get_values')) {
             $enqueued = true;
 
             // Always enqueue all popup scripts and styles when shortcodes are used to support different layouts
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.96');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.1.100');
             }
             
             // Enqueue modern popup script
@@ -4802,7 +5337,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
             }
@@ -4813,7 +5348,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
             }
@@ -4824,7 +5359,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.1.96',
+                    '1.1.1.100',
                     true
                 );
             }
@@ -4849,7 +5384,10 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         private function get_display_options()
         {
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             return $options;
         }
 
@@ -4908,12 +5446,124 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
         }
 
+        /**
+         * OPTIMIZED: Batch load product location relationships to prevent N+1 queries
+         * Loads all requested product locations in a single database query
+         * 
+         * @param array $product_ids Array of product IDs to load
+         * @return void
+         */
+        private static function batch_load_product_locations($product_ids)
+        {
+            // Initialize cache if needed
+            if (self::$product_locations_cache === null) {
+                self::$product_locations_cache = [];
+            }
+            
+            // Filter out already cached product IDs
+            $product_ids = array_unique(array_map('intval', $product_ids));
+            $uncached_ids = array_filter($product_ids, function($id) {
+                return $id > 0 && !isset(self::$product_locations_cache[$id]);
+            });
+            
+            if (empty($uncached_ids)) {
+                return;
+            }
+            
+            global $wpdb;
+            
+            // Build placeholders for IN clause
+            $placeholders = implode(',', array_fill(0, count($uncached_ids), '%d'));
+            
+            // Single query to get all product location relationships
+            // This replaces N individual queries with 1 batch query
+            // We use taxonomy name directly instead of term_taxonomy_id for better compatibility
+            $query = $wpdb->prepare(
+                "SELECT tr.object_id, t.slug
+                FROM {$wpdb->term_relationships} tr
+                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+                WHERE tr.object_id IN ($placeholders)
+                AND tt.taxonomy = %s",
+                array_merge($uncached_ids, ['mulopimfwc_store_location'])
+            );
+            
+            $results = $wpdb->get_results($query, ARRAY_A);
+            
+            // Initialize all products with empty arrays
+            foreach ($uncached_ids as $id) {
+                self::$product_locations_cache[$id] = [];
+            }
+            
+            // Group results by product ID and decode slugs
+            if (!empty($results)) {
+                foreach ($results as $row) {
+                    $product_id = (int) $row['object_id'];
+                    $slug = rawurldecode($row['slug']);
+                    
+                    if (!isset(self::$product_locations_cache[$product_id])) {
+                        self::$product_locations_cache[$product_id] = [];
+                    }
+                    
+                    if (!in_array($slug, self::$product_locations_cache[$product_id], true)) {
+                        self::$product_locations_cache[$product_id][] = $slug;
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Get product location slugs from cache (with batch loading)
+         * 
+         * @param int $product_id Product ID
+         * @return array Array of location slugs
+         */
+        private function get_product_location_slugs($product_id)
+        {
+            $product_id = (int) $product_id;
+            
+            if ($product_id <= 0) {
+                return [];
+            }
+            
+            // Track requested product IDs for batch loading
+            if (!in_array($product_id, self::$requested_product_ids, true)) {
+                self::$requested_product_ids[] = $product_id;
+            }
+            
+            // Initialize cache if needed
+            if (self::$product_locations_cache === null) {
+                self::$product_locations_cache = [];
+            }
+            
+            // If not cached yet, perform batch load
+            if (!isset(self::$product_locations_cache[$product_id])) {
+                // Load this product along with any other pending products
+                self::batch_load_product_locations(self::$requested_product_ids);
+            }
+            
+            // Return cached result (or empty array if not found)
+            return isset(self::$product_locations_cache[$product_id]) 
+                ? self::$product_locations_cache[$product_id] 
+                : [];
+        }
+        
+        /**
+         * OPTIMIZED: Check if product belongs to location using cached data
+         * Prevents N+1 queries by batch loading all product locations
+         * 
+         * @param int $product_id Product ID
+         * @return bool True if product belongs to current location
+         */
         private function product_belongs_to_location($product_id)
         {
             $location = $this->get_current_location();
             global $mulopimfwc_options;
             $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
+
+            // Get product location slugs from cache (batch loaded)
+            $terms = $this->get_product_location_slugs($product_id);
 
             if (is_array($manager_locations)) {
                 if (empty($manager_locations)) {
@@ -4928,29 +5578,168 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $allowed_locations = [$location];
                 }
 
-                $terms = array_map('rawurldecode', wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
                 if (empty($terms)) {
                     return false;
                 }
-                return (!is_wp_error($terms) && !empty(array_intersect($allowed_locations, $terms)));
+                return !empty(array_intersect($allowed_locations, $terms));
             }
 
             if (!$location || $location === 'all-products') {
                 return true;
             }
 
-            $terms = array_map('rawurldecode', wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
             if (empty($terms) && $enable_all_locations === 'on') {
                 return true; // Product is available in all locations
             }
-            return (!is_wp_error($terms) && in_array($location, $terms));
+            return in_array($location, $terms, true);
+        }
+        
+        /**
+         * Preload product locations for a batch of product IDs
+         * Call this method before looping through products to prevent N+1 queries
+         * 
+         * @param array $product_ids Array of product IDs to preload
+         * @return void
+         */
+        public function preload_product_locations($product_ids)
+        {
+            if (empty($product_ids) || !is_array($product_ids)) {
+                return;
+            }
+            
+            // Add to requested IDs
+            $product_ids = array_unique(array_map('intval', $product_ids));
+            self::$requested_product_ids = array_unique(array_merge(
+                self::$requested_product_ids,
+                $product_ids
+            ));
+            
+            // Load immediately
+            self::batch_load_product_locations($product_ids);
+        }
+        
+        /**
+         * Clear the product locations cache
+         * Useful when products are updated or locations are changed
+         * 
+         * @return void
+         */
+        public static function clear_product_locations_cache()
+        {
+            self::$product_locations_cache = null;
+            self::$requested_product_ids = [];
+            self::$batch_loaded = false;
+        }
+        
+        /**
+         * Clear cache when a product is updated
+         * 
+         * @param int $post_id Post ID
+         * @param WP_Post $post Post object
+         * @return void
+         */
+        public function clear_cache_on_product_update($post_id, $post)
+        {
+            // Only clear cache for products
+            if (isset($post->post_type) && $post->post_type === 'product') {
+                // Clear only the specific product from cache if it exists
+                if (self::$product_locations_cache !== null && isset(self::$product_locations_cache[$post_id])) {
+                    unset(self::$product_locations_cache[$post_id]);
+                }
+            }
+        }
+        
+        /**
+         * Clear cache when a location term is updated
+         * 
+         * @param int $term_id Term ID
+         * @param int $tt_id Term taxonomy ID
+         * @param string $taxonomy Taxonomy name
+         * @return void
+         */
+        public function clear_cache_on_term_update($term_id, $tt_id, $taxonomy)
+        {
+            // Only clear cache for location taxonomy
+            if ($taxonomy === 'mulopimfwc_store_location') {
+                // Clear entire cache since term relationships may have changed
+                self::clear_product_locations_cache();
+            }
+        }
+        
+        /**
+         * Clear cache when a location term is deleted
+         * 
+         * @param int $term_id Term ID
+         * @param int $tt_id Term taxonomy ID
+         * @param string $taxonomy Taxonomy name
+         * @param WP_Term $deleted_term Deleted term object
+         * @return void
+         */
+        public function clear_cache_on_term_delete($term_id, $tt_id, $taxonomy, $deleted_term)
+        {
+            // Only clear cache for location taxonomy
+            if ($taxonomy === 'mulopimfwc_store_location') {
+                // Clear entire cache since term relationships have changed
+                self::clear_product_locations_cache();
+            }
+        }
+        
+        /**
+         * Clear cache when object terms are set (product location assignments changed)
+         * 
+         * @param int $object_id Object ID
+         * @param array $terms Array of term IDs
+         * @param array $tt_ids Array of term taxonomy IDs
+         * @param string $taxonomy Taxonomy name
+         * @param bool $append Whether to append terms
+         * @param array $old_tt_ids Old term taxonomy IDs
+         * @return void
+         */
+        public function clear_cache_on_object_terms_update($object_id, $terms, $tt_ids, $taxonomy, $append, $old_tt_ids)
+        {
+            // Only clear cache for location taxonomy and products
+            if ($taxonomy === 'mulopimfwc_store_location') {
+                $post_type = get_post_type($object_id);
+                if ($post_type === 'product') {
+                    // Clear only the specific product from cache
+                    if (self::$product_locations_cache !== null && isset(self::$product_locations_cache[$object_id])) {
+                        unset(self::$product_locations_cache[$object_id]);
+                    }
+                }
+            }
         }
 
+        /**
+         * FIXED: Enhanced product blocks filtering to respect visibility and stock settings
+         */
         public function filter_product_blocks($html, $data, $product)
         {
-            if (!$this->product_belongs_to_location($product->get_id())) {
+            // Check if filtering should be applied based on settings
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            
+            // Check if blocks filtering is enabled
+            if ($strict_filtering === 'disabled' || !in_array('blocks', $filtered_sections, true)) {
+                return $html;
+            }
+            
+            $product_id = $product->get_id();
+            
+            // Check location
+            if (!$this->product_belongs_to_location($product_id)) {
                 return '';
             }
+            
+            // Also check stock status if setting requires it
+            $show_out_of_stock = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
+            if ($show_out_of_stock === 'hide' && mulopimfwc_is_product_out_of_stock_for_location($product_id)) {
+                return '';
+            }
+            
             return $html;
         }
 
@@ -4965,6 +5754,12 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return $products;
             }
 
+            // OPTIMIZED: Preload all product locations in one query
+            $product_ids = array_keys($products);
+            if (!empty($product_ids)) {
+                $this->preload_product_locations($product_ids);
+            }
+
             foreach ($products as $id => $product) {
                 if (!$this->product_belongs_to_location($id)) {
                     unset($products[$id]);
@@ -4974,11 +5769,28 @@ if (!function_exists('mulopimfwc_get_values')) {
             return $products;
         }
 
+        /**
+         * FIXED: Enhanced REST API products filtering to respect visibility settings
+         */
         public function filter_rest_api_products($args, $request)
         {
+            // Check if filtering should be applied based on settings
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            
+            // Check if REST API filtering is enabled
+            if ($strict_filtering === 'disabled' || !in_array('rest_api', $filtered_sections, true)) {
+                return $args;
+            }
+            
             global $mulopimfwc_options;
             $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
+            
             if (is_array($manager_locations)) {
                 if (empty($manager_locations)) {
                     $args['post__in'] = [0];
@@ -4996,24 +5808,44 @@ if (!function_exists('mulopimfwc_get_values')) {
                 }
 
                 $args['tax_query'][] = $this->build_location_tax_query($target_locations, $enable_all_locations, true);
+                
+                // FIXED: Also filter out-of-stock products if setting requires it
+                $this->apply_stock_filtering($args, $target_locations);
+                
                 return $args;
             }
 
             $location = $this->get_current_location();
 
-            if (!$location || $location === 'all-products') {
+            if (!$location || $location === 'all-products' || $enable_all_locations === 'on') {
+                // Still apply stock filtering even if location filtering is off
+                if ($location && $location !== 'all-products') {
+                    $this->apply_stock_filtering($args, [$location]);
+                }
                 return $args;
             }
 
-            // if (!isset($args['tax_query'])) {
-            //     $args['tax_query'] = [];
-            // }
+            // Initialize tax_query if needed
+            if (!isset($args['tax_query'])) {
+                $args['tax_query'] = [];
+            }
+
+            // FIXED: Validate location exists before filtering
+            $location_term = mulopimfwc_validate_location_slug($location);
+            if (!$location_term) {
+                // Invalid location - return empty results
+                $args['post__in'] = [0];
+                return $args;
+            }
 
             $args['tax_query'][] = [
                 'taxonomy' => 'mulopimfwc_store_location',
                 'field' => 'slug',
                 'terms' => $location,
             ];
+            
+            // FIXED: Also filter out-of-stock products if setting requires it
+            $this->apply_stock_filtering($args, [$location]);
 
             return $args;
         }
@@ -5039,6 +5871,17 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Ensure $cart_contents is an array
             if (!is_array($cart_contents)) {
                 return $cart_contents;
+            }
+
+            // OPTIMIZED: Preload all product locations in one query
+            $product_ids = [];
+            foreach ($cart_contents as $item) {
+                if (is_array($item) && isset($item['product_id'])) {
+                    $product_ids[] = (int) $item['product_id'];
+                }
+            }
+            if (!empty($product_ids)) {
+                $this->preload_product_locations($product_ids);
             }
 
             foreach ($cart_contents as $key => $item) {
@@ -5069,9 +5912,16 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
+            // OPTIMIZED: Preload all product locations in one query
+            $product_ids = array_filter(array_map('intval', $viewed_products));
+            if (!empty($product_ids)) {
+                $this->preload_product_locations($product_ids);
+            }
+
             $filtered_products = [];
             foreach ($viewed_products as $product_id) {
-                if ($this->product_belongs_to_location($product_id)) {
+                $product_id = (int) $product_id;
+                if ($product_id > 0 && $this->product_belongs_to_location($product_id)) {
                     $filtered_products[] = $product_id;
                 }
             }
@@ -5266,60 +6116,422 @@ if (!function_exists('mulopimfwc_get_values')) {
             return $custom_orderby . $orderby;
         }
 
+        /**
+         * Handle single product query to prevent 404 when setting is show_message
+         * This runs early in pre_get_posts to ensure product is included in query
+         * 
+         * @param WP_Query $query The WordPress query object
+         * @return void
+         */
+        public function handle_single_product_query($query)
+        {
+            // Only run on frontend main query
+            if (is_admin() || !$query->is_main_query()) {
+                return;
+            }
 
+            // Check if it's a product post type query
+            $post_type = $query->get('post_type');
+            $is_product_query = false;
+            
+            if ($post_type === 'product') {
+                $is_product_query = true;
+            } elseif (is_array($post_type) && in_array('product', $post_type, true)) {
+                $is_product_query = true;
+            } elseif (empty($post_type) && (isset($query->query_vars['p']) || isset($query->query_vars['name']))) {
+                // Might be a single post query, check if it's a product
+                $is_product_query = true;
+            }
 
+            if (!$is_product_query) {
+                return;
+            }
+
+            // Get the product ID from query
+            $product_id = 0;
+            if (isset($query->query_vars['p']) && $query->query_vars['p'] > 0) {
+                $product_id = (int) $query->query_vars['p'];
+                // Verify it's actually a product
+                $post_type_check = get_post_type($product_id);
+                if ($post_type_check !== 'product') {
+                    return;
+                }
+            } elseif (isset($query->query_vars['name'])) {
+                $product = get_page_by_path($query->query_vars['name'], OBJECT, 'product');
+                if ($product) {
+                    $product_id = $product->ID;
+                } else {
+                    return;
+                }
+            } else {
+                return;
+            }
+
+            if ($product_id <= 0) {
+                return;
+            }
+
+            // Get settings
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $behavior = isset($options['single_product_unavailable_behavior']) 
+                ? $options['single_product_unavailable_behavior'] 
+                : 'show_404';
+            
+            // If behavior is show_404, let WordPress handle it normally (don't interfere)
+            if ($behavior === 'show_404') {
+                return;
+            }
+            
+            // Check if strict filtering is enabled
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            if ($strict_filtering === 'disabled') {
+                return; // Don't filter if strict filtering is disabled
+            }
+            
+            // Check if product belongs to current location
+            if ($this->product_belongs_to_location($product_id)) {
+                return; // Product is available, no action needed
+            }
+            
+            // Product is not available, but we want to show it with message
+            // Ensure the product is included in the query by forcing it
+            // Store original query vars to restore if needed
+            $query->set('post__in', [$product_id]);
+            $query->set('post_type', 'product');
+            // Remove any tax_query that might filter it out
+            $existing_tax_query = $query->get('tax_query');
+            if (!empty($existing_tax_query)) {
+                // Remove location-based tax queries but keep others
+                $filtered_tax_query = [];
+                foreach ($existing_tax_query as $tax_item) {
+                    if (isset($tax_item['taxonomy']) && $tax_item['taxonomy'] === 'mulopimfwc_store_location') {
+                        continue; // Skip location tax queries
+                    }
+                    $filtered_tax_query[] = $tax_item;
+                }
+                $query->set('tax_query', $filtered_tax_query);
+            }
+            
+            // Mark that we've handled this product - this flag will be checked in posts_clauses filter
+            $query->set('mulopimfwc_force_show_product', true);
+            $query->set('mulopimfwc_skip_location_filter', true);
+        }
+
+        /**
+         * Handle single product pages when product is not available in selected location
+         * Checks the setting and either shows 404 or displays product with unavailable message
+         * This runs on template_redirect as a fallback
+         * 
+         * @return void
+         */
+        public function handle_single_product_unavailable()
+        {
+            // Only run on frontend single product pages
+            if (is_admin() || !is_singular('product')) {
+                return;
+            }
+
+            global $post, $wp_query;
+            if (!$post || $post->post_type !== 'product') {
+                return;
+            }
+
+            // If 404 is already set, check if we should override it
+            if ($wp_query->is_404()) {
+                // Get settings
+                global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+                $behavior = isset($options['single_product_unavailable_behavior']) 
+                    ? $options['single_product_unavailable_behavior'] 
+                    : 'show_404';
+                
+                // If behavior is show_message, unset 404 and show product
+                if ($behavior === 'show_message') {
+                    // Check if strict filtering is enabled
+                    $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+                    if ($strict_filtering !== 'disabled') {
+                        // Check if product doesn't belong to location
+                        if (!$this->product_belongs_to_location($post->ID)) {
+                            // Unset 404 and restore the post
+                            $wp_query->is_404 = false;
+                            $wp_query->is_singular = true;
+                            $wp_query->queried_object = $post;
+                            $wp_query->queried_object_id = $post->ID;
+                            status_header(200);
+                            
+                            // Add notice to display on product page
+                            add_action('woocommerce_single_product_summary', [$this, 'display_product_unavailable_notice'], 1);
+                            // Disable add to cart button
+                            add_filter('woocommerce_is_purchasable', [$this, 'disable_purchasable_for_unavailable_product'], 10, 2);
+                            add_filter('woocommerce_variation_is_purchasable', [$this, 'disable_purchasable_for_unavailable_product'], 10, 2);
+                            return;
+                        }
+                    }
+                }
+                // If we get here and 404 is set, keep it
+                return;
+            }
+
+            $product_id = $post->ID;
+            
+            // Get settings
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $behavior = isset($options['single_product_unavailable_behavior']) 
+                ? $options['single_product_unavailable_behavior'] 
+                : 'show_404';
+            
+            // Check if strict filtering is enabled
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            if ($strict_filtering === 'disabled') {
+                return; // Don't filter if strict filtering is disabled
+            }
+            
+            // Check if product belongs to current location
+            if ($this->product_belongs_to_location($product_id)) {
+                return; // Product is available, no action needed
+            }
+            
+            // Product is not available in selected location
+            if ($behavior === 'show_404') {
+                // Show 404 page (current behavior)
+                $wp_query->set_404();
+                status_header(404);
+                nocache_headers();
+            } else {
+                // Show product with unavailable message
+                // Add notice to display on product page
+                add_action('woocommerce_single_product_summary', [$this, 'display_product_unavailable_notice'], 1);
+                // Disable add to cart button
+                add_filter('woocommerce_is_purchasable', [$this, 'disable_purchasable_for_unavailable_product'], 10, 2);
+                add_filter('woocommerce_variation_is_purchasable', [$this, 'disable_purchasable_for_unavailable_product'], 10, 2);
+            }
+        }
+
+        /**
+         * Display notice when product is not available in selected location
+         * 
+         * @return void
+         */
+        public function display_product_unavailable_notice()
+        {
+            $location = $this->get_current_location();
+            $location_name = '';
+            
+            if (!empty($location) && $location !== 'all-products') {
+                $location_term = get_term_by('slug', $location, 'mulopimfwc_store_location');
+                if ($location_term && !is_wp_error($location_term)) {
+                    $location_name = $location_term->name;
+                }
+            }
+            
+            $message = __('This product is not available in your selected location.', 'multi-location-product-and-inventory-management');
+            if (!empty($location_name)) {
+                $message = sprintf(
+                    __('This product is not available at %s. Please select a different location to view this product.', 'multi-location-product-and-inventory-management'),
+                    esc_html($location_name)
+                );
+            }
+            
+            echo '<div class="woocommerce-info mulopimfwc-product-unavailable-notice" style="background-color: #fff3cd; border: 1px solid #ffc107; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 20px 0;">';
+            echo '<div style="display: flex; align-items: start; gap: 12px;">';
+            echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="flex-shrink: 0; margin-top: 2px;" fill="#856404">';
+            echo '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>';
+            echo '</svg>';
+            echo '<div>';
+            echo '<p style="margin: 0; color: #856404; font-weight: 500;">' . esc_html($message) . '</p>';
+            echo '</div>';
+            echo '</div>';
+            echo '</div>';
+        }
+
+        /**
+         * Disable purchasable status for products not available in selected location
+         * 
+         * @param bool $is_purchasable Whether product is purchasable
+         * @param WC_Product $product Product object
+         * @return bool
+         */
+        public function disable_purchasable_for_unavailable_product($is_purchasable, $product)
+        {
+            if (!$product) {
+                return $is_purchasable;
+            }
+            
+            $product_id = $product->get_id();
+            
+            // Check if product belongs to current location
+            if (!$this->product_belongs_to_location($product_id)) {
+                return false;
+            }
+            
+            return $is_purchasable;
+        }
+
+        /**
+         * FIXED: Enhanced related products filtering to respect visibility and stock settings
+         */
         public function filter_related_products_by_location($related_products, $product_id, $args)
         {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            
+            // Check if filtering should be applied
+            if ($strict_filtering === 'disabled' || !in_array('related', $filtered_sections, true)) {
+                return $related_products;
+            }
+            
             $location = $this->get_filtered_location('related');
 
             if (!$location) {
                 return $related_products;
             }
 
-            return array_filter($related_products, [$this, 'product_belongs_to_location']);
+            // OPTIMIZED: Preload all product locations in one query
+            if (!empty($related_products)) {
+                $this->preload_product_locations($related_products);
+            }
+            
+            // Filter by location and stock status
+            $filtered = array_filter($related_products, function($product_id) use ($location) {
+                if (!$this->product_belongs_to_location($product_id)) {
+                    return false;
+                }
+                
+                // Also check stock status if setting requires it
+                global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+                $show_out_of_stock = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
+                if ($show_out_of_stock === 'hide') {
+                    return !mulopimfwc_is_product_out_of_stock_for_location($product_id);
+                }
+                
+                return true;
+            });
+
+            return $filtered;
         }
 
+        /**
+         * FIXED: Enhanced cross-sells filtering to respect visibility and stock settings
+         */
         public function filter_cross_sells_by_location($cross_sells)
         {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            
+            // Check if filtering should be applied
+            if ($strict_filtering === 'disabled' || !in_array('cross_sells', $filtered_sections, true)) {
+                return $cross_sells;
+            }
+            
             $location = $this->get_filtered_location('cross_sells');
 
             if (!$location) {
                 return $cross_sells;
             }
 
-            return array_filter($cross_sells, [$this, 'product_belongs_to_location']);
+            // OPTIMIZED: Preload all product locations in one query
+            if (!empty($cross_sells)) {
+                $this->preload_product_locations($cross_sells);
+            }
+            
+            // Filter by location and stock status
+            $filtered = array_filter($cross_sells, function($product_id) use ($location) {
+                if (!$this->product_belongs_to_location($product_id)) {
+                    return false;
+                }
+                
+                // Also check stock status if setting requires it
+                global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+                $show_out_of_stock = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
+                if ($show_out_of_stock === 'hide') {
+                    return !mulopimfwc_is_product_out_of_stock_for_location($product_id);
+                }
+                
+                return true;
+            });
+
+            return $filtered;
         }
 
+        /**
+         * FIXED: Enhanced upsells filtering to respect visibility and stock settings
+         */
         public function filter_upsells_by_location($upsell_ids, $product_id)
         {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            
+            // Check if filtering should be applied
+            if ($strict_filtering === 'disabled' || !in_array('upsells', $filtered_sections, true)) {
+                return $upsell_ids;
+            }
+            
             $location = $this->get_filtered_location('upsells');
 
             if (!$location) {
                 return $upsell_ids;
             }
 
-            return array_filter($upsell_ids, [$this, 'product_belongs_to_location']);
+            // OPTIMIZED: Preload all product locations in one query
+            if (!empty($upsell_ids)) {
+                $this->preload_product_locations($upsell_ids);
+            }
+            
+            // Filter by location and stock status
+            $filtered = array_filter($upsell_ids, function($product_id) use ($location) {
+                if (!$this->product_belongs_to_location($product_id)) {
+                    return false;
+                }
+                
+                // Also check stock status if setting requires it
+                global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+                $show_out_of_stock = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
+                if ($show_out_of_stock === 'hide') {
+                    return !mulopimfwc_is_product_out_of_stock_for_location($product_id);
+                }
+                
+                return true;
+            });
+
+            return $filtered;
         }
 
+        /**
+         * FIXED: Enhanced widget products filtering to respect settings
+         */
         public function filter_widget_products_by_location($query_args)
         {
-            $location = $this->get_filtered_location('widgets');
-
-            if (!$location) {
-                return $query_args;
-            }
-
-            // if (!isset($query_args['tax_query'])) {
-            //     $query_args['tax_query'] = [];
-            // }
-
-            $query_args['tax_query'][] = [
-                'taxonomy' => 'mulopimfwc_store_location',
-                'field' => 'slug',
-                'terms' => $location,
-            ];
-
-            return $query_args;
+            // Use the enhanced filtering method that respects settings
+            return $this->filter_shortcode_products($query_args);
         }
 
         function clear_cart()
@@ -5360,7 +6572,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 wp_send_json_error(['message' => __('Invalid location.', 'multi-location-product-and-inventory-management')]);
             }
 
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
 
             $allow_mixed = isset($options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                 ? $options['allow_mixed_location_cart']
@@ -5474,7 +6689,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             if (!isset($mulopimfwc_options) || !is_array($mulopimfwc_options)) {
-                $mulopimfwc_options = get_option('mulopimfwc_display_options', []);
+                $mulopimfwc_options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
             }
 
             $enable_all_locations = isset($mulopimfwc_options['enable_all_locations'])
@@ -5504,7 +6721,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.1.96");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.1.100");
         }
     }
 
@@ -5650,25 +6867,42 @@ if (!function_exists('mulopimfwc_get_values')) {
 
     function mulopimfwc_delete_user_location()
     {
+        // FIXED: Add nonce verification (Issue #33)
+        check_ajax_referer('mulopimfwc_delete_user_location', 'nonce');
+
+        // FIXED: Add capability check (Issue #40)
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => __('You must be logged in to delete locations.', 'multi-location-product-and-inventory-management')));
+            return;
+        }
 
         // Get location ID
-        $location_id = isset($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : '';
+        $location_id = isset($_POST['location_id']) ? sanitize_text_field(wp_unslash($_POST['location_id'])) : '';
 
         if (empty($location_id)) {
-            wp_send_json_error(array('message' => 'Invalid location ID'));
+            wp_send_json_error(array('message' => __('Invalid location ID', 'multi-location-product-and-inventory-management')));
+            return;
+        }
+
+        // FIXED: Validate location ID format (Issue #37)
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $location_id)) {
+            wp_send_json_error(array('message' => __('Invalid location ID format', 'multi-location-product-and-inventory-management')));
+            return;
         }
 
         $user_id = get_current_user_id();
         $user_locations = get_user_meta($user_id, 'mulopimfwc_user_locations', true);
 
         if (!is_array($user_locations)) {
-            wp_send_json_error(array('message' => 'No saved locations found'));
+            wp_send_json_error(array('message' => __('No saved locations found', 'multi-location-product-and-inventory-management')));
+            return;
         }
 
-        // Find and remove the location
+        // FIXED: Validate location exists and belongs to current user before attempting deletion (Issue #37)
         $found = false;
         foreach ($user_locations as $key => $location) {
-            if ($location['id'] === $location_id) {
+            // FIXED: Validate location belongs to current user
+            if (isset($location['id']) && $location['id'] === $location_id) {
                 unset($user_locations[$key]);
                 $found = true;
                 break;
@@ -5676,7 +6910,8 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         if (!$found) {
-            wp_send_json_error(array('message' => 'Location not found'));
+            wp_send_json_error(array('message' => __('Location not found', 'multi-location-product-and-inventory-management')));
+            return;
         }
 
         // Re-index array
@@ -5685,7 +6920,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         // Update user meta
         update_user_meta($user_id, 'mulopimfwc_user_locations', $user_locations);
 
-        wp_send_json_success(array('message' => 'Location deleted successfully'));
+        wp_send_json_success(array('message' => __('Location deleted successfully', 'multi-location-product-and-inventory-management')));
     }
 
     /**
@@ -5698,7 +6933,10 @@ if (!function_exists('mulopimfwc_get_values')) {
         $value = ($value === '' || $value === null) ? null : (int) $value;
 
         if ($value === null) {
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             if ($type === 'out') {
                 $value = isset($options['out_of_stock_threshold']) ? (int) $options['out_of_stock_threshold'] : 0;
             } else {
@@ -5735,7 +6973,10 @@ if (!function_exists('mulopimfwc_get_values')) {
      */
     function mulopimfwc_get_social_settings()
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $defaults = [
             'enabled' => 'off',
             'new_order' => 'on',
@@ -5988,7 +7229,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             return;
         }
 
-        $options = get_option('mulopimfwc_display_options', ['low_stock_notification_recipients' => 'admin']);
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', ['low_stock_notification_recipients' => 'admin']);
         $mode = isset($options['low_stock_notification_recipients']) ? $options['low_stock_notification_recipients'] : 'admin';
 
         $include_admin = ($mode === 'admin' || $mode === 'both');
@@ -6560,7 +7804,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.1.96",
+                "1.1.1.100",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );
@@ -6629,7 +7873,10 @@ function mulopimfwc_enqueue_admin_notifications_assets()
         true
     );
 
-    $options = get_option('mulopimfwc_display_options', []);
+    global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
     $defaults = [
         'realtime_enabled' => 'on',
         'floating_enabled' => 'on',
@@ -6759,7 +8006,10 @@ add_action('admin_head', 'mulopimfwc_add_favicon');
 add_action('wp_head', 'mulopimfwc_add_favicon');
 function mulopimfwc_add_favicon()
 {
-    $options = get_option('mulopimfwc_display_options', []);
+    global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
     $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings'])
         ? $options['notification_settings']
         : [];
@@ -7151,7 +8401,10 @@ function mulopimfwc_add_sw_registration_script()
         return;
     }
 
-    $options = get_option('mulopimfwc_display_options', []);
+    global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
     $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings'])
         ? $options['notification_settings']
         : [];

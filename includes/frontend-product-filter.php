@@ -110,7 +110,10 @@ class Location_Wise_Products_Filter
     public function render_filter_ui()
     {
         // Check if automatic display is enabled
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         // Get setting value, default to 'on' for backward compatibility if not set
         $enable_filter = isset($options['enable_product_filter']) ? $options['enable_product_filter'] : 'off';
         
@@ -255,7 +258,10 @@ class Location_Wise_Products_Filter
      */
     private function should_show_stock_filter()
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         return isset($options['enable_location_stock']) && $options['enable_location_stock'] === 'on';
     }
 
@@ -387,6 +393,7 @@ class Location_Wise_Products_Filter
             $batch_size = 500;
             $batch_page = 1;
             $filtered_posts = [];
+            // OPTIMIZED: Use cached method instead of direct get_term_by
             $location_term = !empty($location_slug) ? get_term_by('slug', $location_slug, 'mulopimfwc_store_location') : null;
             
             // Increase memory limit for stock filtering

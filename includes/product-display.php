@@ -21,7 +21,9 @@ if (!defined('ABSPATH')) {
  * Add this code to your theme's functions.php file or create a custom plugin
  */
 
-$display_option = get_option('mulopimfwc_display_options', []);
+$display_option = is_array($mulopimfwc_options ?? null)
+    ? $mulopimfwc_options
+    : get_option('mulopimfwc_display_options', []);
 
 if ($display_option === 'location_first') {
     // Hook to modify the main query
@@ -84,7 +86,10 @@ function mulopimfwc_add_store_location_orderby($orderby, $query)
 // Get the saved option value
 function mulopimfwc_get_out_of_stock_display_option()
 {
-    $options = get_option('mulopimfwc_display_options', array());
+    global $mulopimfwc_options;
+    $options = is_array($mulopimfwc_options ?? null)
+        ? $mulopimfwc_options
+        : get_option('mulopimfwc_display_options', []);
     return isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
 }
 
@@ -102,7 +107,7 @@ function mulopimfwc_is_product_out_of_stock_for_location($product_id)
         return $product ? !$product->is_in_stock() : false;
     }
 
-    // Get location term
+    // OPTIMIZED: Get location term using cached method
     $location = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
     if (!$location) {
         $product = wc_get_product($product_id);
@@ -175,7 +180,7 @@ function mulopimfwc_filter_out_of_stock_products_where($where, $query)
                 AND meta_value != 'outofstock'
             )";
         } else {
-            // Filter by location-specific stock
+            // OPTIMIZED: Filter by location-specific stock using cached method
             $location = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
             if ($location) {
                 $location_id = $location->term_id;

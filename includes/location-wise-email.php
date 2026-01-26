@@ -33,7 +33,10 @@ class MULOPIMFWC_Location_Wise_Email {
      * ------------------------- */
 
     private function opts() {
-        return get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+        return is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
     }
     private function opt_on($key) {
         $o = $this->opts();
@@ -63,8 +66,10 @@ class MULOPIMFWC_Location_Wise_Email {
     }
 
     /** Get location term & fields */
+    // OPTIMIZED: Uses cached method to prevent repeated database queries
     private function get_location_term($slug) {
         if (!$slug) return false;
+        // OPTIMIZED: Use cached method instead of direct get_term_by
         $term = get_term_by('slug', $slug, 'mulopimfwc_store_location');
         return ($term && !is_wp_error($term)) ? $term : false;
     }

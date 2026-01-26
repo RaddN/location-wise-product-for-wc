@@ -423,7 +423,10 @@ class MULOPIMFWC_Location_Managers
 
         $locations = $mulopimfwc_locations;
         $capabilities = $this->get_available_capabilities();
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $global_capabilities = isset($options['location_manager_capabilities']) ? $options['location_manager_capabilities'] : [];
 
 ?>
@@ -1209,15 +1212,54 @@ class MULOPIMFWC_Location_Managers
         check_ajax_referer('mulopimfwc_location_managers_nonce', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => esc_html_e('Permission denied', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => esc_html__('Permission denied', 'multi-location-product-and-inventory-management')]);
+            return;
         }
 
-        $query = sanitize_text_field($_POST['query']);
+        // FIXED: Add rate limiting (Issue #31)
+        $rate_limit_key = 'mulopimfwc_search_users_rate_' . get_current_user_id();
+        $requests = get_transient($rate_limit_key);
+        if ($requests === false) {
+            $requests = 0;
+        }
+        $requests++;
+        set_transient($rate_limit_key, $requests, MINUTE_IN_SECONDS);
+
+        $rate_limit = apply_filters('mulopimfwc_search_users_rate_limit', 30); // 30 requests per minute
+        if ($requests > $rate_limit) {
+            wp_send_json_error(['message' => __('Rate limit exceeded. Please try again later.', 'multi-location-product-and-inventory-management')]);
+            return;
+        }
+
+        // FIXED: Add wp_unslash and input validation (Issues #34, #39)
+        $query = isset($_POST['query']) ? sanitize_text_field(wp_unslash($_POST['query'])) : '';
+        
+        // FIXED: Add minimum and maximum length validation (Issue #34)
+        if (strlen($query) < 2) {
+            wp_send_json_error(['message' => __('Search query must be at least 2 characters.', 'multi-location-product-and-inventory-management')]);
+            return;
+        }
+
+        if (strlen($query) > 100) {
+            wp_send_json_error(['message' => __('Search query is too long.', 'multi-location-product-and-inventory-management')]);
+            return;
+        }
+
+        // FIXED: Remove wildcards from user input to prevent potential issues (Issue #34)
+        $query = trim($query);
+
+        // FIXED: Optimize to single query and cache excluded IDs (Issue #35)
+        $cache_key = 'mulopimfwc_excluded_manager_ids';
+        $excluded_ids = get_transient($cache_key);
+        if ($excluded_ids === false) {
+            $excluded_ids = get_users(['role' => 'mulopimfwc_location_manager', 'fields' => 'ID']);
+            set_transient($cache_key, $excluded_ids, 5 * MINUTE_IN_SECONDS); // Cache for 5 minutes
+        }
 
         $users = get_users([
             'search' => '*' . $query . '*',
             'search_columns' => ['user_login', 'user_email', 'user_nicename', 'display_name'],
-            'exclude' => get_users(['role' => 'mulopimfwc_location_manager', 'fields' => 'ID']),
+            'exclude' => $excluded_ids,
             'number' => 10
         ]);
 
@@ -1805,7 +1847,10 @@ class MULOPIMFWC_Location_Managers
         $manager_capabilities = get_user_meta($user->ID, 'mulopimfwc_manager_capabilities', true);
         if (!is_array($manager_capabilities) || empty($manager_capabilities)) {
             // Use global capabilities
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $manager_capabilities = isset($options['location_manager_capabilities']) ? $options['location_manager_capabilities'] : [];
         }
 

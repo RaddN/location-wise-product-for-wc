@@ -358,7 +358,10 @@ class MULOPIMFWC_Coupon_Location_Restrictions
      */
     private function get_cross_location_coupon_behavior()
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $behavior = isset($options['cross_location_coupon_behavior']) ? $options['cross_location_coupon_behavior'] : 'restrict';
         $allowed = ['restrict', 'applicable_products', 'full_cart'];
 

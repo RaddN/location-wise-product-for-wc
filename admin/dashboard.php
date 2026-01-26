@@ -887,8 +887,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.1.96", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.1.96");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.1.100", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.1.100");
 
         $payload = $this->build_dashboard_payload();
 
@@ -898,7 +898,10 @@ class MULOPIMFWC_Dashboard
         }
 
         // Get notification settings for poll interval
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings']) ? $options['notification_settings'] : [];
         $poll_interval = isset($notification_settings['poll_interval']) ? $notification_settings['poll_interval'] : '30000';
 
@@ -1321,7 +1324,7 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Low Stock Products by Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php esc_html_e('Stock Alerts by Location', 'multi-location-product-and-inventory-management'); ?></h2>
                             <?php
                             global $mulopimfwc_options;
                             $low_stock_products   = $this->get_low_stock_products_efficiently();
@@ -1560,23 +1563,43 @@ class MULOPIMFWC_Dashboard
             });
         }
 
+        // FIXED: Add caching and memory optimization (Issues #12, #20)
         foreach ($locations_to_include as $location) {
-            if ($has_range) {
-                $query = $wpdb->prepare("
-                    SELECT COUNT(DISTINCT p.ID) 
-                    FROM {$wpdb->posts} p
-                    INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE p.post_type = 'product' 
-                    AND p.post_status = 'publish'
-                    AND DATE(p.post_date) BETWEEN %s AND %s
-                    AND tt.taxonomy = 'mulopimfwc_store_location'
-                    AND tt.term_id = %d
-                ", $date_from, $date_to, $location->term_id);
-                $counts[$location->name] = (int) $wpdb->get_var($query);
-            } else {
-                $counts[$location->name] = $this->get_location_product_count($location->term_id);
+            // Validate location exists (Issue #13)
+            if (!$location || !isset($location->term_id) || !isset($location->name)) {
+                continue;
             }
+            
+            // FIXED: Use cache for repeated queries (Issue #12)
+            $cache_key = 'mulopimfwc_product_count_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
+            $cached_count = wp_cache_get($cache_key, 'mulopimfwc_dashboard');
+            
+            if ($cached_count !== false) {
+                $counts[$location->name] = (int) $cached_count;
+            } else {
+                if ($has_range) {
+                    $query = $wpdb->prepare("
+                        SELECT COUNT(DISTINCT p.ID) 
+                        FROM {$wpdb->posts} p
+                        INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                        WHERE p.post_type = 'product' 
+                        AND p.post_status = 'publish'
+                        AND DATE(p.post_date) BETWEEN %s AND %s
+                        AND tt.taxonomy = 'mulopimfwc_store_location'
+                        AND tt.term_id = %d
+                    ", $date_from, $date_to, $location->term_id);
+                    $counts[$location->name] = (int) $wpdb->get_var($query);
+                } else {
+                    $counts[$location->name] = $this->get_location_product_count($location->term_id);
+                }
+                
+                // Cache result for 5 minutes (Issue #12)
+                wp_cache_set($cache_key, $counts[$location->name], 'mulopimfwc_dashboard', 300);
+            }
+            
+            // FIXED: Clear variables to prevent memory leaks (Issue #20)
+            unset($query);
         }
 
         if ($include_default) {
@@ -1628,24 +1651,44 @@ class MULOPIMFWC_Dashboard
             });
         }
 
+        // FIXED: Add caching and memory optimization (Issues #12, #20)
         foreach ($locations_to_include as $location) {
-            if ($has_range) {
-                $meta_key = '_location_stock_' . $location->term_id;
-                $query = $wpdb->prepare("
-                    SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)), 0) as total_stock
-                    FROM {$wpdb->posts} p
-                    INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-                    WHERE p.post_type = 'product' 
-                    AND p.post_status = 'publish'
-                    AND pm.meta_key = %s
-                    AND pm.meta_value != ''
-                    AND pm.meta_value IS NOT NULL
-                    AND DATE(p.post_date) BETWEEN %s AND %s
-                ", $meta_key, $date_from, $date_to);
-                $levels[$location->name] = (int) $wpdb->get_var($query);
-            } else {
-                $levels[$location->name] = $this->get_location_stock_level($location->term_id);
+            // Validate location exists (Issue #13)
+            if (!$location || !isset($location->term_id) || !isset($location->name)) {
+                continue;
             }
+            
+            // FIXED: Use cache for repeated queries (Issue #12)
+            $cache_key = 'mulopimfwc_stock_level_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
+            $cached_level = wp_cache_get($cache_key, 'mulopimfwc_dashboard');
+            
+            if ($cached_level !== false) {
+                $levels[$location->name] = (int) $cached_level;
+            } else {
+                if ($has_range) {
+                    $meta_key = '_location_stock_' . $location->term_id;
+                    $query = $wpdb->prepare("
+                        SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)), 0) as total_stock
+                        FROM {$wpdb->posts} p
+                        INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                        WHERE p.post_type = 'product' 
+                        AND p.post_status = 'publish'
+                        AND pm.meta_key = %s
+                        AND pm.meta_value != ''
+                        AND pm.meta_value IS NOT NULL
+                        AND DATE(p.post_date) BETWEEN %s AND %s
+                    ", $meta_key, $date_from, $date_to);
+                    $levels[$location->name] = (int) $wpdb->get_var($query);
+                } else {
+                    $levels[$location->name] = $this->get_location_stock_level($location->term_id);
+                }
+                
+                // Cache result for 5 minutes (Issue #12)
+                wp_cache_set($cache_key, $levels[$location->name], 'mulopimfwc_dashboard', 300);
+            }
+            
+            // FIXED: Clear variables to prevent memory leaks (Issue #20)
+            unset($query, $meta_key);
         }
 
         if ($include_default) {
@@ -2476,7 +2519,7 @@ class MULOPIMFWC_Dashboard
     /**
      * Load inventory records tied to a location stock meta.
      */
-    private function get_location_inventory_records(?int $location_id = null): array
+    private function get_location_inventory_records(?int $location_id = null, int $limit = 0, int $offset = 0): array
     {
         global $wpdb;
 
@@ -2485,6 +2528,14 @@ class MULOPIMFWC_Dashboard
 
         $location_sale_key = $location_id ? '_location_sale_price_' . $location_id : '';
         $location_regular_key = $location_id ? '_location_regular_price_' . $location_id : '';
+
+        // FIXED: Add limit and offset for pagination to prevent memory exhaustion (Issue #38)
+        $limit_clause = '';
+        if ($limit > 0) {
+            $limit_clause = ' LIMIT %d OFFSET %d';
+            $prepare_params[] = $limit;
+            $prepare_params[] = $offset;
+        }
 
         $query = "
             SELECT pm_stock.post_id AS product_id,
@@ -2509,6 +2560,7 @@ class MULOPIMFWC_Dashboard
             AND pm_stock.meta_value != ''
             AND pm_stock.meta_value IS NOT NULL
             AND CAST(pm_stock.meta_value AS SIGNED) > 0
+            " . $limit_clause . "
         ";
 
         if ($location_id) {
@@ -2518,7 +2570,12 @@ class MULOPIMFWC_Dashboard
 
         $prepare_params[] = $stock_meta_key;
 
-        $results = $wpdb->get_results($wpdb->prepare($query, ...$prepare_params));
+        // Prepare query with all parameters
+        if (!empty($prepare_params)) {
+            $results = $wpdb->get_results($wpdb->prepare($query, ...$prepare_params));
+        } else {
+            $results = $wpdb->get_results($query);
+        }
 
         // FIXED: Enhanced error handling with user feedback
         if ($wpdb->last_error) {
@@ -2617,7 +2674,29 @@ class MULOPIMFWC_Dashboard
         $threshold_timestamp = $now - ($dead_stock_days * DAY_IN_SECONDS);
 
         foreach ($locations as $entry) {
-            $records = $this->get_location_inventory_records($entry['term_id']);
+            // FIXED: Process records in batches to prevent memory exhaustion (Issue #38)
+            $all_records = [];
+            $batch_size = 1000;
+            $offset = 0;
+            
+            do {
+                $records = $this->get_location_inventory_records($entry['term_id'], $batch_size, $offset);
+                if (!empty($records) && !isset($records['error'])) {
+                    $all_records = array_merge($all_records, $records);
+                } elseif (isset($records['error'])) {
+                    // Error occurred, break and log
+                    error_log('Mulopimfwc: Error fetching inventory records for location ' . $entry['term_id']);
+                    break;
+                }
+                $offset += $batch_size;
+                
+                // Safety check to prevent infinite loops
+                if ($offset > 50000) {
+                    break;
+                }
+            } while (count($records) === $batch_size);
+            
+            $records = $all_records;
             $sales_info = $this->get_location_recent_sales_info($entry['slug'], $threshold_timestamp);
             $last_sale_dates = $sales_info['last_sale_dates'];
             $sold_quantities = $sales_info['sold_quantities'];
@@ -2867,6 +2946,26 @@ class MULOPIMFWC_Dashboard
             wp_send_json_error([
                 'message' => __('Permission denied', 'multi-location-product-and-inventory-management'),
             ]);
+            return;
+        }
+
+        // FIXED: Add rate limiting (max 1 request per 5 seconds per user) (Issue #32)
+        $rate_limit_key = 'mulopimfwc_dashboard_live_rate_' . get_current_user_id();
+        $last_request = get_transient($rate_limit_key);
+        if ($last_request !== false && (time() - $last_request) < 5) {
+            wp_send_json_error([
+                'message' => __('Please wait before requesting another update.', 'multi-location-product-and-inventory-management'),
+            ]);
+            return;
+        }
+        set_transient($rate_limit_key, time(), 10); // 10 second expiry
+
+        // FIXED: Use caching to reduce database load (Issue #32)
+        $cache_key = 'mulopimfwc_dashboard_live_data';
+        $cached_data = get_transient($cache_key);
+        if ($cached_data !== false) {
+            wp_send_json_success($cached_data);
+            return;
         }
 
         $payload = $this->build_dashboard_payload();
@@ -2876,7 +2975,7 @@ class MULOPIMFWC_Dashboard
 
         update_option('mulopimfwc_dashboard_last_check', current_time('timestamp', true));
 
-        wp_send_json_success([
+        $response_data = [
             'productCounts' => $payload['product_counts'],
             'stockLevels' => $payload['stock_levels'],
             'locationColors' => $payload['location_colors'],
@@ -2895,7 +2994,12 @@ class MULOPIMFWC_Dashboard
             'low_stock' => $payload['low_stock_products'],
             'alerts' => $alerts,
             'site_status' => $site_status,
-        ]);
+        ];
+
+        // Cache for 30 seconds
+        set_transient($cache_key, $response_data, 30);
+
+        wp_send_json_success($response_data);
     }
 
     /**
@@ -2954,7 +3058,10 @@ class MULOPIMFWC_Dashboard
             'completed' => [],
         ];
         $high_value_orders = [];
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $social = isset($options['social_notifications']) ? $options['social_notifications'] : [];
         $high_value_threshold = floatval($social['high_value_threshold'] ?? 500);
 

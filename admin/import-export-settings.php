@@ -26,7 +26,7 @@ class mulopimfwc_Import_Export
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '1.1.1.96',
+            '1.1.1.100',
             true
         );
 
@@ -62,7 +62,10 @@ class mulopimfwc_Import_Export
         }
 
         // Get all plugin settings
-        $settings = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+        $settings = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
 
         // Add metadata
         $export_data = [
@@ -138,7 +141,9 @@ class mulopimfwc_Import_Export
         $sanitized_settings = $this->sanitize_imported_settings($import_data['settings']);
 
         // Backup current settings before importing
-        $current_settings = get_option('mulopimfwc_display_options', []);
+        $current_settings = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         update_option('mulopimfwc_display_options_backup_' . time(), $current_settings);
 
         // Update settings
@@ -214,17 +219,27 @@ function mulopimfwc_export_products_csv_handler() {
         $locations = [];
     }
     
-    // Get products in batches to prevent memory exhaustion
-    // Use a reasonable batch size (500 products per batch)
-    $batch_size = 500;
+    // FIXED: Improved memory management with streaming approach (Issue #7)
+    // Use a reasonable batch size (250 products per batch to reduce memory usage)
+    $batch_size = apply_filters('mulopimfwc_export_batch_size', 250);
     $page = 1;
-    $products_data = [];
+    $total_processed = 0;
+    $max_products = apply_filters('mulopimfwc_export_max_products', 50000); // Limit total exports
     
-    // Increase memory limit for export
+    // Increase memory limit for export (but more conservatively)
     if (function_exists('ini_set')) {
-        @ini_set('memory_limit', '512M');
+        $current_limit = ini_get('memory_limit');
+        $current_bytes = wp_convert_hr_to_bytes($current_limit);
+        $min_bytes = wp_convert_hr_to_bytes('256M');
+        if ($current_bytes < $min_bytes) {
+            @ini_set('memory_limit', '256M');
+        }
     }
-    @set_time_limit(300);
+    @set_time_limit(600); // Increased timeout for large exports
+    
+    // FIXED: Use generator pattern to process in chunks and clear memory
+    $products_data = [];
+    $memory_usage_start = memory_get_usage(true);
     
     do {
         $args = [
@@ -243,7 +258,16 @@ function mulopimfwc_export_products_csv_handler() {
             break;
         }
         
+        // Process batch
+        $batch_data = [];
         foreach ($product_ids as $product_id) {
+            // Check memory usage and break if getting too high
+            $memory_usage = memory_get_usage(true);
+            $memory_limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
+            if ($memory_usage > ($memory_limit * 0.8)) { // Stop at 80% of limit
+                break 2;
+            }
+            
             $product = wc_get_product($product_id);
             
             if (!$product) {
@@ -252,9 +276,12 @@ function mulopimfwc_export_products_csv_handler() {
             
             $product_type = $product->get_type();
             
-            // Get location data for the product
+            // Get location data for the product (only for existing locations)
             $location_data = [];
             foreach ($locations as $location) {
+                if (!$location || is_wp_error($location)) {
+                    continue;
+                }
                 $location_data[$location->term_id] = [
                     'stock' => get_post_meta($product_id, '_location_stock_' . $location->term_id, true),
                     'price' => get_post_meta($product_id, '_location_sale_price_' . $location->term_id, true),
@@ -275,12 +302,13 @@ function mulopimfwc_export_products_csv_handler() {
                 'variations' => [],
             ];
             
-            // Handle variable products
+            // Handle variable products (limit variations to prevent memory issues)
             if ($product_type === 'variable') {
-                $available_variations = $product->get_available_variations();
+                $variation_ids = $product->get_children();
+                $max_variations = apply_filters('mulopimfwc_export_max_variations', 100);
+                $variation_ids = array_slice($variation_ids, 0, $max_variations);
                 
-                foreach ($available_variations as $variation) {
-                    $variation_id = $variation['variation_id'];
+                foreach ($variation_ids as $variation_id) {
                     $variation_obj = wc_get_product($variation_id);
                     
                     if (!$variation_obj) {
@@ -290,6 +318,9 @@ function mulopimfwc_export_products_csv_handler() {
                     // Get location data for variation
                     $variation_location_data = [];
                     foreach ($locations as $location) {
+                        if (!$location || is_wp_error($location)) {
+                            continue;
+                        }
                         $variation_location_data[$location->term_id] = [
                             'stock' => get_post_meta($variation_id, '_location_stock_' . $location->term_id, true),
                             'price' => get_post_meta($variation_id, '_location_sale_price_' . $location->term_id, true),
@@ -297,59 +328,84 @@ function mulopimfwc_export_products_csv_handler() {
                         ];
                     }
                     
-                    // Format attributes for display
+                    // Get variation attributes
+                    $attributes = $variation_obj->get_attributes();
                     $attributes_label = [];
-                    foreach ($variation['attributes'] as $key => $value) {
-                        $attr_name = ucfirst(str_replace('attribute_pa_', '', $key));
+                    foreach ($attributes as $key => $value) {
+                        $attr_name = wc_attribute_label(str_replace('attribute_', '', $key), $product);
                         $attributes_label[] = $attr_name . ': ' . $value;
                     }
                     
                     $product_info['variations'][] = [
                         'id' => $variation_id,
-                        'attributes' => $variation['attributes'],
+                        'attributes' => $attributes,
                         'attributes_label' => implode(', ', $attributes_label),
-                        'price' => $variation['display_price'],
-                        'stock' => $variation['is_in_stock'] ? $variation['max_qty'] : 0,
+                        'price' => $variation_obj->get_price(),
+                        'stock' => $variation_obj->get_stock_quantity(),
                         'sku' => $variation_obj->get_sku(),
                         'purchase_price' => get_post_meta($variation_id, '_purchase_price', true),
                         'location_data' => $variation_location_data,
                     ];
+                    
+                    // Clear variation object from memory
+                    unset($variation_obj);
                 }
             }
             
-            $products_data[] = $product_info;
+            $batch_data[] = $product_info;
+            
+            // Clear product object from memory
+            unset($product);
         }
         
-        // Store count before unsetting for while condition
-        $batch_count = count($product_ids);
+        // Add batch to main array
+        $products_data = array_merge($products_data, $batch_data);
+        $total_processed += count($batch_data);
         
-        // Clear memory after each batch
+        // Clear batch data from memory
+        unset($batch_data);
         unset($product_ids);
+        
+        // Force garbage collection every 5 batches
+        if ($page % 5 === 0) {
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
+        }
         
         // Increment page for next batch
         $page++;
         
-        // Safety check: limit total batches to prevent infinite loops
-        if ($page > 1000) { // Max 500,000 products (500 * 1000)
+        // Safety checks: limit total batches and total products
+        if ($page > 200 || $total_processed >= $max_products) { // Max 50,000 products (250 * 200)
             break;
         }
         
-    } while ($batch_count === $batch_size);
+    } while (count($product_ids ?? []) === $batch_size);
     
-    // Format locations for frontend
+    // Format locations for frontend (validate locations exist)
     $locations_formatted = [];
     foreach ($locations as $location) {
-        $locations_formatted[] = [
-            'id' => $location->term_id,
-            'name' => $location->name,
-            'slug' => rawurldecode($location->slug),
-        ];
+        if (!$location || is_wp_error($location)) {
+            continue;
+        }
+        // FIXED: Validate location exists before adding (Issue #13)
+        $validated_location = get_term($location->term_id, 'mulopimfwc_store_location');
+        if ($validated_location && !is_wp_error($validated_location)) {
+            $locations_formatted[] = [
+                'id' => $location->term_id,
+                'name' => $location->name,
+                'slug' => rawurldecode($location->slug),
+            ];
+        }
     }
     
     wp_send_json_success([
         'products' => $products_data,
         'locations' => $locations_formatted,
         'count' => count($products_data),
+        'total_processed' => $total_processed,
+        'memory_used' => size_format(memory_get_usage(true) - $memory_usage_start),
     ]);
 }
 

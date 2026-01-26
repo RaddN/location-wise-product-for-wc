@@ -41,7 +41,10 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          * ------------------------- */
 
         private function get_options() {
-            return get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            return is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         }
 
         private function is_enabled($option_key) {

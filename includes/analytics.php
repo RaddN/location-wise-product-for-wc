@@ -87,20 +87,30 @@ class mulopimfwc_anaylytics
     {
         $data = $this->collect_site_data();
 
+        // FIXED: Add timeout and error handling (Issue #36)
         $response = wp_remote_post($this->analytics_api_url . '/track/' . $this->product_id, array(
             'headers' => array(
                 'Content-Type' => 'application/json',
             ),
             'body' => wp_json_encode($data),
-            'timeout' => 30,
+            'timeout' => 10, // FIXED: Reduce timeout from 30 to 10 seconds
+            'blocking' => false, // FIXED: Make non-blocking to avoid slowing down site
         ));
 
+        // FIXED: Log errors for debugging (Issue #36)
         if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Mulopimfwc Analytics Error: ' . $response->get_error_message());
+            }
             return false;
         }
 
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
+            $response_body = wp_remote_retrieve_body($response);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Mulopimfwc Analytics Error: HTTP ' . $response_code . ' - ' . substr($response_body, 0, 200));
+            }
             return false;
         }
 
@@ -117,15 +127,30 @@ class mulopimfwc_anaylytics
             'reason' => $reason,
         );
 
+        // FIXED: Add timeout and error handling (Issue #36)
         $response = wp_remote_post($this->analytics_api_url . '/deactivate/' . $this->product_id, array(
             'headers' => array(
                 'Content-Type' => 'application/json',
             ),
             'body' => wp_json_encode($data),
-            'timeout' => 30,
+            'timeout' => 10, // FIXED: Reduce timeout from 30 to 10 seconds
+            'blocking' => false, // FIXED: Make non-blocking to avoid slowing down site
         ));
 
+        // FIXED: Log errors for debugging (Issue #36)
         if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Mulopimfwc Analytics Deactivation Error: ' . $response->get_error_message());
+            }
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200 && $response_code !== 201) {
+            $response_body = wp_remote_retrieve_body($response);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Mulopimfwc Analytics Deactivation Error: HTTP ' . $response_code . ' - ' . substr($response_body, 0, 200));
+            }
             return false;
         }
 

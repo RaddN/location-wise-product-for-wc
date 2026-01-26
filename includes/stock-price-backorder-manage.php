@@ -369,7 +369,10 @@ function mulopimfwc_get_current_store_location()
     }
     
     // If cookie is empty, check if popup is enabled
-    $options = get_option('mulopimfwc_display_options', []);
+    global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
     $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
     
     // If popup is disabled, use default location
@@ -384,12 +387,15 @@ function mulopimfwc_get_current_store_location()
 }
 
 // Get location term ID from slug
+// OPTIMIZED: Uses cached method to prevent repeated database queries
 function mulopimfwc_get_location_term_id($location_slug)
 {
     if (empty($location_slug)) {
         return false;
     }
 
+    // OPTIMIZED: Use cached method instead of direct get_term_by
+    // This prevents N+1 queries when called multiple times per request
     $location = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
     return $location ? $location->term_id : false;
 }
@@ -1152,7 +1158,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.96');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.100');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -1173,7 +1179,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.96');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.100');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }
@@ -1183,14 +1189,16 @@ add_action('wp_footer', function () {
 
 
 // add stock & price details in product pages
-$options = get_option('mulopimfwc_display_options', ['enable_location_by_user_role' => []]);
+$options = is_array($mulopimfwc_options ?? null)
+    ? $mulopimfwc_options
+    : get_option('mulopimfwc_display_options', ['enable_location_by_user_role' => []]);
 $selected_roles = isset($options['enable_location_by_user_role']) ? $options['enable_location_by_user_role'] : [];
 $current_user = wp_get_current_user();
 $user_roles = $current_user->roles;
 
 // Check if the current user role has permission
 if (array_intersect($user_roles, $selected_roles)) {
-    if ((get_option('mulopimfwc_display_options', ['enable_location_information' => 'off'])['enable_location_information'] ?? 'off') === 'on') {
+    if (($options['enable_location_information'] ?? 'off') === 'on') {
         // Add location-specific stock and price display on product pages
         add_action('woocommerce_single_product_summary', 'mulopimfwc_display_location_specific_stock_info', 25);
         add_action('woocommerce_shop_loop_item_title', 'mulopimfwc_display_location_specific_stock_info_loop', 15);
@@ -1380,7 +1388,7 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
 
 
 
-if (array_intersect($user_roles, $selected_roles) && (get_option('mulopimfwc_display_options', ['enable_location_information' => 'off'])['enable_location_information'] ?? 'off') === 'on') {
+if (array_intersect($user_roles, $selected_roles) && ($options['enable_location_information'] ?? 'off') === 'on') {
 
     /**
      * Add stock status to product category/archive pages

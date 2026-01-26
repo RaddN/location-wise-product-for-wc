@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.1.96
+ * @since 1.1.1.100
  */
 
 if (!defined('ABSPATH')) {
@@ -116,7 +116,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     private function is_tracking_enabled()
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         return isset($options['enable_customer_location_tracking']) &&
             $options['enable_customer_location_tracking'] === 'on' && mulopimfwc_premium_feature();
     }
@@ -143,7 +146,10 @@ class Mulopimfwc_Customer_Location_Insights
         
         // If no cookie, check if there's a default location set
         if (empty($location_slug) || $location_slug === 'all-products') {
-            $options = get_option('mulopimfwc_display_options', []);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
             $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
             
             // If popup is disabled, use default location
@@ -346,7 +352,10 @@ class Mulopimfwc_Customer_Location_Insights
     // FIXED: Changed from private to protected to allow proper access without Reflection
     protected function log_action($action_type, $location, $product_id = null, $order_id = null)
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $history_setting = isset($options['customer_location_history']) ?
             $options['customer_location_history'] : 'latest';
 
@@ -729,7 +738,10 @@ class Mulopimfwc_Customer_Location_Insights
             return;
         }
 
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $recommendations_enabled = isset($options['location_based_recommendations']) &&
             $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
 
@@ -738,14 +750,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.1.96'
+                '1.1.1.100'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.1.96',
+                '1.1.1.100',
                 true
             );
 
@@ -761,7 +773,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function recommendations_shortcode($atts)
     {
-        $options = get_option('mulopimfwc_display_options', []);
+        global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
         $recommendations_enabled = isset($options['location_based_recommendations']) &&
             $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
 
