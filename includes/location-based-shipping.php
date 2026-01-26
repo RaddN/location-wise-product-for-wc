@@ -5,7 +5,7 @@
  * Handles shipping zone and method filtering based on selected store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.1.100
+ * @since 1.1.1.101
  */
 
 if (!defined('ABSPATH')) {
@@ -409,14 +409,14 @@ class MULOPIMFWC_Location_Based_Shipping
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/css/shipping-admin.css',
             array(),
-            '1.1.1.100'
+            '1.1.1.101'
         );
 
         wp_enqueue_script(
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/js/shipping-admin.js',
             array('jquery'),
-            '1.1.1.100',
+            '1.1.1.101',
             true
         );
 

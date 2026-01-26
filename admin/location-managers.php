@@ -1562,7 +1562,13 @@ class MULOPIMFWC_Location_Managers
             $page === 'multi-location-product-and-inventory-management' &&
             !self::user_has_capability('view_dashboard')
         ) {
-            wp_redirect(admin_url('index.php?restricted=1'));
+            if (self::user_has_capability('view_products') || self::user_has_capability('manage_products')) {
+                wp_redirect(admin_url('admin.php?page=location-stock-management'));
+            } elseif (self::user_has_capability('run_reports')) {
+                wp_redirect(admin_url('admin.php?page=mulopimfwc-analytics'));
+            } else {
+                wp_redirect(admin_url('index.php?restricted=1'));
+            }
             exit;
         }
 
@@ -1631,17 +1637,21 @@ class MULOPIMFWC_Location_Managers
             'profile.php', // User profile
         ];
 
+        $can_view_dashboard = in_array('view_dashboard', $manager_capabilities, true);
+        $can_view_products = in_array('view_products', $manager_capabilities, true);
+        $can_manage_products = in_array('manage_products', $manager_capabilities, true);
+        $can_run_reports = in_array('run_reports', $manager_capabilities, true);
+        $show_plugin_parent = $can_view_dashboard || $can_view_products || $can_manage_products || $can_run_reports;
+
         // Capability-based page mapping
         $capability_pages = [
             'view_dashboard' => [
                 'multi-location-product-and-inventory-management',
             ],
             'view_products' => [
-                'multi-location-product-and-inventory-management',
                 'location-stock-management',
             ],
             'manage_products' => [
-                'multi-location-product-and-inventory-management',
                 'location-stock-management',
                 'edit.php?post_type=product',
                 'post-new.php?post_type=product',
@@ -1672,7 +1682,6 @@ class MULOPIMFWC_Location_Managers
                 'coupons-moved', // If they can manage orders, they might need coupons
             ],
             'run_reports' => [
-                'multi-location-product-and-inventory-management',
                 'woocommerce', // WooCommerce main menu usually contains reports
                 'mulopimfwc-analytics',
                 // Add specific report pages here if you have custom ones
@@ -1681,6 +1690,7 @@ class MULOPIMFWC_Location_Managers
 
         // Build allowed pages based on capabilities
         $allowed_pages = $base_allowed_pages;
+        $allowed_parents = $base_allowed_pages;
 
         foreach ($manager_capabilities as $capability) {
             if (isset($capability_pages[$capability])) {
@@ -1688,26 +1698,31 @@ class MULOPIMFWC_Location_Managers
             }
         }
 
+        if ($show_plugin_parent) {
+            $allowed_parents[] = 'multi-location-product-and-inventory-management';
+        }
+
         // Remove duplicates
         $allowed_pages = array_unique($allowed_pages);
+        $allowed_parents = array_unique($allowed_parents);
 
         // Remove all top-level menus except allowed ones
         foreach ($menu as $index => $item) {
-            if (!in_array($item[2], $allowed_pages)) {
+            if (!in_array($item[2], $allowed_pages, true) && !in_array($item[2], $allowed_parents, true)) {
                 remove_menu_page($item[2]);
             }
         }
 
         // Remove all submenus except for allowed pages
         foreach ($submenu as $parent => $items) {
-            if (!in_array($parent, $allowed_pages)) {
+            if (!in_array($parent, $allowed_pages, true) && !in_array($parent, $allowed_parents, true)) {
                 remove_menu_page($parent);
                 continue;
             }
 
             // Clean up submenus for allowed pages
             foreach ($items as $index => $subitem) {
-                if (!in_array($subitem[2], $allowed_pages)) {
+                if (!in_array($subitem[2], $allowed_pages, true)) {
                     unset($submenu[$parent][$index]);
                 }
             }
