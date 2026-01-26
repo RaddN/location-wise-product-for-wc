@@ -34,7 +34,7 @@ class MULOPIMFWC_Dashboard
         check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
 
         // Check user permissions
-        if (!current_user_can('manage_woocommerce')) {
+        if (!MULOPIMFWC_Location_Managers::user_has_capability('export_report')) {
             wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
         }
 
@@ -235,7 +235,7 @@ class MULOPIMFWC_Dashboard
         check_ajax_referer('mulopimfwc_export_nonce', 'nonce');
 
         // Check user permissions
-        if (!current_user_can('manage_woocommerce')) {
+        if (!MULOPIMFWC_Location_Managers::user_has_capability('export_report')) {
             wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
         }
 
@@ -905,6 +905,16 @@ class MULOPIMFWC_Dashboard
         $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings']) ? $options['notification_settings'] : [];
         $poll_interval = isset($notification_settings['poll_interval']) ? $notification_settings['poll_interval'] : '30000';
 
+        $can_manage_products = MULOPIMFWC_Location_Managers::user_has_capability('manage_products');
+        $can_view_products = MULOPIMFWC_Location_Managers::user_has_capability('view_products');
+        $can_export_report = MULOPIMFWC_Location_Managers::user_has_capability('export_report');
+        $products_link = '';
+        if ($can_manage_products) {
+            $products_link = admin_url('edit.php?post_type=product');
+        } elseif ($can_view_products) {
+            $products_link = admin_url('admin.php?page=location-stock-management');
+        }
+
         wp_localize_script('lwp-dashboard-js', 'mulopimfwc_DashboardData', [
             'ajaxurl' => admin_url('admin-ajax.php'),
             'export_nonce' => wp_create_nonce('mulopimfwc_export_nonce'),
@@ -959,6 +969,7 @@ class MULOPIMFWC_Dashboard
                         </button>
 
                         <!-- Export Dropdown -->
+                        <?php if ($can_export_report) : ?>
                         <div class="export_report_dropdown <?php echo esc_attr(mulopimfwc_get_pro_class(false)); ?>">
                             <button class="mulopimfwc-btn-primary export_toggle_btn" style="padding: 10px 30px !important;">
                                 <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -978,6 +989,7 @@ class MULOPIMFWC_Dashboard
                                 </button>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
 
                     <style>
@@ -1177,7 +1189,11 @@ class MULOPIMFWC_Dashboard
                 </div>
                 <div class="lwp-card-stats">
                     <div class="lwp-stats-grid">
-                        <a href="<?php echo esc_url(admin_url('edit.php?post_type=product')); ?>" class="lwp-stat-item">
+                        <?php
+                        $products_tag = $products_link ? 'a' : 'div';
+                        $products_attrs = $products_link ? ' href="' . esc_url($products_link) . '"' : '';
+                        ?>
+                        <<?php echo $products_tag; ?> class="lwp-stat-item"<?php echo $products_attrs; ?>>
                             <div class="lwp-stat-item-icon">
 
                                 <svg class="svg-inline--fa fa-box" aria-hidden="true" data-prefix="fas" data-icon="box" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18">
@@ -1189,7 +1205,7 @@ class MULOPIMFWC_Dashboard
                                 <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management'); ?></span>
                                 <span class="lwp-stat-value"><?php echo esc_html($this->get_total_products_count()); ?></span>
                             </div>
-                        </a>
+                        </<?php echo $products_tag; ?>>
                         <a href="<?php echo esc_url(admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product')); ?>" class="lwp-stat-item">
                             <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
 
@@ -1408,9 +1424,13 @@ class MULOPIMFWC_Dashboard
                                         <?php foreach ((object)$low_stock_products as $item) : ?>
                                             <tr>
                                                 <td>
-                                                    <a href="<?php echo esc_url(get_edit_post_link($item['product_id'])); ?>">
+                                                    <?php if ($can_manage_products) : ?>
+                                                        <a href="<?php echo esc_url(get_edit_post_link($item['product_id'])); ?>">
+                                                            <?php echo esc_html($item['product_title']); ?>
+                                                        </a>
+                                                    <?php else : ?>
                                                         <?php echo esc_html($item['product_title']); ?>
-                                                    </a>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td><?php echo esc_html($item['location_name']); ?></td>
                                                 <td>
@@ -3028,6 +3048,22 @@ class MULOPIMFWC_Dashboard
             }
         }
 
+        $can_manage_products = MULOPIMFWC_Location_Managers::user_has_capability('manage_products');
+        $can_view_products = MULOPIMFWC_Location_Managers::user_has_capability('view_products');
+        $can_view_dashboard = MULOPIMFWC_Location_Managers::user_has_capability('view_dashboard');
+        $products_list_url = admin_url('edit.php?post_type=product');
+        $stock_central_url = admin_url('admin.php?page=location-stock-management');
+        $dashboard_url = $can_view_dashboard
+            ? admin_url('admin.php?page=multi-location-product-and-inventory-management')
+            : admin_url('index.php');
+        if ($can_manage_products) {
+            $fallback_product_url = $products_list_url;
+        } elseif ($can_view_products) {
+            $fallback_product_url = $stock_central_url;
+        } else {
+            $fallback_product_url = $dashboard_url;
+        }
+
         $order_args = [
             'limit' => 25,
             'status' => ['pending', 'processing', 'on-hold', 'completed', 'failed', 'cancelled', 'refunded'],
@@ -3116,13 +3152,17 @@ class MULOPIMFWC_Dashboard
             // Create individual alerts for each low stock product
             foreach (array_slice($low_stock_items, 0, 5) as $item) {
                 $product_id = isset($item['product_id']) ? $item['product_id'] : 0;
+                $product_url = $fallback_product_url;
+                if ($can_manage_products && $product_id) {
+                    $product_url = get_edit_post_link($product_id);
+                }
                 $alerts[] = $this->format_alert(
                     'low_stock',
                     sprintf(__('Low stock: %s (%s)', 'multi-location-product-and-inventory-management'), $item['product_title'], $item['location_name']),
                     'warning',
                     [
                         'product_id' => $product_id,
-                        'url' => $product_id ? get_edit_post_link($product_id) : admin_url('edit.php?post_type=product'),
+                        'url' => $product_url,
                     ]
                 );
             }
@@ -3134,13 +3174,17 @@ class MULOPIMFWC_Dashboard
             // Create individual alerts for each out of stock product
             foreach (array_slice($out_of_stock, 0, 5) as $item) {
                 $product_id = isset($item['product_id']) ? $item['product_id'] : 0;
+                $product_url = $fallback_product_url;
+                if ($can_manage_products && $product_id) {
+                    $product_url = get_edit_post_link($product_id);
+                }
                 $alerts[] = $this->format_alert(
                     'out_of_stock',
                     sprintf(__('Out of stock: %s (%s)', 'multi-location-product-and-inventory-management'), $item['product_title'], $item['location_name']),
                     'critical',
                     [
                         'product_id' => $product_id,
-                        'url' => $product_id ? get_edit_post_link($product_id) : admin_url('edit.php?post_type=product'),
+                        'url' => $product_url,
                     ]
                 );
             }

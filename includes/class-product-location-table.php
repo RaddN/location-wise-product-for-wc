@@ -34,6 +34,76 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         ]);
     }
 
+    private function is_location_manager()
+    {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        return in_array('mulopimfwc_location_manager', $user->roles, true);
+    }
+
+    private function user_can_manage_products()
+    {
+        if (class_exists('MULOPIMFWC_Location_Managers')) {
+            return MULOPIMFWC_Location_Managers::user_has_capability('manage_products');
+        }
+
+        return current_user_can('manage_woocommerce');
+    }
+
+    private function user_can_view_products()
+    {
+        if (class_exists('MULOPIMFWC_Location_Managers')) {
+            return MULOPIMFWC_Location_Managers::user_has_capability('view_products');
+        }
+
+        return current_user_can('manage_woocommerce');
+    }
+
+    private function user_has_all_products()
+    {
+        if (class_exists('MULOPIMFWC_Location_Managers')) {
+            return MULOPIMFWC_Location_Managers::user_has_capability('all_products');
+        }
+
+        return current_user_can('manage_woocommerce');
+    }
+
+    private function should_show_default_details()
+    {
+        return !$this->is_location_manager() || $this->user_has_all_products();
+    }
+
+    private function filter_location_terms_for_user($location_terms)
+    {
+        if (!$this->is_location_manager() || $this->user_has_all_products()) {
+            return $location_terms;
+        }
+
+        if (!is_array($location_terms)) {
+            return [];
+        }
+
+        $assigned_locations = [];
+        if (class_exists('MULOPIMFWC_Location_Managers')) {
+            $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+        }
+
+        if (!is_array($assigned_locations) || empty($assigned_locations)) {
+            return [];
+        }
+
+        return array_values(array_filter($location_terms, function ($term) use ($assigned_locations) {
+            if (!is_object($term) || !isset($term->slug)) {
+                return false;
+            }
+
+            return in_array(rawurldecode($term->slug), $assigned_locations, true);
+        }));
+    }
+
     /**
      * Get table columns
      *
@@ -41,16 +111,29 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     public function get_columns()
     {
-        return [
-            'cb'            => '<input type="checkbox" />',
+        $columns = [
             'image'         => __('Image', 'multi-location-product-and-inventory-management'),
             'title'         => __('Product', 'multi-location-product-and-inventory-management'),
             'stock'         => __('Stock by Location', 'multi-location-product-and-inventory-management'),
             'price'         => __('Price by Location', 'multi-location-product-and-inventory-management'),
-            'purchase_price' => __('Purchase Info', 'multi-location-product-and-inventory-management'),
-            'gross_profit'   => __('Gross Profit', 'multi-location-product-and-inventory-management'),
-            'actions'       => __('Actions', 'multi-location-product-and-inventory-management'),
         ];
+
+        $show_purchase_profit = !($this->is_location_manager() && !$this->user_can_manage_products());
+        if ($show_purchase_profit) {
+            $columns['purchase_price'] = __('Purchase Info', 'multi-location-product-and-inventory-management');
+            $columns['gross_profit'] = __('Gross Profit', 'multi-location-product-and-inventory-management');
+        }
+
+        $show_actions = $this->user_can_manage_products() || ($this->is_location_manager() && $this->user_can_view_products());
+        if ($show_actions) {
+            $columns['actions'] = __('Actions', 'multi-location-product-and-inventory-management');
+        }
+
+        if ($this->user_can_manage_products()) {
+            $columns = array_merge(['cb' => '<input type="checkbox" />'], $columns);
+        }
+
+        return $columns;
     }
 
     /**
@@ -60,6 +143,10 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     protected function get_bulk_actions()
     {
+        if (!$this->user_can_manage_products()) {
+            return [];
+        }
+
         return [
             'bulk_assign_location' => __('Assign to Location', 'multi-location-product-and-inventory-management'),
             'bulk_remove_location' => __('Remove from Location', 'multi-location-product-and-inventory-management'),
@@ -102,6 +189,10 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     public function column_cb($item)
     {
+        if (!$this->user_can_manage_products()) {
+            return '';
+        }
+
         return sprintf('<input type="checkbox" name="product[]" value="%s" />', $item['id']);
     }
 
@@ -124,6 +215,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     public function column_title($item)
     {
+        if (!$this->user_can_manage_products()) {
+            $view_link = get_permalink($item['id']);
+            return '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . esc_html($item['title']) . '</a></strong>';
+        }
+
         $edit_link = get_edit_post_link($item['id']);
         $view_link = get_permalink($item['id']);
         $trash_link = get_delete_post_link($item['id'], '', true);
@@ -140,7 +236,8 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         global $mulopimfwc_locations;
         $all_locations_data = [];
         if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
-            foreach ($mulopimfwc_locations as $location) {
+            $all_locations = $this->filter_location_terms_for_user($mulopimfwc_locations);
+            foreach ($all_locations as $location) {
                 $all_locations_data[] = [
                     'id' => $location->term_id,
                     'name' => $location->name,
@@ -185,6 +282,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             return '<span style="color: #9ca3af;">--</span>';
         }
 
+        $location_terms = $this->filter_location_terms_for_user($item['location_terms']);
+        $show_default = $this->should_show_default_details();
+        if (!$show_default && empty($location_terms)) {
+            return '<span class="no-locations">' . __('N/A', 'multi-location-product-and-inventory-management') . '</span>';
+        }
+
         $output = '<div class="location-stock-container">';
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
             $variation_index = 0;
@@ -205,22 +308,24 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $variation_product = wc_get_product($variation['id']);
                 $manage_stock = $variation_product ? $variation_product->get_manage_stock() : false;
                 
-                $output .= '<div class="location-stock-item">';
-                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                if ($manage_stock) {
-                    // Stock management is enabled - use stock quantity
-                    $default_stock = get_post_meta($variation['id'], '_stock', true);
-                    $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
-                } else {
-                    // Stock management is disabled - check stock status
-                    $stock_status = get_post_meta($variation['id'], '_stock_status', true);
-                    $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
-                    $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
+                if ($show_default) {
+                    $output .= '<div class="location-stock-item">';
+                    $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                    if ($manage_stock) {
+                        // Stock management is enabled - use stock quantity
+                        $default_stock = get_post_meta($variation['id'], '_stock', true);
+                        $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                    } else {
+                        // Stock management is disabled - check stock status
+                        $stock_status = get_post_meta($variation['id'], '_stock_status', true);
+                        $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
+                        $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
+                    }
+                    $output .= '</div>';
                 }
-                $output .= '</div>';
                 
-                if (!empty($item['location_terms'])) {
-                    foreach ($item['location_terms'] as $location) {
+                if (!empty($location_terms)) {
+                    foreach ($location_terms as $location) {
                         $location_stock = get_post_meta($variation['id'], '_location_stock_' . $location->term_id, true);
                         $output .= '<div class="location-stock-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
@@ -254,24 +359,26 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $product = wc_get_product($item['id']);
             $manage_stock = $product ? $product->get_manage_stock() : false;
             
-            if ($manage_stock) {
-                // Stock management is enabled - use stock quantity
-                $default_stock = get_post_meta($item['id'], "_stock", true);
-                $output .= '<div class="location-stock-item">';
-                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
-                $output .= '</div>';
-            } else {
-                // Stock management is disabled - check stock status
-                $stock_status = get_post_meta($item['id'], "_stock_status", true);
-                $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
-                $output .= '<div class="location-stock-item">';
-                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
-                $output .= '</div>';
+            if ($show_default) {
+                if ($manage_stock) {
+                    // Stock management is enabled - use stock quantity
+                    $default_stock = get_post_meta($item['id'], "_stock", true);
+                    $output .= '<div class="location-stock-item">';
+                    $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                    $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                    $output .= '</div>';
+                } else {
+                    // Stock management is disabled - check stock status
+                    $stock_status = get_post_meta($item['id'], "_stock_status", true);
+                    $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
+                    $output .= '<div class="location-stock-item">';
+                    $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                    $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
+                    $output .= '</div>';
+                }
             }
-            if (!empty($item['location_terms'])) {
-                foreach ($item['location_terms'] as $location) {
+            if (!empty($location_terms)) {
+                foreach ($location_terms as $location) {
                     $location_stock = get_post_meta($item['id'], '_location_stock_' . $location->term_id, true);
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
@@ -314,6 +421,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             return '<span style="color: #9ca3af;">--</span>';
         }
 
+        $location_terms = $this->filter_location_terms_for_user($item['location_terms']);
+        $show_default = $this->should_show_default_details();
+        if (!$show_default && empty($location_terms)) {
+            return '<span class="no-locations">' . __('N/A', 'multi-location-product-and-inventory-management') . '</span>';
+        }
+
         $output = '<div class="location-price-container">';
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
             $variation_index = 0;
@@ -329,12 +442,14 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $output .= '<span class="accordion-icon">' . ($is_first ? '−' : '+') . '</span>';
                 $output .= '</div>';
                 $output .= '<div class="accordion-content' . ($is_first ? ' accordion-open' : '') . '" id="' . esc_attr($accordion_id) . '">';
-                $output .= '<div class="location-price-item">';
-                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                $output .= '<span class="price-value">' . wc_price($variation['price']) . '</span>';
-                $output .= '</div>';
-                if (!empty($item['location_terms'])) {
-                    foreach ($item['location_terms'] as $location) {
+                if ($show_default) {
+                    $output .= '<div class="location-price-item">';
+                    $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                    $output .= '<span class="price-value">' . wc_price($variation['price']) . '</span>';
+                    $output .= '</div>';
+                }
+                if (!empty($location_terms)) {
+                    foreach ($location_terms as $location) {
                         $price = get_post_meta($variation['id'], '_location_sale_price_' . $location->term_id, true);
                         $output .= '<div class="location-price-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
@@ -348,12 +463,14 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             }
         } else {
             $default_price = get_post_meta($item['id'], "_price", true);
-            $output .= '<div class="location-price-item">';
-            $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-            $output .= '<span class="price-value">' . wc_price($default_price) . '</span>';
-            $output .= '</div>';
-            if (!empty($item['location_terms'])) {
-                foreach ($item['location_terms'] as $location) {
+            if ($show_default) {
+                $output .= '<div class="location-price-item">';
+                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                $output .= '<span class="price-value">' . wc_price($default_price) . '</span>';
+                $output .= '</div>';
+            }
+            if (!empty($location_terms)) {
+                foreach ($location_terms as $location) {
                     $price = get_post_meta($item['id'], '_location_sale_price_' . $location->term_id, true);
                     $output .= '<div class="location-price-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
@@ -424,6 +541,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             return '<span style="color: #9ca3af;">--</span>';
         }
 
+        $location_terms = $this->filter_location_terms_for_user($item['location_terms']);
+        $show_default = $this->should_show_default_details();
+        if (!$show_default && empty($location_terms)) {
+            return '<span class="gross-profit-value no-data">' . __('N/A', 'multi-location-product-and-inventory-management') . '</span>';
+        }
+
         $output = '<div class="gross-profit-container '.esc_attr(mulopimfwc_get_pro_class()).'">';
 
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
@@ -446,14 +569,16 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $output .= '<div class="accordion-content' . ($is_first ? ' accordion-open' : '') . '" id="' . esc_attr($accordion_id) . '">';
 
                 // Default gross profit
-                $output .= '<div class="location-gross-profit-item">';
-                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                $output .= $this->calculate_profit_display($default_price, $purchase_price);
-                $output .= '</div>';
+                if ($show_default) {
+                    $output .= '<div class="location-gross-profit-item">';
+                    $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                    $output .= $this->calculate_profit_display($default_price, $purchase_price);
+                    $output .= '</div>';
+                }
 
                 // Location-specific gross profit
-                if (!empty($item['location_terms'])) {
-                    foreach ($item['location_terms'] as $location) {
+                if (!empty($location_terms)) {
+                    foreach ($location_terms as $location) {
                         $location_price = get_post_meta($variation['id'], '_location_sale_price_' . $location->term_id, true);
                         $price_to_use = !empty($location_price) ? $location_price : $default_price;
 
@@ -473,14 +598,16 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $default_price = get_post_meta($item['id'], "_price", true);
 
             // Default gross profit
-            $output .= '<div class="location-gross-profit-item">';
-            $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-            $output .= $this->calculate_profit_display($default_price, $purchase_price);
-            $output .= '</div>';
+            if ($show_default) {
+                $output .= '<div class="location-gross-profit-item">';
+                $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
+                $output .= $this->calculate_profit_display($default_price, $purchase_price);
+                $output .= '</div>';
+            }
 
             // Location-specific gross profit
-            if (!empty($item['location_terms'])) {
-                foreach ($item['location_terms'] as $location) {
+            if (!empty($location_terms)) {
+                foreach ($location_terms as $location) {
                     $location_price = get_post_meta($item['id'], '_location_sale_price_' . $location->term_id, true);
                     $price_to_use = !empty($location_price) ? $location_price : $default_price;
 
@@ -531,7 +658,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_locations_display($item)
     {
-        $locations = $item['location_terms'];
+        $locations = $this->filter_location_terms_for_user($item['location_terms']);
         if (empty($locations)) {
             return '<span class="no-locations">' . __('N/A', 'multi-location-product-and-inventory-management') . '</span>';
         }
@@ -551,6 +678,15 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_actions_display($item)
     {
+        if (!$this->user_can_manage_products()) {
+            if (!$this->is_location_manager() || !$this->user_can_view_products()) {
+                return '';
+            }
+
+            $view_link = get_permalink($item['id']);
+            return '<a class="button button-small" target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . esc_html__('View', 'multi-location-product-and-inventory-management') . '</a>';
+        }
+
         // Create nonce for action buttons
         $nonce = wp_create_nonce('location_product_action_nonce');
 
@@ -560,7 +696,8 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         global $mulopimfwc_locations;
         $all_locations_data = [];
         if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
-            foreach ($mulopimfwc_locations as $location) {
+            $all_locations = $this->filter_location_terms_for_user($mulopimfwc_locations);
+            foreach ($all_locations as $location) {
                 $all_locations_data[] = [
                     'id' => $location->term_id,
                     'name' => $location->name,
@@ -618,6 +755,10 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     public function process_bulk_action()
     {
+        if (!$this->user_can_manage_products()) {
+            return;
+        }
+
         // Check if bulk action is set
         if (!isset($_REQUEST['action']) && !isset($_REQUEST['action2'])) {
             return;
@@ -863,6 +1004,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
                 // Get product locations
                 $location_terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location');
+                if (!is_wp_error($location_terms)) {
+                    $location_terms = $this->filter_location_terms_for_user($location_terms);
+                }
 
                 // Get product type
                 $product_type = $product->get_type();
@@ -1020,16 +1164,21 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     protected function extra_tablenav($which)
     {
         global $mulopimfwc_locations;
+        $available_locations = [];
+        if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+            $available_locations = $this->filter_location_terms_for_user($mulopimfwc_locations);
+        }
+
         if ($which == 'top') {
             // Filters section
             echo '<div class="alignleft actions filters-section">';
             
             // Location filter
-            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+            if (!empty($available_locations)) {
                 $selected_location = isset($_REQUEST['filter-by-location']) ? sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])) : '';
                 echo '<select name="filter-by-location" id="filter-by-location">';
                 echo '<option value="">' . esc_html__('All Locations', 'multi-location-product-and-inventory-management') . '</option>';
-                foreach ($mulopimfwc_locations as $location) {
+                foreach ($available_locations as $location) {
                     $location_slug = rawurldecode($location->slug);
                     $selected = ($selected_location == $location_slug) ? 'selected="selected"' : '';
                     echo '<option value="' . esc_attr($location_slug) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
@@ -1105,19 +1254,21 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             echo '</div>';
 
             // Bulk actions section - location selector for bulk actions
-            echo '<div class="alignleft actions bulk-actions-section">';
-            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
-                $selected_bulk_location = isset($_REQUEST['bulk_location_id']) ? intval($_REQUEST['bulk_location_id']) : '';
-                echo '<label for="bulk-location-id" style="margin-right: 5px;">' . esc_html__('Location for Bulk Actions:', 'multi-location-product-and-inventory-management') . '</label>';
-                echo '<select name="bulk_location_id" id="bulk-location-id">';
-                echo '<option value="">' . esc_html__('Select Location', 'multi-location-product-and-inventory-management') . '</option>';
-                foreach ($mulopimfwc_locations as $location) {
-                    $selected = ($selected_bulk_location == $location->term_id) ? 'selected="selected"' : '';
-                    echo '<option value="' . esc_attr($location->term_id) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
+            if ($this->user_can_manage_products()) {
+                echo '<div class="alignleft actions bulk-actions-section">';
+                if (!empty($available_locations)) {
+                    $selected_bulk_location = isset($_REQUEST['bulk_location_id']) ? intval($_REQUEST['bulk_location_id']) : '';
+                    echo '<label for="bulk-location-id" style="margin-right: 5px;">' . esc_html__('Location for Bulk Actions:', 'multi-location-product-and-inventory-management') . '</label>';
+                    echo '<select name="bulk_location_id" id="bulk-location-id">';
+                    echo '<option value="">' . esc_html__('Select Location', 'multi-location-product-and-inventory-management') . '</option>';
+                    foreach ($available_locations as $location) {
+                        $selected = ($selected_bulk_location == $location->term_id) ? 'selected="selected"' : '';
+                        echo '<option value="' . esc_attr($location->term_id) . '" ' . esc_attr($selected) . '>' . esc_html($location->name) . '</option>';
+                    }
+                    echo '</select>';
                 }
-                echo '</select>';
+                echo '</div>';
             }
-            echo '</div>';
         }
     }
 

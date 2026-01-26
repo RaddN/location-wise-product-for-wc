@@ -325,7 +325,7 @@ class MULOPIMFWC_Location_Managers
     private function get_available_capabilities()
     {
         return [
-            'manage_inventory' => __('Manage Inventory', 'multi-location-product-and-inventory-management'),
+            'view_dashboard' => __('View Dashboard', 'multi-location-product-and-inventory-management'),
             'view_orders' => __('View Orders', 'multi-location-product-and-inventory-management'),
             'manage_orders' => __('Manage Orders', 'multi-location-product-and-inventory-management'),
             'all_orders' => __('Manage/View All Orders', 'multi-location-product-and-inventory-management'),
@@ -333,8 +333,23 @@ class MULOPIMFWC_Location_Managers
             'manage_products' => __('Manage Products', 'multi-location-product-and-inventory-management'),
             'all_products' => __('Manage/View All Products', 'multi-location-product-and-inventory-management'),
             'run_reports' => __('Run Reports', 'multi-location-product-and-inventory-management'),
+            'export_report' => __('Export Report', 'multi-location-product-and-inventory-management'),
             'location_specific_products_frontend' => __('Location Specific Products Frontend', 'multi-location-product-and-inventory-management'),
         ];
+    }
+
+    private static function normalize_manager_capabilities($capabilities)
+    {
+        if (!is_array($capabilities)) {
+            return [];
+        }
+
+        if (in_array('manage_inventory', $capabilities, true)) {
+            $capabilities[] = 'view_dashboard';
+            $capabilities[] = 'view_products';
+        }
+
+        return array_values(array_unique($capabilities));
     }
 
     /**
@@ -372,7 +387,7 @@ class MULOPIMFWC_Location_Managers
                 'ID' => 2,
                 'display_name' => 'Jane Smith',
                 'user_email' => 'jane.smith@example.com',
-                'capabilities' => ['Manage Inventory'],
+                'capabilities' => ['View Dashboard'],
                 'assigned_locations' => ['Chicago']
             ],
             (object) [
@@ -393,7 +408,7 @@ class MULOPIMFWC_Location_Managers
                 'ID' => 5,
                 'display_name' => 'Charlie Davis',
                 'user_email' => 'charlie.davis@example.com',
-                'capabilities' => ['Manage Products', 'Manage Inventory'],
+                'capabilities' => ['Manage Products', 'View Dashboard'],
                 'assigned_locations' => ['San Francisco']
             ],
             (object) [
@@ -407,7 +422,7 @@ class MULOPIMFWC_Location_Managers
                 'ID' => 9,
                 'display_name' => 'George King',
                 'user_email' => 'george.king@example.com',
-                'capabilities' => ['Manage Inventory'],
+                'capabilities' => ['View Dashboard'],
                 'assigned_locations' => ['Denver', 'Las Vegas']
             ],
             (object) [
@@ -428,6 +443,7 @@ class MULOPIMFWC_Location_Managers
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
         $global_capabilities = isset($options['location_manager_capabilities']) ? $options['location_manager_capabilities'] : [];
+        $global_capabilities = self::normalize_manager_capabilities($global_capabilities);
 
 ?>
         <div class="wrap mulopimfwc-location-managers-main <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', 'mulopimfwc_pro_only mulopimfwc_pro_only_blur1')); ?>">
@@ -477,7 +493,11 @@ class MULOPIMFWC_Location_Managers
                                     }
                                 }
                                 if (!is_array($assigned_locations)) $assigned_locations = [];
-                                if (!is_array($manager_capabilities)) $manager_capabilities = $global_capabilities;
+                                if (!is_array($manager_capabilities)) {
+                                    $manager_capabilities = $global_capabilities;
+                                } else {
+                                    $manager_capabilities = self::normalize_manager_capabilities($manager_capabilities);
+                                }
                                 ?>
                                 <div class="mulopimfwc-manager-card" data-manager-id="<?php echo esc_attr($manager->ID); ?>">
                                     <div class="manager-header">
@@ -1535,6 +1555,39 @@ class MULOPIMFWC_Location_Managers
             wp_redirect(admin_url('index.php?restricted=1'));
             exit;
         }
+
+        $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+
+        if (
+            $page === 'multi-location-product-and-inventory-management' &&
+            !self::user_has_capability('view_dashboard')
+        ) {
+            wp_redirect(admin_url('index.php?restricted=1'));
+            exit;
+        }
+
+        if (
+            $page === 'location-stock-management' &&
+            !self::user_has_capability('view_products') &&
+            !self::user_has_capability('manage_products')
+        ) {
+            wp_redirect(admin_url('index.php?restricted=1'));
+            exit;
+        }
+
+        if ($page === 'mulopimfwc-analytics' && !self::user_has_capability('run_reports')) {
+            wp_redirect(admin_url('index.php?restricted=1'));
+            exit;
+        }
+
+        $post_type = isset($_GET['post_type']) ? sanitize_text_field(wp_unslash($_GET['post_type'])) : '';
+        if (
+            ($post_type === 'product' || ($current_screen && $current_screen->post_type === 'product')) &&
+            !self::user_has_capability('manage_products')
+        ) {
+            wp_redirect(admin_url('index.php?restricted=1'));
+            exit;
+        }
     }
 
 
@@ -1557,7 +1610,7 @@ class MULOPIMFWC_Location_Managers
         }
 
         // Double-check capability
-        if (!current_user_can('mulopimfwc_location_manager')) {
+        if (!current_user_can('manage_woocommerce')) {
             return;
         }
 
@@ -1567,6 +1620,7 @@ class MULOPIMFWC_Location_Managers
         if (empty($manager_capabilities) || !is_array($manager_capabilities)) {
             $manager_capabilities = [];
         }
+        $manager_capabilities = self::normalize_manager_capabilities($manager_capabilities);
 
         // Get all global menu items
         global $menu, $submenu;
@@ -1579,20 +1633,16 @@ class MULOPIMFWC_Location_Managers
 
         // Capability-based page mapping
         $capability_pages = [
-            'manage_inventory' => [
+            'view_dashboard' => [
                 'multi-location-product-and-inventory-management',
-                'location-stock-management',
-                'upload.php', // Media library for product images
-                'media-new.php',
-                'Library',
-                'upload_files',
             ],
             'view_products' => [
-                'edit.php?post_type=product',
-                'products',
-                'edit_products',
+                'multi-location-product-and-inventory-management',
+                'location-stock-management',
             ],
             'manage_products' => [
+                'multi-location-product-and-inventory-management',
+                'location-stock-management',
                 'edit.php?post_type=product',
                 'post-new.php?post_type=product',
                 'edit-tags.php?taxonomy=product_brand&amp;post_type=product',
@@ -1622,7 +1672,9 @@ class MULOPIMFWC_Location_Managers
                 'coupons-moved', // If they can manage orders, they might need coupons
             ],
             'run_reports' => [
+                'multi-location-product-and-inventory-management',
                 'woocommerce', // WooCommerce main menu usually contains reports
+                'mulopimfwc-analytics',
                 // Add specific report pages here if you have custom ones
             ],
         ];
@@ -1690,6 +1742,7 @@ class MULOPIMFWC_Location_Managers
 
         if (!is_array($assigned_locations)) $assigned_locations = [];
         if (!is_array($manager_capabilities)) $manager_capabilities = [];
+        $manager_capabilities = self::normalize_manager_capabilities($manager_capabilities);
     ?>
 
         <h3><?php echo esc_html__('Location Manager Settings', 'multi-location-product-and-inventory-management'); ?></h3>
@@ -1853,6 +1906,7 @@ class MULOPIMFWC_Location_Managers
                 : get_option('mulopimfwc_display_options', []);
             $manager_capabilities = isset($options['location_manager_capabilities']) ? $options['location_manager_capabilities'] : [];
         }
+        $manager_capabilities = self::normalize_manager_capabilities($manager_capabilities);
 
         return in_array($capability, $manager_capabilities, true);
     }

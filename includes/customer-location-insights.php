@@ -1101,6 +1101,18 @@ class Mulopimfwc_Customer_Location_Insights
             'term_id' => 0,
         ];
 
+        $visible_location_slugs = null;
+        if (is_user_logged_in() && class_exists('MULOPIMFWC_Location_Managers')) {
+            $user = wp_get_current_user();
+            if (
+                in_array('mulopimfwc_location_manager', $user->roles, true) &&
+                !MULOPIMFWC_Location_Managers::user_has_capability('all_products')
+            ) {
+                $assigned = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+                $visible_location_slugs = is_array($assigned) ? $assigned : [];
+            }
+        }
+
         $global_stats = [
             'total_views' => 0,
             'total_purchases' => 0,
@@ -1113,7 +1125,12 @@ class Mulopimfwc_Customer_Location_Insights
         $all_products = [];
 
         foreach ($locations as $location) {
-            $stats = $this->get_location_stats(rawurldecode($location->slug));
+            $location_slug = rawurldecode($location->slug);
+            if (is_array($visible_location_slugs) && !in_array($location_slug, $visible_location_slugs, true)) {
+                continue;
+            }
+
+            $stats = $this->get_location_stats($location_slug);
             $global_stats['total_views'] += $stats['total_views'];
             $global_stats['total_purchases'] += $stats['total_purchases'];
             $global_stats['total_users'] += $stats['unique_users'];
@@ -1121,7 +1138,7 @@ class Mulopimfwc_Customer_Location_Insights
 
             $location_score = ($stats['total_purchases'] * 10) + $stats['total_views'];
 
-            $top_products_raw = $this->get_popular_products(rawurldecode($location->slug), 5);
+            $top_products_raw = $this->get_popular_products($location_slug, 5);
             $top_products = [];
             foreach ($top_products_raw as $product_id => $product_data) {
                 $product = wc_get_product($product_id);
@@ -1139,7 +1156,7 @@ class Mulopimfwc_Customer_Location_Insights
                 : 0;
 
             $location_details[] = [
-                'slug' => rawurldecode($location->slug),
+                'slug' => $location_slug,
                 'name' => $location->name,
                 'stats' => $stats,
                 'conversion' => $location_conversion,
@@ -1148,7 +1165,7 @@ class Mulopimfwc_Customer_Location_Insights
             ];
 
             $location_scores[] = [
-                'slug' => rawurldecode($location->slug),
+                'slug' => $location_slug,
                 'name' => $location->name,
                 'score' => $location_score,
                 'stats' => $stats,
@@ -1156,7 +1173,7 @@ class Mulopimfwc_Customer_Location_Insights
             ];
 
             // Track products to find global top performer
-            $products = $this->get_popular_products(rawurldecode($location->slug), 100);
+            $products = $this->get_popular_products($location_slug, 100);
             foreach ($products as $product_id => $product_data) {
                 if (!isset($all_products[$product_id])) {
                     $all_products[$product_id] = [
@@ -1269,7 +1286,7 @@ class Mulopimfwc_Customer_Location_Insights
     {
         check_ajax_referer('mulopimfwc_analytics_live', 'nonce');
 
-        if (!current_user_can('manage_woocommerce')) {
+        if (!mulopimfwc_user_can_run_reports()) {
             wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
         }
 
@@ -1286,7 +1303,7 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function render_analytics_page()
     {
-        if (!current_user_can('manage_woocommerce')) {
+        if (!mulopimfwc_user_can_run_reports()) {
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
@@ -1503,10 +1520,12 @@ class Mulopimfwc_Customer_Location_Insights
                         <div class="mulopimfwc-location-analytics-card" data-location-card="<?php echo esc_attr($location['slug']); ?>">
                             <div class="card-header">
                                 <h3><?php echo esc_html($location['name']); ?></h3>
-                                <button type="button" class="button button-secondary export-location-btn" data-location="<?php echo esc_attr($location['slug']); ?>">
-                                    <span class="dashicons dashicons-download"></span>
-                                    <?php esc_html_e('Export', 'multi-location-product-and-inventory-management'); ?>
-                                </button>
+                                <?php if (mulopimfwc_user_can_export_reports()) : ?>
+                                    <button type="button" class="button button-secondary export-location-btn" data-location="<?php echo esc_attr($location['slug']); ?>">
+                                        <span class="dashicons dashicons-download"></span>
+                                        <?php esc_html_e('Export', 'multi-location-product-and-inventory-management'); ?>
+                                    </button>
+                                <?php endif; ?>
                             </div>
 
                             <div class="mulopimfwc-analytics-stats">
@@ -2325,11 +2344,30 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function export_analytics_data($location_slug = null)
     {
-        if (!current_user_can('manage_woocommerce')) {
+        if (!mulopimfwc_user_can_export_reports()) {
             return;
         }
 
         $popularity_data = get_option(self::POPULARITY_OPTION, []);
+        if (!is_array($popularity_data)) {
+            $popularity_data = [];
+        }
+
+        $visible_location_slugs = null;
+        if (is_user_logged_in() && class_exists('MULOPIMFWC_Location_Managers')) {
+            $user = wp_get_current_user();
+            if (
+                in_array('mulopimfwc_location_manager', $user->roles, true) &&
+                !MULOPIMFWC_Location_Managers::user_has_capability('all_products')
+            ) {
+                $assigned = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+                $visible_location_slugs = is_array($assigned) ? array_values(array_filter($assigned)) : [];
+            }
+        }
+
+        if (is_array($visible_location_slugs)) {
+            $popularity_data = array_intersect_key($popularity_data, array_flip($visible_location_slugs));
+        }
 
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="location-analytics-' . date('Y-m-d') . '.csv"');
@@ -2446,6 +2484,28 @@ function mulopimfwc_ajax_track_location_selection()
     wp_send_json_success(['message' => __('Location tracked', 'multi-location-product-and-inventory-management')]);
 }
 
+function mulopimfwc_user_can_run_reports()
+{
+    if (class_exists('MULOPIMFWC_Location_Managers')) {
+        return MULOPIMFWC_Location_Managers::user_has_capability('run_reports');
+    }
+
+    return current_user_can('manage_woocommerce');
+}
+
+function mulopimfwc_user_can_export_reports()
+{
+    if (!mulopimfwc_user_can_run_reports()) {
+        return false;
+    }
+
+    if (class_exists('MULOPIMFWC_Location_Managers')) {
+        return MULOPIMFWC_Location_Managers::user_has_capability('export_report');
+    }
+
+    return current_user_can('manage_woocommerce');
+}
+
 // AJAX handler for exporting analytics
 add_action('wp_ajax_mulopimfwc_export_analytics', 'mulopimfwc_ajax_export_analytics');
 
@@ -2453,7 +2513,7 @@ function mulopimfwc_ajax_export_analytics()
 {
     check_ajax_referer('mulopimfwc_analytics_export', 'nonce');
 
-    if (!current_user_can('manage_woocommerce')) {
+    if (!mulopimfwc_user_can_export_reports()) {
         wp_die(__('You do not have permission to export analytics.'));
     }
 
@@ -2478,7 +2538,7 @@ add_action('admin_footer', 'mulopimfwc_add_export_button_script');
 function mulopimfwc_add_export_button_script()
 {
     $screen = get_current_screen();
-    if ($screen && $screen->id === 'location-manage_page_mulopimfwc-analytics') {
+    if ($screen && $screen->id === 'location-manage_page_mulopimfwc-analytics' && mulopimfwc_user_can_export_reports()) {
     ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
@@ -2577,7 +2637,7 @@ function mulopimfwc_ajax_clear_analytics_data()
 {
     check_ajax_referer('mulopimfwc_clear_analytics', 'nonce');
 
-    if (!current_user_can('manage_woocommerce')) {
+    if (!mulopimfwc_user_can_run_reports()) {
         wp_send_json_error(['message' => __('You do not have permission to clear analytics data.', 'multi-location-product-and-inventory-management')]);
     }
 

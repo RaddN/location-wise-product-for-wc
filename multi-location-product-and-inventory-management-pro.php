@@ -3576,6 +3576,86 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         /**
+         * Check if the current user can manage product data for locations
+         */
+        private function current_user_can_manage_products()
+        {
+            if (class_exists('MULOPIMFWC_Location_Managers')) {
+                return MULOPIMFWC_Location_Managers::user_has_capability('manage_products');
+            }
+
+            return current_user_can('manage_woocommerce');
+        }
+
+        private function get_location_manager_allowed_slugs()
+        {
+            if (!class_exists('MULOPIMFWC_Location_Managers') || !is_user_logged_in()) {
+                return null;
+            }
+
+            $user = wp_get_current_user();
+            if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
+                return null;
+            }
+
+            if (MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
+                return null;
+            }
+
+            $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+            return is_array($assigned_locations) ? array_values(array_filter($assigned_locations)) : [];
+        }
+
+        private function get_location_manager_allowed_ids()
+        {
+            $allowed_slugs = $this->get_location_manager_allowed_slugs();
+            if ($allowed_slugs === null) {
+                return null;
+            }
+
+            if (empty($allowed_slugs)) {
+                return [];
+            }
+
+            $terms = get_terms([
+                'taxonomy' => 'mulopimfwc_store_location',
+                'hide_empty' => false,
+                'slug' => $allowed_slugs,
+                'fields' => 'ids',
+            ]);
+
+            if (is_wp_error($terms)) {
+                return [];
+            }
+
+            return array_map('intval', (array) $terms);
+        }
+
+        private function filter_locations_for_manager($locations)
+        {
+            $allowed_slugs = $this->get_location_manager_allowed_slugs();
+            if (!is_array($allowed_slugs)) {
+                return $locations;
+            }
+
+            if (!is_array($locations)) {
+                return [];
+            }
+
+            if (empty($allowed_slugs)) {
+                return [];
+            }
+
+            return array_values(array_filter($locations, function ($location) use ($allowed_slugs) {
+                if (!is_object($location) || !isset($location->slug)) {
+                    return false;
+                }
+
+                return in_array(rawurldecode($location->slug), $allowed_slugs, true);
+            }));
+        }
+
+        /**
          * Get available locations for a product via AJAX
          */
         public function cymulopimfwc_get_available_locations()
@@ -3585,7 +3665,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             check_ajax_referer('location_wise_products_nonce', 'security');
 
             // Check permissions
-            if (!current_user_can('manage_woocommerce')) {
+            if (!$this->current_user_can_manage_products()) {
                 wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
             }
 
@@ -3600,9 +3680,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                 wp_send_json_error(['message' => $mulopimfwc_locations->get_error_message()]);
             }
 
+            $available_locations = $this->filter_locations_for_manager($mulopimfwc_locations);
+
             // Format locations for output
             $location_data = [];
-            foreach ($mulopimfwc_locations as $location) {
+            foreach ($available_locations as $location) {
                 $location_data[] = [
                     'id' => $location->term_id,
                     'name' => $location->name,
@@ -3623,7 +3705,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             check_ajax_referer('location_wise_products_nonce', 'security');
 
             // Check permissions
-            if (!current_user_can('manage_woocommerce')) {
+            if (!$this->current_user_can_manage_products()) {
                 wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
             }
 
@@ -3633,6 +3715,15 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (!$product_id) {
                 wp_send_json_error(['message' => __('Invalid product ID.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            $allowed_location_ids = $this->get_location_manager_allowed_ids();
+            if (is_array($allowed_location_ids)) {
+                $location_ids = array_values(array_intersect($location_ids, $allowed_location_ids));
+                $existing_ids = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'ids']);
+                $existing_ids = is_wp_error($existing_ids) ? [] : array_map('intval', $existing_ids);
+                $preserved_ids = array_diff($existing_ids, $allowed_location_ids);
+                $location_ids = array_values(array_unique(array_merge($preserved_ids, $location_ids)));
             }
 
             // Set product locations
@@ -3652,7 +3743,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             check_ajax_referer('location_wise_products_nonce', 'security');
 
             // Check permissions
-            if (!current_user_can('manage_woocommerce')) {
+            if (!$this->current_user_can_manage_products()) {
                 wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
             }
 
@@ -3663,6 +3754,11 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (!$product_id || !$location_id || !in_array($action, ['activate', 'deactivate'])) {
                 wp_send_json_error(['message' => __('Invalid parameters.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            $allowed_location_ids = $this->get_location_manager_allowed_ids();
+            if (is_array($allowed_location_ids) && !in_array($location_id, $allowed_location_ids, true)) {
+                wp_send_json_error(['message' => __('You do not have permission to modify this location.', 'multi-location-product-and-inventory-management')]);
             }
 
             // Update location status
@@ -3709,7 +3805,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             check_ajax_referer('location_wise_products_nonce', 'security');
 
             // Check permissions
-            if (!current_user_can('manage_woocommerce')) {
+            if (!$this->current_user_can_manage_products()) {
                 wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
             }
 
@@ -3725,6 +3821,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             global $mulopimfwc_locations;
+            $available_locations = [];
+            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                $available_locations = $this->filter_locations_for_manager($mulopimfwc_locations);
+            }
             $product_type = $product->get_type();
             $data = [
                 'product_id' => $product_id,
@@ -3746,10 +3846,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             ];
 
             // Get location data - batch meta queries for better performance
-            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+            if (!empty($available_locations)) {
                 $location_ids = array_map(function ($loc) {
                     return $loc->term_id;
-                }, $mulopimfwc_locations);
+                }, $available_locations);
 
                 // Batch fetch all meta keys at once
                 $meta_keys = [];
@@ -3781,7 +3881,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 }
 
                 // Build location data from cached meta
-                foreach ($mulopimfwc_locations as $location) {
+                foreach ($available_locations as $location) {
                     $location_data = [
                         'id' => $location->term_id,
                         'name' => $location->name,
@@ -3802,10 +3902,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 if (!empty($variation_ids)) {
                     // Get location IDs if available
                     $loc_ids_for_variations = [];
-                    if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                    if (!empty($available_locations)) {
                         $loc_ids_for_variations = array_map(function ($loc) {
                             return $loc->term_id;
-                        }, $mulopimfwc_locations);
+                        }, $available_locations);
                     }
 
                     // Batch load all variation meta at once
@@ -3870,8 +3970,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                         ];
 
                         // Get location data for variation from cached meta
-                        if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
-                            foreach ($mulopimfwc_locations as $location) {
+                        if (!empty($available_locations)) {
+                            foreach ($available_locations as $location) {
                                 $variation_info['locations'][] = [
                                     'id' => $location->term_id,
                                     'name' => $location->name,
@@ -3900,7 +4000,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             check_ajax_referer('location_wise_products_nonce', 'security');
 
             // Check permissions
-            if (!current_user_can('manage_woocommerce')) {
+            if (!$this->current_user_can_manage_products()) {
                 wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
             }
 
@@ -3914,6 +4014,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!$product) {
                 wp_send_json_error(['message' => __('Product not found.', 'multi-location-product-and-inventory-management')]);
             }
+
+            $allowed_location_ids = $this->get_location_manager_allowed_ids();
+            $restrict_locations = is_array($allowed_location_ids);
 
             // Save default product data
             if (isset($_POST['default'])) {
@@ -3944,6 +4047,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 foreach ($_POST['locations'] as $location_data) {
                     $location_id = isset($location_data['id']) ? intval($location_data['id']) : 0;
                     if (!$location_id) {
+                        continue;
+                    }
+                    if ($restrict_locations && !in_array($location_id, $allowed_location_ids, true)) {
                         continue;
                     }
 
@@ -4014,10 +4120,23 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Set assigned locations (queue add/remove)
             if (isset($_POST['location_ids'])) {
-                $location_ids = array_map('intval', (array) $_POST['location_ids']);
+                $submitted_location_ids = array_map('intval', (array) $_POST['location_ids']);
+                if ($restrict_locations) {
+                    $submitted_location_ids = array_values(array_intersect($submitted_location_ids, $allowed_location_ids));
+                    $existing_ids = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'ids']);
+                    $existing_ids = is_wp_error($existing_ids) ? [] : array_map('intval', $existing_ids);
+                    $preserved_ids = array_diff($existing_ids, $allowed_location_ids);
+                    $location_ids = array_values(array_unique(array_merge($preserved_ids, $submitted_location_ids)));
+                } else {
+                    $location_ids = $submitted_location_ids;
+                }
+
                 wp_set_object_terms($product_id, $location_ids, 'mulopimfwc_store_location');
 
                 $removed_location_ids = isset($_POST['removed_location_ids']) ? array_map('intval', (array) $_POST['removed_location_ids']) : [];
+                if ($restrict_locations) {
+                    $removed_location_ids = array_values(array_intersect($removed_location_ids, $allowed_location_ids));
+                }
                 if (!empty($removed_location_ids)) {
                     $removed_location_ids = array_diff($removed_location_ids, $location_ids);
                     foreach ($removed_location_ids as $location_id) {
@@ -4081,6 +4200,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                             if (!$location_id) {
                                 continue;
                             }
+                            if ($restrict_locations && !in_array($location_id, $allowed_location_ids, true)) {
+                                continue;
+                            }
 
                             if (isset($location_data['stock'])) {
                                 update_post_meta($variation_id, '_location_stock_' . $location_id, intval($location_data['stock']));
@@ -4111,7 +4233,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             check_ajax_referer('location_wise_products_nonce', 'security');
 
             // Check permissions
-            if (!current_user_can('manage_woocommerce')) {
+            if (!$this->current_user_can_manage_products()) {
                 wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')]);
             }
 
@@ -4121,6 +4243,11 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (!$product_id || !$location_id) {
                 wp_send_json_error(['message' => __('Invalid parameters.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            $allowed_location_ids = $this->get_location_manager_allowed_ids();
+            if (is_array($allowed_location_ids) && !in_array($location_id, $allowed_location_ids, true)) {
+                wp_send_json_error(['message' => __('You do not have permission to modify this location.', 'multi-location-product-and-inventory-management')]);
             }
 
             // Remove location from product
