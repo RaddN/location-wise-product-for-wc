@@ -4,6 +4,7 @@
 (function ($) {
     'use strict';
     const LIVE_POLL_INTERVAL = 30000;
+    const LIVE_RATE_LIMIT_MS = 5000;
 
     // Store chart instances globally for updates
     window.locationProductsChart = null;
@@ -507,9 +508,28 @@
         });
     }
 
+    function scheduleRealtimeRetry(delayMs) {
+        if (window.mulopimfwcLiveRetryTimer) {
+            return;
+        }
+
+        const delay = Math.max((delayMs || 0) + 250, 250);
+        window.mulopimfwcLiveRetryTimer = setTimeout(function () {
+            window.mulopimfwcLiveRetryTimer = null;
+            fetchRealtimeData();
+        }, delay);
+    }
+
     function fetchRealtimeData() {
         if (filtersAreActive()) {
             updateConnectionStatus('paused');
+            return;
+        }
+
+        const now = Date.now();
+        const lastRequestAt = window.mulopimfwcLiveRequestAt || 0;
+        if (lastRequestAt && (now - lastRequestAt) < LIVE_RATE_LIMIT_MS) {
+            scheduleRealtimeRetry(LIVE_RATE_LIMIT_MS - (now - lastRequestAt));
             return;
         }
 
@@ -521,6 +541,7 @@
         updateConnectionStatus('syncing');
 
         const startTime = Date.now();
+        window.mulopimfwcLiveRequestAt = startTime;
 
         $.post(mulopimfwc_DashboardData.ajaxurl, {
             action: 'mulopimfwc_dashboard_live_data',

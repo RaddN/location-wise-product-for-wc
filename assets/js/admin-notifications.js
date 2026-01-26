@@ -11,6 +11,8 @@
     const floatContainer = $('<div id="mulopimfwc-floating-notifications"></div>').appendTo('body');
     let serviceWorkerRegistration = null;
     let allNotifications = []; // Store all notifications for admin bar dropdown
+    let lastRealtimeDataAt = 0;
+    const LIVE_RATE_LIMIT_MS = 5000;
 
     // Storage keys for read/unread notifications
     const STORAGE_READ_KEY = 'mulopimfwc_read_notifications';
@@ -133,6 +135,16 @@
 
         // Clear the allNotifications array
         allNotifications = [];
+    }
+
+    function canSendLiveRequest() {
+        const now = Date.now();
+        const lastRequestAt = window.mulopimfwcLiveRequestAt || 0;
+        if (lastRequestAt && (now - lastRequestAt) < LIVE_RATE_LIMIT_MS) {
+            return false;
+        }
+        window.mulopimfwcLiveRequestAt = now;
+        return true;
     }
 
     // Check if notification is read
@@ -422,7 +434,10 @@
         // Initialize visibility
         updateTestEmailUI();
 
-        if (config.realtime_enabled !== 'off' && !isDashboardView()) {
+        const realtimeEnabled = config.realtime_enabled !== 'off';
+        const isDashboard = isDashboardView();
+
+        if (realtimeEnabled && !isDashboard) {
             startPolling();
         }
 
@@ -437,8 +452,16 @@
         initAdminBarNotifications();
 
         // Fetch notifications for admin bar on load
-        if ($('#wp-admin-bar-mulopimfwc-notifications').length > 0) {
-            fetchNotificationsForAdminBar();
+        if ($('#wp-admin-bar-mulopimfwc-notifications').length > 0 && !isDashboard) {
+            if (!realtimeEnabled) {
+                fetchNotificationsForAdminBar();
+            } else {
+                setTimeout(function () {
+                    if (lastRealtimeDataAt === 0) {
+                        fetchNotificationsForAdminBar();
+                    }
+                }, 6000);
+            }
         }
     });
 
@@ -456,6 +479,9 @@
     }
 
     function fetchNotifications() {
+        if (!canSendLiveRequest()) {
+            return;
+        }
         $.post(config.ajaxurl, {
             action: 'mulopimfwc_dashboard_live_data',
             nonce: config.nonce
@@ -468,6 +494,7 @@
     }
 
     function handleRealtimeData(data) {
+        lastRealtimeDataAt = Date.now();
         if (!data || !Array.isArray(data.alerts) || data.alerts.length === 0) {
             updateAdminBarNotifications([]);
             return;
@@ -1384,6 +1411,9 @@
     }
 
     function fetchNotificationsForAdminBar() {
+        if (!canSendLiveRequest()) {
+            return;
+        }
         $.post(config.ajaxurl, {
             action: 'mulopimfwc_dashboard_live_data',
             nonce: config.nonce
@@ -1556,4 +1586,3 @@
     }
 
 })(jQuery);
-
