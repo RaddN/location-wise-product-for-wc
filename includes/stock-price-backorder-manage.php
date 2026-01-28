@@ -702,102 +702,166 @@ if (!is_admin()) {
     }, 10, 2);
 }
 
-if (!is_admin()) {
-    // Handle stock reduction when order is placed
-    add_action('woocommerce_reduce_order_stock', function ($order) {
-        global $mulopimfwc_options;
+// Handle stock reduction when order is placed
+add_action('woocommerce_reduce_order_stock', function ($order) {
+    global $mulopimfwc_options;
 
-        if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
-            return;
+    if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
+        return;
+    }
+
+    foreach ($order->get_items() as $item) {
+        $product_id = $item->get_product_id();
+        $variation_id = $item->get_variation_id();
+        $quantity = $item->get_quantity();
+
+        $target_id = $variation_id ? $variation_id : $product_id;
+
+        // Get location from order item meta (stored during checkout)
+        $location_slug = $item->get_meta('_mulopimfwc_location');
+        if (!$location_slug) {
+            // Fallback to current location if no location stored in order item
+            $location_slug = mulopimfwc_get_current_store_location();
         }
 
-        foreach ($order->get_items() as $item) {
-            $product_id = $item->get_product_id();
-            $variation_id = $item->get_variation_id();
-            $quantity = $item->get_quantity();
+        $location_id = mulopimfwc_get_location_term_id($location_slug);
+        if (!$location_id) {
+            continue;
+        }
 
-            $target_id = $variation_id ? $variation_id : $product_id;
+        $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
 
-            // Get location from order item meta (stored during checkout)
-            $location_slug = $item->get_meta('_mulopimfwc_location');
-            if (!$location_slug) {
-                // Fallback to current location if no location stored in order item
-                $location_slug = mulopimfwc_get_current_store_location();
-            }
+        if ($current_stock !== '') {
+            $old_stock_int = (int) $current_stock;
+            $new_stock = max(0, $old_stock_int - (int) $quantity);
+            update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
 
-            $location_id = mulopimfwc_get_location_term_id($location_slug);
-            if (!$location_id) {
-                continue;
-            }
+            // Trigger low/out-of-stock alerts when crossing thresholds (order-time stock reduction)
+            if (function_exists('mulopimfwc_send_location_stock_alert')) {
+                $location_term = get_term($location_id, 'mulopimfwc_store_location');
+                if ($location_term && !is_wp_error($location_term)) {
+                    $low_threshold = function_exists('mulopimfwc_get_location_threshold')
+                        ? mulopimfwc_get_location_threshold($location_id, 'low')
+                        : 5;
+                    $out_threshold = function_exists('mulopimfwc_get_location_threshold')
+                        ? mulopimfwc_get_location_threshold($location_id, 'out')
+                        : 0;
 
-            $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
-
-            if ($current_stock !== '') {
-                $old_stock_int = (int) $current_stock;
-                $new_stock = max(0, $old_stock_int - (int) $quantity);
-                update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
-
-                // Trigger low/out-of-stock alerts when crossing thresholds (order-time stock reduction)
-                if (function_exists('mulopimfwc_send_location_stock_alert')) {
-                    $location_term = get_term($location_id, 'mulopimfwc_store_location');
-                    if ($location_term && !is_wp_error($location_term)) {
-                        $low_threshold = function_exists('mulopimfwc_get_location_threshold')
-                            ? mulopimfwc_get_location_threshold($location_id, 'low')
-                            : 5;
-                        $out_threshold = function_exists('mulopimfwc_get_location_threshold')
-                            ? mulopimfwc_get_location_threshold($location_id, 'out')
-                            : 0;
-
-                        // Out of stock alert
-                        if ($new_stock <= $out_threshold && $old_stock_int > $out_threshold) {
-                            mulopimfwc_send_location_stock_alert($target_id, $location_term, $new_stock, $out_threshold, 'out');
-                        }
-                        // Low stock alert (only if not already out-of-stock)
-                        elseif ($new_stock <= $low_threshold && $old_stock_int > $low_threshold) {
-                            mulopimfwc_send_location_stock_alert($target_id, $location_term, $new_stock, $low_threshold, 'low');
-                        }
+                    // Out of stock alert
+                    if ($new_stock <= $out_threshold && $old_stock_int > $out_threshold) {
+                        mulopimfwc_send_location_stock_alert($target_id, $location_term, $new_stock, $out_threshold, 'out');
+                    }
+                    // Low stock alert (only if not already out-of-stock)
+                    elseif ($new_stock <= $low_threshold && $old_stock_int > $low_threshold) {
+                        mulopimfwc_send_location_stock_alert($target_id, $location_term, $new_stock, $low_threshold, 'low');
                     }
                 }
             }
         }
-    });
+    }
+});
 
-    // Handle stock restoration when order is canceled
-    add_action('woocommerce_restore_order_stock', function ($order) {
-        global $mulopimfwc_options;
+// Handle stock restoration when order is canceled
+add_action('woocommerce_restore_order_stock', function ($order) {
+    global $mulopimfwc_options;
 
-        if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
-            return;
+    if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
+        return;
+    }
+
+    foreach ($order->get_items() as $item) {
+        $product_id = $item->get_product_id();
+        $variation_id = $item->get_variation_id();
+        $quantity = $item->get_quantity();
+
+        $target_id = $variation_id ? $variation_id : $product_id;
+
+        // Get location from order item meta (stored during checkout)
+        $location_slug = $item->get_meta('_mulopimfwc_location');
+        if (!$location_slug) {
+            // Fallback to current location if no location stored in order item
+            $location_slug = mulopimfwc_get_current_store_location();
         }
 
-        foreach ($order->get_items() as $item) {
-            $product_id = $item->get_product_id();
-            $variation_id = $item->get_variation_id();
-            $quantity = $item->get_quantity();
-
-            $target_id = $variation_id ? $variation_id : $product_id;
-
-            // Get location from order item meta (stored during checkout)
-            $location_slug = $item->get_meta('_mulopimfwc_location');
-            if (!$location_slug) {
-                // Fallback to current location if no location stored in order item
-                $location_slug = mulopimfwc_get_current_store_location();
-            }
-
-            $location_id = mulopimfwc_get_location_term_id($location_slug);
-            if (!$location_id) {
-                continue;
-            }
-
-            $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
-
-            if ($current_stock !== '') {
-                $new_stock = (int)$current_stock + $quantity;
-                update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
-            }
+        $location_id = mulopimfwc_get_location_term_id($location_slug);
+        if (!$location_id) {
+            continue;
         }
-    });
-}
+
+        $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+
+        if ($current_stock !== '') {
+            $new_stock = (int)$current_stock + $quantity;
+            update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
+        }
+    }
+});
+
+// Handle stock restoration when items are refunded (Restock refunded items)
+add_action('woocommerce_create_refund', function ($refund, $args) {
+    global $mulopimfwc_options;
+
+    if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
+        return;
+    }
+
+    if (empty($args['restock_items']) || empty($args['line_items']) || empty($args['order_id'])) {
+        return;
+    }
+
+    $order = wc_get_order($args['order_id']);
+    if (!$order) {
+        return;
+    }
+
+    foreach ($args['line_items'] as $item_id => $line_item) {
+        if (empty($line_item['qty'])) {
+            continue;
+        }
+
+        $qty = function_exists('wc_stock_amount')
+            ? wc_stock_amount($line_item['qty'])
+            : (int) $line_item['qty'];
+
+        if ($qty <= 0) {
+            continue;
+        }
+
+        $item = $order->get_item($item_id);
+        if (!$item || !$item->is_type('line_item')) {
+            continue;
+        }
+
+        $product_id = $item->get_product_id();
+        $variation_id = $item->get_variation_id();
+        $target_id = $variation_id ? $variation_id : $product_id;
+
+        if (!$target_id) {
+            continue;
+        }
+
+        $location_slug = $item->get_meta('_mulopimfwc_location');
+        if (!$location_slug) {
+            $location_slug = (string) $order->get_meta('_store_location');
+        }
+        if (!$location_slug) {
+            $location_slug = mulopimfwc_get_current_store_location();
+        }
+
+        $location_id = mulopimfwc_get_location_term_id($location_slug);
+        if (!$location_id) {
+            continue;
+        }
+
+        $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+        if ($current_stock === '') {
+            continue;
+        }
+
+        $new_stock = (int) $current_stock + $qty;
+        update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
+    }
+}, 10, 2);
 
 // Validate cart items against location stock
 add_filter('woocommerce_add_to_cart_validation', function ($passed, $product_id, $quantity, $variation_id = 0, $variations = array()) {
