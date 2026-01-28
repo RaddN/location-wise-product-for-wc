@@ -1985,7 +1985,6 @@ input.disabled + .mulopimfwc_slider {
   background: #ffffff;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
-  overflow: hidden;
   transition: all 0.3s ease;
   margin-bottom: 0;
 }
@@ -2024,7 +2023,6 @@ input.disabled + .mulopimfwc_slider {
   align-items: center;
   transition: background-color 0.2s;
   user-select: none;
-  border-bottom: 2px solid #e5e7eb;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -2032,6 +2030,7 @@ input.disabled + .mulopimfwc_slider {
 .variation-accordion.expanded .variation-accordion-header {
   background: #f0f4ff;
   border-bottom-color: #667eea;
+  border-radius: 10px 10px 0 0;
 }
 
 .variation-accordion-header:hover {

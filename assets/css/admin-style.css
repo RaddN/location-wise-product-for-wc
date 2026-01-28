@@ -40,9 +40,12 @@
     margin-bottom: 5px; /* Space between location entries */
 }
 .fixed .column-locations {
-    width: max-content !important;
+    width: 15% !important;
     word-break: keep-all;
     white-space: nowrap;
+}
+.fixed .column-taxonomy-mulopimfwc_store_location {
+    width: 12% !important;
 }
 .outofstock {
     background: #f8d7da;
