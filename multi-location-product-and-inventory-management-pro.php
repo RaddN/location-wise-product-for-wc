@@ -4605,6 +4605,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'location_change_notification' => isset($mulopimfwc_options["location_change_notification"]) || (isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] === "prompt_user"),
                 'nonce' => wp_create_nonce('multi-location-product-and-inventory-management'),
                 'cookie_expiry' => $cookie_expiry_days,
+                'currentLocation' => $this->get_current_location(),
                 'allow_mixed_in_cart' => isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
                     ? $mulopimfwc_options['allow_mixed_location_cart']
                     : 'off',
