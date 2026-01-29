@@ -97,14 +97,47 @@ jQuery(function ($) {
 
     function setPluginCookie(name, value) {
         var days = cookieDays;
-        if (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookie_expiry) {
-            var override = parseInt(mulopimfwc_locationWiseProducts.cookie_expiry, 10);
-            if (Number.isFinite(override) && override > 0) {
-                days = override;
+        var cookieName = name;
+        var options = {
+            path: '/',
+            sameSite: 'lax',
+            secure: window.location.protocol === 'https:'
+        };
+
+        if (window.mulopimfwc_locationWiseProducts) {
+            if (mulopimfwc_locationWiseProducts.cookie_expiry) {
+                var override = parseInt(mulopimfwc_locationWiseProducts.cookie_expiry, 10);
+                if (Number.isFinite(override) && override > 0) {
+                    days = override;
+                }
+            }
+            if (mulopimfwc_locationWiseProducts.cookieName) {
+                cookieName = mulopimfwc_locationWiseProducts.cookieName;
+            }
+            if (mulopimfwc_locationWiseProducts.cookiePath) {
+                options.path = mulopimfwc_locationWiseProducts.cookiePath;
+            }
+            if (mulopimfwc_locationWiseProducts.cookieSameSite) {
+                options.sameSite = String(mulopimfwc_locationWiseProducts.cookieSameSite).toLowerCase();
+            }
+            if (typeof mulopimfwc_locationWiseProducts.cookieSecure === 'boolean') {
+                options.secure = mulopimfwc_locationWiseProducts.cookieSecure;
+            }
+            if (mulopimfwc_locationWiseProducts.cookieDomain) {
+                options.domain = mulopimfwc_locationWiseProducts.cookieDomain;
             }
         }
+
         var expiryDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-        document.cookie = name + '=' + value + ';expires=' + expiryDate.toUTCString() + ';path=/;samesite=lax';
+        var encodedValue = encodeURIComponent(String(value));
+        var cookieString = cookieName + '=' + encodedValue + ';expires=' + expiryDate.toUTCString() + ';path=' + options.path + ';samesite=' + options.sameSite;
+        if (options.domain) {
+            cookieString += ';domain=' + options.domain;
+        }
+        if (options.secure) {
+            cookieString += ';secure';
+        }
+        document.cookie = cookieString;
     }
 
     function toRadians(value) {

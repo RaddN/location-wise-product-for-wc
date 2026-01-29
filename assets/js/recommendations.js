@@ -199,7 +199,11 @@
             // 2. Location was set but no products available (showing "no recommendations" message)
             
             // Check if location cookie changed
-            let currentLocation = this.getCookie('mulopimfwc_store_location');
+            const storeCookieName =
+                (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookieName)
+                    ? mulopimfwc_locationWiseProducts.cookieName
+                    : 'mulopimfwc_store_location';
+            let currentLocation = this.getCookie(storeCookieName);
             
             // Decode URL-encoded cookie value
             if (currentLocation) {
@@ -353,7 +357,15 @@
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) {
-                return parts.pop().split(';').shift();
+                const raw = parts.pop().split(';').shift();
+                if (raw) {
+                    try {
+                        return decodeURIComponent(raw);
+                    } catch (e) {
+                        return raw;
+                    }
+                }
+                return raw;
             }
             return null;
         },

@@ -2,25 +2,87 @@ jQuery(document).ready(function ($) {
     const modal = document.getElementById('lwp-store-selector-modal');
     const modalSubmit = document.getElementById('lwp-store-selector-submit');
     const COOKIE_MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const locationSettings = window.mulopimfwc_locationWiseProducts || {};
 
     function getLocationCookieExpiryDays() {
         if (typeof mulopimfwc_locationWiseProducts === 'undefined') {
             return 30;
         }
 
-        const value = parseInt(mulopimfwc_locationWiseProducts.cookie_expiry, 10);
+        const rawValue =
+            (typeof mulopimfwc_locationWiseProducts.cookie_expiry !== 'undefined')
+                ? mulopimfwc_locationWiseProducts.cookie_expiry
+                : mulopimfwc_locationWiseProducts.cookieExpiryDays;
+        const value = parseInt(rawValue, 10);
         return Number.isFinite(value) && value > 0 ? value : 30;
+    }
+
+    function getStoreCookieName() {
+        if (typeof mulopimfwc_locationWiseProducts !== 'undefined' && mulopimfwc_locationWiseProducts.cookieName) {
+            return mulopimfwc_locationWiseProducts.cookieName;
+        }
+        return 'mulopimfwc_store_location';
+    }
+
+    function getAjaxUrl() {
+        if (typeof mulopimfwc_locationWiseProducts === 'undefined') {
+            return '';
+        }
+        return mulopimfwc_locationWiseProducts.ajaxUrl || mulopimfwc_locationWiseProducts.ajax_url || '';
+    }
+
+    function getCookieOptions() {
+        const options = {
+            path: '/',
+            sameSite: 'lax',
+            secure: window.location.protocol === 'https:'
+        };
+
+        if (typeof mulopimfwc_locationWiseProducts !== 'undefined') {
+            if (mulopimfwc_locationWiseProducts.cookiePath) {
+                options.path = mulopimfwc_locationWiseProducts.cookiePath;
+            }
+            if (mulopimfwc_locationWiseProducts.cookieSameSite) {
+                options.sameSite = String(mulopimfwc_locationWiseProducts.cookieSameSite).toLowerCase();
+            }
+            if (typeof mulopimfwc_locationWiseProducts.cookieSecure === 'boolean') {
+                options.secure = mulopimfwc_locationWiseProducts.cookieSecure;
+            }
+            if (mulopimfwc_locationWiseProducts.cookieDomain) {
+                options.domain = mulopimfwc_locationWiseProducts.cookieDomain;
+            }
+        }
+
+        return options;
+    }
+
+    function buildCookieString(name, value, expiryDate) {
+        const options = getCookieOptions();
+        const encodedValue = encodeURIComponent(String(value));
+        let cookie = `${name}=${encodedValue};expires=${expiryDate.toUTCString()};path=${options.path};samesite=${options.sameSite}`;
+        if (options.domain) {
+            cookie += `;domain=${options.domain}`;
+        }
+        if (options.secure) {
+            cookie += ';secure';
+        }
+        return cookie;
     }
 
     function setPluginCookie(name, value) {
         const expiryDate = new Date(Date.now() + getLocationCookieExpiryDays() * COOKIE_MS_PER_DAY);
-        document.cookie = `${name}=${value};expires=${expiryDate.toUTCString()};path=/;samesite=lax`;
+        document.cookie = buildCookieString(name, value, expiryDate);
     }
 
     // Function to check if the cart has products
     function checkCartHasProducts(callback) {
+        const ajaxUrl = getAjaxUrl();
+        if (!ajaxUrl) {
+            callback(false);
+            return;
+        }
         $.ajax({
-            url: mulopimfwc_locationWiseProducts.ajaxUrl,
+            url: ajaxUrl,
             method: 'POST',
             data: { action: 'check_cart_products' },
             success: function (response) {
@@ -126,13 +188,25 @@ jQuery(document).ready(function ($) {
     }
 
     function clearPluginCookie(name) {
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;samesite=lax`;
+        const options = getCookieOptions();
+        let cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=${options.path};samesite=${options.sameSite}`;
+        if (options.domain) {
+            cookie += `;domain=${options.domain}`;
+        }
+        if (options.secure) {
+            cookie += ';secure';
+        }
+        document.cookie = cookie;
     }
 
     // Function to clear the cart and reload the page
     function clearCartAndReload() {
+        const ajaxUrl = getAjaxUrl();
+        if (!ajaxUrl) {
+            return;
+        }
         $.ajax({
-            url: mulopimfwc_locationWiseProducts.ajaxUrl,
+            url: ajaxUrl,
             method: 'POST',
             data: { action: 'clear_cart' },
             success: function () {
@@ -158,7 +232,7 @@ jQuery(document).ready(function ($) {
                 e.preventDefault();
                 var selectedStore = $dropdown.val();
                 if (selectedStore) {
-                    setPluginCookie('mulopimfwc_store_location', selectedStore);
+                    setPluginCookie(getStoreCookieName(), selectedStore);
                     $modal.css('display', 'none');
                     $('body').removeClass('mulopimfwc-modal-open');
                     location.reload();
@@ -175,7 +249,7 @@ jQuery(document).ready(function ($) {
             const modalDropdown = document.getElementById('lwp-selected-store');
             const selectedStore = modalDropdown.value;
             if (selectedStore) {
-                setPluginCookie('mulopimfwc_store_location', selectedStore);
+                setPluginCookie(getStoreCookieName(), selectedStore);
                 modal.style.display = 'none';
                 location.reload();
             } else {
@@ -195,46 +269,124 @@ jQuery(document).ready(function ($) {
         });
     }, 100);
 
-    $('#lwp-shortcode-selector-form').on('change', function () {
-        const dropdown = $(this).find('#lwp-selected-store-shortcode') || $(this).find('#lwp-selected-store');
-        const selectedStore = dropdown.val();
-        const selectedStoreLabel = dropdown.find('option:selected').text() || '';
-        const matchedLocationId = findMatchingSavedLocationId(selectedStore, selectedStoreLabel);
+    function getShortcodeSelection($form) {
+        const $single = $form.find('#lwp-shortcode-selector');
+        if ($single.length) {
+            return {
+                value: $single.val() || '',
+                label: $single.find('option:selected').text() || '',
+                isHierarchical: false,
+                isReady: true
+            };
+        }
 
+        const $dropdowns = $form.find('.lwp-shortcode-selector-dropdown');
+        if ($dropdowns.length) {
+            const $visibleDropdowns = $dropdowns.filter(function () {
+                return $(this).closest('.lwp-select-container').is(':visible');
+            });
+            const $activeDropdown = $visibleDropdowns.last();
+            const value = $activeDropdown.length ? ($activeDropdown.val() || '') : '';
+            const label = $activeDropdown.find('option:selected').text() || '';
+
+            return {
+                value: value,
+                label: label,
+                isHierarchical: true,
+                isReady: !!value
+            };
+        }
+
+        const $hidden = $form.find('#lwp-selected-store-shortcode');
+        return {
+            value: $hidden.length ? ($hidden.val() || '') : '',
+            label: '',
+            isHierarchical: false,
+            isReady: true
+        };
+    }
+
+    function resolveShortcodeLabel($form, value, fallbackLabel) {
+        if (fallbackLabel) {
+            return fallbackLabel;
+        }
+
+        if (!value) {
+            return '';
+        }
+
+        const $option = $form
+            .find('select option:selected')
+            .filter(function () {
+                return $(this).val() === value;
+            })
+            .first();
+
+        return $option.length ? $option.text() : '';
+    }
+
+    function syncShortcodeHiddenValue($form, value) {
+        const $hidden = $form.find('#lwp-selected-store-shortcode');
+        if ($hidden.length) {
+            $hidden.val(value || '');
+        }
+    }
+
+    $(document).on('submit', '#lwp-shortcode-selector-form', function (e) {
+        e.preventDefault();
+
+        console.log('Store location form submitted.');
+
+        const $form = $(this);
+        const selection = getShortcodeSelection($form);
+        const selectedStore = selection.value;
+        const storeCookieName = getStoreCookieName();
 
         if (!selectedStore) {
             alert('Please select a store location.');
             return;
         }
 
+        if (selection.isHierarchical && !selection.isReady) {
+            alert('Please select a store location.');
+            return;
+        }
+
+        syncShortcodeHiddenValue($form, selectedStore);
+
+        const selectedStoreLabel = resolveShortcodeLabel($form, selectedStore, selection.label);
+        const matchedLocationId = findMatchingSavedLocationId(selectedStore, selectedStoreLabel);
+
         if (selectedStore === 'all-products') {
-            setPluginCookie('mulopimfwc_store_location', 'all-products');
+            setPluginCookie(storeCookieName, 'all-products');
             setPluginCookie('mulopimfwc_user_location', 'all-products');
             location.reload();
             return;
         }
 
-        if (mulopimfwc_locationWiseProducts.allow_mixed_in_cart !== 'on' && mulopimfwc_locationWiseProducts.allow_cart_update) {
+        const allowMixedInCart = locationSettings.allow_mixed_in_cart || 'off';
+        const allowCartUpdate = !!locationSettings.allow_cart_update;
+
+        if (allowMixedInCart !== 'on' && allowCartUpdate) {
 
             // Check if the cart has products before changing the store location
             checkCartHasProducts(function (cartHasProducts) {
-                if (cartHasProducts && mulopimfwc_locationWiseProducts.location_change_notification) {
-                    const confirmChange = confirm(mulopimfwc_locationWiseProducts.location_notification_text || 'Do you want to change the store location? Your cart will be emptied.');
+                if (cartHasProducts && locationSettings.location_change_notification) {
+                    const confirmChange = confirm(locationSettings.location_notification_text || 'Do you want to change the store location? Your cart will be emptied.');
                     if (!confirmChange) {
-                        dropdown.val(getCookie('mulopimfwc_store_location') || '');
-                        $('.saved-location-item').removeClass('selected');
-                        $('.saved-location-item[data-location-id="' + getCookie('mulopimfwc_user_location') + '"]').addClass('selected');
-                        var selectedAddress = $('.saved-location-item.selected').data('address');
-                        var label = $('.saved-location-item.selected').data('label');
-                        if (selectedAddress) {
-                            $('.address-text').text(label + ' - ' + selectedAddress);
+                        var currentLocation = getCookie(storeCookieName);
+                        if (currentLocation) {
+                            var revertUrl = window.location.href.split('?')[0];
+                            var separator = '?';
+                            revertUrl += separator + 'mulopimfwc_loc=' + encodeURIComponent(currentLocation) + '&_t=' + Date.now();
+                            window.location.href = revertUrl;
                         }
                         return;
                     }
                 }
 
                 // Set the cookie and clear the cart
-                setPluginCookie('mulopimfwc_store_location', selectedStore);
+                setPluginCookie(storeCookieName, selectedStore);
                 if (matchedLocationId) {
                     setPluginCookie('mulopimfwc_user_location', matchedLocationId);
                 } else if (hasSavedLocationItems()) {
@@ -244,7 +396,7 @@ jQuery(document).ready(function ($) {
             });
         } else {
             // Set the cookie without clearing the cart
-            setPluginCookie('mulopimfwc_store_location', selectedStore);
+            setPluginCookie(storeCookieName, selectedStore);
             if (matchedLocationId) {
                 setPluginCookie('mulopimfwc_user_location', matchedLocationId);
             } else if (hasSavedLocationItems()) {
@@ -261,7 +413,14 @@ jQuery(document).ready(function ($) {
     // Helper function to get cookie value
     function getCookie(name) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-        return match ? match[2] : '';
+        if (!match) {
+            return '';
+        }
+        try {
+            return decodeURIComponent(match[2]);
+        } catch (e) {
+            return match[2];
+        }
     }
 
     function updateSingleProductAddToCartState() {
@@ -274,7 +433,7 @@ jQuery(document).ready(function ($) {
         }
 
         const selectedLocation =
-            getCookie('mulopimfwc_store_location') ||
+            getCookie(getStoreCookieName()) ||
             (mulopimfwc_locationWiseProducts.currentLocation || '');
         const needsSelection = !selectedLocation || selectedLocation === 'all-products';
         const $button = $('.single_add_to_cart_button');
@@ -304,7 +463,7 @@ jQuery(document).ready(function ($) {
 
     updateSingleProductAddToCartState();
 
-    $(document).on('change', '#lwp-shortcode-selector, #mulopimfwc_store_location, .mulopimfwc-location-selector', function () {
+    $(document).on('change', '#lwp-shortcode-selector, .lwp-shortcode-selector-dropdown, #mulopimfwc_store_location, .mulopimfwc-location-selector', function () {
         setTimeout(updateSingleProductAddToCartState, 100);
     });
 

@@ -334,10 +334,8 @@ class MULOPIMFWC_Coupon_Location_Restrictions
      */
     private function get_selected_location_term_ids()
     {
-        $slug = '';
-        if (isset($_COOKIE['mulopimfwc_store_location'])) {
-            $slug = sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location']));
-        } elseif (isset($_COOKIE['mulopimfwc_user_location'])) {
+        $slug = mulopimfwc_get_store_location_cookie();
+        if ($slug === '' && isset($_COOKIE['mulopimfwc_user_location'])) {
             $slug = sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_user_location']));
         }
 

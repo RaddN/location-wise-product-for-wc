@@ -215,10 +215,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 		 * @return string
 		 */
 		private function get_current_location_slug() {
-			if ( isset( $_COOKIE['mulopimfwc_store_location'] ) ) {
-				return sanitize_text_field( wp_unslash( $_COOKIE['mulopimfwc_store_location'] ) );
-			}
-			return '';
+			return mulopimfwc_get_store_location_cookie();
 		}
 
 		/**

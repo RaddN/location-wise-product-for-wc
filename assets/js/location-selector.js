@@ -328,7 +328,7 @@
         }
 
         getCurrentStoreLocation() {
-            const cookieLocation = this.getCookie('mulopimfwc_store_location');
+            const cookieLocation = this.getCookie(this.getStoreCookieName());
             if (cookieLocation) return cookieLocation;
 
             return '';
@@ -358,11 +358,27 @@
             }
         }
 
+        getStoreCookieName() {
+            return this.settings.cookieName || 'mulopimfwc_store_location';
+        }
+
         setLocationCookie(location) {
             // FIXED: Validate location slug and add secure flag for HTTPS
             const expires = new Date(Date.now() + this.getCookieExpiryMs());
-            const isSecure = window.location.protocol === 'https:';
-            const cookieString = `mulopimfwc_store_location=${encodeURIComponent(location)}; expires=${expires.toUTCString()}; path=/; ${isSecure ? 'secure;' : ''}samesite=lax`;
+            const cookiePath = this.settings.cookiePath || '/';
+            const sameSite = this.settings.cookieSameSite ? String(this.settings.cookieSameSite).toLowerCase() : 'lax';
+            const isSecure = typeof this.settings.cookieSecure === 'boolean'
+                ? this.settings.cookieSecure
+                : window.location.protocol === 'https:';
+            const cookieDomain = this.settings.cookieDomain || '';
+            const cookieName = this.getStoreCookieName();
+            let cookieString = `${cookieName}=${encodeURIComponent(location)}; expires=${expires.toUTCString()}; path=${cookiePath}; samesite=${sameSite}`;
+            if (cookieDomain) {
+                cookieString += `; domain=${cookieDomain}`;
+            }
+            if (isSecure) {
+                cookieString += '; secure';
+            }
             document.cookie = cookieString;
             
             // FIXED: Validate cookie was set by making AJAX call to server
@@ -377,7 +393,14 @@
                     })
                 }).catch(() => {
                     // If validation fails, remove invalid cookie
-                    document.cookie = 'mulopimfwc_store_location=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+                    let clearCookie = `${cookieName}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=${cookiePath};samesite=${sameSite}`;
+                    if (cookieDomain) {
+                        clearCookie += `;domain=${cookieDomain}`;
+                    }
+                    if (isSecure) {
+                        clearCookie += ';secure';
+                    }
+                    document.cookie = clearCookie;
                 });
             }
         }
@@ -394,7 +417,14 @@
             for (let i = 0; i < ca.length; i++) {
                 let c = ca[i];
                 while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                if (c.indexOf(nameEQ) === 0) {
+                    const value = c.substring(nameEQ.length, c.length);
+                    try {
+                        return decodeURIComponent(value);
+                    } catch (e) {
+                        return value;
+                    }
+                }
             }
             return null;
         }

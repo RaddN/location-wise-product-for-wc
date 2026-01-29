@@ -40,8 +40,9 @@ class MULOPIMFWC_Location_Wise_Local_Pickup
             return self::$current_location_cache;
         }
 
-        if (isset($_COOKIE['mulopimfwc_store_location'])) {
-            self::$current_location_cache = sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location']));
+        $cookie_location = mulopimfwc_get_store_location_cookie();
+        if (!empty($cookie_location)) {
+            self::$current_location_cache = $cookie_location;
             return self::$current_location_cache;
         }
 

@@ -362,7 +362,7 @@ add_action('woocommerce_save_product_variation', function ($variation_id, $loop)
 function mulopimfwc_get_current_store_location()
 {
     // First check if cookie is set
-    $cookie_location = isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
+    $cookie_location = mulopimfwc_get_store_location_cookie();
 
     if (!empty($cookie_location)) {
         return $cookie_location;
@@ -435,6 +435,37 @@ function mulopimfwc_get_cart_item_location($product_id, $variation_id = 0)
     }
 
     return null;
+}
+
+if (!function_exists('mulopimfwc_get_order_item_location_slug')) {
+    /**
+     * Resolve the store location slug for an order item, with safe fallbacks.
+     *
+     * Order item meta is preferred; order meta is the secondary source; current
+     * location is the final fallback to avoid empty restores.
+     *
+     * @param WC_Order_Item|null $item
+     * @param WC_Order|null $order
+     * @return string
+     */
+    function mulopimfwc_get_order_item_location_slug($item, $order = null): string
+    {
+        $location_slug = '';
+
+        if ($item && is_object($item) && is_callable([$item, 'get_meta'])) {
+            $location_slug = (string) $item->get_meta('_mulopimfwc_location');
+        }
+
+        if (!$location_slug && $order && is_object($order) && is_callable([$order, 'get_meta'])) {
+            $location_slug = (string) $order->get_meta('_store_location');
+        }
+
+        if (!$location_slug) {
+            $location_slug = mulopimfwc_get_current_store_location();
+        }
+
+        return $location_slug;
+    }
 }
 
 if (!is_admin()) {
@@ -717,12 +748,8 @@ add_action('woocommerce_reduce_order_stock', function ($order) {
 
         $target_id = $variation_id ? $variation_id : $product_id;
 
-        // Get location from order item meta (stored during checkout)
-        $location_slug = $item->get_meta('_mulopimfwc_location');
-        if (!$location_slug) {
-            // Fallback to current location if no location stored in order item
-            $location_slug = mulopimfwc_get_current_store_location();
-        }
+        // Get location from order item meta (stored during checkout), with order fallback
+        $location_slug = mulopimfwc_get_order_item_location_slug($item, $order);
 
         $location_id = mulopimfwc_get_location_term_id($location_slug);
         if (!$location_id) {
@@ -776,12 +803,8 @@ add_action('woocommerce_restore_order_stock', function ($order) {
 
         $target_id = $variation_id ? $variation_id : $product_id;
 
-        // Get location from order item meta (stored during checkout)
-        $location_slug = $item->get_meta('_mulopimfwc_location');
-        if (!$location_slug) {
-            // Fallback to current location if no location stored in order item
-            $location_slug = mulopimfwc_get_current_store_location();
-        }
+        // Get location from order item meta (stored during checkout), with order fallback
+        $location_slug = mulopimfwc_get_order_item_location_slug($item, $order);
 
         $location_id = mulopimfwc_get_location_term_id($location_slug);
         if (!$location_id) {
@@ -822,6 +845,7 @@ add_action('woocommerce_create_refund', function ($refund, $args) {
         $qty = function_exists('wc_stock_amount')
             ? wc_stock_amount($line_item['qty'])
             : (int) $line_item['qty'];
+        $qty = absint($qty);
 
         if ($qty <= 0) {
             continue;
@@ -840,13 +864,7 @@ add_action('woocommerce_create_refund', function ($refund, $args) {
             continue;
         }
 
-        $location_slug = $item->get_meta('_mulopimfwc_location');
-        if (!$location_slug) {
-            $location_slug = (string) $order->get_meta('_store_location');
-        }
-        if (!$location_slug) {
-            $location_slug = mulopimfwc_get_current_store_location();
-        }
+        $location_slug = mulopimfwc_get_order_item_location_slug($item, $order);
 
         $location_id = mulopimfwc_get_location_term_id($location_slug);
         if (!$location_id) {
@@ -1222,7 +1240,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.121');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.1.122');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }

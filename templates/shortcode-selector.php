@@ -2,6 +2,10 @@
 // templates/shortcode-selector.php
 if (!defined('ABSPATH')) exit;
 // Template for the store location selector shortcode
+// Read store location cookie via helper to respect filters.
+$store_cookie_value = function_exists('mulopimfwc_get_store_location_cookie')
+    ? mulopimfwc_get_store_location_cookie()
+    : '';
 ?>
 <?php
 // If no unit is present, append 'px'
@@ -47,11 +51,11 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                     } else {
                         // For non-logged in users, check if location is set in cookie
                         $location_set = true;
-                        $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : (isset($_COOKIE['mulopimfwc_store_location']) ? $_COOKIE['mulopimfwc_store_location'] : '');
+                        $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : ($store_cookie_value ?: '');
                         $current_location = !empty($selected_location_id) ? $selected_location_id : __('Current Location', 'multi-location-product-and-inventory-management');
                     }
 
-                    $store_location = isset($_COOKIE['mulopimfwc_store_location']) ? $_COOKIE['mulopimfwc_store_location'] : '';
+                    $store_location = $store_cookie_value;
 
                     if ($location_set) {
                         echo esc_html($current_location);
@@ -77,7 +81,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                             <?php
                             $user_locations = get_user_meta($current_user->ID, 'mulopimfwc_user_locations', true);
                             if ($is_admin_or_manager && $show_all_products_admin === 'on'):
-                                $all_selected = (isset($_COOKIE['mulopimfwc_user_location']) && $_COOKIE['mulopimfwc_user_location'] === 'all-products') || (isset($_COOKIE['mulopimfwc_store_location']) && $_COOKIE['mulopimfwc_store_location'] === 'all-products') ? 'selected' : '';
+                                $all_selected = (isset($_COOKIE['mulopimfwc_user_location']) && $_COOKIE['mulopimfwc_user_location'] === 'all-products') || ($store_cookie_value === 'all-products') ? 'selected' : '';
                             ?>
                                 <div
                                     class="saved-location-item <?php echo esc_attr($all_selected); ?>"
@@ -708,9 +712,8 @@ jQuery(document).ready(function($) {
         var selectedValue = $(this).val();
         if (selectedValue) {
             $('#lwp-selected-store-shortcode').val(selectedValue);
-            if (autoSubmit) {
-                $('#lwp-shortcode-selector-form').submit();
-            }
+        } else {
+            $('#lwp-selected-store-shortcode').val('');
         }
         for (var i = selectedLevel + 1; i <= $max_depth_js; i++) {
             $('.lwp-select-container.level-' + i).hide();
@@ -764,6 +767,8 @@ else:
             if ($auto_submit_js) {
                 $('#lwp-shortcode-selector-form').submit();
             }
+        } else {
+            $('#lwp-selected-store-shortcode').val('');
         }
     });
     $('.lwp-shortcode-submit').on('click', function() {

@@ -342,12 +342,31 @@ jQuery(function ($) {
         }
         // FIXED: Validate location slug and add secure flag for HTTPS
         var expiryDate = new Date(Date.now() + cookieDays * 24 * 60 * 60 * 1000);
-        var isSecure = window.location.protocol === 'https:';
-        var cookieString = 'mulopimfwc_store_location=' + encodeURIComponent(slug) + 
-                          ';expires=' + expiryDate.toUTCString() + 
-                          ';path=/' + 
-                          (isSecure ? ';secure' : '') + 
-                          ';samesite=lax';
+        var cookieName = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookieName)
+            ? mulopimfwc_locationWiseProducts.cookieName
+            : 'mulopimfwc_store_location';
+        var cookiePath = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookiePath)
+            ? mulopimfwc_locationWiseProducts.cookiePath
+            : '/';
+        var sameSite = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookieSameSite)
+            ? String(mulopimfwc_locationWiseProducts.cookieSameSite).toLowerCase()
+            : 'lax';
+        var isSecure = (window.mulopimfwc_locationWiseProducts && typeof mulopimfwc_locationWiseProducts.cookieSecure === 'boolean')
+            ? mulopimfwc_locationWiseProducts.cookieSecure
+            : window.location.protocol === 'https:';
+        var cookieDomain = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.cookieDomain)
+            ? mulopimfwc_locationWiseProducts.cookieDomain
+            : '';
+        var cookieString = cookieName + '=' + encodeURIComponent(slug) +
+                          ';expires=' + expiryDate.toUTCString() +
+                          ';path=' + cookiePath +
+                          ';samesite=' + sameSite;
+        if (cookieDomain) {
+            cookieString += ';domain=' + cookieDomain;
+        }
+        if (isSecure) {
+            cookieString += ';secure';
+        }
         document.cookie = cookieString;
         
         // FIXED: Validate cookie was set by making AJAX call to server
@@ -359,7 +378,14 @@ jQuery(function ($) {
                 nonce: mulopimfwc_locationWiseProducts.nonce || ''
             }).fail(function() {
                 // If validation fails, remove invalid cookie
-                document.cookie = 'mulopimfwc_store_location=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+                var clearCookie = cookieName + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=' + cookiePath + ';samesite=' + sameSite;
+                if (cookieDomain) {
+                    clearCookie += ';domain=' + cookieDomain;
+                }
+                if (isSecure) {
+                    clearCookie += ';secure';
+                }
+                document.cookie = clearCookie;
             });
         }
         

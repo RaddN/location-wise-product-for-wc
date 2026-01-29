@@ -5,7 +5,7 @@
  * Handles shipping zone and method filtering based on selected store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.1.121
+ * @since 1.1.1.122
  */
 
 if (!defined('ABSPATH')) {
@@ -75,8 +75,9 @@ class MULOPIMFWC_Location_Based_Shipping
     private function get_current_location()
     {
         // First check if cookie is set
-        if (isset($_COOKIE['mulopimfwc_store_location'])) {
-            return sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location']));
+        $cookie_location = mulopimfwc_get_store_location_cookie();
+        if (!empty($cookie_location)) {
+            return $cookie_location;
         }
         
         // If cookie is empty, check if popup is enabled
@@ -409,14 +410,14 @@ class MULOPIMFWC_Location_Based_Shipping
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/css/shipping-admin.css',
             array(),
-            '1.1.1.121'
+            '1.1.1.122'
         );
 
         wp_enqueue_script(
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/js/shipping-admin.js',
             array('jquery'),
-            '1.1.1.121',
+            '1.1.1.122',
             true
         );
 

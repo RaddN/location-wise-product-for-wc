@@ -194,7 +194,7 @@ class mulopimfwc_License_Manager
                 wp_send_json_success(array(
                     'update_available' => true,
                     'new_version' => $update_info->new_version,
-                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.121'
+                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.122'
                 ));
             } else {
                 wp_send_json_success(array(
@@ -384,7 +384,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.121')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.122')
         ));
 
         if (is_wp_error($response)) {
@@ -419,7 +419,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.121')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.122')
         ));
 
         if (is_wp_error($response)) {
@@ -451,7 +451,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.121')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.122')
         ));
 
         if (is_wp_error($response)) {
@@ -500,7 +500,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.121')
+            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.122')
         ));
 
         if (is_wp_error($response)) {
@@ -531,7 +531,7 @@ class mulopimfwc_License_Manager
             return false;
         }
 
-        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.121';
+        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.122';
         if (version_compare($current_version, $version_info->new_version, '<')) {
             return $version_info;
         }
@@ -552,7 +552,7 @@ class mulopimfwc_License_Manager
             wp_send_json_success(array(
                 'update_available' => true,
                 'new_version' => $update_info->new_version,
-                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.121'
+                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.1.122'
             ));
         } else {
             wp_send_json_success(array(

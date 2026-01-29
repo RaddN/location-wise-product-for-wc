@@ -29,9 +29,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
      */
     private function is_current_location_open() {
         // Get current selected location
-        $location_slug = isset($_COOKIE['mulopimfwc_store_location']) 
-            ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) 
-            : '';
+        $location_slug = mulopimfwc_get_store_location_cookie();
         
         // If no location selected or "all-products", allow purchase
         if (empty($location_slug) || $location_slug === 'all-products') {
@@ -61,9 +59,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
      * Get current location information
      */
     private function get_current_location_info() {
-        $location_slug = isset($_COOKIE['mulopimfwc_store_location']) 
-            ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) 
-            : '';
+        $location_slug = mulopimfwc_get_store_location_cookie();
         
         if (empty($location_slug) || $location_slug === 'all-products') {
             return null;

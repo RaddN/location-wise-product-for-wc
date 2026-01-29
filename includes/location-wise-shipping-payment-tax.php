@@ -53,7 +53,7 @@ class MULOPIMFWC_Runtime_Filters
 
     private function get_current_location()
     {
-        return isset($_COOKIE['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_store_location'])) : '';
+        return mulopimfwc_get_store_location_cookie();
     }
 
     /**
