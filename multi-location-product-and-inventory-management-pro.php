@@ -1858,7 +1858,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (isset($options['enable_popup']) && $options['enable_popup'] === 'on' && mulopimfwc_premium_feature()) {
                 add_action('wp_footer', [$this, 'location_selector_modal']);
             }
-            add_action('init', [$this, 'maybe_set_default_location_cookie'], 5);
+            add_action('init', [$this, 'maybe_set_default_location_cookie'], 999);
             add_action('init', [$this, 'clear_cart_on_location_change']);
 
             add_shortcode('mulopimfwc_store_location_selector', [$this, 'location_selector_shortcode']);
