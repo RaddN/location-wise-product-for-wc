@@ -335,8 +335,6 @@ jQuery(document).ready(function ($) {
     $(document).on('submit', '#lwp-shortcode-selector-form', function (e) {
         e.preventDefault();
 
-        console.log('Store location form submitted.');
-
         const $form = $(this);
         const selection = getShortcodeSelection($form);
         const selectedStore = selection.value;

@@ -1337,7 +1337,7 @@ form#lwp-store-selector-form-modal > div * {
 
 .lwp-form-actions .button.lwp-back-btn {
   background-color: var(--lwp-secondary, #764ba2);
-  color: var(--lwp-ink, #495057);
+  color: var(--lwp-button-text, #fff);
   border: 1px solid var(--lwp-border, #ddd);
 }
 
@@ -1370,7 +1370,7 @@ form#lwp-store-selector-form-modal > div * {
 .lwp-form-actions svg {
   width: 16px;
   height: 16px;
-  fill: var(--lwp-ink, #495057);
+  fill: var(--lwp-button-text, #fff);
 }
 
 .lwp-form-actions .button-primary:hover {

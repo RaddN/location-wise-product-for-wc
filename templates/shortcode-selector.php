@@ -93,7 +93,9 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                                     data-state="all-products"
                                     data-postal="all-products"
                                     data-country="all-products" style="gap:20px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" xml:space="preserve" width="16" height="16"><path d="M3.454 9.188a.3.3 0 0 1-.185.065.3.3 0 0 1-.231-.111l-.041-.051a.3.3 0 0 1-.065-.185.296.296 0 0 1 .527-.186l.041.051a.296.296 0 0 1-.046.416m.842 1.524a.3.3 0 0 0 .231.111.3.3 0 0 0 .185-.065.3.3 0 0 0 .111-.231.3.3 0 0 0-.065-.185l-.041-.051a.296.296 0 0 0-.527.185c0 .065.021.13.065.185zM4.178 9.33a.3.3 0 0 0 .185-.065.3.3 0 0 0 .111-.231.3.3 0 0 0-.065-.185l-.041-.051a.296.296 0 0 0-.462.371l.041.051a.3.3 0 0 0 .231.111m-.75.805a.3.3 0 0 0 .231.111.3.3 0 0 0 .185-.065.3.3 0 0 0 .111-.231.3.3 0 0 0-.065-.185l-.041-.051a.296.296 0 0 0-.527.186.3.3 0 0 0 .065.185zM.256 7.009a1.166 1.166 0 0 1 .181-1.638 1.16 1.16 0 0 1 .859-.249 1.16 1.16 0 0 1 .43-.784 1.166 1.166 0 0 1 1.665 1.605l.522.652.235-.188a.3.3 0 0 1 .23-.062 3 3 0 0 1 .348.076.296.296 0 0 1 .204.365.295.295 0 0 1-.365.204 2 2 0 0 0-.152-.037l-2.01 1.611c-.004.328.064.674.198 1.009a.296.296 0 0 1-.165.385.3.3 0 0 1-.11.021.3.3 0 0 1-.275-.186 3.2 3.2 0 0 1-.234-1.396.3.3 0 0 1 .11-.211l.235-.188-.522-.652A1.17 1.17 0 0 1 .256 7.01m1.268-.281a.3.3 0 0 1 .185-.065.3.3 0 0 1 .231.111l.684.853.827-.663-.684-.853a.296.296 0 0 1 .046-.416.574.574 0 0 0-.717-.895.57.57 0 0 0-.179.648.3.3 0 0 1-.092.335.3.3 0 0 1-.347.017.57.57 0 0 0-.671.033.574.574 0 0 0 .717.895m4.844.504v.512a.296.296 0 0 0 .592 0v-.512a.296.296 0 0 0-.592 0m3.324.207a1.13 1.13 0 0 0-.673-.256h-.01c-.392.006-.782.26-1.098.714-.477.685-.796 1.848-.481 2.745a.3.3 0 0 0 .279.198.296.296 0 0 0 .279-.394c-.237-.677.021-1.655.408-2.211.2-.287.425-.454.617-.46a.56.56 0 0 1 .317.133.296.296 0 0 0 .361-.469m2.071 3.102a.296.296 0 0 0 .303-.289c.021-.867-.269-1.847-.963-2.083l-.009-.003c-.31-.094-.667-.029-1.033.187-.686.406-1.308 1.295-1.48 2.113a.296.296 0 0 0 .58.122c.138-.66.655-1.401 1.202-1.725.213-.126.41-.173.554-.131.336.119.575.765.557 1.506a.296.296 0 0 0 .289.303M2.938 3.633a.3.3 0 0 0 .129.03.3.3 0 0 0 .267-.167c.012-.025.159-.401.171-.43C4.199 1.736 5.529.855 7.154.647c1.694-.216 3.394.367 4.435 1.522a.296.296 0 1 0 .44-.396A5.3 5.3 0 0 0 9.758.314 6.1 6.1 0 0 0 7.079.06C5.257.292 3.761 1.29 2.977 2.797c-.015.029-.169.422-.178.444a.296.296 0 0 0 .139.392m6.153 2.565a.296.296 0 1 1-.43.407.73.73 0 0 0-.389-.216.296.296 0 0 1-.237-.29v-.383H6.731v.383a.296.296 0 0 1-.237.29.74.74 0 0 0-.591.721v3.345a.296.296 0 0 1-.592 0V7.11c0-.545.337-1.029.828-1.23v-.324a.66.66 0 0 1-.23-.5v-.39a.66.66 0 0 1 .659-.659h1.63a.66.66 0 0 1 .659.659v.39c0 .2-.089.379-.23.5v.324a1.3 1.3 0 0 1 .464.318m-.826-1.533a.07.07 0 0 0-.067-.067h-1.63a.07.07 0 0 0-.067.067v.39c0 .028.018.052.042.062l.003.001q.011.004.023.004h1.63l.026-.005a.07.07 0 0 0 .042-.062zm6.386 5.973c-.015.664-.446 1.517-1.182 2.341a8.4 8.4 0 0 1-2.612 1.956v.759a.296.296 0 0 1-.296.296H5.154a.296.296 0 0 1-.296-.296v-.759a8.5 8.5 0 0 1-2.612-1.956c-.736-.824-1.167-1.677-1.182-2.341a.3.3 0 0 1 .166-.273.3.3 0 0 1 .317.037c.129.105.607.371 2.267.571 1.125.135 2.561.21 4.043.21s2.918-.074 4.043-.21c1.66-.2 2.138-.466 2.267-.571a.3.3 0 0 1 .317-.037.3.3 0 0 1 .166.273m-4.385 4.403H5.45v.357h4.815zm3.678-3.877c-1.645.576-5.28.609-6.086.609s-4.441-.033-6.086-.609c.096.26.249.542.45.832q.008.008.015.018c.043.055.135.146.266.146.117 0 .228-.074.305-.203a.296.296 0 0 1 .508.304 1 1 0 0 1-.52.44c.216.23.457.458.72.674a.296.296 0 0 1 .476.348l-.007.012c.381.27.795.514 1.232.714h5.28c.41-.188.8-.414 1.161-.664l-.039-.061a.296.296 0 1 1 .508-.304l.006.01c.289-.234.554-.481.789-.731a1 1 0 0 1-.511-.437.296.296 0 0 1 .508-.304c.077.129.188.203.305.203.097 0 .171-.05.219-.095.226-.314.396-.621.499-.901m.316-6.937a.296.296 0 0 0-.405.104l-.038.064a.296.296 0 0 0 .255.447.3.3 0 0 0 .255-.145l.038-.064a.296.296 0 0 0-.104-.405m-.812.575a.296.296 0 0 0-.405.105l-.037.064a.296.296 0 0 0 .105.405.296.296 0 0 0 .405-.105l.037-.064a.296.296 0 0 0-.105-.405m.111-.988a.296.296 0 0 0-.405.104l-.038.064a.296.296 0 0 0 .104.405.296.296 0 0 0 .405-.104l.038-.064a.296.296 0 0 0-.104-.405m2.426 1.152c-.359 1.094-.911 2.287-1.598 3.452-.293.496-.604.977-.925 1.43a.3.3 0 0 1-.242.125.3.3 0 0 1-.171-.055.296.296 0 0 1-.07-.413c.311-.439.613-.906.897-1.388a18 18 0 0 0 1.365-2.823 4 4 0 0 0-.251.104l-.029.013c-.82.383-1.85 1.178-2.874 2.238l-.091.258a.296.296 0 0 1-.379.178.296.296 0 0 1-.178-.379l.111-.318c.501-1.469.77-2.818.76-3.765v-.034l-.001-.056a21 21 0 0 0-1.694 2.468 23 23 0 0 0-.459.816.296.296 0 0 1-.401.121.296.296 0 0 1-.121-.401 23 23 0 0 1 .471-.837c.677-1.149 1.434-2.21 2.189-3.069a.296.296 0 0 1 .512.12 3 3 0 0 1 .047.225c.864-.732 1.573-.964 2.069-.672.637.375.588 1.397.367 2.352q.201-.058.383-.079c.1-.012.2.029.263.107s.083.184.052.28m-1.366-2.15c-.22-.13-.799.036-1.716.913-.007.755-.161 1.697-.448 2.74.761-.689 1.499-1.217 2.15-1.539.357-1.254.268-1.964.014-2.114m-.29.493a.296.296 0 0 0-.405.105l-.037.064a.296.296 0 0 0 .255.446.3.3 0 0 0 .255-.146l.037-.064a.296.296 0 0 0-.105-.405m-9.048 9.184a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491m2.226 0a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491m3.638.491c.326 0 .63-.184.814-.491a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 1 0-.508.304c.184.308.488.491.814.491m-4.947.333a.296.296 0 0 0-.406.102c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 1 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491a.296.296 0 0 0-.102-.406m1.297.102a.296.296 0 0 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491a.296.296 0 0 0-.102-.406.296.296 0 0 0-.406.102c-.077.129-.188.203-.305.203s-.228-.074-.305-.203m1.418-.436c.326 0 .63-.184.814-.491a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.508.304c.184.308.488.491.814.491m.489.334a.296.296 0 0 0-.102.406c.184.308.488.491.814.491s.63-.184.814-.491a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.406-.102"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" xml:space="preserve" width="16" height="16">
+                                        <path d="M3.454 9.188a.3.3 0 0 1-.185.065.3.3 0 0 1-.231-.111l-.041-.051a.3.3 0 0 1-.065-.185.296.296 0 0 1 .527-.186l.041.051a.296.296 0 0 1-.046.416m.842 1.524a.3.3 0 0 0 .231.111.3.3 0 0 0 .185-.065.3.3 0 0 0 .111-.231.3.3 0 0 0-.065-.185l-.041-.051a.296.296 0 0 0-.527.185c0 .065.021.13.065.185zM4.178 9.33a.3.3 0 0 0 .185-.065.3.3 0 0 0 .111-.231.3.3 0 0 0-.065-.185l-.041-.051a.296.296 0 0 0-.462.371l.041.051a.3.3 0 0 0 .231.111m-.75.805a.3.3 0 0 0 .231.111.3.3 0 0 0 .185-.065.3.3 0 0 0 .111-.231.3.3 0 0 0-.065-.185l-.041-.051a.296.296 0 0 0-.527.186.3.3 0 0 0 .065.185zM.256 7.009a1.166 1.166 0 0 1 .181-1.638 1.16 1.16 0 0 1 .859-.249 1.16 1.16 0 0 1 .43-.784 1.166 1.166 0 0 1 1.665 1.605l.522.652.235-.188a.3.3 0 0 1 .23-.062 3 3 0 0 1 .348.076.296.296 0 0 1 .204.365.295.295 0 0 1-.365.204 2 2 0 0 0-.152-.037l-2.01 1.611c-.004.328.064.674.198 1.009a.296.296 0 0 1-.165.385.3.3 0 0 1-.11.021.3.3 0 0 1-.275-.186 3.2 3.2 0 0 1-.234-1.396.3.3 0 0 1 .11-.211l.235-.188-.522-.652A1.17 1.17 0 0 1 .256 7.01m1.268-.281a.3.3 0 0 1 .185-.065.3.3 0 0 1 .231.111l.684.853.827-.663-.684-.853a.296.296 0 0 1 .046-.416.574.574 0 0 0-.717-.895.57.57 0 0 0-.179.648.3.3 0 0 1-.092.335.3.3 0 0 1-.347.017.57.57 0 0 0-.671.033.574.574 0 0 0 .717.895m4.844.504v.512a.296.296 0 0 0 .592 0v-.512a.296.296 0 0 0-.592 0m3.324.207a1.13 1.13 0 0 0-.673-.256h-.01c-.392.006-.782.26-1.098.714-.477.685-.796 1.848-.481 2.745a.3.3 0 0 0 .279.198.296.296 0 0 0 .279-.394c-.237-.677.021-1.655.408-2.211.2-.287.425-.454.617-.46a.56.56 0 0 1 .317.133.296.296 0 0 0 .361-.469m2.071 3.102a.296.296 0 0 0 .303-.289c.021-.867-.269-1.847-.963-2.083l-.009-.003c-.31-.094-.667-.029-1.033.187-.686.406-1.308 1.295-1.48 2.113a.296.296 0 0 0 .58.122c.138-.66.655-1.401 1.202-1.725.213-.126.41-.173.554-.131.336.119.575.765.557 1.506a.296.296 0 0 0 .289.303M2.938 3.633a.3.3 0 0 0 .129.03.3.3 0 0 0 .267-.167c.012-.025.159-.401.171-.43C4.199 1.736 5.529.855 7.154.647c1.694-.216 3.394.367 4.435 1.522a.296.296 0 1 0 .44-.396A5.3 5.3 0 0 0 9.758.314 6.1 6.1 0 0 0 7.079.06C5.257.292 3.761 1.29 2.977 2.797c-.015.029-.169.422-.178.444a.296.296 0 0 0 .139.392m6.153 2.565a.296.296 0 1 1-.43.407.73.73 0 0 0-.389-.216.296.296 0 0 1-.237-.29v-.383H6.731v.383a.296.296 0 0 1-.237.29.74.74 0 0 0-.591.721v3.345a.296.296 0 0 1-.592 0V7.11c0-.545.337-1.029.828-1.23v-.324a.66.66 0 0 1-.23-.5v-.39a.66.66 0 0 1 .659-.659h1.63a.66.66 0 0 1 .659.659v.39c0 .2-.089.379-.23.5v.324a1.3 1.3 0 0 1 .464.318m-.826-1.533a.07.07 0 0 0-.067-.067h-1.63a.07.07 0 0 0-.067.067v.39c0 .028.018.052.042.062l.003.001q.011.004.023.004h1.63l.026-.005a.07.07 0 0 0 .042-.062zm6.386 5.973c-.015.664-.446 1.517-1.182 2.341a8.4 8.4 0 0 1-2.612 1.956v.759a.296.296 0 0 1-.296.296H5.154a.296.296 0 0 1-.296-.296v-.759a8.5 8.5 0 0 1-2.612-1.956c-.736-.824-1.167-1.677-1.182-2.341a.3.3 0 0 1 .166-.273.3.3 0 0 1 .317.037c.129.105.607.371 2.267.571 1.125.135 2.561.21 4.043.21s2.918-.074 4.043-.21c1.66-.2 2.138-.466 2.267-.571a.3.3 0 0 1 .317-.037.3.3 0 0 1 .166.273m-4.385 4.403H5.45v.357h4.815zm3.678-3.877c-1.645.576-5.28.609-6.086.609s-4.441-.033-6.086-.609c.096.26.249.542.45.832q.008.008.015.018c.043.055.135.146.266.146.117 0 .228-.074.305-.203a.296.296 0 0 1 .508.304 1 1 0 0 1-.52.44c.216.23.457.458.72.674a.296.296 0 0 1 .476.348l-.007.012c.381.27.795.514 1.232.714h5.28c.41-.188.8-.414 1.161-.664l-.039-.061a.296.296 0 1 1 .508-.304l.006.01c.289-.234.554-.481.789-.731a1 1 0 0 1-.511-.437.296.296 0 0 1 .508-.304c.077.129.188.203.305.203.097 0 .171-.05.219-.095.226-.314.396-.621.499-.901m.316-6.937a.296.296 0 0 0-.405.104l-.038.064a.296.296 0 0 0 .255.447.3.3 0 0 0 .255-.145l.038-.064a.296.296 0 0 0-.104-.405m-.812.575a.296.296 0 0 0-.405.105l-.037.064a.296.296 0 0 0 .105.405.296.296 0 0 0 .405-.105l.037-.064a.296.296 0 0 0-.105-.405m.111-.988a.296.296 0 0 0-.405.104l-.038.064a.296.296 0 0 0 .104.405.296.296 0 0 0 .405-.104l.038-.064a.296.296 0 0 0-.104-.405m2.426 1.152c-.359 1.094-.911 2.287-1.598 3.452-.293.496-.604.977-.925 1.43a.3.3 0 0 1-.242.125.3.3 0 0 1-.171-.055.296.296 0 0 1-.07-.413c.311-.439.613-.906.897-1.388a18 18 0 0 0 1.365-2.823 4 4 0 0 0-.251.104l-.029.013c-.82.383-1.85 1.178-2.874 2.238l-.091.258a.296.296 0 0 1-.379.178.296.296 0 0 1-.178-.379l.111-.318c.501-1.469.77-2.818.76-3.765v-.034l-.001-.056a21 21 0 0 0-1.694 2.468 23 23 0 0 0-.459.816.296.296 0 0 1-.401.121.296.296 0 0 1-.121-.401 23 23 0 0 1 .471-.837c.677-1.149 1.434-2.21 2.189-3.069a.296.296 0 0 1 .512.12 3 3 0 0 1 .047.225c.864-.732 1.573-.964 2.069-.672.637.375.588 1.397.367 2.352q.201-.058.383-.079c.1-.012.2.029.263.107s.083.184.052.28m-1.366-2.15c-.22-.13-.799.036-1.716.913-.007.755-.161 1.697-.448 2.74.761-.689 1.499-1.217 2.15-1.539.357-1.254.268-1.964.014-2.114m-.29.493a.296.296 0 0 0-.405.105l-.037.064a.296.296 0 0 0 .255.446.3.3 0 0 0 .255-.146l.037-.064a.296.296 0 0 0-.105-.405m-9.048 9.184a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491m2.226 0a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491m3.638.491c.326 0 .63-.184.814-.491a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 1 0-.508.304c.184.308.488.491.814.491m-4.947.333a.296.296 0 0 0-.406.102c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 1 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491a.296.296 0 0 0-.102-.406m1.297.102a.296.296 0 0 0-.508.304c.184.308.488.491.814.491s.63-.184.814-.491a.296.296 0 0 0-.102-.406.296.296 0 0 0-.406.102c-.077.129-.188.203-.305.203s-.228-.074-.305-.203m1.418-.436c.326 0 .63-.184.814-.491a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.508.304c.184.308.488.491.814.491m.489.334a.296.296 0 0 0-.102.406c.184.308.488.491.814.491s.63-.184.814-.491a.296.296 0 0 0-.508-.304c-.077.129-.188.203-.305.203s-.228-.074-.305-.203a.296.296 0 0 0-.406-.102" />
+                                    </svg>
                                     <div class="location-info">
                                         <span class="location-label">
                                             <?php _e('All Products', 'multi-location-product-and-inventory-management'); ?>
@@ -174,7 +176,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
         <style>
             .lwp-user-location-features {
                 position: relative;
-                margin-bottom: 20px;
+                margin-bottom: 0px;
             }
 
             .address-content {
@@ -183,18 +185,16 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 padding: 12px 16px;
                 background: var(--lwp-background, #ffffff);
                 border: 1px solid var(--lwp-border, #e9ecef);
-                border-radius: var(--lwp-border-radius, 8px);
+                border-radius: 8px;
                 cursor: pointer;
                 transition: all 0.2s ease;
                 font-size: 14px;
             }
 
             .address-content:hover {
-                background: color-mix(
-                    in srgb,
-                    var(--lwp-primary, #e9ecef) 30%,
-                    transparent
-                );
+                background: color-mix(in srgb,
+                        var(--lwp-primary, #e9ecef) 30%,
+                        transparent);
                 border-color: var(--lwp-primary, #dee2e6);
             }
 
@@ -334,6 +334,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 cursor: pointer;
                 transition: all 0.2s ease;
             }
+
             .saved-location-item .location-actions svg {
                 width: 20px;
                 height: 20px;
@@ -342,17 +343,16 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             }
 
             .saved-location-item:hover {
-                background: color-mix(
-                    in srgb,
-                    var(--lwp-primary, #e9ecef) 30%,
-                    transparent
-                );
+                background: color-mix(in srgb,
+                        var(--lwp-primary, #e9ecef) 30%,
+                        transparent);
                 border-color: var(--lwp-primary, #dee2e6)
             }
 
             .saved-location-item.selected {
-                background: #e3f2fd;
-                border-color: #2196f3;
+                background:
+                    color-mix(in srgb, var(--lwp-primary, #e9ecef) 30%, transparent);
+                border-color: var(--lwp-primary, #dee2e6);
             }
 
             .location-info {
@@ -409,6 +409,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             .edit-location-btn:hover {
                 background: #e3f2fd;
             }
+
             .edit-location-btn:hover svg {
                 fill: var(--lwp-primary, #667eea);
             }
@@ -490,7 +491,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             }
         </style>
     <?php endif; ?>
-    <form id="lwp-shortcode-selector-form" class="lwp-selector-form" style="display: <?php echo $atts['enable_user_locations'] === 'on' ? 'none' : 'block'; ?>;">
+    <form id="lwp-shortcode-selector-form" class="lwp-selector-form">
         <?php wp_nonce_field('mulopimfwc_shortcode_selector', 'mulopimfwc_shortcode_selector_nonce'); ?>
         <?php if ($atts["herichical"] === "seperately"): ?>
             <?php
@@ -557,7 +558,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 $placeholder = $level == 0 ? ($atts['placeholder'] ?? '-- Select a Store --') : sprintf(__('-- Select %s --', 'multi-location-product-and-inventory-management'), ($level == 1 ? 'Area' : 'Sub-area'));
             ?>
                 <div class="lwp-select-container level-<?php echo esc_html($level); ?>" <?php echo $level > 0 ? 'style="display:none;"' : ''; ?>>
-                    <select id="<?php echo esc_html($select_id); ?>" class="lwp-shortcode-selector-dropdown" data-level="<?php echo esc_html($level); ?>">
+                    <select id="<?php echo esc_html($select_id); ?>" class="lwp-shortcode-selector-dropdown" data-level="<?php echo esc_html($level); ?>" style="display: <?php echo $atts['enable_user_locations'] === 'on' ? 'none' : 'block'; ?>;">
                         <option value=""><?php echo esc_html($placeholder); ?></option>
                         <?php if ($level == 0 && $is_admin_or_manager && $show_all_products_admin === 'on'): ?>
                             <option value="all-products" <?php echo ($selected_location === 'all-products') ? 'selected' : ''; ?>>
@@ -587,7 +588,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             <input type="hidden" id="lwp-selected-store-shortcode" name="mulopimfwc_selected_store" value="<?php echo esc_attr($selected_location); ?>">
         <?php else: ?>
             <!-- Single dropdown implementation -->
-            <select id="lwp-shortcode-selector" class="lwp-location-dropdown">
+            <select id="lwp-shortcode-selector" class="lwp-location-dropdown" style="display: <?php echo $atts['enable_user_locations'] === 'on' ? 'none' : 'block'; ?>;">
                 <option value=""><?php echo esc_html($atts['placeholder'] ?? '-- Select a Store --'); ?></option>
                 <?php if ($is_admin_or_manager && $show_all_products_admin === 'on'): ?>
                     <?php $selected = ($selected_location === 'all-products') ? 'selected' : ''; ?>
@@ -663,7 +664,8 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             <div class="lwp-map-container">
                 <div id="lwp-location-map" class="lwp-location-map"></div>
                 <div class="lwp-map-controls">
-                    <button type="button" class="button button-primary lwp-continue-btn"><?php _e('Continue', 'multi-location-product-and-inventory-management'); echo mulopimfwc_svg_icon('right_arrow'); ?></button>
+                    <button type="button" class="button button-primary lwp-continue-btn"><?php _e('Continue', 'multi-location-product-and-inventory-management');
+                                                                                            echo mulopimfwc_svg_icon('right_arrow'); ?></button>
                 </div>
             </div>
         </div>
@@ -706,8 +708,10 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                     <input type="hidden" id="lwp-location-postal" name="postal">
                     <input type="hidden" id="lwp-location-country" name="country">
                     <div class="lwp-form-actions">
-                        <button type="button" class="button lwp-back-btn"><?php echo mulopimfwc_svg_icon('left_arrow'); _e('Back', 'multi-location-product-and-inventory-management'); ?></button>
-                        <button type="submit" class="button button-primary"><?php echo mulopimfwc_svg_icon('save'); _e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
+                        <button type="button" class="button lwp-back-btn"><?php echo mulopimfwc_svg_icon('left_arrow');
+                                                                            _e('Back', 'multi-location-product-and-inventory-management'); ?></button>
+                        <button type="submit" class="button button-primary"><?php echo mulopimfwc_svg_icon('save');
+                                                                            _e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
                     </div>
                 </form>
             </div>
@@ -1093,6 +1097,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
 
                 updateCurrentLocation: function(locationId, address, $item = null) {
+
                     if (!locationId) {
                         $('#location-tooltip').hide();
                         this.showAlert('No matching store found for this address.');
@@ -1100,7 +1105,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     }
                     const addrArray = address.split(',').map(s => s.trim().toLowerCase());
 
-                    const $dropdown = $('select#lwp-shortcode-selector');
+                    const $dropdown = $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown');
                     let found = false;
 
                     // If already selected, skip
@@ -1112,6 +1117,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     // Build an array of dropdown option values (lowercase)
                     const dropdownValues = [];
                     $dropdown.find('option').each(function() {
+                        if (($(this).val() || '').toString().trim() === '') return;
                         dropdownValues.push($(this).val().toLowerCase());
                     });
 
@@ -1228,9 +1234,9 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     const dataLabel = ($item.data('label') || '').toString().trim();
                     const dataAddress = ($item.data('address') || '').toString().trim();
                     const locationLabel = dataLabel || $item.find('.location-label').text().trim();
-                    const locationAddress = locationId === 'all-products'
-                        ? ''
-                        : (dataAddress || $item.find('.location-address').text().trim());
+                    const locationAddress = locationId === 'all-products' ?
+                        '' :
+                        (dataAddress || $item.find('.location-address').text().trim());
                     const displayText = locationAddress ? locationLabel + ' - ' + locationAddress : locationLabel;
                     $('.address-text').text(displayText);
                 },
@@ -1329,8 +1335,6 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 },
 
                 deleteLocation: function(locationId) {
-                    console.log('Deleting location ID:', locationId);
-                    console.log('Nonce:', $('#mulopimfwc_shortcode_selector_nonce').val());
                     $.ajax({
                         url: mulopimfwc_locationWiseProducts.ajaxUrl,
                         type: 'POST',
@@ -1450,7 +1454,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         timeout: 5000
                     }).done((data) => {
                         window.mulopimfwc_ipRequestInProgress = false;
-                        
+
                         if (data && data.latitude && data.longitude) {
                             // Cache the result
                             try {
@@ -1461,19 +1465,19 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                             } catch (e) {
                                 // localStorage might be disabled, ignore
                             }
-                            
+
                             this.reverseGeocode(data.latitude, data.longitude, callback);
                         } else {
                             this.getLocationByTimezone(callback);
                         }
                     }).fail((xhr, status, error) => {
                         window.mulopimfwc_ipRequestInProgress = false;
-                        
+
                         // For JSONP, xhr.status might not be available, but we can check the error message
                         // Rate limit errors often show as "abort" or "timeout" status, or status 429
-                        const isRateLimit = (status === 'abort' || status === 'timeout' || 
-                                            (xhr && (xhr.status === 429 || xhr.status === 0)));
-                        
+                        const isRateLimit = (status === 'abort' || status === 'timeout' ||
+                            (xhr && (xhr.status === 429 || xhr.status === 0)));
+
                         if (isRateLimit) {
                             // Store rate limit timestamp for cooldown
                             try {
@@ -1484,7 +1488,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                                 // localStorage might be disabled, ignore
                             }
                         }
-                        
+
                         // Always fall back to timezone on failure
                         this.getLocationByTimezone(callback);
                     });
@@ -1768,6 +1772,22 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         url += separator + '_t=' + Date.now();
                     }
                     window.location.href = url;
+                },
+
+                getUserLocation: function() {
+                    const name = 'mulopimfwc_user_location=';
+                    const decodedCookie = decodeURIComponent(document.cookie);
+                    const ca = decodedCookie.split(';');
+                    for (let i = 0; i < ca.length; i++) {
+                        let c = ca[i];
+                        while (c.charAt(0) === ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) === 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return '';
                 },
 
                 showAlert: function(message) {
