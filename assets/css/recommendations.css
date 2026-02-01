@@ -7,9 +7,9 @@
 .mulopimfwc-recommendations-container {
     margin: 30px 0;
     padding: 20px;
-    background: #fff;
+    background: var(--lwp-background, #fff);
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--lwp-box-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
 }
 
 /* Title */
@@ -19,10 +19,10 @@
     gap: 10px;
     font-size: 24px;
     font-weight: 600;
-    color: #333;
+    color: var(--lwp-ink, #495057);
     margin: 0 0 25px 0;
     padding-bottom: 15px;
-    border-bottom: 2px solid #f0f0f0;
+    border-bottom: 2px solid var(--lwp-border, #ddd);
 }
 
 .mulopimfwc-recommendations-title svg {
@@ -109,7 +109,11 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background: linear-gradient(135deg, #ffa500 0%, #ff6b00 100%);
+    background: linear-gradient(135deg, color-mix(
+        in srgb,
+        var(--lwp-secondary, #764ba2) 70%,
+        transparent
+    ) 0%, var(--lwp-secondary, #764ba2) 100%);
     color: #fff;
     padding: 5px 12px;
     border-radius: 20px;
@@ -140,7 +144,7 @@
 
 /* Product Link */
 .mulopimfwc-recommendation-link {
-    text-decoration: none;
+    text-decoration: none !important;
     color: inherit;
     display: flex;
     flex-direction: column;
@@ -186,7 +190,7 @@
     font-size: 16px;
     font-weight: 600;
     color: #333;
-    margin: 0 0 10px 0;
+    margin: 0 !important;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -204,7 +208,7 @@
 .mulopimfwc-recommendation-price {
     font-size: 18px;
     font-weight: 700;
-    color: #0073aa;
+    color: var(--lwp-primary, #667eea);
     margin-bottom: 8px;
 }
 
@@ -216,7 +220,7 @@
 
 .mulopimfwc-recommendation-price ins {
     text-decoration: none;
-    color: #e74c3c;
+    color: var(--lwp-secondary, #764ba2);
 }
 
 /* Stats */
@@ -251,11 +255,12 @@
     transition: all 0.3s ease;
     border: none;
     cursor: pointer;
+    text-decoration: none !important;
 }
 
 .mulopimfwc-recommendation-actions .button {
-    background: #0073aa;
-    color: #fff;
+    background: var(--lwp-primary, #667eea);
+    color: var(--lwp-button-text, #fff);
 }
 
 .mulopimfwc-recommendation-actions .button:hover {

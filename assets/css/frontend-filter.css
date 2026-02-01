@@ -5,8 +5,8 @@
 .mulopimfwc-product-filter {
     margin-bottom: 30px;
     padding: 20px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+    background: var(--lwp-background, #fff);
+    border: 1px solid var(--lwp-border, #e9ecef);
     border-radius: 8px;
 }
 
@@ -26,7 +26,7 @@
     display: block;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #495057;
+    color: var(--lwp-ink, #495057);
     font-size: 14px;
 }
 
@@ -39,6 +39,11 @@
     background-color: #fff;
     color: #495057;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+button#mulopimfwc-filter-button{
+    background-color: var(--lwp-primary, #007bff);
+    color: var(--lwp-button-text, #fff);
 }
 
 .mulopimfwc-filter-select:focus {

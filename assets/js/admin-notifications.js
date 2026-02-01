@@ -1475,7 +1475,7 @@
             } else {
                 html += '<div class="mulopimfwc-notification-item-menu-item" data-action="mark-read" data-alert-id="' + escapeHtml(alert.id || '') + '">✓ Mark as Read</div>';
             }
-            html += '<div class="mulopimfwc-notification-item-menu-item danger" data-action="remove" data-alert-id="' + escapeHtml(alert.id || '') + '">🗑️ Remove</div>';
+            html += '<div class="mulopimfwc-notification-item-menu-item danger" data-action="remove" data-alert-id="' + escapeHtml(alert.id || '') + '"><?php echo mulopimfwc_svg_icon('trash'); ?> Remove</div>';
             html += '</div></div></div>';
         });
 

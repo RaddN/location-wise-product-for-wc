@@ -118,7 +118,18 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-        $css = '';
+        $css = ':root{';
+        $css .= '--lwp-background:' . (isset($options['branding_popup_background']) && !empty($options['branding_popup_background']) ? sanitize_hex_color($options['branding_popup_background']) : '#ffffff') . ';';
+        $css .= '--lwp-ink:' . (isset($options['branding_popup_text']) && !empty($options['branding_popup_text']) ? sanitize_hex_color($options['branding_popup_text']) : '#000000') . ';';
+        $css .= '--lwp-primary:' . (isset($options['branding_primary_color']) && !empty($options['branding_primary_color']) ? sanitize_hex_color($options['branding_primary_color']) : '#667eea') . ';';
+        $css .= '--lwp-secondary:' . (isset($options['branding_secondary_color']) && !empty($options['branding_secondary_color']) ? sanitize_hex_color($options['branding_secondary_color']) : '#764ba2') . ';';
+        $css .= '--lwp-border:' . (isset($options['branding_border_color']) && !empty($options['branding_border_color']) ? sanitize_hex_color($options['branding_border_color']) : '#e7e0d6') . ';';
+        $css .= '--lwp-button-text:' . (isset($options['branding_button_text']) && !empty($options['branding_button_text']) ? sanitize_hex_color($options['branding_button_text']) : '#ffffff') . ';';
+        $css .= '--lwp-font-size:' . (isset($options['branding_font_size']) && !empty($options['branding_font_size']) ? sanitize_text_field($options['branding_font_size']) : '16px') . ';';
+        $css .= '--lwp-font-family:' . (isset($options['branding_font_family']) && !empty($options['branding_font_family']) ? "'" . esc_attr($options['branding_font_family']) . "'" : "'Trebuchet MS', sans-serif") . ';';
+        $css .= '--lwp-box-shadow:' . (isset($options['branding_box_shadow']) && !empty($options['branding_box_shadow']) ? sanitize_text_field($options['branding_box_shadow']) : '0 4px 12px rgba(0, 0, 0, 0.15)') . ';';
+        $css .= '--lwp-border-radius:' . (isset($options['branding_border_radius']) && !empty($options['branding_border_radius']) ? sanitize_text_field($options['branding_border_radius']) : '8px') . ';';
+        $css .= '}' . "\n";
 
         // Popup/Modal Colors
         if (!empty($options['branding_popup_background'])) {
@@ -7080,7 +7091,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     function mulopimfwc_delete_user_location()
     {
         // FIXED: Add nonce verification (Issue #33)
-        check_ajax_referer('mulopimfwc_delete_user_location', 'nonce');
+        check_ajax_referer('mulopimfwc_shortcode_selector', 'nonce');
 
         // FIXED: Add capability check (Issue #40)
         if (!is_user_logged_in()) {
@@ -8870,3 +8881,26 @@ add_action('admin_init', function () {
         exit;
     }
 });
+
+function mulopimfwc_svg_icon($icon_name){
+    $icons = [
+        'location' => '<svg aria-hidden="true" class="address-label-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.322 2a8.322 8.322 0 0 1 7.234 12.44l-1.085 1.451q-.897.938-3.566 3.57l-1.884 1.852a1 1 0 0 1-1.4 0l-3.703-3.656-1.322-1.329q-.466-.477-1.509-1.89A8.322 8.322 0 0 1 12.322 2m0 1.5a6.822 6.822 0 0 0-6.083 9.914l.133.246.592.884.218.236.59.605c.462.469 1.11 1.116 1.93 1.93l2.215 2.185.123.12a.4.4 0 0 0 .561 0l.074-.072 2.627-2.59 1.903-1.912.329-.342.153-.17.585-.875.133-.243a6.8 6.8 0 0 0 .732-2.767l.008-.327A6.82 6.82 0 0 0 12.322 3.5m0 3.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5m0 1.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5"></path>
+                </svg>',
+        'pencil' => '<svg aria-hidden="true" class="edit-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm18.37-11.06c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                </svg>',
+        'trash' => '<svg aria-hidden="true" class="trash-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                </svg>',
+        'save' => '<svg width="24" height="24" viewBox="0 0 0.72 0.72" xmlns="http://www.w3.org/2000/svg"><path d="M.71.185.535.01A.03.03 0 0 0 .512 0H.033A.033.033 0 0 0 0 .033v.655c0 .018.015.033.033.033h.655A.033.033 0 0 0 .721.688v-.48a.03.03 0 0 0-.01-.023zM.196.065h.196V.24H.196zm0 .589V.479h.327v.175zm.458 0H.588V.447A.033.033 0 0 0 .555.414H.164a.033.033 0 0 0-.033.033v.207H.065V.065H.13v.208c0 .018.015.033.033.033h.262A.033.033 0 0 0 .458.273V.065h.04l.156.156z"/></svg>',
+        'left_arrow' => '<svg aria-hidden="true" class="left-arrow-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
+                </svg>',
+        'right_arrow' => '<svg aria-hidden="true" class="right-arrow-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"></path>
+                </svg>',
+    ];
+
+    return isset($icons[$icon_name]) ? $icons[$icon_name] : '';
+}

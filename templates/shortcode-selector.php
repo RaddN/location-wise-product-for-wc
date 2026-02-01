@@ -146,8 +146,8 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                                             <span class="location-address"><?php echo esc_html($location['address']); ?></span>
                                         </div>
                                         <div class="location-actions">
-                                            <button type="button" class="edit-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Edit location', 'multi-location-product-and-inventory-management'); ?>">✏️</button>
-                                            <button type="button" class="delete-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Delete location', 'multi-location-product-and-inventory-management'); ?>">🗑️</button>
+                                            <button type="button" class="edit-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Edit location', 'multi-location-product-and-inventory-management'); ?>"><?php echo mulopimfwc_svg_icon('pencil'); ?></button>
+                                            <button type="button" class="delete-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Delete location', 'multi-location-product-and-inventory-management'); ?>"><?php echo mulopimfwc_svg_icon('trash'); ?></button>
                                         </div>
                                     </div>
                                 <?php
@@ -181,17 +181,21 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 display: flex;
                 align-items: center;
                 padding: 12px 16px;
-                background: #f8f9fa;
-                border: 1px solid #e9ecef;
-                border-radius: 8px;
+                background: var(--lwp-background, #ffffff);
+                border: 1px solid var(--lwp-border, #e9ecef);
+                border-radius: var(--lwp-border-radius, 8px);
                 cursor: pointer;
                 transition: all 0.2s ease;
                 font-size: 14px;
             }
 
             .address-content:hover {
-                background: #e9ecef;
-                border-color: #dee2e6;
+                background: color-mix(
+                    in srgb,
+                    var(--lwp-primary, #e9ecef) 30%,
+                    transparent
+                );
+                border-color: var(--lwp-primary, #dee2e6);
             }
 
             .address-label-icon {
@@ -200,7 +204,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             }
 
             .address-text {
-                color: #495057;
+                color: var(--lwp-ink, #212529);
                 font-weight: 500;
                 <?php if (!isset($atts['multi_line']) || (isset($atts['multi_line']) && $atts['multi_line'] !== "on")) { ?>width: calc(<?php echo esc_attr($max_width); ?> - (<?php echo esc_attr($max_width); ?> / 3));
                 /* Set a fixed width */
@@ -212,13 +216,17 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 <?php } ?>
             }
 
+            .address-content:hover .address-text {
+                color: var(--lwp-primary, #0071a1);
+            }
+
             .tooltip_popup {
                 position: absolute;
                 top: 100%;
                 left: 0;
                 right: 0;
-                background: white;
-                border: 1px solid #dee2e6;
+                background: var(--lwp-background, #ffffff);
+                border: 1px solid var(--lwp-border, #dee2e6);
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                 z-index: 1000;
@@ -261,7 +269,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 background: white;
                 padding: 0 4px;
                 font-size: 12px;
-                color: #6c757d;
+                color: var(--lwp-ink, #6c757d);
                 font-weight: 500;
             }
 
@@ -306,12 +314,13 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 margin: 0 0 12px 0;
                 font-size: 16px;
                 font-weight: 600;
-                color: #495057;
+                color: var(--lwp-ink, #495057);
             }
 
             .saved-locations-list {
                 max-height: 200px;
                 overflow-y: auto;
+                scrollbar-width: thin;
             }
 
             .saved-location-item {
@@ -319,16 +328,26 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 justify-content: space-between;
                 align-items: center;
                 padding: 12px;
-                border: 1px solid #e9ecef;
+                border: 1px solid var(--lwp-border, #e9ecef);
                 border-radius: 6px;
                 margin-bottom: 8px;
                 cursor: pointer;
                 transition: all 0.2s ease;
             }
+            .saved-location-item .location-actions svg {
+                width: 20px;
+                height: 20px;
+                flex-shrink: 0;
+                fill: var(--lwp-ink, #495057);
+            }
 
             .saved-location-item:hover {
-                background: #f8f9fa;
-                border-color: #dee2e6;
+                background: color-mix(
+                    in srgb,
+                    var(--lwp-primary, #e9ecef) 30%,
+                    transparent
+                );
+                border-color: var(--lwp-primary, #dee2e6)
             }
 
             .saved-location-item.selected {
@@ -344,7 +363,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
 
             .location-label {
                 font-weight: 600;
-                color: #495057;
+                color: var(--lwp-ink, #495057);
                 font-size: 14px;
             }
 
@@ -390,9 +409,16 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             .edit-location-btn:hover {
                 background: #e3f2fd;
             }
+            .edit-location-btn:hover svg {
+                fill: var(--lwp-primary, #667eea);
+            }
 
             .delete-location-btn:hover {
                 background: #ffebee;
+            }
+
+            .delete-location-btn:hover svg {
+                fill: #d32f2f;
             }
 
             .no-saved-locations {
@@ -637,7 +663,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             <div class="lwp-map-container">
                 <div id="lwp-location-map" class="lwp-location-map"></div>
                 <div class="lwp-map-controls">
-                    <button type="button" class="button button-primary lwp-continue-btn"><?php _e('Continue', 'multi-location-product-and-inventory-management'); ?></button>
+                    <button type="button" class="button button-primary lwp-continue-btn"><?php _e('Continue', 'multi-location-product-and-inventory-management'); echo mulopimfwc_svg_icon('right_arrow'); ?></button>
                 </div>
             </div>
         </div>
@@ -647,7 +673,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 <div class="lwp-details-header">
                     <h4><?php _e('Location Details', 'multi-location-product-and-inventory-management'); ?></h4>
                     <p class="lwp-address-preview"></p>
-                    <span class="edit_location_map" style="cursor: pointer;">✏️</span>
+                    <span class="edit_location_map" style="cursor: pointer;"><?php echo mulopimfwc_svg_icon('pencil'); ?></span>
                 </div>
                 <form id="lwp-location-form">
                     <?php wp_nonce_field('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce'); ?>
@@ -680,8 +706,8 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                     <input type="hidden" id="lwp-location-postal" name="postal">
                     <input type="hidden" id="lwp-location-country" name="country">
                     <div class="lwp-form-actions">
-                        <button type="button" class="button lwp-back-btn"><?php _e('Back', 'multi-location-product-and-inventory-management'); ?></button>
-                        <button type="submit" class="button button-primary"><?php _e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
+                        <button type="button" class="button lwp-back-btn"><?php echo mulopimfwc_svg_icon('left_arrow'); _e('Back', 'multi-location-product-and-inventory-management'); ?></button>
+                        <button type="submit" class="button button-primary"><?php echo mulopimfwc_svg_icon('save'); _e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
                     </div>
                 </form>
             </div>
@@ -1303,6 +1329,8 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 },
 
                 deleteLocation: function(locationId) {
+                    console.log('Deleting location ID:', locationId);
+                    console.log('Nonce:', $('#mulopimfwc_shortcode_selector_nonce').val());
                     $.ajax({
                         url: mulopimfwc_locationWiseProducts.ajaxUrl,
                         type: 'POST',

@@ -854,7 +854,7 @@ class Mulopimfwc_Customer_Location_Insights
                     $product_id = $product->get_id();
                     $popularity_data = isset($popular_products[$product_id]) ? $popular_products[$product_id] : null;
                 ?>
-                    <div class="mulopimfwc-recommendation-item">
+                    <div class="mulopimfwc-recommendation-item" style="transform: translateY(-20px);">
                         <?php if ($atts['show_badge'] === 'yes' && $popularity_data): ?>
                             <div class="mulopimfwc-popularity-badge" title="<?php echo esc_attr(sprintf(__('Views: %d | Purchases: %d', 'multi-location-product-and-inventory-management'), $popularity_data['view_count'], $popularity_data['purchase_count'])); ?>">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

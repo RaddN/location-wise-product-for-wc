@@ -247,10 +247,10 @@
             $('.mulopimfwc-recommendation-item').each(function(index) {
                 $(this).css({
                     'opacity': '0',
-                    'transform': 'translateY(20px)'
+                    'transform': 'translateY(0px)'
                 }).delay(index * 100).animate({
                     'opacity': '1',
-                    'transform': 'translateY(0)'
+                    'transform': 'translateY(-20px)'
                 }, 400);
             });
 
