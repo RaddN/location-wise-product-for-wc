@@ -1942,6 +1942,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('wp_ajax_get_cart_item_locations', [$this, 'get_cart_item_locations']);
             add_action('wp_ajax_nopriv_get_cart_item_locations', [$this, 'get_cart_item_locations']);
             add_action('woocommerce_before_order_itemmeta', [$this, 'display_location_in_order_items'], 10, 3);
+            add_filter('woocommerce_hidden_order_itemmeta', [$this, 'hide_location_order_itemmeta'], 10, 1);
             add_action('woocommerce_check_cart_items', [$this, 'validate_mixed_cart_locations']);
             add_action('woocommerce_before_cart_table', [$this, 'display_cart_location_summary']);
 
@@ -2543,16 +2544,9 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Always save location data if available, regardless of mixed cart setting
             // This ensures proper stock management and price tracking
+            // Only save the internal meta field - display is handled by display_location_in_order_items()
             if (isset($values['mulopimfwc_location'])) {
                 $item->add_meta_data('_mulopimfwc_location', $values['mulopimfwc_location'], true);
-            }
-
-            if (isset($values['mulopimfwc_location_name'])) {
-                $item->add_meta_data(
-                    __('Store Location', 'multi-location-product-and-inventory-management'),
-                    $values['mulopimfwc_location_name'],
-                    true
-                );
             }
         }
 
@@ -2575,6 +2569,19 @@ if (!function_exists('mulopimfwc_get_values')) {
                     echo '</div>';
                 }
             }
+        }
+
+        /**
+         * Hide location meta fields from order item meta display
+         * Prevents duplicate location information from showing
+         */
+        public function hide_location_order_itemmeta($hidden_meta)
+        {
+            // Hide internal location meta field and any "Store Location" meta
+            // We display location via display_location_in_order_items() instead
+            $hidden_meta[] = '_mulopimfwc_location';
+            $hidden_meta[] = __('Store Location', 'multi-location-product-and-inventory-management');
+            return $hidden_meta;
         }
 
         /**
