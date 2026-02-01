@@ -1251,7 +1251,7 @@ class MULOPIMFWC_Admin
         // Add columns before the 'slug' column
         foreach ($columns as $key => $value) {
             if ($key === 'slug') {
-                $new_columns['status'] = __('Status', 'multi-location-product-and-inventory-management');
+                $new_columns['status'] = __('Open Status', 'multi-location-product-and-inventory-management');
                 $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
                 $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
             }
