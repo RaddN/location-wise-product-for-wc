@@ -49,6 +49,7 @@ class MULOPIMFWC_Admin
         add_action('wp_ajax_mulopimfwc_save_quick_edit', array($this, 'ajax_save_quick_edit'));
         add_action('quick_edit_custom_box', array($this, 'add_quick_edit_fields'), 10, 3);
         add_action('edited_mulopimfwc_store_location', array($this, 'save_quick_edit_fields'), 10, 2);
+        add_action('admin_footer-edit-tags.php', array($this, 'save_quick_edit_on_submit'));
 
 
 
@@ -1511,36 +1512,23 @@ class MULOPIMFWC_Admin
             border: 2px dashed #c3c4c7;
             visibility: visible !important;
         }
-        .mulopimfwc-quick-edit-row {
-            display: none;
+        /* Custom fields in WordPress quick edit */
+        .inline-edit-col-right .inline-edit-col {
+            margin-bottom: 10px;
         }
-        .mulopimfwc-quick-edit-row.inline-edit-row {
-            display: table-row;
-        }
-        .mulopimfwc-quick-edit-row .inline-edit-col {
-            padding: 10px;
-            display: inline-block;
-            vertical-align: top;
-            margin-right: 20px;
-        }
-        .mulopimfwc-quick-edit-row label {
+        .inline-edit-col-right .inline-edit-col label {
             display: block;
             margin-bottom: 5px;
         }
-        .mulopimfwc-quick-edit-row .title {
+        .inline-edit-col-right .inline-edit-col .title {
             font-weight: 600;
             display: block;
             margin-bottom: 5px;
         }
-        .mulopimfwc-quick-edit-row input[type="number"],
-        .mulopimfwc-quick-edit-row select {
-            width: 200px;
-            max-width: 100%;
-        }
-        .mulopimfwc-quick-edit-row .inline-edit-save {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+        .inline-edit-col-right #inline-edit-is-active,
+        .inline-edit-col-right #inline-edit-display-order {
+            width: 100%;
+            max-width: 200px;
         }
         </style>
         ';
@@ -1702,13 +1690,63 @@ class MULOPIMFWC_Admin
                     });
                 });
 
-                // Add quick edit functionality
+                // Populate our custom fields when WordPress quick edit opens
+                var inlineEditTax = inlineEditTax || {};
+                var originalEdit = inlineEditTax.edit;
+                
+                // Override WordPress quick edit function
+                inlineEditTax.edit = function(id) {
+                    // Call original WordPress function
+                    if (typeof originalEdit === "function") {
+                        originalEdit.apply(this, arguments);
+                    }
+                    
+                    var termId = 0;
+                    if (typeof(id) === "object") {
+                        termId = parseInt(id, 10);
+                    } else {
+                        termId = parseInt(id.replace("tag-", ""), 10);
+                    }
+                    
+                    if (!termId) {
+                        return;
+                    }
+                    
+                    // Get current values from the row
+                    var $row = $("#tag-" + termId);
+                    var isActive = $row.find(".mulopimfwc-status-toggle").data("status") || "1";
+                    var displayOrder = "";
+                    var $orderCell = $row.find("td.column-display_order");
+                    if ($orderCell.length) {
+                        var text = $orderCell.text().trim();
+                        if (text !== "—" && text !== "") {
+                            displayOrder = text;
+                        }
+                    }
+                    
+                    // Wait for WordPress quick edit row to be ready, then populate our fields
+                    setTimeout(function() {
+                        var $quickEditRow = $("#edit-" + termId);
+                        if ($quickEditRow.length) {
+                            // Populate our custom fields
+                            var $statusField = $quickEditRow.find("#inline-edit-is-active");
+                            var $orderField = $quickEditRow.find("#inline-edit-display-order");
+                            
+                            if ($statusField.length) {
+                                $statusField.val(isActive);
+                            }
+                            if ($orderField.length) {
+                                $orderField.val(displayOrder);
+                            }
+                        }
+                    }, 200);
+                };
+                
+                // Also handle click event as fallback
                 $(document).on("click", ".editinline", function(e) {
-                    e.preventDefault();
                     var $row = $(this).closest("tr");
                     var termId = $row.find(".mulopimfwc-drag-handle").data("term-id");
                     if (!termId) {
-                        // Try to get from row ID
                         var rowId = $row.attr("id");
                         if (rowId) {
                             termId = rowId.replace("tag-", "");
@@ -1719,91 +1757,25 @@ class MULOPIMFWC_Admin
                         return;
                     }
                     
+                    // Get current values
                     var isActive = $row.find(".mulopimfwc-status-toggle").data("status") || "1";
                     var displayOrder = "";
-                    $row.find("td").each(function() {
-                        var $td = $(this);
-                        if ($td.hasClass("column-display_order") || $td.text().trim() !== "" && !isNaN($td.text().trim())) {
-                            var text = $td.text().trim();
-                            if (text !== "—" && text !== "") {
-                                displayOrder = text;
-                            }
+                    var $orderCell = $row.find("td.column-display_order");
+                    if ($orderCell.length) {
+                        var text = $orderCell.text().trim();
+                        if (text !== "—" && text !== "") {
+                            displayOrder = text;
                         }
-                    });
-                    
-                    // Remove existing quick edit rows
-                    $(".mulopimfwc-quick-edit-row").remove();
-                    
-                    // Count columns
-                    var colCount = $row.find("td").length;
-                    
-                    // Create quick edit row
-                    var quickEditHtml = "<tr class=\"mulopimfwc-quick-edit-row inline-edit-row\" id=\"edit-" + termId + "\"><td colspan=\"" + colCount + "\" class=\"colspanchange\">";
-                    quickEditHtml += "<fieldset><div class=\"inline-edit-col\">";
-                    quickEditHtml += "<label><span class=\"title\">' . esc_js(__('Status', 'multi-location-product-and-inventory-management')) . '</span><select name=\"is_active\"><option value=\"1\">' . esc_js(__('Active', 'multi-location-product-and-inventory-management')) . '</option><option value=\"0\">' . esc_js(__('Inactive', 'multi-location-product-and-inventory-management')) . '</option></select></label>";
-                    quickEditHtml += "</div><div class=\"inline-edit-col\">";
-                    quickEditHtml += "<label><span class=\"title\">' . esc_js(__('Order', 'multi-location-product-and-inventory-management')) . '</span><input type=\"number\" name=\"display_order\" value=\"" + displayOrder + "\" min=\"0\" step=\"1\" /></label>";
-                    quickEditHtml += "</div></fieldset>";
-                    quickEditHtml += "<p class=\"inline-edit-save submit\">";
-                    quickEditHtml += "<button type=\"button\" class=\"button button-primary save\">' . esc_js(__('Update', 'multi-location-product-and-inventory-management')) . '</button> ";
-                    quickEditHtml += "<button type=\"button\" class=\"button cancel\">' . esc_js(__('Cancel', 'multi-location-product-and-inventory-management')) . '</button>";
-                    quickEditHtml += "</p></td></tr>";
-                    
-                    var $quickEdit = $(quickEditHtml);
-                    $row.after($quickEdit);
-                    
-                    // Populate fields
-                    $quickEdit.find("select[name=\"is_active\"]").val(isActive);
-                    $quickEdit.find("input[name=\"display_order\"]").val(displayOrder);
-                    $quickEdit.find("fieldset").append("<input type=\"hidden\" name=\"tag_ID\" value=\"" + termId + "\" />");
-                });
-
-                // Save quick edit
-                $(document).on("click", ".mulopimfwc-quick-edit-row .save", function(e) {
-                    e.preventDefault();
-                    var $quickEdit = $(this).closest(".mulopimfwc-quick-edit-row");
-                    var termId = $quickEdit.find("input[name=\"tag_ID\"]").val();
-                    var isActive = $quickEdit.find("select[name=\"is_active\"]").val();
-                    var displayOrder = $quickEdit.find("input[name=\"display_order\"]").val();
-                    
-                    if (!termId) {
-                        alert("Error: Term ID not found");
-                        return;
                     }
                     
-                    $.ajax({
-                        url: ajaxurl,
-                        type: "POST",
-                        data: {
-                            action: "mulopimfwc_save_quick_edit",
-                            term_id: termId,
-                            is_active: isActive,
-                            display_order: displayOrder,
-                            nonce: "' . esc_js($ajax_nonce) . '"
-                        },
-                        beforeSend: function() {
-                            $quickEdit.find(".save").prop("disabled", true).text("' . esc_js(__('Updating...', 'multi-location-product-and-inventory-management')) . '");
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // Reload page to show updated data
-                                location.reload();
-                            } else {
-                                alert(response.data.message || "Error saving");
-                                $quickEdit.find(".save").prop("disabled", false).text("' . esc_js(__('Update', 'multi-location-product-and-inventory-management')) . '");
-                            }
-                        },
-                        error: function() {
-                            alert("Error saving");
-                            $quickEdit.find(".save").prop("disabled", false).text("' . esc_js(__('Update', 'multi-location-product-and-inventory-management')) . '");
+                    // Wait and populate
+                    setTimeout(function() {
+                        var $quickEditRow = $("#edit-" + termId);
+                        if ($quickEditRow.length) {
+                            $quickEditRow.find("#inline-edit-is-active").val(isActive);
+                            $quickEditRow.find("#inline-edit-display-order").val(displayOrder);
                         }
-                    });
-                });
-
-                // Cancel quick edit
-                $(document).on("click", ".mulopimfwc-quick-edit-row .cancel", function(e) {
-                    e.preventDefault();
-                    $(this).closest(".mulopimfwc-quick-edit-row").remove();
+                    }, 200);
                 });
             });
         })(jQuery);
@@ -1864,7 +1836,7 @@ class MULOPIMFWC_Admin
     }
 
     /**
-     * Add quick edit fields
+     * Add quick edit fields to WordPress default quick edit
      */
     public function add_quick_edit_fields($column_name, $screen, $name)
     {
@@ -1872,7 +1844,31 @@ class MULOPIMFWC_Admin
             return;
         }
 
-        // This is handled via JavaScript in add_location_table_scripts
+        // Add our custom fields after the slug field
+        static $printed = false;
+        if ($printed) {
+            return;
+        }
+        $printed = true;
+        ?>
+        <fieldset class="inline-edit-col-right">
+            <div class="inline-edit-col">
+                <label>
+                    <span class="title"><?php _e('Status', 'multi-location-product-and-inventory-management'); ?></span>
+                    <select name="is_active" id="inline-edit-is-active">
+                        <option value="1"><?php _e('Active', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management'); ?></option>
+                    </select>
+                </label>
+            </div>
+            <div class="inline-edit-col">
+                <label>
+                    <span class="title"><?php _e('Order', 'multi-location-product-and-inventory-management'); ?></span>
+                    <input type="number" name="display_order" id="inline-edit-display-order" value="" min="0" step="1" />
+                </label>
+            </div>
+        </fieldset>
+        <?php
     }
 
     /**
@@ -1907,6 +1903,83 @@ class MULOPIMFWC_Admin
     }
 
     /**
+     * Save quick edit fields when WordPress quick edit form is submitted
+     */
+    public function save_quick_edit_on_submit()
+    {
+        global $taxonomy;
+        if ($taxonomy !== 'mulopimfwc_store_location') {
+            return;
+        }
+        
+        $ajax_nonce = wp_create_nonce('mulopimfwc_location_ajax');
+        ?>
+        <script type="text/javascript">
+        (function($) {
+            // Override WordPress quick edit save function
+            var inlineEditTax = inlineEditTax || {};
+            var originalSave = inlineEditTax.save;
+            
+            inlineEditTax.save = function(id) {
+                // Get term ID
+                var termId = 0;
+                if (typeof(id) === 'object') {
+                    termId = parseInt(id, 10);
+                } else {
+                    termId = parseInt(id.replace('tag-', ''), 10);
+                }
+                
+                // Get our custom field values before WordPress saves
+                var $quickEditRow = $("#edit-" + termId);
+                var isActive = '1';
+                var displayOrder = '';
+                
+                if ($quickEditRow.length) {
+                    var $statusField = $quickEditRow.find("#inline-edit-is-active");
+                    var $orderField = $quickEditRow.find("#inline-edit-display-order");
+                    
+                    if ($statusField.length) {
+                        isActive = $statusField.val() || '1';
+                    }
+                    if ($orderField.length) {
+                        displayOrder = $orderField.val() || '';
+                    }
+                }
+                
+                // Call original WordPress save function
+                if (typeof originalSave === 'function') {
+                    var result = originalSave.apply(this, arguments);
+                }
+                
+                // Save our custom fields via AJAX
+                if (termId > 0) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'mulopimfwc_save_quick_edit',
+                            term_id: termId,
+                            is_active: isActive,
+                            display_order: displayOrder,
+                            nonce: '<?php echo esc_js($ajax_nonce); ?>'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Reload to show updated values
+                                location.reload();
+                            }
+                        }
+                    });
+                }
+                
+                return result;
+            };
+        })(jQuery);
+        </script>
+        <?php
+    }
+
+    /**
      * Save quick edit fields (for form submissions)
      */
     public function save_quick_edit_fields($term_id, $tt_id)
@@ -1915,7 +1988,7 @@ class MULOPIMFWC_Admin
             return;
         }
 
-        // This is handled via AJAX, but we keep this for form submissions
+        // Save our custom fields when term is edited
         if (isset($_POST['is_active'])) {
             $is_active = sanitize_text_field(wp_unslash($_POST['is_active']));
             $is_active = ($is_active === '1' || $is_active === 'yes' || $is_active === 'on') ? '1' : '0';
