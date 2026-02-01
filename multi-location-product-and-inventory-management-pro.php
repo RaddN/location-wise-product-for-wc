@@ -1900,6 +1900,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('wp_ajax_nopriv_mulopimfwc_switch_location', [$this, 'ajax_switch_location']);
 
             add_action('admin_enqueue_scripts', [$this, 'custom_admin_styles']);
+            add_action('admin_enqueue_scripts', [$this, 'enqueue_order_location_scripts']);
 
             // add settings button after deactivate button in plugins page
 
@@ -1943,6 +1944,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('wp_ajax_nopriv_get_cart_item_locations', [$this, 'get_cart_item_locations']);
             add_action('woocommerce_before_order_itemmeta', [$this, 'display_location_in_order_items'], 10, 3);
             add_filter('woocommerce_hidden_order_itemmeta', [$this, 'hide_location_order_itemmeta'], 10, 1);
+            add_action('wp_ajax_mulopimfwc_update_order_item_location', [$this, 'update_order_item_location']);
+            add_action('woocommerce_before_save_order_item', [$this, 'store_order_item_old_quantity'], 5, 1);
+            add_action('woocommerce_after_order_object_save', [$this, 'process_order_items_stock_update'], 10, 1);
             add_action('woocommerce_check_cart_items', [$this, 'validate_mixed_cart_locations']);
             add_action('woocommerce_before_cart_table', [$this, 'display_cart_location_summary']);
 
@@ -2551,24 +2555,142 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         /**
-         * Display location in order items (admin)
+         * Display location in order items (admin) with location selector
          */
 
         public function display_location_in_order_items($item_id, $item, $product)
         {
-            // Always show location information when available
-            // Get location from order item meta
-            $location = $item->get_meta('_mulopimfwc_location');
-
-            if (!empty($location)) {
-                $location_term = get_term_by('slug', $location, 'mulopimfwc_store_location');
-                if ($location_term && !is_wp_error($location_term)) {
-                    echo '<div class="mulopimfwc-order-item-location">';
-                    echo '<strong>' . esc_html__('Location:', 'multi-location-product-and-inventory-management') . '</strong> ';
-                    echo esc_html($location_term->name);
-                    echo '</div>';
+            // Get current location from order item meta
+            $current_location = $item->get_meta('_mulopimfwc_location');
+            
+            // Get product ID (variation or simple)
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+            $target_id = $variation_id ? $variation_id : $product_id;
+            
+            // Get all available locations for this product
+            $product_obj = $variation_id ? wc_get_product($variation_id) : wc_get_product($product_id);
+            if (!$product_obj) {
+                return;
+            }
+            
+            // Get product locations
+            $product_locations = get_the_terms($product_id, 'mulopimfwc_store_location');
+            global $mulopimfwc_options;
+            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            
+            // If product has specific locations, use those; otherwise use all locations if enabled
+            if (!empty($product_locations) && !is_wp_error($product_locations)) {
+                $available_locations = $product_locations;
+            } elseif ($enable_all_locations === 'on') {
+                global $mulopimfwc_locations;
+                if (empty($mulopimfwc_locations)) {
+                    $mulopimfwc_locations = get_terms([
+                        'taxonomy' => 'mulopimfwc_store_location',
+                        'hide_empty' => false,
+                    ]);
+                }
+                $available_locations = $mulopimfwc_locations;
+            } else {
+                $available_locations = [];
+            }
+            
+            if (empty($available_locations) || is_wp_error($available_locations)) {
+                // Fallback: just show current location if available
+                if (!empty($current_location)) {
+                    $location_term = get_term_by('slug', $current_location, 'mulopimfwc_store_location');
+                    if ($location_term && !is_wp_error($location_term)) {
+                        echo '<div class="mulopimfwc-order-item-location">';
+                        echo '<strong>' . esc_html__('Location:', 'multi-location-product-and-inventory-management') . '</strong> ';
+                        echo esc_html($location_term->name);
+                        echo '</div>';
+                    }
+                }
+                return;
+            }
+            
+            // Get order to check if it's editable
+            // Try multiple methods to get order ID for compatibility
+            $order_id = 0;
+            if (method_exists($item, 'get_order_id')) {
+                $order_id = $item->get_order_id();
+            } elseif (isset($item->order_id)) {
+                $order_id = $item->order_id;
+            } elseif (function_exists('wp_get_post_parent_id')) {
+                $order_id = wp_get_post_parent_id($item_id);
+            }
+            
+            $is_editable = false;
+            if ($order_id) {
+                $order = wc_get_order($order_id);
+                $is_editable = $order && method_exists($order, 'is_editable') && $order->is_editable();
+            }
+            
+            // Get order ID for data attribute
+            $order_id_for_attr = 0;
+            if ($order_id) {
+                $order_id_for_attr = $order_id;
+            } elseif (method_exists($item, 'get_order_id')) {
+                $order_id_for_attr = $item->get_order_id();
+            } elseif (isset($item->order_id)) {
+                $order_id_for_attr = $item->order_id;
+            }
+            
+            echo '<div class="mulopimfwc-order-item-location-selector" data-item-id="' . esc_attr($item_id) . '" data-order-id="' . esc_attr($order_id_for_attr) . '" data-product-id="' . esc_attr($product_id) . '" data-variation-id="' . esc_attr($variation_id) . '" data-quantity="' . esc_attr($item->get_quantity()) . '">';
+            echo '<strong>' . esc_html__('Location:', 'multi-location-product-and-inventory-management') . '</strong> ';
+            
+            if ($is_editable && count($available_locations) > 1) {
+                // Show dropdown selector for editable orders with multiple locations
+                $current_quantity = $item->get_quantity();
+                echo '<select class="mulopimfwc-order-item-location-select" data-item-id="' . esc_attr($item_id) . '" style="margin-left: 5px; min-width: 200px;">';
+                foreach ($available_locations as $location) {
+                    $location_slug = rawurldecode($location->slug);
+                    $selected = ($current_location === $location_slug) ? 'selected' : '';
+                    
+                    // Get stock for this location
+                    $location_stock = get_post_meta($target_id, '_location_stock_' . $location->term_id, true);
+                    $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location->term_id, true);
+                    
+                    // Format stock display
+                    $stock_display = '';
+                    if ($location_stock !== '') {
+                        $stock_qty = (int) $location_stock;
+                        if ($stock_qty >= $current_quantity) {
+                            $stock_display = sprintf(__(' (Stock: %d)', 'multi-location-product-and-inventory-management'), $stock_qty);
+                        } elseif ($location_backorders !== 'off') {
+                            $stock_display = sprintf(__(' (Stock: %d - Backorder)', 'multi-location-product-and-inventory-management'), $stock_qty);
+                        } else {
+                            $stock_display = sprintf(__(' (Stock: %d - Insufficient)', 'multi-location-product-and-inventory-management'), $stock_qty);
+                        }
+                    } else {
+                        $stock_display = ' (' . __('No stock set', 'multi-location-product-and-inventory-management') . ')';
+                    }
+                    
+                    // Disable option if insufficient stock and backorders not allowed
+                    $disabled = '';
+                    if ($location_stock !== '' && (int) $location_stock < $current_quantity && $location_backorders === 'off') {
+                        $disabled = 'disabled';
+                    }
+                    
+                    echo '<option value="' . esc_attr($location_slug) . '" ' . $selected . ' ' . $disabled . '>' . esc_html($location->name) . $stock_display . '</option>';
+                }
+                echo '</select>';
+                echo '<span class="mulopimfwc-location-updating" style="display:none; margin-left: 10px; color: #2271b1;">' . esc_html__('Updating...', 'multi-location-product-and-inventory-management') . '</span>';
+            } else {
+                // Show text only for non-editable orders or single location
+                if (!empty($current_location)) {
+                    $location_term = get_term_by('slug', $current_location, 'mulopimfwc_store_location');
+                    if ($location_term && !is_wp_error($location_term)) {
+                        echo esc_html($location_term->name);
+                    } else {
+                        echo esc_html($current_location);
+                    }
+                } else {
+                    echo '<span style="color: #999;">' . esc_html__('Not set', 'multi-location-product-and-inventory-management') . '</span>';
                 }
             }
+            
+            echo '</div>';
         }
 
         /**
@@ -2581,7 +2703,439 @@ if (!function_exists('mulopimfwc_get_values')) {
             // We display location via display_location_in_order_items() instead
             $hidden_meta[] = '_mulopimfwc_location';
             $hidden_meta[] = __('Store Location', 'multi-location-product-and-inventory-management');
+            // Hide price meta field (used internally, not needed in display)
+            $hidden_meta[] = '_price';
             return $hidden_meta;
+        }
+
+        /**
+         * AJAX handler to update order item location and adjust stock
+         */
+        public function update_order_item_location()
+        {
+            // Verify nonce
+            if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'mulopimfwc_update_order_item_location')) {
+                wp_send_json_error(['message' => __('Security check failed', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Check user permissions
+            if (!current_user_can('edit_shop_orders')) {
+                wp_send_json_error(['message' => __('You do not have permission to edit orders', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Get and validate input
+            $item_id = isset($_POST['item_id']) ? absint($_POST['item_id']) : 0;
+            $new_location_slug = isset($_POST['location_slug']) ? sanitize_text_field(rawurldecode($_POST['location_slug'])) : '';
+
+            if (!$item_id || empty($new_location_slug)) {
+                wp_send_json_error(['message' => __('Invalid item ID or location', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Get order - try to get order ID from POST first (from data attribute), then fallback methods
+            $order = null;
+            $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
+            
+            // If order ID not in POST, try to get from item
+            if (!$order_id) {
+                if (function_exists('wp_get_post_parent_id')) {
+                    $order_id = wp_get_post_parent_id($item_id);
+                }
+            }
+            
+            if ($order_id) {
+                $order = wc_get_order($order_id);
+            }
+            
+            if (!$order) {
+                wp_send_json_error(['message' => __('Order not found', 'multi-location-product-and-inventory-management')]);
+            }
+
+            $item = $order->get_item($item_id);
+            if (!$item) {
+                wp_send_json_error(['message' => __('Order item not found', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Check if order is editable
+            if (!$order->is_editable()) {
+                wp_send_json_error(['message' => __('This order is no longer editable', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Get current location
+            $old_location_slug = $item->get_meta('_mulopimfwc_location');
+            
+            // If location hasn't changed, return success
+            if ($old_location_slug === $new_location_slug) {
+                wp_send_json_success(['message' => __('Location unchanged', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Validate new location exists
+            $new_location_term = get_term_by('slug', $new_location_slug, 'mulopimfwc_store_location');
+            if (!$new_location_term || is_wp_error($new_location_term)) {
+                wp_send_json_error(['message' => __('Location not found', 'multi-location-product-and-inventory-management')]);
+            }
+
+            // Get product details
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+            $quantity = $item->get_quantity();
+            $target_id = $variation_id ? $variation_id : $product_id;
+
+            // Validate stock availability for new location before allowing change
+            global $mulopimfwc_options;
+            $enable_location_stock = isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] === 'on';
+            
+            if ($enable_location_stock) {
+                $new_location_id = $new_location_term->term_id;
+                $new_location_stock = get_post_meta($target_id, '_location_stock_' . $new_location_id, true);
+                $new_location_backorders = get_post_meta($target_id, '_location_backorders_' . $new_location_id, true);
+                
+                // Check if new location has enough stock
+                if ($new_location_stock !== '') {
+                    $available_stock = (int) $new_location_stock;
+                    
+                    // If backorders are not allowed and we don't have enough stock
+                    if ($new_location_backorders === 'off' && $available_stock < $quantity) {
+                        $product = wc_get_product($target_id);
+                        $product_name = $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management');
+                        
+                        wp_send_json_error([
+                            'message' => sprintf(
+                                __('Cannot change location. Insufficient stock at %s location. Available: %d, Required: %d', 'multi-location-product-and-inventory-management'),
+                                $new_location_term->name,
+                                $available_stock,
+                                $quantity
+                            )
+                        ]);
+                    }
+                }
+            }
+
+            // Update stock if location stock management is enabled
+            if ($enable_location_stock) {
+                // Restore stock to old location if it exists
+                if (!empty($old_location_slug)) {
+                    $old_location_term = get_term_by('slug', $old_location_slug, 'mulopimfwc_store_location');
+                    if ($old_location_term && !is_wp_error($old_location_term)) {
+                        $old_location_id = $old_location_term->term_id;
+                        $old_stock = get_post_meta($target_id, '_location_stock_' . $old_location_id, true);
+                        
+                        if ($old_stock !== '') {
+                            $new_old_stock = (int) $old_stock + (int) $quantity;
+                            update_post_meta($target_id, '_location_stock_' . $old_location_id, $new_old_stock);
+                        }
+                    }
+                }
+
+                // Reduce stock from new location
+                $new_location_id = $new_location_term->term_id;
+                $new_stock = get_post_meta($target_id, '_location_stock_' . $new_location_id, true);
+                
+                if ($new_stock !== '') {
+                    $current_stock_int = (int) $new_stock;
+                    $updated_stock = max(0, $current_stock_int - (int) $quantity);
+                    update_post_meta($target_id, '_location_stock_' . $new_location_id, $updated_stock);
+                }
+            }
+
+            // Update order item price if location pricing is enabled
+            $enable_location_price = isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] === 'on';
+            $old_price = $item->get_subtotal();
+            $new_price = $old_price;
+            
+            if ($enable_location_price) {
+                $new_location_id = $new_location_term->term_id;
+                
+                // Get location-specific price
+                $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $new_location_id, true);
+                $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $new_location_id, true);
+                
+                // Use sale price if available, otherwise regular price, otherwise keep current price
+                if (!empty($location_sale_price)) {
+                    $new_price_per_unit = floatval($location_sale_price);
+                } elseif (!empty($location_regular_price)) {
+                    $new_price_per_unit = floatval($location_regular_price);
+                } else {
+                    // No location-specific price, use product's default price
+                    $product_obj = wc_get_product($target_id);
+                    if ($product_obj) {
+                        // Get the actual price (sale price if on sale, otherwise regular price)
+                        $sale_price = $product_obj->get_sale_price();
+                        $regular_price = $product_obj->get_regular_price();
+                        $new_price_per_unit = !empty($sale_price) ? floatval($sale_price) : floatval($regular_price);
+                    } else {
+                        // Fallback: calculate from current item price
+                        $new_price_per_unit = floatval($old_price) / floatval($quantity);
+                    }
+                }
+                
+                // Calculate new subtotal and total
+                $new_subtotal = $new_price_per_unit * floatval($quantity);
+                $new_total = $new_subtotal; // Subtotal and total are the same before taxes
+                
+                // Update order item prices
+                $item->set_subtotal($new_subtotal);
+                $item->set_total($new_total);
+                
+                // Update the price per unit in meta (for display purposes)
+                $item->update_meta_data('_price', $new_price_per_unit);
+                
+                $new_price = $new_subtotal;
+            }
+            
+            // Update order item meta
+            $item->update_meta_data('_mulopimfwc_location', $new_location_slug);
+            $item->save();
+            
+            // Recalculate order totals
+            $order->calculate_totals();
+            $order->save();
+
+            // Log the change
+            $old_location_name = $old_location_slug ? (get_term_by('slug', $old_location_slug, 'mulopimfwc_store_location') ? get_term_by('slug', $old_location_slug, 'mulopimfwc_store_location')->name : $old_location_slug) : __('Not set', 'multi-location-product-and-inventory-management');
+            
+            $note_message = sprintf(
+                __('Order item location changed from %s to %s', 'multi-location-product-and-inventory-management'),
+                $old_location_name,
+                $new_location_term->name
+            );
+            
+            // Add price change to note if price changed
+            if ($enable_location_price && $old_price != $new_price) {
+                $note_message .= sprintf(
+                    __(' | Price updated from %s to %s', 'multi-location-product-and-inventory-management'),
+                    wc_price($old_price),
+                    wc_price($new_price)
+                );
+            }
+            
+            $order->add_order_note($note_message);
+
+            wp_send_json_success([
+                'message' => __('Location and price updated successfully', 'multi-location-product-and-inventory-management'),
+                'location_name' => $new_location_term->name,
+                'price_changed' => $enable_location_price && $old_price != $new_price,
+                'old_price' => $old_price,
+                'new_price' => $new_price
+            ]);
+        }
+
+        /**
+         * Store old quantities before order items are saved (for stock validation and update)
+         */
+        private static $old_quantities = [];
+
+        /**
+         * Store old quantity before order item is saved
+         */
+        public function store_order_item_old_quantity($item)
+        {
+            // Only process line items
+            if (!$item->is_type('line_item')) {
+                return;
+            }
+
+            $item_id = $item->get_id();
+            if (!$item_id) {
+                return;
+            }
+
+            // Get old quantity directly from database to avoid issues with already-modified item object
+            // WooCommerce stores order item quantity in order_itemmeta table
+            $old_quantity = wc_get_order_item_meta($item_id, '_qty', true);
+            
+            if ($old_quantity !== false && $old_quantity !== '') {
+                self::$old_quantities[$item_id] = floatval($old_quantity);
+            } else {
+                // Fallback: try to get from order
+                $order_id = 0;
+                if (method_exists($item, 'get_order_id')) {
+                    $order_id = $item->get_order_id();
+                } elseif (isset($item->order_id)) {
+                    $order_id = $item->order_id;
+                }
+
+                if ($order_id) {
+                    $order = wc_get_order($order_id);
+                    if ($order) {
+                        $old_item = $order->get_item($item_id);
+                        if ($old_item) {
+                            self::$old_quantities[$item_id] = $old_item->get_quantity();
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Process stock updates for all order items after order is saved
+         */
+        public function process_order_items_stock_update($order)
+        {
+            // Only process if we have stored old quantities (meaning items were updated)
+            if (empty(self::$old_quantities)) {
+                return;
+            }
+
+            // Check if location stock management is enabled
+            global $mulopimfwc_options;
+            $enable_location_stock = isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] === 'on';
+
+            if (!$enable_location_stock) {
+                self::$old_quantities = [];
+                return;
+            }
+
+            // Process each item that was changed
+            foreach ($order->get_items() as $item_id => $item) {
+                if (!isset(self::$old_quantities[$item_id])) {
+                    continue;
+                }
+
+                $this->validate_and_update_order_item_stock($item, $item_id, $order);
+            }
+
+            // Clear all stored quantities
+            self::$old_quantities = [];
+        }
+
+        /**
+         * Validate stock and update location stock when order item quantity changes
+         */
+        private function validate_and_update_order_item_stock($item, $item_id, $order)
+        {
+            // Only process line items
+            if (!$item->is_type('line_item')) {
+                return;
+            }
+
+            // Check if location stock management is enabled
+            global $mulopimfwc_options;
+            $enable_location_stock = isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] === 'on';
+
+            if (!$enable_location_stock) {
+                return;
+            }
+
+            // Get location from order item
+            $location_slug = $item->get_meta('_mulopimfwc_location');
+            if (empty($location_slug)) {
+                return; // No location set, skip
+            }
+
+            // Get product details
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+            $target_id = $variation_id ? $variation_id : $product_id;
+            $new_quantity = $item->get_quantity();
+
+            // Get old quantity from stored data
+            $old_quantity = isset(self::$old_quantities[$item_id]) ? self::$old_quantities[$item_id] : null;
+
+            // If no old quantity stored, this might be a new item - skip stock update
+            // (new items are handled by woocommerce_reduce_order_stock hook)
+            if ($old_quantity === null) {
+                unset(self::$old_quantities[$item_id]);
+                return;
+            }
+
+            // If quantity hasn't changed, skip
+            if ($old_quantity == $new_quantity) {
+                unset(self::$old_quantities[$item_id]);
+                return;
+            }
+
+            // Get location ID
+            $location_id = mulopimfwc_get_location_term_id($location_slug);
+            if (!$location_id) {
+                unset(self::$old_quantities[$item_id]);
+                return;
+            }
+
+            // Get location stock
+            $location_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+            if ($location_stock === '') {
+                unset(self::$old_quantities[$item_id]);
+                return; // No location stock set, skip
+            }
+
+            // Get backorder setting
+            $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_id, true);
+
+            // Calculate quantity difference
+            $quantity_difference = $new_quantity - $old_quantity;
+
+            // If quantity increased, validate stock availability
+            if ($quantity_difference > 0) {
+                $available_stock = (int) $location_stock;
+                
+                // If backorders are not allowed and we don't have enough stock
+                if ($location_backorders === 'off' && $available_stock < $quantity_difference) {
+                    $location_term = get_term($location_id, 'mulopimfwc_store_location');
+                    $location_name = $location_term && !is_wp_error($location_term) ? $location_term->name : $location_slug;
+                    $product = wc_get_product($target_id);
+                    $product_name = $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management');
+
+                    // Revert quantity to old value and save
+                    $item->set_quantity($old_quantity);
+                    $item->save();
+                    
+                    // Recalculate order totals after reverting
+                    $order->calculate_totals();
+                    $order->save();
+
+                    // Add error notice via order note and admin notice
+                    $error_message = sprintf(
+                        __('Cannot increase quantity for %s. Insufficient stock at %s location. Available: %d, Required: %d', 'multi-location-product-and-inventory-management'),
+                        $product_name,
+                        $location_name,
+                        $available_stock,
+                        $quantity_difference
+                    );
+                    
+                    $order->add_order_note($error_message, 0, false);
+                    
+                    // Show admin notice
+                    add_action('admin_notices', function() use ($error_message) {
+                        echo '<div class="error notice is-dismissible">';
+                        echo '<p>' . esc_html($error_message) . '</p>';
+                        echo '</div>';
+                    });
+
+                    unset(self::$old_quantities[$item_id]);
+                    return;
+                }
+            }
+
+            // Update stock based on quantity difference
+            $current_stock_int = (int) $location_stock;
+            $new_stock = max(0, $current_stock_int - $quantity_difference);
+            update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
+
+            // Get order for logging
+            $order_id = method_exists($item, 'get_order_id') ? $item->get_order_id() : 0;
+            if ($order_id) {
+                $order = wc_get_order($order_id);
+                if ($order) {
+                    // Log the change
+                    $location_term = get_term($location_id, 'mulopimfwc_store_location');
+                    $location_name = $location_term && !is_wp_error($location_term) ? $location_term->name : $location_slug;
+                    $product = wc_get_product($target_id);
+                    $product_name = $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management');
+
+                    $order->add_order_note(sprintf(
+                        __('Order item quantity changed for %s at %s location: %d → %d (Stock: %d → %d)', 'multi-location-product-and-inventory-management'),
+                        $product_name,
+                        $location_name,
+                        $old_quantity,
+                        $new_quantity,
+                        $current_stock_int,
+                        $new_stock
+                    ));
+                }
+            }
+
+            // Clean up stored quantity
+            unset(self::$old_quantities[$item_id]);
         }
 
         /**
@@ -6952,6 +7506,132 @@ if (!function_exists('mulopimfwc_get_values')) {
         function custom_admin_styles()
         {
             wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.2");
+        }
+
+        /**
+         * Enqueue scripts for order location selector
+         */
+        public function enqueue_order_location_scripts($hook)
+        {
+            // Check if we're on an order edit page
+            $is_order_page = false;
+            
+            // For regular orders (non-HPOS)
+            if (in_array($hook, ['post.php', 'post-new.php'])) {
+                global $post;
+                if ($post && $post->post_type === 'shop_order') {
+                    $is_order_page = true;
+                }
+            }
+            
+            // For HPOS orders
+            if ($hook === 'woocommerce_page_wc-orders' || (isset($_GET['page']) && $_GET['page'] === 'wc-orders')) {
+                $is_order_page = true;
+            }
+            
+            if (!$is_order_page) {
+                return;
+            }
+
+            // Enqueue inline script for order location updates
+            $script = "
+            jQuery(document).ready(function($) {
+                $(document).on('change', '.mulopimfwc-order-item-location-select', function() {
+                    var \$select = $(this);
+                    var \$container = \$select.closest('.mulopimfwc-order-item-location-selector');
+                    var \$updating = \$container.find('.mulopimfwc-location-updating');
+                    var itemId = \$select.data('item-id');
+                    var newLocation = \$select.val();
+                    var originalValue = \$select.data('original-value') || \$select.val();
+                    
+                    // Prevent multiple simultaneous requests
+                    if (\$select.prop('disabled')) {
+                        \$select.val(originalValue);
+                        return;
+                    }
+                    
+                    // Store original value
+                    \$select.data('original-value', originalValue);
+                    
+                    // Disable select and show updating message
+                    \$select.prop('disabled', true);
+                    \$updating.show();
+                    
+                    // Get order ID from container
+                    var orderId = \$container.data('order-id') || 0;
+                    
+                    // Make AJAX request
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'mulopimfwc_update_order_item_location',
+                            item_id: itemId,
+                            order_id: orderId,
+                            location_slug: newLocation,
+                            nonce: '" . wp_create_nonce('mulopimfwc_update_order_item_location') . "'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Update original value
+                                \$select.data('original-value', newLocation);
+                                
+                                // Check if price changed
+                                var priceChanged = response.data && response.data.price_changed;
+                                
+                                if (priceChanged) {
+                                    // Price changed - reload page to show updated totals
+                                    \$updating.text('" . esc_js(__('Price updated! Reloading...', 'multi-location-product-and-inventory-management')) . "').css('color', '#00a32a');
+                                    setTimeout(function() {
+                                        window.location.reload();
+                                    }, 1000);
+                                } else {
+                                    // Only location changed - show success message
+                                    \$updating.text('" . esc_js(__('Updated!', 'multi-location-product-and-inventory-management')) . "').css('color', '#00a32a');
+                                    
+                                    // Hide message after 2 seconds
+                                    setTimeout(function() {
+                                        \$updating.hide().text('" . esc_js(__('Updating...', 'multi-location-product-and-inventory-management')) . "').css('color', '#2271b1');
+                                    }, 2000);
+                                    
+                                    // Trigger WooCommerce order update if needed
+                                    if (typeof woocommerce_admin !== 'undefined') {
+                                        $(document.body).trigger('wc_order_update');
+                                    }
+                                }
+                            } else {
+                                // Revert selection on error
+                                \$select.val(originalValue);
+                                var errorMessage = response.data && response.data.message ? response.data.message : '" . esc_js(__('Failed to update location', 'multi-location-product-and-inventory-management')) . "';
+                                
+                                // Show error message
+                                \$updating.text(errorMessage).css('color', '#d63638').show();
+                                
+                                // Hide error message after 5 seconds
+                                setTimeout(function() {
+                                    \$updating.hide().text('" . esc_js(__('Updating...', 'multi-location-product-and-inventory-management')) . "').css('color', '#2271b1');
+                                }, 5000);
+                                
+                                // Also show alert for important errors
+                                alert(errorMessage);
+                            }
+                        },
+                        error: function() {
+                            // Revert selection on error
+                            \$select.val(originalValue);
+                            alert('" . esc_js(__('An error occurred while updating the location', 'multi-location-product-and-inventory-management')) . "');
+                        },
+                        complete: function() {
+                            // Re-enable select
+                            \$select.prop('disabled', false);
+                            \$updating.hide();
+                        }
+                    });
+                });
+            });
+            ";
+
+            wp_add_inline_script('jquery', $script);
         }
     }
 

@@ -1558,7 +1558,7 @@ class MULOPIMFWC_Admin
 
             echo '</select>';
             echo '</p>';
-            echo '<p class="description">' . esc_html__('Update the store location for this order.', 'multi-location-product-and-inventory-management') . '</p>';
+            echo '<p class="description">' . esc_html__('Update user selected store location for this order.', 'multi-location-product-and-inventory-management') . '</p>';
         } else {
             $location_label = $this->get_location_label($location_slug);
             if ($location_label !== '') {
