@@ -38,6 +38,17 @@ class MULOPIMFWC_Admin
         add_filter('manage_edit-mulopimfwc_store_location_columns', array($this, 'add_location_taxonomy_columns'));
         add_filter('manage_mulopimfwc_store_location_custom_column', array($this, 'add_location_taxonomy_column_content'), 10, 3);
         add_filter('manage_edit-mulopimfwc_store_location_sortable_columns', array($this, 'add_location_taxonomy_sortable_columns'));
+        
+        // Add row actions and modify term query for ordering
+        add_filter('get_terms', array($this, 'order_locations_by_display_order'), 10, 4);
+        add_filter('tag_row_actions', array($this, 'add_quick_edit_link'), 10, 2);
+        add_filter('term_id_list_table_column', array($this, 'add_term_id_to_row'), 10, 2);
+        add_action('admin_footer-edit-tags.php', array($this, 'add_location_table_scripts'));
+        add_action('wp_ajax_mulopimfwc_update_location_order', array($this, 'ajax_update_location_order'));
+        add_action('wp_ajax_mulopimfwc_toggle_location_status', array($this, 'ajax_toggle_location_status'));
+        add_action('wp_ajax_mulopimfwc_save_quick_edit', array($this, 'ajax_save_quick_edit'));
+        add_action('quick_edit_custom_box', array($this, 'add_quick_edit_fields'), 10, 3);
+        add_action('edited_mulopimfwc_store_location', array($this, 'save_quick_edit_fields'), 10, 2);
 
 
 
@@ -657,6 +668,15 @@ class MULOPIMFWC_Admin
             <input type="number" name="display_order" id="display_order" value="" min="0" step="1" />
             <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
+
+        <div class="form-field">
+            <label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management'); ?></label>
+            <select name="is_active" id="is_active">
+                <option value="1" selected><?php _e('Active', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management'); ?></option>
+            </select>
+            <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
     <?php
     }
     /**
@@ -999,6 +1019,21 @@ class MULOPIMFWC_Admin
                 <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
+
+        <?php
+        $is_active = get_term_meta($term->term_id, 'is_active', true);
+        $is_active = ($is_active === '' || $is_active === '1' || $is_active === true) ? '1' : '0';
+        ?>
+        <tr class="form-field">
+            <th scope="row"><label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <select name="is_active" id="is_active">
+                    <option value="1" <?php selected($is_active, '1'); ?>><?php _e('Active', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="0" <?php selected($is_active, '0'); ?>><?php _e('Inactive', 'multi-location-product-and-inventory-management'); ?></option>
+                </select>
+                <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
 <?php
     }
 
@@ -1238,6 +1273,40 @@ class MULOPIMFWC_Admin
         if (isset($_POST['display_order'])) {
             $display_order = absint($_POST['display_order']);
             update_term_meta($term_id, 'display_order', $display_order);
+        } else {
+            // If no display_order is set, assign the next available order
+            $existing = get_term_meta($term_id, 'display_order', true);
+            if ($existing === '') {
+                // Get the highest display_order and add 1
+                $terms = get_terms(array(
+                    'taxonomy' => 'mulopimfwc_store_location',
+                    'hide_empty' => false,
+                    'fields' => 'ids',
+                ));
+                $max_order = 0;
+                if (!is_wp_error($terms) && !empty($terms)) {
+                    foreach ($terms as $tid) {
+                        $order = (int) get_term_meta($tid, 'display_order', true);
+                        if ($order > $max_order) {
+                            $max_order = $order;
+                        }
+                    }
+                }
+                update_term_meta($term_id, 'display_order', $max_order + 1);
+            }
+        }
+
+        // Save active/inactive status
+        if (isset($_POST['is_active'])) {
+            $is_active = sanitize_text_field(wp_unslash($_POST['is_active']));
+            $is_active = ($is_active === '1' || $is_active === 'yes' || $is_active === 'on') ? '1' : '0';
+            update_term_meta($term_id, 'is_active', $is_active);
+        } else {
+            // Default to active if not set
+            $existing = get_term_meta($term_id, 'is_active', true);
+            if ($existing === '') {
+                update_term_meta($term_id, 'is_active', '1');
+            }
         }
     }
 
@@ -1248,14 +1317,30 @@ class MULOPIMFWC_Admin
     {
         $new_columns = array();
 
-        // Add columns before the 'slug' column
+        // Add checkbox column first
+        if (isset($columns['cb'])) {
+            $new_columns['cb'] = $columns['cb'];
+        }
+
+        // Add drag handle column
+        $new_columns['drag_handle'] = '<span class="dashicons dashicons-menu-alt" style="cursor:move;" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management') . '"></span>';
+
+        // Add other columns
         foreach ($columns as $key => $value) {
-            if ($key === 'slug') {
+            if ($key === 'cb') {
+                continue; // Already added
+            }
+            if ($key === 'name') {
+                $new_columns[$key] = $value;
+                $new_columns['is_active'] = __('Status', 'multi-location-product-and-inventory-management');
+            } elseif ($key === 'slug') {
                 $new_columns['status'] = __('Open Status', 'multi-location-product-and-inventory-management');
                 $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
                 $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
+                $new_columns[$key] = $value;
+            } else {
+                $new_columns[$key] = $value;
             }
-            $new_columns[$key] = $value;
         }
 
         return $new_columns;
@@ -1267,6 +1352,16 @@ class MULOPIMFWC_Admin
     public function add_location_taxonomy_column_content($content, $column_name, $term_id)
     {
         switch ($column_name) {
+            case 'drag_handle':
+                echo '<span class="mulopimfwc-drag-handle dashicons dashicons-menu-alt" data-term-id="' . esc_attr($term_id) . '" style="cursor:move;color:#646970;font-size:18px;vertical-align:middle;" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management') . '"></span>';
+                break;
+            case 'is_active':
+                $is_active = get_term_meta($term_id, 'is_active', true);
+                $is_active = ($is_active === '' || $is_active === '1' || $is_active === true) ? '1' : '0';
+                $status_class = $is_active === '1' ? 'active' : 'inactive';
+                $status_text = $is_active === '1' ? __('Active', 'multi-location-product-and-inventory-management') : __('Inactive', 'multi-location-product-and-inventory-management');
+                echo '<span class="mulopimfwc-status-toggle ' . esc_attr($status_class) . '" data-term-id="' . esc_attr($term_id) . '" data-status="' . esc_attr($is_active) . '" style="cursor:pointer;display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:500;color:#fff;background:' . ($is_active === '1' ? '#16a34a' : '#dc2626') . ';">' . esc_html($status_text) . '</span>';
+                break;
             case 'status':
                 echo $this->render_status_badge($term_id);
                 break;
@@ -1296,6 +1391,510 @@ class MULOPIMFWC_Admin
     {
         $columns['display_order'] = 'display_order';
         return $columns;
+    }
+
+    /**
+     * Add quick edit link to row actions
+     */
+    public function add_quick_edit_link($actions, $term)
+    {
+        if (!isset($term->taxonomy) || $term->taxonomy !== 'mulopimfwc_store_location') {
+            return $actions;
+        }
+
+        // Add quick edit link if not already present
+        if (!isset($actions['inline hide-if-no-js'])) {
+            $actions['inline hide-if-no-js'] = '<a href="#" class="editinline" aria-label="' . esc_attr__('Quick edit', 'multi-location-product-and-inventory-management') . '">' . __('Quick&nbsp;Edit', 'multi-location-product-and-inventory-management') . '</a>';
+        }
+
+        return $actions;
+    }
+
+    /**
+     * Add term ID data attribute to table rows (via JavaScript injection)
+     * This is handled in the JavaScript, but we keep this for potential future use
+     */
+    public function add_term_id_to_row($content, $term_id)
+    {
+        // This is handled via JavaScript in add_location_table_scripts
+        return $content;
+    }
+
+    /**
+     * Order locations by display_order by default
+     */
+    public function order_locations_by_display_order($terms, $taxonomies, $args, $term_query)
+    {
+        // Only apply to our taxonomy
+        if (!in_array('mulopimfwc_store_location', (array) $taxonomies, true)) {
+            return $terms;
+        }
+
+        // Only apply if no custom orderby is set
+        if (isset($args['orderby']) && $args['orderby'] !== 'display_order' && $args['orderby'] !== 'term_order') {
+            return $terms;
+        }
+
+        // Sort terms by display_order
+        if (!empty($terms) && !is_wp_error($terms)) {
+            usort($terms, function($a, $b) {
+                $order_a = (int) get_term_meta($a->term_id, 'display_order', true);
+                $order_b = (int) get_term_meta($b->term_id, 'display_order', true);
+                
+                if ($order_a === $order_b) {
+                    return strcmp($a->name, $b->name);
+                }
+                
+                return ($order_a < $order_b) ? -1 : 1;
+            });
+        }
+
+        return $terms;
+    }
+
+    /**
+     * Add scripts and styles for drag & drop and quick edit
+     */
+    public function add_location_table_scripts()
+    {
+        global $taxonomy;
+        if ($taxonomy !== 'mulopimfwc_store_location') {
+            return;
+        }
+
+        // Enqueue jQuery UI Sortable
+        wp_enqueue_script('jquery-ui-sortable');
+        
+        // Add inline CSS
+        $css = '
+        <style>
+        .mulopimfwc-drag-handle {
+            cursor: move !important;
+            color: #646970;
+            font-size: 18px;
+            vertical-align: middle;
+        }
+        .mulopimfwc-drag-handle:hover {
+            color: #2271b1;
+        }
+        .mulopimfwc-status-toggle {
+            cursor: pointer;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #fff;
+            transition: all 0.2s ease;
+        }
+        .mulopimfwc-status-toggle:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+        .mulopimfwc-status-toggle.active {
+            background: #16a34a;
+        }
+        .mulopimfwc-status-toggle.inactive {
+            background: #dc2626;
+        }
+        #the-list.ui-sortable tr {
+            cursor: move;
+        }
+        #the-list.ui-sortable tr.ui-sortable-helper {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border: 1px solid #c3c4c7;
+        }
+        #the-list.ui-sortable tr.ui-sortable-placeholder {
+            height: 40px;
+            background: #f0f0f1;
+            border: 2px dashed #c3c4c7;
+            visibility: visible !important;
+        }
+        .mulopimfwc-quick-edit-row {
+            display: none;
+        }
+        .mulopimfwc-quick-edit-row.inline-edit-row {
+            display: table-row;
+        }
+        .mulopimfwc-quick-edit-row .inline-edit-col {
+            padding: 10px;
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 20px;
+        }
+        .mulopimfwc-quick-edit-row label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .mulopimfwc-quick-edit-row .title {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .mulopimfwc-quick-edit-row input[type="number"],
+        .mulopimfwc-quick-edit-row select {
+            width: 200px;
+            max-width: 100%;
+        }
+        .mulopimfwc-quick-edit-row .inline-edit-save {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+        </style>
+        ';
+        echo $css;
+
+        // Add inline JavaScript
+        $ajax_nonce = wp_create_nonce('mulopimfwc_location_ajax');
+        $js = '
+        <script type="text/javascript">
+        (function($) {
+            $(document).ready(function() {
+                var $tbody = $("#the-list");
+                
+                // Add data-term-id to all rows for easier access
+                $tbody.find("tr").each(function() {
+                    var $row = $(this);
+                    var rowId = $row.attr("id");
+                    if (rowId && rowId.indexOf("tag-") === 0) {
+                        var termId = rowId.replace("tag-", "");
+                        $row.attr("data-term-id", termId);
+                        // Also add to drag handle if it exists
+                        $row.find(".mulopimfwc-drag-handle").attr("data-term-id", termId);
+                    }
+                });
+                
+                // Initialize sortable
+                if ($tbody.length) {
+                    $tbody.sortable({
+                        handle: ".mulopimfwc-drag-handle, td.column-drag_handle",
+                        items: "tr:not(.no-items):not(.mulopimfwc-quick-edit-row)",
+                        placeholder: "ui-sortable-placeholder",
+                        helper: function(e, tr) {
+                            var $originals = tr.children();
+                            var $helper = tr.clone();
+                            $helper.children().each(function(index) {
+                                $(this).width($originals.eq(index).width());
+                            });
+                            return $helper;
+                        },
+                        start: function(e, ui) {
+                            ui.placeholder.height(ui.item.height());
+                        },
+                        update: function(e, ui) {
+                            var termIds = [];
+                            $tbody.find("tr:not(.mulopimfwc-quick-edit-row)").each(function() {
+                                var $row = $(this);
+                                var termId = $row.find(".mulopimfwc-drag-handle").data("term-id");
+                                if (!termId) {
+                                    // Try to get from row ID
+                                    var rowId = $row.attr("id");
+                                    if (rowId) {
+                                        termId = rowId.replace("tag-", "");
+                                    }
+                                }
+                                if (termId) {
+                                    termIds.push(termId);
+                                }
+                            });
+                            
+                            if (termIds.length > 0) {
+                                $.ajax({
+                                    url: ajaxurl,
+                                    type: "POST",
+                                    data: {
+                                        action: "mulopimfwc_update_location_order",
+                                        term_ids: termIds,
+                                        nonce: "' . esc_js($ajax_nonce) . '"
+                                    },
+                                    success: function(response) {
+                                        if (response.success) {
+                                            // Show success message
+                                            var notice = $("<div class=\"notice notice-success is-dismissible\"><p>" + response.data.message + "</p></div>");
+                                            $(".wrap h1").after(notice);
+                                            setTimeout(function() {
+                                                notice.fadeOut(function() {
+                                                    $(this).remove();
+                                                });
+                                            }, 3000);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // Toggle active/inactive status
+                $(document).on("click", ".mulopimfwc-status-toggle", function(e) {
+                    e.preventDefault();
+                    var $toggle = $(this);
+                    var termId = $toggle.data("term-id");
+                    var currentStatus = $toggle.data("status");
+                    var newStatus = currentStatus === "1" ? "0" : "1";
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: "POST",
+                        data: {
+                            action: "mulopimfwc_toggle_location_status",
+                            term_id: termId,
+                            status: newStatus,
+                            nonce: "' . esc_js($ajax_nonce) . '"
+                        },
+                        beforeSend: function() {
+                            $toggle.css("opacity", "0.5");
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $toggle.data("status", newStatus);
+                                if (newStatus === "1") {
+                                    $toggle.removeClass("inactive").addClass("active");
+                                    $toggle.css("background", "#16a34a");
+                                    $toggle.text("' . esc_js(__('Active', 'multi-location-product-and-inventory-management')) . '");
+                                } else {
+                                    $toggle.removeClass("active").addClass("inactive");
+                                    $toggle.css("background", "#dc2626");
+                                    $toggle.text("' . esc_js(__('Inactive', 'multi-location-product-and-inventory-management')) . '");
+                                }
+                            } else {
+                                alert(response.data.message || "Error updating status");
+                            }
+                            $toggle.css("opacity", "1");
+                        },
+                        error: function() {
+                            alert("Error updating status");
+                            $toggle.css("opacity", "1");
+                        }
+                    });
+                });
+
+                // Add quick edit functionality
+                $(document).on("click", ".editinline", function(e) {
+                    e.preventDefault();
+                    var $row = $(this).closest("tr");
+                    var termId = $row.find(".mulopimfwc-drag-handle").data("term-id");
+                    if (!termId) {
+                        // Try to get from row ID
+                        var rowId = $row.attr("id");
+                        if (rowId) {
+                            termId = rowId.replace("tag-", "");
+                        }
+                    }
+                    
+                    if (!termId) {
+                        return;
+                    }
+                    
+                    var isActive = $row.find(".mulopimfwc-status-toggle").data("status") || "1";
+                    var displayOrder = "";
+                    $row.find("td").each(function() {
+                        var $td = $(this);
+                        if ($td.hasClass("column-display_order") || $td.text().trim() !== "" && !isNaN($td.text().trim())) {
+                            var text = $td.text().trim();
+                            if (text !== "—" && text !== "") {
+                                displayOrder = text;
+                            }
+                        }
+                    });
+                    
+                    // Remove existing quick edit rows
+                    $(".mulopimfwc-quick-edit-row").remove();
+                    
+                    // Count columns
+                    var colCount = $row.find("td").length;
+                    
+                    // Create quick edit row
+                    var quickEditHtml = "<tr class=\"mulopimfwc-quick-edit-row inline-edit-row\" id=\"edit-" + termId + "\"><td colspan=\"" + colCount + "\" class=\"colspanchange\">";
+                    quickEditHtml += "<fieldset><div class=\"inline-edit-col\">";
+                    quickEditHtml += "<label><span class=\"title\">' . esc_js(__('Status', 'multi-location-product-and-inventory-management')) . '</span><select name=\"is_active\"><option value=\"1\">' . esc_js(__('Active', 'multi-location-product-and-inventory-management')) . '</option><option value=\"0\">' . esc_js(__('Inactive', 'multi-location-product-and-inventory-management')) . '</option></select></label>";
+                    quickEditHtml += "</div><div class=\"inline-edit-col\">";
+                    quickEditHtml += "<label><span class=\"title\">' . esc_js(__('Order', 'multi-location-product-and-inventory-management')) . '</span><input type=\"number\" name=\"display_order\" value=\"" + displayOrder + "\" min=\"0\" step=\"1\" /></label>";
+                    quickEditHtml += "</div></fieldset>";
+                    quickEditHtml += "<p class=\"inline-edit-save submit\">";
+                    quickEditHtml += "<button type=\"button\" class=\"button button-primary save\">' . esc_js(__('Update', 'multi-location-product-and-inventory-management')) . '</button> ";
+                    quickEditHtml += "<button type=\"button\" class=\"button cancel\">' . esc_js(__('Cancel', 'multi-location-product-and-inventory-management')) . '</button>";
+                    quickEditHtml += "</p></td></tr>";
+                    
+                    var $quickEdit = $(quickEditHtml);
+                    $row.after($quickEdit);
+                    
+                    // Populate fields
+                    $quickEdit.find("select[name=\"is_active\"]").val(isActive);
+                    $quickEdit.find("input[name=\"display_order\"]").val(displayOrder);
+                    $quickEdit.find("fieldset").append("<input type=\"hidden\" name=\"tag_ID\" value=\"" + termId + "\" />");
+                });
+
+                // Save quick edit
+                $(document).on("click", ".mulopimfwc-quick-edit-row .save", function(e) {
+                    e.preventDefault();
+                    var $quickEdit = $(this).closest(".mulopimfwc-quick-edit-row");
+                    var termId = $quickEdit.find("input[name=\"tag_ID\"]").val();
+                    var isActive = $quickEdit.find("select[name=\"is_active\"]").val();
+                    var displayOrder = $quickEdit.find("input[name=\"display_order\"]").val();
+                    
+                    if (!termId) {
+                        alert("Error: Term ID not found");
+                        return;
+                    }
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: "POST",
+                        data: {
+                            action: "mulopimfwc_save_quick_edit",
+                            term_id: termId,
+                            is_active: isActive,
+                            display_order: displayOrder,
+                            nonce: "' . esc_js($ajax_nonce) . '"
+                        },
+                        beforeSend: function() {
+                            $quickEdit.find(".save").prop("disabled", true).text("' . esc_js(__('Updating...', 'multi-location-product-and-inventory-management')) . '");
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Reload page to show updated data
+                                location.reload();
+                            } else {
+                                alert(response.data.message || "Error saving");
+                                $quickEdit.find(".save").prop("disabled", false).text("' . esc_js(__('Update', 'multi-location-product-and-inventory-management')) . '");
+                            }
+                        },
+                        error: function() {
+                            alert("Error saving");
+                            $quickEdit.find(".save").prop("disabled", false).text("' . esc_js(__('Update', 'multi-location-product-and-inventory-management')) . '");
+                        }
+                    });
+                });
+
+                // Cancel quick edit
+                $(document).on("click", ".mulopimfwc-quick-edit-row .cancel", function(e) {
+                    e.preventDefault();
+                    $(this).closest(".mulopimfwc-quick-edit-row").remove();
+                });
+            });
+        })(jQuery);
+        </script>
+        ';
+        echo $js;
+    }
+
+    /**
+     * AJAX handler for updating location order
+     */
+    public function ajax_update_location_order()
+    {
+        check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+        }
+
+        if (!isset($_POST['term_ids']) || !is_array($_POST['term_ids'])) {
+            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management')));
+        }
+
+        $term_ids = array_map('absint', $_POST['term_ids']);
+        $order = 0;
+
+        foreach ($term_ids as $term_id) {
+            $order++;
+            update_term_meta($term_id, 'display_order', $order);
+        }
+
+        wp_send_json_success(array('message' => __('Order updated successfully', 'multi-location-product-and-inventory-management')));
+    }
+
+    /**
+     * AJAX handler for toggling location status
+     */
+    public function ajax_toggle_location_status()
+    {
+        check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+        }
+
+        if (!isset($_POST['term_id']) || !isset($_POST['status'])) {
+            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management')));
+        }
+
+        $term_id = absint($_POST['term_id']);
+        $status = sanitize_text_field($_POST['status']);
+        $status = ($status === '1' || $status === 'yes' || $status === 'on') ? '1' : '0';
+
+        update_term_meta($term_id, 'is_active', $status);
+
+        $status_text = $status === '1' ? __('Active', 'multi-location-product-and-inventory-management') : __('Inactive', 'multi-location-product-and-inventory-management');
+        wp_send_json_success(array('message' => sprintf(__('Location status updated to %s', 'multi-location-product-and-inventory-management'), $status_text)));
+    }
+
+    /**
+     * Add quick edit fields
+     */
+    public function add_quick_edit_fields($column_name, $screen, $name)
+    {
+        if ($name !== 'mulopimfwc_store_location' || $screen !== 'edit-tags') {
+            return;
+        }
+
+        // This is handled via JavaScript in add_location_table_scripts
+    }
+
+    /**
+     * AJAX handler for saving quick edit
+     */
+    public function ajax_save_quick_edit()
+    {
+        check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+        }
+
+        if (!isset($_POST['term_id'])) {
+            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management')));
+        }
+
+        $term_id = absint($_POST['term_id']);
+
+        if (isset($_POST['is_active'])) {
+            $is_active = sanitize_text_field(wp_unslash($_POST['is_active']));
+            $is_active = ($is_active === '1' || $is_active === 'yes' || $is_active === 'on') ? '1' : '0';
+            update_term_meta($term_id, 'is_active', $is_active);
+        }
+
+        if (isset($_POST['display_order'])) {
+            $display_order = absint($_POST['display_order']);
+            update_term_meta($term_id, 'display_order', $display_order);
+        }
+
+        wp_send_json_success(array('message' => __('Location updated successfully', 'multi-location-product-and-inventory-management')));
+    }
+
+    /**
+     * Save quick edit fields (for form submissions)
+     */
+    public function save_quick_edit_fields($term_id, $tt_id)
+    {
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        // This is handled via AJAX, but we keep this for form submissions
+        if (isset($_POST['is_active'])) {
+            $is_active = sanitize_text_field(wp_unslash($_POST['is_active']));
+            $is_active = ($is_active === '1' || $is_active === 'yes' || $is_active === 'on') ? '1' : '0';
+            update_term_meta($term_id, 'is_active', $is_active);
+        }
+
+        if (isset($_POST['display_order'])) {
+            $display_order = absint($_POST['display_order']);
+            update_term_meta($term_id, 'display_order', $display_order);
+        }
     }
 
 

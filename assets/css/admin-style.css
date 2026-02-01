@@ -2,6 +2,10 @@
     width: 6%;
 }
 
+.taxonomy-mulopimfwc_store_location .fixed .column-slug{
+    width: unset !important;
+}
+
 .location_variation_table {
     width: 100%;
     border-collapse: collapse;
