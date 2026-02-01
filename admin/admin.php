@@ -1589,10 +1589,12 @@ class MULOPIMFWC_Admin
                                 var $row = $(this);
                                 var termId = $row.find(".mulopimfwc-drag-handle").data("term-id");
                                 if (!termId) {
-                                    // Try to get from row ID
+                                    // Try to get from row ID or data attribute
                                     var rowId = $row.attr("id");
                                     if (rowId) {
                                         termId = rowId.replace("tag-", "");
+                                    } else {
+                                        termId = $row.attr("data-term-id");
                                     }
                                 }
                                 if (termId) {
@@ -1611,6 +1613,16 @@ class MULOPIMFWC_Admin
                                     },
                                     success: function(response) {
                                         if (response.success) {
+                                            // Update order values in the table immediately
+                                            $tbody.find("tr:not(.mulopimfwc-quick-edit-row)").each(function(index) {
+                                                var $row = $(this);
+                                                var $orderCell = $row.find("td.column-display_order");
+                                                if ($orderCell.length) {
+                                                    // Update the displayed order number (1-based index)
+                                                    $orderCell.text(index + 1);
+                                                }
+                                            });
+                                            
                                             // Show success message
                                             var notice = $("<div class=\"notice notice-success is-dismissible\"><p>" + response.data.message + "</p></div>");
                                             $(".wrap h1").after(notice);
@@ -1619,7 +1631,16 @@ class MULOPIMFWC_Admin
                                                     $(this).remove();
                                                 });
                                             }, 3000);
+                                        } else {
+                                            // Show error message
+                                            var notice = $("<div class=\"notice notice-error is-dismissible\"><p>" + (response.data.message || "Error updating order") + "</p></div>");
+                                            $(".wrap h1").after(notice);
                                         }
+                                    },
+                                    error: function() {
+                                        // Show error message
+                                        var notice = $("<div class=\"notice notice-error is-dismissible\"><p>Error updating order. Please refresh the page.</p></div>");
+                                        $(".wrap h1").after(notice);
                                     }
                                 });
                             }
@@ -1630,10 +1651,17 @@ class MULOPIMFWC_Admin
                 // Toggle active/inactive status
                 $(document).on("click", ".mulopimfwc-status-toggle", function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     var $toggle = $(this);
                     var termId = $toggle.data("term-id");
-                    var currentStatus = $toggle.data("status");
-                    var newStatus = currentStatus === "1" ? "0" : "1";
+                    var currentStatus = String($toggle.data("status") || $toggle.attr("data-status") || "1");
+                    // Toggle: if current is "1", make it "0", otherwise make it "1"
+                    var newStatus = (currentStatus === "1" || currentStatus === 1) ? "0" : "1";
+                    
+                    if (!termId) {
+                        console.error("Term ID not found");
+                        return;
+                    }
                     
                     $.ajax({
                         url: ajaxurl,
@@ -1645,11 +1673,13 @@ class MULOPIMFWC_Admin
                             nonce: "' . esc_js($ajax_nonce) . '"
                         },
                         beforeSend: function() {
-                            $toggle.css("opacity", "0.5");
+                            $toggle.css("opacity", "0.5").css("pointer-events", "none");
                         },
                         success: function(response) {
                             if (response.success) {
-                                $toggle.data("status", newStatus);
+                                // Update the data attribute
+                                $toggle.attr("data-status", newStatus).data("status", newStatus);
+                                
                                 if (newStatus === "1") {
                                     $toggle.removeClass("inactive").addClass("active");
                                     $toggle.css("background", "#16a34a");
@@ -1662,11 +1692,12 @@ class MULOPIMFWC_Admin
                             } else {
                                 alert(response.data.message || "Error updating status");
                             }
-                            $toggle.css("opacity", "1");
+                            $toggle.css("opacity", "1").css("pointer-events", "auto");
                         },
-                        error: function() {
-                            alert("Error updating status");
-                            $toggle.css("opacity", "1");
+                        error: function(xhr, status, error) {
+                            console.error("AJAX error:", error);
+                            alert("Error updating status. Please try again.");
+                            $toggle.css("opacity", "1").css("pointer-events", "auto");
                         }
                     });
                 });
