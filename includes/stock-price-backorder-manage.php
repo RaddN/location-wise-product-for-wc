@@ -538,16 +538,14 @@ if (!is_admin()) {
             return $quantity; // Use default WooCommerce stock quantity
         }
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $quantity;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
 
         $location_id = mulopimfwc_get_location_term_id($location_slug);
@@ -578,16 +576,14 @@ if (!is_admin()) {
             return $backorders; // Use default WooCommerce backorder setting
         }
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $backorders;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
         $location_id = mulopimfwc_get_location_term_id($location_slug);
 
@@ -611,16 +607,14 @@ if (!is_admin()) {
         $product_id = $product->get_id();
         $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($product_id);
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $status;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($product_id);
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
         $location_id = mulopimfwc_get_location_term_id($location_slug);
 
@@ -678,16 +672,14 @@ if (!is_admin()) {
             return $quantity;
         }
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($variation->get_parent_id(), $variation->get_id());
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $quantity;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($variation->get_parent_id(), $variation->get_id());
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
         $location_id = mulopimfwc_get_location_term_id($location_slug);
 
@@ -710,16 +702,14 @@ if (!is_admin()) {
             return $backorders;
         }
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($variation->get_parent_id(), $variation->get_id());
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $backorders;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($variation->get_parent_id(), $variation->get_id());
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
         $location_id = mulopimfwc_get_location_term_id($location_slug);
 
@@ -985,16 +975,14 @@ if (!is_admin()) {
             return $price; // Another plugin has already modified the price
         }
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $price;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
 
         $location_id = mulopimfwc_get_location_term_id($location_slug);
@@ -1042,16 +1030,14 @@ if (!is_admin()) {
             return $price; // Another plugin has already modified the price
         }
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($variation->get_parent_id(), $variation->get_id());
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $price;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($variation->get_parent_id(), $variation->get_id());
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
 
         $location_id = mulopimfwc_get_location_term_id($location_slug);
@@ -1089,16 +1075,14 @@ if (!is_admin()) {
         }
 
 
-        // Check if we're in cart context and have cart item location data
-        $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
-
-        // Use cart item location if available, otherwise fall back to current location
-        $location_slug = $cart_item_location ? $cart_item_location : null;
-
-        if (!$location_slug && is_cart() && is_checkout()) {
-            return $prices;
+        // Only use cart item location when on cart/checkout pages
+        // On product pages and other pages, always use the currently selected location
+        if (is_cart() || is_checkout()) {
+            $cart_item_location = mulopimfwc_get_cart_item_location($product->get_id());
+            $location_slug = $cart_item_location ? $cart_item_location : mulopimfwc_get_current_store_location();
         } else {
-            $location_slug = $location_slug ? $location_slug : mulopimfwc_get_current_store_location();
+            // On product pages and other pages, use the currently selected location
+            $location_slug = mulopimfwc_get_current_store_location();
         }
 
         $location_id = mulopimfwc_get_location_term_id($location_slug);

@@ -3785,7 +3785,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 <option value="customer_selection" <?php selected($value, 'customer_selection'); ?>><?php echo esc_html_e('Customer Selection (Based on selected location)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option disabled value="inventory_based" <?php selected($value, 'inventory_based'); ?>><?php echo esc_html_e('Inventory Based (Location with highest stock)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option disabled value="proximity_based" <?php selected($value, 'proximity_based'); ?>><?php echo esc_html_e('Proximity Based (Nearest location to shipping address)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="manual" <?php selected($value, 'manual'); ?>><?php echo esc_html_e('Manual Assignment (Admin assigns after order)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="manual" <?php selected($value, 'manual'); ?>><?php echo esc_html_e('Manual Assignment (Admin assigns after order)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('How orders are assigned to locations for fulfillment.', 'multi-location-product-and-inventory-management'); ?></p>
             <?php
