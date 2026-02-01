@@ -1714,7 +1714,16 @@ class MULOPIMFWC_Admin
                     
                     // Get current values from the row
                     var $row = $("#tag-" + termId);
-                    var isActive = $row.find(".mulopimfwc-status-toggle").data("status") || "1";
+                    var $statusToggle = $row.find(".mulopimfwc-status-toggle");
+                    // Get status from data attribute or HTML attribute (handle "0" properly)
+                    var isActive = $statusToggle.attr("data-status") || $statusToggle.data("status");
+                    // If status is undefined, null, or empty, default to "1", otherwise use the actual value
+                    if (isActive === undefined || isActive === null || isActive === "") {
+                        isActive = "1";
+                    } else {
+                        isActive = String(isActive);
+                    }
+                    
                     var displayOrder = "";
                     var $orderCell = $row.find("td.column-display_order");
                     if ($orderCell.length) {
@@ -1758,7 +1767,16 @@ class MULOPIMFWC_Admin
                     }
                     
                     // Get current values
-                    var isActive = $row.find(".mulopimfwc-status-toggle").data("status") || "1";
+                    var $statusToggle = $row.find(".mulopimfwc-status-toggle");
+                    // Get status from data attribute or HTML attribute (handle "0" properly)
+                    var isActive = $statusToggle.attr("data-status") || $statusToggle.data("status");
+                    // If status is undefined, null, or empty, default to "1", otherwise use the actual value
+                    if (isActive === undefined || isActive === null || isActive === "") {
+                        isActive = "1";
+                    } else {
+                        isActive = String(isActive);
+                    }
+                    
                     var displayOrder = "";
                     var $orderCell = $row.find("td.column-display_order");
                     if ($orderCell.length) {
