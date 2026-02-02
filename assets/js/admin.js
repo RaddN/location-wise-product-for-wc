@@ -3853,6 +3853,7 @@ jQuery(document).ready(function ($) {
         var orderId = $select.data('order-id');
         var nonce = $select.data('nonce');
         var locationSlug = $select.val();
+        var priceChanged = false;
 
         if (!locationSlug) {
             return; // Don't do anything if empty selection
@@ -3874,23 +3875,45 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 if (response.success) {
-                    // Replace the dropdown with the location label
-                    $wrapper.html('<span class="mulopimfwc-location-assigned">' + 
-                        response.data.location_label + '</span>');
+                    // Check if price changed - if so, reload page to show updated totals
+                    priceChanged = response.data && response.data.price_changed;
                     
-                    // Remove unassigned row styling if present
-                    $wrapper.closest('tr').removeClass('unassigned-order-row');
-                    
-                    // Show success notice
-                    if (typeof showNotice === 'function') {
-                        showNotice(response.data.message, 'success');
+                    if (priceChanged) {
+                        // Price changed - reload page to show updated totals
+                        $spinner.text('⏳ ' + (response.data.message || 'Price updated! Reloading...'));
+                        
+                        // Show success notice before reload
+                        if (typeof showNotice === 'function') {
+                            showNotice(response.data.message || 'Location assigned and prices updated! Reloading...', 'success');
+                        }
+                        
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
                     } else {
-                        // Fallback notice
-                        $('<div class="notice notice-success is-dismissible"><p>' + 
-                            response.data.message + '</p></div>')
-                            .insertAfter('.wp-header-end, .wrap h1')
-                            .delay(3000)
-                            .fadeOut();
+                        // Only location changed - replace the dropdown with the location label
+                        $wrapper.html('<span class="mulopimfwc-location-assigned">' + 
+                            response.data.location_label + '</span>');
+                        
+                        // Remove unassigned row styling if present
+                        $wrapper.closest('tr').removeClass('unassigned-order-row');
+                        
+                        // Show success notice
+                        if (typeof showNotice === 'function') {
+                            showNotice(response.data.message || 'Location assigned successfully', 'success');
+                        } else {
+                            // Fallback notice
+                            $('<div class="notice notice-success is-dismissible"><p>' + 
+                                (response.data.message || 'Location assigned successfully') + '</p></div>')
+                                .insertAfter('.wp-header-end, .wrap h1')
+                                .delay(3000)
+                                .fadeOut();
+                        }
+                        
+                        // Trigger WooCommerce order update if needed
+                        if (typeof woocommerce_admin !== 'undefined') {
+                            $(document.body).trigger('wc_order_update');
+                        }
                     }
                 } else {
                     // Show error
@@ -3930,7 +3953,10 @@ jQuery(document).ready(function ($) {
                 $select.prop('disabled', false);
             },
             complete: function () {
-                $spinner.hide();
+                // Only hide spinner if we're not reloading
+                if (!priceChanged) {
+                    $spinner.hide();
+                }
             }
         });
     });
