@@ -3817,6 +3817,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Quick Location Assignment for Orders
 jQuery(document).ready(function ($) {
+    // Prevent navigation when clicking on the store location column (quick assignment area)
+    $(document).on('click', 'td.column-mulopimfwc_store_location, td.mulopimfwc_store_location', function(e) {
+        var $target = $(e.target);
+        
+        // Allow clicks on actual links to work normally
+        if ($target.is('a') || $target.closest('a').length > 0) {
+            return true;
+        }
+        
+        // Prevent navigation for all other clicks within this column
+        // This includes clicks on the wrapper, badge, select dropdown, spinner, or empty space
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+    
+    // Prevent clicks on the wrapper and its children from bubbling up (but allow select to function)
+    $(document).on('click', '.mulopimfwc-quick-assignment-wrapper, .mulopimfwc-unassigned-badge, .mulopimfwc-assignment-spinner', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+    
+    // For the select dropdown, stop propagation to prevent row navigation but allow dropdown to work
+    $(document).on('click', '.mulopimfwc-quick-assignment-select', function(e) {
+        e.stopPropagation(); // Prevent bubbling to row click handler, but allow select to function
+    });
+
     // Handle quick assignment dropdown change
     $(document).on('change', '.mulopimfwc-quick-assignment-select', function () {
         var $select = $(this);
