@@ -4982,6 +4982,21 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function save_location_to_order_meta($order_id, $data = null)
         {
+
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            
+            $assignment_method = isset($options['order_assignment_method']) 
+                ? $options['order_assignment_method'] 
+                : 'customer_selection';
+            
+            // Skip automatic assignment if manual mode is enabled
+            if ($assignment_method === 'manual') {
+                return; // Don't save location automatically
+            }
+
             // Use get_current_location method which includes default location logic
             $location = $this->get_current_location();
 
