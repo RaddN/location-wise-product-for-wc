@@ -2322,17 +2322,36 @@ class MULOPIMFWC_Admin
         ?>
         <div class="mulopimfwc-quick-assignment-wrapper">
             <span class="mulopimfwc-unassigned-badge">🔴 <?php echo esc_html__('Needs Assignment', 'multi-location-product-and-inventory-management'); ?></span>
-            <select class="mulopimfwc-quick-assignment-select" data-order-id="<?php echo esc_attr($order_id); ?>" data-nonce="<?php echo esc_attr(wp_create_nonce('mulopimfwc_quick_assign_' . $order_id)); ?>">
-                <option value=""><?php echo esc_html__('Select Location...', 'multi-location-product-and-inventory-management'); ?></option>
-                <?php if (empty($locations)): ?>
-                    <option value="" disabled><?php echo esc_html__('No locations available (insufficient stock)', 'multi-location-product-and-inventory-management'); ?></option>
-                <?php else: ?>
+            <?php if (empty($locations)): ?>
+                <?php
+                // Get order edit URL
+                $order_edit_url = '';
+                if (function_exists('wc_get_order')) {
+                    // Try HPOS first
+                    if (class_exists('\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController')) {
+                        $order_edit_url = admin_url('admin.php?page=wc-orders&action=edit&id=' . $order_id);
+                    } else {
+                        // Fallback to post-based orders
+                        $order_edit_url = admin_url('post.php?post=' . $order_id . '&action=edit');
+                    }
+                }
+                ?>
+                <div class="mulopimfwc-no-locations-message" style="margin-top: 5px; padding: 8px; background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; font-size: 12px;">
+                    <strong><?php echo esc_html__('No locations available', 'multi-location-product-and-inventory-management'); ?></strong><br>
+                    <?php echo esc_html__('Insufficient stock for all products at any location.', 'multi-location-product-and-inventory-management'); ?>
+                        <span style="font-style: italic;">
+                            <?php echo esc_html__('Please edit the order and set locations for each product individually', 'multi-location-product-and-inventory-management'); ?>
+                        </span>
+                </div>
+            <?php else: ?>
+                <select class="mulopimfwc-quick-assignment-select" data-order-id="<?php echo esc_attr($order_id); ?>" data-nonce="<?php echo esc_attr(wp_create_nonce('mulopimfwc_quick_assign_' . $order_id)); ?>">
+                    <option value=""><?php echo esc_html__('Select Location...', 'multi-location-product-and-inventory-management'); ?></option>
                     <?php foreach ($locations as $location): ?>
                         <option value="<?php echo esc_attr($location->slug); ?>"><?php echo esc_html($location->name); ?></option>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </select>
-            <span class="mulopimfwc-assignment-spinner" style="display: none;">⏳</span>
+                </select>
+                <span class="mulopimfwc-assignment-spinner" style="display: none;">⏳</span>
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();
