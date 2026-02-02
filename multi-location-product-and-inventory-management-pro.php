@@ -421,6 +421,62 @@ if (!function_exists('mulopimfwc_get_location_cookie_name')) {
     }
 }
 
+if (!function_exists('mulopimfwc_get_frontend_locations')) {
+    /**
+     * Get locations for frontend display, filtered by is_active status and ordered by display_order.
+     * 
+     * @param array $args Optional arguments to pass to get_terms
+     * @return array|WP_Error Array of location terms or WP_Error on failure
+     */
+    function mulopimfwc_get_frontend_locations($args = [])
+    {
+        // Default arguments
+        $default_args = [
+            'taxonomy' => 'mulopimfwc_store_location',
+            'hide_empty' => false,
+        ];
+        
+        // Merge with provided arguments
+        $query_args = array_merge($default_args, $args);
+        
+        // Get all locations
+        $locations = get_terms($query_args);
+        
+        if (is_wp_error($locations) || empty($locations)) {
+            return $locations;
+        }
+        
+        // Filter by is_active status and order by display_order
+        $filtered_locations = [];
+        foreach ($locations as $location) {
+            $is_active = get_term_meta($location->term_id, 'is_active', true);
+            
+            // Only include active locations (is_active === 'on' or '1' or true)
+            if ($is_active === 'on' || $is_active === '1' || $is_active === true || $is_active === 'yes') {
+                $display_order = get_term_meta($location->term_id, 'display_order', true);
+                $display_order = !empty($display_order) ? intval($display_order) : 999;
+                
+                $filtered_locations[] = [
+                    'location' => $location,
+                    'display_order' => $display_order,
+                ];
+            }
+        }
+        
+        // Sort by display_order (ascending)
+        usort($filtered_locations, function($a, $b) {
+            return $a['display_order'] <=> $b['display_order'];
+        });
+        
+        // Extract just the location objects
+        $result = array_map(function($item) {
+            return $item['location'];
+        }, $filtered_locations);
+        
+        return $result;
+    }
+}
+
 if (!function_exists('mulopimfwc_get_store_location_cookie')) {
     /**
      * Read the selected store location from the cookie using the filtered name.
@@ -5926,8 +5982,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             $show_all_products_admin = isset($options['show_all_products_admin']) ? $options['show_all_products_admin'] : 'off';
              $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             $selected_location = $this->get_current_location();
-
-            $locations = $mulopimfwc_locations;
+            
+            // Filter locations for frontend display (active only, ordered by display_order)
+            $locations = mulopimfwc_get_frontend_locations();
 
             ob_start();
             include plugin_dir_path(__FILE__) . 'templates/shortcode-selector.php';
@@ -6041,7 +6098,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Determine if modal should be shown
             $should_show = $show_modal || ($show_popup_admin === 'on' && empty($selected_location)) || (empty($selected_location) && !$is_admin_or_manager);
             
-            $locations = $mulopimfwc_locations;
+            // Filter locations for frontend display (active only, ordered by display_order)
+            $locations = mulopimfwc_get_frontend_locations();
 
             // Use provided layout or fallback to options
             $template_selection = !empty($layout) && $layout !== 'default' ? $layout : (isset($options['template_selection']) ? $options['template_selection'] : 'default');

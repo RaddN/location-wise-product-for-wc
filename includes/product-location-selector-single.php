@@ -489,7 +489,8 @@ class MULOPIMFWC_Product_Location_Selector
      */
     public function get_available_locations(WC_Product $product): array
     {
-        $all_locations = get_terms([
+        // Get all active locations ordered by display_order
+        $all_locations = mulopimfwc_get_frontend_locations([
             'taxonomy' => self::TAXONOMY,
             'hide_empty' => false,
         ]);
@@ -501,7 +502,7 @@ class MULOPIMFWC_Product_Location_Selector
         $product_locations = get_the_terms($product->get_id(), self::TAXONOMY);
 
 
-        // If product has specific locations, filter to only those
+        // If product has specific locations, filter to only those (and ensure they're active)
         if (!empty($product_locations) && !is_wp_error($product_locations)) {
             $product_slugs = wp_list_pluck($product_locations, 'slug');
             return array_filter($all_locations, function ($location) use ($product_slugs) {
@@ -1035,9 +1036,9 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
 
         self::$shortcode_displayed[$display_key] = true;
 
-        // If showing all locations, get all locations directly
+        // If showing all locations, get all locations directly (filtered by is_active and ordered by display_order)
         if ($show_all_locations) {
-            $locations = get_terms([
+            $locations = mulopimfwc_get_frontend_locations([
                 'taxonomy' => 'mulopimfwc_store_location',
                 'hide_empty' => false,
             ]);

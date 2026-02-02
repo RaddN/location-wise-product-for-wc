@@ -227,6 +227,98 @@ class MULOPIMFWC_Admin
                         });
                     });
                 }
+
+                // Handle description truncation and popup
+                function truncateDescriptions() {
+                    $(".taxonomy-mulopimfwc_store_location td.description.column-description p").each(function() {
+                        var $p = $(this);
+                        var fullText = $p.text().trim();
+                        var fullHTML = $p.html();
+                        
+                        // Store full content in data attributes if not already stored
+                        if (!$p.data("full-text")) {
+                            $p.data("full-text", fullText);
+                            $p.data("full-html", fullHTML);
+                        }
+                        
+                        // Only truncate if text is longer than 20 characters
+                        if (fullText.length > 20) {
+                            var truncated = fullText.substring(0, 20);
+                            $p.text(truncated + ".....").addClass("mulopimfwc-truncated-description");
+                        }
+                    });
+                }
+
+                // Initialize truncation
+                truncateDescriptions();
+
+                // Handle click on truncated description
+                $(document).on("click", ".taxonomy-mulopimfwc_store_location td.description.column-description p", function(e) {
+                    e.preventDefault();
+                    var $p = $(this);
+                    var fullText = $p.data("full-text") || $p.text().trim();
+                    var fullHTML = $p.data("full-html") || $p.html();
+                    
+                    // Only show popup if text was truncated
+                    if (fullText.length > 20) {
+                        showDescriptionPopup(fullHTML);
+                    }
+                });
+
+                // Function to show description popup
+                function showDescriptionPopup(htmlContent) {
+                    // Remove existing popup if any
+                    $(".mulopimfwc-description-popup").remove();
+                    
+                    // Create popup HTML - WordPress already sanitizes taxonomy descriptions
+                    var $popup = $(\'<div class="mulopimfwc-description-popup active">\' +
+                        \'<div class="mulopimfwc-description-popup-content">\' +
+                        \'<div class="mulopimfwc-description-popup-header">\' +
+                        \'<h3>Description</h3>\' +
+                        \'<button type="button" class="mulopimfwc-description-popup-close" aria-label="Close">&times;</button>\' +
+                        \'</div>\' +
+                        \'<div class="mulopimfwc-description-popup-body"></div>\' +
+                        \'</div>\' +
+                        \'</div>\');
+                    
+                    // Set content safely
+                    $popup.find(".mulopimfwc-description-popup-body").html(htmlContent);
+                    
+                    // Append to body
+                    $("body").append($popup);
+                    
+                    // Handle close button click
+                    $popup.find(".mulopimfwc-description-popup-close").on("click", function() {
+                        $popup.removeClass("active").fadeOut(200, function() {
+                            $(this).remove();
+                        });
+                    });
+                    
+                    // Handle click outside popup
+                    $popup.on("click", function(e) {
+                        if ($(e.target).hasClass("mulopimfwc-description-popup")) {
+                            $popup.removeClass("active").fadeOut(200, function() {
+                                $(this).remove();
+                            });
+                        }
+                    });
+                    
+                    // Handle ESC key
+                    var escHandler = function(e) {
+                        if (e.keyCode === 27) { // ESC key
+                            $popup.removeClass("active").fadeOut(200, function() {
+                                $(this).remove();
+                            });
+                            $(document).off("keydown.mulopimfwcDescriptionPopup", escHandler);
+                        }
+                    };
+                    $(document).on("keydown.mulopimfwcDescriptionPopup", escHandler);
+                }
+
+                // Re-truncate after AJAX operations (for dynamic content)
+                $(document).ajaxComplete(function() {
+                    setTimeout(truncateDescriptions, 100);
+                });
             });
         })(jQuery);
         ';

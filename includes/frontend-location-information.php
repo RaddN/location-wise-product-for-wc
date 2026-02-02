@@ -151,6 +151,13 @@ class MULOPIMFWC_Frontend_Location_Information
         if (empty($locations) || is_wp_error($locations)) {
             return $tabs;
         }
+        
+        // Filter by is_active and order by display_order
+        $locations = $this->filter_and_order_locations($locations);
+        
+        if (empty($locations)) {
+            return $tabs;
+        }
 
 
         $tabs['location_info'] = [
@@ -278,6 +285,13 @@ class MULOPIMFWC_Frontend_Location_Information
         $locations = wp_get_object_terms($product->get_id(), 'mulopimfwc_store_location');
 
         if (empty($locations) || is_wp_error($locations)) {
+            return;
+        }
+        
+        // Filter by is_active and order by display_order
+        $locations = $this->filter_and_order_locations($locations);
+        
+        if (empty($locations)) {
             return;
         }
 
@@ -1069,19 +1083,34 @@ class MULOPIMFWC_Frontend_Location_Information
                 }
             }
         } else {
-            // Get all locations
+            // Get all locations (filtered by is_active and ordered by display_order)
             $args = [
                 'taxonomy' => 'mulopimfwc_store_location',
                 'hide_empty' => false,
-                'orderby' => $atts['orderby'],
-                'order' => $atts['order']
             ];
 
-            if (!empty($atts['limit'])) {
-                $args['number'] = intval($atts['limit']);
+            $locations = mulopimfwc_get_frontend_locations($args);
+            
+            // Apply additional ordering if specified (after display_order)
+            if (!empty($atts['orderby']) && $atts['orderby'] !== 'display_order') {
+                if ($atts['orderby'] === 'name') {
+                    usort($locations, function($a, $b) use ($atts) {
+                        $result = strcasecmp($a->name, $b->name);
+                        return $atts['order'] === 'DESC' ? -$result : $result;
+                    });
+                } elseif ($atts['orderby'] === 'id') {
+                    usort($locations, function($a, $b) use ($atts) {
+                        $result = $a->term_id <=> $b->term_id;
+                        return $atts['order'] === 'DESC' ? -$result : $result;
+                    });
+                }
             }
-
-            $locations = get_terms($args);
+            
+            // Apply limit if specified
+            if (!empty($atts['limit'])) {
+                $limit = intval($atts['limit']);
+                $locations = array_slice($locations, 0, $limit);
+            }
         }
 
         if (empty($locations) || is_wp_error($locations)) {
@@ -1368,6 +1397,45 @@ class MULOPIMFWC_Frontend_Location_Information
 <?php
     }
 
+
+    /**
+     * Filter and order locations by is_active and display_order
+     * 
+     * @param array $locations Array of location term objects
+     * @return array Filtered and ordered locations
+     */
+    private function filter_and_order_locations($locations)
+    {
+        if (empty($locations) || is_wp_error($locations)) {
+            return [];
+        }
+        
+        $filtered_locations = [];
+        foreach ($locations as $location) {
+            $is_active = get_term_meta($location->term_id, 'is_active', true);
+            
+            // Only include active locations (is_active === 'on' or '1' or true or 'yes')
+            if ($is_active === 'on' || $is_active === '1' || $is_active === true || $is_active === 'yes') {
+                $display_order = get_term_meta($location->term_id, 'display_order', true);
+                $display_order = !empty($display_order) ? intval($display_order) : 999;
+                
+                $filtered_locations[] = [
+                    'location' => $location,
+                    'display_order' => $display_order,
+                ];
+            }
+        }
+        
+        // Sort by display_order (ascending)
+        usort($filtered_locations, function($a, $b) {
+            return $a['display_order'] <=> $b['display_order'];
+        });
+        
+        // Extract just the location objects
+        return array_map(function($item) {
+            return $item['location'];
+        }, $filtered_locations);
+    }
 
     /**
      * Override location archive template

@@ -231,15 +231,14 @@ class Location_Wise_Products_Filter
         }
 
         // Check for cached locations
-        $cache_key = 'available_locations';
+        $cache_key = 'available_locations_frontend';
         $locations = wp_cache_get($cache_key, self::CACHE_GROUP);
 
         if (false === $locations) {
-            $locations = get_terms([
+            // Get active locations ordered by display_order
+            $locations = mulopimfwc_get_frontend_locations([
                 'taxonomy' => 'mulopimfwc_store_location',
                 'hide_empty' => true,
-                'orderby' => 'name',
-                'order' => 'ASC',
             ]);
 
             if (is_wp_error($locations)) {
@@ -599,7 +598,7 @@ class Location_Wise_Products_Filter
         set_transient('mulopimfwc_filter_cache_version', $cache_version, self::CACHE_EXPIRATION * 24);
         
         // Also clear available locations cache
-        wp_cache_delete('available_locations', self::CACHE_GROUP);
+        wp_cache_delete('available_locations_frontend', self::CACHE_GROUP);
     }
 
     /**
@@ -609,7 +608,7 @@ class Location_Wise_Products_Filter
     {
         if ($taxonomy === 'mulopimfwc_store_location') {
             // Clear available locations cache
-            wp_cache_delete('available_locations', self::CACHE_GROUP);
+            wp_cache_delete('available_locations_frontend', self::CACHE_GROUP);
             
             // Invalidate filter cache version
             $cache_version = get_transient('mulopimfwc_filter_cache_version');
@@ -629,7 +628,7 @@ class Location_Wise_Products_Filter
     {
         if ($taxonomy === 'mulopimfwc_store_location') {
             // Clear available locations cache
-            wp_cache_delete('available_locations', self::CACHE_GROUP);
+            wp_cache_delete('available_locations_frontend', self::CACHE_GROUP);
             
             // Invalidate filter cache version
             $cache_version = get_transient('mulopimfwc_filter_cache_version');
