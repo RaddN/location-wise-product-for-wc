@@ -1206,7 +1206,7 @@ class MULOPIMFWC_Dashboard
                                 <span class="lwp-stat-value"><?php echo esc_html($this->get_total_products_count()); ?></span>
                             </div>
                         </<?php echo $products_tag; ?>>
-                        <a href="<?php echo esc_url(admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product')); ?>" class="lwp-stat-item">
+                        <a href="<?php echo esc_url(admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc')); ?>" class="lwp-stat-item">
                             <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
 
                                 <svg class="svg-inline--fa fa-location-dot" aria-hidden="true" data-prefix="fas" data-icon="location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18">

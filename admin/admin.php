@@ -2053,7 +2053,7 @@ class MULOPIMFWC_Admin
             __('Locations', 'multi-location-product-and-inventory-management'),
             __('Locations', 'multi-location-product-and-inventory-management'),
             'manage_options',
-            'edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product',
+            'edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc',
             null,
             56
         );
@@ -2074,7 +2074,7 @@ class MULOPIMFWC_Admin
             global $pagenow, $taxonomy;
 
             if ($pagenow === 'edit-tags.php' && $taxonomy === 'mulopimfwc_store_location') {
-                $submenu_file = 'edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product';
+                $submenu_file = 'edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc';
             }
 
             return $submenu_file;

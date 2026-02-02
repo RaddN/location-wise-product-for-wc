@@ -6,6 +6,20 @@
     width: unset !important;
 }
 
+
+.taxonomy-mulopimfwc_store_location td.description.column-description p {
+    max-height: 2.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.taxonomy-mulopimfwc_store_location td.description.column-description p::after {
+    content: "...";
+    position: absolute;
+    right: 9px;
+    bottom: 2px;
+}
+
 .location_variation_table {
     width: 100%;
     border-collapse: collapse;
