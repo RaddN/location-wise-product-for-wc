@@ -5034,27 +5034,79 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         /**
+         * Get count of unassigned orders
+         *
+         * @return int Count of unassigned orders
+         */
+        private function get_unassigned_orders_count()
+        {
+            $args = array(
+                'limit' => -1,
+                'return' => 'ids',
+                'meta_query' => array(
+                    array(
+                        'key' => '_store_location',
+                        'compare' => 'NOT EXISTS',
+                    ),
+                ),
+            );
+
+            // Also count orders with empty location
+            $args2 = array(
+                'limit' => -1,
+                'return' => 'ids',
+                'meta_query' => array(
+                    array(
+                        'key' => '_store_location',
+                        'value' => '',
+                        'compare' => '=',
+                    ),
+                ),
+            );
+
+            $orders1 = wc_get_orders($args);
+            $orders2 = wc_get_orders($args2);
+            
+            // Combine and get unique count
+            $all_order_ids = array_unique(array_merge($orders1, $orders2));
+            
+            return count($all_order_ids);
+        }
+
+        /**
          * Add filter dropdown in the WooCommerce orders list table
          */
         public function add_store_location_filter()
         {
-
             $locations = $this->get_all_store_locations();
-
-            if (!isset($_GET['store_location_filter_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['store_location_filter_nonce'])), 'store_location_filter_nonce')) {
-                $selected_location = '';
-            } else {
-                $selected_location = isset($_GET['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_GET['mulopimfwc_store_location'])) : '';
+            $options = get_option('mulopimfwc_display_options', []);
+            $is_manual_mode = isset($options['order_assignment_method']) 
+                && $options['order_assignment_method'] === 'manual';
+            
+            if (empty($locations) && !$is_manual_mode) {
+                return;
             }
+            
+            $current_filter = isset($_GET['store_location_filter']) 
+                ? sanitize_text_field($_GET['store_location_filter']) 
+                : '';
 
-            // add nonce for security
-            wp_nonce_field('store_location_filter_nonce', 'store_location_filter_nonce');
-
-            echo '<select name="mulopimfwc_store_location" id="mulopimfwc_store_location">';
+            echo '<select name="store_location_filter" id="store_location_filter" class="postform">';
             echo '<option value="">' . esc_html__('All Locations', 'multi-location-product-and-inventory-management') . '</option>';
-
+            
+            if ($is_manual_mode) {
+                $unassigned_count = $this->get_unassigned_orders_count();
+                $selected = ($current_filter === 'unassigned') ? 'selected' : '';
+                echo '<option value="unassigned" ' . esc_attr($selected) . '>';
+                echo esc_html__('Unassigned', 'multi-location-product-and-inventory-management');
+                if ($unassigned_count > 0) {
+                    echo ' (' . esc_html($unassigned_count) . ')';
+                }
+                echo '</option>';
+            }
+            
             foreach ($locations as $location) {
-                $selected = ($location === $selected_location) ? 'selected' : '';
+                $selected = ($location === $current_filter) ? 'selected' : '';
                 echo '<option value="' . esc_attr($location) . '" ' . esc_attr($selected) . '>' . esc_html(ucfirst(strtolower($location))) . '</option>';
             }
 
@@ -5069,18 +5121,62 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function filter_orders_by_location($query_args)
         {
-            if (!isset($_GET['store_location_filter_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['store_location_filter_nonce'])), 'store_location_filter_nonce')) {
-                $selected_location = '';
-            } else {
-                $selected_location = isset($_GET['mulopimfwc_store_location']) ? sanitize_text_field(wp_unslash($_GET['mulopimfwc_store_location'])) : '';
+            if (!isset($_GET['store_location_filter']) || empty($_GET['store_location_filter'])) {
+                return $query_args;
             }
 
-            if (!empty($selected_location)) {
-                $query_args['meta_query'][] = [
+            $filter = sanitize_text_field($_GET['store_location_filter']);
+            
+            if (!isset($query_args['meta_query'])) {
+                $query_args['meta_query'] = array();
+            }
+            
+            // If there are existing meta queries, we need to wrap them properly
+            $has_existing = !empty($query_args['meta_query']);
+            
+            if ($filter === 'unassigned') {
+                // Filter for unassigned orders
+                $unassigned_query = array(
+                    'relation' => 'OR',
+                    array(
+                        'key' => '_store_location',
+                        'compare' => 'NOT EXISTS',
+                    ),
+                    array(
+                        'key' => '_store_location',
+                        'value' => '',
+                        'compare' => '=',
+                    ),
+                );
+                
+                if ($has_existing) {
+                    // Wrap existing queries and add our filter
+                    $query_args['meta_query'] = array(
+                        'relation' => 'AND',
+                        $query_args['meta_query'],
+                        $unassigned_query,
+                    );
+                } else {
+                    $query_args['meta_query'] = $unassigned_query;
+                }
+            } else {
+                // Filter by specific location
+                $location_query = array(
                     'key' => '_store_location',
-                    'value' => $selected_location,
-                    'compare' => '='
-                ];
+                    'value' => $filter,
+                    'compare' => '=',
+                );
+                
+                if ($has_existing) {
+                    // Wrap existing queries and add our filter
+                    $query_args['meta_query'] = array(
+                        'relation' => 'AND',
+                        $query_args['meta_query'],
+                        $location_query,
+                    );
+                } else {
+                    $query_args['meta_query'] = $location_query;
+                }
             }
 
             return $query_args;

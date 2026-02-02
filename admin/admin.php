@@ -24,9 +24,20 @@ class MULOPIMFWC_Admin
         add_filter('manage_edit-shop_order_columns', array($this, 'add_location_column'), 20);
         add_filter('manage_shop_order_posts_columns', array($this, 'add_location_column'), 20);
         add_action('manage_shop_order_posts_custom_column', array($this, 'display_location_column_content'), 20, 2);
+        
+        // Add query filtering for wc-orders page (HPOS)
+        add_filter('woocommerce_shop_order_list_table_prepare_items_query_args', array($this, 'filter_orders_by_location'), 20, 1);
+        add_filter('woocommerce_orders_table_query_clauses', array($this, 'filter_orders_query_clauses'), 20, 2);
+        
+        // Add unassigned orders link to subsubsub menu
+        add_filter('views_woocommerce_page_wc-orders', array($this, 'add_unassigned_orders_view'), 20, 1);
+        
         // Add metabox to order details
         add_action('add_meta_boxes', array($this, 'add_location_metabox'));
         add_action('woocommerce_process_shop_order_meta', array($this, 'save_location_metabox'), 20, 2);
+        
+        // AJAX handler for quick location assignment
+        add_action('wp_ajax_mulopimfwc_quick_assign_location', array($this, 'ajax_quick_assign_location'));
 
         // Add custom fields to location taxonomy
         add_action('mulopimfwc_store_location_add_form_fields', array($this, 'add_location_fields'));
@@ -2262,7 +2273,7 @@ class MULOPIMFWC_Admin
      * Display location in orders table column
      *
      * @param string $column Column name
-     * @param WC_Order $order Order object
+     * @param WC_Order|int $order Order object or order ID
      */
     public function display_location_column_content($column, $order)
     {
@@ -2277,9 +2288,328 @@ class MULOPIMFWC_Admin
         }
 
         $location_slug = (string) $order_obj->get_meta('_store_location');
-        $location_label = $this->get_location_label($location_slug);
-        echo esc_html($location_label !== '' ? $location_label : '—');
+        
+        // Check if manual assignment mode is active
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method']) 
+            && $options['order_assignment_method'] === 'manual';
+        
+        if (empty($location_slug) && $is_manual_mode) {
+            // Show quick assignment dropdown for unassigned orders
+            echo $this->render_quick_assignment_dropdown($order_obj);
+        } else {
+            $location_label = $this->get_location_label($location_slug);
+            echo esc_html($location_label !== '' ? $location_label : '—');
+        }
     }
+    /**
+     * Render quick assignment dropdown for unassigned orders
+     *
+     * @param WC_Order $order Order object
+     * @return string HTML output
+     */
+    private function render_quick_assignment_dropdown($order)
+    {
+        if (!$order || !current_user_can('edit_shop_order', $order->get_id())) {
+            return '<span class="mulopimfwc-unassigned-badge">⚠️ ' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management') . '</span>';
+        }
+
+        $order_id = $order->get_id();
+        $locations = $this->get_all_store_locations();
+        
+        ob_start();
+        ?>
+        <div class="mulopimfwc-quick-assignment-wrapper">
+            <span class="mulopimfwc-unassigned-badge">🔴 <?php echo esc_html__('Needs Assignment', 'multi-location-product-and-inventory-management'); ?></span>
+            <select class="mulopimfwc-quick-assignment-select" data-order-id="<?php echo esc_attr($order_id); ?>" data-nonce="<?php echo esc_attr(wp_create_nonce('mulopimfwc_quick_assign_' . $order_id)); ?>">
+                <option value=""><?php echo esc_html__('Select Location...', 'multi-location-product-and-inventory-management'); ?></option>
+                <?php foreach ($locations as $location): ?>
+                    <option value="<?php echo esc_attr($location->slug); ?>"><?php echo esc_html($location->name); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <span class="mulopimfwc-assignment-spinner" style="display: none;">⏳</span>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Get all store locations
+     *
+     * @return array Array of location term objects
+     */
+    private function get_all_store_locations()
+    {
+        $locations = get_terms(array(
+            'taxonomy' => 'mulopimfwc_store_location',
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+        ));
+
+        if (is_wp_error($locations)) {
+            return [];
+        }
+
+        return $locations;
+    }
+
+    /**
+     * Get count of unassigned orders
+     *
+     * @return int Count of unassigned orders
+     */
+    private function get_unassigned_orders_count()
+    {
+        $args = array(
+            'limit' => -1,
+            'return' => 'ids',
+            'meta_query' => array(
+                array(
+                    'key' => '_store_location',
+                    'compare' => 'NOT EXISTS',
+                ),
+            ),
+        );
+
+        // Also count orders with empty location
+        $args2 = array(
+            'limit' => -1,
+            'return' => 'ids',
+            'meta_query' => array(
+                array(
+                    'key' => '_store_location',
+                    'value' => '',
+                    'compare' => '=',
+                ),
+            ),
+        );
+
+        $orders1 = wc_get_orders($args);
+        $orders2 = wc_get_orders($args2);
+        
+        // Combine and get unique count
+        $all_order_ids = array_unique(array_merge($orders1, $orders2));
+        
+        return count($all_order_ids);
+    }
+
+    /**
+     * Filter orders by location in query args
+     *
+     * @param array $query_args Query arguments
+     * @return array Modified query arguments
+     */
+    public function filter_orders_by_location($query_args)
+    {
+        if (!isset($_GET['store_location_filter']) || empty($_GET['store_location_filter'])) {
+            return $query_args;
+        }
+
+        $filter = sanitize_text_field($_GET['store_location_filter']);
+        
+        if (!isset($query_args['meta_query'])) {
+            $query_args['meta_query'] = array();
+        }
+        
+        // If there are existing meta queries, we need to wrap them properly
+        $has_existing = !empty($query_args['meta_query']);
+        
+        if ($filter === 'unassigned') {
+            // Filter for unassigned orders
+            $unassigned_query = array(
+                'relation' => 'OR',
+                array(
+                    'key' => '_store_location',
+                    'compare' => 'NOT EXISTS',
+                ),
+                array(
+                    'key' => '_store_location',
+                    'value' => '',
+                    'compare' => '=',
+                ),
+            );
+            
+            if ($has_existing) {
+                // Wrap existing queries and add our filter
+                $query_args['meta_query'] = array(
+                    'relation' => 'AND',
+                    $query_args['meta_query'],
+                    $unassigned_query,
+                );
+            } else {
+                $query_args['meta_query'] = $unassigned_query;
+            }
+        } else {
+            // Filter by specific location
+            $location_query = array(
+                'key' => '_store_location',
+                'value' => $filter,
+                'compare' => '=',
+            );
+            
+            if ($has_existing) {
+                // Wrap existing queries and add our filter
+                $query_args['meta_query'] = array(
+                    'relation' => 'AND',
+                    $query_args['meta_query'],
+                    $location_query,
+                );
+            } else {
+                $query_args['meta_query'] = $location_query;
+            }
+        }
+
+        return $query_args;
+    }
+
+    /**
+     * Filter orders query clauses for HPOS
+     *
+     * @param array $clauses Query clauses
+     * @param array $args Query arguments
+     * @return array Modified clauses
+     */
+    public function filter_orders_query_clauses($clauses, $args)
+    {
+        if (!isset($_GET['store_location_filter']) || empty($_GET['store_location_filter'])) {
+            return $clauses;
+        }
+
+        global $wpdb;
+        $filter = sanitize_text_field($_GET['store_location_filter']);
+        
+        if ($filter === 'unassigned') {
+            // Filter for unassigned orders using LEFT JOIN and WHERE
+            $meta_table = $wpdb->prefix . 'wc_orders_meta';
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            
+            $clauses['join'] .= " LEFT JOIN {$meta_table} AS location_meta ON {$orders_table}.id = location_meta.order_id AND location_meta.meta_key = '_store_location'";
+            $clauses['where'] .= " AND (location_meta.meta_value IS NULL OR location_meta.meta_value = '')";
+        } else {
+            // Filter by specific location
+            $meta_table = $wpdb->prefix . 'wc_orders_meta';
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            
+            $clauses['join'] .= " INNER JOIN {$meta_table} AS location_meta ON {$orders_table}.id = location_meta.order_id AND location_meta.meta_key = '_store_location'";
+            $clauses['where'] .= $wpdb->prepare(" AND location_meta.meta_value = %s", $filter);
+        }
+
+        return $clauses;
+    }
+
+    /**
+     * Add unassigned orders view to subsubsub menu
+     *
+     * @param array $views Existing views
+     * @return array Modified views
+     */
+    public function add_unassigned_orders_view($views)
+    {
+        // Only show on wc-orders page
+        if (!isset($_GET['page']) || $_GET['page'] !== 'wc-orders') {
+            return $views;
+        }
+
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method']) 
+            && $options['order_assignment_method'] === 'manual';
+        
+        if (!$is_manual_mode) {
+            return $views;
+        }
+
+        $unassigned_count = $this->get_unassigned_orders_count();
+        $current_filter = isset($_GET['store_location_filter']) ? sanitize_text_field($_GET['store_location_filter']) : '';
+        $is_current = ($current_filter === 'unassigned');
+        
+        $base_url = admin_url('admin.php?page=wc-orders');
+        
+        // Preserve all query parameters except store_location_filter
+        $url_params = $_GET;
+        unset($url_params['store_location_filter']);
+        $url_params['store_location_filter'] = 'unassigned';
+        
+        $url = add_query_arg($url_params, $base_url);
+        
+        $class = $is_current ? 'current' : '';
+        $count_html = $unassigned_count > 0 ? ' <span class="count">(' . $unassigned_count . ')</span>' : '';
+        
+        // Insert after draft if it exists, otherwise at the end
+        $new_views = array();
+        $inserted = false;
+        
+        foreach ($views as $key => $view) {
+            $new_views[$key] = $view;
+            
+            // Insert after draft
+            if ($key === 'wc-checkout-draft' && !$inserted) {
+                $new_views['unassigned-location'] = sprintf(
+                    '<a href="%s" class="%s">%s%s</a>',
+                    esc_url($url),
+                    esc_attr($class),
+                    esc_html__('Unassigned', 'multi-location-product-and-inventory-management'),
+                    $count_html
+                );
+                $inserted = true;
+            }
+        }
+        
+        // If draft doesn't exist, add at the end
+        if (!$inserted) {
+            $new_views['unassigned-location'] = sprintf(
+                '<a href="%s" class="%s">%s%s</a>',
+                esc_url($url),
+                esc_attr($class),
+                esc_html__('Unassigned', 'multi-location-product-and-inventory-management'),
+                $count_html
+            );
+        }
+        
+        return $new_views;
+    }
+
+    /**
+     * AJAX handler for quick location assignment
+     */
+    public function ajax_quick_assign_location()
+    {
+        check_ajax_referer('mulopimfwc_quick_assign_' . (isset($_POST['order_id']) ? intval($_POST['order_id']) : 0), 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')));
+        }
+
+        $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
+        $location_slug = isset($_POST['location_slug']) ? sanitize_text_field($_POST['location_slug']) : '';
+
+        if (!$order_id) {
+            wp_send_json_error(array('message' => __('Invalid order ID', 'multi-location-product-and-inventory-management')));
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            wp_send_json_error(array('message' => __('Order not found', 'multi-location-product-and-inventory-management')));
+        }
+
+        // Update order location
+        if (empty($location_slug)) {
+            $order->delete_meta_data('_store_location');
+        } else {
+            $order->update_meta_data('_store_location', $location_slug);
+        }
+        
+        $order->save();
+
+        $location_label = $this->get_location_label($location_slug);
+        
+        wp_send_json_success(array(
+            'message' => __('Location assigned successfully', 'multi-location-product-and-inventory-management'),
+            'location_label' => $location_label !== '' ? $location_label : '—',
+            'location_slug' => $location_slug,
+        ));
+    }
+
     /**
      * Add location metabox to order details
      */

@@ -3815,6 +3815,136 @@ document.addEventListener('DOMContentLoaded', function () {
 
 })(jQuery);
 
+// Quick Location Assignment for Orders
+jQuery(document).ready(function ($) {
+    // Handle quick assignment dropdown change
+    $(document).on('change', '.mulopimfwc-quick-assignment-select', function () {
+        var $select = $(this);
+        var $wrapper = $select.closest('.mulopimfwc-quick-assignment-wrapper');
+        var $spinner = $wrapper.find('.mulopimfwc-assignment-spinner');
+        var orderId = $select.data('order-id');
+        var nonce = $select.data('nonce');
+        var locationSlug = $select.val();
+
+        if (!locationSlug) {
+            return; // Don't do anything if empty selection
+        }
+
+        // Show spinner
+        $spinner.show();
+        $select.prop('disabled', true);
+
+        // Make AJAX request
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_quick_assign_location',
+                order_id: orderId,
+                location_slug: locationSlug,
+                nonce: nonce
+            },
+            success: function (response) {
+                if (response.success) {
+                    // Replace the dropdown with the location label
+                    $wrapper.html('<span class="mulopimfwc-location-assigned">' + 
+                        response.data.location_label + '</span>');
+                    
+                    // Remove unassigned row styling if present
+                    $wrapper.closest('tr').removeClass('unassigned-order-row');
+                    
+                    // Show success notice
+                    if (typeof showNotice === 'function') {
+                        showNotice(response.data.message, 'success');
+                    } else {
+                        // Fallback notice
+                        $('<div class="notice notice-success is-dismissible"><p>' + 
+                            response.data.message + '</p></div>')
+                            .insertAfter('.wp-header-end, .wrap h1')
+                            .delay(3000)
+                            .fadeOut();
+                    }
+                } else {
+                    // Show error
+                    var errorMsg = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'An error occurred';
+                    
+                    if (typeof showNotice === 'function') {
+                        showNotice(errorMsg, 'error');
+                    } else {
+                        $('<div class="notice notice-error is-dismissible"><p>' + 
+                            errorMsg + '</p></div>')
+                            .insertAfter('.wp-header-end, .wrap h1')
+                            .delay(5000)
+                            .fadeOut();
+                    }
+                    
+                    // Re-enable select
+                    $select.prop('disabled', false);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX Error:', error);
+                
+                var errorMsg = 'Failed to assign location. Please try again.';
+                if (typeof showNotice === 'function') {
+                    showNotice(errorMsg, 'error');
+                } else {
+                    $('<div class="notice notice-error is-dismissible"><p>' + 
+                        errorMsg + '</p></div>')
+                        .insertAfter('.wp-header-end, .wrap h1')
+                        .delay(5000)
+                        .fadeOut();
+                }
+                
+                // Re-enable select
+                $select.prop('disabled', false);
+            },
+            complete: function () {
+                $spinner.hide();
+            }
+        });
+    });
+
+    // Add unassigned row class for styling (better browser compatibility)
+    $('.mulopimfwc-unassigned-badge, .mulopimfwc-quick-assignment-wrapper').each(function() {
+        $(this).closest('tr').addClass('unassigned-order-row');
+    });
+    
+    // Also handle dynamically added rows (if using AJAX table updates)
+    if (typeof MutationObserver !== 'undefined') {
+        var observer = new MutationObserver(function(mutations) {
+            $('.mulopimfwc-unassigned-badge, .mulopimfwc-quick-assignment-wrapper').each(function() {
+                $(this).closest('tr').addClass('unassigned-order-row');
+            });
+        });
+        
+        var tableContainer = document.querySelector('.woocommerce_page_wc-orders .wp-list-table, .wp-list-table');
+        if (tableContainer) {
+            observer.observe(tableContainer, { childList: true, subtree: true });
+        }
+    }
+    
+    // Auto-submit location filter dropdown on change (optional enhancement)
+    $('#store_location_filter').on('change', function() {
+        var $form = $(this).closest('form');
+        if ($form.length) {
+            $form.submit();
+        } else {
+            // If not in a form, navigate with the filter parameter
+            var filterValue = $(this).val();
+            var url = new URL(window.location.href);
+            if (filterValue) {
+                url.searchParams.set('store_location_filter', filterValue);
+            } else {
+                url.searchParams.delete('store_location_filter');
+            }
+            window.location.href = url.toString();
+        }
+    });
+});
+
 
 
 

@@ -206,3 +206,85 @@ a.lwp-subtab.lwp-subtab-active {
         opacity: 1;
     }
 }
+
+/* Unassigned Orders Styling */
+.mulopimfwc-unassigned-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+tr.unassigned-order-row,
+.wp-list-table tbody tr:has(.mulopimfwc-unassigned-badge) {
+    background-color: #fff8e1 !important;
+}
+
+.wp-list-table tbody tr:has(.mulopimfwc-unassigned-badge):hover {
+    background-color: #ffecb3 !important;
+}
+
+/* Quick Assignment Dropdown */
+.mulopimfwc-quick-assignment-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mulopimfwc-quick-assignment-select {
+    min-width: 150px;
+    padding: 4px 8px;
+    font-size: 13px;
+    border: 1px solid #8c8f94;
+    border-radius: 3px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.mulopimfwc-quick-assignment-select:hover {
+    border-color: #2271b1;
+}
+
+.mulopimfwc-quick-assignment-select:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.mulopimfwc-assignment-spinner {
+    display: inline-block;
+    font-size: 14px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Location Filter Dropdown */
+#store_location_filter {
+    margin-right: 8px;
+}
+
+/* Unassigned orders row highlighting */
+.woocommerce_page_wc-orders .wp-list-table tbody tr.unassigned-order-row td,
+.woocommerce_page_wc-orders .wp-list-table tbody tr:has(.mulopimfwc-unassigned-badge) td {
+    background-color: #fff8e1;
+}
+
+.woocommerce_page_wc-orders .wp-list-table tbody tr.unassigned-order-row:hover td,
+.woocommerce_page_wc-orders .wp-list-table tbody tr:has(.mulopimfwc-unassigned-badge):hover td {
+    background-color: #ffecb3;
+}
