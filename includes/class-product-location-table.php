@@ -104,6 +104,21 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         }));
     }
 
+    private function get_product_term_list($product_id, $taxonomy)
+    {
+        if (empty($taxonomy) || !taxonomy_exists($taxonomy)) {
+            return '';
+        }
+
+        $terms = get_the_terms($product_id, $taxonomy);
+        if (is_wp_error($terms) || empty($terms)) {
+            return '';
+        }
+
+        $names = wp_list_pluck($terms, 'name');
+        return implode(', ', $names);
+    }
+
     /**
      * Get table columns
      *
@@ -116,6 +131,16 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             'title'         => __('Product', 'multi-location-product-and-inventory-management'),
             'stock'         => __('Stock by Location', 'multi-location-product-and-inventory-management'),
             'price'         => __('Price by Location', 'multi-location-product-and-inventory-management'),
+            'sku'           => __('SKU', 'multi-location-product-and-inventory-management'),
+            'type'          => __('Type', 'multi-location-product-and-inventory-management'),
+            'categories'    => __('Categories', 'multi-location-product-and-inventory-management'),
+            'tags'          => __('Tags', 'multi-location-product-and-inventory-management'),
+            'brands'        => __('Brands', 'multi-location-product-and-inventory-management'),
+            'short_description' => __('Short Description', 'multi-location-product-and-inventory-management'),
+            'description'   => __('Description', 'multi-location-product-and-inventory-management'),
+            'featured'      => __('Featured', 'multi-location-product-and-inventory-management'),
+            'dimensions'    => __('Dimensions', 'multi-location-product-and-inventory-management'),
+            'date'          => __('Date', 'multi-location-product-and-inventory-management'),
         ];
 
         $show_purchase_profit = !($this->is_location_manager() && !$this->user_can_manage_products());
@@ -170,6 +195,39 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 return $this->get_location_stock_display($item);
             case 'price':
                 return $this->get_location_price_display($item);
+            case 'sku':
+                $sku = $item['sku'] ?? '';
+                return $sku !== '' ? esc_html($sku) : '-';
+            case 'type':
+                $type_label = $item['type_label'] ?? '';
+                if ($type_label === '' && !empty($item['type'])) {
+                    $type_label = ucfirst($item['type']);
+                }
+                return $type_label !== '' ? esc_html($type_label) : '-';
+            case 'categories':
+                $categories = $item['categories'] ?? '';
+                return $categories !== '' ? esc_html($categories) : '-';
+            case 'tags':
+                $tags = $item['tags'] ?? '';
+                return $tags !== '' ? esc_html($tags) : '-';
+            case 'brands':
+                $brands = $item['brands'] ?? '';
+                return $brands !== '' ? esc_html($brands) : '-';
+            case 'short_description':
+                $short_description = $item['short_description'] ?? '';
+                return $short_description !== '' ? esc_html($short_description) : '-';
+            case 'description':
+                $description = $item['description'] ?? '';
+                return $description !== '' ? esc_html($description) : '-';
+            case 'featured':
+                $featured = !empty($item['featured']);
+                return $featured ? esc_html__('Yes', 'multi-location-product-and-inventory-management') : esc_html__('No', 'multi-location-product-and-inventory-management');
+            case 'dimensions':
+                $dimensions = $item['dimensions'] ?? '';
+                return $dimensions !== '' ? wp_kses_post($dimensions) : '-';
+            case 'date':
+                $date = $item['date'] ?? '';
+                return $date !== '' ? esc_html($date) : '-';
             case 'purchase_price':
                 return $this->get_purchase_price_display($item);
             case 'gross_profit':
@@ -217,7 +275,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     {
         if (!$this->user_can_manage_products()) {
             $view_link = get_permalink($item['id']);
-            return '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . esc_html($item['title']) . '</a></strong>';
+            $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . esc_html($item['title']) . '</a></strong>';
+            $title .= '<span class="mulopimfwc-product-id"> (ID: ' . esc_html($item['id']) . ')</span>';
+            return $title;
         }
 
         $edit_link = get_edit_post_link($item['id']);
@@ -250,6 +310,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
 
         $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . esc_html($item['title']) . '</a></strong>';
+        $title .= '<span class="mulopimfwc-product-id"> (ID: ' . esc_html($item['id']) . ')</span>';
         $title .= '<div class="row-actions">';
         $title .= '<span class="edit"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . __('Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
         $title .= '<span class="view"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . __('View', 'multi-location-product-and-inventory-management') . '</a> | </span>';
@@ -993,6 +1054,15 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $this->items = [];
 
         if ($query->have_posts()) {
+            $brand_taxonomy = null;
+            $brand_taxonomies = ['product_brand', 'pa_brand', 'pwb-brand'];
+            foreach ($brand_taxonomies as $brand_taxonomy_candidate) {
+                if (taxonomy_exists($brand_taxonomy_candidate)) {
+                    $brand_taxonomy = $brand_taxonomy_candidate;
+                    break;
+                }
+            }
+
             while ($query->have_posts()) {
                 $query->the_post();
                 $product_id = get_the_ID();
@@ -1012,6 +1082,41 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
                 // Get product type
                 $product_type = $product->get_type();
+                $product_types = wc_get_product_types();
+                $type_label = isset($product_types[$product_type]) ? $product_types[$product_type] : ucfirst($product_type);
+
+                $sku = (string) $product->get_sku();
+                $categories_list = $this->get_product_term_list($product_id, 'product_cat');
+                $tags_list = $this->get_product_term_list($product_id, 'product_tag');
+                $brands_list = $this->get_product_term_list($product_id, $brand_taxonomy);
+
+                $short_description = wp_trim_words(wp_strip_all_tags($product->get_short_description()), 20, '...');
+                $description = wp_trim_words(wp_strip_all_tags($product->get_description()), 30, '...');
+
+                $featured = $product->is_featured();
+
+                $dimensions_output = [];
+                if ($product->has_weight()) {
+                    $weight = $product->get_weight();
+                    $weight_unit = get_option('woocommerce_weight_unit');
+                    $dimensions_output[] = esc_html__('Weight:', 'multi-location-product-and-inventory-management') . ' ' . esc_html($weight . ($weight_unit ? ' ' . $weight_unit : ''));
+                }
+                if ($product->has_dimensions()) {
+                    $length = $product->get_length();
+                    $width = $product->get_width();
+                    $height = $product->get_height();
+                    $dimension_unit = get_option('woocommerce_dimension_unit');
+                    $size = trim($length . ' x ' . $width . ' x ' . $height);
+                    if ($size !== '') {
+                        if ($dimension_unit) {
+                            $size .= ' ' . $dimension_unit;
+                        }
+                        $dimensions_output[] = esc_html__('Size:', 'multi-location-product-and-inventory-management') . ' ' . esc_html($size);
+                    }
+                }
+                $dimensions = !empty($dimensions_output) ? implode('<br>', $dimensions_output) : '';
+
+                $date = get_the_date(get_option('date_format'), $product_id);
 
                 // Handle variable products
                 if ($product_type === 'variable') {
@@ -1130,6 +1235,16 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     'image' => $thumbnail,
                     'location_terms' => is_wp_error($location_terms) ? [] : $location_terms,
                     'type' => $product_type,
+                    'type_label' => $type_label,
+                    'sku' => $sku,
+                    'categories' => $categories_list,
+                    'tags' => $tags_list,
+                    'brands' => $brands_list,
+                    'short_description' => $short_description,
+                    'description' => $description,
+                    'featured' => $featured,
+                    'dimensions' => $dimensions,
+                    'date' => $date,
                     'variations' => $product_type === 'variable' ? $variations : [],
                     'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
                     'quick_edit_data' => $product_data, // Store complete data for popup

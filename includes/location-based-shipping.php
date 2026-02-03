@@ -64,7 +64,7 @@ class MULOPIMFWC_Location_Based_Shipping
         $options = is_array($mulopimfwc_options ?? null)
             ? $mulopimfwc_options
             : get_option('mulopimfwc_display_options', []);
-        return isset($options['enable_location_shipping']) && $options['enable_location_shipping'] === 'on';
+        return mulopimfwc_is_location_shipping_enabled($options);
     }
 
     /**

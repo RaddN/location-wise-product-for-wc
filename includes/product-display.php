@@ -21,11 +21,14 @@ if (!defined('ABSPATH')) {
  * Add this code to your theme's functions.php file or create a custom plugin
  */
 
-$display_option = is_array($mulopimfwc_options ?? null)
+$display_options = is_array($mulopimfwc_options ?? null)
     ? $mulopimfwc_options
     : get_option('mulopimfwc_display_options', []);
+$product_priority_display = function_exists('mulopimfwc_get_product_priority_display_value')
+    ? mulopimfwc_get_product_priority_display_value($display_options)
+    : (isset($display_options['product_priority_display']) ? $display_options['product_priority_display'] : 'location_first');
 
-if ($display_option === 'location_first') {
+if ($product_priority_display === 'location_first') {
     // Hook to modify the main query
     add_action('pre_get_posts', 'mulopimfwc_prioritize_products_with_store_location');
     add_filter('posts_orderby', 'mulopimfwc_add_store_location_orderby', 10, 2);
@@ -116,7 +119,7 @@ function mulopimfwc_is_product_out_of_stock_for_location($product_id)
 
     // Check if product is assigned to this location
     global $mulopimfwc_options;
-    $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+    $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
     $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
 
     // If enable_all_locations is on and product has no location terms, use global stock

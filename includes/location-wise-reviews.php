@@ -24,6 +24,11 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 		const VERSION = '1.0.0';
 
 		public function __construct() {
+			$options = get_option( 'mulopimfwc_display_options', array() );
+			if ( function_exists( 'mulopimfwc_is_location_reviews_enabled' ) && ! mulopimfwc_is_location_reviews_enabled( $options ) ) {
+				return;
+			}
+
 			// Save location on review submit.
 			add_action( 'comment_post', array( $this, 'save_location_on_review' ), 10, 3 );
 

@@ -2268,6 +2268,19 @@ class MULOPIMFWC_Admin
             $this->stock_central = new mulopimfwc_Stock_Central();
         }
 
+        $screen = get_current_screen();
+        if ($screen && !empty($screen->id)) {
+            $screen_id = $screen->id;
+            add_filter('default_hidden_columns', function ($hidden, $current_screen) use ($screen_id) {
+                if ($current_screen && $current_screen->id === $screen_id) {
+                    $hidden[] = 'date';
+                    $hidden = array_values(array_unique($hidden));
+                }
+
+                return $hidden;
+            }, 10, 2);
+        }
+
         $this->stock_central->register_screen_options();
     }
 

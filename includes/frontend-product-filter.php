@@ -666,7 +666,7 @@ class Location_Wise_Products_Filter
 
         // Get location-specific stock
         global $mulopimfwc_options;
-        $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+        $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
         $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
 
         // If enable_all_locations is on and product has no location terms, use global stock

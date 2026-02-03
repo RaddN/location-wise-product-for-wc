@@ -135,6 +135,12 @@ class mulopimfwc_Stock_Central
                 font-weight: 500;
             }
 
+            .mlsctock-cenral-main .mulopimfwc-product-id {
+                color: #6b7280;
+                font-weight: 400;
+                margin-left: 6px;
+            }
+
             .mlsctock-cenral-main form .deactivate-location {
                 background-color: #fef2f2;
                 color: #dc2626;

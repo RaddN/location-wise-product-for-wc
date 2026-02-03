@@ -13,6 +13,11 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
     public function __construct()
     {
+        $options = get_option('mulopimfwc_display_options', []);
+        if (function_exists('mulopimfwc_is_location_discounts_enabled') && !mulopimfwc_is_location_discounts_enabled($options)) {
+            return;
+        }
+
         // Admin UI fields
         add_action('woocommerce_coupon_options_usage_restriction', [$this, 'add_usage_restriction_fields'], 20, 1);
         add_action('woocommerce_coupon_options_save', [$this, 'save_usage_restriction_fields'], 10, 2);

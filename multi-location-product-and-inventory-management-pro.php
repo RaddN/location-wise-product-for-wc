@@ -90,6 +90,10 @@ if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
      */
     function mulopimfwc_get_location_cookie_expiry_days(): int
     {
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return 30;
+        }
+
         global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
@@ -423,6 +427,275 @@ if (!function_exists('mulopimfwc_is_show_all_products_admin_enabled')) {
         }
 
         return isset($options['show_all_products_admin']) && $options['show_all_products_admin'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_shipping_enabled')) {
+    /**
+     * Check whether location-based shipping is enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_shipping_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['enable_location_shipping']) && $options['enable_location_shipping'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_payment_methods_enabled')) {
+    /**
+     * Check whether location-based payment methods are enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_payment_methods_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['enable_location_payment_methods']) && $options['enable_location_payment_methods'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_taxes_enabled')) {
+    /**
+     * Check whether location-based taxes are enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_taxes_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['enable_location_taxes']) && $options['enable_location_taxes'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_discounts_enabled')) {
+    /**
+     * Check whether location-based discounts are enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_discounts_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['enable_location_discounts']) && $options['enable_location_discounts'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_reviews_enabled')) {
+    /**
+     * Check whether location-specific reviews are enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_reviews_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['location_specific_reviews']) && $options['location_specific_reviews'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_all_locations_enabled')) {
+    /**
+     * Check whether "enable all locations" is enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_all_locations_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['enable_all_locations']) && $options['enable_all_locations'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_get_strict_filtering_value')) {
+    /**
+     * Get strict filtering mode, disabled in manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return string
+     */
+    function mulopimfwc_get_strict_filtering_value($options = null): string
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return 'disabled';
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        $value = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+
+        return $value === 'disabled' ? 'disabled' : 'enabled';
+    }
+}
+
+if (!function_exists('mulopimfwc_get_product_priority_display_value')) {
+    /**
+     * Get product priority display setting, disabled in manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return string
+     */
+    function mulopimfwc_get_product_priority_display_value($options = null): string
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return 'mixed';
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        $value = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
+        $valid = ['location_first', 'global_first', 'mixed'];
+
+        return in_array($value, $valid, true) ? $value : 'location_first';
+    }
+}
+
+if (!function_exists('mulopimfwc_get_single_product_unavailable_behavior')) {
+    /**
+     * Get single product unavailable behavior, defaulting to show_404 in manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return string
+     */
+    function mulopimfwc_get_single_product_unavailable_behavior($options = null): string
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return 'show_404';
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        $value = isset($options['single_product_unavailable_behavior'])
+            ? $options['single_product_unavailable_behavior']
+            : 'show_404';
+
+        return in_array($value, ['show_404', 'show_message'], true) ? $value : 'show_404';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_information_enabled')) {
+    /**
+     * Check whether location-specific information is enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_information_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['enable_location_information']) && $options['enable_location_information'] === 'on';
     }
 }
 
@@ -2501,9 +2774,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if location-based shipping is enabled
-            $enable_location_shipping = isset($mulopimfwc_options['enable_location_shipping']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['enable_location_shipping']
-                : 'off';
+            $enable_location_shipping = mulopimfwc_is_location_shipping_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($enable_location_shipping !== 'on') {
                 return $packages;
@@ -2751,7 +3022,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Get product locations
             $product_locations = get_the_terms($product_id, 'mulopimfwc_store_location');
             global $mulopimfwc_options;
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
             
             // If product has specific locations, use those; otherwise use all locations if enabled
             if (!empty($product_locations) && !is_wp_error($product_locations)) {
@@ -3489,7 +3760,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (is_wp_error($terms) || empty($terms)) {
                 // Check if enable_all_locations is on
-                $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
+                $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
                 if ($enable_all_locations === 'on') {
                     // Get all locations
                     global $mulopimfwc_locations;
@@ -3562,7 +3833,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-                $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
+                $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
 
                 if ($enable_all_locations === 'on') {
                     // Get all locations
@@ -3719,7 +3990,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-                $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
+                $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
 
                 if ($enable_all_locations === 'on') {
                     global $mulopimfwc_locations;
@@ -5651,7 +5922,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             
             // If strict filtering is disabled, don't filter
             if ($strict_filtering === 'disabled') {
@@ -5687,7 +5958,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options_for_all_locations = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $enable_all_locations = isset($options_for_all_locations['enable_all_locations']) ? $options_for_all_locations['enable_all_locations'] : 'off';
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($options_for_all_locations) ? 'on' : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
             
             if (is_array($manager_locations)) {
@@ -5779,12 +6050,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
-            $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
-            $enable_all_locations = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
-            $single_product_behavior = isset($options['single_product_unavailable_behavior']) 
-                ? $options['single_product_unavailable_behavior'] 
-                : 'show_404';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
+            $product_priority_display = mulopimfwc_get_product_priority_display_value($options);
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
+            $single_product_behavior = mulopimfwc_get_single_product_unavailable_behavior($options);
             
             // Check if we should skip location filtering for this query
             // This flag is set in handle_single_product_query when setting is "show_message"
@@ -6689,7 +6958,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             $location = $this->get_current_location();
             global $mulopimfwc_options;
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
 
             // Get product location slugs from cache (batch loaded)
@@ -6849,7 +7118,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
             
             // Check if blocks filtering is enabled
@@ -6877,7 +7146,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             $location = $this->get_current_location();
             global $mulopimfwc_options;
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
 
             if ($manager_locations === null && (!$location || $location === 'all-products')) {
@@ -6909,7 +7178,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
             
             // Check if REST API filtering is enabled
@@ -6918,7 +7187,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
             
             global $mulopimfwc_options;
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
             
             if (is_array($manager_locations)) {
@@ -7076,7 +7345,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return false;
             }
 
-            if (isset($options['strict_filtering']) && $options['strict_filtering'] === 'disabled') {
+            $strict_filtering = function_exists('mulopimfwc_get_strict_filtering_value')
+                ? mulopimfwc_get_strict_filtering_value($options)
+                : (isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled');
+
+            if ($strict_filtering === 'disabled') {
                 return false;
             }
 
@@ -7109,7 +7382,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             $tax_query = (array) $query->get('tax_query');
             global $mulopimfwc_options;
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations']) ? $mulopimfwc_options['enable_all_locations'] : 'off';
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
             $manager_locations = $this->get_location_manager_frontend_locations();
             if (is_array($manager_locations)) {
                 if (empty($manager_locations)) {
@@ -7160,7 +7433,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $query->set('tax_query', $tax_query);
 
             // Add custom ordering based on product priority display setting
-            $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
+            $product_priority_display = mulopimfwc_get_product_priority_display_value($options);
 
             if ($product_priority_display !== 'mixed' && $enable_all_locations === 'on' && mulopimfwc_premium_feature()) {
                 add_filter('posts_join', [$this, 'custom_product_join'], 10, 2);
@@ -7228,7 +7501,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             $options = $this->get_display_options();
-            $product_priority_display = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
+            $product_priority_display = mulopimfwc_get_product_priority_display_value($options);
 
             if ($product_priority_display === 'location_first') {
                 $priority_value_for_location = 1;
@@ -7306,9 +7579,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $behavior = isset($options['single_product_unavailable_behavior']) 
-                ? $options['single_product_unavailable_behavior'] 
-                : 'show_404';
+            $behavior = mulopimfwc_get_single_product_unavailable_behavior($options);
             
             // If behavior is show_404, let WordPress handle it normally (don't interfere)
             if ($behavior === 'show_404') {
@@ -7316,7 +7587,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
             
             // Check if strict filtering is enabled
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             if ($strict_filtering === 'disabled') {
                 return; // Don't filter if strict filtering is disabled
             }
@@ -7376,14 +7647,12 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-                $behavior = isset($options['single_product_unavailable_behavior']) 
-                    ? $options['single_product_unavailable_behavior'] 
-                    : 'show_404';
+                $behavior = mulopimfwc_get_single_product_unavailable_behavior($options);
                 
                 // If behavior is show_message, unset 404 and show product
                 if ($behavior === 'show_message') {
                     // Check if strict filtering is enabled
-                    $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+                    $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
                     if ($strict_filtering !== 'disabled') {
                         // Check if product doesn't belong to location
                         if (!$this->product_belongs_to_location($post->ID)) {
@@ -7414,12 +7683,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $behavior = isset($options['single_product_unavailable_behavior']) 
-                ? $options['single_product_unavailable_behavior'] 
-                : 'show_404';
+            $behavior = mulopimfwc_get_single_product_unavailable_behavior($options);
             
             // Check if strict filtering is enabled
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             if ($strict_filtering === 'disabled') {
                 return; // Don't filter if strict filtering is disabled
             }
@@ -7514,7 +7781,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
             
             // Check if filtering should be applied
@@ -7564,7 +7831,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
             
             // Check if filtering should be applied
@@ -7614,7 +7881,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $strict_filtering = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
+            $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
             $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
             
             // Check if filtering should be applied
@@ -7822,9 +8089,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     : get_option('mulopimfwc_display_options', []);
             }
 
-            $enable_all_locations = isset($mulopimfwc_options['enable_all_locations'])
-                ? $mulopimfwc_options['enable_all_locations']
-                : 'off';
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
 
@@ -9935,3 +10200,7 @@ function mulopimfwc_svg_icon($icon_name){
 
     return isset($icons[$icon_name]) ? $icons[$icon_name] : '';
 }
+
+
+
+

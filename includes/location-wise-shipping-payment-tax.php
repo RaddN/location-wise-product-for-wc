@@ -15,15 +15,35 @@ class MULOPIMFWC_Runtime_Filters
 
         global $mulopimfwc_options;
 
-        // Shipping: remove disallowed shipping method instances
-        add_filter('woocommerce_package_rates', [$this, 'filter_package_rates'], 50, 2);
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return;
+        }
 
-        if (isset($mulopimfwc_options['enable_location_payment_methods']) && $mulopimfwc_options['enable_location_payment_methods'] === "on"  && mulopimfwc_premium_feature()) {
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        $shipping_enabled = function_exists('mulopimfwc_is_location_shipping_enabled')
+            ? mulopimfwc_is_location_shipping_enabled($options)
+            : (isset($options['enable_location_shipping']) && $options['enable_location_shipping'] === 'on');
+
+        if ($shipping_enabled) {
+            // Shipping: remove disallowed shipping method instances
+            add_filter('woocommerce_package_rates', [$this, 'filter_package_rates'], 50, 2);
+        }
+
+        if (function_exists('mulopimfwc_is_location_payment_methods_enabled')
+            ? mulopimfwc_is_location_payment_methods_enabled($options)
+            : (isset($options['enable_location_payment_methods']) && $options['enable_location_payment_methods'] === 'on' && mulopimfwc_premium_feature())
+        ) {
             // Payment: remove disallowed gateways
             add_filter('woocommerce_available_payment_gateways', [$this, 'filter_payment_gateways'], 50);
         }
 
-        if (isset($mulopimfwc_options['enable_location_taxes']) && $mulopimfwc_options['enable_location_taxes'] === "on"  && mulopimfwc_premium_feature()) {
+        if (function_exists('mulopimfwc_is_location_taxes_enabled')
+            ? mulopimfwc_is_location_taxes_enabled($options)
+            : (isset($options['enable_location_taxes']) && $options['enable_location_taxes'] === 'on' && mulopimfwc_premium_feature())
+        ) {
             // Tax class: set default tax class from location (product + variations)
             add_filter('woocommerce_product_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
             add_filter('woocommerce_product_variation_get_tax_class', [$this, 'filter_product_tax_class'], 50, 2);
