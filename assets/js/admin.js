@@ -4386,25 +4386,105 @@ jQuery(document).ready(function ($) {
 
 jQuery(document).ready(function ($) {
     var $assignmentSelect = $('select[name="mulopimfwc_display_options[order_assignment_method]"]');
-    var $requireCheckbox = $('input[name="mulopimfwc_display_options[location_require_selection]"]');
 
-    if (!$assignmentSelect.length || !$requireCheckbox.length) {
+    if (!$assignmentSelect.length) {
         return;
     }
 
-    var $wrapper = $requireCheckbox.closest('.mulopimfwc_switch');
+    var manualFieldSelectors = [
+        'input[name="mulopimfwc_display_options[location_require_selection]"]',
+        'input[name="mulopimfwc_display_options[enable_popup]"]',
+        '#template_selection',
+        'input[name="mulopimfwc_display_options[use_select2]"]',
+        'input[name="mulopimfwc_display_options[title_show_popup]"]',
+        'input[name="mulopimfwc_display_options[mulopimfwc_popup_title]"]',
+        'input[name="mulopimfwc_display_options[mulopimfwc_popup_placeholder]"]',
+        'input[name="mulopimfwc_display_options[mulopimfwc_popup_btn_txt]"]',
+        'select[name="mulopimfwc_display_options[herichical]"]',
+        'input[name="mulopimfwc_display_options[show_count]"]',
+        'input[name="mulopimfwc_display_options[show_popup_admin]"]',
+        'textarea[name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]"]',
+        'input[name="mulopimfwc_display_options[display_location_single_product]"]',
+        'select[name="mulopimfwc_display_options[location_display_position]"]',
+        'select[name="mulopimfwc_display_options[location_selector_layout]"]',
+        'input[name="mulopimfwc_display_options[enable_product_filter]"]',
+        'input[name="mulopimfwc_display_options[allow_location_change_in_cart]"]',
+        'select[name="mulopimfwc_display_options[location_switching_behavior]"]',
+        'input[name="mulopimfwc_display_options[location_change_notification]"]',
+        'textarea[name="mulopimfwc_display_options[location_notification_text]"]'
+    ];
 
-    function toggleRequireSelection() {
-        var isManual = $assignmentSelect.val() === 'manual';
-        $requireCheckbox.prop('disabled', isManual);
+    function getFieldValue($field) {
+        if ($field.is(':checkbox')) {
+            return $field.is(':checked') ? 'on' : 'off';
+        }
+        return $field.val() || '';
+    }
+
+    function syncHiddenField($field, isManual) {
+        var name = $field.attr('name');
+        if (!name) {
+            return;
+        }
+
+        var selector = 'input[type="hidden"][data-manual-hidden="true"][data-manual-for="' + name.replace(/"/g, '\\"') + '"]';
+        var $hidden = $(selector);
+
         if (isManual) {
-            $wrapper.addClass('mulopimfwc-setting-disabled');
-        } else {
-            $wrapper.removeClass('mulopimfwc-setting-disabled');
+            var value = getFieldValue($field);
+            if (!$hidden.length) {
+                $hidden = $('<input type="hidden" data-manual-hidden="true" />')
+                    .attr('data-manual-for', name)
+                    .attr('name', name)
+                    .val(value);
+                $field.after($hidden);
+            } else {
+                $hidden.val(value);
+            }
+        } else if ($hidden.length) {
+            $hidden.remove();
         }
     }
 
-    toggleRequireSelection();
-    $assignmentSelect.on('change', toggleRequireSelection);
+    function setFieldDisabled($field, isManual) {
+        var isProLocked = $field.closest('.mulopimfwc_pro_only').length > 0;
+
+        if (isManual) {
+            $field.prop('disabled', true);
+        } else if (!isProLocked) {
+            $field.prop('disabled', false);
+        }
+
+        var $wrapper = $field.closest('.mulopimfwc_switch');
+        if ($wrapper.length) {
+            $wrapper.toggleClass('mulopimfwc-setting-disabled', isManual);
+        } else {
+            $field.toggleClass('mulopimfwc-setting-disabled', isManual);
+        }
+
+        var $templateWrapper = $field.closest('.mulopimfwc-default-template-only');
+        if ($templateWrapper.length) {
+            $templateWrapper.toggleClass('mulopimfwc-setting-disabled', isManual);
+        }
+    }
+
+    function toggleManualModeSettings() {
+        var isManual = $assignmentSelect.val() === 'manual';
+
+        manualFieldSelectors.forEach(function (selector) {
+            var $fields = $(selector);
+            if (!$fields.length) {
+                return;
+            }
+            $fields.each(function () {
+                var $field = $(this);
+                setFieldDisabled($field, isManual);
+                syncHiddenField($field, isManual);
+            });
+        });
+    }
+
+    toggleManualModeSettings();
+    $assignmentSelect.on('change', toggleManualModeSettings);
 });
 

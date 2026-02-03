@@ -116,6 +116,10 @@ class MULOPIMFWC_Product_Location_Selector
             return;
         }
 
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return;
+        }
+
         wp_enqueue_script(
             'mulopimfwc-location-selector',
             plugins_url('../assets/js/location-selector.js', __FILE__),
@@ -236,6 +240,10 @@ class MULOPIMFWC_Product_Location_Selector
      */
     private function is_location_display_enabled(): bool
     {
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
         global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
@@ -452,6 +460,10 @@ class MULOPIMFWC_Product_Location_Selector
     public function render_location_selector(int $product_id = 0, string $position = '', array $atts = []): void
     {
         static $location_selector_added = [];
+
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return;
+        }
 
         $this->current_product = $product_id > 0 ? wc_get_product($product_id) : wc_get_product();
 
@@ -875,6 +887,10 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     public function maybe_enqueue_shortcode_scripts()
     {
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return;
+        }
+
         global $post;
         
         // Check if shortcode is in post content
@@ -1008,6 +1024,10 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     public function render_shortcode($atts)
     {
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return '';
+        }
+
         // Check if product_id was explicitly provided BEFORE shortcode_atts merges defaults
         $product_id_provided = isset($atts['product_id']) && !empty($atts['product_id']) && $atts['product_id'] != '0';
         

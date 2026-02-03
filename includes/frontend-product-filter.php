@@ -56,6 +56,10 @@ class Location_Wise_Products_Filter
      */
     public function enqueue_scripts()
     {
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return;
+        }
+
         // Load on shop/archive pages or if shortcode is being used
         $load_scripts = is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy();
         
@@ -109,6 +113,10 @@ class Location_Wise_Products_Filter
      */
     public function render_filter_ui()
     {
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return;
+        }
+
         // Check if automatic display is enabled
         global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
@@ -135,6 +143,10 @@ class Location_Wise_Products_Filter
      */
     public function shortcode_filter_ui($atts)
     {
+        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+            return '';
+        }
+
         $atts = shortcode_atts([
             'location' => 'yes',
             'stock' => 'yes',

@@ -305,6 +305,23 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_manual_assignment_mode')) {
+    /**
+     * Check whether order assignment is set to manual mode.
+     *
+     * @return bool
+     */
+    function mulopimfwc_is_manual_assignment_mode(): bool
+    {
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        return isset($options['order_assignment_method']) && $options['order_assignment_method'] === 'manual';
+    }
+}
+
 /**
  * Helper function to convert hex to RGB
  */
@@ -1922,7 +1939,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_popup' => 'off']);
-            if (isset($options['enable_popup']) && $options['enable_popup'] === 'on' && mulopimfwc_premium_feature()) {
+            $is_manual_mode = mulopimfwc_is_manual_assignment_mode();
+            if (isset($options['enable_popup']) && $options['enable_popup'] === 'on' && mulopimfwc_premium_feature() && !$is_manual_mode) {
                 add_action('wp_footer', [$this, 'location_selector_modal']);
             }
             add_action('init', [$this, 'maybe_set_default_location_cookie'], 999);
@@ -3419,6 +3437,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+
+            if (mulopimfwc_is_manual_assignment_mode()) {
+                return;
+            }
 
             // Check if feature is enabled
             $allow_location_change = isset($options['allow_location_change_in_cart'])
@@ -5292,6 +5314,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
+            $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
+            $is_manual_mode = $assignment_method === 'manual';
+
             wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.2');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
@@ -5334,9 +5359,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
-            $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
             $location_require_selection = isset($mulopimfwc_options['location_require_selection']) ? $mulopimfwc_options['location_require_selection'] : 'off';
-            if ($assignment_method === 'manual') {
+            if ($is_manual_mode) {
                 $location_require_selection = 'off';
             }
             $single_product_requires_location = false;
@@ -5368,6 +5392,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $allow_location_change_in_cart = isset($options['allow_location_change_in_cart'])
                 ? $options['allow_location_change_in_cart']
                 : 'off';
+
+            if ($is_manual_mode) {
+                $allow_location_change_in_cart = 'off';
+            }
 
             if ($allow_location_change_in_cart === 'on' && (is_cart() || is_checkout())) {
                 wp_enqueue_script(
@@ -6037,6 +6065,10 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function location_selector_modal()
         {
+            if (mulopimfwc_is_manual_assignment_mode()) {
+                return;
+            }
+
             // Check if page has shortcode with on_click_button=false
             if ($this->has_popup_shortcode_without_button()) {
                 return; // Don't show global popup if shortcode with on_click_button=false exists
@@ -6122,6 +6154,10 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function location_selector_shortcode($atts)
         {
+            if (mulopimfwc_is_manual_assignment_mode()) {
+                return '';
+            }
+
             global $mulopimfwc_locations;
             $atts = shortcode_atts([
                 'title' => __('Select Store Location', 'multi-location-product-and-inventory-management'),
@@ -6165,6 +6201,10 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function display_popup_shortcode($atts)
         {
+            if (mulopimfwc_is_manual_assignment_mode()) {
+                return '';
+            }
+
             // Check if premium feature is enabled
             if (!mulopimfwc_premium_feature()) {
                 return '';
@@ -6246,6 +6286,10 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         private function render_popup_modal($instance_id = '', $layout = 'default', $show_modal = false)
         {
+            if (mulopimfwc_is_manual_assignment_mode()) {
+                return;
+            }
+
             global $mulopimfwc_locations;
             
             $is_user_logged_in = is_user_logged_in();
