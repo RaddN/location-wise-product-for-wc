@@ -2071,6 +2071,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['default_location' => '']);
                 $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+                $is_manual_mode = $this->is_manual_assignment_mode();
+                if ($is_manual_mode) {
+                    $this->render_manual_hidden_input('default_location', $default_location);
+                }
+                $disabled_attr = $is_manual_mode ? ' disabled' : '';
                 
                 // Get all locations
                 $locations = get_terms([
@@ -2082,7 +2087,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     $locations = [];
                 }
             ?>
-                <select name="mulopimfwc_display_options[default_location]" id="default_location_select">
+                <select name="mulopimfwc_display_options[default_location]" id="default_location_select"<?php echo $disabled_attr; ?>>
                     <option value=""><?php echo esc_html__('None', 'multi-location-product-and-inventory-management'); ?></option>
                     <?php
                     if (!empty($locations)) {
@@ -2093,7 +2098,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     }
                     ?>
                 </select>
-                <p class="description"><?php echo esc_html__('Select a default location/warehouse. This location will be used automatically when popup is disabled and no location cookie is set.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Select a default location/warehouse. This location will be used automatically when popup is disabled and no location cookie is set.', 'multi-location-product-and-inventory-management'))); ?></p>
             <?php
             },
             'lwp-default-location-settings',
@@ -3819,7 +3824,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'show_all_products_admin',
             __('Show All Products in Admin', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("show_all_products_admin", __("Whether admins can see all products regardless of location restrictions.", 'multi-location-product-and-inventory-management'));
+                $is_manual_mode = $this->is_manual_assignment_mode();
+                $options = $this->get_display_options();
+                if ($is_manual_mode) {
+                    $this->render_manual_hidden_input('show_all_products_admin', $options['show_all_products_admin'] ?? 'off');
+                }
+                $message = $this->append_manual_disabled_note(__("Whether admins can see all products regardless of location restrictions.", 'multi-location-product-and-inventory-management'));
+                $this->render_advance_checkbox("show_all_products_admin", $message, $is_manual_mode);
             },
             'lwp-admin-product-visibility-settings',
             'mulopimfwc_admin_visibility_section'
@@ -3951,7 +3962,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Allow Mixed-Location Cart', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $this->render_advance_checkbox("allow_mixed_location_cart", __("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'));
+                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $options = $this->get_display_options();
+                    if ($is_manual_mode) {
+                        $this->render_manual_hidden_input('allow_mixed_location_cart', $options['allow_mixed_location_cart'] ?? 'off');
+                    }
+                    $message = $this->append_manual_disabled_note(__("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'));
+                    $this->render_advance_checkbox("allow_mixed_location_cart", $message, $is_manual_mode);
                 } else {
                     $this->render_advance_checkbox("_pro", __("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'), true, false);
                 }
@@ -3989,7 +4006,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Group Cart Items by Location', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $this->render_advance_checkbox("group_cart_by_location", __("Group cart items by their store location for better visibility.", 'multi-location-product-and-inventory-management'));
+                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $options = $this->get_display_options();
+                    if ($is_manual_mode) {
+                        $this->render_manual_hidden_input('group_cart_by_location', $options['group_cart_by_location'] ?? 'off');
+                    }
+                    $message = $this->append_manual_disabled_note(__("Group cart items by their store location for better visibility.", 'multi-location-product-and-inventory-management'));
+                    $this->render_advance_checkbox("group_cart_by_location", $message, $is_manual_mode);
                 } else {
                     $this->render_advance_checkbox("group_cart_by_location", __("Group cart items by their store location for better visibility.", 'multi-location-product-and-inventory-management'), true, false);
                 }
@@ -4293,10 +4316,15 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_customer_location_tracking' => 'on']);
                 $value = isset($options['enable_customer_location_tracking']) ? $options['enable_customer_location_tracking'] : 'on';
+                $is_manual_mode = $this->is_manual_assignment_mode();
+                if ($is_manual_mode) {
+                    $this->render_manual_hidden_input('enable_customer_location_tracking', $value);
+                }
+                $disabled_attr = $is_manual_mode ? ' disabled' : '';
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <select name="mulopimfwc_display_options[enable_customer_location_tracking]">
+                <select name="mulopimfwc_display_options[enable_customer_location_tracking]"<?php echo $disabled_attr; ?>>
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
                 </select>
@@ -4308,7 +4336,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     </select>
                 </label>
             <?php } ?>
-            <p class="description"><?php echo esc_html_e('Track and analyze customer preferences by location.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Track and analyze customer preferences by location.', 'multi-location-product-and-inventory-management'))); ?></p>
         <?php
             },
             'lwp-customer-insights-settings',
@@ -4325,13 +4353,18 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['customer_location_history' => 'latest']);
                 $value = isset($options['customer_location_history']) ? $options['customer_location_history'] : 'latest';
+                $is_manual_mode = $this->is_manual_assignment_mode();
+                if ($is_manual_mode) {
+                    $this->render_manual_hidden_input('customer_location_history', $value);
+                }
+                $disabled_attr = $is_manual_mode ? ' disabled' : '';
         ?>
-            <select name="mulopimfwc_display_options[customer_location_history]">
+            <select name="mulopimfwc_display_options[customer_location_history]"<?php echo $disabled_attr; ?>>
                 <option value="latest" <?php selected($value, 'latest'); ?>><?php echo esc_html_e('Store Latest Only', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="all" <?php selected($value, 'all'); ?>><?php echo esc_html_e('Store Full History', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('Do Not Store', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
-            <p class="description"><?php echo esc_html_e('How to store customer location selection history.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('How to store customer location selection history.', 'multi-location-product-and-inventory-management'))); ?></p>
             <?php
             },
             'lwp-customer-insights-settings',
@@ -4348,10 +4381,15 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_based_recommendations' => 'on']);
                 $value = isset($options['location_based_recommendations']) ? $options['location_based_recommendations'] : 'on';
+                $is_manual_mode = $this->is_manual_assignment_mode();
+                if ($is_manual_mode) {
+                    $this->render_manual_hidden_input('location_based_recommendations', $value);
+                }
+                $disabled_attr = $is_manual_mode ? ' disabled' : '';
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <select name="mulopimfwc_display_options[location_based_recommendations]">
+                <select name="mulopimfwc_display_options[location_based_recommendations]"<?php echo $disabled_attr; ?>>
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
                 </select>
@@ -4363,7 +4401,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     </select>
                 </label>
             <?php } ?>
-            <p class="description"><?php echo esc_html_e('Show product recommendations based on location popularity.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Show product recommendations based on location popularity.', 'multi-location-product-and-inventory-management'))); ?></p>
         <?php
             },
             'lwp-customer-insights-settings',

@@ -4408,10 +4408,17 @@ jQuery(document).ready(function ($) {
         'select[name="mulopimfwc_display_options[location_display_position]"]',
         'select[name="mulopimfwc_display_options[location_selector_layout]"]',
         'input[name="mulopimfwc_display_options[enable_product_filter]"]',
+        'input[name="mulopimfwc_display_options[show_all_products_admin]"]',
+        'input[name="mulopimfwc_display_options[allow_mixed_location_cart]"]',
+        'input[name="mulopimfwc_display_options[group_cart_by_location]"]',
         'input[name="mulopimfwc_display_options[allow_location_change_in_cart]"]',
         'select[name="mulopimfwc_display_options[location_switching_behavior]"]',
         'input[name="mulopimfwc_display_options[location_change_notification]"]',
-        'textarea[name="mulopimfwc_display_options[location_notification_text]"]'
+        'textarea[name="mulopimfwc_display_options[location_notification_text]"]',
+        'select[name="mulopimfwc_display_options[default_location]"]',
+        'select[name="mulopimfwc_display_options[enable_customer_location_tracking]"]',
+        'select[name="mulopimfwc_display_options[customer_location_history]"]',
+        'select[name="mulopimfwc_display_options[location_based_recommendations]"]'
     ];
 
     function getFieldValue($field) {
