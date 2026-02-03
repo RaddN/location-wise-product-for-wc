@@ -4279,3 +4279,132 @@ jQuery(document).ready(function ($) {
     });
 });
 
+jQuery(document).ready(function ($) {
+    var $select = $('#mulopimfwc_store_location');
+    var $panel = $('.mulopimfwc-location-stock-panel');
+
+    if (!$select.length || !$panel.length) {
+        return;
+    }
+
+    function escapeHtml(text) {
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return (text || '').toString().replace(/[&<>"']/g, function (m) { return map[m]; });
+    }
+
+    function statusLabel(status) {
+        switch (status) {
+            case 'ok':
+                return 'In stock';
+            case 'backorder':
+                return 'Backorder';
+            case 'insufficient':
+                return 'Insufficient';
+            case 'not-assigned':
+                return 'Not assigned';
+            default:
+                return 'Not tracked';
+        }
+    }
+
+    function updateStockPanel() {
+        var selectedVal = $select.val();
+        var currentLocation = ($select.data('current-location') || '').toString();
+        var $selectedOption = $select.find('option:selected');
+        var summary = $selectedOption.attr('data-stock-summary') || '';
+        var status = $selectedOption.attr('data-stock-status') || '';
+        var itemsRaw = $selectedOption.attr('data-stock-items') || '[]';
+        var items = [];
+        var shouldShowPanel = !!selectedVal && selectedVal !== currentLocation;
+
+        try {
+            items = JSON.parse(itemsRaw);
+        } catch (e) {
+            items = [];
+        }
+
+        $select.toggleClass('is-unassigned', !selectedVal && !currentLocation);
+        $select.toggleClass('is-warning', !!selectedVal && (status === 'insufficient' || status === 'not-assigned'));
+
+        var $summary = $panel.find('.mulopimfwc-location-stock-summary');
+        var $list = $panel.find('.mulopimfwc-location-stock-list');
+        var $message = $panel.find('.mulopimfwc-location-stock-message');
+
+        if (!shouldShowPanel) {
+            $panel.hide();
+            $summary.text('');
+            $list.empty();
+            $message.hide();
+            return;
+        }
+
+        $panel.show();
+
+        $summary.text(summary || 'Stock availability');
+        $list.empty();
+
+        if (!items.length) {
+            $list.html('<div class="mulopimfwc-bulk-empty">No stock details available.</div>');
+        } else {
+            items.forEach(function (item) {
+                var available = item.available === null || typeof item.available === 'undefined' ? '-' : item.available;
+                var row = '<div class="mulopimfwc-stock-row status-' + escapeHtml(item.status || '') + '">' +
+                    '<span class="mulopimfwc-stock-product">' + escapeHtml(item.product || '') + '</span>' +
+                    '<span class="mulopimfwc-stock-qty">Req: ' + escapeHtml(item.required) + ' | Avail: ' + escapeHtml(available) + '</span>' +
+                    '<span class="mulopimfwc-stock-status">' + escapeHtml(statusLabel(item.status)) + '</span>' +
+                    '</div>';
+                $list.append(row);
+            });
+        }
+
+        if (status === 'insufficient' || status === 'not-assigned') {
+            $message
+                .text('Selected location has insufficient stock for this order.')
+                .removeClass('is-info is-warning')
+                .addClass('is-error')
+                .show();
+        } else if (status === 'backorder') {
+            $message
+                .text('Selected location can fulfill this order, but some items require backorder.')
+                .removeClass('is-info is-error')
+                .addClass('is-warning')
+                .show();
+        } else {
+            $message.hide();
+        }
+    }
+
+    updateStockPanel();
+    $select.on('change', updateStockPanel);
+});
+
+jQuery(document).ready(function ($) {
+    var $assignmentSelect = $('select[name="mulopimfwc_display_options[order_assignment_method]"]');
+    var $requireCheckbox = $('input[name="mulopimfwc_display_options[location_require_selection]"]');
+
+    if (!$assignmentSelect.length || !$requireCheckbox.length) {
+        return;
+    }
+
+    var $wrapper = $requireCheckbox.closest('.mulopimfwc_switch');
+
+    function toggleRequireSelection() {
+        var isManual = $assignmentSelect.val() === 'manual';
+        $requireCheckbox.prop('disabled', isManual);
+        if (isManual) {
+            $wrapper.addClass('mulopimfwc-setting-disabled');
+        } else {
+            $wrapper.removeClass('mulopimfwc-setting-disabled');
+        }
+    }
+
+    toggleRequireSelection();
+    $assignmentSelect.on('change', toggleRequireSelection);
+});
+

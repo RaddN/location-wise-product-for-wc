@@ -3948,7 +3948,17 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'location_require_selection',
             __('Require Location Selection', 'multi-location-product-and-inventory-management'),
             function () {
-                $this->render_advance_checkbox("location_require_selection", __("Require customers to select a location before adding products to the cart.", 'multi-location-product-and-inventory-management'));
+                global $mulopimfwc_options;
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
+                $is_manual_mode = isset($options['order_assignment_method'])
+                    && $options['order_assignment_method'] === 'manual';
+                $message = __("Require customers to select a location before adding products to the cart.", 'multi-location-product-and-inventory-management');
+                if ($is_manual_mode) {
+                    $message .= ' ' . __("Disabled while Manual Assignment is enabled.", 'multi-location-product-and-inventory-management');
+                }
+                $this->render_advance_checkbox("location_require_selection", $message, $is_manual_mode);
             },
             'location-customer-experience-settings',
             'mulopimfwc_customer_experience_section'

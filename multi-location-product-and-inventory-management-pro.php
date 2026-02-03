@@ -2070,6 +2070,13 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
+            $assignment_method = isset($options['order_assignment_method'])
+                ? $options['order_assignment_method']
+                : 'customer_selection';
+            if ($assignment_method === 'manual') {
+                return $passed;
+            }
+
             $require_selection = isset($options['location_require_selection']) ? $options['location_require_selection'] : 'off';
 
             if ($require_selection !== 'on') {
@@ -5327,7 +5334,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options['group_cart_by_location']
                 : 'off';
 
+            $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
             $location_require_selection = isset($mulopimfwc_options['location_require_selection']) ? $mulopimfwc_options['location_require_selection'] : 'off';
+            if ($assignment_method === 'manual') {
+                $location_require_selection = 'off';
+            }
             $single_product_requires_location = false;
 
             if ($location_require_selection === 'on' && function_exists('is_product') && is_product()) {

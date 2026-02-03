@@ -2386,6 +2386,123 @@ class MULOPIMFWC_Admin
         return $locations;
     }
 
+    private function build_location_stock_snapshot($order, $location_term)
+    {
+        $snapshot = [
+            'status' => 'unknown',
+            'summary' => __('Stock not tracked', 'multi-location-product-and-inventory-management'),
+            'items' => [],
+        ];
+
+        if (!$order || !$location_term || is_wp_error($location_term)) {
+            return $snapshot;
+        }
+
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+        $enable_location_stock = isset($options['enable_location_stock']) && $options['enable_location_stock'] === 'on';
+
+        $insufficient = 0;
+        $backorder = 0;
+        $unknown = 0;
+
+        $items = $order->get_items();
+        if (empty($items)) {
+            $snapshot['summary'] = __('No items in order', 'multi-location-product-and-inventory-management');
+            return $snapshot;
+        }
+
+        foreach ($items as $item) {
+            if (!$item->is_type('line_item')) {
+                continue;
+            }
+
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+            $quantity = $item->get_quantity();
+            $target_id = $variation_id ? $variation_id : $product_id;
+            $product_name = $item->get_name();
+
+            $detail = [
+                'product' => $product_name,
+                'required' => (int) $quantity,
+                'available' => null,
+                'status' => 'unknown',
+            ];
+
+            if ($target_id) {
+                if ($enable_location_stock) {
+                    $location_stock = get_post_meta($target_id, '_location_stock_' . $location_term->term_id, true);
+                    $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_term->term_id, true);
+
+                    if ($location_stock !== '') {
+                        $available_stock = (int) $location_stock;
+                        $detail['available'] = $available_stock;
+
+                        if ($location_backorders === 'off' && $available_stock < $quantity) {
+                            $detail['status'] = 'insufficient';
+                            $insufficient++;
+                        } elseif ($available_stock < $quantity && $location_backorders !== 'off') {
+                            $detail['status'] = 'backorder';
+                            $backorder++;
+                        } else {
+                            $detail['status'] = 'ok';
+                        }
+                    } else {
+                        $assigned_terms_raw = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+                        $assigned_terms = is_wp_error($assigned_terms_raw) ? [] : array_map('rawurldecode', $assigned_terms_raw);
+                        if (empty($assigned_terms) || !in_array($location_term->slug, $assigned_terms, true)) {
+                            $detail['status'] = 'not-assigned';
+                            $insufficient++;
+                        } else {
+                            $detail['status'] = 'unknown';
+                            $unknown++;
+                        }
+                    }
+                } else {
+                    $assigned_terms_raw = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+                    $assigned_terms = is_wp_error($assigned_terms_raw) ? [] : array_map('rawurldecode', $assigned_terms_raw);
+                    if (empty($assigned_terms) || !in_array($location_term->slug, $assigned_terms, true)) {
+                        $detail['status'] = 'not-assigned';
+                        $insufficient++;
+                    } else {
+                        $detail['status'] = 'unknown';
+                        $unknown++;
+                    }
+                }
+            } else {
+                $detail['status'] = 'unknown';
+                $unknown++;
+            }
+
+            $snapshot['items'][] = $detail;
+        }
+
+        if ($insufficient > 0) {
+            $snapshot['status'] = 'insufficient';
+            $snapshot['summary'] = sprintf(
+                __('Insufficient stock for %d item(s)', 'multi-location-product-and-inventory-management'),
+                $insufficient
+            );
+        } elseif ($backorder > 0) {
+            $snapshot['status'] = 'backorder';
+            $snapshot['summary'] = sprintf(
+                __('Backorder required for %d item(s)', 'multi-location-product-and-inventory-management'),
+                $backorder
+            );
+        } elseif ($unknown > 0) {
+            $snapshot['status'] = 'unknown';
+            $snapshot['summary'] = __('Stock not tracked for some items', 'multi-location-product-and-inventory-management');
+        } else {
+            $snapshot['status'] = 'ok';
+            $snapshot['summary'] = __('All items in stock', 'multi-location-product-and-inventory-management');
+        }
+
+        return $snapshot;
+    }
+
     /**
      * Get locations that are valid for all provided orders (intersection).
      *
@@ -3290,6 +3407,7 @@ class MULOPIMFWC_Admin
         }
 
         $location_slug = (string) $order->get_meta('_store_location');
+        $is_unassigned = ($location_slug === '');
         $locations = get_terms(array(
             'taxonomy' => 'mulopimfwc_store_location',
             'hide_empty' => false,
@@ -3297,16 +3415,34 @@ class MULOPIMFWC_Admin
             'order' => 'ASC',
         ));
         $can_edit = current_user_can('edit_shop_order', $order->get_id()) || current_user_can('manage_woocommerce');
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method'])
+            && $options['order_assignment_method'] === 'manual';
+
+        $location_stock_summaries = [];
+        if (!is_wp_error($locations) && !empty($locations)) {
+            foreach ($locations as $location_term) {
+                $location_stock_summaries[$location_term->slug] = $this->build_location_stock_snapshot($order, $location_term);
+            }
+        }
 
         echo '<div class="wc-store-location-container">';
 
         wp_nonce_field('mulopimfwc_store_location_metabox', 'mulopimfwc_store_location_nonce');
 
+        if ($is_unassigned && $is_manual_mode) {
+            echo '<div class="notice notice-warning inline mulopimfwc-location-alert">';
+            echo '<p><strong>' . esc_html__('⚠️ This order needs location assignment', 'multi-location-product-and-inventory-management') . '</strong></p>';
+            echo '<p>' . esc_html__('Please select a fulfillment location to continue processing this order.', 'multi-location-product-and-inventory-management') . '</p>';
+            echo '</div>';
+        }
+
         if (!is_wp_error($locations) && !empty($locations)) {
             echo '<p>';
             echo '<label for="mulopimfwc_store_location" class="screen-reader-text">' . esc_html__('Store Location', 'multi-location-product-and-inventory-management') . '</label>';
-            echo '<select name="mulopimfwc_store_location" id="mulopimfwc_store_location"' . disabled(!$can_edit, true, false) . '>';
-            echo '<option value="">' . esc_html__('Unassigned location', 'multi-location-product-and-inventory-management') . '</option>';
+            $select_classes = 'mulopimfwc-location-select' . ($is_unassigned ? ' is-unassigned' : '');
+            echo '<select name="mulopimfwc_store_location" id="mulopimfwc_store_location" class="' . esc_attr($select_classes) . '" data-current-location="' . esc_attr($location_slug) . '"' . disabled(!$can_edit, true, false) . '>';
+            echo '<option value="" data-stock-status="" data-stock-summary="" data-stock-items="[]">' . esc_html__('Unassigned location', 'multi-location-product-and-inventory-management') . '</option>';
 
             $has_current = false;
             foreach ($locations as $location_term) {
@@ -3317,17 +3453,37 @@ class MULOPIMFWC_Admin
             }
 
             if (!$has_current && $location_slug !== '') {
-                echo '<option value="' . esc_attr($location_slug) . '" selected="selected">' . esc_html($this->get_location_label($location_slug)) . '</option>';
+                echo '<option value="' . esc_attr($location_slug) . '" selected="selected" data-stock-status="" data-stock-summary="" data-stock-items="[]">' . esc_html($this->get_location_label($location_slug)) . '</option>';
             }
 
             foreach ($locations as $location_term) {
-                echo '<option value="' . esc_attr($location_term->slug) . '" ' . selected($location_slug, $location_term->slug, false) . '>';
-                echo esc_html($location_term->name);
+                $summary = $location_stock_summaries[$location_term->slug] ?? [
+                    'status' => 'unknown',
+                    'summary' => __('Stock not tracked', 'multi-location-product-and-inventory-management'),
+                    'items' => [],
+                ];
+                $summary_text = $summary['summary'] ?? '';
+                $label = $location_term->name;
+                if ($summary_text !== '') {
+                    $label .= ' - ' . $summary_text;
+                }
+
+                echo '<option value="' . esc_attr($location_term->slug) . '" ' . selected($location_slug, $location_term->slug, false) .
+                    ' data-stock-status="' . esc_attr($summary['status'] ?? '') . '"' .
+                    ' data-stock-summary="' . esc_attr($summary_text) . '"' .
+                    ' data-stock-items="' . esc_attr(wp_json_encode($summary['items'] ?? [])) . '"' .
+                    '>';
+                echo esc_html($label);
                 echo '</option>';
             }
 
             echo '</select>';
             echo '</p>';
+            echo '<div class="mulopimfwc-location-stock-panel" data-empty-message="' . esc_attr__('Select a location to view stock availability.', 'multi-location-product-and-inventory-management') . '" style="display:none;">';
+            echo '<div class="mulopimfwc-location-stock-summary"></div>';
+            echo '<div class="mulopimfwc-location-stock-list"></div>';
+            echo '<div class="mulopimfwc-location-stock-message" style="display:none;"></div>';
+            echo '</div>';
             echo '<p class="description">' . esc_html__('Update user selected store location for this order.', 'multi-location-product-and-inventory-management') . '</p>';
         } else {
             $location_label = $this->get_location_label($location_slug);
@@ -3376,8 +3532,18 @@ class MULOPIMFWC_Admin
                 return;
             }
             $order->delete_meta_data('_store_location');
+            $order->save();
+            return;
         } else {
             if ($new_location === $current_location) {
+                return;
+            }
+            $update_result = $this->update_all_order_items_location($order, $new_location);
+            if (!$update_result['success']) {
+                $order->add_order_note(sprintf(
+                    __('Location assignment failed: %s', 'multi-location-product-and-inventory-management'),
+                    $update_result['message']
+                ));
                 return;
             }
             $order->update_meta_data('_store_location', $new_location);

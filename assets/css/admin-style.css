@@ -289,6 +289,101 @@ tr.unassigned-order-row,
     background-color: #ffecb3;
 }
 
+/* Location Metabox Enhancements */
+.mulopimfwc-location-alert {
+    border-left-color: #dc3545;
+    background: #fff5f5;
+}
+
+.mulopimfwc-location-select.is-unassigned {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 1px #dc3545;
+}
+
+.mulopimfwc-location-stock-panel {
+    margin: 10px 0 6px;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    font-size: 12px;
+}
+
+.mulopimfwc-location-stock-summary {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #0f172a;
+}
+
+.mulopimfwc-stock-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.mulopimfwc-stock-row:last-child {
+    border-bottom: none;
+}
+
+.mulopimfwc-stock-product {
+    flex: 1;
+    color: #0f172a;
+}
+
+.mulopimfwc-stock-qty {
+    min-width: 140px;
+    color: #475569;
+    text-align: right;
+}
+
+.mulopimfwc-stock-status {
+    min-width: 90px;
+    text-align: right;
+    font-weight: 600;
+}
+
+.mulopimfwc-stock-row.status-ok .mulopimfwc-stock-status {
+    color: #15803d;
+}
+
+.mulopimfwc-stock-row.status-backorder .mulopimfwc-stock-status {
+    color: #b45309;
+}
+
+.mulopimfwc-stock-row.status-insufficient .mulopimfwc-stock-status,
+.mulopimfwc-stock-row.status-not-assigned .mulopimfwc-stock-status {
+    color: #b91c1c;
+}
+
+.mulopimfwc-stock-row.status-unknown .mulopimfwc-stock-status {
+    color: #64748b;
+}
+
+.mulopimfwc-location-stock-message {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.mulopimfwc-location-stock-message.is-error {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.mulopimfwc-location-stock-message.is-warning {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.mulopimfwc-setting-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 /* Bulk Assignment Modal */
 body.mulopimfwc-modal-open {
     overflow: hidden;
