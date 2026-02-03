@@ -4,14 +4,19 @@ if (!defined('ABSPATH')) exit;
 
 class MULOPIMFWC_Admin
 {
+    private $stock_central;
+
     public function __construct()
     {
+        $this->stock_central = new mulopimfwc_Stock_Central();
+
         add_action('init', [$this, 'register_store_location_taxonomy']);
 
         add_action('admin_enqueue_scripts', [$this, 'mulopimfwc_admin_assets']);
 
         // // Hook to add the settings page
         add_action('admin_menu', [$this, 'add_settings_page']);
+        add_filter('set-screen-option', [$this, 'save_stock_central_screen_options'], 10, 3);
 
         // Allow adding locations to menus and link pickers.
         add_filter('nav_menu_meta_box_object', [$this, 'filter_nav_menu_meta_box_object'], 10, 1);
@@ -2193,14 +2198,17 @@ class MULOPIMFWC_Admin
 
 
         // add Stock Central submenu
-        add_submenu_page(
+        $stock_central_hook = add_submenu_page(
             'multi-location-product-and-inventory-management',
             __('Stock Central', 'multi-location-product-and-inventory-management'),
             __('Stock Central', 'multi-location-product-and-inventory-management'),
             'manage_options',
             'location-stock-management',
-            [new mulopimfwc_Stock_Central(), 'location_stock_page_content']
+            [$this->stock_central, 'location_stock_page_content']
         );
+        if ($stock_central_hook) {
+            add_action('load-' . $stock_central_hook, [$this, 'register_stock_central_screen_options']);
+        }
 
         global $MULOPIMFWC_Location_Managers;
 
@@ -2252,6 +2260,24 @@ class MULOPIMFWC_Admin
         }
 
         return $new_columns;
+    }
+
+    public function register_stock_central_screen_options()
+    {
+        if (!$this->stock_central) {
+            $this->stock_central = new mulopimfwc_Stock_Central();
+        }
+
+        $this->stock_central->register_screen_options();
+    }
+
+    public function save_stock_central_screen_options($status, $option, $value)
+    {
+        if ($option === 'mulopimfwc_stock_central_per_page') {
+            return max(1, (int) $value);
+        }
+
+        return $status;
     }
 
     private function get_location_label($location_slug)

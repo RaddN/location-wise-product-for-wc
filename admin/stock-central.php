@@ -4,10 +4,27 @@ if (!defined('ABSPATH')) exit;
 
 class mulopimfwc_Stock_Central
 {
+    private $product_table;
+
     public function __construct() {}
 
-    public function location_stock_page_content()
+    public function register_screen_options()
     {
+        $this->get_product_table();
+
+        add_screen_option('per_page', [
+            'label' => __('Number of items per page:', 'multi-location-product-and-inventory-management'),
+            'default' => 20,
+            'option' => 'mulopimfwc_stock_central_per_page',
+        ]);
+    }
+
+    private function get_product_table()
+    {
+        if ($this->product_table instanceof mulopimfwc_Product_Location_Table) {
+            return $this->product_table;
+        }
+
         // Include required file for WP_List_Table
         if (!class_exists('WP_List_Table')) {
             require_once(ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
@@ -16,8 +33,14 @@ class mulopimfwc_Stock_Central
         // Include our custom table class
         require_once plugin_dir_path(__FILE__) . '../includes/class-product-location-table.php';
 
-        // Create an instance of our table class
-        $product_table = new mulopimfwc_Product_Location_Table();
+        $this->product_table = new mulopimfwc_Product_Location_Table();
+
+        return $this->product_table;
+    }
+
+    public function location_stock_page_content()
+    {
+        $product_table = $this->get_product_table();
 
         // Prepare the items to display in the table
         $product_table->prepare_items();

@@ -89,7 +89,7 @@ class MULOPIMFWC_Location_Based_Shipping
         
         // If popup is disabled, use default location
         if ($enable_popup === 'off') {
-            $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+            $default_location = mulopimfwc_get_default_location_value($options);
             if (!empty($default_location)) {
                 return $default_location;
             }

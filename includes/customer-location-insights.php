@@ -42,6 +42,13 @@ class Mulopimfwc_Customer_Location_Insights
     private $order_stats_cache = null;
 
     /**
+     * Whether features are disabled due to manual assignment mode.
+     *
+     * @var bool
+     */
+    private $manual_disabled = false;
+
+    /**
      * Get singleton instance
      */
     public static function get_instance()
@@ -57,7 +64,23 @@ class Mulopimfwc_Customer_Location_Insights
      */
     private function __construct()
     {
+        $this->manual_disabled = function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode();
+
+        if ($this->manual_disabled) {
+            return;
+        }
+
         $this->init_hooks();
+    }
+
+    /**
+     * Check whether customer insights are disabled.
+     *
+     * @return bool
+     */
+    private function is_disabled()
+    {
+        return $this->manual_disabled;
     }
 
     /**
@@ -116,6 +139,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     private function is_tracking_enabled()
     {
+        if ($this->is_disabled()) {
+            return false;
+        }
+
         global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
@@ -154,7 +181,7 @@ class Mulopimfwc_Customer_Location_Insights
             
             // If popup is disabled, use default location
             if ($enable_popup === 'off') {
-                $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+                $default_location = mulopimfwc_get_default_location_value($options);
                 if (!empty($default_location)) {
                     $location_slug = trim($default_location);
                 }
@@ -248,6 +275,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function track_location_selection()
     {
+        if ($this->is_disabled()) {
+            return;
+        }
+
         if (!$this->is_tracking_enabled()) {
             return;
         }
@@ -282,6 +313,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function track_product_view()
     {
+        if ($this->is_disabled()) {
+            return;
+        }
+
         if (!$this->is_tracking_enabled()) {
             return;
         }
@@ -308,6 +343,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function track_purchase($order_id)
     {
+        if ($this->is_disabled()) {
+            return;
+        }
+
         if (!$this->is_tracking_enabled()) {
             return;
         }
@@ -352,6 +391,10 @@ class Mulopimfwc_Customer_Location_Insights
     // FIXED: Changed from private to protected to allow proper access without Reflection
     protected function log_action($action_type, $location, $product_id = null, $order_id = null)
     {
+        if ($this->is_disabled()) {
+            return;
+        }
+
         global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
@@ -742,7 +785,8 @@ class Mulopimfwc_Customer_Location_Insights
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-        $recommendations_enabled = isset($options['location_based_recommendations']) &&
+        $recommendations_enabled = !$this->is_disabled() &&
+            isset($options['location_based_recommendations']) &&
             $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
 
         if ($recommendations_enabled) {
@@ -773,6 +817,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function recommendations_shortcode($atts)
     {
+        if ($this->is_disabled()) {
+            return '';
+        }
+
         global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
@@ -907,6 +955,21 @@ class Mulopimfwc_Customer_Location_Insights
     {
         check_ajax_referer('mulopimfwc_recommendations', 'nonce');
 
+        if ($this->is_disabled()) {
+            wp_send_json_error(['message' => __('Recommendations are disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+        $recommendations_enabled = isset($options['location_based_recommendations']) &&
+            $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
+
+        if (!$recommendations_enabled) {
+            wp_send_json_error(['message' => __('Location recommendations are disabled.', 'multi-location-product-and-inventory-management')]);
+        }
+
         $location_slug = isset($_POST['location']) ? sanitize_text_field(wp_unslash(rawurldecode($_POST['location']))) : '';
         $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 8;
 
@@ -927,6 +990,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function add_analytics_menu()
     {
+        if ($this->is_disabled()) {
+            return;
+        }
+
         add_submenu_page(
             'multi-location-product-and-inventory-management',
             __('Location Analytics', 'multi-location-product-and-inventory-management'),
@@ -1289,6 +1356,10 @@ class Mulopimfwc_Customer_Location_Insights
     {
         check_ajax_referer('mulopimfwc_analytics_live', 'nonce');
 
+        if ($this->is_disabled()) {
+            wp_send_json_error(['message' => __('Analytics is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+        }
+
         if (!mulopimfwc_user_can_run_reports()) {
             wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
         }
@@ -1306,6 +1377,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function render_analytics_page()
     {
+        if ($this->is_disabled()) {
+            wp_die(__('Location analytics is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management'));
+        }
+
         if (!mulopimfwc_user_can_run_reports()) {
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
@@ -2347,6 +2422,10 @@ class Mulopimfwc_Customer_Location_Insights
      */
     public function export_analytics_data($location_slug = null)
     {
+        if ($this->is_disabled()) {
+            return;
+        }
+
         if (!mulopimfwc_user_can_export_reports()) {
             return;
         }
@@ -2440,6 +2519,11 @@ function mulopimfwc_ajax_track_location_selection()
 {
     check_ajax_referer('mulopimfwc_tracking', 'nonce');
 
+    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        wp_send_json_error(['message' => __('Location tracking is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+        return;
+    }
+
     // FIXED: Add rate limiting to prevent DoS attacks
     $rate_limit_key = 'mulopimfwc_track_rate_' . (is_user_logged_in() ? get_current_user_id() : $_SERVER['REMOTE_ADDR']);
     $rate_limit_count = get_transient($rate_limit_key);
@@ -2516,6 +2600,10 @@ function mulopimfwc_ajax_export_analytics()
 {
     check_ajax_referer('mulopimfwc_analytics_export', 'nonce');
 
+    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        wp_die(__('Analytics export is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management'));
+    }
+
     if (!mulopimfwc_user_can_export_reports()) {
         wp_die(__('You do not have permission to export analytics.'));
     }
@@ -2540,6 +2628,10 @@ add_action('admin_footer', 'mulopimfwc_add_export_button_script');
 
 function mulopimfwc_add_export_button_script()
 {
+    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        return;
+    }
+
     $screen = get_current_screen();
     if ($screen && $screen->id === 'location-manage_page_mulopimfwc-analytics' && mulopimfwc_user_can_export_reports()) {
     ?>
@@ -2639,6 +2731,10 @@ add_action('wp_ajax_mulopimfwc_clear_analytics_data', 'mulopimfwc_ajax_clear_ana
 function mulopimfwc_ajax_clear_analytics_data()
 {
     check_ajax_referer('mulopimfwc_clear_analytics', 'nonce');
+
+    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        wp_send_json_error(['message' => __('Analytics data cannot be cleared while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+    }
 
     if (!mulopimfwc_user_can_run_reports()) {
         wp_send_json_error(['message' => __('You do not have permission to clear analytics data.', 'multi-location-product-and-inventory-management')]);

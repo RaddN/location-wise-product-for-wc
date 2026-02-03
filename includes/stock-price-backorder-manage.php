@@ -377,7 +377,7 @@ function mulopimfwc_get_current_store_location()
 
     // If popup is disabled, use default location
     if ($enable_popup === 'off') {
-        $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+        $default_location = mulopimfwc_get_default_location_value($options);
         if (!empty($default_location)) {
             return $default_location;
         }
@@ -876,9 +876,7 @@ add_filter('woocommerce_add_to_cart_validation', function ($passed, $product_id,
     global $mulopimfwc_options;
 
     // Check if mixed location cart is enabled
-    $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart'])
-        ? $mulopimfwc_options['allow_mixed_location_cart']
-        : 'off';
+    $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
     // Get the location for this specific product being added
     $location_slug = mulopimfwc_get_current_store_location();

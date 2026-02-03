@@ -863,11 +863,13 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $this->process_bulk_action();
 
         $columns = $this->get_columns();
-        $hidden = [];
+        $hidden = get_hidden_columns($this->screen);
         $sortable = $this->get_sortable_columns();
-        $this->_column_headers = [$columns, $hidden, $sortable];
+        $primary = $this->get_primary_column_name();
+        $this->_column_headers = [$columns, $hidden, $sortable, $primary];
 
-        $per_page = 20;
+        $per_page = $this->get_items_per_page('mulopimfwc_stock_central_per_page', 20);
+        $per_page = max(1, (int) $per_page);
         $current_page = $this->get_pagenum();
 
         $args = [

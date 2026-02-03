@@ -322,6 +322,110 @@ if (!function_exists('mulopimfwc_is_manual_assignment_mode')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_mixed_location_cart_enabled')) {
+    /**
+     * Check whether mixed-location cart is enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_mixed_location_cart_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_group_cart_enabled')) {
+    /**
+     * Check whether cart grouping is enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_group_cart_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['group_cart_by_location']) && $options['group_cart_by_location'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_get_default_location_value')) {
+    /**
+     * Get default location setting, disabled in manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return string
+     */
+    function mulopimfwc_get_default_location_value($options = null): string
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return '';
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['default_location']) ? trim((string) $options['default_location']) : '';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_show_all_products_admin_enabled')) {
+    /**
+     * Check whether "show all products in admin" is enabled, respecting manual mode.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_show_all_products_admin_enabled($options = null): bool
+    {
+        if (mulopimfwc_is_manual_assignment_mode()) {
+            return false;
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['show_all_products_admin']) && $options['show_all_products_admin'] === 'on';
+    }
+}
+
 /**
  * Helper function to convert hex to RGB
  */
@@ -2208,9 +2312,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($allow_mixed !== 'on') {
                 return;
@@ -2293,9 +2395,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($allow_mixed !== 'on') {
                 return;
@@ -2394,9 +2494,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($allow_mixed !== 'on') {
                 return $packages;
@@ -2482,9 +2580,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($allow_mixed !== 'on') {
                 return;
@@ -2598,9 +2694,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['group_cart_by_location']
-                : 'off';
+            $group_cart = mulopimfwc_is_group_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             // Always show location information when available
             // Check if location data exists
@@ -2624,9 +2718,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             // Always save location data if available, regardless of mixed cart setting
             // This ensures proper stock management and price tracking
@@ -3229,9 +3321,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($allow_mixed !== 'on') {
                 return;
@@ -3274,9 +3364,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($allow_mixed !== 'on') {
                 return array();
@@ -3361,9 +3449,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($allow_mixed !== 'on') {
                 return;
@@ -3745,9 +3831,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             global $mulopimfwc_options;
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['group_cart_by_location']
-                : 'off';
+            $group_cart = mulopimfwc_is_group_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             if ($group_cart !== 'on') {
                 $this->should_group_cache = false;
@@ -3755,9 +3839,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if mixed location cart is enabled
-            $allow_mixed = isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             $this->should_group_cache = ($allow_mixed === 'on');
             return $this->should_group_cache;
@@ -5355,9 +5437,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Check if cart grouping is enabled
-            $group_cart = isset($mulopimfwc_options['group_cart_by_location']) && mulopimfwc_premium_feature()
-                ? $mulopimfwc_options['group_cart_by_location']
-                : 'off';
+            $group_cart = mulopimfwc_is_group_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             $location_require_selection = isset($mulopimfwc_options['location_require_selection']) ? $mulopimfwc_options['location_require_selection'] : 'off';
             if ($is_manual_mode) {
@@ -5466,9 +5546,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'cookieSameSite' => 'Lax',
                 'cookieSecure' => is_ssl(),
                 'currentLocation' => $this->get_current_location(),
-                'allow_mixed_in_cart' => isset($mulopimfwc_options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                    ? $mulopimfwc_options['allow_mixed_location_cart']
-                    : 'off',
+                'allow_mixed_in_cart' => mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off',
                 'allow_cart_update' => isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] !== "preserve_cart",
                 'location_switching_behavior' => isset($mulopimfwc_options["location_switching_behavior"]) ? $mulopimfwc_options["location_switching_behavior"] : 'update_cart',
                 'location_notification_text' => isset($mulopimfwc_options['location_notification_text']) && mulopimfwc_premium_feature()
@@ -5502,7 +5580,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // If popup is disabled, use default location
             if ($enable_popup === 'off') {
-                $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+                $default_location = mulopimfwc_get_default_location_value($options);
                 if (!empty($default_location)) {
                     return $default_location;
                 }
@@ -6029,6 +6107,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
+            if (mulopimfwc_is_manual_assignment_mode()) {
+                return;
+            }
+
             $current_location = mulopimfwc_get_store_location_cookie();
             if (!empty($current_location)) {
                 return;
@@ -6044,9 +6126,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
-            $default_location = isset($options['default_location'])
-                ? trim((string) $options['default_location'])
-                : '';
+            $default_location = mulopimfwc_get_default_location_value($options);
 
             if ($default_location === '') {
                 return;
@@ -6179,7 +6259,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $show_all_products_admin = isset($options['show_all_products_admin']) ? $options['show_all_products_admin'] : 'off';
+            $show_all_products_admin = mulopimfwc_is_show_all_products_admin_enabled($options) ? 'on' : 'off';
              $is_admin_or_manager = in_array('administrator', $current_user->roles) || in_array('shop_manager', $current_user->roles) || in_array('mulopimfwc_location_manager', $current_user->roles);
             $selected_location = $this->get_current_location();
             
@@ -7627,9 +7707,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
-            $allow_mixed = isset($options['allow_mixed_location_cart']) && mulopimfwc_premium_feature()
-                ? $options['allow_mixed_location_cart']
-                : 'off';
+            $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($options) ? 'on' : 'off';
 
             $behavior = isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart';
 

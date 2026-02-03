@@ -164,6 +164,10 @@ class MULOPIMFWC_Product_Location_Selector
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+
+        $allow_mixed_in_cart = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
+            ? mulopimfwc_is_mixed_location_cart_enabled($options)
+            : (isset($options['allow_mixed_location_cart']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature());
         
         $selector_config = [
             'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -176,9 +180,7 @@ class MULOPIMFWC_Product_Location_Selector
             'cookiePath' => '/',
             'cookieSameSite' => 'Lax',
             'cookieSecure' => is_ssl(),
-            'allow_mixed_in_cart' => isset($options['allow_mixed_location_cart']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
-                ? $options['allow_mixed_location_cart']
-                : 'off',
+            'allow_mixed_in_cart' => $allow_mixed_in_cart ? 'on' : 'off',
             'location_switching_behavior' => isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart',
             'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
             'location_notification_text' => isset($options['location_notification_text']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
@@ -973,6 +975,10 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+
+        $allow_mixed_in_cart = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
+            ? mulopimfwc_is_mixed_location_cart_enabled($options)
+            : (isset($options['allow_mixed_location_cart']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature());
         
         // Inline merge to avoid overwriting existing frontend config.
         // Note: Using 'multi-location-product-and-inventory-management' nonce to match ajax_switch_location handler
@@ -987,9 +993,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             'cookiePath' => '/',
             'cookieSameSite' => 'Lax',
             'cookieSecure' => is_ssl(),
-            'allow_mixed_in_cart' => isset($options['allow_mixed_location_cart']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
-                ? $options['allow_mixed_location_cart']
-                : 'off',
+            'allow_mixed_in_cart' => $allow_mixed_in_cart ? 'on' : 'off',
             'location_switching_behavior' => isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart',
             'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
             'location_notification_text' => isset($options['location_notification_text']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
