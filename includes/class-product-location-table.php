@@ -276,7 +276,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         if (!$this->user_can_manage_products()) {
             $view_link = get_permalink($item['id']);
             $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . esc_html($item['title']) . '</a></strong>';
-            $title .= '<span class="mulopimfwc-product-id"> (ID: ' . esc_html($item['id']) . ')</span>';
+            $title .= '<span class="mulopimfwc-product-id"> ID: ' . esc_html($item['id']) . '</span>';
             return $title;
         }
 
@@ -310,7 +310,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
 
         $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . esc_html($item['title']) . '</a></strong>';
-        $title .= '<span class="mulopimfwc-product-id"> (ID: ' . esc_html($item['id']) . ')</span>';
+        $title .= '<span class="mulopimfwc-product-id"> ID: ' . esc_html($item['id']) . '</span>';
         $title .= '<div class="row-actions">';
         $title .= '<span class="edit"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . __('Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
         $title .= '<span class="view"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . __('View', 'multi-location-product-and-inventory-management') . '</a> | </span>';

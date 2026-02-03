@@ -2273,8 +2273,19 @@ class MULOPIMFWC_Admin
             $screen_id = $screen->id;
             add_filter('default_hidden_columns', function ($hidden, $current_screen) use ($screen_id) {
                 if ($current_screen && $current_screen->id === $screen_id) {
-                    $hidden[] = 'date';
-                    $hidden = array_values(array_unique($hidden));
+                    $default_hidden = [
+                        'sku',
+                        'type',
+                        'categories',
+                        'tags',
+                        'brands',
+                        'short_description',
+                        'description',
+                        'featured',
+                        'dimensions',
+                        'date',
+                    ];
+                    $hidden = array_values(array_unique(array_merge($hidden, $default_hidden)));
                 }
 
                 return $hidden;
