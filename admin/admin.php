@@ -1440,7 +1440,7 @@ class MULOPIMFWC_Admin
         }
 
         // Add drag handle column
-        $new_columns['drag_handle'] = '<span class="dashicons dashicons-menu-alt" style="cursor:move;" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management') . '"></span>';
+        $new_columns['drag_handle'] = 'Reorder';
 
         // Add other columns
         foreach ($columns as $key => $value) {
