@@ -56,7 +56,7 @@ class Location_Wise_Products_Filter
      */
     public function enqueue_scripts()
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return;
         }
 
@@ -113,7 +113,7 @@ class Location_Wise_Products_Filter
      */
     public function render_filter_ui()
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return;
         }
 
@@ -143,7 +143,7 @@ class Location_Wise_Products_Filter
      */
     public function shortcode_filter_ui($atts)
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return '';
         }
 

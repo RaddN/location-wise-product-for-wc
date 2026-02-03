@@ -158,7 +158,7 @@ General Settings', 'multi-location-product-and-inventory-management'),
             'enable_location_information',
             __('Enable Location Information', 'multi-location-product-and-inventory-management'),
             function () {
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_location_information', $options['enable_location_information'] ?? 'off');
@@ -323,7 +323,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Popup', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $is_manual_mode = $this->is_manual_assignment_strict_mode();
                     $message = $this->append_manual_disabled_note(__("Enable or disable popup management.", 'multi-location-product-and-inventory-management'));
                     $options = $this->get_display_options();
                     if ($is_manual_mode) {
@@ -344,7 +344,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Template Selection', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
@@ -389,7 +389,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Use Select2', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
                 $style = $is_default ? '' : ' style="display: none;"';
@@ -416,7 +416,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Title Show in Popup', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $is_manual_mode = $this->is_manual_assignment_strict_mode();
                     $options = $this->get_display_options();
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('title_show_popup', $options['title_show_popup'] ?? 'off');
@@ -437,7 +437,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $mulopimfwc_popup_title = isset($options['mulopimfwc_popup_title']) ? $options['mulopimfwc_popup_title'] : 'Select Your Location';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('mulopimfwc_popup_title', $mulopimfwc_popup_title);
@@ -463,7 +463,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Popup Placeholder', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
                 $style = $is_default ? '' : ' style="display: none;"';
@@ -500,7 +500,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     $mulopimfwc_popup_btn_txt = __('Select Location', 'multi-location-product-and-inventory-management');
                 }
 
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('mulopimfwc_popup_btn_txt', $mulopimfwc_popup_btn_txt);
@@ -526,7 +526,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Hierarchical Option', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
                 $style = $is_default ? '' : ' style="display: none;"';
@@ -566,7 +566,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Show Count', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
                 $style = $is_default ? '' : ' style="display: none;"';
@@ -591,7 +591,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Show Popup for Admins', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $is_manual_mode = $this->is_manual_assignment_strict_mode();
                     $options = $this->get_display_options();
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('show_popup_admin', $options['show_popup_admin'] ?? 'off');
@@ -612,7 +612,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $mulopimfwc_popup_custom_css = isset($options['mulopimfwc_popup_custom_css']) ? $options['mulopimfwc_popup_custom_css'] : null;
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
@@ -775,7 +775,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_location_shipping' => 'off']);
                 $value = isset($options['enable_location_shipping']) ? $options['enable_location_shipping'] : 'off';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_location_shipping', $value);
                 }
@@ -1063,7 +1063,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_location_payment_methods' => 'off']);
                 $value = isset($options['enable_location_payment_methods']) ? $options['enable_location_payment_methods'] : 'off';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_location_payment_methods', $value);
                 }
@@ -1130,7 +1130,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_location_taxes' => 'off']);
                 $value = isset($options['enable_location_taxes']) ? $options['enable_location_taxes'] : 'off';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_location_taxes', $value);
@@ -1227,7 +1227,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_location_discounts' => 'off']);
                 $value = isset($options['enable_location_discounts']) ? $options['enable_location_discounts'] : 'off';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_location_discounts', $value);
@@ -1379,7 +1379,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_specific_reviews' => 'off']);
                 $value = isset($options['location_specific_reviews']) ? $options['location_specific_reviews'] : 'off';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_specific_reviews', $value);
@@ -1966,7 +1966,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'display_location_single_product',
             __('Display Location on Single Product', 'multi-location-product-and-inventory-management'),
             function () {
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('display_location_single_product', $options['display_location_single_product'] ?? 'off');
@@ -1988,7 +1988,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_display_position' => 'after_price']);
                 $value = isset($options['location_display_position']) ? $options['location_display_position'] : 'after_price';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_display_position', $value);
                 }
@@ -2018,7 +2018,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_selector_layout' => 'list']);
                 $value = isset($options['location_selector_layout']) ? $options['location_selector_layout'] : 'list';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_selector_layout', $value);
                 }
@@ -2060,7 +2060,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Product Filter', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $is_manual_mode = $this->is_manual_assignment_strict_mode();
                     $options = $this->get_display_options();
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('enable_product_filter', $options['enable_product_filter'] ?? 'off');
@@ -2100,7 +2100,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['default_location' => '']);
                 $default_location = isset($options['default_location']) ? $options['default_location'] : '';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('default_location', $default_location);
                 }
@@ -2449,7 +2449,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_cookie_expiry' => '30']);
                 $value = isset($options['location_cookie_expiry']) ? $options['location_cookie_expiry'] : '30';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_cookie_expiry', $value);
@@ -3704,7 +3704,7 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
             function () {
                 $options = $this->get_display_options();
                 $value = isset($options['enable_all_locations']) ? $options['enable_all_locations'] : 'off';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_all_locations', $value);
                 }
@@ -3725,7 +3725,7 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['product_priority_display' => 'location_first']);
                 $value = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('product_priority_display', $value);
@@ -3764,7 +3764,7 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['single_product_unavailable_behavior' => 'show_404']);
                 $value = isset($options['single_product_unavailable_behavior']) ? $options['single_product_unavailable_behavior'] : 'show_404';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('single_product_unavailable_behavior', $value);
@@ -3875,7 +3875,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'show_all_products_admin',
             __('Show All Products in Admin', 'multi-location-product-and-inventory-management'),
             function () {
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('show_all_products_admin', $options['show_all_products_admin'] ?? 'off');
@@ -3956,6 +3956,17 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'mulopimfwc_order_fulfillment_section'
         );
 
+        add_settings_field(
+            'manual_optional_location_selection',
+            __('Optional Location Selection (Manual Mode)', 'multi-location-product-and-inventory-management'),
+            function () {
+                $message = __("Allow customers to optionally select a location when Manual Assignment is enabled. Location selection remains optional.", 'multi-location-product-and-inventory-management');
+                $this->render_advance_checkbox('manual_optional_location_selection', $message);
+            },
+            'lwp-order-fullfill-settings',
+            'mulopimfwc_order_fulfillment_section'
+        );
+
         // Add "Order Notification Recipients" field
         add_settings_field(
             'order_notification_recipients',
@@ -4013,7 +4024,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Allow Mixed-Location Cart', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $is_manual_mode = $this->is_manual_assignment_strict_mode();
                     $options = $this->get_display_options();
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('allow_mixed_location_cart', $options['allow_mixed_location_cart'] ?? 'off');
@@ -4057,7 +4068,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Group Cart Items by Location', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $is_manual_mode = $this->is_manual_assignment_mode();
+                    $is_manual_mode = $this->is_manual_assignment_strict_mode();
                     $options = $this->get_display_options();
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('group_cart_by_location', $options['group_cart_by_location'] ?? 'off');
@@ -4092,7 +4103,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'allow_location_change_in_cart',
             __('Allow Location Change in Cart', 'multi-location-product-and-inventory-management'),
             function () {
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('allow_location_change_in_cart', $options['allow_location_change_in_cart'] ?? 'off');
@@ -4134,9 +4145,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     : get_option('mulopimfwc_display_options', []);
                 $is_manual_mode = isset($options['order_assignment_method'])
                     && $options['order_assignment_method'] === 'manual';
-                $message = $this->append_manual_disabled_note(__("Require customers to select a location before adding products to the cart.", 'multi-location-product-and-inventory-management'));
+                $message = __("Require customers to select a location before adding products to the cart.", 'multi-location-product-and-inventory-management');
                 if ($is_manual_mode) {
-                    $this->render_manual_hidden_input('location_require_selection', $options['location_require_selection'] ?? 'off');
+                    $message .= ' ' . __('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management');
+                }
+                if ($is_manual_mode) {
+                    echo '<input type="hidden" data-manual-hidden="true" data-manual-for="mulopimfwc_display_options[location_require_selection]" name="mulopimfwc_display_options[location_require_selection]" value="' . esc_attr($options['location_require_selection'] ?? 'off') . '">';
                 }
                 $this->render_advance_checkbox("location_require_selection", $message, $is_manual_mode);
             },
@@ -4154,7 +4168,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_switching_behavior' => 'update_cart']);
                 $value = isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_switching_behavior', $value);
                 }
@@ -4177,7 +4191,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'location_change_notification',
             __('Location Change Notification', 'multi-location-product-and-inventory-management'),
             function () {
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_change_notification', $options['location_change_notification'] ?? 'off');
@@ -4199,7 +4213,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_notification_text' => 'Do you want to change the store location? Your cart will be emptied.']);
                 $value = isset($options['location_notification_text']) ? $options['location_notification_text'] : 'Do you want to change the store location? Your cart will be emptied.';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('location_notification_text', $value);
@@ -4367,7 +4381,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_customer_location_tracking' => 'on']);
                 $value = isset($options['enable_customer_location_tracking']) ? $options['enable_customer_location_tracking'] : 'on';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_customer_location_tracking', $value);
                 }
@@ -4404,7 +4418,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['customer_location_history' => 'latest']);
                 $value = isset($options['customer_location_history']) ? $options['customer_location_history'] : 'latest';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('customer_location_history', $value);
                 }
@@ -4432,7 +4446,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['location_based_recommendations' => 'on']);
                 $value = isset($options['location_based_recommendations']) ? $options['location_based_recommendations'] : 'on';
-                $is_manual_mode = $this->is_manual_assignment_mode();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_based_recommendations', $value);
                 }
@@ -4484,6 +4498,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         // Handle strict_filtering option
         if (isset($input['strict_filtering'])) {
             $sanitized['strict_filtering'] = sanitize_text_field($input['strict_filtering']);
+        }
+
+        // Handle manual optional location selection (checkbox)
+        if (isset($input['manual_optional_location_selection']) && $input['manual_optional_location_selection'] === 'on') {
+            $sanitized['manual_optional_location_selection'] = 'on';
+        } else {
+            $sanitized['manual_optional_location_selection'] = 'off';
         }
 
         // Handle filtered_sections
@@ -7108,9 +7129,25 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         return isset($options['order_assignment_method']) && $options['order_assignment_method'] === 'manual';
     }
 
+    private function is_manual_optional_location_enabled(): bool
+    {
+        $options = $this->get_display_options();
+        if (!isset($options['order_assignment_method']) || $options['order_assignment_method'] !== 'manual') {
+            return false;
+        }
+
+        return isset($options['manual_optional_location_selection'])
+            && $options['manual_optional_location_selection'] === 'on';
+    }
+
+    private function is_manual_assignment_strict_mode(): bool
+    {
+        return $this->is_manual_assignment_mode() && !$this->is_manual_optional_location_enabled();
+    }
+
     private function append_manual_disabled_note(string $message): string
     {
-        if ($this->is_manual_assignment_mode()) {
+        if ($this->is_manual_assignment_strict_mode()) {
             $message .= ' ' . __('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management');
         }
         return $message;
@@ -7118,7 +7155,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
     private function render_manual_hidden_input(string $key, $value): void
     {
-        if (!$this->is_manual_assignment_mode()) {
+        if (!$this->is_manual_assignment_strict_mode()) {
             return;
         }
 
@@ -7132,7 +7169,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     {
         $options = $this->get_display_options();
         $strict = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
-        $is_manual_mode = $this->is_manual_assignment_mode();
+        $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
         if ($is_manual_mode) {
             $this->render_manual_hidden_input('strict_filtering', $strict);

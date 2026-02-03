@@ -15,7 +15,7 @@ class MULOPIMFWC_Runtime_Filters
 
         global $mulopimfwc_options;
 
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return;
         }
 

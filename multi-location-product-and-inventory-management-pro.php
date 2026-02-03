@@ -90,7 +90,7 @@ if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
      */
     function mulopimfwc_get_location_cookie_expiry_days(): int
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return 30;
         }
 
@@ -326,6 +326,56 @@ if (!function_exists('mulopimfwc_is_manual_assignment_mode')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')) {
+    /**
+     * Check whether optional location selection is enabled for manual assignment.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_manual_optional_location_selection_enabled($options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (!isset($options['order_assignment_method']) || $options['order_assignment_method'] !== 'manual') {
+            return false;
+        }
+
+        return isset($options['manual_optional_location_selection'])
+            && $options['manual_optional_location_selection'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_manual_assignment_strict_mode')) {
+    /**
+     * Check whether manual assignment mode should disable location-based features.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_manual_assignment_strict_mode($options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (!isset($options['order_assignment_method']) || $options['order_assignment_method'] !== 'manual') {
+            return false;
+        }
+
+        return empty($options['manual_optional_location_selection'])
+            || $options['manual_optional_location_selection'] !== 'on';
+    }
+}
+
 if (!function_exists('mulopimfwc_is_mixed_location_cart_enabled')) {
     /**
      * Check whether mixed-location cart is enabled, respecting manual mode.
@@ -335,19 +385,19 @@ if (!function_exists('mulopimfwc_is_mixed_location_cart_enabled')) {
      */
     function mulopimfwc_is_mixed_location_cart_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
         }
 
         return isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
@@ -363,19 +413,19 @@ if (!function_exists('mulopimfwc_is_group_cart_enabled')) {
      */
     function mulopimfwc_is_group_cart_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
         }
 
         return isset($options['group_cart_by_location']) && $options['group_cart_by_location'] === 'on';
@@ -391,15 +441,15 @@ if (!function_exists('mulopimfwc_get_default_location_value')) {
      */
     function mulopimfwc_get_default_location_value($options = null): string
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return '';
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return '';
         }
 
         return isset($options['default_location']) ? trim((string) $options['default_location']) : '';
@@ -415,15 +465,15 @@ if (!function_exists('mulopimfwc_is_show_all_products_admin_enabled')) {
      */
     function mulopimfwc_is_show_all_products_admin_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
         }
 
         return isset($options['show_all_products_admin']) && $options['show_all_products_admin'] === 'on';
@@ -439,19 +489,19 @@ if (!function_exists('mulopimfwc_is_location_shipping_enabled')) {
      */
     function mulopimfwc_is_location_shipping_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
         }
 
         return isset($options['enable_location_shipping']) && $options['enable_location_shipping'] === 'on';
@@ -467,19 +517,19 @@ if (!function_exists('mulopimfwc_is_location_payment_methods_enabled')) {
      */
     function mulopimfwc_is_location_payment_methods_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
         }
 
         return isset($options['enable_location_payment_methods']) && $options['enable_location_payment_methods'] === 'on';
@@ -495,19 +545,19 @@ if (!function_exists('mulopimfwc_is_location_taxes_enabled')) {
      */
     function mulopimfwc_is_location_taxes_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
         }
 
         return isset($options['enable_location_taxes']) && $options['enable_location_taxes'] === 'on';
@@ -523,19 +573,19 @@ if (!function_exists('mulopimfwc_is_location_discounts_enabled')) {
      */
     function mulopimfwc_is_location_discounts_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
         }
 
         return isset($options['enable_location_discounts']) && $options['enable_location_discounts'] === 'on';
@@ -551,19 +601,19 @@ if (!function_exists('mulopimfwc_is_location_reviews_enabled')) {
      */
     function mulopimfwc_is_location_reviews_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
         }
 
         return isset($options['location_specific_reviews']) && $options['location_specific_reviews'] === 'on';
@@ -579,15 +629,15 @@ if (!function_exists('mulopimfwc_is_all_locations_enabled')) {
      */
     function mulopimfwc_is_all_locations_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
         }
 
         return isset($options['enable_all_locations']) && $options['enable_all_locations'] === 'on';
@@ -603,15 +653,15 @@ if (!function_exists('mulopimfwc_get_strict_filtering_value')) {
      */
     function mulopimfwc_get_strict_filtering_value($options = null): string
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return 'disabled';
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return 'disabled';
         }
 
         $value = isset($options['strict_filtering']) ? $options['strict_filtering'] : 'enabled';
@@ -629,15 +679,15 @@ if (!function_exists('mulopimfwc_get_product_priority_display_value')) {
      */
     function mulopimfwc_get_product_priority_display_value($options = null): string
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return 'mixed';
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return 'mixed';
         }
 
         $value = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
@@ -656,15 +706,15 @@ if (!function_exists('mulopimfwc_get_single_product_unavailable_behavior')) {
      */
     function mulopimfwc_get_single_product_unavailable_behavior($options = null): string
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return 'show_404';
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return 'show_404';
         }
 
         $value = isset($options['single_product_unavailable_behavior'])
@@ -684,15 +734,15 @@ if (!function_exists('mulopimfwc_is_location_information_enabled')) {
      */
     function mulopimfwc_is_location_information_enabled($options = null): bool
     {
-        if (mulopimfwc_is_manual_assignment_mode()) {
-            return false;
-        }
-
         if (!is_array($options)) {
             global $mulopimfwc_options;
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
         }
 
         return isset($options['enable_location_information']) && $options['enable_location_information'] === 'on';
@@ -2316,7 +2366,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', ['enable_popup' => 'off']);
-            $is_manual_mode = mulopimfwc_is_manual_assignment_mode();
+            $is_manual_mode = mulopimfwc_is_manual_assignment_strict_mode($options);
             if (isset($options['enable_popup']) && $options['enable_popup'] === 'on' && mulopimfwc_premium_feature() && !$is_manual_mode) {
                 add_action('wp_footer', [$this, 'location_selector_modal']);
             }
@@ -3795,7 +3845,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
-            if (mulopimfwc_is_manual_assignment_mode()) {
+            if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
                 return;
             }
 
@@ -5669,6 +5719,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
             $is_manual_mode = $assignment_method === 'manual';
+            $is_manual_strict = mulopimfwc_is_manual_assignment_strict_mode($options);
 
             wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.2.15');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
@@ -5744,7 +5795,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $options['allow_location_change_in_cart']
                 : 'off';
 
-            if ($is_manual_mode) {
+            if ($is_manual_strict) {
                 $allow_location_change_in_cart = 'off';
             }
 
@@ -6376,7 +6427,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
-            if (mulopimfwc_is_manual_assignment_mode()) {
+            if (mulopimfwc_is_manual_assignment_strict_mode()) {
                 return;
             }
 
@@ -6414,7 +6465,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function location_selector_modal()
         {
-            if (mulopimfwc_is_manual_assignment_mode()) {
+            if (mulopimfwc_is_manual_assignment_strict_mode()) {
                 return;
             }
 
@@ -6503,7 +6554,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function location_selector_shortcode($atts)
         {
-            if (mulopimfwc_is_manual_assignment_mode()) {
+            if (mulopimfwc_is_manual_assignment_strict_mode()) {
                 return '';
             }
 
@@ -6550,7 +6601,7 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function display_popup_shortcode($atts)
         {
-            if (mulopimfwc_is_manual_assignment_mode()) {
+            if (mulopimfwc_is_manual_assignment_strict_mode()) {
                 return '';
             }
 
@@ -6635,7 +6686,7 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         private function render_popup_modal($instance_id = '', $layout = 'default', $show_modal = false)
         {
-            if (mulopimfwc_is_manual_assignment_mode()) {
+            if (mulopimfwc_is_manual_assignment_strict_mode()) {
                 return;
             }
 

@@ -64,7 +64,7 @@ class Mulopimfwc_Customer_Location_Insights
      */
     private function __construct()
     {
-        $this->manual_disabled = function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode();
+        $this->manual_disabled = function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode();
 
         if ($this->manual_disabled) {
             return;
@@ -2519,7 +2519,7 @@ function mulopimfwc_ajax_track_location_selection()
 {
     check_ajax_referer('mulopimfwc_tracking', 'nonce');
 
-    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+    if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
         wp_send_json_error(['message' => __('Location tracking is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
         return;
     }
@@ -2600,7 +2600,7 @@ function mulopimfwc_ajax_export_analytics()
 {
     check_ajax_referer('mulopimfwc_analytics_export', 'nonce');
 
-    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+    if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
         wp_die(__('Analytics export is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management'));
     }
 
@@ -2628,7 +2628,7 @@ add_action('admin_footer', 'mulopimfwc_add_export_button_script');
 
 function mulopimfwc_add_export_button_script()
 {
-    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+    if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
         return;
     }
 
@@ -2732,7 +2732,7 @@ function mulopimfwc_ajax_clear_analytics_data()
 {
     check_ajax_referer('mulopimfwc_clear_analytics', 'nonce');
 
-    if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+    if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
         wp_send_json_error(['message' => __('Analytics data cannot be cleared while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
     }
 

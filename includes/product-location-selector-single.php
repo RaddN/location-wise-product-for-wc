@@ -116,7 +116,7 @@ class MULOPIMFWC_Product_Location_Selector
             return;
         }
 
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return;
         }
 
@@ -242,7 +242,7 @@ class MULOPIMFWC_Product_Location_Selector
      */
     private function is_location_display_enabled(): bool
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return false;
         }
 
@@ -463,7 +463,7 @@ class MULOPIMFWC_Product_Location_Selector
     {
         static $location_selector_added = [];
 
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return;
         }
 
@@ -889,7 +889,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     public function maybe_enqueue_shortcode_scripts()
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return;
         }
 
@@ -1028,7 +1028,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     public function render_shortcode($atts)
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_mode') && mulopimfwc_is_manual_assignment_mode()) {
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             return '';
         }
 

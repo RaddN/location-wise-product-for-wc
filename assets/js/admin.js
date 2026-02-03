@@ -4391,8 +4391,10 @@ jQuery(document).ready(function ($) {
         return;
     }
 
+    var $manualOptional = $('input[name="mulopimfwc_display_options[manual_optional_location_selection]"]');
+    var $manualOptionalRow = $manualOptional.closest('tr');
+
     var manualFieldSelectors = [
-        'input[name="mulopimfwc_display_options[location_require_selection]"]',
         'input[name="mulopimfwc_display_options[enable_popup]"]',
         '#template_selection',
         'input[name="mulopimfwc_display_options[use_select2]"]',
@@ -4430,6 +4432,9 @@ jQuery(document).ready(function ($) {
         'select[name="mulopimfwc_display_options[enable_customer_location_tracking]"]',
         'select[name="mulopimfwc_display_options[customer_location_history]"]',
         'select[name="mulopimfwc_display_options[location_based_recommendations]"]'
+    ];
+    var manualAlwaysDisableSelectors = [
+        'input[name="mulopimfwc_display_options[location_require_selection]"]'
     ];
 
     function getFieldValue($field) {
@@ -4488,8 +4493,30 @@ jQuery(document).ready(function ($) {
 
     function toggleManualModeSettings() {
         var isManual = $assignmentSelect.val() === 'manual';
+        var isOptionalEnabled = isManual && $manualOptional.length && $manualOptional.is(':checked');
+
+        if ($manualOptionalRow.length) {
+            $manualOptionalRow.toggle(isManual);
+        }
+
+        if ($manualOptional.length) {
+            setFieldDisabled($manualOptional, !isManual);
+            syncHiddenField($manualOptional, !isManual);
+        }
 
         manualFieldSelectors.forEach(function (selector) {
+            var $fields = $(selector);
+            if (!$fields.length) {
+                return;
+            }
+            $fields.each(function () {
+                var $field = $(this);
+                setFieldDisabled($field, isManual && !isOptionalEnabled);
+                syncHiddenField($field, isManual && !isOptionalEnabled);
+            });
+        });
+
+        manualAlwaysDisableSelectors.forEach(function (selector) {
             var $fields = $(selector);
             if (!$fields.length) {
                 return;
@@ -4504,5 +4531,6 @@ jQuery(document).ready(function ($) {
 
     toggleManualModeSettings();
     $assignmentSelect.on('change', toggleManualModeSettings);
+    $manualOptional.on('change', toggleManualModeSettings);
 });
 
