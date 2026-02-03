@@ -446,7 +446,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ?>
                 <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_title]" value="<?php echo esc_attr($mulopimfwc_popup_title); ?>" class="regular-text"<?php echo $disabled_attr; ?>>
                 <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
                 <?php endif; ?>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
@@ -477,7 +477,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ?>
                 <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_placeholder]" value="<?php echo esc_attr($mulopimfwc_popup_placeholder); ?>" class="regular-text"<?php echo $disabled_attr; ?>>
                 <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
                 <?php endif; ?>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
@@ -509,7 +509,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ?>
                 <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_btn_txt]" value="<?php echo esc_attr($mulopimfwc_popup_btn_txt); ?>" class="regular-text"<?php echo $disabled_attr; ?>>
                 <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
                 <?php endif; ?>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
@@ -544,7 +544,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     <option value="seperately" <?php selected($value, 'seperately'); ?>><?php echo esc_html__('Seperately', 'multi-location-product-and-inventory-management'); ?></option>
                 </select>
                 <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
                 <?php endif; ?>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
@@ -623,7 +623,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}"<?php echo $disabled_attr; ?>><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
             </textarea>
             <?php if ($is_manual_mode) : ?>
-                <p class="description"><?php echo esc_html__('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
             <?php endif; ?>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
@@ -3945,7 +3945,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         ?>
             <select name="mulopimfwc_display_options[order_assignment_method]">
                 <option value="customer_selection" <?php selected($value, 'customer_selection'); ?>><?php echo esc_html_e('Customer Selection (Based on selected location)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="inventory_based" <?php selected($value, 'inventory_based'); ?>><?php echo esc_html_e('Inventory Based (Location with highest stock)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="inventory_based" <?php selected($value, 'inventory_based'); ?>><?php echo esc_html_e('Inventory Based (Location with highest stock)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option disabled value="proximity_based" <?php selected($value, 'proximity_based'); ?>><?php echo esc_html_e('Proximity Based (Nearest location to shipping address)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="manual" <?php selected($value, 'manual'); ?>><?php echo esc_html_e('Manual Assignment (Admin assigns after order)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
@@ -3958,9 +3958,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
         add_settings_field(
             'manual_optional_location_selection',
-            __('Optional Location Selection (Manual Mode)', 'multi-location-product-and-inventory-management'),
+            __('Optional Location Selection (Manual/Inventory)', 'multi-location-product-and-inventory-management'),
             function () {
-                $message = __("Allow customers to optionally select a location when Manual Assignment is enabled. Location selection remains optional.", 'multi-location-product-and-inventory-management');
+                $message = __("Allow customers to optionally select a location when Manual or Inventory-Based assignment is enabled. Location selection remains optional.", 'multi-location-product-and-inventory-management');
                 $this->render_advance_checkbox('manual_optional_location_selection', $message);
             },
             'lwp-order-fullfill-settings',
@@ -4143,11 +4143,10 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $options = is_array($mulopimfwc_options ?? null)
                     ? $mulopimfwc_options
                     : get_option('mulopimfwc_display_options', []);
-                $is_manual_mode = isset($options['order_assignment_method'])
-                    && $options['order_assignment_method'] === 'manual';
+                $is_manual_mode = $this->is_manual_assignment_mode();
                 $message = __("Require customers to select a location before adding products to the cart.", 'multi-location-product-and-inventory-management');
                 if ($is_manual_mode) {
-                    $message .= ' ' . __('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management');
+                    $message .= ' ' . __('Disabled while Manual or Inventory-Based assignment is enabled.', 'multi-location-product-and-inventory-management');
                 }
                 if ($is_manual_mode) {
                     echo '<input type="hidden" data-manual-hidden="true" data-manual-for="mulopimfwc_display_options[location_require_selection]" name="mulopimfwc_display_options[location_require_selection]" value="' . esc_attr($options['location_require_selection'] ?? 'off') . '">';
@@ -4222,7 +4221,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             ?>
                 <textarea name="mulopimfwc_display_options[location_notification_text]" rows="2" class="large-text"<?php echo $disabled_attr; ?>><?php echo esc_textarea($value); ?></textarea>
                 <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
                 <?php endif; ?>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
@@ -7126,13 +7125,17 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     private function is_manual_assignment_mode(): bool
     {
         $options = $this->get_display_options();
-        return isset($options['order_assignment_method']) && $options['order_assignment_method'] === 'manual';
+        return isset($options['order_assignment_method'])
+            && in_array($options['order_assignment_method'], ['manual', 'inventory_based'], true);
     }
 
     private function is_manual_optional_location_enabled(): bool
     {
         $options = $this->get_display_options();
-        if (!isset($options['order_assignment_method']) || $options['order_assignment_method'] !== 'manual') {
+        if (
+            !isset($options['order_assignment_method'])
+            || !in_array($options['order_assignment_method'], ['manual', 'inventory_based'], true)
+        ) {
             return false;
         }
 
@@ -7148,7 +7151,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     private function append_manual_disabled_note(string $message): string
     {
         if ($this->is_manual_assignment_strict_mode()) {
-            $message .= ' ' . __('Disabled while Manual Assignment is enabled.', 'multi-location-product-and-inventory-management');
+            $message .= ' ' . __('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management');
         }
         return $message;
     }

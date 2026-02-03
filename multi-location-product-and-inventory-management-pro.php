@@ -328,7 +328,7 @@ if (!function_exists('mulopimfwc_is_manual_assignment_mode')) {
 
 if (!function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')) {
     /**
-     * Check whether optional location selection is enabled for manual assignment.
+     * Check whether optional location selection is enabled for manual or inventory-based assignment.
      *
      * @param array|null $options Optional options array.
      * @return bool
@@ -342,7 +342,11 @@ if (!function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')
                 : get_option('mulopimfwc_display_options', []);
         }
 
-        if (!isset($options['order_assignment_method']) || $options['order_assignment_method'] !== 'manual') {
+        $assignment_method = isset($options['order_assignment_method'])
+            ? $options['order_assignment_method']
+            : 'customer_selection';
+
+        if (!in_array($assignment_method, ['manual', 'inventory_based'], true)) {
             return false;
         }
 
@@ -353,7 +357,7 @@ if (!function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')
 
 if (!function_exists('mulopimfwc_is_manual_assignment_strict_mode')) {
     /**
-     * Check whether manual assignment mode should disable location-based features.
+     * Check whether assignment mode should disable location-based features.
      *
      * @param array|null $options Optional options array.
      * @return bool
@@ -367,7 +371,11 @@ if (!function_exists('mulopimfwc_is_manual_assignment_strict_mode')) {
                 : get_option('mulopimfwc_display_options', []);
         }
 
-        if (!isset($options['order_assignment_method']) || $options['order_assignment_method'] !== 'manual') {
+        $assignment_method = isset($options['order_assignment_method'])
+            ? $options['order_assignment_method']
+            : 'customer_selection';
+
+        if (!in_array($assignment_method, ['manual', 'inventory_based'], true)) {
             return false;
         }
 
@@ -2518,7 +2526,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $assignment_method = isset($options['order_assignment_method'])
                 ? $options['order_assignment_method']
                 : 'customer_selection';
-            if ($assignment_method === 'manual') {
+            if (in_array($assignment_method, ['manual', 'inventory_based'], true)) {
                 return $passed;
             }
 
@@ -5427,6 +5435,21 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Skip automatic assignment if manual mode is enabled
             if ($assignment_method === 'manual') {
+                if (mulopimfwc_is_manual_optional_location_selection_enabled($options)) {
+                    $selected_location = mulopimfwc_get_store_location_cookie();
+                    if ($selected_location !== 'all-products' && mulopimfwc_validate_location_slug($selected_location)) {
+                        $order = wc_get_order($order_id);
+                        if ($order) {
+                            $existing_location = (string) $order->get_meta('_store_location');
+                            if ($existing_location === '') {
+                                $order->update_meta_data('_store_location', $selected_location);
+                                $order->save();
+                                return;
+                            }
+                        }
+                    }
+                }
+
                 $order = wc_get_order($order_id);
                 if ($order) {
                     $existing_location = (string) $order->get_meta('_store_location');
@@ -5443,6 +5466,32 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return; // Don't save location automatically
             }
 
+            if ($assignment_method === 'inventory_based') {
+                $order = wc_get_order($order_id);
+                if (!$order) {
+                    return;
+                }
+
+                $selected_location = '';
+                if (mulopimfwc_is_manual_optional_location_selection_enabled($options)) {
+                    $selected_location = mulopimfwc_get_store_location_cookie();
+                    if ($selected_location === 'all-products' || !mulopimfwc_validate_location_slug($selected_location)) {
+                        $selected_location = '';
+                    }
+                }
+
+                $location = $selected_location !== ''
+                    ? $selected_location
+                    : $this->assign_location_by_inventory($order);
+
+                if (!empty($location)) {
+                    $order->update_meta_data('_store_location', $location);
+                    $order->save();
+                }
+
+                return;
+            }
+
             // Use get_current_location method which includes default location logic
             $location = $this->get_current_location();
 
@@ -5453,6 +5502,236 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $order->save();
                 }
             }
+        }
+
+        /**
+         * Assign a location to an order based on combined inventory across items.
+         *
+         * @param WC_Order|int $order Order object or ID.
+         * @return string Location slug or empty string if none found.
+         */
+        private function assign_location_by_inventory($order): string
+        {
+            $order = $order instanceof WC_Order ? $order : wc_get_order($order);
+            if (!$order) {
+                return '';
+            }
+
+            $order_items = $order->get_items();
+            if (empty($order_items)) {
+                return '';
+            }
+
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+
+            $locations = function_exists('mulopimfwc_get_frontend_locations')
+                ? mulopimfwc_get_frontend_locations()
+                : get_terms([
+                    'taxonomy' => 'mulopimfwc_store_location',
+                    'hide_empty' => false,
+                ]);
+
+            if (is_wp_error($locations) || empty($locations)) {
+                return '';
+            }
+
+            $location_map = [];
+            foreach ($locations as $location) {
+                if (!isset($location->slug, $location->term_id)) {
+                    continue;
+                }
+
+                $display_order = get_term_meta($location->term_id, 'display_order', true);
+                $display_order = $display_order !== '' ? (int) $display_order : 999;
+
+                $location_map[$location->slug] = [
+                    'term_id' => (int) $location->term_id,
+                    'display_order' => $display_order,
+                    'total_stock' => 0,
+                ];
+            }
+
+            if (empty($location_map)) {
+                return '';
+            }
+
+            $all_location_slugs = array_keys($location_map);
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
+            $processed_items = false;
+
+            foreach ($order_items as $item) {
+                if (!$item->is_type('line_item')) {
+                    continue;
+                }
+
+                $product_id = $item->get_product_id();
+                $variation_id = $item->get_variation_id();
+
+                if (!$product_id) {
+                    continue;
+                }
+
+                $processed_items = true;
+
+                $assigned_slugs = $this->get_item_assigned_location_slugs(
+                    $product_id,
+                    $variation_id,
+                    $all_location_slugs,
+                    $enable_all_locations
+                );
+
+                if (empty($assigned_slugs)) {
+                    return '';
+                }
+
+                foreach (array_keys($location_map) as $location_slug) {
+                    if (!in_array($location_slug, $assigned_slugs, true)) {
+                        unset($location_map[$location_slug]);
+                        continue;
+                    }
+
+                    $location_id = $location_map[$location_slug]['term_id'];
+                    if ($this->is_location_disabled_for_item($product_id, $variation_id, $location_id)) {
+                        unset($location_map[$location_slug]);
+                        continue;
+                    }
+
+                    $location_map[$location_slug]['total_stock'] += $this->get_item_location_stock_quantity(
+                        $product_id,
+                        $variation_id,
+                        $location_id
+                    );
+                }
+
+                if (empty($location_map)) {
+                    return '';
+                }
+            }
+
+            if (!$processed_items) {
+                return '';
+            }
+
+            $best_slug = '';
+            $best_total = null;
+            $best_display_order = null;
+
+            foreach ($location_map as $location_slug => $data) {
+                $total_stock = (int) $data['total_stock'];
+                $display_order = (int) $data['display_order'];
+
+                if ($best_total === null || $total_stock > $best_total) {
+                    $best_slug = $location_slug;
+                    $best_total = $total_stock;
+                    $best_display_order = $display_order;
+                    continue;
+                }
+
+                if ($total_stock === $best_total) {
+                    if ($best_display_order === null || $display_order < $best_display_order) {
+                        $best_slug = $location_slug;
+                        $best_display_order = $display_order;
+                    } elseif ($display_order === $best_display_order && strcmp($location_slug, $best_slug) < 0) {
+                        $best_slug = $location_slug;
+                    }
+                }
+            }
+
+            return $best_slug;
+        }
+
+        /**
+         * Resolve assigned location slugs for an order item.
+         *
+         * @param int $product_id Product ID.
+         * @param int $variation_id Variation ID.
+         * @param array $fallback_slugs All location slugs.
+         * @param string $enable_all_locations Whether fallback should include all locations.
+         * @return array
+         */
+        private function get_item_assigned_location_slugs($product_id, $variation_id, array $fallback_slugs, string $enable_all_locations): array
+        {
+            $ids_to_check = array_values(array_filter([$variation_id, $product_id]));
+            $assigned_slugs = [];
+
+            foreach ($ids_to_check as $id) {
+                $terms = wp_get_object_terms($id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+                if (!is_wp_error($terms) && !empty($terms)) {
+                    $assigned_slugs = array_map('rawurldecode', $terms);
+                    break;
+                }
+            }
+
+            if (empty($assigned_slugs)) {
+                return $enable_all_locations === 'on' ? $fallback_slugs : [];
+            }
+
+            return array_values(array_unique($assigned_slugs));
+        }
+
+        /**
+         * Check if a location is disabled for an order item.
+         *
+         * @param int $product_id Product ID.
+         * @param int $variation_id Variation ID.
+         * @param int $location_id Location term ID.
+         * @return bool
+         */
+        private function is_location_disabled_for_item($product_id, $variation_id, $location_id): bool
+        {
+            $ids_to_check = array_values(array_filter([$variation_id, $product_id]));
+
+            foreach ($ids_to_check as $id) {
+                $is_disabled = get_post_meta($id, '_location_disabled_' . $location_id, true);
+                if (!empty($is_disabled)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * Get stock quantity for an order item at a specific location.
+         *
+         * @param int $product_id Product ID.
+         * @param int $variation_id Variation ID.
+         * @param int $location_id Location term ID.
+         * @return int
+         */
+        private function get_item_location_stock_quantity($product_id, $variation_id, $location_id): int
+        {
+            $ids_to_check = array_values(array_filter([$variation_id, $product_id]));
+
+            foreach ($ids_to_check as $id) {
+                $stock = get_post_meta($id, '_location_stock_' . $location_id, true);
+                if ($stock !== '') {
+                    return max(0, (int) $stock);
+                }
+            }
+
+            static $global_stock_cache = [];
+            $cache_key = $variation_id ? $variation_id : $product_id;
+            if (isset($global_stock_cache[$cache_key])) {
+                return $global_stock_cache[$cache_key];
+            }
+
+            foreach ($ids_to_check as $id) {
+                $product = wc_get_product($id);
+                if ($product && $product->managing_stock()) {
+                    $qty = $product->get_stock_quantity();
+                    if ($qty !== null) {
+                        $global_stock_cache[$cache_key] = max(0, (int) $qty);
+                        return $global_stock_cache[$cache_key];
+                    }
+                }
+            }
+
+            $global_stock_cache[$cache_key] = 0;
+            return 0;
         }
 
         public function maybe_hold_manual_unassigned_order_status($status, $order_id, $order)
@@ -5718,7 +5997,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 : get_option('mulopimfwc_display_options', []);
 
             $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
-            $is_manual_mode = $assignment_method === 'manual';
+            $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based'], true);
             $is_manual_strict = mulopimfwc_is_manual_assignment_strict_mode($options);
 
             wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.2.15');
@@ -5762,7 +6041,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $group_cart = mulopimfwc_is_group_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
             $location_require_selection = isset($mulopimfwc_options['location_require_selection']) ? $mulopimfwc_options['location_require_selection'] : 'off';
-            if ($is_manual_mode) {
+            if ($is_optional_assignment_mode) {
                 $location_require_selection = 'off';
             }
             $single_product_requires_location = false;

@@ -42,7 +42,7 @@ class Mulopimfwc_Customer_Location_Insights
     private $order_stats_cache = null;
 
     /**
-     * Whether features are disabled due to manual assignment mode.
+     * Whether features are disabled due to assignment settings.
      *
      * @var bool
      */
@@ -956,7 +956,7 @@ class Mulopimfwc_Customer_Location_Insights
         check_ajax_referer('mulopimfwc_recommendations', 'nonce');
 
         if ($this->is_disabled()) {
-            wp_send_json_error(['message' => __('Recommendations are disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Recommendations are disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
         }
 
         global $mulopimfwc_options;
@@ -1357,7 +1357,7 @@ class Mulopimfwc_Customer_Location_Insights
         check_ajax_referer('mulopimfwc_analytics_live', 'nonce');
 
         if ($this->is_disabled()) {
-            wp_send_json_error(['message' => __('Analytics is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
         }
 
         if (!mulopimfwc_user_can_run_reports()) {
@@ -1378,7 +1378,7 @@ class Mulopimfwc_Customer_Location_Insights
     public function render_analytics_page()
     {
         if ($this->is_disabled()) {
-            wp_die(__('Location analytics is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management'));
+            wp_die(__('Location analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'));
         }
 
         if (!mulopimfwc_user_can_run_reports()) {
@@ -2520,7 +2520,7 @@ function mulopimfwc_ajax_track_location_selection()
     check_ajax_referer('mulopimfwc_tracking', 'nonce');
 
     if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
-        wp_send_json_error(['message' => __('Location tracking is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Location tracking is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
         return;
     }
 
@@ -2601,7 +2601,7 @@ function mulopimfwc_ajax_export_analytics()
     check_ajax_referer('mulopimfwc_analytics_export', 'nonce');
 
     if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
-        wp_die(__('Analytics export is disabled while manual assignment mode is active.', 'multi-location-product-and-inventory-management'));
+        wp_die(__('Analytics export is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'));
     }
 
     if (!mulopimfwc_user_can_export_reports()) {
@@ -2733,7 +2733,7 @@ function mulopimfwc_ajax_clear_analytics_data()
     check_ajax_referer('mulopimfwc_clear_analytics', 'nonce');
 
     if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
-        wp_send_json_error(['message' => __('Analytics data cannot be cleared while manual assignment mode is active.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Analytics data cannot be cleared while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
     }
 
     if (!mulopimfwc_user_can_run_reports()) {

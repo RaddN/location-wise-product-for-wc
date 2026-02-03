@@ -4492,16 +4492,17 @@ jQuery(document).ready(function ($) {
     }
 
     function toggleManualModeSettings() {
-        var isManual = $assignmentSelect.val() === 'manual';
-        var isOptionalEnabled = isManual && $manualOptional.length && $manualOptional.is(':checked');
+        var assignmentMethod = $assignmentSelect.val();
+        var isOptionalAssignment = assignmentMethod === 'manual' || assignmentMethod === 'inventory_based';
+        var isOptionalEnabled = isOptionalAssignment && $manualOptional.length && $manualOptional.is(':checked');
 
         if ($manualOptionalRow.length) {
-            $manualOptionalRow.toggle(isManual);
+            $manualOptionalRow.toggle(isOptionalAssignment);
         }
 
         if ($manualOptional.length) {
-            setFieldDisabled($manualOptional, !isManual);
-            syncHiddenField($manualOptional, !isManual);
+            setFieldDisabled($manualOptional, !isOptionalAssignment);
+            syncHiddenField($manualOptional, !isOptionalAssignment);
         }
 
         manualFieldSelectors.forEach(function (selector) {
@@ -4511,8 +4512,8 @@ jQuery(document).ready(function ($) {
             }
             $fields.each(function () {
                 var $field = $(this);
-                setFieldDisabled($field, isManual && !isOptionalEnabled);
-                syncHiddenField($field, isManual && !isOptionalEnabled);
+                setFieldDisabled($field, isOptionalAssignment && !isOptionalEnabled);
+                syncHiddenField($field, isOptionalAssignment && !isOptionalEnabled);
             });
         });
 
@@ -4523,8 +4524,8 @@ jQuery(document).ready(function ($) {
             }
             $fields.each(function () {
                 var $field = $(this);
-                setFieldDisabled($field, isManual);
-                syncHiddenField($field, isManual);
+                setFieldDisabled($field, isOptionalAssignment);
+                syncHiddenField($field, isOptionalAssignment);
             });
         });
     }
