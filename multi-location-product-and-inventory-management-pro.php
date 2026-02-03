@@ -1967,6 +1967,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             add_action('woocommerce_checkout_update_order_meta', [$this, 'save_location_to_order_meta'], 5, 1);
             add_action('woocommerce_thankyou', array($this, 'save_location_to_order_meta'), 10, 1);
             add_action('woocommerce_checkout_order_processed', [$this, 'handle_social_new_order_notification'], 20, 1);
+            add_filter('woocommerce_payment_complete_order_status', [$this, 'maybe_hold_manual_unassigned_order_status'], 10, 3);
 
             // Use these specific hooks for HPOS orders table
             add_action('woocommerce_order_list_table_restrict_manage_orders', array($this, 'add_store_location_filter'));
@@ -4994,6 +4995,19 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Skip automatic assignment if manual mode is enabled
             if ($assignment_method === 'manual') {
+                $order = wc_get_order($order_id);
+                if ($order) {
+                    $existing_location = (string) $order->get_meta('_store_location');
+                    if ($existing_location === '') {
+                        $current_status = $order->get_status();
+                        if ($current_status !== 'on-hold' && !in_array($current_status, ['cancelled', 'refunded', 'failed'], true)) {
+                            $order->update_status(
+                                'on-hold',
+                                __('Awaiting manual location assignment.', 'multi-location-product-and-inventory-management')
+                            );
+                        }
+                    }
+                }
                 return; // Don't save location automatically
             }
 
@@ -5007,6 +5021,34 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $order->save();
                 }
             }
+        }
+
+        public function maybe_hold_manual_unassigned_order_status($status, $order_id, $order)
+        {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+
+            $assignment_method = isset($options['order_assignment_method'])
+                ? $options['order_assignment_method']
+                : 'customer_selection';
+
+            if ($assignment_method !== 'manual') {
+                return $status;
+            }
+
+            $order = $order instanceof WC_Order ? $order : wc_get_order($order_id);
+            if (!$order) {
+                return $status;
+            }
+
+            $existing_location = (string) $order->get_meta('_store_location');
+            if ($existing_location !== '') {
+                return $status;
+            }
+
+            return 'on-hold';
         }
 
         /**
