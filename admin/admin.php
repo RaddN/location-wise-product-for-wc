@@ -38,6 +38,14 @@ class MULOPIMFWC_Admin
         
         // AJAX handler for quick location assignment
         add_action('wp_ajax_mulopimfwc_quick_assign_location', array($this, 'ajax_quick_assign_location'));
+        
+        // Bulk assignment for orders
+        add_filter('bulk_actions-edit-shop_order', array($this, 'add_bulk_location_assignment'), 20, 1);
+        add_filter('bulk_actions-woocommerce_page_wc-orders', array($this, 'add_bulk_location_assignment'), 20, 1);
+        add_action('wp_ajax_mulopimfwc_get_bulk_assignment_data', array($this, 'ajax_get_bulk_assignment_data'));
+        add_action('wp_ajax_mulopimfwc_bulk_assign_location', array($this, 'ajax_bulk_assign_location'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_bulk_assignment_assets'));
+        add_action('admin_footer', array($this, 'render_bulk_assignment_modal'));
 
         // Add custom fields to location taxonomy
         add_action('mulopimfwc_store_location_add_form_fields', array($this, 'add_location_fields'));
@@ -2379,8 +2387,52 @@ class MULOPIMFWC_Admin
     }
 
     /**
-     * Get available locations for an order based on product stock availability
-     * Only returns locations where all products in the order are available in stock
+     * Get locations that are valid for all provided orders (intersection).
+     *
+     * @param array $orders Array of WC_Order objects
+     * @return array Array of location term objects available for all orders
+     */
+    private function get_available_locations_for_orders($orders)
+    {
+        if (empty($orders)) {
+            return [];
+        }
+
+        $common_slugs = null;
+
+        foreach ($orders as $order) {
+            $locations = $this->get_available_locations_for_order($order);
+            $slugs = array_values(array_filter(wp_list_pluck($locations, 'slug')));
+
+            if ($common_slugs === null) {
+                $common_slugs = $slugs;
+            } else {
+                $common_slugs = array_values(array_intersect($common_slugs, $slugs));
+            }
+
+            if (empty($common_slugs)) {
+                return [];
+            }
+        }
+
+        if ($common_slugs === null || empty($common_slugs)) {
+            return [];
+        }
+
+        $locations = get_terms(array(
+            'taxonomy' => 'mulopimfwc_store_location',
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+            'slug' => $common_slugs,
+        ));
+
+        return is_wp_error($locations) ? [] : $locations;
+    }
+
+    /**
+     * Get available locations for an order based on product stock availability.
+     * Only returns locations where all products in the order are available in stock.
      *
      * @param WC_Order $order Order object
      * @return array Array of location term objects that have all products in stock
@@ -2904,6 +2956,226 @@ class MULOPIMFWC_Admin
         ));
     }
 
+    public function add_bulk_location_assignment($actions)
+    {
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method'])
+            && $options['order_assignment_method'] === 'manual';
+
+        if (!$is_manual_mode) {
+            return $actions;
+        }
+
+        $actions['mulopimfwc_assign_location'] = __('Assign Location', 'multi-location-product-and-inventory-management');
+
+        return $actions;
+    }
+
+    public function render_bulk_assignment_modal()
+    {
+        if (!$this->is_orders_list_screen()) {
+            return;
+        }
+
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method'])
+            && $options['order_assignment_method'] === 'manual';
+
+        if (!$is_manual_mode) {
+            return;
+        }
+        ?>
+        <div id="mulopimfwc-bulk-assign-modal" class="mulopimfwc-modal" aria-hidden="true">
+            <div class="mulopimfwc-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="mulopimfwc-bulk-assign-title">
+                <button type="button" class="mulopimfwc-modal__close" aria-label="<?php echo esc_attr__('Close', 'multi-location-product-and-inventory-management'); ?>">&times;</button>
+                <div class="mulopimfwc-modal__header">
+                    <h2 id="mulopimfwc-bulk-assign-title"><?php echo esc_html__('Assign Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                    <p class="mulopimfwc-modal__subtitle">
+                        <?php echo esc_html__('Assign a fulfillment location to all selected orders.', 'multi-location-product-and-inventory-management'); ?>
+                    </p>
+                </div>
+
+                <div class="mulopimfwc-modal__body">
+                    <div class="mulopimfwc-bulk-assign-summary">
+                        <span class="mulopimfwc-bulk-assign-count">0</span>
+                        <span class="mulopimfwc-bulk-assign-label"><?php echo esc_html__('orders selected', 'multi-location-product-and-inventory-management'); ?></span>
+                    </div>
+
+                    <div class="mulopimfwc-bulk-assign-orders">
+                        <div class="mulopimfwc-bulk-assign-orders__header">
+                            <span><?php echo esc_html__('Orders Preview', 'multi-location-product-and-inventory-management'); ?></span>
+                        </div>
+                        <div class="mulopimfwc-bulk-assign-orders__list"></div>
+                    </div>
+
+                    <div class="mulopimfwc-bulk-assign-location">
+                        <label for="mulopimfwc-bulk-location-select"><?php echo esc_html__('Available Locations', 'multi-location-product-and-inventory-management'); ?></label>
+                        <select id="mulopimfwc-bulk-location-select">
+                            <option value=""><?php echo esc_html__('Select a location', 'multi-location-product-and-inventory-management'); ?></option>
+                        </select>
+                        <p class="description">
+                            <?php echo esc_html__('Only locations with sufficient stock for all items in the selected orders are shown.', 'multi-location-product-and-inventory-management'); ?>
+                        </p>
+                    </div>
+
+                    <div class="mulopimfwc-bulk-assign-message" style="display:none;"></div>
+                </div>
+
+                <div class="mulopimfwc-modal__footer">
+                    <button type="button" class="button button-secondary mulopimfwc-modal-cancel">
+                        <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
+                    <button type="button" class="button button-primary mulopimfwc-bulk-assign-confirm" disabled>
+                        <?php echo esc_html__('Assign Location', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    public function ajax_get_bulk_assignment_data()
+    {
+        check_ajax_referer('mulopimfwc_bulk_assign_location', 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method'])
+            && $options['order_assignment_method'] === 'manual';
+        if (!$is_manual_mode) {
+            wp_send_json_error(['message' => __('Manual assignment is not enabled.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $order_ids = isset($_POST['order_ids']) ? array_map('absint', (array) $_POST['order_ids']) : [];
+        $order_ids = array_values(array_filter($order_ids));
+
+        if (empty($order_ids)) {
+            wp_send_json_error(['message' => __('No orders selected', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $orders = [];
+        foreach ($order_ids as $order_id) {
+            $order = wc_get_order($order_id);
+            if ($order) {
+                $orders[] = $order;
+            }
+        }
+
+        if (empty($orders)) {
+            wp_send_json_error(['message' => __('No valid orders found', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $available_locations = $this->get_available_locations_for_orders($orders);
+        $locations_payload = array_map(function ($location) {
+            return [
+                'slug' => $location->slug,
+                'name' => $location->name,
+            ];
+        }, $available_locations);
+
+        $orders_preview = [];
+        foreach ($orders as $order) {
+            $customer_name = trim($order->get_formatted_billing_full_name());
+            $status = $order->get_status();
+            $orders_preview[] = [
+                'id' => $order->get_id(),
+                'number' => $order->get_order_number(),
+                'status' => $status,
+                'status_label' => wc_get_order_status_name('wc-' . $status),
+                'total' => wp_strip_all_tags($order->get_formatted_order_total()),
+                'customer' => $customer_name !== '' ? $customer_name : __('Guest', 'multi-location-product-and-inventory-management'),
+                'location' => $this->get_location_label((string) $order->get_meta('_store_location')),
+            ];
+        }
+
+        wp_send_json_success([
+            'orders' => $orders_preview,
+            'locations' => $locations_payload,
+        ]);
+    }
+
+    public function ajax_bulk_assign_location()
+    {
+        check_ajax_referer('mulopimfwc_bulk_assign_location', 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method'])
+            && $options['order_assignment_method'] === 'manual';
+        if (!$is_manual_mode) {
+            wp_send_json_error(['message' => __('Manual assignment is not enabled.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $order_ids = isset($_POST['order_ids']) ? array_map('absint', (array) $_POST['order_ids']) : [];
+        $order_ids = array_values(array_filter($order_ids));
+        $location_slug = isset($_POST['location_slug']) ? sanitize_text_field(wp_unslash($_POST['location_slug'])) : '';
+
+        if (empty($order_ids) || empty($location_slug)) {
+            wp_send_json_error(['message' => __('Order IDs and location are required', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $price_changed = false;
+        $updated_count = 0;
+        $failed = [];
+
+        foreach ($order_ids as $order_id) {
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                $failed[] = $order_id;
+                continue;
+            }
+
+            $available_locations = $this->get_available_locations_for_order($order);
+            $available_slugs = wp_list_pluck($available_locations, 'slug');
+            if (!in_array($location_slug, $available_slugs, true)) {
+                $failed[] = $order_id;
+                continue;
+            }
+
+            $update_result = $this->update_all_order_items_location($order, $location_slug);
+            if (!$update_result['success']) {
+                $failed[] = $order_id;
+                continue;
+            }
+
+            $order->update_meta_data('_store_location', $location_slug);
+            $order->save();
+
+            $updated_count++;
+            if ($update_result['price_changed']) {
+                $price_changed = true;
+            }
+        }
+
+        if ($updated_count === 0) {
+            wp_send_json_error(['message' => __('No orders were updated. Please review stock availability and order status.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $message = sprintf(
+            __('Assigned location to %d order(s).', 'multi-location-product-and-inventory-management'),
+            $updated_count
+        );
+
+        if (!empty($failed)) {
+            $message .= ' ' . sprintf(
+                __('%d order(s) could not be updated.', 'multi-location-product-and-inventory-management'),
+                count($failed)
+            );
+        }
+
+        wp_send_json_success([
+            'message' => $message,
+            'price_changed' => $price_changed,
+            'failed' => $failed,
+        ]);
+    }
+
     /**
      * Add location metabox to order details
      */
@@ -2941,6 +3213,67 @@ class MULOPIMFWC_Admin
         }
 
         return 'shop_order';
+    }
+
+    private function is_orders_list_screen($screen = null)
+    {
+        if (!function_exists('get_current_screen')) {
+            return false;
+        }
+
+        $screen = $screen ?: get_current_screen();
+        if (!$screen) {
+            return false;
+        }
+
+        if (in_array($screen->id, ['woocommerce_page_wc-orders', 'edit-shop_order'], true)) {
+            return true;
+        }
+
+        if ($screen->post_type === 'shop_order' && $screen->base === 'edit') {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function enqueue_bulk_assignment_assets($hook)
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$this->is_orders_list_screen($screen)) {
+            return;
+        }
+
+        $options = get_option('mulopimfwc_display_options', []);
+        $is_manual_mode = isset($options['order_assignment_method'])
+            && $options['order_assignment_method'] === 'manual';
+
+        if (!$is_manual_mode) {
+            return;
+        }
+
+        wp_enqueue_script('jquery');
+
+        $data = [
+            'nonce' => wp_create_nonce('mulopimfwc_bulk_assign_location'),
+            'i18n' => [
+                'title' => __('Assign Location', 'multi-location-product-and-inventory-management'),
+                'loading' => __('Loading available locations...', 'multi-location-product-and-inventory-management'),
+                'selectLocation' => __('Select a location', 'multi-location-product-and-inventory-management'),
+                'assignLocation' => __('Assign Location', 'multi-location-product-and-inventory-management'),
+                'confirmAssign' => __('Confirm & Assign', 'multi-location-product-and-inventory-management'),
+                'cancel' => __('Cancel', 'multi-location-product-and-inventory-management'),
+                'noOrders' => __('Please select at least one order.', 'multi-location-product-and-inventory-management'),
+                'noLocations' => __('No locations have sufficient stock for all selected orders.', 'multi-location-product-and-inventory-management'),
+                'confirmMessage' => __('This will update the location for the selected orders. Continue?', 'multi-location-product-and-inventory-management'),
+                'assigning' => __('Assigning...', 'multi-location-product-and-inventory-management'),
+                'failed' => __('Bulk assignment failed. Please try again.', 'multi-location-product-and-inventory-management'),
+                'unassigned' => __('Unassigned', 'multi-location-product-and-inventory-management'),
+                'loadingOrders' => __('Loading orders...', 'multi-location-product-and-inventory-management'),
+            ],
+        ];
+
+        wp_add_inline_script('jquery', 'window.mulopimfwcBulkAssign=' . wp_json_encode($data) . ';', 'before');
     }
     /**
      * Render location metabox content

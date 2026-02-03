@@ -4003,4 +4003,279 @@ jQuery(document).ready(function ($) {
 
 
 
+jQuery(document).ready(function ($) {
+    if (typeof window.mulopimfwcBulkAssign === 'undefined') {
+        return;
+    }
+
+    var modal = $('#mulopimfwc-bulk-assign-modal');
+    if (!modal.length) {
+        return;
+    }
+
+    var i18n = window.mulopimfwcBulkAssign.i18n || {};
+    var nonce = window.mulopimfwcBulkAssign.nonce || '';
+    var state = {
+        orderIds: []
+    };
+
+    function escapeHtml(text) {
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return (text || '').toString().replace(/[&<>"']/g, function (m) { return map[m]; });
+    }
+
+    function showAdminNotice(message, type) {
+        var noticeClass = 'notice notice-' + (type || 'info') + ' is-dismissible';
+        var $notice = $('<div class="' + noticeClass + '"><p>' + escapeHtml(message) + '</p></div>');
+        var $target = $('.wp-header-end');
+        if ($target.length) {
+            $target.after($notice);
+        } else {
+            $('.wrap h1').first().after($notice);
+        }
+        setTimeout(function () {
+            $notice.fadeOut(200, function () {
+                $(this).remove();
+            });
+        }, 5000);
+    }
+
+    function setModalMessage(type, message) {
+        var $message = modal.find('.mulopimfwc-bulk-assign-message');
+        if (!message) {
+            $message.hide();
+            return;
+        }
+        $message
+            .removeClass('is-error is-warning is-success is-info')
+            .addClass('is-' + type)
+            .text(message)
+            .show();
+    }
+
+    function resetModal() {
+        modal.removeClass('is-loading');
+        state.orderIds = [];
+        modal.find('.mulopimfwc-bulk-assign-count').text('0');
+        modal.find('.mulopimfwc-bulk-assign-orders__list').empty();
+        modal.find('.mulopimfwc-bulk-assign-confirm')
+            .prop('disabled', true)
+            .text(i18n.assignLocation || 'Assign Location')
+            .data('confirmed', false);
+        modal.find('#mulopimfwc-bulk-location-select')
+            .prop('disabled', true)
+            .html('<option value="">' + (i18n.selectLocation || 'Select a location') + '</option>');
+        setModalMessage('info', '');
+    }
+
+    function openModal(orderIds) {
+        resetModal();
+        state.orderIds = orderIds;
+        modal.addClass('is-active').attr('aria-hidden', 'false');
+        $('body').addClass('mulopimfwc-modal-open');
+        modal.find('.mulopimfwc-bulk-assign-count').text(orderIds.length);
+        setModalMessage('info', i18n.loadingOrders || 'Loading orders...');
+        modal.find('#mulopimfwc-bulk-location-select')
+            .prop('disabled', true)
+            .html('<option value="">' + (i18n.loading || 'Loading available locations...') + '</option>');
+        modal.addClass('is-loading');
+
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_get_bulk_assignment_data',
+                order_ids: orderIds,
+                nonce: nonce
+            },
+            success: function (response) {
+                if (response.success) {
+                    renderOrders(response.data.orders || []);
+                    renderLocations(response.data.locations || []);
+                    if (!response.data.locations || response.data.locations.length === 0) {
+                        setModalMessage('warning', i18n.noLocations || 'No locations have sufficient stock for all selected orders.');
+                    } else {
+                        setModalMessage('info', '');
+                    }
+                } else {
+                    setModalMessage('error', (response.data && response.data.message) ? response.data.message : (i18n.failed || 'Bulk assignment failed. Please try again.'));
+                }
+            },
+            error: function () {
+                setModalMessage('error', i18n.failed || 'Bulk assignment failed. Please try again.');
+            },
+            complete: function () {
+                modal.removeClass('is-loading');
+            }
+        });
+    }
+
+    function closeModal() {
+        modal.removeClass('is-active').attr('aria-hidden', 'true');
+        $('body').removeClass('mulopimfwc-modal-open');
+        resetModal();
+    }
+
+    function renderOrders(orders) {
+        var $list = modal.find('.mulopimfwc-bulk-assign-orders__list');
+        if (!orders.length) {
+            $list.html('<div class="mulopimfwc-bulk-empty">' + escapeHtml(i18n.noOrders || 'No orders selected.') + '</div>');
+            return;
+        }
+
+        var html = orders.map(function (order) {
+            var orderNumber = order.number || order.id;
+            var statusClass = order.status ? 'status-' + escapeHtml(order.status) : '';
+            var locationLabel = order.location ? order.location : (i18n.unassigned || 'Unassigned');
+
+            return '<div class="mulopimfwc-bulk-order-row">' +
+                '<span class="mulopimfwc-bulk-order-id">#' + escapeHtml(orderNumber) + '</span>' +
+                '<span class="mulopimfwc-bulk-order-customer">' + escapeHtml(order.customer || '') + '</span>' +
+                '<span class="mulopimfwc-bulk-order-total">' + escapeHtml(order.total || '') + '</span>' +
+                '<span class="mulopimfwc-bulk-order-status ' + statusClass + '">' + escapeHtml(order.status_label || order.status || '') + '</span>' +
+                '<span class="mulopimfwc-bulk-order-location">' + escapeHtml(locationLabel) + '</span>' +
+                '</div>';
+        }).join('');
+
+        $list.html(html);
+    }
+
+    function renderLocations(locations) {
+        var $select = modal.find('#mulopimfwc-bulk-location-select');
+        var options = '<option value="">' + (i18n.selectLocation || 'Select a location') + '</option>';
+
+        if (locations && locations.length) {
+            locations.forEach(function (location) {
+                options += '<option value="' + escapeHtml(location.slug) + '">' + escapeHtml(location.name) + '</option>';
+            });
+            $select.prop('disabled', false);
+        } else {
+            $select.prop('disabled', true);
+        }
+
+        $select.html(options);
+    }
+
+    function getSelectedOrderIds() {
+        var ids = [];
+        $('input[name="id[]"]:checked, input[name="post[]"]:checked, input[name="order_id[]"]:checked').each(function () {
+            var value = parseInt($(this).val(), 10);
+            if (value) {
+                ids.push(value);
+            }
+        });
+        return ids;
+    }
+
+    function resetBulkActions() {
+        $('#bulk-action-selector-top, #bulk-action-selector-bottom').val('-1');
+    }
+
+    $(document).on('click', '#doaction, #doaction2', function (e) {
+        var $button = $(this);
+        var $selector = $button.attr('id') === 'doaction' ? $('#bulk-action-selector-top') : $('#bulk-action-selector-bottom');
+        var action = $selector.val();
+
+        if (action !== 'mulopimfwc_assign_location') {
+            return;
+        }
+
+        e.preventDefault();
+        resetBulkActions();
+
+        var orderIds = getSelectedOrderIds();
+        if (!orderIds.length) {
+            showAdminNotice(i18n.noOrders || 'Please select at least one order.', 'warning');
+            return;
+        }
+
+        openModal(orderIds);
+    });
+
+    $(document).on('change', '#mulopimfwc-bulk-location-select', function () {
+        var hasValue = !!$(this).val();
+        modal.find('.mulopimfwc-bulk-assign-confirm')
+            .prop('disabled', !hasValue)
+            .data('confirmed', false)
+            .text(i18n.assignLocation || 'Assign Location');
+        if (hasValue) {
+            setModalMessage('info', '');
+        }
+    });
+
+    $(document).on('click', '.mulopimfwc-bulk-assign-confirm', function () {
+        var $button = $(this);
+        var locationSlug = modal.find('#mulopimfwc-bulk-location-select').val();
+
+        if (!locationSlug) {
+            setModalMessage('warning', i18n.selectLocation || 'Select a location');
+            return;
+        }
+
+        if (!$button.data('confirmed')) {
+            $button.data('confirmed', true).text(i18n.confirmAssign || 'Confirm & Assign');
+            setModalMessage('warning', i18n.confirmMessage || 'This will update the location for the selected orders. Continue?');
+            return;
+        }
+
+        modal.addClass('is-loading');
+        $button.prop('disabled', true).text(i18n.assigning || 'Assigning...');
+        modal.find('#mulopimfwc-bulk-location-select').prop('disabled', true);
+
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_bulk_assign_location',
+                order_ids: state.orderIds,
+                location_slug: locationSlug,
+                nonce: nonce
+            },
+            success: function (response) {
+                if (response.success) {
+                    showAdminNotice(response.data.message || (i18n.assignLocation || 'Location assigned.'), 'success');
+                    closeModal();
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 600);
+                } else {
+                    setModalMessage('error', (response.data && response.data.message) ? response.data.message : (i18n.failed || 'Bulk assignment failed. Please try again.'));
+                    $button.prop('disabled', false).text(i18n.assignLocation || 'Assign Location').data('confirmed', false);
+                    modal.find('#mulopimfwc-bulk-location-select').prop('disabled', false);
+                }
+            },
+            error: function () {
+                setModalMessage('error', i18n.failed || 'Bulk assignment failed. Please try again.');
+                $button.prop('disabled', false).text(i18n.assignLocation || 'Assign Location').data('confirmed', false);
+                modal.find('#mulopimfwc-bulk-location-select').prop('disabled', false);
+            },
+            complete: function () {
+                modal.removeClass('is-loading');
+            }
+        });
+    });
+
+    $(document).on('click', '.mulopimfwc-modal__close, .mulopimfwc-modal-cancel', function (e) {
+        e.preventDefault();
+        closeModal();
+    });
+
+    $(document).on('click', '#mulopimfwc-bulk-assign-modal', function (e) {
+        if ($(e.target).is('#mulopimfwc-bulk-assign-modal')) {
+            closeModal();
+        }
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.keyCode === 27 && modal.hasClass('is-active')) {
+            closeModal();
+        }
+    });
+});
 

@@ -288,3 +288,221 @@ tr.unassigned-order-row,
 .woocommerce_page_wc-orders .wp-list-table tbody tr:has(.mulopimfwc-unassigned-badge):hover td {
     background-color: #ffecb3;
 }
+
+/* Bulk Assignment Modal */
+body.mulopimfwc-modal-open {
+    overflow: hidden;
+}
+
+.mulopimfwc-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 100000;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.mulopimfwc-modal.is-active {
+    display: flex;
+}
+
+.mulopimfwc-modal__dialog {
+    background: #ffffff;
+    border-radius: 12px;
+    width: min(980px, 96vw);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.mulopimfwc-modal__header {
+    padding: 20px 28px 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.mulopimfwc-modal__header h2 {
+    margin: 0 0 6px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.mulopimfwc-modal__subtitle {
+    margin: 0;
+    color: #64748b;
+}
+
+.mulopimfwc-modal__body {
+    padding: 20px 28px;
+    overflow-y: auto;
+}
+
+.mulopimfwc-modal__footer {
+    padding: 16px 28px 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8fafc;
+}
+
+.mulopimfwc-modal__close {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.mulopimfwc-modal__close:hover {
+    color: #0f172a;
+}
+
+.mulopimfwc-bulk-assign-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.mulopimfwc-bulk-assign-count {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.mulopimfwc-bulk-assign-label {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.mulopimfwc-bulk-assign-orders {
+    margin-bottom: 18px;
+}
+
+.mulopimfwc-bulk-assign-orders__header {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #0f172a;
+}
+
+.mulopimfwc-bulk-assign-orders__list {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.mulopimfwc-bulk-empty {
+    padding: 14px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.mulopimfwc-bulk-order-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 110px 120px 140px;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+}
+
+.mulopimfwc-bulk-order-row:last-child {
+    border-bottom: none;
+}
+
+.mulopimfwc-bulk-order-id {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.mulopimfwc-bulk-order-customer {
+    color: #334155;
+}
+
+.mulopimfwc-bulk-order-total {
+    font-weight: 600;
+    text-align: right;
+}
+
+.mulopimfwc-bulk-order-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #334155;
+    text-transform: capitalize;
+    font-size: 12px;
+}
+
+.mulopimfwc-bulk-order-location {
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.mulopimfwc-bulk-assign-location label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.mulopimfwc-bulk-assign-location select {
+    width: 100%;
+    max-width: 420px;
+    padding: 6px 10px;
+    border: 1px solid #8c8f94;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.mulopimfwc-bulk-assign-message {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.mulopimfwc-bulk-assign-message.is-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.mulopimfwc-bulk-assign-message.is-warning {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.mulopimfwc-bulk-assign-message.is-error {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.mulopimfwc-modal.is-loading .mulopimfwc-modal__dialog {
+    opacity: 0.9;
+}
+
+@media (max-width: 900px) {
+    .mulopimfwc-bulk-order-row {
+        grid-template-columns: 80px 1fr;
+        grid-template-rows: auto auto auto;
+    }
+
+    .mulopimfwc-bulk-order-total,
+    .mulopimfwc-bulk-order-status,
+    .mulopimfwc-bulk-order-location {
+        grid-column: 1 / -1;
+    }
+}
