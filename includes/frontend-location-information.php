@@ -151,10 +151,10 @@ class MULOPIMFWC_Frontend_Location_Information
         if (empty($locations) || is_wp_error($locations)) {
             return $tabs;
         }
-        
+
         // Filter by is_active and order by display_order
         $locations = $this->filter_and_order_locations($locations);
-        
+
         if (empty($locations)) {
             return $tabs;
         }
@@ -287,10 +287,10 @@ class MULOPIMFWC_Frontend_Location_Information
         if (empty($locations) || is_wp_error($locations)) {
             return;
         }
-        
+
         // Filter by is_active and order by display_order
         $locations = $this->filter_and_order_locations($locations);
-        
+
         if (empty($locations)) {
             return;
         }
@@ -559,24 +559,25 @@ class MULOPIMFWC_Frontend_Location_Information
                                 data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>"
                                 data-url="<?php echo esc_url(get_term_link($location)); ?>">
 
-                                <?php if ($logo_id): ?>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <?php if ($logo_id): ?>
                                         <div class="mulopimfwc-tab-logo">
                                             <?php echo wp_get_attachment_image($logo_id, 'thumbnail', false, ['alt' => $location->name]); ?>
                                         </div>
-                                        <div class="mulopimfwc-tab-header" style="width: calc(100% - 80px);">
-                                            <h4 class="mulopimfwc-tab-title">
-                                                <a href="<?php echo esc_url(get_term_link($location)); ?>" target="_blank">
-                                                    <?php echo esc_html($location->name); ?>
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                        <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor" />
-                                                    </svg>
-                                                </a>
-                                            </h4>
-                                            <?php echo $this->render_status_badge($status, true); ?>
-                                        </div>
+                                    <?php endif; ?>
+                                    <div class="mulopimfwc-tab-header" style="width: calc(100% - 80px);">
+                                        <h4 class="mulopimfwc-tab-title">
+                                            <a href="<?php echo esc_url(get_term_link($location)); ?>" target="_blank">
+                                                <?php echo esc_html($location->name); ?>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor" />
+                                                </svg>
+                                            </a>
+                                        </h4>
+                                        <?php echo $this->render_status_badge($status, true); ?>
                                     </div>
-                                <?php endif; ?>
+                                </div>
+
 
                                 <div class="mulopimfwc-tab-info">
                                     <div class="mulopimfwc-tab-details">
@@ -681,7 +682,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 </div>
             <?php endif; ?>
 
-            <?php 
+            <?php
             // Check if there's any actual address content (not just empty strings)
             $has_address = false;
             $address_parts = array_filter([
@@ -689,68 +690,68 @@ class MULOPIMFWC_Frontend_Location_Information
                 trim($city),
                 trim($state),
                 trim($postal_code)
-            ], function($part) {
+            ], function ($part) {
                 return !empty($part);
             });
-            
+
             if (!empty($address_parts)) {
                 $has_address = true;
             }
-            
+
             // Check if phone and email have actual content
             $has_phone = !empty(trim($phone));
             $has_email = !empty(trim($email));
-            
+
             // Only render overlay-details if there's at least one item to display
             $has_details = $has_address || $has_phone || $has_email;
             ?>
             <?php if ($has_details): ?>
-            <div class="mulopimfwc-overlay-details">
-                <?php if ($has_address): ?>
-                    <div class="mulopimfwc-overlay-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" />
-                        </svg>
-                        <div>
-                            <?php if (!empty(trim($street_address))): ?>
-                                <div><?php echo esc_html($street_address); ?></div>
-                            <?php endif; ?>
-                            <?php 
-                            $address_line = array_filter([
-                                trim($city),
-                                trim($state),
-                                trim($postal_code)
-                            ], function($part) {
-                                return !empty($part);
-                            });
-                            if (!empty($address_line)): 
-                            ?>
-                                <div>
-                                    <?php echo esc_html(implode(', ', $address_line)); ?>
-                                </div>
-                            <?php endif; ?>
+                <div class="mulopimfwc-overlay-details">
+                    <?php if ($has_address): ?>
+                        <div class="mulopimfwc-overlay-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" />
+                            </svg>
+                            <div>
+                                <?php if (!empty(trim($street_address))): ?>
+                                    <div><?php echo esc_html($street_address); ?></div>
+                                <?php endif; ?>
+                                <?php
+                                $address_line = array_filter([
+                                    trim($city),
+                                    trim($state),
+                                    trim($postal_code)
+                                ], function ($part) {
+                                    return !empty($part);
+                                });
+                                if (!empty($address_line)):
+                                ?>
+                                    <div>
+                                        <?php echo esc_html(implode(', ', $address_line)); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
 
-                <?php if ($has_phone): ?>
-                    <div class="mulopimfwc-overlay-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" fill="currentColor" />
-                        </svg>
-                        <a href="tel:<?php echo esc_attr($phone); ?>"><?php echo esc_html($phone); ?></a>
-                    </div>
-                <?php endif; ?>
+                    <?php if ($has_phone): ?>
+                        <div class="mulopimfwc-overlay-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" fill="currentColor" />
+                            </svg>
+                            <a href="tel:<?php echo esc_attr($phone); ?>"><?php echo esc_html($phone); ?></a>
+                        </div>
+                    <?php endif; ?>
 
-                <?php if ($has_email): ?>
-                    <div class="mulopimfwc-overlay-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
-                        </svg>
-                        <a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a>
-                    </div>
-                <?php endif; ?>
-            </div>
+                    <?php if ($has_email): ?>
+                        <div class="mulopimfwc-overlay-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
+                            </svg>
+                            <a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a>
+                        </div>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
 
             <div class="mulopimfwc-overlay-actions">
@@ -983,15 +984,15 @@ class MULOPIMFWC_Frontend_Location_Information
                     </div>
             </div>
             <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
-            <div class="mulopimfwc-map-wrapper">
-                <div id="mulopimfwc-map-<?php echo esc_attr($term_id); ?>"
-                    class="mulopimfwc-location-map mulopimfwc-map-small"
-                    data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
-                    data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
-                    data-name="<?php echo esc_attr($location->name); ?>"
-                    data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>" style="height: 100%;">
+                <div class="mulopimfwc-map-wrapper">
+                    <div id="mulopimfwc-map-<?php echo esc_attr($term_id); ?>"
+                        class="mulopimfwc-location-map mulopimfwc-map-small"
+                        data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
+                        data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
+                        data-name="<?php echo esc_attr($location->name); ?>"
+                        data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>" style="height: 100%;">
+                    </div>
                 </div>
-            </div>
             <?php endif; ?>
         <?php else: ?>
         </div>
@@ -1090,22 +1091,22 @@ class MULOPIMFWC_Frontend_Location_Information
             ];
 
             $locations = mulopimfwc_get_frontend_locations($args);
-            
+
             // Apply additional ordering if specified (after display_order)
             if (!empty($atts['orderby']) && $atts['orderby'] !== 'display_order') {
                 if ($atts['orderby'] === 'name') {
-                    usort($locations, function($a, $b) use ($atts) {
+                    usort($locations, function ($a, $b) use ($atts) {
                         $result = strcasecmp($a->name, $b->name);
                         return $atts['order'] === 'DESC' ? -$result : $result;
                     });
                 } elseif ($atts['orderby'] === 'id') {
-                    usort($locations, function($a, $b) use ($atts) {
+                    usort($locations, function ($a, $b) use ($atts) {
                         $result = $a->term_id <=> $b->term_id;
                         return $atts['order'] === 'DESC' ? -$result : $result;
                     });
                 }
             }
-            
+
             // Apply limit if specified
             if (!empty($atts['limit'])) {
                 $limit = intval($atts['limit']);
@@ -1252,14 +1253,14 @@ class MULOPIMFWC_Frontend_Location_Information
                                     <h4 class="mulopimfwc-tab-title">
                                         <?php if ($use_anchor): ?>
                                             <a href="<?php echo esc_url(rawurldecode(get_term_link($location))); ?>" target="_blank">
-                                        <?php endif; ?>
-                                        <span>
-                                            <?php echo esc_html($location->name); ?>
-                                        </span>
-                                        <?php if ($use_anchor): ?>
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor" />
-                                            </svg>
+                                            <?php endif; ?>
+                                            <span>
+                                                <?php echo esc_html($location->name); ?>
+                                            </span>
+                                            <?php if ($use_anchor): ?>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor" />
+                                                </svg>
                                             </a>
                                         <?php endif; ?>
                                     </h4>
@@ -1409,30 +1410,30 @@ class MULOPIMFWC_Frontend_Location_Information
         if (empty($locations) || is_wp_error($locations)) {
             return [];
         }
-        
+
         $filtered_locations = [];
         foreach ($locations as $location) {
             $is_active = get_term_meta($location->term_id, 'is_active', true);
-            
+
             // Only include active locations (is_active === 'on' or '1' or true or 'yes')
             if ($is_active === 'on' || $is_active === '1' || $is_active === true || $is_active === 'yes') {
                 $display_order = get_term_meta($location->term_id, 'display_order', true);
                 $display_order = !empty($display_order) ? intval($display_order) : 999;
-                
+
                 $filtered_locations[] = [
                     'location' => $location,
                     'display_order' => $display_order,
                 ];
             }
         }
-        
+
         // Sort by display_order (ascending)
-        usort($filtered_locations, function($a, $b) {
+        usort($filtered_locations, function ($a, $b) {
             return $a['display_order'] <=> $b['display_order'];
         });
-        
+
         // Extract just the location objects
-        return array_map(function($item) {
+        return array_map(function ($item) {
             return $item['location'];
         }, $filtered_locations);
     }
