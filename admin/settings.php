@@ -3946,7 +3946,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             <select name="mulopimfwc_display_options[order_assignment_method]">
                 <option value="customer_selection" <?php selected($value, 'customer_selection'); ?>><?php echo esc_html_e('Customer Selection (Based on selected location)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="inventory_based" <?php selected($value, 'inventory_based'); ?>><?php echo esc_html_e('Inventory Based (Location with highest stock)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="proximity_based" <?php selected($value, 'proximity_based'); ?>><?php echo esc_html_e('Proximity Based (Nearest location to shipping address)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="proximity_based" <?php selected($value, 'proximity_based'); ?>><?php echo esc_html_e('Proximity Based (Nearest location to shipping address)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="manual" <?php selected($value, 'manual'); ?>><?php echo esc_html_e('Manual Assignment (Admin assigns after order)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('Choose how orders are assigned to fulfillment locations. In Manual Assignment mode, orders placed without a selected location are set to On Hold until a location is assigned.', 'multi-location-product-and-inventory-management'); ?></p>
@@ -3958,9 +3958,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
         add_settings_field(
             'manual_optional_location_selection',
-            __('Optional Location Selection (Manual/Inventory)', 'multi-location-product-and-inventory-management'),
+            __('Optional Location Selection (Manual/Inventory/Proximity)', 'multi-location-product-and-inventory-management'),
             function () {
-                $message = __("Allow customers to optionally select a location when Manual or Inventory-Based assignment is enabled. Location selection remains optional.", 'multi-location-product-and-inventory-management');
+                $message = __("Allow customers to optionally select a location when Manual, Inventory-Based, or Proximity-Based assignment is enabled. Location selection remains optional.", 'multi-location-product-and-inventory-management');
                 $this->render_advance_checkbox('manual_optional_location_selection', $message);
             },
             'lwp-order-fullfill-settings',
@@ -7126,7 +7126,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     {
         $options = $this->get_display_options();
         return isset($options['order_assignment_method'])
-            && in_array($options['order_assignment_method'], ['manual', 'inventory_based'], true);
+            && in_array($options['order_assignment_method'], ['manual', 'inventory_based', 'proximity_based'], true);
     }
 
     private function is_manual_optional_location_enabled(): bool
@@ -7134,7 +7134,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $options = $this->get_display_options();
         if (
             !isset($options['order_assignment_method'])
-            || !in_array($options['order_assignment_method'], ['manual', 'inventory_based'], true)
+            || !in_array($options['order_assignment_method'], ['manual', 'inventory_based', 'proximity_based'], true)
         ) {
             return false;
         }
@@ -7151,7 +7151,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     private function append_manual_disabled_note(string $message): string
     {
         if ($this->is_manual_assignment_strict_mode()) {
-            $message .= ' ' . __('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management');
+            $message .= ' ' . __('Disabled while Manual, Inventory-Based, or Proximity-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management');
         }
         return $message;
     }

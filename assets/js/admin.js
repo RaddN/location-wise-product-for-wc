@@ -4493,7 +4493,7 @@ jQuery(document).ready(function ($) {
 
     function toggleManualModeSettings() {
         var assignmentMethod = $assignmentSelect.val();
-        var isOptionalAssignment = assignmentMethod === 'manual' || assignmentMethod === 'inventory_based';
+        var isOptionalAssignment = assignmentMethod === 'manual' || assignmentMethod === 'inventory_based' || assignmentMethod === 'proximity_based';
         var isOptionalEnabled = isOptionalAssignment && $manualOptional.length && $manualOptional.is(':checked');
 
         if ($manualOptionalRow.length) {

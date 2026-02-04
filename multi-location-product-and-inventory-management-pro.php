@@ -328,7 +328,7 @@ if (!function_exists('mulopimfwc_is_manual_assignment_mode')) {
 
 if (!function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')) {
     /**
-     * Check whether optional location selection is enabled for manual or inventory-based assignment.
+     * Check whether optional location selection is enabled for manual, inventory-based, or proximity-based assignment.
      *
      * @param array|null $options Optional options array.
      * @return bool
@@ -346,7 +346,7 @@ if (!function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')
             ? $options['order_assignment_method']
             : 'customer_selection';
 
-        if (!in_array($assignment_method, ['manual', 'inventory_based'], true)) {
+        if (!in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true)) {
             return false;
         }
 
@@ -375,7 +375,7 @@ if (!function_exists('mulopimfwc_is_manual_assignment_strict_mode')) {
             ? $options['order_assignment_method']
             : 'customer_selection';
 
-        if (!in_array($assignment_method, ['manual', 'inventory_based'], true)) {
+        if (!in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true)) {
             return false;
         }
 
@@ -2526,7 +2526,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $assignment_method = isset($options['order_assignment_method'])
                 ? $options['order_assignment_method']
                 : 'customer_selection';
-            if (in_array($assignment_method, ['manual', 'inventory_based'], true)) {
+            if (in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true)) {
                 return $passed;
             }
 
@@ -5492,6 +5492,32 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
+            if ($assignment_method === 'proximity_based') {
+                $order = wc_get_order($order_id);
+                if (!$order) {
+                    return;
+                }
+
+                $selected_location = '';
+                if (mulopimfwc_is_manual_optional_location_selection_enabled($options)) {
+                    $selected_location = mulopimfwc_get_store_location_cookie();
+                    if ($selected_location === 'all-products' || !mulopimfwc_validate_location_slug($selected_location)) {
+                        $selected_location = '';
+                    }
+                }
+
+                $location = $selected_location !== ''
+                    ? $selected_location
+                    : $this->assign_location_by_proximity($order, is_array($data) ? $data : null);
+
+                if (!empty($location)) {
+                    $order->update_meta_data('_store_location', $location);
+                    $order->save();
+                }
+
+                return;
+            }
+
             // Use get_current_location method which includes default location logic
             $location = $this->get_current_location();
 
@@ -5641,6 +5667,335 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             return $best_slug;
+        }
+
+        /**
+         * Assign a location to an order based on proximity to the shipping address.
+         *
+         * @param WC_Order|int $order Order object or ID.
+         * @return string Location slug or empty string if none found.
+         */
+        private function assign_location_by_proximity($order, ?array $checkout_data = null): string
+        {
+            $order = $order instanceof WC_Order ? $order : wc_get_order($order);
+            if (!$order) {
+                return '';
+            }
+
+            $locations = function_exists('mulopimfwc_get_frontend_locations')
+                ? mulopimfwc_get_frontend_locations()
+                : get_terms([
+                    'taxonomy' => 'mulopimfwc_store_location',
+                    'hide_empty' => false,
+                ]);
+
+            if (is_wp_error($locations) || empty($locations)) {
+                return '';
+            }
+
+            $fallback_slug = $this->get_location_fallback_by_display_order($locations);
+
+            $address = $this->get_order_shipping_address_string($order, $checkout_data);
+            if ($address === '') {
+                return $fallback_slug;
+            }
+
+            $coords = $this->geocode_address($address);
+            if (empty($coords) || !isset($coords['lat'], $coords['lng'])) {
+                return $fallback_slug;
+            }
+
+            $best_slug = '';
+            $best_distance = null;
+            $best_display_order = null;
+
+            foreach ($locations as $location) {
+                if (!isset($location->term_id, $location->slug)) {
+                    continue;
+                }
+
+                $lat = get_term_meta($location->term_id, 'latitude', true);
+                $lng = get_term_meta($location->term_id, 'longitude', true);
+
+                if (!is_numeric($lat) || !is_numeric($lng)) {
+                    continue;
+                }
+
+                $lat = (float) $lat;
+                $lng = (float) $lng;
+
+                if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+                    continue;
+                }
+
+                $distance = $this->calculate_haversine_distance_km(
+                    $coords['lat'],
+                    $coords['lng'],
+                    $lat,
+                    $lng
+                );
+
+                $display_order = get_term_meta($location->term_id, 'display_order', true);
+                $display_order = $display_order !== '' ? (int) $display_order : 999;
+
+                if ($best_distance === null || $distance < $best_distance - 0.000001) {
+                    $best_slug = $location->slug;
+                    $best_distance = $distance;
+                    $best_display_order = $display_order;
+                    continue;
+                }
+
+                if (abs($distance - $best_distance) <= 0.000001) {
+                    if ($best_display_order === null || $display_order < $best_display_order) {
+                        $best_slug = $location->slug;
+                        $best_display_order = $display_order;
+                    } elseif ($display_order === $best_display_order && strcmp($location->slug, $best_slug) < 0) {
+                        $best_slug = $location->slug;
+                    }
+                }
+            }
+
+            return $best_slug !== '' ? $best_slug : $fallback_slug;
+        }
+
+        /**
+         * Build a normalized shipping address string for geocoding.
+         *
+         * @param WC_Order $order
+         * @param array|null $checkout_data
+         * @return string
+         */
+        private function get_order_shipping_address_string(WC_Order $order, ?array $checkout_data = null): string
+        {
+            $address_parts = [
+                $order->get_shipping_address_1(),
+                $order->get_shipping_address_2(),
+                $order->get_shipping_city(),
+                $order->get_shipping_state(),
+                $order->get_shipping_postcode(),
+                $order->get_shipping_country(),
+            ];
+
+            $address = $this->sanitize_address_parts($address_parts);
+
+            if (empty($address) && is_array($checkout_data)) {
+                $address_parts = [
+                    $checkout_data['shipping_address_1'] ?? '',
+                    $checkout_data['shipping_address_2'] ?? '',
+                    $checkout_data['shipping_city'] ?? '',
+                    $checkout_data['shipping_state'] ?? '',
+                    $checkout_data['shipping_postcode'] ?? '',
+                    $checkout_data['shipping_country'] ?? '',
+                ];
+                $address = $this->sanitize_address_parts($address_parts);
+            }
+
+            if (empty($address)) {
+                $address_parts = [
+                    $order->get_billing_address_1(),
+                    $order->get_billing_address_2(),
+                    $order->get_billing_city(),
+                    $order->get_billing_state(),
+                    $order->get_billing_postcode(),
+                    $order->get_billing_country(),
+                ];
+                $address = $this->sanitize_address_parts($address_parts);
+            }
+
+            if (empty($address) && is_array($checkout_data)) {
+                $address_parts = [
+                    $checkout_data['billing_address_1'] ?? '',
+                    $checkout_data['billing_address_2'] ?? '',
+                    $checkout_data['billing_city'] ?? '',
+                    $checkout_data['billing_state'] ?? '',
+                    $checkout_data['billing_postcode'] ?? '',
+                    $checkout_data['billing_country'] ?? '',
+                ];
+                $address = $this->sanitize_address_parts($address_parts);
+            }
+
+            if (empty($address)) {
+                return '';
+            }
+
+            return implode(', ', $address);
+        }
+
+        /**
+         * Get a fallback location slug based on lowest display order.
+         *
+         * @param array $locations
+         * @return string
+         */
+        private function get_location_fallback_by_display_order(array $locations): string
+        {
+            $best_slug = '';
+            $best_display_order = null;
+
+            foreach ($locations as $location) {
+                if (!isset($location->term_id, $location->slug)) {
+                    continue;
+                }
+
+                $display_order = get_term_meta($location->term_id, 'display_order', true);
+                $display_order = $display_order !== '' ? (int) $display_order : 999;
+
+                if ($best_display_order === null || $display_order < $best_display_order) {
+                    $best_display_order = $display_order;
+                    $best_slug = $location->slug;
+                    continue;
+                }
+
+                if ($display_order === $best_display_order && strcmp($location->slug, $best_slug) < 0) {
+                    $best_slug = $location->slug;
+                }
+            }
+
+            return $best_slug;
+        }
+
+        /**
+         * Sanitize address parts for geocoding.
+         *
+         * @param array $parts
+         * @return array
+         */
+        private function sanitize_address_parts(array $parts): array
+        {
+            $cleaned = array_map(static function ($value) {
+                if (!is_scalar($value)) {
+                    return '';
+                }
+                return trim(sanitize_text_field((string) $value));
+            }, $parts);
+
+            return array_values(array_filter($cleaned, static function ($value) {
+                return $value !== '';
+            }));
+        }
+
+        /**
+         * Geocode an address using OpenStreetMap Nominatim.
+         *
+         * @param string $address
+         * @return array{lat: float, lng: float}|array
+         */
+        private function geocode_address(string $address): array
+        {
+            $address = trim($address);
+            if ($address === '') {
+                return [];
+            }
+
+            $cache_key = 'mulopimfwc_geocode_' . md5(strtolower($address));
+            $cached = get_transient($cache_key);
+            if (is_array($cached) && isset($cached['lat'], $cached['lng'])) {
+                return $cached;
+            }
+            if ($cached === 'miss') {
+                return [];
+            }
+
+            $query_args = [
+                'q' => $address,
+                'format' => 'json',
+                'limit' => 1,
+                'addressdetails' => 0,
+            ];
+
+            $request_url = add_query_arg($query_args, 'https://nominatim.openstreetmap.org/search');
+
+            $user_agent = sprintf('MulopimFWC/%s (%s)', defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.0', home_url('/'));
+
+            $response = wp_remote_get($request_url, [
+                'timeout' => 8,
+                'redirection' => 2,
+                'user-agent' => $user_agent,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Accept-Language' => get_locale(),
+                ],
+            ]);
+
+            $failure_ttl = (int) apply_filters('mulopimfwc_geocode_failure_ttl', HOUR_IN_SECONDS, $address);
+
+            if (is_wp_error($response)) {
+                set_transient($cache_key, 'miss', $failure_ttl);
+                return [];
+            }
+
+            $response_code = wp_remote_retrieve_response_code($response);
+            if ($response_code !== 200) {
+                set_transient($cache_key, 'miss', $failure_ttl);
+                return [];
+            }
+
+            $body = wp_remote_retrieve_body($response);
+            if ($body === '') {
+                set_transient($cache_key, 'miss', $failure_ttl);
+                return [];
+            }
+
+            $data = json_decode($body, true);
+            if (!is_array($data) || empty($data[0])) {
+                set_transient($cache_key, 'miss', $failure_ttl);
+                return [];
+            }
+
+            $lat = isset($data[0]['lat']) ? (float) $data[0]['lat'] : null;
+            $lng = isset($data[0]['lon']) ? (float) $data[0]['lon'] : null;
+
+            if (!is_numeric($lat) || !is_numeric($lng)) {
+                set_transient($cache_key, 'miss', $failure_ttl);
+                return [];
+            }
+
+            $lat = (float) $lat;
+            $lng = (float) $lng;
+
+            if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+                set_transient($cache_key, 'miss', $failure_ttl);
+                return [];
+            }
+
+            $result = [
+                'lat' => $lat,
+                'lng' => $lng,
+            ];
+
+            $success_ttl = (int) apply_filters('mulopimfwc_geocode_cache_ttl', DAY_IN_SECONDS * 30, $address, $result);
+            if ($success_ttl < 1) {
+                $success_ttl = DAY_IN_SECONDS;
+            }
+            set_transient($cache_key, $result, $success_ttl);
+
+            return $result;
+        }
+
+        /**
+         * Calculate Haversine distance between two coordinates in kilometers.
+         *
+         * @param float $lat1
+         * @param float $lng1
+         * @param float $lat2
+         * @param float $lng2
+         * @return float
+         */
+        private function calculate_haversine_distance_km(float $lat1, float $lng1, float $lat2, float $lng2): float
+        {
+            $earth_radius = 6371;
+
+            $lat1_rad = deg2rad($lat1);
+            $lat2_rad = deg2rad($lat2);
+            $delta_lat = deg2rad($lat2 - $lat1);
+            $delta_lng = deg2rad($lng2 - $lng1);
+
+            $a = sin($delta_lat / 2) ** 2
+                + cos($lat1_rad) * cos($lat2_rad) * sin($delta_lng / 2) ** 2;
+
+            $c = 2 * asin(min(1, sqrt($a)));
+
+            return $earth_radius * $c;
         }
 
         /**
@@ -5997,7 +6352,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 : get_option('mulopimfwc_display_options', []);
 
             $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
-            $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based'], true);
+            $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
             $is_manual_strict = mulopimfwc_is_manual_assignment_strict_mode($options);
 
             wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.2.15');
