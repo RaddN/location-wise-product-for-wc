@@ -3843,9 +3843,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         ?>
             <select name="mulopimfwc_display_options[stock_display_format]">
                 <option value="exact_count" <?php selected($value, 'exact_count'); ?>><?php echo esc_html_e('Show Exact Stock Count', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="availability_only" <?php selected($value, 'availability_only'); ?>><?php echo esc_html_e('Show Only Availability (In Stock/Out of Stock)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="stock_levels" <?php selected($value, 'stock_levels'); ?>><?php echo esc_html_e('Show Stock Levels (High/Medium/Low)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option disabled value="hide_stock" <?php selected($value, 'hide_stock'); ?>><?php echo esc_html_e('Hide Stock Information', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="availability_only" <?php selected($value, 'availability_only'); ?>><?php echo esc_html_e('Show Only Availability (In Stock/Out of Stock)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="stock_levels" <?php selected($value, 'stock_levels'); ?>><?php echo esc_html_e('Show Stock Levels (High/Medium/Low)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="hide_stock" <?php selected($value, 'hide_stock'); ?>><?php echo esc_html_e('Hide Stock Information', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html_e('How to display stock information for location-specific products.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
@@ -4526,6 +4526,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $valid_values = ['show_404', 'show_message'];
             $value = sanitize_text_field($input['single_product_unavailable_behavior']);
             $sanitized['single_product_unavailable_behavior'] = in_array($value, $valid_values, true) ? $value : 'show_404';
+        }
+        // Handle stock_display_format option
+        if (isset($input['stock_display_format'])) {
+            $valid_values = ['exact_count', 'availability_only', 'stock_levels', 'hide_stock'];
+            $value = sanitize_text_field($input['stock_display_format']);
+            $sanitized['stock_display_format'] = in_array($value, $valid_values, true) ? $value : 'exact_count';
         }
         // Handle enable_location_stock option
         if (isset($input['enable_location_stock'])) {

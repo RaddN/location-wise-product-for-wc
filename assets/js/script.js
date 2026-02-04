@@ -558,7 +558,20 @@ jQuery(document).ready(function ($) {
             location_info_html += '<h4>' + 'Information for' + location_data.location_name + '</h4>';
 
             // Stock info
-            if (location_data.location_stock !== '') {
+            if (location_data.stock_display && location_data.stock_display.show && location_data.stock_display.label) {
+                var statusClass = 'in-stock';
+                if (location_data.stock_display.status === 'outofstock') {
+                    statusClass = 'out-of-stock';
+                } else if (location_data.stock_display.status === 'onbackorder') {
+                    statusClass = 'on-backorder';
+                }
+                if (location_data.stock_display.level) {
+                    statusClass += ' stock-level-' + location_data.stock_display.level;
+                }
+                location_info_html += '<p class="location-stock"><strong>Stock</strong> ';
+                location_info_html += '<span class="' + statusClass + '">' + location_data.stock_display.label + '</span>';
+                location_info_html += '</p>';
+            } else if (location_data.location_stock !== '') {
                 location_info_html += '<p class="location-stock"><strong>Stock</strong> ';
 
                 if (parseInt(location_data.location_stock) > 0) {

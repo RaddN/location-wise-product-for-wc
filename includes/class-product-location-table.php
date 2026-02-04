@@ -368,19 +368,31 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 // Get variation product to check stock management setting
                 $variation_product = wc_get_product($variation['id']);
                 $manage_stock = $variation_product ? $variation_product->get_manage_stock() : false;
+                $backorders = $variation_product ? $variation_product->get_backorders() : 'off';
                 
                 if ($show_default) {
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
                     if ($manage_stock) {
-                        // Stock management is enabled - use stock quantity
                         $default_stock = get_post_meta($variation['id'], '_stock', true);
-                        $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                        $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                            ? mulopimfwc_build_stock_display_label([
+                                'stock_qty' => $default_stock,
+                                'backorders' => $backorders,
+                                'count_format' => 'paren',
+                            ])
+                            : ['show' => true, 'label' => $default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')];
                     } else {
-                        // Stock management is disabled - check stock status
                         $stock_status = get_post_meta($variation['id'], '_stock_status', true);
-                        $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
-                        $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
+                        $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                            ? mulopimfwc_build_stock_display_label([
+                                'stock_status' => $stock_status,
+                                'backorders' => $backorders,
+                            ])
+                            : ['show' => true, 'label' => ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management')];
+                    }
+                    if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                        $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
                     }
                     $output .= '</div>';
                 }
@@ -393,19 +405,42 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         
                         // For location stock, check if stock is set (empty string means not set)
                         if ($location_stock !== '') {
-                            // Location stock is set - use it
-                            $output .= '<span class="stock-value">' . ($location_stock > 0 ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($location_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                            $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                                ? mulopimfwc_build_stock_display_label([
+                                    'stock_qty' => $location_stock,
+                                    'backorders' => get_post_meta($variation['id'], '_location_backorders_' . $location->term_id, true),
+                                    'location_id' => (int) $location->term_id,
+                                    'count_format' => 'paren',
+                                ])
+                                : ['show' => true, 'label' => ($location_stock > 0 ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($location_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management'))];
+                            if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                                $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                            }
                         } else {
                             // Location stock not set - check default stock status
                             if ($manage_stock) {
-                                // Use default stock quantity
                                 $default_stock = get_post_meta($variation['id'], '_stock', true);
-                                $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                                $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                                    ? mulopimfwc_build_stock_display_label([
+                                        'stock_qty' => $default_stock,
+                                        'backorders' => $backorders,
+                                        'count_format' => 'paren',
+                                    ])
+                                    : ['show' => true, 'label' => ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management'))];
+                                if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                                    $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                                }
                             } else {
-                                // Use default stock status
                                 $stock_status = get_post_meta($variation['id'], '_stock_status', true);
-                                $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
-                                $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
+                                $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                                    ? mulopimfwc_build_stock_display_label([
+                                        'stock_status' => $stock_status,
+                                        'backorders' => $backorders,
+                                    ])
+                                    : ['show' => true, 'label' => ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management')];
+                                if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                                    $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                                }
                             }
                         }
                         $output .= '</div>';
@@ -419,22 +454,38 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             // Get product to check stock management setting
             $product = wc_get_product($item['id']);
             $manage_stock = $product ? $product->get_manage_stock() : false;
+            $backorders = $product ? $product->get_backorders() : 'off';
             
             if ($show_default) {
                 if ($manage_stock) {
-                    // Stock management is enabled - use stock quantity
                     $default_stock = get_post_meta($item['id'], "_stock", true);
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                    $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                    $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                        ? mulopimfwc_build_stock_display_label([
+                            'stock_qty' => $default_stock,
+                            'backorders' => $backorders,
+                            'count_format' => 'paren',
+                        ])
+                        : ['show' => true, 'label' => ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management'))];
+                    if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                        $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                    }
                     $output .= '</div>';
                 } else {
-                    // Stock management is disabled - check stock status
                     $stock_status = get_post_meta($item['id'], "_stock_status", true);
-                    $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
+                    $backorders = $product ? $product->get_backorders() : 'off';
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                    $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
+                    $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                        ? mulopimfwc_build_stock_display_label([
+                            'stock_status' => $stock_status,
+                            'backorders' => $backorders,
+                        ])
+                        : ['show' => true, 'label' => ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management')];
+                    if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                        $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                    }
                     $output .= '</div>';
                 }
             }
@@ -446,19 +497,42 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     
                     // For location stock, check if stock is set (empty string means not set)
                     if ($location_stock !== '') {
-                        // Location stock is set - use it
-                        $output .= '<span class="stock-value">' . ($location_stock > 0 ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($location_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                        $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                            ? mulopimfwc_build_stock_display_label([
+                                'stock_qty' => $location_stock,
+                                'backorders' => get_post_meta($item['id'], '_location_backorders_' . $location->term_id, true),
+                                'location_id' => (int) $location->term_id,
+                                'count_format' => 'paren',
+                            ])
+                            : ['show' => true, 'label' => ($location_stock > 0 ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($location_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management'))];
+                        if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                            $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                        }
                     } else {
                         // Location stock not set - check default stock status
                         if ($manage_stock) {
-                            // Use default stock quantity
                             $default_stock = get_post_meta($item['id'], '_stock', true);
-                            $output .= '<span class="stock-value">' . ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management')) . '</span>';
+                            $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                                ? mulopimfwc_build_stock_display_label([
+                                    'stock_qty' => $default_stock,
+                                    'backorders' => $backorders,
+                                    'count_format' => 'paren',
+                                ])
+                                : ['show' => true, 'label' => ($default_stock ? __('In stock', 'multi-location-product-and-inventory-management') . ' (' . esc_html($default_stock) . ')' : __('Out of stock', 'multi-location-product-and-inventory-management'))];
+                            if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                                $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                            }
                         } else {
-                            // Use default stock status
                             $stock_status = get_post_meta($item['id'], '_stock_status', true);
-                            $stock_status_text = ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management');
-                            $output .= '<span class="stock-value">' . esc_html($stock_status_text) . '</span>';
+                            $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                                ? mulopimfwc_build_stock_display_label([
+                                    'stock_status' => $stock_status,
+                                    'backorders' => $backorders,
+                                ])
+                                : ['show' => true, 'label' => ($stock_status === 'instock') ? __('In stock', 'multi-location-product-and-inventory-management') : __('Out of stock', 'multi-location-product-and-inventory-management')];
+                            if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                                $output .= '<span class="stock-value">' . esc_html($stock_data['label']) . '</span>';
+                            }
                         }
                     }
                     $output .= '</div>';

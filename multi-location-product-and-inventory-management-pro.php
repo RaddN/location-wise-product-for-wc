@@ -3156,17 +3156,32 @@ if (!function_exists('mulopimfwc_get_values')) {
                     
                     // Format stock display
                     $stock_display = '';
-                    if ($location_stock !== '') {
-                        $stock_qty = (int) $location_stock;
-                        if ($stock_qty >= $current_quantity) {
-                            $stock_display = sprintf(__(' (Stock: %d)', 'multi-location-product-and-inventory-management'), $stock_qty);
-                        } elseif ($location_backorders !== 'off') {
-                            $stock_display = sprintf(__(' (Stock: %d - Backorder)', 'multi-location-product-and-inventory-management'), $stock_qty);
+                    $format = function_exists('mulopimfwc_get_stock_display_format')
+                        ? mulopimfwc_get_stock_display_format()
+                        : 'exact_count';
+                    if ($format !== 'hide_stock') {
+                        if ($location_stock !== '') {
+                            $stock_qty = (int) $location_stock;
+                            $stock_data = function_exists('mulopimfwc_build_stock_display_label')
+                                ? mulopimfwc_build_stock_display_label([
+                                    'stock_qty' => $stock_qty,
+                                    'backorders' => $location_backorders,
+                                    'location_id' => (int) $location->term_id,
+                                    'count_format' => 'paren',
+                                    'backorder_label' => 'backorder',
+                                ])
+                                : ['show' => true, 'label' => sprintf(__('In stock (%d)', 'multi-location-product-and-inventory-management'), $stock_qty)];
+
+                            if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
+                                $stock_display = ' (' . $stock_data['label'];
+                                if ($stock_qty < $current_quantity && $location_backorders === 'off') {
+                                    $stock_display .= ' - ' . __('Insufficient', 'multi-location-product-and-inventory-management');
+                                }
+                                $stock_display .= ')';
+                            }
                         } else {
-                            $stock_display = sprintf(__(' (Stock: %d - Insufficient)', 'multi-location-product-and-inventory-management'), $stock_qty);
+                            $stock_display = ' (' . __('No stock set', 'multi-location-product-and-inventory-management') . ')';
                         }
-                    } else {
-                        $stock_display = ' (' . __('No stock set', 'multi-location-product-and-inventory-management') . ')';
                     }
                     
                     // Disable option if insufficient stock and backorders not allowed
@@ -9149,6 +9164,185 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         return max(0, (int) $value);
+    }
+
+    /**
+     * Get global stock threshold with fallback defaults.
+     */
+    function mulopimfwc_get_global_stock_threshold($type = 'low')
+    {
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        if ($type === 'out') {
+            $value = isset($options['out_of_stock_threshold']) ? (int) $options['out_of_stock_threshold'] : 0;
+        } else {
+            $value = isset($options['low_stock_threshold']) ? (int) $options['low_stock_threshold'] : 5;
+        }
+
+        return max(0, (int) $value);
+    }
+
+    /**
+     * Get stock display format from options with validation.
+     */
+    function mulopimfwc_get_stock_display_format($options = null)
+    {
+        if ($options === null) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        $format = isset($options['stock_display_format']) ? sanitize_text_field($options['stock_display_format']) : 'exact_count';
+        $valid = ['exact_count', 'availability_only', 'stock_levels', 'hide_stock'];
+
+        return in_array($format, $valid, true) ? $format : 'exact_count';
+    }
+
+    /**
+     * Build stock display label and status based on format.
+     *
+     * @param array $args
+     * @return array{show:bool,label:string,status:string,level:string,class:string,quantity:int|null}
+     */
+    function mulopimfwc_build_stock_display_label($args = [])
+    {
+        $defaults = [
+            'stock_qty' => null,
+            'stock_status' => '',
+            'backorders' => 'off',
+            'format' => null,
+            'location_id' => 0,
+            'count_format' => 'paren', // paren|phrase|short
+            'backorder_label' => 'backorder', // backorder|available
+        ];
+        $args = array_merge($defaults, is_array($args) ? $args : []);
+
+        $format = $args['format'] ? sanitize_text_field($args['format']) : mulopimfwc_get_stock_display_format();
+        if ($format === 'hide_stock') {
+            return [
+                'show' => false,
+                'label' => '',
+                'status' => 'hidden',
+                'level' => '',
+                'class' => 'hidden',
+                'quantity' => null,
+            ];
+        }
+
+        $stock_qty = ($args['stock_qty'] === '' || $args['stock_qty'] === null) ? null : (int) $args['stock_qty'];
+        $backorders = $args['backorders'] ? $args['backorders'] : 'off';
+
+        $status = '';
+        if ($stock_qty !== null) {
+            if ($stock_qty > 0) {
+                $status = 'instock';
+            } else {
+                $status = ($backorders !== 'off') ? 'onbackorder' : 'outofstock';
+            }
+        } else {
+            $status = sanitize_text_field($args['stock_status']);
+            if ($status === 'onbackorder' || $status === 'backorder') {
+                $status = 'onbackorder';
+            } elseif ($status === 'outofstock') {
+                $status = 'outofstock';
+            } else {
+                $status = 'instock';
+            }
+        }
+
+        $label = '';
+        $level = '';
+        $class = $status;
+
+        $backorder_label = ($args['backorder_label'] === 'available')
+            ? __('Available on backorder', 'multi-location-product-and-inventory-management')
+            : __('Backorder', 'multi-location-product-and-inventory-management');
+
+        if ($format === 'availability_only' || $stock_qty === null) {
+            if ($status === 'instock') {
+                $label = __('In stock', 'multi-location-product-and-inventory-management');
+            } elseif ($status === 'onbackorder') {
+                $label = $backorder_label;
+            } else {
+                $label = __('Out of stock', 'multi-location-product-and-inventory-management');
+            }
+        } elseif ($format === 'stock_levels') {
+            if ($status === 'onbackorder') {
+                $label = $backorder_label;
+            } elseif ($status === 'outofstock') {
+                $label = __('Out of stock', 'multi-location-product-and-inventory-management');
+            } else {
+                $location_id = (int) $args['location_id'];
+                if ($location_id > 0 && function_exists('mulopimfwc_get_location_threshold')) {
+                    $low_threshold = mulopimfwc_get_location_threshold($location_id, 'low');
+                    $out_threshold = mulopimfwc_get_location_threshold($location_id, 'out');
+                } else {
+                    $low_threshold = mulopimfwc_get_global_stock_threshold('low');
+                    $out_threshold = mulopimfwc_get_global_stock_threshold('out');
+                }
+
+                if ($stock_qty <= $out_threshold) {
+                    $label = __('Out of stock', 'multi-location-product-and-inventory-management');
+                    $status = 'outofstock';
+                } elseif ($stock_qty <= $low_threshold) {
+                    $label = __('Low stock', 'multi-location-product-and-inventory-management');
+                    $level = 'low';
+                    $class = 'low';
+                } else {
+                    $default_medium = max($low_threshold * 2, $low_threshold + 1);
+                    $medium_threshold = (int) apply_filters('mulopimfwc_stock_medium_threshold', $default_medium, $low_threshold, $location_id, $stock_qty);
+                    if ($stock_qty <= $medium_threshold) {
+                        $label = __('Medium stock', 'multi-location-product-and-inventory-management');
+                        $level = 'medium';
+                        $class = 'medium';
+                    } else {
+                        $label = __('High stock', 'multi-location-product-and-inventory-management');
+                        $level = 'high';
+                        $class = 'high';
+                    }
+                }
+            }
+        } else {
+            if ($status === 'instock') {
+                if ($args['count_format'] === 'phrase') {
+                    $label = sprintf(_n('%d item in stock', '%d items in stock', $stock_qty, 'multi-location-product-and-inventory-management'), $stock_qty);
+                } elseif ($args['count_format'] === 'short') {
+                    $label = sprintf(__('%d in stock', 'multi-location-product-and-inventory-management'), $stock_qty);
+                } else {
+                    $label = sprintf(__('In stock (%d)', 'multi-location-product-and-inventory-management'), $stock_qty);
+                }
+            } elseif ($status === 'onbackorder') {
+                $label = $backorder_label;
+            } else {
+                $label = __('Out of stock', 'multi-location-product-and-inventory-management');
+            }
+        }
+
+        $label = apply_filters(
+            'mulopimfwc_stock_display_label',
+            $label,
+            [
+                'status' => $status,
+                'level' => $level,
+                'format' => $format,
+                'quantity' => $stock_qty,
+                'location_id' => (int) $args['location_id'],
+            ]
+        );
+
+        return [
+            'show' => true,
+            'label' => $label,
+            'status' => $status,
+            'level' => $level,
+            'class' => $class,
+            'quantity' => $stock_qty,
+        ];
     }
 
     /**
