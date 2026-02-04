@@ -179,6 +179,39 @@ class MULOPIMFWC_Admin
         wp_enqueue_style('select2', plugin_dir_url(__FILE__) . '../assets/css/select2.min.css', array(), '4.0.13');
         wp_enqueue_script('select2', plugin_dir_url(__FILE__) . '../assets/js/select2.min.js', array('jquery'), '4.0.13', true);
 
+        // Leaflet for location map picker
+        wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', [], '1.9.4');
+        wp_enqueue_script('leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', ['jquery'], '1.9.4', true);
+
+        wp_enqueue_style(
+            'mulopimfwc-admin-location-map',
+            plugin_dir_url(__FILE__) . '../assets/css/admin-location-map.css',
+            ['leaflet'],
+            mulopimfwc_VERSION
+        );
+        wp_enqueue_script(
+            'mulopimfwc-admin-location-map',
+            plugin_dir_url(__FILE__) . '../assets/js/admin-location-map.js',
+            ['jquery', 'leaflet'],
+            mulopimfwc_VERSION,
+            true
+        );
+
+        $display_options = get_option('mulopimfwc_display_options', []);
+        $default_map_zoom = isset($display_options['default_map_zoom']) ? intval($display_options['default_map_zoom']) : 15;
+        if ($default_map_zoom < 1 || $default_map_zoom > 19) {
+            $default_map_zoom = 15;
+        }
+
+        wp_localize_script('mulopimfwc-admin-location-map', 'mulopimfwcAdminLocationMap', [
+            'defaultLat' => 0,
+            'defaultLng' => 0,
+            'defaultZoom' => $default_map_zoom,
+            'tileUrl' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            'tileAttribution' => '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            'nominatimUrl' => 'https://nominatim.openstreetmap.org',
+        ]);
+
         // Small inline script (no separate file needed)
         $js = '
         (function($){
@@ -537,6 +570,18 @@ class MULOPIMFWC_Admin
     public function add_location_fields()
     {
 ?>
+        <!-- Location Map -->
+        <div class="form-field mulopimfwc-location-map-wrap">
+            <label><?php _e('Location Map', 'multi-location-product-and-inventory-management'); ?></label>
+            <div class="mulopimfwc-location-map-controls">
+                <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management'); ?>" />
+                <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management'); ?></button>
+            </div>
+            <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management'); ?>"></div>
+            <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description mulopimfwc-location-map-feedback" style="display:none;"></p>
+        </div>
+
         <div class="form-field">
             <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="street_address" id="street_address" value="" />
@@ -845,6 +890,19 @@ class MULOPIMFWC_Admin
             }
         }
     ?>
+        <tr class="form-field mulopimfwc-location-map-wrap">
+            <th scope="row"><label><?php _e('Location Map', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <div class="mulopimfwc-location-map-controls">
+                    <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management'); ?>" />
+                    <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management'); ?></button>
+                </div>
+                <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management'); ?>"></div>
+                <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description mulopimfwc-location-map-feedback" style="display:none;"></p>
+            </td>
+        </tr>
+
         <tr class="form-field">
             <th scope="row"><label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>

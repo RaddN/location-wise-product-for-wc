@@ -1,0 +1,28 @@
+.mulopimfwc-location-map-wrap .mulopimfwc-location-map {
+    height: 300px;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    background: #f6f7f7;
+}
+
+.mulopimfwc-location-map-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+    align-items: center;
+}
+
+.mulopimfwc-location-map-controls .mulopimfwc-location-search {
+    min-width: 240px;
+    max-width: 420px;
+    width: 100%;
+}
+
+.mulopimfwc-location-map-feedback {
+    margin-top: 6px;
+}
+
+.mulopimfwc-location-map-feedback.is-error {
+    color: #b32d2e;
+}
