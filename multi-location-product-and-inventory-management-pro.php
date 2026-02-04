@@ -6503,6 +6503,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ');
             }
 
+            $auto_populate_addresses = isset($options['auto_populate_customer_addresses'])
+                ? $options['auto_populate_customer_addresses']
+                : 'off';
+            $is_checkout_page = function_exists('is_checkout') ? is_checkout() : false;
+
             wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
                 'cartHasProducts' => !WC()->cart->is_empty(),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -6525,7 +6530,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                     : 'Do you want to change the store location? Your cart will be emptied.',
                 'singleProductRequiresLocation' => $single_product_requires_location,
                 'selectLocationPrompt' => __('Please select a store location before adding this product to your cart.', 'multi-location-product-and-inventory-management'),
-                'locationSelectionEnforced' => ($location_require_selection === 'on')
+                'locationSelectionEnforced' => ($location_require_selection === 'on'),
+                'autoPopulateAddresses' => $auto_populate_addresses,
+                'autoPopulateNonce' => wp_create_nonce('mulopimfwc_update_customer_address'),
+                'isLoggedIn' => is_user_logged_in(),
+                'isCheckout' => $is_checkout_page
             ]);
 
             wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', array(), '1.7.1');
@@ -9133,6 +9142,125 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'address' => $location_data['address']
             ));
         }
+    }
+
+    // AJAX handler for updating customer checkout address
+    add_action('wp_ajax_mulopimfwc_update_customer_address', 'mulopimfwc_update_customer_address');
+    add_action('wp_ajax_nopriv_mulopimfwc_update_customer_address', 'mulopimfwc_update_customer_address');
+
+    function mulopimfwc_update_customer_address()
+    {
+        check_ajax_referer('mulopimfwc_update_customer_address', 'nonce');
+
+        $options = get_option('mulopimfwc_display_options', []);
+        if (!isset($options['auto_populate_customer_addresses']) || $options['auto_populate_customer_addresses'] !== 'on') {
+            wp_send_json_error(['message' => __('Auto-populate addresses is disabled.', 'multi-location-product-and-inventory-management')]);
+            return;
+        }
+
+        if (!function_exists('WC')) {
+            wp_send_json_error(['message' => __('WooCommerce is not available.', 'multi-location-product-and-inventory-management')]);
+            return;
+        }
+
+        if (!WC()->customer && function_exists('wc_load_cart')) {
+            wc_load_cart();
+        }
+
+        if (!WC()->customer) {
+            wp_send_json_error(['message' => __('Customer session unavailable.', 'multi-location-product-and-inventory-management')]);
+            return;
+        }
+
+        $address = [
+            'address_1' => isset($_POST['street']) ? sanitize_text_field(wp_unslash($_POST['street'])) : '',
+            'address_2' => isset($_POST['address_2']) ? sanitize_text_field(wp_unslash($_POST['address_2'])) : '',
+            'city' => isset($_POST['city']) ? sanitize_text_field(wp_unslash($_POST['city'])) : '',
+            'state' => isset($_POST['state']) ? sanitize_text_field(wp_unslash($_POST['state'])) : '',
+            'postcode' => isset($_POST['postcode']) ? sanitize_text_field(wp_unslash($_POST['postcode'])) : '',
+            'country' => isset($_POST['country']) ? sanitize_text_field(wp_unslash($_POST['country'])) : '',
+        ];
+
+        $has_data = false;
+        foreach ($address as $value) {
+            if (!empty($value)) {
+                $has_data = true;
+                break;
+            }
+        }
+        if (!$has_data) {
+            wp_send_json_error(['message' => __('No address data provided.', 'multi-location-product-and-inventory-management')]);
+            return;
+        }
+
+        // Normalize country/state to WooCommerce codes when possible.
+        if (WC()->countries) {
+            $countries = WC()->countries->get_countries();
+            $country_input = $address['country'];
+            if (!empty($country_input)) {
+                $country_upper = strtoupper($country_input);
+                if (isset($countries[$country_upper])) {
+                    $address['country'] = $country_upper;
+                } else {
+                    foreach ($countries as $code => $name) {
+                        if (strcasecmp($name, $country_input) === 0) {
+                            $address['country'] = $code;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($address['country'])) {
+                $states = WC()->countries->get_states($address['country']);
+                if (!empty($states) && !empty($address['state'])) {
+                    $state_input = $address['state'];
+                    $state_upper = strtoupper($state_input);
+                    if (isset($states[$state_upper])) {
+                        $address['state'] = $state_upper;
+                    } else {
+                        foreach ($states as $code => $name) {
+                            if (strcasecmp($name, $state_input) === 0) {
+                                $address['state'] = $code;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $use_shipping = false;
+        if (function_exists('wc_shipping_enabled') && wc_shipping_enabled()) {
+            $use_shipping = true;
+            if (WC()->cart) {
+                $use_shipping = WC()->cart->needs_shipping_address();
+            }
+        }
+
+        $customer = WC()->customer;
+        if ($use_shipping) {
+            $customer->set_shipping_address_1($address['address_1']);
+            $customer->set_shipping_address_2($address['address_2']);
+            $customer->set_shipping_city($address['city']);
+            $customer->set_shipping_state($address['state']);
+            $customer->set_shipping_postcode($address['postcode']);
+            $customer->set_shipping_country($address['country']);
+        } else {
+            $customer->set_billing_address_1($address['address_1']);
+            $customer->set_billing_address_2($address['address_2']);
+            $customer->set_billing_city($address['city']);
+            $customer->set_billing_state($address['state']);
+            $customer->set_billing_postcode($address['postcode']);
+            $customer->set_billing_country($address['country']);
+        }
+
+        $customer->save();
+
+        wp_send_json_success([
+            'address' => $address,
+            'updated' => $use_shipping ? 'shipping' : 'billing',
+        ]);
     }
 
 

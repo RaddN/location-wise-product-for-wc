@@ -4132,6 +4132,29 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'mulopimfwc_cart_settings_section'
         );
 
+        // Checkout Settings
+        add_settings_section(
+            'mulopimfwc_checkout_settings_section',
+            __('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0f2fe;padding:10px;border-radius:6px">
+  <path fill="#0284c7" d="M7 4h10a2 2 0 0 1 2 2v3h-2V6H7v12h10v-3h2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 6h7v2h-7v-2zm0 4h5v2h-5v-2z"/>
+</svg>Checkout Settings', 'multi-location-product-and-inventory-management'),
+            function () {
+                echo '<p>' . esc_html__('Configure checkout address behavior for location-based shopping.', 'multi-location-product-and-inventory-management') . '</p>';
+            },
+            'lwp-checkout-settings'
+        );
+
+        add_settings_field(
+            'auto_populate_customer_addresses',
+            __('Auto-Populate Customer Addresses', 'multi-location-product-and-inventory-management'),
+            function () {
+                $message = __("Automatically fill in customer addresses based on their detected location for a faster checkout process.", 'multi-location-product-and-inventory-management');
+                $this->render_advance_checkbox("auto_populate_customer_addresses", $message, false);
+            },
+            'lwp-checkout-settings',
+            'mulopimfwc_checkout_settings_section'
+        );
+
 
         /**
          * Additional Settings for Multi Location Product & Inventory Management for WooCommerce
@@ -4564,6 +4587,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         // Handle enable_location_price option
         if (isset($input['enable_location_price'])) {
             $sanitized['enable_location_price'] = sanitize_text_field($input['enable_location_price']);
+        }
+
+        // Handle auto_populate_customer_addresses option (checkbox)
+        if (isset($input['auto_populate_customer_addresses']) && $input['auto_populate_customer_addresses'] === 'on') {
+            $sanitized['auto_populate_customer_addresses'] = 'on';
+        } else {
+            $sanitized['auto_populate_customer_addresses'] = 'off';
         }
 
         // Handle enable_product_filter option (checkbox - when unchecked, it's not in input, so default to 'off')
@@ -5312,6 +5342,11 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 <div class="lwp-settings-section">
                                     <div class="lwp-settings-box">
                                         <?php do_settings_sections('lwp-cart-settings'); ?>
+                                    </div>
+                                </div>
+                                <div class="lwp-settings-section">
+                                    <div class="lwp-settings-box">
+                                        <?php do_settings_sections('lwp-checkout-settings'); ?>
                                     </div>
                                 </div>
                             </div>

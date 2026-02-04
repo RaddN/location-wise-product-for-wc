@@ -116,6 +116,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                                         data-label="<?php echo esc_attr($location['label']); ?>"
                                         data-address="<?php echo esc_attr($location['address']); ?>"
                                         data-street="<?php echo esc_attr($location['street'] ?? ''); ?>"
+                                        data-apartment="<?php echo esc_attr($location['apartment'] ?? ''); ?>"
                                         data-city="<?php echo esc_attr($location['city'] ?? ''); ?>"
                                         data-state="<?php echo esc_attr($location['state'] ?? ''); ?>"
                                         data-postal="<?php echo esc_attr($location['postal'] ?? ''); ?>"
@@ -832,6 +833,9 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 selectedLng: null,
                 selectedAddress: {},
                 searchTimeout: null,
+                pendingAutoPopulateAddress: null,
+                autoPopulateInFlight: false,
+                autoPopulatePerformed: false,
 
                 // Configuration
                 config: {
@@ -933,6 +937,218 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 },
 
                 // ========================================
+                // AUTO-POPULATE CUSTOMER ADDRESS
+                // ========================================
+
+                isAutoPopulateEnabled: function() {
+                    return !!(window.mulopimfwc_locationWiseProducts &&
+                        mulopimfwc_locationWiseProducts.autoPopulateAddresses === 'on');
+                },
+
+                isLoggedIn: function() {
+                    return !!(window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.isLoggedIn);
+                },
+
+                isCheckoutContext: function() {
+                    return !!(window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.isCheckout);
+                },
+
+                isInvalidAddressValue: function(value) {
+                    const normalized = (value || '').toString().trim().toLowerCase();
+                    return !normalized || normalized === 'all-products';
+                },
+
+                buildAddressFromItem: function($item) {
+                    if (!$item || !$item.length) {
+                        return null;
+                    }
+
+                    const locationId = ($item.data('location-id') || '').toString().trim().toLowerCase();
+                    if (locationId === 'all-products') {
+                        return null;
+                    }
+
+                    const address = {
+                        street: ($item.data('street') || '').toString(),
+                        address_2: ($item.data('apartment') || '').toString(),
+                        city: ($item.data('city') || '').toString(),
+                        state: ($item.data('state') || '').toString(),
+                        postal: ($item.data('postal') || '').toString(),
+                        country: ($item.data('country') || '').toString()
+                    };
+
+                    const hasData = Object.keys(address).some((key) => !this.isInvalidAddressValue(address[key]));
+                    return hasData ? address : null;
+                },
+
+                normalizeAddressPayload: function(address) {
+                    return {
+                        street: (address && address.street) ? address.street : '',
+                        address_2: (address && address.address_2) ? address.address_2 : '',
+                        city: (address && address.city) ? address.city : '',
+                        state: (address && address.state) ? address.state : '',
+                        postcode: (address && (address.postcode || address.postal)) ? (address.postcode || address.postal) : '',
+                        country: (address && address.country) ? address.country : ''
+                    };
+                },
+
+                resolveSelectValue: function($select, value) {
+                    if (!$select || !$select.length) {
+                        return value;
+                    }
+
+                    const rawValue = (value || '').toString().trim();
+                    if (!rawValue) {
+                        return '';
+                    }
+
+                    const normalized = rawValue.toLowerCase();
+                    let matched = '';
+                    $select.find('option').each(function() {
+                        const optionValue = ($(this).val() || '').toString();
+                        const optionText = ($(this).text() || '').toString();
+                        if (!optionValue) {
+                            return;
+                        }
+                        if (optionValue.toLowerCase() === normalized || optionText.toLowerCase() === normalized) {
+                            matched = optionValue;
+                            return false;
+                        }
+                        if (!matched && optionText.toLowerCase().includes(normalized)) {
+                            matched = optionValue;
+                        }
+                    });
+                    return matched || rawValue;
+                },
+
+                setFieldValue: function($field, value, force) {
+                    if (!$field || !$field.length) {
+                        return;
+                    }
+                    if (!force && ($field.val() || '').toString().trim() !== '') {
+                        return;
+                    }
+
+                    $field.val(value).trigger('change');
+                },
+
+                applyCheckoutAddress: function(address, force) {
+                    const normalized = this.normalizeAddressPayload(address);
+
+                    const $shippingAddress = $('#shipping_address_1');
+                    const $billingAddress = $('#billing_address_1');
+                    if (!$shippingAddress.length && !$billingAddress.length) {
+                        return;
+                    }
+
+                    const hasShippingFields = $('#shipping_address_1, #shipping_city, #shipping_postcode, #shipping_country').length > 0;
+                    const shipToDifferent = $('#ship-to-different-address-checkbox').length
+                        ? $('#ship-to-different-address-checkbox').is(':checked')
+                        : hasShippingFields;
+                    const prefix = (hasShippingFields && shipToDifferent) ? 'shipping' : 'billing';
+
+                    const $country = $('#' + prefix + '_country');
+                    const $state = $('#' + prefix + '_state');
+                    const countryValue = this.resolveSelectValue($country, normalized.country);
+
+                    this.setFieldValue($('#' + prefix + '_address_1'), normalized.street, force);
+                    this.setFieldValue($('#' + prefix + '_address_2'), normalized.address_2, force);
+                    this.setFieldValue($('#' + prefix + '_city'), normalized.city, force);
+                    this.setFieldValue($('#' + prefix + '_postcode'), normalized.postcode, force);
+
+                    if ($country.length) {
+                        this.setFieldValue($country, countryValue, force);
+                    }
+
+                    const applyState = () => {
+                        if ($state.length) {
+                            const stateValue = this.resolveSelectValue($state, normalized.state);
+                            this.setFieldValue($state, stateValue, force);
+                        }
+                    };
+
+                    applyState();
+                    setTimeout(applyState, 300);
+
+                    if (this.isCheckoutContext() || $('#checkout').length) {
+                        $('body').trigger('update_checkout');
+                    }
+                },
+
+                updateCustomerAddress: function(address, done, options) {
+                    const settings = options || {};
+                    const normalized = this.normalizeAddressPayload(address);
+                    const hasData = Object.keys(normalized).some((key) => !this.isInvalidAddressValue(normalized[key]));
+
+                    if (!this.isAutoPopulateEnabled() || !hasData) {
+                        if (typeof done === 'function') {
+                            done(false);
+                        }
+                        return;
+                    }
+
+                    const payload = {
+                        action: 'mulopimfwc_update_customer_address',
+                        nonce: (window.mulopimfwc_locationWiseProducts || {}).autoPopulateNonce || '',
+                        street: normalized.street,
+                        address_2: normalized.address_2,
+                        city: normalized.city,
+                        state: normalized.state,
+                        postcode: normalized.postcode,
+                        country: normalized.country
+                    };
+
+                    const force = settings.force === true;
+                    this.applyCheckoutAddress(normalized, force);
+
+                    const ajaxUrl = (window.mulopimfwc_locationWiseProducts || {}).ajaxUrl;
+                    if (!ajaxUrl || !payload.nonce) {
+                        if (typeof done === 'function') {
+                            done(false);
+                        }
+                        return;
+                    }
+
+                    if (this.autoPopulateInFlight) {
+                        if (typeof done === 'function') {
+                            done(false);
+                        }
+                        return;
+                    }
+
+                    this.autoPopulateInFlight = true;
+                    $.ajax({
+                        url: ajaxUrl,
+                        type: 'POST',
+                        data: payload,
+                        success: (res) => {
+                            if (res && res.success && res.data && res.data.address) {
+                                this.applyCheckoutAddress(res.data.address, force);
+                            }
+                        },
+                        complete: () => {
+                            this.autoPopulateInFlight = false;
+                            if (typeof done === 'function') {
+                                done(true);
+                            }
+                        }
+                    });
+                },
+
+                maybeAutoPopulateFromDetected: function(address) {
+                    if (!this.isAutoPopulateEnabled() || this.isLoggedIn()) {
+                        return;
+                    }
+
+                    if (this.autoPopulatePerformed) {
+                        return;
+                    }
+
+                    this.autoPopulatePerformed = true;
+                    this.updateCustomerAddress(address, null, { force: false });
+                },
+
+                // ========================================
                 // AUTO-DETECT USER LOCATION
                 // ========================================
 
@@ -954,6 +1170,8 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                         // Update the input
                         $('#address-search-input').val(addressString).prop('readonly', false);
+
+                        this.maybeAutoPopulateFromDetected(address);
                     });
                 },
 
@@ -986,6 +1204,14 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     const selectedLocation = $(e.target).val();
                     if (selectedLocation) {
                         this.setUserLocation(selectedLocation);
+                        if (this.isAutoPopulateEnabled() && this.pendingAutoPopulateAddress) {
+                            const pendingAddress = this.pendingAutoPopulateAddress;
+                            this.pendingAutoPopulateAddress = null;
+                            this.updateCustomerAddress(pendingAddress, () => {
+                                this.reloadPage();
+                            }, { force: true });
+                            return;
+                        }
                         this.reloadPage();
                     }
                 },
@@ -1224,6 +1450,10 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     const $item = $(e.currentTarget);
                     const locationId = $item.data('location-id');
                     const address = $item.data('address');
+
+                    if (this.isAutoPopulateEnabled()) {
+                        this.pendingAutoPopulateAddress = this.buildAddressFromItem($item);
+                    }
 
                     this.updateCurrentLocation(locationId, address, $item);
 
