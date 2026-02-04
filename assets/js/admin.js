@@ -4409,6 +4409,7 @@ jQuery(document).ready(function ($) {
         'input[name="mulopimfwc_display_options[display_location_single_product]"]',
         'select[name="mulopimfwc_display_options[location_display_position]"]',
         'select[name="mulopimfwc_display_options[location_selector_layout]"]',
+        'input[name="mulopimfwc_display_options[hide_out_of_stock_locations]"]',
         'input[name="mulopimfwc_display_options[enable_product_filter]"]',
         'input[name="mulopimfwc_display_options[enable_location_information]"]',
         'input[name="mulopimfwc_display_options[show_all_products_admin]"]',

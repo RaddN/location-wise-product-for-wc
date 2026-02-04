@@ -7692,6 +7692,62 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
             return in_array($location, $terms, true);
         }
+
+        /**
+         * Check if out-of-stock locations should be treated as unavailable
+         *
+         * @param array $options
+         * @return bool
+         */
+        private function should_hide_out_of_stock_locations($options): bool
+        {
+            return isset($options['hide_out_of_stock_locations']) && $options['hide_out_of_stock_locations'] === 'on';
+        }
+
+        /**
+         * Check if product is out of stock for the currently selected location
+         *
+         * @param int $product_id
+         * @param array $options
+         * @return bool
+         */
+        private function is_product_out_of_stock_for_selected_location($product_id, $options): bool
+        {
+            if (!$this->should_hide_out_of_stock_locations($options)) {
+                return false;
+            }
+
+            $location = $this->get_current_location();
+            if (empty($location) || $location === 'all-products') {
+                return false;
+            }
+
+            if (!function_exists('mulopimfwc_is_product_out_of_stock_for_location')) {
+                return false;
+            }
+
+            return mulopimfwc_is_product_out_of_stock_for_location($product_id);
+        }
+
+        /**
+         * Check if product is available for the current location context
+         *
+         * @param int $product_id
+         * @param array $options
+         * @return bool
+         */
+        private function product_is_available_in_current_location($product_id, $options): bool
+        {
+            if (!$this->product_belongs_to_location($product_id)) {
+                return false;
+            }
+
+            if ($this->is_product_out_of_stock_for_selected_location($product_id, $options)) {
+                return false;
+            }
+
+            return true;
+        }
         
         /**
          * Preload product locations for a batch of product IDs
@@ -8293,7 +8349,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
             
             // Check if product belongs to current location
-            if ($this->product_belongs_to_location($product_id)) {
+            if ($this->product_is_available_in_current_location($product_id, $options)) {
                 return; // Product is available, no action needed
             }
             
@@ -8355,7 +8411,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
                     if ($strict_filtering !== 'disabled') {
                         // Check if product doesn't belong to location
-                        if (!$this->product_belongs_to_location($post->ID)) {
+                        if (!$this->product_is_available_in_current_location($post->ID, $options)) {
                             // Unset 404 and restore the post
                             $wp_query->is_404 = false;
                             $wp_query->is_singular = true;
@@ -8392,7 +8448,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
             
             // Check if product belongs to current location
-            if ($this->product_belongs_to_location($product_id)) {
+            if ($this->product_is_available_in_current_location($product_id, $options)) {
                 return; // Product is available, no action needed
             }
             

@@ -514,17 +514,80 @@ class MULOPIMFWC_Product_Location_Selector
         }
 
         $product_locations = get_the_terms($product->get_id(), self::TAXONOMY);
-
+        $product_slugs = (!empty($product_locations) && !is_wp_error($product_locations))
+            ? wp_list_pluck($product_locations, 'slug')
+            : [];
+        $locations = $all_locations;
 
         // If product has specific locations, filter to only those (and ensure they're active)
         if (!empty($product_locations) && !is_wp_error($product_locations)) {
-            $product_slugs = wp_list_pluck($product_locations, 'slug');
-            return array_filter($all_locations, function ($location) use ($product_slugs) {
+            $locations = array_filter($locations, function ($location) use ($product_slugs) {
                 return in_array($location->slug, $product_slugs, true);
             });
         }
 
-        return $all_locations;
+        if ($this->should_hide_out_of_stock_locations()) {
+            $locations = array_filter($locations, function ($location) use ($product, $product_slugs) {
+                return !$this->is_product_out_of_stock_for_location($product, $location, $product_slugs);
+            });
+        }
+
+        return $locations;
+    }
+
+    /**
+     * Check if out-of-stock locations should be hidden
+     *
+     * @return bool
+     */
+    private function should_hide_out_of_stock_locations(): bool
+    {
+        if (empty($this->options)) {
+            $this->load_options();
+        }
+
+        return isset($this->options['hide_out_of_stock_locations']) && $this->options['hide_out_of_stock_locations'] === 'on';
+    }
+
+    /**
+     * Check if a product is out of stock for a specific location
+     *
+     * @param WC_Product $product
+     * @param WP_Term|null $location_term
+     * @return bool
+     */
+    private function is_product_out_of_stock_for_location(WC_Product $product, $location_term = null, array $product_slugs = null): bool
+    {
+        if (!$location_term) {
+            return !$product->is_in_stock();
+        }
+
+        global $mulopimfwc_options;
+        $enable_all_locations = function_exists('mulopimfwc_is_all_locations_enabled')
+            ? (mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off')
+            : 'off';
+        $terms = $product_slugs;
+        if ($terms === null) {
+            $terms = wp_get_object_terms($product->get_id(), self::TAXONOMY, ['fields' => 'slugs']);
+            if (is_wp_error($terms) || empty($terms)) {
+                $terms = [];
+            } else {
+                $terms = array_map('rawurldecode', $terms);
+            }
+        }
+
+        if ($enable_all_locations === 'on' && empty($terms)) {
+            return !$product->is_in_stock();
+        }
+
+        $location_stock = get_post_meta($product->get_id(), '_location_stock_' . $location_term->term_id, true);
+        $location_backorders = get_post_meta($product->get_id(), '_location_backorders_' . $location_term->term_id, true);
+
+        if ($location_stock === '') {
+            return !$product->is_in_stock();
+        }
+
+        return ($location_stock <= 0 && $location_backorders === 'off');
     }
 
     /**

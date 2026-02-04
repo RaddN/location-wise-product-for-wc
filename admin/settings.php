@@ -2039,6 +2039,23 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'mulopimfwc_location_display_section'
         );
 
+        // Add "Hide Out of Stock Locations" field
+        add_settings_field(
+            'hide_out_of_stock_locations',
+            __('Hide Out of Stock Locations', 'multi-location-product-and-inventory-management'),
+            function () {
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                $options = $this->get_display_options();
+                if ($is_manual_mode) {
+                    $this->render_manual_hidden_input('hide_out_of_stock_locations', $options['hide_out_of_stock_locations'] ?? 'off');
+                }
+                $message = $this->append_manual_disabled_note(__('Hide locations that are out of stock for the current product in the selector.', 'multi-location-product-and-inventory-management'));
+                $this->render_advance_checkbox("hide_out_of_stock_locations", $message, $is_manual_mode);
+            },
+            'lwp-location-selection-settings',
+            'mulopimfwc_location_display_section'
+        );
+
         // Add Product Filter section
         add_settings_section(
             'mulopimfwc_product_filter_section',
@@ -4526,6 +4543,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $valid_values = ['show_404', 'show_message'];
             $value = sanitize_text_field($input['single_product_unavailable_behavior']);
             $sanitized['single_product_unavailable_behavior'] = in_array($value, $valid_values, true) ? $value : 'show_404';
+        }
+        // Handle hide_out_of_stock_locations option (checkbox)
+        if (isset($input['hide_out_of_stock_locations']) && $input['hide_out_of_stock_locations'] === 'on') {
+            $sanitized['hide_out_of_stock_locations'] = 'on';
+        } else {
+            $sanitized['hide_out_of_stock_locations'] = 'off';
         }
         // Handle stock_display_format option
         if (isset($input['stock_display_format'])) {
