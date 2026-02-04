@@ -171,7 +171,11 @@
         handleLocationChange(location) {
             if (!location || this.isSwitching) return;
 
+            
+
             const previousLocation = this.getCurrentStoreLocation();
+
+            
 
             if (previousLocation && String(previousLocation) === String(location)) {
                 return;
@@ -181,12 +185,16 @@
             const behavior = this.settings.location_switching_behavior || 'update_cart';
             const shouldUpdateCart = !allowMixed && behavior !== 'preserve_cart';
 
+            
+
             const proceed = () => this.performLocationSwitch(location, previousLocation);
 
             if (!shouldUpdateCart) {
                 proceed();
                 return;
             }
+
+            
 
             this.checkCartHasProducts()
                 .then((cartHasProducts) => {
@@ -235,6 +243,8 @@
             const behavior = this.settings.location_switching_behavior || 'update_cart';
             const requiresCleanup = this.settings.allow_mixed_in_cart !== 'on' && behavior !== 'preserve_cart';
 
+            
+
             const fallbackReload = () => {
                 this.setLocationCookie(location);
                 // Perform a hard reload, ensuring any potential form data is not resubmitted
@@ -252,6 +262,8 @@
                 return;
             }
 
+            
+
             this.isSwitching = true;
             this.setLoadingState(true);
 
@@ -267,6 +279,7 @@
                     this.isSwitching = false;
 
                     if (response && response.success) {
+                        
                         const removedItems = response.data && response.data.removed_items ? response.data.removed_items : [];
 
                         if (removedItems && removedItems.length) {
@@ -276,7 +289,6 @@
                             );
                         }
 
-                        this.setLocationCookie(location);
                         // Perform a hard reload with cache-busting parameter
                         var url = window.location.origin + window.location.pathname;
                         var separator = '?';
