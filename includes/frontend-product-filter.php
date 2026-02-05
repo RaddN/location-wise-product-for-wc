@@ -248,10 +248,7 @@ class Location_Wise_Products_Filter
 
         if (false === $locations) {
             // Get active locations ordered by display_order
-            $locations = mulopimfwc_get_frontend_locations([
-                'taxonomy' => 'mulopimfwc_store_location',
-                'hide_empty' => true,
-            ]);
+            $locations = mulopimfwc_get_frontend_locations();
 
             if (is_wp_error($locations)) {
                 $locations = [];

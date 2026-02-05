@@ -1084,13 +1084,8 @@ class MULOPIMFWC_Frontend_Location_Information
                 }
             }
         } else {
-            // Get all locations (filtered by is_active and ordered by display_order)
-            $args = [
-                'taxonomy' => 'mulopimfwc_store_location',
-                'hide_empty' => false,
-            ];
 
-            $locations = mulopimfwc_get_frontend_locations($args);
+            $locations = mulopimfwc_get_frontend_locations();
 
             // Apply additional ordering if specified (after display_order)
             if (!empty($atts['orderby']) && $atts['orderby'] !== 'display_order') {
@@ -1415,8 +1410,8 @@ class MULOPIMFWC_Frontend_Location_Information
         foreach ($locations as $location) {
             $is_active = get_term_meta($location->term_id, 'is_active', true);
 
-            // Only include active locations (is_active === 'on' or '1' or true or 'yes')
-            if ($is_active === 'on' || $is_active === '1' || $is_active === true || $is_active === 'yes') {
+            // Only include active locations (treat unset is_active as active by default)
+            if ($is_active === '' || $is_active === 'on' || $is_active === '1' || $is_active === true || $is_active === 'yes') {
                 $display_order = get_term_meta($location->term_id, 'display_order', true);
                 $display_order = !empty($display_order) ? intval($display_order) : 999;
 

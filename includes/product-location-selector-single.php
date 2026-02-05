@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.1.2.20
+ * @version 1.1.2.26
  * @author Your Name
- * @since 1.1.2.20
+ * @since 1.1.2.26
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.1.2.20';
+    const VERSION = '1.1.2.26';
 
     /**
      * Available display positions
@@ -504,10 +504,7 @@ class MULOPIMFWC_Product_Location_Selector
     public function get_available_locations(WC_Product $product): array
     {
         // Get all active locations ordered by display_order
-        $all_locations = mulopimfwc_get_frontend_locations([
-            'taxonomy' => self::TAXONOMY,
-            'hide_empty' => false,
-        ]);
+        $all_locations = mulopimfwc_get_frontend_locations();
 
         if (empty($all_locations) || is_wp_error($all_locations)) {
             return [];
@@ -923,7 +920,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     /**
      * Plugin version
      */
-    const VERSION = '1.1.2.20';
+    const VERSION = '1.1.2.26';
     
     /**
      * @var array Track displayed shortcodes to prevent duplicates
@@ -1125,10 +1122,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
 
         // If showing all locations, get all locations directly (filtered by is_active and ordered by display_order)
         if ($show_all_locations) {
-            $locations = mulopimfwc_get_frontend_locations([
-                'taxonomy' => 'mulopimfwc_store_location',
-                'hide_empty' => false,
-            ]);
+            $locations = mulopimfwc_get_frontend_locations();
 
             if (empty($locations) || is_wp_error($locations)) {
                 return '';
