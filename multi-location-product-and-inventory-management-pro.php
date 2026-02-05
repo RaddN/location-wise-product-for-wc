@@ -3020,12 +3020,40 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Check if cart grouping is enabled
             $group_cart = mulopimfwc_is_group_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
 
+            // Ensure location data is available for WooCommerce Blocks/Store API requests
+            $is_store_api_request = false;
+            if (function_exists('wc_is_store_api_request')) {
+                $is_store_api_request = wc_is_store_api_request();
+            } elseif (defined('REST_REQUEST') && REST_REQUEST) {
+                $request_uri = isset($_SERVER['REQUEST_URI'])
+                    ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']))
+                    : '';
+                $rest_route = isset($_GET['rest_route'])
+                    ? sanitize_text_field(wp_unslash($_GET['rest_route']))
+                    : '';
+                $is_store_api_request = (
+                    strpos($request_uri, '/wc/store/') !== false ||
+                    strpos($rest_route, '/wc/store/') !== false
+                );
+            }
+
+            $location_name = isset($cart_item['mulopimfwc_location_name'])
+                ? $cart_item['mulopimfwc_location_name']
+                : '';
+
+            if ($location_name === '' && !empty($cart_item['mulopimfwc_location']) && $cart_item['mulopimfwc_location'] !== 'unknown') {
+                $location_term = get_term_by('slug', $cart_item['mulopimfwc_location'], 'mulopimfwc_store_location');
+                if ($location_term && !is_wp_error($location_term)) {
+                    $location_name = $location_term->name;
+                }
+            }
+
             // Always show location information when available
             // Check if location data exists
-            if (isset($cart_item['mulopimfwc_location_name']) && ($group_cart !== 'on' || is_cart())) {
+            if ($location_name !== '' && ($group_cart !== 'on' || is_cart() || $is_store_api_request)) {
                 $item_data[] = array(
                     'key'     => __('Location', 'multi-location-product-and-inventory-management'),
-                    'value'   => esc_html($cart_item['mulopimfwc_location_name']),
+                    'value'   => esc_html($location_name),
                     'display' => '',
                 );
             }
@@ -3710,16 +3738,29 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             $items_by_location = array();
+            $location_name_cache = array();
 
             foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
                 $location = isset($cart_item['mulopimfwc_location'])
                     ? $cart_item['mulopimfwc_location']
                     : 'unknown';
 
+                $location_name = isset($cart_item['mulopimfwc_location_name'])
+                    ? $cart_item['mulopimfwc_location_name']
+                    : '';
+
+                if ($location_name === '' && $location !== 'unknown') {
+                    if (!isset($location_name_cache[$location])) {
+                        $location_term = get_term_by('slug', $location, 'mulopimfwc_store_location');
+                        $location_name_cache[$location] = ($location_term && !is_wp_error($location_term)) ? $location_term->name : '';
+                    }
+                    $location_name = $location_name_cache[$location];
+                }
+
                 if (!isset($items_by_location[$location])) {
                     $items_by_location[$location] = array(
-                        'location_name' => isset($cart_item['mulopimfwc_location_name'])
-                            ? $cart_item['mulopimfwc_location_name']
+                        'location_name' => $location_name !== ''
+                            ? $location_name
                             : __('Global', 'multi-location-product-and-inventory-management'),
                         'location_slug' => $location,
                         'items' => array()
@@ -3747,6 +3788,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             $items_by_location = array();
+            $location_name_cache = array();
 
             // Get cart once and cache it
             $cart_contents = WC()->cart->get_cart();
@@ -3761,10 +3803,22 @@ if (!function_exists('mulopimfwc_get_values')) {
                     ? $cart_item['mulopimfwc_location']
                     : 'unknown';
 
+                $location_name = isset($cart_item['mulopimfwc_location_name'])
+                    ? $cart_item['mulopimfwc_location_name']
+                    : '';
+
+                if ($location_name === '' && $location !== 'unknown') {
+                    if (!isset($location_name_cache[$location])) {
+                        $location_term = get_term_by('slug', $location, 'mulopimfwc_store_location');
+                        $location_name_cache[$location] = ($location_term && !is_wp_error($location_term)) ? $location_term->name : '';
+                    }
+                    $location_name = $location_name_cache[$location];
+                }
+
                 if (!isset($items_by_location[$location])) {
                     $items_by_location[$location] = array(
-                        'location_name' => isset($cart_item['mulopimfwc_location_name'])
-                            ? $cart_item['mulopimfwc_location_name']
+                        'location_name' => $location_name !== ''
+                            ? $location_name
                             : __('Global', 'multi-location-product-and-inventory-management'),
                         'location_slug' => $location,
                         'items' => array()
