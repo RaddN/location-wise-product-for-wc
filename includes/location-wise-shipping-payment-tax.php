@@ -125,6 +125,48 @@ class MULOPIMFWC_Runtime_Filters
     }
 
     /**
+     * Check if location-wise pickup feature is enabled.
+     */
+    protected function is_location_pickup_enabled($options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        return isset($options['enable_location_pickup']) && $options['enable_location_pickup'] === 'on';
+    }
+
+    /**
+     * Detect if the given rate is a local pickup method.
+     */
+    protected function is_local_pickup_rate($rate): bool
+    {
+        if (!is_object($rate)) {
+            return false;
+        }
+
+        $method_id = '';
+        if (is_callable([$rate, 'get_method_id'])) {
+            $method_id = (string) $rate->get_method_id();
+        } elseif (isset($rate->method_id)) {
+            $method_id = (string) $rate->method_id;
+        }
+
+        if ($method_id === '') {
+            return false;
+        }
+
+        return in_array($method_id, ['local_pickup', 'pickup_location'], true);
+    }
+
+    /**
      * SHIPPING: Keep only rates whose instance_id is allowed for the location.
      */
     public function filter_package_rates($rates, $package)
@@ -135,12 +177,17 @@ class MULOPIMFWC_Runtime_Filters
             return $rates;
         }
 
+        $allow_pickup = $this->is_location_pickup_enabled();
+
         foreach ($rates as $key => $rate) {
             // $rate is WC_Shipping_Rate
             $instance_id = is_callable([$rate, 'get_instance_id']) ? (int) $rate->get_instance_id() : 0;
 
             // Some methods can have instance_id 0 (legacy table rate etc). If 0, require explicit '0' in allowlist.
             if (! in_array($instance_id, $cfg['shipping_instances'], true)) {
+                if ($allow_pickup && $this->is_local_pickup_rate($rate)) {
+                    continue;
+                }
                 unset($rates[$key]);
             }
         }
