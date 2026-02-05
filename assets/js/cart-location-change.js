@@ -11,6 +11,32 @@ jQuery(document).ready(function ($) {
         const cartRows = document.querySelectorAll(
             '.wc-block-cart-item, .wc-block-cart-items__row, tr.wc-block-cart-items__row, .wc-block-mini-cart__item, li.wc-block-mini-cart__item'
         );
+
+        // Cache cart data once per injection run for consistent matching
+        let cartItems = null;
+        let cartItemsByKey = null;
+        if (window.wp && window.wp.data) {
+            try {
+                const cartStore = window.wp.data.select('wc/store/cart');
+                if (cartStore && cartStore.getCartData) {
+                    const cartData = cartStore.getCartData();
+                    if (cartData && Array.isArray(cartData.items)) {
+                        cartItems = cartData.items;
+                        cartItemsByKey = {};
+                        cartItems.forEach(function(item) {
+                            if (item && item.key) {
+                                cartItemsByKey[item.key] = item;
+                            }
+                        });
+                    }
+                }
+            } catch(e) {
+                // Ignore errors
+            }
+        }
+
+        // Track assigned keys for this run to avoid duplicate matching
+        const assignedCartItemKeys = new Set();
         
         cartRows.forEach(function(row) {
             // Check if selector already exists in this row
@@ -34,25 +60,20 @@ jQuery(document).ready(function ($) {
                             row.closest('[data-cart_item_key]')?.getAttribute('data-cart_item_key');
             
             // If not found, try to extract from WooCommerce cart data
-            if (!cartItemKey && window.wp && window.wp.data) {
-                try {
-                    const cartStore = window.wp.data.select('wc/store/cart');
-                    if (cartStore && cartStore.getCartData) {
-                        const cartData = cartStore.getCartData();
-                        if (cartData && cartData.items) {
-                            // Try to match by product name or other identifier
-                            const productName = productNameEl ? productNameEl.textContent.trim() : '';
-                            const matchedItem = cartData.items.find(function(item) {
-                                return item.name === productName || 
-                                       (productNameEl && item.name && productNameEl.textContent.includes(item.name));
-                            });
-                            if (matchedItem && matchedItem.key) {
-                                cartItemKey = matchedItem.key;
-                            }
+            if (!cartItemKey && cartItems && cartItems.length) {
+                // Try to match by product name or other identifier, but avoid reusing the same key
+                const productName = productNameEl ? productNameEl.textContent.trim() : '';
+                if (productName) {
+                    const matchedItem = cartItems.find(function(item) {
+                        if (!item || !item.key || assignedCartItemKeys.has(item.key)) {
+                            return false;
                         }
+                        return item.name === productName ||
+                               (item.name && productName.includes(item.name));
+                    });
+                    if (matchedItem && matchedItem.key) {
+                        cartItemKey = matchedItem.key;
                     }
-                } catch(e) {
-                    // Ignore errors
                 }
             }
 
@@ -75,29 +96,18 @@ jQuery(document).ready(function ($) {
                 return;
             }
 
+            // Mark this cart item key as assigned for this run
+            assignedCartItemKeys.add(cartItemKey);
+
             // Get product ID - try multiple methods
             let productId = row.getAttribute('data-product-id') || row.getAttribute('data-product_id');
             let variationId = row.getAttribute('data-variation-id') || row.getAttribute('data-variation_id') || '0';
             
             // Try to get from WooCommerce cart data
-            if (!productId && window.wp && window.wp.data) {
-                try {
-                    const cartStore = window.wp.data.select('wc/store/cart');
-                    if (cartStore && cartStore.getCartData) {
-                        const cartData = cartStore.getCartData();
-                        if (cartData && cartData.items) {
-                            const matchedItem = cartData.items.find(function(item) {
-                                return item.key === cartItemKey;
-                            });
-                            if (matchedItem) {
-                                productId = matchedItem.id || matchedItem.product_id;
-                                variationId = matchedItem.variation_id || '0';
-                            }
-                        }
-                    }
-                } catch(e) {
-                    // Ignore errors
-                }
+            if (!productId && cartItemsByKey && cartItemsByKey[cartItemKey]) {
+                const matchedItem = cartItemsByKey[cartItemKey];
+                productId = matchedItem.id || matchedItem.product_id;
+                variationId = matchedItem.variation_id || '0';
             }
 
             // Try to extract from product link
