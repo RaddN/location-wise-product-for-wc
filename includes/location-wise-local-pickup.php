@@ -67,6 +67,10 @@ class MULOPIMFWC_Location_Wise_Local_Pickup
 
     public function filter_pickup_locations_by_store($pickup_locations)
     {
+        if (is_admin() && !wp_doing_ajax()) {
+            return $pickup_locations;
+        }
+
         if (!$this->is_pickup_enabled() || !is_array($pickup_locations)) {
             return $pickup_locations;
         }
