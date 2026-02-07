@@ -3264,7 +3264,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 if (empty($current_location)) {
                     echo ' selected';
                 }
-                echo '>' . esc_html__('Unassign', 'multi-location-product-and-inventory-management') . '</option>';
+                echo '>' . esc_html__('No location assigned', 'multi-location-product-and-inventory-management') . '</option>';
                 foreach ($available_locations as $location) {
                     $location_slug = rawurldecode($location->slug);
                     $selected = ($current_location === $location_slug) ? 'selected' : '';
