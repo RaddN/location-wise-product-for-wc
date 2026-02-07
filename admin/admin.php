@@ -3748,10 +3748,16 @@ class MULOPIMFWC_Admin
                     $label .= ' - ' . $summary_text;
                 }
 
+                $disabled = '';
+                // Disable if stock status is insufficient
+                if (isset($summary['status']) && $summary['status'] === 'insufficient') {
+                    $disabled = 'disabled';
+                }
                 echo '<option value="' . esc_attr($location_term->slug) . '" ' . selected($location_slug, $location_term->slug, false) .
                     ' data-stock-status="' . esc_attr($summary['status'] ?? '') . '"' .
                     ' data-stock-summary="' . esc_attr($summary_text) . '"' .
-                    ' data-stock-items="' . esc_attr(wp_json_encode($summary['items'] ?? [])) . '"' .
+                    ' data-stock-items="' . esc_attr(wp_json_encode($summary['items'] ?? [])) . '" ' .
+                    $disabled .
                     '>';
                 echo esc_html($label);
                 echo '</option>';
