@@ -9790,6 +9790,34 @@ if (!function_exists('mulopimfwc_get_values')) {
     }
 
     /**
+     * Get order statuses that should count toward revenue/sales metrics.
+     */
+    function mulopimfwc_get_revenue_order_statuses()
+    {
+        $default_statuses = ['completed', 'processing', 'on-hold'];
+
+        if (function_exists('wc_get_is_paid_statuses')) {
+            $default_statuses = array_merge($default_statuses, wc_get_is_paid_statuses());
+        }
+
+        $statuses = apply_filters('mulopimfwc_revenue_order_statuses', $default_statuses);
+        if (!is_array($statuses)) {
+            $statuses = $default_statuses;
+        }
+
+        $statuses = array_map(function ($status) {
+            $status = (string) $status;
+            if (strpos($status, 'wc-') === 0) {
+                $status = substr($status, 3);
+            }
+            return $status;
+        }, $statuses);
+
+        $statuses = array_values(array_unique(array_filter($statuses, 'strlen')));
+        return $statuses;
+    }
+
+    /**
      * Normalize social channels for a user.
      */
     function mulopimfwc_get_user_social_channels($user_id)
@@ -10202,6 +10230,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             return;
         }
 
+        $revenue_statuses = mulopimfwc_get_revenue_order_statuses();
         $now = current_time('timestamp');
         $start = strtotime('today', $now);
         $end = strtotime('tomorrow', $now);
@@ -10216,7 +10245,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $orders = wc_get_orders([
                 'limit' => $batch_size,
                 'offset' => ($page - 1) * $batch_size,
-                'status' => array_keys(wc_get_order_statuses()),
+                'status' => $revenue_statuses,
                 'date_created' => [
                     'after' => gmdate('Y-m-d H:i:s', $start),
                     'before' => gmdate('Y-m-d H:i:s', $end),

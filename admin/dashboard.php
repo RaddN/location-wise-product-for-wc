@@ -2006,6 +2006,9 @@ class MULOPIMFWC_Dashboard
         $orders_by_location = ['Default' => 0];
         $location_revenue = ['Default' => 0];
         $location_slugs = ['Default' => 'default'];
+        $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
+            ? mulopimfwc_get_revenue_order_statuses()
+            : ['completed', 'processing', 'on-hold'];
 
         foreach ($mulopimfwc_locations as $location) {
             $location_slugs[$location->name] = rawurldecode($location->slug);
@@ -2070,7 +2073,8 @@ class MULOPIMFWC_Dashboard
             if (!$order) continue;
 
             $order_location = $order->get_meta('_store_location');
-            $order_total = $order->get_total();
+            $order_total = (float) $order->get_total();
+            $order_status = $order->get_status();
 
             // Location filter
             if ($location_filter !== 'all' && $order_location !== $location_filter) {
@@ -2086,7 +2090,9 @@ class MULOPIMFWC_Dashboard
             }
 
             $orders_by_location[$location_name]++;
-            $location_revenue[$location_name] += $order_total;
+            if (in_array($order_status, $revenue_statuses, true)) {
+                $location_revenue[$location_name] += $order_total;
+            }
         }
 
         return [
@@ -2415,6 +2421,9 @@ class MULOPIMFWC_Dashboard
     private function get_location_recent_sales_info(string $location_slug, int $since_timestamp): array
     {
         $since_date = gmdate('Y-m-d', $since_timestamp);
+        $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
+            ? mulopimfwc_get_revenue_order_statuses()
+            : ['completed', 'processing', 'on-hold'];
 
         // Process orders in batches to prevent memory exhaustion
         $batch_size = 1000;
@@ -2425,7 +2434,7 @@ class MULOPIMFWC_Dashboard
             $args = [
                 'limit' => $batch_size,
                 'offset' => ($page - 1) * $batch_size,
-                'status' => ['completed', 'processing', 'on-hold', 'pending'],
+                'status' => $revenue_statuses,
                 'date_created' => '>=' . $since_date,
                 'return' => 'ids'
             ];
