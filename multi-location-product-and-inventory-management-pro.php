@@ -3171,6 +3171,11 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function display_location_in_order_items($item_id, $item, $product)
         {
+            // Only handle product line items
+            if (!$item || !method_exists($item, 'is_type') || !$item->is_type('line_item')) {
+                return;
+            }
+
             // Get current location from order item meta
             $current_location = $item->get_meta('_mulopimfwc_location');
             
