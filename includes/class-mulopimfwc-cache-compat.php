@@ -6,7 +6,7 @@
  * Ensures proper cache varying by location cookie across all cache layers.
  *
  * @package MultiLocationProductInventoryManagement
- * @since 1.1.2.30
+ * @since 1.1.2.31
  */
 
 if (!defined('ABSPATH')) {
