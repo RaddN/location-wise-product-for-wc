@@ -3593,6 +3593,15 @@ class MULOPIMFWC_Admin
             echo '<div class="mulopimfwc-location-stock-message" style="display:none;"></div>';
             echo '</div>';
             echo '<p class="description">' . esc_html__('Update user selected store location for this order.', 'multi-location-product-and-inventory-management') . '</p>';
+            // Display a styled info note with svg icon, improved UI
+            echo '<div class="mulopimfwc-info-note" style="display: flex; align-items: flex-start; gap: 8px; background: #f1f5fb; border-left: 4px solid #63b3ed; padding: 10px 12px; margin: 10px 0 0 0; border-radius: 4px;">'
+                . '<span style="display: flex; align-items: center; margin-top:2px;">'
+                . (function_exists('mulopimfwc_svg_icon') ? mulopimfwc_svg_icon('info') : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="fill: #3498db;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3498db"/><rect x="11" y="10" width="2" height="7" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>')
+                . '</span>'
+                . '<span style="font-size:13px; line-height:1.5;color:#223;">'
+                . esc_html__('You can only change the store location if the order is editable (pending or on-hold).', 'multi-location-product-and-inventory-management')
+                . '</span>'
+                . '</div>';
         } else {
             $location_label = $this->get_location_label($location_slug);
             if ($location_label !== '') {

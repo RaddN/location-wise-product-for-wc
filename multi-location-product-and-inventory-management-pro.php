@@ -11452,6 +11452,7 @@ function mulopimfwc_svg_icon($icon_name){
         'right_arrow' => '<svg aria-hidden="true" class="right-arrow-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"></path>
                 </svg>',
+        'info' => '<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#3498db"/><rect x="11" y="10" width="2" height="7" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>',
     ];
 
     return isset($icons[$icon_name]) ? $icons[$icon_name] : '';
