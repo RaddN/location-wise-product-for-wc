@@ -3511,6 +3511,40 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Update order item meta
             $item->update_meta_data('_mulopimfwc_location', $new_location_slug);
             $item->save();
+
+            // Update order location if all line items share the same location
+            $order_location_updated = false;
+            $order_location_slug = '';
+            $line_items = $order->get_items('line_item');
+            if (!empty($line_items)) {
+                $shared_location = null;
+                $all_same_location = true;
+
+                foreach ($line_items as $line_item) {
+                    $item_location = (string) $line_item->get_meta('_mulopimfwc_location');
+                    if ($item_location === '') {
+                        $all_same_location = false;
+                        break;
+                    }
+                    if ($shared_location === null) {
+                        $shared_location = $item_location;
+                        continue;
+                    }
+                    if ($shared_location !== $item_location) {
+                        $all_same_location = false;
+                        break;
+                    }
+                }
+
+                if ($all_same_location && $shared_location !== null) {
+                    $current_order_location = (string) $order->get_meta('_store_location');
+                    if ($current_order_location !== $shared_location) {
+                        $order->update_meta_data('_store_location', $shared_location);
+                        $order_location_updated = true;
+                        $order_location_slug = $shared_location;
+                    }
+                }
+            }
             
             // Recalculate order totals
             $order->calculate_totals();
@@ -3533,6 +3567,15 @@ if (!function_exists('mulopimfwc_get_values')) {
                     wc_price($new_price)
                 );
             }
+
+            if ($order_location_updated) {
+                $order_location_term = get_term_by('slug', $order_location_slug, 'mulopimfwc_store_location');
+                $order_location_name = ($order_location_term && !is_wp_error($order_location_term)) ? $order_location_term->name : $order_location_slug;
+                $note_message .= sprintf(
+                    __(' | Order location set to %s', 'multi-location-product-and-inventory-management'),
+                    $order_location_name
+                );
+            }
             
             $order->add_order_note($note_message);
 
@@ -3540,6 +3583,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'message' => __('Location and price updated successfully', 'multi-location-product-and-inventory-management'),
                 'location_name' => $new_location_term->name,
                 'price_changed' => $enable_location_price && $old_price != $new_price,
+                'order_location_updated' => $order_location_updated,
+                'order_location_slug' => $order_location_slug,
                 'old_price' => $old_price,
                 'new_price' => $new_price
             ]);
@@ -9088,6 +9133,18 @@ if (!function_exists('mulopimfwc_get_values')) {
                                 
                                 // Check if price changed
                                 var priceChanged = response.data && response.data.price_changed;
+                                var orderLocationUpdated = response.data && response.data.order_location_updated;
+                                var orderLocationSlug = response.data && response.data.order_location_slug ? response.data.order_location_slug : newLocation;
+                                
+                                if (orderLocationUpdated) {
+                                    var \$orderLocationSelect = $('#mulopimfwc_store_location');
+                                    if (\$orderLocationSelect.length) {
+                                        \$orderLocationSelect.val(orderLocationSlug);
+                                        \$orderLocationSelect.data('current-location', orderLocationSlug);
+                                        \$orderLocationSelect.attr('data-current-location', orderLocationSlug);
+                                        \$orderLocationSelect.trigger('change');
+                                    }
+                                }
                                 
                                 if (priceChanged) {
                                     // Price changed - reload page to show updated totals

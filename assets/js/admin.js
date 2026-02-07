@@ -3130,7 +3130,7 @@ jQuery(document).ready(function ($) {
     });
 
     const $enable_all_locations = $('input[name="mulopimfwc_display_options[enable_all_locations]"]');
-    const $all_locations_related_settings = $enable_all_locations.closest('table').find('input, select, textarea').not($enable_all_locations);
+    const $all_locations_related_settings = $enable_all_locations.closest('table').find('select[name="mulopimfwc_display_options[product_priority_display]"]').not($enable_all_locations);
 
     // Set initial state
     mulopimfwc_toggleDisabledClass(!$enable_all_locations.is(':checked'), $all_locations_related_settings);
