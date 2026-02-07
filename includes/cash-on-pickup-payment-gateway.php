@@ -81,6 +81,21 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
             }
             
             /**
+             * Get the icon for the gateway.
+             * Only show icon in admin area, hide on frontend.
+             *
+             * @return string
+             */
+            public function get_icon() {
+                // Only show icon in admin area
+                if (is_admin()) {
+                    return $this->icon ? '<img src="' . esc_url($this->icon) . '" alt="' . esc_attr($this->get_title()) . '" />' : '';
+                }
+                // Return empty string on frontend
+                return '';
+            }
+            
+            /**
              * Process payment for REST API (WooCommerce Blocks checkout)
              */
             public function process_rest_payment($result, $context) {
