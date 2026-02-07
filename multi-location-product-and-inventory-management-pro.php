@@ -1033,6 +1033,91 @@ if (!function_exists('mulopimfwc_set_location_cookie')) {
     }
 }
 
+if (!function_exists('mulopimfwc_clear_location_cookie')) {
+    /**
+     * Clear the selected store location cookie using standardized, filterable arguments.
+     *
+     * @param string|null $cookie_name Optional cookie name (defaults to filtered value)
+     * @return bool True on success, false on failure
+     */
+    function mulopimfwc_clear_location_cookie(?string $cookie_name = null): bool
+    {
+        if ($cookie_name === null) {
+            $cookie_name = mulopimfwc_get_location_cookie_name();
+        }
+
+        if (empty($cookie_name)) {
+            return false;
+        }
+
+        $cookie_args = [
+            'expires' => time() - HOUR_IN_SECONDS,
+            'path' => '/',
+            'domain' => apply_filters('mulopimfwc_location_cookie_domain', COOKIE_DOMAIN),
+            'secure' => is_ssl(),
+            // JS reads this cookie for UI state; keep HttpOnly off by default.
+            'httponly' => apply_filters('mulopimfwc_location_cookie_httponly', false),
+            'samesite' => 'Lax',
+        ];
+
+        // Allow full customization of cookie args (keep same filters as set)
+        $cookie_args = apply_filters('mulopimfwc_location_cookie_args', $cookie_args, '');
+        // Ensure expiry is in the past even if filters override
+        $cookie_args['expires'] = time() - HOUR_IN_SECONDS;
+
+        $cleared = false;
+        if (version_compare(PHP_VERSION, '7.3.0', '>=')) {
+            $cleared = setcookie($cookie_name, '', $cookie_args);
+        } else {
+            $cleared = setcookie(
+                $cookie_name,
+                '',
+                $cookie_args['expires'],
+                $cookie_args['path'],
+                $cookie_args['domain'],
+                $cookie_args['secure'],
+                $cookie_args['httponly']
+            );
+        }
+
+        if (isset($_COOKIE[$cookie_name])) {
+            unset($_COOKIE[$cookie_name]);
+        }
+
+        return $cleared;
+    }
+}
+
+if (!function_exists('mulopimfwc_maybe_clear_location_cookie_for_manual_assignment')) {
+    /**
+     * Remove stale selected location cookies when manual assignment disables location selection.
+     */
+    function mulopimfwc_maybe_clear_location_cookie_for_manual_assignment(): void
+    {
+        if (!function_exists('mulopimfwc_is_manual_assignment_strict_mode')) {
+            return;
+        }
+
+        if (!mulopimfwc_is_manual_assignment_strict_mode()) {
+            return;
+        }
+
+        $cookie_name = mulopimfwc_get_location_cookie_name();
+        if (empty($cookie_name) || !isset($_COOKIE[$cookie_name])) {
+            return;
+        }
+
+        if (headers_sent()) {
+            unset($_COOKIE[$cookie_name]);
+            return;
+        }
+
+        mulopimfwc_clear_location_cookie($cookie_name);
+    }
+}
+
+add_action('init', 'mulopimfwc_maybe_clear_location_cookie_for_manual_assignment', 2);
+
 // Check if the free version is installed and deactivate it if active
 add_action('init', function () {
     if (is_plugin_active('multi-location-product-and-inventory-management/multi-location-product-and-inventory-management.php')) {

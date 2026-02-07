@@ -187,7 +187,6 @@
     }
 
     async function initializePWA() {
-        console.log('Initializing PWA...');
 
         if (!('serviceWorker' in navigator)) {
             console.warn('Service Workers not supported');
@@ -260,7 +259,6 @@
         // Initialize PWA if enabled
         if (config.pwa_enabled === 'on') {
             initializePWA().then(() => {
-                console.log('PWA initialization completed');
             }).catch(err => {
                 console.error('PWA initialization error:', err);
             });
@@ -805,8 +803,6 @@
             .attr('rel', 'manifest')
             .attr('href', manifestUrl)
             .appendTo('head');
-        
-        console.log('Manifest link added:', manifestUrl);
     }
 
     async function sendPushNotification(alert, message) {
@@ -874,7 +870,6 @@
                 
                 if (serviceWorkerRegistration.showNotification) {
                     await serviceWorkerRegistration.showNotification(payload.title, payload);
-                    console.log('✓ Notification shown via service worker');
                     return;
                 }
             }
@@ -885,7 +880,6 @@
                     const registration = await navigator.serviceWorker.ready;
                     if (registration && registration.showNotification) {
                         await registration.showNotification(payload.title, payload);
-                        console.log('✓ Notification shown via service worker (retrieved)');
                         serviceWorkerRegistration = registration;
                         return;
                     }
