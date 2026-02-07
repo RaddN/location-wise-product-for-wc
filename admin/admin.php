@@ -2430,6 +2430,10 @@ class MULOPIMFWC_Admin
             return '<span class="mulopimfwc-unassigned-badge">⚠️ ' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management') . '</span>';
         }
 
+        if (!$order->is_editable()) {
+            return '<span class="mulopimfwc-unassigned-badge">' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management') . '</span>';
+        }
+
         $order_id = $order->get_id();
         // Get available locations based on order products stock availability
         $locations = $this->get_available_locations_for_order($order);
@@ -3302,9 +3306,16 @@ class MULOPIMFWC_Admin
         }, $available_locations);
 
         $orders_preview = [];
+        $all_editable = true;
+        $non_editable_count = 0;
         foreach ($orders as $order) {
             $customer_name = trim($order->get_formatted_billing_full_name());
             $status = $order->get_status();
+            $is_editable = $order->is_editable();
+            if (!$is_editable) {
+                $all_editable = false;
+                $non_editable_count++;
+            }
             $orders_preview[] = [
                 'id' => $order->get_id(),
                 'number' => $order->get_order_number(),
@@ -3313,12 +3324,15 @@ class MULOPIMFWC_Admin
                 'total' => wp_strip_all_tags($order->get_formatted_order_total()),
                 'customer' => $customer_name !== '' ? $customer_name : __('Guest', 'multi-location-product-and-inventory-management'),
                 'location' => $this->get_location_label((string) $order->get_meta('_store_location')),
+                'editable' => $is_editable,
             ];
         }
 
         wp_send_json_success([
             'orders' => $orders_preview,
             'locations' => $locations_payload,
+            'all_editable' => $all_editable,
+            'non_editable_count' => $non_editable_count,
         ]);
     }
 
@@ -3345,9 +3359,9 @@ class MULOPIMFWC_Admin
             wp_send_json_error(['message' => __('Order IDs and location are required', 'multi-location-product-and-inventory-management')]);
         }
 
-        $price_changed = false;
-        $updated_count = 0;
+        $orders = [];
         $failed = [];
+        $non_editable = [];
 
         foreach ($order_ids as $order_id) {
             $order = wc_get_order($order_id);
@@ -3356,6 +3370,38 @@ class MULOPIMFWC_Admin
                 continue;
             }
 
+            if (!$order->is_editable()) {
+                $non_editable[] = $order_id;
+            }
+
+            $orders[] = $order;
+        }
+
+        if (!empty($non_editable)) {
+            $message = sprintf(
+                _n(
+                    '%d selected order is not editable. Remove it to continue.',
+                    '%d selected orders are not editable. Remove them to continue.',
+                    count($non_editable),
+                    'multi-location-product-and-inventory-management'
+                ),
+                count($non_editable)
+            );
+            wp_send_json_error([
+                'message' => $message,
+                'non_editable' => $non_editable,
+            ]);
+        }
+
+        if (empty($orders)) {
+            wp_send_json_error(['message' => __('No valid orders found', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $price_changed = false;
+        $updated_count = 0;
+
+        foreach ($orders as $order) {
+            $order_id = $order->get_id();
             $available_locations = $this->get_available_locations_for_order($order);
             $available_slugs = wp_list_pluck($available_locations, 'slug');
             if (!in_array($location_slug, $available_slugs, true)) {
@@ -3495,6 +3541,7 @@ class MULOPIMFWC_Admin
                 'failed' => __('Bulk assignment failed. Please try again.', 'multi-location-product-and-inventory-management'),
                 'unassigned' => __('Unassigned', 'multi-location-product-and-inventory-management'),
                 'loadingOrders' => __('Loading orders...', 'multi-location-product-and-inventory-management'),
+                'notEditable' => __('All selected orders must be editable to assign a location. Remove completed or cancelled orders and try again.', 'multi-location-product-and-inventory-management'),
             ],
         ];
 

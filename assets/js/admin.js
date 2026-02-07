@@ -4016,7 +4016,8 @@ jQuery(document).ready(function ($) {
     var i18n = window.mulopimfwcBulkAssign.i18n || {};
     var nonce = window.mulopimfwcBulkAssign.nonce || '';
     var state = {
-        orderIds: []
+        orderIds: [],
+        allEditable: true
     };
 
     function escapeHtml(text) {
@@ -4062,6 +4063,7 @@ jQuery(document).ready(function ($) {
     function resetModal() {
         modal.removeClass('is-loading');
         state.orderIds = [];
+        state.allEditable = true;
         modal.find('.mulopimfwc-bulk-assign-count').text('0');
         modal.find('.mulopimfwc-bulk-assign-orders__list').empty();
         modal.find('.mulopimfwc-bulk-assign-confirm')
@@ -4096,9 +4098,16 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 if (response.success) {
+                    var allEditable = true;
+                    if (response.data && typeof response.data.all_editable !== 'undefined') {
+                        allEditable = !!response.data.all_editable;
+                    }
+                    state.allEditable = allEditable;
                     renderOrders(response.data.orders || []);
-                    renderLocations(response.data.locations || []);
-                    if (!response.data.locations || response.data.locations.length === 0) {
+                    renderLocations(response.data.locations || [], allEditable);
+                    if (!allEditable) {
+                        setModalMessage('warning', i18n.notEditable || 'All selected orders must be editable to assign a location.');
+                    } else if (!response.data.locations || response.data.locations.length === 0) {
                         setModalMessage('warning', i18n.noLocations || 'No locations have sufficient stock for all selected orders.');
                     } else {
                         setModalMessage('info', '');
@@ -4146,19 +4155,18 @@ jQuery(document).ready(function ($) {
         $list.html(html);
     }
 
-    function renderLocations(locations) {
+    function renderLocations(locations, canAssign) {
         var $select = modal.find('#mulopimfwc-bulk-location-select');
         var options = '<option value="">' + (i18n.selectLocation || 'Select a location') + '</option>';
 
+        var canEnable = !!canAssign && locations && locations.length;
         if (locations && locations.length) {
             locations.forEach(function (location) {
                 options += '<option value="' + escapeHtml(location.slug) + '">' + escapeHtml(location.name) + '</option>';
             });
-            $select.prop('disabled', false);
-        } else {
-            $select.prop('disabled', true);
         }
 
+        $select.prop('disabled', !canEnable);
         $select.html(options);
     }
 
@@ -4199,6 +4207,11 @@ jQuery(document).ready(function ($) {
     });
 
     $(document).on('change', '#mulopimfwc-bulk-location-select', function () {
+        if (!state.allEditable) {
+            modal.find('.mulopimfwc-bulk-assign-confirm').prop('disabled', true);
+            setModalMessage('warning', i18n.notEditable || 'All selected orders must be editable to assign a location.');
+            return;
+        }
         var hasValue = !!$(this).val();
         modal.find('.mulopimfwc-bulk-assign-confirm')
             .prop('disabled', !hasValue)
@@ -4211,6 +4224,10 @@ jQuery(document).ready(function ($) {
 
     $(document).on('click', '.mulopimfwc-bulk-assign-confirm', function () {
         var $button = $(this);
+        if (!state.allEditable) {
+            setModalMessage('warning', i18n.notEditable || 'All selected orders must be editable to assign a location.');
+            return;
+        }
         var locationSlug = modal.find('#mulopimfwc-bulk-location-select').val();
 
         if (!locationSlug) {
