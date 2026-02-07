@@ -273,16 +273,90 @@ class MULOPIMFWC_Admin
 
             // Initialize Select2 for all select fields with common class
             $(document).ready(function(){
+                function initSelect2($select){
+                    var placeholder = $select.data("placeholder") || "";
+                    $select.select2({
+                        width: "100%",
+                        placeholder: placeholder,
+                        allowClear: true
+                    });
+                }
+
                 if(typeof $.fn.select2 !== "undefined"){
                     $(".mulopimfwc-select2").each(function(){
-                        var $select = $(this);
-                        var placeholder = $select.data("placeholder") || "";
-                        $select.select2({
-                            width: "100%",
-                            placeholder: placeholder,
-                            allowClear: true
+                        initSelect2($(this));
+                    });
+                }
+
+                // Filter shipping methods based on selected zones
+                var $zones = $("#shipping_zones");
+                var $methods = $("#shipping_methods");
+                if ($zones.length && $methods.length) {
+                    var methodOptions = [];
+                    $methods.find("option").each(function(){
+                        var val = $(this).val();
+                        if (!val) {
+                            return;
+                        }
+                        var parts = val.toString().split(":");
+                        var zoneId = parts[0];
+                        var $group = $(this).closest("optgroup");
+                        var groupLabel = $group.attr("label") || "";
+                        methodOptions.push({
+                            value: val.toString(),
+                            label: $(this).text(),
+                            zoneId: zoneId.toString(),
+                            groupLabel: groupLabel.toString()
                         });
                     });
+
+                    function rebuildShippingMethods(){
+                        var selectedZones = ($zones.val() || []).map(function(v){ return v.toString(); });
+                        var selectedMethods = ($methods.val() || []).map(function(v){ return v.toString(); });
+                        var allowed = {};
+                        selectedZones.forEach(function(zoneId){ allowed[zoneId] = true; });
+
+                        $methods.empty();
+
+                        if (selectedZones.length) {
+                            var grouped = {};
+                            methodOptions.forEach(function(option){
+                                if (!allowed[option.zoneId]) {
+                                    return;
+                                }
+                                if (!grouped[option.zoneId]) {
+                                    grouped[option.zoneId] = {
+                                        label: option.groupLabel || ("Zone " + option.zoneId),
+                                        options: []
+                                    };
+                                }
+                                grouped[option.zoneId].options.push(option);
+                            });
+
+                            Object.keys(grouped).forEach(function(zoneId){
+                                var group = grouped[zoneId];
+                                var $optgroup = $("<optgroup>").attr("label", group.label);
+                                group.options.forEach(function(option){
+                                    var $opt = $("<option>").val(option.value).text(option.label);
+                                    if (selectedMethods.indexOf(option.value) !== -1) {
+                                        $opt.prop("selected", true);
+                                    }
+                                    $optgroup.append($opt);
+                                });
+                                $methods.append($optgroup);
+                            });
+                        }
+
+                        if (typeof $.fn.select2 !== "undefined" && $methods.data("select2")) {
+                            $methods.select2("destroy");
+                            initSelect2($methods);
+                        }
+
+                        $methods.trigger("change");
+                    }
+
+                    $zones.on("change", rebuildShippingMethods);
+                    rebuildShippingMethods();
                 }
 
                 // Handle description truncation and popup
@@ -1227,18 +1301,19 @@ class MULOPIMFWC_Admin
             return;
         }
 
-        // Security: Verify nonce (WordPress taxonomy forms use _wpnonce)
-        // For new terms: 'add-tag', for existing terms: 'update-tag_' . $term_id
-        $nonce_action = 'add-tag';
-        if ($term_id > 0) {
-            $nonce_action = 'update-tag_' . $term_id;
+        // Security: Verify nonce (WordPress taxonomy forms use _wpnonce or _wpnonce_add-tag)
+        $nonce_valid = false;
+        if (isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'update-tag_' . $term_id)) {
+            $nonce_valid = true;
         }
-
-        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), $nonce_action)) {
-            // Also check for add-tag in case it's a new term
-            if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'add-tag')) {
-                return;
-            }
+        if (!$nonce_valid && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'add-tag')) {
+            $nonce_valid = true;
+        }
+        if (!$nonce_valid && isset($_POST['_wpnonce_add-tag']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce_add-tag'])), 'add-tag')) {
+            $nonce_valid = true;
+        }
+        if (!$nonce_valid) {
+            return;
         }
 
         if (isset($_POST['street_address'])) {
