@@ -291,6 +291,7 @@ class MULOPIMFWC_Admin
                 // Filter shipping methods based on selected zones
                 var $zones = $("#shipping_zones");
                 var $methods = $("#shipping_methods");
+                var rebuildShippingMethods = null;
                 if ($zones.length && $methods.length) {
                     var methodOptions = [];
                     $methods.find("option").each(function(){
@@ -310,7 +311,7 @@ class MULOPIMFWC_Admin
                         });
                     });
 
-                    function rebuildShippingMethods(){
+                    rebuildShippingMethods = function(){
                         var selectedZones = ($zones.val() || []).map(function(v){ return v.toString(); });
                         var selectedMethods = ($methods.val() || []).map(function(v){ return v.toString(); });
                         var allowed = {};
@@ -358,6 +359,55 @@ class MULOPIMFWC_Admin
                     $zones.on("change", rebuildShippingMethods);
                     rebuildShippingMethods();
                 }
+
+                function clearSelectValue($select){
+                    if (!$select || !$select.length) {
+                        return;
+                    }
+                    if ($select.prop("multiple")) {
+                        $select.val([]);
+                    } else {
+                        $select.val("");
+                    }
+                    $select.trigger("change");
+                }
+
+                function resetLocationAddForm(){
+                    clearSelectValue($("#shipping_zones"));
+                    clearSelectValue($("#payment_methods"));
+                    clearSelectValue($("#pickup_locations"));
+                    if (typeof rebuildShippingMethods === "function") {
+                        clearSelectValue($methods);
+                        rebuildShippingMethods();
+                    }
+                }
+
+                $(document).ajaxComplete(function(event, xhr, settings){
+                    if (!settings || !settings.data) {
+                        return;
+                    }
+
+                    var action = "";
+                    var taxonomy = "";
+
+                    if (typeof settings.data === "string") {
+                        try {
+                            var params = new URLSearchParams(settings.data);
+                            action = params.get("action") || "";
+                            taxonomy = params.get("taxonomy") || "";
+                        } catch (e) {
+                            action = "";
+                            taxonomy = "";
+                        }
+                    } else if (typeof settings.data === "object") {
+                        action = settings.data.action || "";
+                        taxonomy = settings.data.taxonomy || "";
+                    }
+
+                    if (action === "add-tag" && taxonomy === "mulopimfwc_store_location") {
+                        resetLocationAddForm();
+                    }
+                });
 
                 // Handle description truncation and popup
                 function truncateDescriptions() {
