@@ -6,6 +6,11 @@
         return;
     }
 
+    if (window.mulopimfwcNotificationsInitialized) {
+        return;
+    }
+    window.mulopimfwcNotificationsInitialized = true;
+
 
     const alertHistory = new Set();
     const floatContainer = $('<div id="mulopimfwc-floating-notifications"></div>').appendTo('body');
@@ -18,6 +23,8 @@
     const STORAGE_READ_KEY = 'mulopimfwc_read_notifications';
     const STORAGE_SEEN_KEY = 'mulopimfwc_seen_notifications';
     const STORAGE_CLEARED_KEY = 'mulopimfwc_cleared_notifications';
+    const STORAGE_RECENT_KEY = 'mulopimfwc_recent_notifications';
+    const RECENT_TTL_MS = 10 * 60 * 1000;
 
     // Get read notifications from localStorage
     function getReadNotifications() {
@@ -55,6 +62,99 @@
         } catch (e) {
             console.warn('Failed to save seen notifications:', e);
         }
+    }
+
+    function loadRecentNotifications() {
+        try {
+            const stored = localStorage.getItem(STORAGE_RECENT_KEY);
+            return stored ? JSON.parse(stored) : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function saveRecentNotifications(map) {
+        try {
+            localStorage.setItem(STORAGE_RECENT_KEY, JSON.stringify(map));
+        } catch (e) {
+            console.warn('Failed to save recent notifications:', e);
+        }
+    }
+
+    function pruneRecentNotifications(map) {
+        const now = Date.now();
+        Object.keys(map || {}).forEach(function (key) {
+            if (!map[key] || (now - map[key]) > RECENT_TTL_MS) {
+                delete map[key];
+            }
+        });
+        return map;
+    }
+
+    function hasRecentNotification(fingerprint) {
+        if (!fingerprint) {
+            return false;
+        }
+        const map = pruneRecentNotifications(loadRecentNotifications());
+        return Boolean(map[fingerprint]);
+    }
+
+    function markRecentNotification(fingerprint) {
+        if (!fingerprint) {
+            return;
+        }
+        const map = pruneRecentNotifications(loadRecentNotifications());
+        map[fingerprint] = Date.now();
+        saveRecentNotifications(map);
+    }
+
+    function hashString(input) {
+        let hash = 5381;
+        for (let i = 0; i < input.length; i++) {
+            hash = ((hash << 5) + hash) + input.charCodeAt(i);
+        }
+        return (hash >>> 0).toString(36);
+    }
+
+    function buildAlertFingerprint(alert) {
+        if (!alert) {
+            return '';
+        }
+
+        const data = alert.data || {};
+        const parts = [String(alert.type || alert.label || 'alert')];
+
+        if (data.order_id) {
+            parts.push('order:' + data.order_id);
+        } else if (Array.isArray(data.order_ids) && data.order_ids.length) {
+            const orderIds = data.order_ids.slice().sort();
+            parts.push('orders:' + orderIds.join(','));
+        } else if (data.product_id) {
+            parts.push('product:' + data.product_id);
+            if (data.location_id || data.location_name) {
+                parts.push('loc:' + (data.location_id || data.location_name));
+            }
+            if (data.stock !== undefined && data.stock !== null) {
+                parts.push('stock:' + data.stock);
+            }
+        } else if (Array.isArray(data.product_ids) && data.product_ids.length) {
+            const productIds = data.product_ids.slice().sort();
+            parts.push('products:' + productIds.join(','));
+        } else if (data.review_id) {
+            parts.push('review:' + data.review_id);
+        } else if (data.user_id) {
+            parts.push('user:' + data.user_id);
+        } else if (data.url) {
+            parts.push('url:' + data.url);
+        } else if (alert.message) {
+            parts.push('msg:' + stripHtmlTags(alert.message));
+        }
+
+        if (data.changed_at) {
+            parts.push('at:' + data.changed_at);
+        }
+
+        return 'mulopimfwc:' + hashString(parts.join('|'));
     }
 
     // Mark notification as read
@@ -519,10 +619,21 @@
                 return;
             }
 
+            const alertId = alert.id;
+            const fingerprint = buildAlertFingerprint(alert);
+
+            if (fingerprint && hasRecentNotification(fingerprint)) {
+                // Mark as seen/read to keep admin bar counts accurate
+                markAsSeen(alertId);
+                markAsRead(alertId);
+                alertHistory.add(alertId);
+                return;
+            }
+
             // Check if notification has been seen before (persists across page reloads)
             // Check both localStorage (via Set) and in-memory history
-            const hasBeenSeenInStorage = seenNotificationsSet.has(alert.id);
-            const hasBeenSeenInSession = alertHistory.has(alert.id);
+            const hasBeenSeenInStorage = seenNotificationsSet.has(alertId);
+            const hasBeenSeenInSession = alertHistory.has(alertId);
 
             // Skip if already seen in either storage or session
             if (hasBeenSeenInStorage || hasBeenSeenInSession) {
@@ -531,18 +642,19 @@
 
             // This is a truly new notification - mark it immediately BEFORE showing
             // Mark in both storage and session to prevent any race conditions
-            alertHistory.add(alert.id);
-            markAsSeen(alert.id); // Mark as seen immediately so it won't show again on reload
-            seenNotificationsSet.add(alert.id); // Also add to our local Set for this iteration
+            alertHistory.add(alertId);
+            markAsSeen(alertId); // Mark as seen immediately so it won't show again on reload
+            seenNotificationsSet.add(alertId); // Also add to our local Set for this iteration
+            markRecentNotification(fingerprint);
             
             const message = formatAlertMessage(alert);
 
             if (config.floating_enabled !== 'off') {
-                showFloatingNotification(alert, message);
+                showFloatingNotification(alert, message, fingerprint);
             }
 
             if (config.pwa_enabled === 'on') {
-                sendPushNotification(alert, message);
+                sendPushNotification(alert, message, fingerprint);
             }
         });
     }
@@ -585,8 +697,12 @@
             .replace('{status}', status);
     }
 
-    function showFloatingNotification(alert, message) {
+    function showFloatingNotification(alert, message, fingerprint) {
         if (!alert || !alert.id) {
+            return;
+        }
+
+        if (fingerprint && hasRecentNotification(fingerprint)) {
             return;
         }
 
@@ -605,6 +721,7 @@
         // This ensures that even if there's a race condition, we won't show duplicates
         markAsSeen(alert.id);
         alertHistory.add(alert.id);
+        markRecentNotification(fingerprint);
 
         const severity = alert.severity || 'info';
         const url = getNotificationUrl(alert);
@@ -805,7 +922,7 @@
             .appendTo('head');
     }
 
-    async function sendPushNotification(alert, message) {
+    async function sendPushNotification(alert, message, fingerprint) {
         if (!('Notification' in window)) {
             return;
         }
@@ -825,10 +942,10 @@
             }
         }
 
-        await showNotification(alert, message);
+        await showNotification(alert, message, fingerprint);
     }
 
-    async function showNotification(alert, message) {
+    async function showNotification(alert, message, fingerprint) {
         // Ensure absolute URLs for icons with proper fallbacks
         let iconUrl = config.pwa_icon || window.location.origin + '/favicon.ico';
         let badgeUrl = config.pwa_badge || config.pwa_icon || window.location.origin + '/favicon.ico';
@@ -840,12 +957,13 @@
         // Strip HTML from title as well (notifications don't support HTML)
         const title = stripHtmlTags(alert.label || alert.type || 'Notification');
         
+        const dedupeTag = fingerprint || alert.id || 'mulopimfwc-notification-' + Date.now();
         const payload = {
             title: title,
             body: message,
             icon: icon,
             badge: badge,
-            tag: alert.id || 'mulopimfwc-notification-' + Date.now(),
+            tag: dedupeTag,
             requireInteraction: alert.severity === 'critical',
             data: {
                 url: alert.data?.url || window.location.origin + '/wp-admin/admin.php?page=multi-location-product-and-inventory-management',

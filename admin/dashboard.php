@@ -2143,6 +2143,7 @@ class MULOPIMFWC_Dashboard
             foreach ($results as $result) {
                 $low_stock_products[] = [
                     'product_id' => $result->ID,
+                    'location_id' => $location->term_id,
                     'product_title' => $result->post_title,
                     'location_name' => $location->name,
                     'stock' => (int) $result->stock
@@ -3162,6 +3163,9 @@ class MULOPIMFWC_Dashboard
                     'warning',
                     [
                         'product_id' => $product_id,
+                        'location_id' => $item['location_id'] ?? null,
+                        'location_name' => $item['location_name'] ?? '',
+                        'stock' => $item['stock'] ?? null,
                         'url' => $product_url,
                     ]
                 );
@@ -3184,6 +3188,9 @@ class MULOPIMFWC_Dashboard
                     'critical',
                     [
                         'product_id' => $product_id,
+                        'location_id' => $item['location_id'] ?? null,
+                        'location_name' => $item['location_name'] ?? '',
+                        'stock' => $item['stock'] ?? null,
                         'url' => $product_url,
                     ]
                 );
@@ -3193,10 +3200,19 @@ class MULOPIMFWC_Dashboard
         foreach (['failed', 'refunded', 'cancelled', 'completed'] as $key) {
             if (!empty($orders_by_status[$key])) {
                 $count = count($orders_by_status[$key]);
+                $order_ids = array_map(static function ($order) {
+                    return $order ? $order->get_id() : 0;
+                }, $orders_by_status[$key]);
+                $order_ids = array_values(array_filter($order_ids));
+                sort($order_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     "order_{$key}",
                     sprintf(__('%s orders %s', 'multi-location-product-and-inventory-management'), ucwords(str_replace('_', ' ', $key)), $count),
-                    'info'
+                    'info',
+                    [
+                        'order_ids' => $order_ids,
+                        'count' => $count,
+                    ]
                 );
             }
         }
@@ -3211,7 +3227,13 @@ class MULOPIMFWC_Dashboard
                 'high_value_order',
                 sprintf(__('High-value order: #%s (%s)', 'multi-location-product-and-inventory-management'), $order->get_order_number(), $formatted_price),
                 'info',
-                ['url' => $order->get_edit_order_url()]
+                [
+                    'order_id' => $order->get_id(),
+                    'order_number' => $order->get_order_number(),
+                    'order_total' => $order->get_total(),
+                    'order_date' => $order->get_date_created() ? $order->get_date_created()->getTimestamp() : null,
+                    'url' => $order->get_edit_order_url(),
+                ]
             );
         }
 
@@ -3230,6 +3252,7 @@ class MULOPIMFWC_Dashboard
         }
         update_option('mulopimfwc_live_low_stock_snapshot', $current_snapshot);
         if (!empty($restocked)) {
+            sort($restocked, SORT_NUMERIC);
             $titles = [];
             foreach ($restocked as $product_id) {
                 $product = wc_get_product($product_id);
@@ -3241,7 +3264,11 @@ class MULOPIMFWC_Dashboard
                 $alerts[] = $this->format_alert(
                     'restocked',
                     sprintf(__('Restocked: %s', 'multi-location-product-and-inventory-management'), implode(', ', array_slice($titles, 0, 3))),
-                    'info'
+                    'info',
+                    [
+                        'product_ids' => $restocked,
+                        'count' => count($restocked),
+                    ]
                 );
             }
         }
@@ -3267,7 +3294,11 @@ class MULOPIMFWC_Dashboard
                 'low_review_alert',
                 sprintf(__('Low rating review for %s', 'multi-location-product-and-inventory-management'), $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management')),
                 'info',
-                ['url' => get_edit_comment_link($review->comment_ID)]
+                [
+                    'review_id' => $review->comment_ID,
+                    'product_id' => $product ? $product->get_id() : null,
+                    'url' => get_edit_comment_link($review->comment_ID),
+                ]
             );
         }
 
@@ -3279,7 +3310,11 @@ class MULOPIMFWC_Dashboard
                     'manager_change',
                     sprintf(__('Manager updated: %s', 'multi-location-product-and-inventory-management'), $user->display_name),
                     'info',
-                    ['url' => admin_url('user-edit.php?user_id=' . $user->ID)]
+                    [
+                        'user_id' => $user->ID,
+                        'changed_at' => $manager_event['timestamp'] ?? null,
+                        'url' => admin_url('user-edit.php?user_id=' . $user->ID),
+                    ]
                 );
             }
             delete_option('mulopimfwc_manager_change_pending');
@@ -3289,7 +3324,11 @@ class MULOPIMFWC_Dashboard
             $alerts[] = $this->format_alert(
                 'site_status',
                 $site_status['message'],
-                $site_status['status'] === 'down' ? 'critical' : 'info'
+                $site_status['status'] === 'down' ? 'critical' : 'info',
+                [
+                    'status' => $site_status['status'] ?? '',
+                    'changed_at' => $site_status['changed_at'] ?? null,
+                ]
             );
         }
 
@@ -3305,6 +3344,7 @@ class MULOPIMFWC_Dashboard
         $last_check = (int) get_option('mulopimfwc_site_status_last_check', 0);
         $state = get_option('mulopimfwc_site_status_state', 'up');
         $changed = false;
+        $changed_at = null;
 
         if ($now - $last_check >= 300) {
             $response = wp_remote_get(home_url(), ['timeout' => 5, 'blocking' => true]);
@@ -3315,6 +3355,8 @@ class MULOPIMFWC_Dashboard
                 $state = $new_state;
                 update_option('mulopimfwc_site_status_state', $state);
                 $changed = true;
+                $changed_at = $now;
+                update_option('mulopimfwc_site_status_changed_at', $changed_at);
             }
 
             update_option('mulopimfwc_site_status_last_check', $now);
@@ -3323,6 +3365,7 @@ class MULOPIMFWC_Dashboard
         return [
             'status' => $state,
             'changed' => $changed,
+            'changed_at' => $changed ? $changed_at : null,
             'message' => $changed
                 ? ($state === 'down'
                     ? __('Site went down. Monitoring could not reach the server.', 'multi-location-product-and-inventory-management')
@@ -3342,19 +3385,51 @@ class MULOPIMFWC_Dashboard
         
         // Create unique ID based on type and relevant identifiers
         $unique_id = $type;
-        
-        // For new orders, include order_id to ensure each order gets a unique notification
-        // Use order_id only (not timestamp) so the same order doesn't show multiple times
-        if ($type === 'new_order' && !empty($data['order_id'])) {
-            $unique_id .= '-order-' . $data['order_id'];
+        $unique_suffix = '';
+
+        if (!empty($data['event_id'])) {
+            $unique_suffix = sanitize_key((string) $data['event_id']);
+        } elseif (!empty($data['order_id'])) {
+            $unique_suffix = 'order-' . absint($data['order_id']);
+        } elseif (!empty($data['order_ids']) && is_array($data['order_ids'])) {
+            $order_ids = array_values(array_filter(array_map('absint', $data['order_ids'])));
+            if (!empty($order_ids)) {
+                sort($order_ids, SORT_NUMERIC);
+                $unique_suffix = 'orders-' . md5(implode(',', $order_ids));
+            }
+        } elseif (!empty($data['product_id'])) {
+            $unique_suffix = 'product-' . absint($data['product_id']);
+            if (!empty($data['location_id'])) {
+                $unique_suffix .= '-loc-' . absint($data['location_id']);
+            } elseif (!empty($data['location_name'])) {
+                $unique_suffix .= '-loc-' . sanitize_title($data['location_name']);
+            }
+        } elseif (!empty($data['product_ids']) && is_array($data['product_ids'])) {
+            $product_ids = array_values(array_filter(array_map('absint', $data['product_ids'])));
+            if (!empty($product_ids)) {
+                sort($product_ids, SORT_NUMERIC);
+                $unique_suffix = 'products-' . md5(implode(',', $product_ids));
+            }
+        } elseif (!empty($data['review_id'])) {
+            $unique_suffix = 'review-' . absint($data['review_id']);
+        } elseif (!empty($data['user_id'])) {
+            $unique_suffix = 'user-' . absint($data['user_id']);
+            if (!empty($data['changed_at'])) {
+                $unique_suffix .= '-at-' . absint($data['changed_at']);
+            }
+        } elseif ($type === 'site_status' && !empty($data['status'])) {
+            $unique_suffix = 'status-' . sanitize_key((string) $data['status']);
+            if (!empty($data['changed_at'])) {
+                $unique_suffix .= '-at-' . absint($data['changed_at']);
+            }
+        } elseif (!empty($data['changed_at'])) {
+            $unique_suffix = 'at-' . absint($data['changed_at']);
         }
-        // For low stock/out of stock, include product_id and location if available
-        elseif (in_array($type, ['low_stock', 'out_of_stock']) && !empty($data['product_id'])) {
-            $location_suffix = !empty($data['location_id']) ? '-loc-' . $data['location_id'] : '';
-            $unique_id .= '-product-' . $data['product_id'] . $location_suffix;
-        }
-        // For other types, use unique ID with timestamp to ensure uniqueness
-        else {
+
+        if (!empty($unique_suffix)) {
+            $unique_id .= '-' . $unique_suffix;
+        } else {
+            // Fallback to unique ID with timestamp if no stable identifier is available
             $unique_id .= '-' . wp_unique_id() . '-' . current_time('timestamp', true);
         }
         
