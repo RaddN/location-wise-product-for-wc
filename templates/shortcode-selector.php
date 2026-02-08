@@ -556,7 +556,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             for ($level = 0; $level <= $max_depth; $level++):
                 $select_id = "lwp-shortcode-selector-level-{$level}";
                 // translators: %s: The name of the location level (e.g., Area, Sub-area)
-                $placeholder = $level == 0 ? ($atts['placeholder'] ?? '-- Select a Store --') : sprintf(__('-- Select %s --', 'multi-location-product-and-inventory-management'), ($level == 1 ? 'Area' : 'Sub-area'));
+                $placeholder = $level == 0 ? $atts['placeholder'] : sprintf(__('-- Select %s --', 'multi-location-product-and-inventory-management'), ($level == 1 ? 'Area' : 'Sub-area'));
             ?>
                 <div class="lwp-select-container level-<?php echo esc_html($level); ?>" <?php echo $level > 0 ? 'style="display:none;"' : ''; ?>>
                     <select id="<?php echo esc_html($select_id); ?>" class="lwp-shortcode-selector-dropdown" data-level="<?php echo esc_html($level); ?>" style="display: <?php echo $atts['enable_user_locations'] === 'on' ? 'none' : 'block'; ?>;">
@@ -590,7 +590,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
         <?php else: ?>
             <!-- Single dropdown implementation -->
             <select id="lwp-shortcode-selector" class="lwp-location-dropdown" style="display: <?php echo $atts['enable_user_locations'] === 'on' ? 'none' : 'block'; ?>;">
-                <option value=""><?php echo esc_html($atts['placeholder'] ?? '-- Select a Store --'); ?></option>
+                <option value=""><?php echo esc_html($atts['placeholder'] ?? mulopimfwc_get_text_value('mulopimfwc_popup_placeholder')); ?></option>
                 <?php if ($is_admin_or_manager && $show_all_products_admin === 'on'): ?>
                     <?php $selected = ($selected_location === 'all-products') ? 'selected' : ''; ?>
                     <option value="all-products" <?php echo esc_attr($selected); ?>><?php echo esc_html_e('All Products', 'multi-location-product-and-inventory-management'); ?></option>

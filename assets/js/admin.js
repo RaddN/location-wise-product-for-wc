@@ -4060,6 +4060,103 @@ jQuery(document).ready(function ($) {
             .show();
     }
 
+    function updateSelectedCount() {
+        modal.find('.mulopimfwc-bulk-assign-count').text(state.orderIds.length);
+    }
+
+    function updateSelectAllCheckboxes() {
+        var $orderCheckboxes = $('input[name="id[]"], input[name="post[]"], input[name="order_id[]"]');
+        if (!$orderCheckboxes.length) {
+            return;
+        }
+        var checkedCount = $orderCheckboxes.filter(':checked').length;
+        var allChecked = checkedCount > 0 && checkedCount === $orderCheckboxes.length;
+        $('#cb-select-all-1, #cb-select-all-2')
+            .prop('checked', allChecked)
+            .prop('indeterminate', checkedCount > 0 && !allChecked);
+    }
+
+    function syncOrderCheckbox(orderId, checked) {
+        if (!orderId) {
+            return;
+        }
+        $('input[name="id[]"], input[name="post[]"], input[name="order_id[]"]')
+            .filter('[value="' + orderId + '"]')
+            .prop('checked', !!checked);
+        updateSelectAllCheckboxes();
+    }
+
+    function updateOrderSelectionFromResponse(requestedIds, orders) {
+        var returnedIds = (orders || []).map(function (order) {
+            return parseInt(order.id, 10);
+        }).filter(Boolean);
+        var removedIds = (requestedIds || []).filter(function (id) {
+            return returnedIds.indexOf(id) === -1;
+        });
+        removedIds.forEach(function (id) {
+            syncOrderCheckbox(id, false);
+        });
+        state.orderIds = returnedIds;
+        updateSelectedCount();
+    }
+
+    function fetchBulkAssignmentData(orderIds, options) {
+        var opts = options || {};
+        var selectedLocation = typeof opts.selectedLocation !== 'undefined'
+            ? opts.selectedLocation
+            : modal.find('#mulopimfwc-bulk-location-select').val();
+
+        modal.addClass('is-loading');
+        if (opts.showLoadingMessage !== false) {
+            setModalMessage('info', i18n.loadingOrders || 'Loading orders...');
+        }
+        modal.find('#mulopimfwc-bulk-location-select')
+            .prop('disabled', true)
+            .html('<option value="">' + (i18n.loading || 'Loading available locations...') + '</option>');
+
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_get_bulk_assignment_data',
+                order_ids: orderIds,
+                nonce: nonce
+            },
+            success: function (response) {
+                if (response.success) {
+                    var orders = (response.data && response.data.orders) ? response.data.orders : [];
+                    var locations = (response.data && response.data.locations) ? response.data.locations : [];
+                    var allEditable = true;
+                    if (response.data && typeof response.data.all_editable !== 'undefined') {
+                        allEditable = !!response.data.all_editable;
+                    }
+                    state.allEditable = allEditable;
+                    updateOrderSelectionFromResponse(orderIds, orders);
+                    renderOrders(orders);
+                    renderLocations(locations, allEditable, selectedLocation);
+
+                    if (!state.orderIds.length) {
+                        setModalMessage('warning', i18n.noOrdersSelected || 'No orders selected.');
+                    } else if (!allEditable) {
+                        setModalMessage('warning', i18n.notEditable || 'All selected orders must be editable to assign a location.');
+                    } else if (!locations.length) {
+                        setModalMessage('warning', i18n.noLocations || 'No locations have sufficient stock for all selected orders.');
+                    } else {
+                        setModalMessage('info', '');
+                    }
+                } else {
+                    setModalMessage('error', (response.data && response.data.message) ? response.data.message : (i18n.failed || 'Bulk assignment failed. Please try again.'));
+                }
+            },
+            error: function () {
+                setModalMessage('error', i18n.failed || 'Bulk assignment failed. Please try again.');
+            },
+            complete: function () {
+                modal.removeClass('is-loading');
+            }
+        });
+    }
+
     function resetModal() {
         modal.removeClass('is-loading');
         state.orderIds = [];
@@ -4078,51 +4175,11 @@ jQuery(document).ready(function ($) {
 
     function openModal(orderIds) {
         resetModal();
-        state.orderIds = orderIds;
+        state.orderIds = orderIds.slice();
         modal.addClass('is-active').attr('aria-hidden', 'false');
         $('body').addClass('mulopimfwc-modal-open');
-        modal.find('.mulopimfwc-bulk-assign-count').text(orderIds.length);
-        setModalMessage('info', i18n.loadingOrders || 'Loading orders...');
-        modal.find('#mulopimfwc-bulk-location-select')
-            .prop('disabled', true)
-            .html('<option value="">' + (i18n.loading || 'Loading available locations...') + '</option>');
-        modal.addClass('is-loading');
-
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'mulopimfwc_get_bulk_assignment_data',
-                order_ids: orderIds,
-                nonce: nonce
-            },
-            success: function (response) {
-                if (response.success) {
-                    var allEditable = true;
-                    if (response.data && typeof response.data.all_editable !== 'undefined') {
-                        allEditable = !!response.data.all_editable;
-                    }
-                    state.allEditable = allEditable;
-                    renderOrders(response.data.orders || []);
-                    renderLocations(response.data.locations || [], allEditable);
-                    if (!allEditable) {
-                        setModalMessage('warning', i18n.notEditable || 'All selected orders must be editable to assign a location.');
-                    } else if (!response.data.locations || response.data.locations.length === 0) {
-                        setModalMessage('warning', i18n.noLocations || 'No locations have sufficient stock for all selected orders.');
-                    } else {
-                        setModalMessage('info', '');
-                    }
-                } else {
-                    setModalMessage('error', (response.data && response.data.message) ? response.data.message : (i18n.failed || 'Bulk assignment failed. Please try again.'));
-                }
-            },
-            error: function () {
-                setModalMessage('error', i18n.failed || 'Bulk assignment failed. Please try again.');
-            },
-            complete: function () {
-                modal.removeClass('is-loading');
-            }
-        });
+        updateSelectedCount();
+        fetchBulkAssignmentData(state.orderIds, { showLoadingMessage: true });
     }
 
     function closeModal() {
@@ -4134,7 +4191,7 @@ jQuery(document).ready(function ($) {
     function renderOrders(orders) {
         var $list = modal.find('.mulopimfwc-bulk-assign-orders__list');
         if (!orders.length) {
-            $list.html('<div class="mulopimfwc-bulk-empty">' + escapeHtml(i18n.noOrders || 'No orders selected.') + '</div>');
+            $list.html('<div class="mulopimfwc-bulk-empty">' + escapeHtml(i18n.noOrdersSelected || i18n.noOrders || 'No orders selected.') + '</div>');
             return;
         }
 
@@ -4142,20 +4199,47 @@ jQuery(document).ready(function ($) {
             var orderNumber = order.number || order.id;
             var statusClass = order.status ? 'status-' + escapeHtml(order.status) : '';
             var locationLabel = order.location ? order.location : (i18n.unassigned || 'Unassigned');
+            var orderId = order.id || order.number || '';
+            var isEditable = order.editable !== false;
+            var hasLocations = order.has_locations !== false;
+            var isBlocker = order.blocker === true;
+            var rowClasses = [];
+            if (!isEditable) {
+                rowClasses.push('is-not-editable');
+            }
+            if (!hasLocations) {
+                rowClasses.push('is-no-locations');
+            }
+            if (isBlocker && hasLocations) {
+                rowClasses.push('is-blocker');
+            }
+            var locationHtml = '<span class="mulopimfwc-bulk-order-location-name">' + escapeHtml(locationLabel) + '</span>';
+            var removeLabel = i18n.removeOrder || 'Remove';
+            var removeAria = (i18n.removeOrderLabel || 'Remove order #') + orderNumber;
 
-            return '<div class="mulopimfwc-bulk-order-row">' +
+            if (!isEditable) {
+                locationHtml += '<span class="mulopimfwc-bulk-order-flag is-danger">' + escapeHtml(i18n.notEditableTag || 'Not editable') + '</span>';
+            }
+            if (!hasLocations) {
+                locationHtml += '<span class="mulopimfwc-bulk-order-flag is-warning">' + escapeHtml(i18n.noLocationsTag || 'No available locations') + '</span>';
+            } else if (isBlocker) {
+                locationHtml += '<span class="mulopimfwc-bulk-order-flag is-blocker">' + escapeHtml(i18n.noCommonLocationTag || 'No common location') + '</span>';
+            }
+
+            return '<div class="mulopimfwc-bulk-order-row' + (rowClasses.length ? ' ' + rowClasses.join(' ') : '') + '" data-order-id="' + escapeHtml(orderId) + '">' +
                 '<span class="mulopimfwc-bulk-order-id">#' + escapeHtml(orderNumber) + '</span>' +
                 '<span class="mulopimfwc-bulk-order-customer">' + escapeHtml(order.customer || '') + '</span>' +
                 '<span class="mulopimfwc-bulk-order-total">' + escapeHtml(order.total || '') + '</span>' +
                 '<span class="mulopimfwc-bulk-order-status ' + statusClass + '">' + escapeHtml(order.status_label || order.status || '') + '</span>' +
-                '<span class="mulopimfwc-bulk-order-location">' + escapeHtml(locationLabel) + '</span>' +
+                '<span class="mulopimfwc-bulk-order-location">' + locationHtml + '</span>' +
+                '<button type="button" class="mulopimfwc-bulk-order-remove" data-order-id="' + escapeHtml(orderId) + '" aria-label="' + escapeHtml(removeAria) + '">' + escapeHtml(removeLabel) + '</button>' +
                 '</div>';
         }).join('');
 
         $list.html(html);
     }
 
-    function renderLocations(locations, canAssign) {
+    function renderLocations(locations, canAssign, selectedLocation) {
         var $select = modal.find('#mulopimfwc-bulk-location-select');
         var options = '<option value="">' + (i18n.selectLocation || 'Select a location') + '</option>';
 
@@ -4168,6 +4252,44 @@ jQuery(document).ready(function ($) {
 
         $select.prop('disabled', !canEnable);
         $select.html(options);
+        if (canEnable && selectedLocation) {
+            $select.val(selectedLocation);
+        }
+
+        var hasValue = !!$select.val();
+        modal.find('.mulopimfwc-bulk-assign-confirm')
+            .prop('disabled', !canEnable || !hasValue)
+            .data('confirmed', false)
+            .text(i18n.assignLocation || 'Assign Location');
+    }
+
+    function removeOrderFromSelection(orderId) {
+        if (!orderId) {
+            return;
+        }
+
+        state.orderIds = state.orderIds.filter(function (id) {
+            return id !== orderId;
+        });
+        syncOrderCheckbox(orderId, false);
+        modal.find('.mulopimfwc-bulk-assign-confirm')
+            .prop('disabled', true)
+            .data('confirmed', false)
+            .text(i18n.assignLocation || 'Assign Location');
+
+        if (!state.orderIds.length) {
+            state.allEditable = true;
+            updateSelectedCount();
+            renderOrders([]);
+            renderLocations([], false, '');
+            setModalMessage('warning', i18n.noOrdersSelected || 'No orders selected.');
+            return;
+        }
+
+        fetchBulkAssignmentData(state.orderIds, {
+            selectedLocation: modal.find('#mulopimfwc-bulk-location-select').val(),
+            showLoadingMessage: true
+        });
     }
 
     function getSelectedOrderIds() {
@@ -4184,6 +4306,15 @@ jQuery(document).ready(function ($) {
     function resetBulkActions() {
         $('#bulk-action-selector-top, #bulk-action-selector-bottom').val('-1');
     }
+
+    $(document).on('click', '.mulopimfwc-bulk-order-remove', function (e) {
+        e.preventDefault();
+        var orderId = parseInt($(this).data('order-id'), 10);
+        if (!orderId) {
+            return;
+        }
+        removeOrderFromSelection(orderId);
+    });
 
     $(document).on('click', '#doaction, #doaction2', function (e) {
         var $button = $(this);

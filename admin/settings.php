@@ -431,95 +431,6 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             'popup_shortcode_manage_section'
         );
 
-        add_settings_field(
-            'mulopimfwc_popup_title',
-            __('Popup Title', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = $this->get_display_options();
-                $mulopimfwc_popup_title = isset($options['mulopimfwc_popup_title']) ? $options['mulopimfwc_popup_title'] : 'Select Your Location';
-                $is_manual_mode = $this->is_manual_assignment_strict_mode();
-                if (mulopimfwc_premium_feature()) {
-                    if ($is_manual_mode) {
-                        $this->render_manual_hidden_input('mulopimfwc_popup_title', $mulopimfwc_popup_title);
-                    }
-                    $disabled_attr = $is_manual_mode ? ' disabled' : '';
-                ?>
-                <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_title]" value="<?php echo esc_attr($mulopimfwc_popup_title); ?>" class="regular-text"<?php echo $disabled_attr; ?>>
-                <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
-                <?php endif; ?>
-            <?php } else { ?>
-                <label class="mulopimfwc_pro_only">
-                    <input disabled type="text" name="_pro[pro]" value="" placeholder="Select Your Location" class="regular-text">
-                </label>
-            <?php }
-            },
-            'location-popup-shortcode-settings',
-            'popup_shortcode_manage_section'
-        );
-
-        add_settings_field(
-            'mulopimfwc_popup_placeholder',
-            __('Popup Placeholder', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = $this->get_display_options();
-                $is_manual_mode = $this->is_manual_assignment_strict_mode();
-                $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
-                $is_default = ($current_template === 'default');
-                $style = $is_default ? '' : ' style="display: none;"';
-                $mulopimfwc_popup_placeholder = isset($options['mulopimfwc_popup_placeholder']) ? $options['mulopimfwc_popup_placeholder'] : ' -- Select a Store -- ';
-                echo '<div data-field="mulopimfwc_popup_placeholder" class="mulopimfwc-default-template-only"' . $style . '>';
-                if (mulopimfwc_premium_feature()) {
-                    if ($is_manual_mode) {
-                        $this->render_manual_hidden_input('mulopimfwc_popup_placeholder', $mulopimfwc_popup_placeholder);
-                    }
-                    $disabled_attr = $is_manual_mode ? ' disabled' : '';
-                ?>
-                <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_placeholder]" value="<?php echo esc_attr($mulopimfwc_popup_placeholder); ?>" class="regular-text"<?php echo $disabled_attr; ?>>
-                <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
-                <?php endif; ?>
-            <?php } else { ?>
-                <label class="mulopimfwc_pro_only">
-                    <input disabled type="text" name="_pro[pro]" value="" placeholder="-- Select a Store -- " class="regular-text">
-                </label>
-            <?php }
-                echo '</div>';
-            },
-            'location-popup-shortcode-settings',
-            'popup_shortcode_manage_section'
-        );
-
-        add_settings_field(
-            'mulopimfwc_popup_btn_txt',
-            __('Popup Button Text', 'multi-location-product-and-inventory-management'),
-            function () {
-                $options = $this->get_display_options();
-                $mulopimfwc_popup_btn_txt = isset($options['mulopimfwc_popup_btn_txt']) ? $options['mulopimfwc_popup_btn_txt'] : '';
-                if (empty($mulopimfwc_popup_btn_txt) || $mulopimfwc_popup_btn_txt === '' || $mulopimfwc_popup_btn_txt === ' ') {
-                    $mulopimfwc_popup_btn_txt = __('Select Location', 'multi-location-product-and-inventory-management');
-                }
-
-                $is_manual_mode = $this->is_manual_assignment_strict_mode();
-                if (mulopimfwc_premium_feature()) {
-                    if ($is_manual_mode) {
-                        $this->render_manual_hidden_input('mulopimfwc_popup_btn_txt', $mulopimfwc_popup_btn_txt);
-                    }
-                    $disabled_attr = $is_manual_mode ? ' disabled' : '';
-                ?>
-                <input type="text" name="mulopimfwc_display_options[mulopimfwc_popup_btn_txt]" value="<?php echo esc_attr($mulopimfwc_popup_btn_txt); ?>" class="regular-text"<?php echo $disabled_attr; ?>>
-                <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
-                <?php endif; ?>
-            <?php } else { ?>
-                <label class="mulopimfwc_pro_only">
-                    <input disabled type="text" name="_pro[pro]" value="" placeholder="Select Location" class="regular-text">
-                </label>
-            <?php }
-            },
-            'location-popup-shortcode-settings',
-            'popup_shortcode_manage_section'
-        );
 
         add_settings_field(
             'herichical',
@@ -1728,7 +1639,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#f3e8ff;padding:10px;border-radius:6px">
-  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.3.1.1.3.2.2.3.1.1.1.120.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.3-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
+  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.3.10.1.1.3.10.2.2.3.1.1.1.120.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.3.10-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
 </svg>Location Hours & Availability', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure business hours and availability for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
@@ -4242,38 +4153,6 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'mulopimfwc_customer_experience_section'
         );
 
-        // Add Location Notification Text field
-        add_settings_field(
-            'location_notification_text',
-            __('Location Notification Text', 'multi-location-product-and-inventory-management'),
-            function () {
-                global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_notification_text' => 'Do you want to change the store location? Your cart will be emptied.']);
-                $value = isset($options['location_notification_text']) ? $options['location_notification_text'] : 'Do you want to change the store location? Your cart will be emptied.';
-                $is_manual_mode = $this->is_manual_assignment_strict_mode();
-                if (mulopimfwc_premium_feature()) {
-                    if ($is_manual_mode) {
-                        $this->render_manual_hidden_input('location_notification_text', $value);
-                    }
-                    $disabled_attr = $is_manual_mode ? ' disabled' : '';
-            ?>
-                <textarea name="mulopimfwc_display_options[location_notification_text]" rows="2" class="large-text"<?php echo $disabled_attr; ?>><?php echo esc_textarea($value); ?></textarea>
-                <?php if ($is_manual_mode) : ?>
-                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
-                <?php endif; ?>
-            <?php } else { ?>
-                <label class="mulopimfwc_pro_only">
-                    <textarea disabled name="_pro[location_notification_text]" rows="2" class="large-text"><?php echo esc_textarea($value); ?></textarea>
-                </label>
-            <?php } ?>
-        <?php
-            },
-            'location-customer-experience-settings',
-            'mulopimfwc_customer_experience_section'
-        );
-
         // Add Location Notification Note field
         add_settings_section(
             'location_notification_note',
@@ -5224,6 +5103,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                             echo $this->mls_nav_tabs("#inventory-settings", "nav-tab", '<svg class="svg-inline--fa fa-chart-bar" aria-hidden="true" data-prefix="fas" data-icon="chart-bar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#22c55e" d="M1 1a1 1 0 0 1 1 1v10.5c0 .275.225.5.5.5H15a1 1 0 1 1 0 2H2.5A2.5 2.5 0 0 1 0 12.5V2a1 1 0 0 1 1-1m3 3a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1m1 2h4a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2m0 3h8a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2"/></svg>', esc_html__('Inventory', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#product-visibility-settings", "nav-tab", '<svg class="svg-inline--fa fa-eye" aria-hidden="true" data-prefix="fas" data-icon="eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="#14b8a6" d="M9 1C6.475 1 4.453 2.15 2.981 3.519 1.519 4.875.541 6.5.078 7.616a1 1 0 0 0 0 .769c.463 1.115 1.441 2.74 2.903 4.096C4.453 13.85 6.475 15 9 15s4.547-1.15 6.019-2.519c1.462-1.359 2.441-2.981 2.906-4.097a1 1 0 0 0 0-.769c-.466-1.116-1.444-2.741-2.906-4.097C13.547 2.15 11.525 1 9 1M4.5 8a4.5 4.5 0 1 1 9 0 4.5 4.5 0 1 1-9 0M9 6a2.002 2.002 0 0 1-2.634 1.897c-.172-.056-.372.05-.366.231a3.002 3.002 0 0 0 3.775 2.769A3.002 3.002 0 0 0 9.128 5c-.181-.006-.287.191-.231.366q.101.3.103.634"/></svg>', esc_html__('Product Visibility', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#popup-shortcode-settings", "nav-tab", '<svg class="svg-inline--fa fa-window-restore" aria-hidden="true" data-prefix="fas" data-icon="window-restore" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#a855f7" d="M13.5 2h-7c-.275 0-.5.225-.5.5V3H4v-.5A2.5 2.5 0 0 1 6.5 0h7A2.5 2.5 0 0 1 16 2.5v7a2.5 2.5 0 0 1-2.5 2.5H13v-2h.5c.275 0 .5-.225.5-.5v-7c0-.275-.225-.5-.5-.5M0 6c0-1.103.897-2 2-2h8c1.103 0 2 .897 2 2v8c0 1.103-.897 2-2 2H2c-1.103 0-2-.897-2-2zm2 1a1 1 0 0 0 1 1h6a1 1 0 1 0 0-2H3a1 1 0 0 0-1 1"/></svg>', esc_html__('Popup', 'multi-location-product-and-inventory-management'));
+                            echo $this->mls_nav_tabs("#text-management-settings", "nav-tab", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle"><path fill="#0ea5e9" d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 5h10v2H4v-2z"/></svg>', esc_html__('Text Management', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#cross-order-settings", "nav-tab", '<svg class="svg-inline--fa fa-truck" aria-hidden="true" data-prefix="fas" data-icon="truck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#f97316" d="M1.5 0A1.5 1.5 0 0 0 0 1.5v10A1.5 1.5 0 0 0 1.5 13H2a3.001 3.001 0 0 0 6 0h4a3.001 3.001 0 0 0 6 0h1a1 1 0 1 0 0-2V7.416c0-.531-.209-1.041-.584-1.416L16 3.584A2 2 0 0 0 14.584 3H13V1.5A1.5 1.5 0 0 0 11.5 0zM13 5h1.584L17 7.416V8h-4zm-9.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0M15 11.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3"/></svg>', esc_html__('Order & Cart', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#notification-settings", "nav-tab", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle"><path fill="#f97316" d="M12 2a5 5 0 0 0-5 5v5.586L5.293 14.293a1 1 0 0 0 1.414 1.414L9 13.414V12a3 3 0 1 1 6 0v1.414l2.293 2.293a1 1 0 0 0 1.414-1.414L17 12.586V7a5 5 0 0 0-5-5zm0 18a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3z"/></svg>', esc_html__('Notifications', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#location-wise-everything", "nav-tab", '<svg class="svg-inline--fa fa-map-location-dot" aria-hidden="true" data-prefix="fas" data-icon="map-location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="#ef4444" d="M12.75 3.75c0 1.706-2.284 4.747-3.288 6-.241.3-.688.3-.925 0-1.003-1.253-3.287-4.294-3.287-6C5.25 1.678 6.928 0 9 0s3.75 1.678 3.75 3.75M13 6.263q.163-.324.3-.644l.047-.116 3.625-1.45A.75.75 0 0 1 18 4.75v8.463a.755.755 0 0 1-.472.697L13 15.719zM4.3 4.322c.075.441.225.884.4 1.297q.136.319.3.644v7.856l-3.972 1.59A.75.75 0 0 1 0 15.012V6.55c0-.306.188-.581.472-.697l3.831-1.531zm5.944 6.053A33 33 0 0 0 12 7.969v7.791l-6-1.716V7.969a33 33 0 0 0 1.756 2.406c.641.8 1.847.8 2.487 0M9 4.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 1 0 0 2.5"/></svg>', esc_html__('Location Wise Everything', 'multi-location-product-and-inventory-management'));
@@ -5305,6 +5185,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         <?php do_settings_sections('location-popup-shortcode-settings'); ?>
                                     </div>
                                 </div>
+                            </div>
+                            <div id="text-management-settings" class="lwp-tab-content" style="display:none;">
+                                <?php $this->render_text_management_tab(); ?>
                             </div>
                             <div id="product-visibility-settings" class="lwp-tab-content" style="display:none;">
                                 <div class="lwp-settings-section">
@@ -7283,6 +7166,228 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     ?>
         <p class="description"><?php echo esc_html_e('Select which parts of your store should have location-based filtering applied.', 'multi-location-product-and-inventory-management'); ?></p>
     <?php
+    }
+
+    private function render_text_management_tab(): void
+    {
+        if (!function_exists('mulopimfwc_get_text_management_fields')) {
+            echo '<p>' . esc_html__('Text management configuration is not available.', 'multi-location-product-and-inventory-management') . '</p>';
+            return;
+        }
+
+        $options = $this->get_display_options();
+        $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
+        $is_manual_mode = $this->is_manual_assignment_strict_mode();
+        $groups = mulopimfwc_get_text_management_fields();
+
+        echo '<style>
+            .mulopimfwc-text-management-intro {
+                display: flex;
+                gap: 16px;
+                align-items: flex-start;
+                background: #f8fafc;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 16px 18px;
+                margin-bottom: 20px;
+            }
+            .mulopimfwc-text-management-intro h2 {
+                margin: 0 0 6px 0;
+                font-size: 16px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            .mulopimfwc-text-management-intro p {
+                margin: 0;
+                color: #475569;
+                line-height: 1.5;
+            }
+            .mulopimfwc-text-group {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 14px;
+                padding: 18px 20px;
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+            }
+            .mulopimfwc-text-group + .mulopimfwc-text-group {
+                margin-top: 20px;
+            }
+            .mulopimfwc-text-group__header {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+            .mulopimfwc-text-group__title {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            .mulopimfwc-text-group__desc {
+                margin: 4px 0 0 0;
+                color: #64748b;
+            }
+            .mulopimfwc-text-fields {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 16px;
+            }
+            .mulopimfwc-text-field {
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 12px 14px;
+            }
+            .mulopimfwc-text-field__header {
+                display: flex;
+                justify-content: space-between;
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+            .mulopimfwc-text-field label {
+                font-weight: 600;
+                color: #111827;
+            }
+            .mulopimfwc-text-field__tags {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .mulopimfwc-text-field__tag {
+                font-size: 11px;
+                padding: 2px 6px;
+                border-radius: 999px;
+                background: #e2e8f0;
+                color: #475569;
+            }
+            .mulopimfwc-text-field__tag--pro {
+                background: #fee2e2;
+                color: #b91c1c;
+            }
+            .mulopimfwc-text-field input[type="text"],
+            .mulopimfwc-text-field textarea {
+                width: 100%;
+                max-width: 100%;
+            }
+        </style>';
+
+        echo '<div class="mulopimfwc-text-management-intro">
+                <div>
+                    <h2>' . esc_html__('Text Management Overview', 'multi-location-product-and-inventory-management') . '</h2>
+                    <p>' . esc_html__('Update every customer-facing label, prompt, and message from one place. Each section groups related text so it is clear where the copy appears on the storefront.', 'multi-location-product-and-inventory-management') . '</p>
+                </div>
+            </div>';
+
+        foreach ($groups as $group) {
+            $title = $group['title'] ?? '';
+            $description = $group['description'] ?? '';
+            $icon = $group['icon'] ?? '';
+            $fields = $group['fields'] ?? [];
+
+            echo '<div class="lwp-settings-section"><div class="lwp-settings-box">';
+            echo '<div class="mulopimfwc-text-group">';
+            echo '<div class="mulopimfwc-text-group__header">';
+            if (!empty($icon)) {
+                echo '<div class="mulopimfwc-text-group__icon">' . $icon . '</div>';
+            }
+            echo '<div>';
+            echo '<h3 class="mulopimfwc-text-group__title">' . esc_html($title) . '</h3>';
+            if (!empty($description)) {
+                echo '<p class="mulopimfwc-text-group__desc">' . esc_html($description) . '</p>';
+            }
+            echo '</div></div>';
+
+            if (!empty($fields)) {
+                echo '<div class="mulopimfwc-text-fields">';
+                foreach ($fields as $field) {
+                    if (!is_array($field) || empty($field['key'])) {
+                        continue;
+                    }
+                    $this->render_text_management_field($field, $options, $is_manual_mode, $current_template);
+                }
+                echo '</div>';
+            }
+            echo '</div></div></div>';
+        }
+    }
+
+    private function render_text_management_field(array $field, array $options, bool $is_manual_mode, string $current_template): void
+    {
+        $key = $field['key'];
+        $label = $field['label'] ?? $key;
+        $type = $field['type'] ?? 'text';
+        $rows = isset($field['rows']) ? (int) $field['rows'] : 2;
+        $default = $field['default'] ?? '';
+        $value = isset($options[$key]) ? $options[$key] : $default;
+        if (is_string($value) && trim($value) === '') {
+            $value = $default;
+        }
+
+        $template_only = $field['template_only'] ?? '';
+        $pro_only = !empty($field['pro_only']);
+        $manual_disable = !empty($field['manual_disable']);
+        $pro_locked = $pro_only && function_exists('mulopimfwc_premium_feature') && !mulopimfwc_premium_feature();
+        $manual_locked = $manual_disable && $is_manual_mode;
+        $disabled_attr = ($pro_locked || $manual_locked) ? ' disabled' : '';
+
+        $wrapper_class = 'mulopimfwc-text-field';
+        $wrapper_style = '';
+        if ($template_only === 'default') {
+            $wrapper_class .= ' mulopimfwc-default-template-only';
+            $wrapper_style = ($current_template === 'default') ? '' : ' style="display:none;"';
+        }
+
+        if ($manual_locked) {
+            $this->render_manual_hidden_input($key, $value);
+        }
+
+        $description = $field['description'] ?? '';
+        if ($manual_locked) {
+            $description = $description ? $this->append_manual_disabled_note($description) : ltrim($this->append_manual_disabled_note(''));
+        }
+
+        $tags = [];
+        if (!empty($template_only)) {
+            $tags[] = sprintf(__('Template: %s', 'multi-location-product-and-inventory-management'), ucfirst(str_replace('-', ' ', $template_only)));
+        }
+        if ($pro_only) {
+            $tags[] = __('Pro', 'multi-location-product-and-inventory-management');
+        }
+
+        echo '<div class="' . esc_attr($wrapper_class) . '"' . $wrapper_style . '>';
+        echo '<div class="mulopimfwc-text-field__header">';
+        echo '<label for="' . esc_attr($key) . '">' . esc_html($label) . '</label>';
+        if (!empty($tags)) {
+            echo '<div class="mulopimfwc-text-field__tags">';
+            foreach ($tags as $tag) {
+                $tag_class = ($tag === __('Pro', 'multi-location-product-and-inventory-management')) ? 'mulopimfwc-text-field__tag mulopimfwc-text-field__tag--pro' : 'mulopimfwc-text-field__tag';
+                echo '<span class="' . esc_attr($tag_class) . '">' . esc_html($tag) . '</span>';
+            }
+            echo '</div>';
+        }
+        echo '</div>';
+
+        if ($pro_locked) {
+            echo '<label class="mulopimfwc_pro_only">';
+        }
+
+        if ($type === 'textarea') {
+            $rows = $rows > 0 ? $rows : 2;
+            echo '<textarea id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . $disabled_attr . '>' . esc_textarea($value) . '</textarea>';
+        } else {
+            echo '<input type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text"' . $disabled_attr . '>';
+        }
+
+        if ($pro_locked) {
+            echo '</label>';
+        }
+
+        if (!empty($description)) {
+            echo '<p class="description">' . esc_html($description) . '</p>';
+        }
+
+        echo '</div>';
     }
 
     public function render_advance_checkbox($key, $message = null, $disabled = false, $is_free = true)

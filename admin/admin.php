@@ -3422,13 +3422,64 @@ class MULOPIMFWC_Admin
             wp_send_json_error(['message' => __('No valid orders found', 'multi-location-product-and-inventory-management')]);
         }
 
-        $available_locations = $this->get_available_locations_for_orders($orders);
+        $order_available_slugs = [];
+        $common_slugs = null;
+        foreach ($orders as $order) {
+            $locations = $this->get_available_locations_for_order($order);
+            $slugs = array_values(array_filter(wp_list_pluck($locations, 'slug')));
+            $order_available_slugs[$order->get_id()] = $slugs;
+
+            if ($common_slugs === null) {
+                $common_slugs = $slugs;
+            } else {
+                $common_slugs = array_values(array_intersect($common_slugs, $slugs));
+            }
+        }
+
+        $available_locations = [];
+        if (!empty($common_slugs)) {
+            $available_locations = get_terms(array(
+                'taxonomy' => 'mulopimfwc_store_location',
+                'hide_empty' => false,
+                'orderby' => 'name',
+                'order' => 'ASC',
+                'slug' => $common_slugs,
+            ));
+            $available_locations = is_wp_error($available_locations) ? [] : $available_locations;
+        }
+
         $locations_payload = array_map(function ($location) {
             return [
                 'slug' => $location->slug,
                 'name' => $location->name,
             ];
         }, $available_locations);
+
+        $blocking_orders = [];
+        if (empty($common_slugs) && count($orders) > 1) {
+            foreach ($orders as $order) {
+                $order_id = $order->get_id();
+                $other_common = null;
+                foreach ($orders as $other_order) {
+                    if ($order_id === $other_order->get_id()) {
+                        continue;
+                    }
+                    $other_slugs = $order_available_slugs[$other_order->get_id()] ?? [];
+                    if ($other_common === null) {
+                        $other_common = $other_slugs;
+                    } else {
+                        $other_common = array_values(array_intersect($other_common, $other_slugs));
+                    }
+                    if (empty($other_common)) {
+                        break;
+                    }
+                }
+
+                if (!empty($other_common)) {
+                    $blocking_orders[$order_id] = true;
+                }
+            }
+        }
 
         $orders_preview = [];
         $all_editable = true;
@@ -3441,6 +3492,9 @@ class MULOPIMFWC_Admin
                 $all_editable = false;
                 $non_editable_count++;
             }
+            $order_id = $order->get_id();
+            $available_slugs = $order_available_slugs[$order_id] ?? [];
+            $has_locations = !empty($available_slugs);
             $orders_preview[] = [
                 'id' => $order->get_id(),
                 'number' => $order->get_order_number(),
@@ -3450,6 +3504,8 @@ class MULOPIMFWC_Admin
                 'customer' => $customer_name !== '' ? $customer_name : __('Guest', 'multi-location-product-and-inventory-management'),
                 'location' => $this->get_location_label((string) $order->get_meta('_store_location')),
                 'editable' => $is_editable,
+                'has_locations' => $has_locations,
+                'blocker' => !empty($blocking_orders[$order_id]),
             ];
         }
 
@@ -3660,13 +3716,19 @@ class MULOPIMFWC_Admin
                 'confirmAssign' => __('Confirm & Assign', 'multi-location-product-and-inventory-management'),
                 'cancel' => __('Cancel', 'multi-location-product-and-inventory-management'),
                 'noOrders' => __('Please select at least one order.', 'multi-location-product-and-inventory-management'),
-                'noLocations' => __('No locations have sufficient stock for all selected orders.', 'multi-location-product-and-inventory-management'),
+                'noOrdersSelected' => __('No orders selected.', 'multi-location-product-and-inventory-management'),
+                'noLocations' => __('No locations have sufficient stock for all selected orders. Remove the highlighted orders to continue.', 'multi-location-product-and-inventory-management'),
                 'confirmMessage' => __('This will update the location for the selected orders. Continue?', 'multi-location-product-and-inventory-management'),
                 'assigning' => __('Assigning...', 'multi-location-product-and-inventory-management'),
                 'failed' => __('Bulk assignment failed. Please try again.', 'multi-location-product-and-inventory-management'),
                 'unassigned' => __('Unassigned', 'multi-location-product-and-inventory-management'),
                 'loadingOrders' => __('Loading orders...', 'multi-location-product-and-inventory-management'),
-                'notEditable' => __('All selected orders must be editable to assign a location. Remove completed or cancelled orders and try again.', 'multi-location-product-and-inventory-management'),
+                'notEditable' => __('Some selected orders are not editable. Remove the highlighted orders to enable location selection.', 'multi-location-product-and-inventory-management'),
+                'notEditableTag' => __('Not editable', 'multi-location-product-and-inventory-management'),
+                'noLocationsTag' => __('No available locations', 'multi-location-product-and-inventory-management'),
+                'noCommonLocationTag' => __('No common location', 'multi-location-product-and-inventory-management'),
+                'removeOrder' => __('Remove', 'multi-location-product-and-inventory-management'),
+                'removeOrderLabel' => __('Remove order #', 'multi-location-product-and-inventory-management'),
             ],
         ];
 

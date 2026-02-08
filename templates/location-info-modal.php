@@ -3,15 +3,13 @@ if (!defined('ABSPATH')) exit;
 $options = $this->get_display_options();
 
 $show_title = isset($options['title_show_popup']) && $options['title_show_popup'] === 'on';
-$popup_title = $options['mulopimfwc_popup_title'] ?? 'Select Your Location';
-$button_text = isset($options['mulopimfwc_popup_btn_txt']) && trim((string) $options['mulopimfwc_popup_btn_txt']) !== ''
-    ? $options['mulopimfwc_popup_btn_txt']
-    : __('Select Location', 'multi-location-product-and-inventory-management');
+$popup_title = mulopimfwc_get_text_value('mulopimfwc_popup_title');
+$button_text = mulopimfwc_get_text_value('mulopimfwc_popup_btn_txt');
 
 $layout = isset($popup_layout) ? $popup_layout : 'tabs';
 $layout_class = sanitize_html_class($layout, 'tabs');
 
-$subtitle = __('Choose a store location to continue shopping with accurate availability.', 'multi-location-product-and-inventory-management');
+$subtitle = mulopimfwc_get_text_value('text_popup_subtitle');
 $renderer = class_exists('MULOPIMFWC_Frontend_Location_Information')
     ? MULOPIMFWC_Frontend_Location_Information::get_instance()
     : null;
@@ -42,7 +40,7 @@ $allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']
                 $renderer->render_popup_locations($locations, $layout_class);
             } else {
                 echo '<p class="lwp-location-info-popup__empty">' .
-                    esc_html__('Location layouts are unavailable.', 'multi-location-product-and-inventory-management') .
+                    esc_html(mulopimfwc_get_text_value('text_popup_msg_layouts_unavailable')) .
                     '</p>';
             }
             ?>

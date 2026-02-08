@@ -4,19 +4,17 @@ $options = $this->get_display_options();
 global $MULOPIMFWC_Admin;
 
 $show_title = isset($options['title_show_popup']) && $options['title_show_popup'] === 'on';
-$popup_title = $options['mulopimfwc_popup_title'] ?? 'Select Your Location';
-$button_text = isset($options['mulopimfwc_popup_btn_txt']) && trim((string) $options['mulopimfwc_popup_btn_txt']) !== ''
-    ? $options['mulopimfwc_popup_btn_txt']
-    : __('Select Location', 'multi-location-product-and-inventory-management');
+$popup_title = mulopimfwc_get_text_value('mulopimfwc_popup_title');
+$button_text = mulopimfwc_get_text_value('mulopimfwc_popup_btn_txt');
 
 $popup_data = [
     'i18n' => [
-        'detecting' => __('Detecting your location...', 'multi-location-product-and-inventory-management'),
-        'detectFailed' => __('We could not detect your location. Distances may be unavailable.', 'multi-location-product-and-inventory-management'),
-        'distanceFromYou' => __('Distances from your location', 'multi-location-product-and-inventory-management'),
-        'distanceApproximate' => __('Approximate distances', 'multi-location-product-and-inventory-management'),
-        'distanceAway' => __('away', 'multi-location-product-and-inventory-management'),
-        'distanceUnit' => __('km', 'multi-location-product-and-inventory-management'),
+        'detecting' => mulopimfwc_get_text_value('text_popup_msg_detecting'),
+        'detectFailed' => mulopimfwc_get_text_value('text_popup_msg_detect_failed'),
+        'distanceFromYou' => mulopimfwc_get_text_value('text_popup_msg_distance_from_you'),
+        'distanceApproximate' => mulopimfwc_get_text_value('text_popup_msg_distance_approximate'),
+        'distanceAway' => mulopimfwc_get_text_value('text_popup_msg_distance_away'),
+        'distanceUnit' => mulopimfwc_get_text_value('text_popup_msg_distance_unit'),
     ],
 ];
 
@@ -41,12 +39,12 @@ $popup_data_json = wp_json_encode($popup_data);
             <?php if ($show_title) { ?>
                 <h2 class="lwp-classic-popup__title"><?php echo esc_html($popup_title); ?></h2>
             <?php } ?>
-            <p class="lwp-classic-popup__subtitle"><?php esc_html_e('Browse available stores and select your preferred location.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="lwp-classic-popup__subtitle"><?php echo esc_html(mulopimfwc_get_text_value('text_popup_subtitle')); ?></p>
         </div>
 
         <div class="lwp-classic-popup__search">
-            <label for="lwp-classic-search"><?php esc_html_e('Search locations', 'multi-location-product-and-inventory-management'); ?></label>
-            <input type="text" id="lwp-classic-search" placeholder="<?php esc_attr_e('Search by store name, city, or address', 'multi-location-product-and-inventory-management'); ?>" autocomplete="off">
+            <label for="lwp-classic-search"><?php echo esc_html(mulopimfwc_get_text_value('text_popup_label_search_locations')); ?></label>
+            <input type="text" id="lwp-classic-search" placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_popup_placeholder_search')); ?>" autocomplete="off">
         </div>
         <div id="lwp-classic-location-status" class="lwp-classic-popup__status" data-state="idle"></div>
 
@@ -69,8 +67,8 @@ $popup_data_json = wp_json_encode($popup_data);
                         $status = $MULOPIMFWC_Admin->is_location_open_now($term_id);
                     }
                     $status_label = $status['open']
-                        ? __('Open', 'multi-location-product-and-inventory-management')
-                        : __('Closed', 'multi-location-product-and-inventory-management');
+                        ? mulopimfwc_get_text_value('text_status_open')
+                        : mulopimfwc_get_text_value('text_status_closed');
 
                     $address_line = trim(implode(', ', array_filter([$street, $city, $state, $postal, $country])));
                     $search_text = strtolower($location->name . ' ' . $address_line);
@@ -100,16 +98,16 @@ $popup_data_json = wp_json_encode($popup_data);
                             <?php } ?>
                         </div>
                         <button type="button" class="lwp-classic-select" data-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>">
-                            <?php esc_html_e('Select', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html(mulopimfwc_get_text_value('mulopimfwc_popup_btn_txt')); ?>
                         </button>
                     </div>
             <?php
                 }
             } else {
-                echo '<div class="lwp-classic-empty">' . esc_html__('No store locations found.', 'multi-location-product-and-inventory-management') . '</div>';
+                echo '<div class="lwp-classic-empty">' . esc_html(mulopimfwc_get_text_value('text_popup_msg_no_locations')) . '</div>';
             }
             ?>
-            <div class="lwp-classic-empty" style="display:none;"><?php esc_html_e('No locations match your search.', 'multi-location-product-and-inventory-management'); ?></div>
+            <div class="lwp-classic-empty" style="display:none;"><?php echo esc_html(mulopimfwc_get_text_value('text_popup_msg_no_results')); ?></div>
         </div>
 
         <div class="lwp-classic-popup__footer">

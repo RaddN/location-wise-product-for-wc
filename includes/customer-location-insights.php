@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.3
+ * @since 1.1.3.10
  */
 
 if (!defined('ABSPATH')) {
@@ -794,20 +794,27 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.3'
+                '1.1.3.10'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.3',
+                '1.1.3.10',
                 true
             );
 
             wp_localize_script('mulopimfwc-recommendations', 'mulopimfwcRecommendations', [
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('mulopimfwc_recommendations')
+                'nonce' => wp_create_nonce('mulopimfwc_recommendations'),
+                'i18n' => [
+                    'loading' => mulopimfwc_get_text_value('text_recommendations_loading'),
+                    'noResults' => mulopimfwc_get_text_value('text_recommendations_none'),
+                    'error' => mulopimfwc_get_text_value('text_recommendations_error'),
+                    'selectLocation' => mulopimfwc_get_text_value('text_recommendations_select_location'),
+                    'added' => mulopimfwc_get_text_value('text_recommendations_added'),
+                ],
             ]);
         }
     }
@@ -846,14 +853,14 @@ class Mulopimfwc_Customer_Location_Insights
 
         if (!$location) {
             return '<div class="mulopimfwc-recommendations-notice">' .
-                esc_html__('Please select a location to see recommendations.', 'multi-location-product-and-inventory-management') .
+                esc_html(mulopimfwc_get_text_value('text_recommendations_select_location')) .
                 '</div>';
         }
 
         $atts = shortcode_atts([
             'limit' => 8,
             'columns' => 4,
-            'title' => sprintf(__('Popular at %s', 'multi-location-product-and-inventory-management'), '{location}'),
+            'title' => sprintf(mulopimfwc_get_text_value('text_recommendations_title'), '{location}'),
             'show_title' => 'yes',
             'orderby' => 'popularity',
             'show_badge' => 'yes'
@@ -866,7 +873,7 @@ class Mulopimfwc_Customer_Location_Insights
 
         if (empty($popular_products)) {
             return '<div class="mulopimfwc-recommendations-notice">' .
-                esc_html__('No recommendations available yet for this location.', 'multi-location-product-and-inventory-management') .
+                esc_html(mulopimfwc_get_text_value('text_recommendations_none')) .
                 '</div>';
         }
 
@@ -904,11 +911,11 @@ class Mulopimfwc_Customer_Location_Insights
                 ?>
                     <div class="mulopimfwc-recommendation-item" style="transform: translateY(-20px);">
                         <?php if ($atts['show_badge'] === 'yes' && $popularity_data): ?>
-                            <div class="mulopimfwc-popularity-badge" title="<?php echo esc_attr(sprintf(__('Views: %d | Purchases: %d', 'multi-location-product-and-inventory-management'), $popularity_data['view_count'], $popularity_data['purchase_count'])); ?>">
+                            <div class="mulopimfwc-popularity-badge" title="<?php echo esc_attr(sprintf(mulopimfwc_get_text_value('text_recommendations_badge_title'), $popularity_data['view_count'], $popularity_data['purchase_count'])); ?>">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" />
                                 </svg>
-                                <?php esc_html_e('Popular', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html(mulopimfwc_get_text_value('text_recommendations_badge')); ?>
                             </div>
                         <?php endif; ?>
 

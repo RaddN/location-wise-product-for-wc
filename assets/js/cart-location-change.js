@@ -170,8 +170,11 @@ jQuery(document).ready(function ($) {
                             optionsHtml += '<option value="' + location.slug + '" ' + selected + '>' + location.name + '</option>';
                         });
 
+                        const changeLabel = (mulopimfwcCartLocationChange && mulopimfwcCartLocationChange.changeLocationLabel)
+                            ? mulopimfwcCartLocationChange.changeLocationLabel
+                            : 'Change Location:';
                         const selectorHtml = '<div class="mulopimfwc-cart-location-selector" data-cart-item-key="' + cartItemKey + '" data-product-id="' + productId + '" data-variation-id="' + variationId + '">' +
-                            '<label for="cart-location-' + cartItemKey + '" style="font-size: 0.9em; font-weight: 600; display: block; margin-top: 8px; margin-bottom: 4px;">Change Location:</label>' +
+                            '<label for="cart-location-' + cartItemKey + '" style="font-size: 0.9em; font-weight: 600; display: block; margin-top: 8px; margin-bottom: 4px;">' + changeLabel + '</label>' +
                             '<select name="cart_location[' + cartItemKey + ']" id="cart-location-' + cartItemKey + '" class="mulopimfwc-cart-location-select" style="width: 100%; max-width: 300px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">' +
                             optionsHtml +
                             '</select>' +

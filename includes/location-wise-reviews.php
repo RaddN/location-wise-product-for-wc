@@ -99,7 +99,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 							?>
 							<div class="mulopimfwc-neighbour-reviews">
 								<h3 class="mulopimfwc-neighbour-reviews__title">
-									<?php echo esc_html__( 'Reviews from your neighbours', 'multi-location-product-and-inventory-management' ); ?>
+									<?php echo esc_html( mulopimfwc_get_text_value( 'text_reviews_heading' ) ); ?>
 								</h3>
 
 								<?php if ( ! empty( $location_name ) ) : ?>
@@ -108,7 +108,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 										echo esc_html(
 											sprintf(
 												/* translators: %s location name */
-												__( 'Showing recent reviews from %s', 'multi-location-product-and-inventory-management' ),
+												mulopimfwc_get_text_value( 'text_reviews_recent' ),
 												$location_name
 											)
 										);
@@ -206,7 +206,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 				echo esc_html(
 					sprintf(
 						/* translators: %s location name */
-						__( 'Reviewed from: %s', 'multi-location-product-and-inventory-management' ),
+						mulopimfwc_get_text_value( 'text_reviews_label' ),
 						$location_name
 					)
 				);

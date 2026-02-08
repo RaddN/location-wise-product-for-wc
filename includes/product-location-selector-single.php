@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.1.3
+ * @version 1.1.3.10
  * @author Your Name
- * @since 1.1.3
+ * @since 1.1.3.10
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.1.3';
+    const VERSION = '1.1.3.10';
 
     /**
      * Available display positions
@@ -183,9 +183,9 @@ class MULOPIMFWC_Product_Location_Selector
             'allow_mixed_in_cart' => $allow_mixed_in_cart ? 'on' : 'off',
             'location_switching_behavior' => isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart',
             'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
-            'location_notification_text' => isset($options['location_notification_text']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
-                ? $options['location_notification_text']
-                : 'Do you want to change the store location? Your cart will be updated.',
+            'location_notification_text' => function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
+                ? mulopimfwc_get_text_value('location_notification_text')
+                : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management'),
         ];
 
         wp_add_inline_script(
@@ -749,7 +749,7 @@ class MULOPIMFWC_Product_Location_Selector
                 <?php echo esc_html($label); ?>
             </div>
             <select class="mulopimfwc-location-dropdown" data-current-location="<?php echo esc_attr($current_location); ?>">
-                <option value=""><?php esc_html_e('Choose a location...', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value=""><?php echo esc_html(mulopimfwc_get_text_value('text_selector_placeholder')); ?></option>
                 <?php foreach ($locations as $location): ?>
                     <option
                         value="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
@@ -772,7 +772,7 @@ class MULOPIMFWC_Product_Location_Selector
     {
         return apply_filters(
             'mulopimfwc_location_selector_label',
-            __('Select Location:', 'multi-location-product-and-inventory-management')
+            mulopimfwc_get_text_value('text_selector_label')
         );
     }
 
@@ -800,7 +800,7 @@ class MULOPIMFWC_Product_Location_Selector
     private function validate_location_change_request(): void
     {
         if (!wp_verify_nonce($_POST['nonce'] ?? '', self::NONCE_ACTION)) {
-            throw new Exception(__('Security check failed', 'multi-location-product-and-inventory-management'));
+            throw new Exception(mulopimfwc_get_text_value('text_selector_error_security'));
         }
     }
 
@@ -815,7 +815,7 @@ class MULOPIMFWC_Product_Location_Selector
         $location = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : '';
 
         if (empty($location)) {
-            throw new Exception(__('Invalid location', 'multi-location-product-and-inventory-management'));
+            throw new Exception(mulopimfwc_get_text_value('text_selector_error_invalid'));
         }
 
         return $location;
@@ -836,7 +836,7 @@ class MULOPIMFWC_Product_Location_Selector
         // OPTIMIZED: Use cached method instead of direct get_term_by
         $term = get_term_by('slug', $location, 'mulopimfwc_store_location');
         if (!$term) {
-            throw new Exception(__('Location not found', 'multi-location-product-and-inventory-management'));
+            throw new Exception(mulopimfwc_get_text_value('text_selector_error_not_found'));
         }
     }
 
@@ -880,7 +880,7 @@ class MULOPIMFWC_Product_Location_Selector
         wp_send_json_success([
             'message' => sprintf(
                 // translators: %s: Name of the location that has been switched to.
-                __('Location changed to: %s', 'multi-location-product-and-inventory-management'),
+                mulopimfwc_get_text_value('text_selector_changed_to'),
                 $location_name
             ),
             'location' => $location,
@@ -898,7 +898,7 @@ class MULOPIMFWC_Product_Location_Selector
     public function get_location_display_name(string $location): string
     {
         if ($location === 'all-products') {
-            return __('All Products', 'multi-location-product-and-inventory-management');
+            return mulopimfwc_get_text_value('text_selector_all_products');
         }
 
         // OPTIMIZED: Use cached method instead of direct get_term_by
@@ -920,7 +920,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     /**
      * Plugin version
      */
-    const VERSION = '1.1.3';
+    const VERSION = '1.1.3.10';
     
     /**
      * @var array Track displayed shortcodes to prevent duplicates
@@ -1056,9 +1056,9 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             'allow_mixed_in_cart' => $allow_mixed_in_cart ? 'on' : 'off',
             'location_switching_behavior' => isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart',
             'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
-            'location_notification_text' => isset($options['location_notification_text']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
-                ? $options['location_notification_text']
-                : 'Do you want to change the store location? Your cart will be updated.',
+            'location_notification_text' => function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
+                ? mulopimfwc_get_text_value('location_notification_text')
+                : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management'),
         ];
 
         wp_add_inline_script(
@@ -1217,7 +1217,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     {
         $current_location = $this->selector->get_current_location();
         $layout = isset($atts['layout']) ? $atts['layout'] : 'list';
-        $label = !empty($atts['label']) ? $atts['label'] : apply_filters('mulopimfwc_location_selector_label', __('Select Location', 'multi-location-product-and-inventory-management'));
+        $label = !empty($atts['label']) ? $atts['label'] : apply_filters('mulopimfwc_location_selector_label', mulopimfwc_get_text_value('text_selector_label'));
 
         echo '<div class="mulopimfwc-product-location-selector-wrapper mulopimfwc-position-shortcode">';
         echo '<div class="mulopimfwc-product-location-selector" data-product-id="0" data-position="shortcode">';

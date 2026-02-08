@@ -228,7 +228,7 @@ function mulopimfwc_display_out_of_stock_badge()
     global $product;
 
     if (mulopimfwc_is_product_out_of_stock_for_location($product->get_id())) {
-        echo '<span class="badge-text ast-shop-product-out-of-stock">Out of Stock</span>';
+        echo '<span class="badge-text ast-shop-product-out-of-stock">' . esc_html(mulopimfwc_get_text_value('text_alert_out_of_stock_badge')) . '</span>';
     }
 }
 
@@ -236,13 +236,15 @@ function mulopimfwc_display_out_of_stock_badge()
 function mulopimfwc_add_out_of_stock_grayed_out_styles()
 {
     $display_option = mulopimfwc_get_out_of_stock_display_option();
+    $badge_text = mulopimfwc_get_text_value('text_alert_out_of_stock_badge');
+    $badge_text_css = wp_json_encode($badge_text, JSON_UNESCAPED_UNICODE);
     $grayed_out_style = ".product.out-of-stock {
         opacity: 0.5;
         position: relative;
     }
     
     .product.out-of-stock::after {
-        content: 'Out of Stock';
+        content: {$badge_text_css};
         position: absolute;
         top: 50%;
         left: 50%;

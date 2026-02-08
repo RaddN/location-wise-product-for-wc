@@ -6,6 +6,20 @@
 (function($) {
     'use strict';
 
+    const recommendationsConfig = window.mulopimfwcRecommendations || {};
+    const recommendationsI18n = recommendationsConfig.i18n || {};
+    const recommendationMessages = {
+        loading: recommendationsI18n.loading || 'Loading recommendations...',
+        noResults: recommendationsI18n.noResults || 'No recommendations available yet for this location.',
+        error: recommendationsI18n.error || 'An error occurred while loading recommendations. Please try again.',
+        selectLocation: recommendationsI18n.selectLocation || 'Please select a location to see recommendations.',
+        added: recommendationsI18n.added || 'Added to cart!'
+    };
+
+    function normalizeText(text) {
+        return (text || '').toString().trim().toLowerCase();
+    }
+
     /**
      * Recommendations Manager
      */
@@ -129,7 +143,7 @@
          */
         showLoading: function($container) {
             const $grid = $container.find('.mulopimfwc-recommendations-grid');
-            $grid.html('<div class="mulopimfwc-recommendations-loading">Loading recommendations...</div>');
+            $grid.html('<div class="mulopimfwc-recommendations-loading">' + recommendationMessages.loading + '</div>');
         },
 
         /**
@@ -137,7 +151,7 @@
          */
         showNoResults: function($container) {
             const $grid = $container.find('.mulopimfwc-recommendations-grid');
-            $grid.html('<div class="mulopimfwc-recommendations-notice">No recommendations available yet for this location.</div>');
+            $grid.html('<div class="mulopimfwc-recommendations-notice">' + recommendationMessages.noResults + '</div>');
         },
 
         /**
@@ -145,7 +159,7 @@
          */
         showError: function($container) {
             const $grid = $container.find('.mulopimfwc-recommendations-grid');
-            $grid.html('<div class="mulopimfwc-recommendations-notice" style="border-color: #e74c3c; background: #ffe8e8;">An error occurred while loading recommendations. Please try again.</div>');
+            $grid.html('<div class="mulopimfwc-recommendations-notice" style="border-color: #e74c3c; background: #ffe8e8;">' + recommendationMessages.error + '</div>');
         },
 
         /**
@@ -156,7 +170,7 @@
             $containers.each(function() {
                 const $container = $(this);
                 const $grid = $container.find('.mulopimfwc-recommendations-grid');
-                $grid.html('<div class="mulopimfwc-recommendations-notice">Please select a location to see recommendations.</div>');
+                $grid.html('<div class="mulopimfwc-recommendations-notice">' + recommendationMessages.selectLocation + '</div>');
             });
         },
 
@@ -228,11 +242,12 @@
                     const $notice = $grid.find('.mulopimfwc-recommendations-notice');
                     
                     // Only hide/replace if there's content that's not already the "select location" message
-                    if ($notice.length === 0 || !$notice.text().toLowerCase().includes('please select a location')) {
+                    const noticeText = normalizeText($notice.text());
+                    if ($notice.length === 0 || noticeText !== normalizeText(recommendationMessages.selectLocation)) {
                         // Check if there are any items (shouldn't be, but double-check)
                         if ($grid.find('.mulopimfwc-recommendation-item').length === 0) {
                             // No items and not already showing "select location" - show the message
-                            $grid.html('<div class="mulopimfwc-recommendations-notice">Please select a location to see recommendations.</div>');
+                            $grid.html('<div class="mulopimfwc-recommendations-notice">' + recommendationMessages.selectLocation + '</div>');
                         }
                     }
                 });
@@ -399,7 +414,7 @@
         if ($button.closest('.mulopimfwc-recommendation-item').length) {
             // Show success message
             const $item = $button.closest('.mulopimfwc-recommendation-item');
-            const $message = $('<div class="mulopimfwc-added-message">Added to cart!</div>');
+            const $message = $('<div class="mulopimfwc-added-message"></div>').text(recommendationMessages.added);
             
             $item.append($message);
             

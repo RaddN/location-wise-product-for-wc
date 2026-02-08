@@ -14,6 +14,7 @@
             this.retryTimer = null;
             this.isSwitching = false;
             this.settings = window.mulopimfwc_locationWiseProducts || {};
+            this.i18n = this.settings.i18n || {};
 
             // Read PHP-provided hints for placement
             this.cfg = window.MULOPIMFWC_LOC_SELECTOR || {
@@ -283,10 +284,13 @@
                         const removedItems = response.data && response.data.removed_items ? response.data.removed_items : [];
 
                         if (removedItems && removedItems.length) {
-                            alert(
-                                'The following items were removed because they are not available at the selected location: ' +
-                                removedItems.join(', ')
-                            );
+                            const template = this.i18n.cartRemovedItems ||
+                                'The following items were removed because they are not available at the selected location: %s';
+                            const itemsText = removedItems.join(', ');
+                            const message = template.indexOf('%s') !== -1
+                                ? template.replace('%s', itemsText)
+                                : template + ' ' + itemsText;
+                            alert(message);
                         }
 
                         // Perform a hard reload with cache-busting parameter
@@ -299,14 +303,16 @@
 
                     this.resetSelectorUI(previousLocation);
                     this.setLoadingState(false);
-                    alert((response && response.data && response.data.message) || 'Unable to change location. Please try again.');
+                    const fallbackMessage = this.i18n.cartUnableChange || 'Unable to change location. Please try again.';
+                    alert((response && response.data && response.data.message) || fallbackMessage);
                 },
                 error: () => {
                     this.isSwitching = false;
                     this.resetSelectorUI(previousLocation);
                     this.setLoadingState(false);
                     if (requiresCleanup) {
-                        alert('Unable to change location right now. Please try again.');
+                        const fallbackMessage = this.i18n.cartUnableChangeNow || 'Unable to change location right now. Please try again.';
+                        alert(fallbackMessage);
                         return;
                     }
 

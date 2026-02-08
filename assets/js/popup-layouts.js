@@ -1,4 +1,6 @@
 jQuery(function ($) {
+    const locationI18n = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.i18n) || {};
+    const selectStoreLocationAlert = locationI18n.selectStoreLocation || 'Please select a store location.';
     // Function to initialize popup layout modals
     function initializePopupLayouts() {
         // Handle all location info popup modals (including instance-specific ones)
@@ -139,7 +141,7 @@ jQuery(function ($) {
         e.preventDefault();
         var slug = $hidden.val();
         if (!slug) {
-            alert('Please select a store location.');
+            alert(selectStoreLocationAlert);
             return;
         }
         

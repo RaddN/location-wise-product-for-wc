@@ -131,7 +131,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
         }
         
         $message = sprintf(
-            __('%s is currently closed. Products cannot be purchased at this time.', 'multi-location-product-and-inventory-management'),
+            mulopimfwc_get_text_value('text_restriction_closed_notice'),
             '<strong>' . esc_html($location_info['name']) . '</strong>'
         );
         
@@ -139,7 +139,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
         if ($location_info['next_change']) {
             $next_change = $location_info['next_change'];
             $message .= ' ' . sprintf(
-                __('Opens at %s.', 'multi-location-product-and-inventory-management'),
+                mulopimfwc_get_text_value('text_restriction_opens_at'),
                 $next_change->format('g:i A')
             );
         }
@@ -170,14 +170,14 @@ class MULOPIMFWC_Business_Hours_Restriction {
         }
         
         $message = sprintf(
-            __('%s is currently closed. You can browse products but cannot make purchases at this time.', 'multi-location-product-and-inventory-management'),
+            mulopimfwc_get_text_value('text_restriction_closed_browse'),
             '<strong>' . esc_html($location_info['name']) . '</strong>'
         );
         
         if ($location_info['next_change']) {
             $next_change = $location_info['next_change'];
             $message .= ' ' . sprintf(
-                __('We open at %s.', 'multi-location-product-and-inventory-management'),
+                mulopimfwc_get_text_value('text_restriction_we_open_at'),
                 $next_change->format('g:i A')
             );
         }
@@ -207,14 +207,14 @@ class MULOPIMFWC_Business_Hours_Restriction {
         
         if (!$location_info['is_open']) {
             $message = sprintf(
-                __('Cannot add to cart. %s is currently closed.', 'multi-location-product-and-inventory-management'),
+                mulopimfwc_get_text_value('text_restriction_cannot_add'),
                 esc_html($location_info['name'])
             );
             
             if ($location_info['next_change']) {
                 $next_change = $location_info['next_change'];
                 $message .= ' ' . sprintf(
-                    __('Opens at %s.', 'multi-location-product-and-inventory-management'),
+                    mulopimfwc_get_text_value('text_restriction_opens_at'),
                     $next_change->format('g:i A')
                 );
             }
@@ -241,7 +241,7 @@ class MULOPIMFWC_Business_Hours_Restriction {
         }
         
         if (!$this->is_current_location_open()) {
-            return __('Location Closed', 'multi-location-product-and-inventory-management');
+            return mulopimfwc_get_text_value('text_restriction_title');
         }
         
         return $text;

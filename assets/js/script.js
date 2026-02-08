@@ -3,6 +3,10 @@ jQuery(document).ready(function ($) {
     const modalSubmit = document.getElementById('lwp-store-selector-submit');
     const COOKIE_MS_PER_DAY = 24 * 60 * 60 * 1000;
     const locationSettings = window.mulopimfwc_locationWiseProducts || {};
+    const i18n = locationSettings.i18n || {};
+    const selectStoreAlert = i18n.selectStore || 'Please select a store.';
+    const selectStoreLocationAlert = i18n.selectStoreLocation || 'Please select a store location.';
+    const cartClearError = i18n.cartClearError || 'Failed to clear the cart. Please try again.';
 
     function getLocationCookieExpiryDays() {
         if (typeof mulopimfwc_locationWiseProducts === 'undefined') {
@@ -217,7 +221,7 @@ jQuery(document).ready(function ($) {
                 window.location.href = url;
             },
             error: function () {
-                alert('Failed to clear the cart. Please try again.');
+                alert(cartClearError);
             }
         });
     }
@@ -237,7 +241,7 @@ jQuery(document).ready(function ($) {
                     $('body').removeClass('mulopimfwc-modal-open');
                     location.reload();
                 } else {
-                    alert('Please select a store.');
+                    alert(selectStoreAlert);
                 }
             });
         }
@@ -253,7 +257,7 @@ jQuery(document).ready(function ($) {
                 modal.style.display = 'none';
                 location.reload();
             } else {
-                alert('Please select a store.');
+                alert(selectStoreAlert);
             }
         });
     }
@@ -341,12 +345,12 @@ jQuery(document).ready(function ($) {
         const storeCookieName = getStoreCookieName();
 
         if (!selectedStore) {
-            alert('Please select a store location.');
+            alert(selectStoreLocationAlert);
             return;
         }
 
         if (selection.isHierarchical && !selection.isReady) {
-            alert('Please select a store location.');
+            alert(selectStoreLocationAlert);
             return;
         }
 
@@ -370,7 +374,7 @@ jQuery(document).ready(function ($) {
             // Check if the cart has products before changing the store location
             checkCartHasProducts(function (cartHasProducts) {
                 if (cartHasProducts && locationSettings.location_change_notification) {
-                    const confirmChange = confirm(locationSettings.location_notification_text || 'Do you want to change the store location? Your cart will be emptied.');
+                    const confirmChange = confirm(locationSettings.location_notification_text || 'Do you want to change the store location? Your cart will be updated.');
                     if (!confirmChange) {
                         var currentLocation = getCookie(storeCookieName);
                         if (currentLocation) {
@@ -549,13 +553,33 @@ jQuery(document).ready(function ($) {
 });
 
 jQuery(document).ready(function ($) {
+    const variationSettings = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.variation) || {};
+    const variationMessages = {
+        infoHeading: variationSettings.infoHeading || 'Information for %s',
+        stockLabel: variationSettings.stockLabel || 'Stock',
+        inStock: variationSettings.inStock || '%s in stock',
+        outOfStock: variationSettings.outOfStock || 'Out of stock',
+        backorder: variationSettings.backorder || 'Available on backorder',
+        priceLabel: variationSettings.priceLabel || 'Price at this location:'
+    };
+
+    function formatWithValue(template, value) {
+        if (!template) {
+            return value;
+        }
+        if (template.indexOf('%s') !== -1) {
+            return template.replace('%s', value);
+        }
+        return template + ' ' + value;
+    }
+
     // Listen for variation change events
     $('.variations_form').on('found_variation', function (event, variation) {
         if (variation.location_data) {
             var location_data = variation.location_data;
             var location_info_html = '';
 
-            location_info_html += '<h4>' + 'Information for' + location_data.location_name + '</h4>';
+            location_info_html += '<h4>' + formatWithValue(variationMessages.infoHeading, location_data.location_name) + '</h4>';
 
             // Stock info
             if (location_data.stock_display && location_data.stock_display.show && location_data.stock_display.label) {
@@ -568,19 +592,19 @@ jQuery(document).ready(function ($) {
                 if (location_data.stock_display.level) {
                     statusClass += ' stock-level-' + location_data.stock_display.level;
                 }
-                location_info_html += '<p class="location-stock"><strong>Stock</strong> ';
+                location_info_html += '<p class="location-stock"><strong>' + variationMessages.stockLabel + '</strong> ';
                 location_info_html += '<span class="' + statusClass + '">' + location_data.stock_display.label + '</span>';
                 location_info_html += '</p>';
             } else if (location_data.location_stock !== '') {
-                location_info_html += '<p class="location-stock"><strong>Stock</strong> ';
+                location_info_html += '<p class="location-stock"><strong>' + variationMessages.stockLabel + '</strong> ';
 
                 if (parseInt(location_data.location_stock) > 0) {
-                    location_info_html += '<span class="in-stock">' + location_data.location_stock + ' in stock</span>';
+                    location_info_html += '<span class="in-stock">' + formatWithValue(variationMessages.inStock, location_data.location_stock) + '</span>';
                 } else {
                     if (location_data.location_backorders === 'off') {
-                        location_info_html += '<span class="out-of-stock">Out of stock</span>';
+                        location_info_html += '<span class="out-of-stock">' + variationMessages.outOfStock + '</span>';
                     } else {
-                        location_info_html += '<span class="on-backorder">Available on backorder</span>';
+                        location_info_html += '<span class="on-backorder">' + variationMessages.backorder + '</span>';
                     }
                 }
                 location_info_html += '</p>';
@@ -588,7 +612,7 @@ jQuery(document).ready(function ($) {
 
             // Price info
             if (location_data.location_regular_price) {
-                location_info_html += '<p class="location-price"><strong>Price at this location:</strong> ';
+                location_info_html += '<p class="location-price"><strong>' + variationMessages.priceLabel + '</strong> ';
 
                 if (location_data.location_sale_price) {
                     location_info_html += '<del>' + location_data.location_regular_price + '</del> <ins>' + location_data.location_sale_price + '</ins>';

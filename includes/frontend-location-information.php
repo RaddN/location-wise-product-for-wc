@@ -161,7 +161,7 @@ class MULOPIMFWC_Frontend_Location_Information
 
 
         $tabs['location_info'] = [
-            'title' => __('Location Information', 'multi-location-product-inventory-management'),
+            'title' => mulopimfwc_get_text_value('text_location_info_tab_title'),
             'priority' => 30,
             'callback' => [$this, 'display_single_product_location_info'],
         ];
@@ -233,6 +233,10 @@ class MULOPIMFWC_Frontend_Location_Information
             'defaultMapZoom' => $default_map_zoom,
             'mapAnimationType' => $map_animation_type,
             'mapAnimationDuration' => $map_animation_duration,
+            'i18n' => [
+                'getDirections' => mulopimfwc_get_text_value('text_location_button_directions'),
+                'viewDetails' => mulopimfwc_get_text_value('text_location_button_details'),
+            ],
         ]);
     }
 
@@ -375,7 +379,7 @@ class MULOPIMFWC_Frontend_Location_Information
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
                             </svg>
-                            <?php esc_html_e('Contact Information', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html(mulopimfwc_get_text_value('text_location_contact_heading')); ?>
                         </h3>
 
                         <div class="mulopimfwc-contact-list">
@@ -385,7 +389,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" />
                                     </svg>
                                     <div>
-                                        <div class="mulopimfwc-contact-label"><?php esc_html_e('Address', 'multi-location-product-and-inventory-management'); ?></div>
+                                        <div class="mulopimfwc-contact-label"><?php echo esc_html(mulopimfwc_get_text_value('text_location_label_address')); ?></div>
                                         <div class="mulopimfwc-contact-value">
                                             <?php if ($street_address): ?>
                                                 <div><?php echo esc_html($street_address); ?></div>
@@ -412,7 +416,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                         <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" fill="currentColor" />
                                     </svg>
                                     <div>
-                                        <div class="mulopimfwc-contact-label"><?php esc_html_e('Phone', 'multi-location-product-and-inventory-management'); ?></div>
+                                        <div class="mulopimfwc-contact-label"><?php echo esc_html(mulopimfwc_get_text_value('text_location_label_phone')); ?></div>
                                         <a href="tel:<?php echo esc_attr($phone); ?>" class="mulopimfwc-contact-value mulopimfwc-contact-link">
                                             <?php echo esc_html($phone); ?>
                                         </a>
@@ -426,7 +430,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                         <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
                                     </svg>
                                     <div>
-                                        <div class="mulopimfwc-contact-label"><?php esc_html_e('Email', 'multi-location-product-and-inventory-management'); ?></div>
+                                        <div class="mulopimfwc-contact-label"><?php echo esc_html(mulopimfwc_get_text_value('text_location_label_email')); ?></div>
                                         <a href="mailto:<?php echo esc_attr($email); ?>" class="mulopimfwc-contact-value mulopimfwc-contact-link">
                                             <?php echo esc_html($email); ?>
                                         </a>
@@ -443,7 +447,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                                     <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor" />
                                 </svg>
-                                <?php esc_html_e('Get Directions', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
                             </a>
                         <?php endif; ?>
                     </div>
@@ -463,7 +467,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                     <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z" fill="currentColor" />
                                 </svg>
-                                <?php esc_html_e('Location Map', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html(mulopimfwc_get_text_value('text_location_heading_map')); ?>
                             </h3>
                             <div class="mulopimfwc-map-container">
                                 <div id="mulopimfwc-map-<?php echo esc_attr($term_id); ?>"
@@ -484,7 +488,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                     <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="currentColor" />
                                 </svg>
-                                <?php esc_html_e('Gallery', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html(mulopimfwc_get_text_value('text_location_heading_gallery')); ?>
                             </h3>
                             <div class="mulopimfwc-gallery-grid">
                                 <?php foreach ($gallery_ids as $image_id): ?>
@@ -529,7 +533,7 @@ class MULOPIMFWC_Frontend_Location_Information
     ?>
         <div class="mulopimfwc-tabbed-locations-wrapper">
             <h3 class="mulopimfwc-locations-heading">
-                <?php esc_html_e('Available at Multiple Locations', 'multi-location-product-and-inventory-management'); ?>
+                <?php echo esc_html(mulopimfwc_get_text_value('text_location_heading_multi')); ?>
             </h3>
 
             <div class="mulopimfwc-locations-tabs-container">
@@ -617,7 +621,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                 <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor" />
                                             </svg>
-                                            <?php esc_html_e('Get Directions', 'multi-location-product-and-inventory-management'); ?>
+                                            <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
                                         </a>
                                     <?php endif; ?>
                                 </div>
@@ -763,13 +767,13 @@ class MULOPIMFWC_Frontend_Location_Information
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor" />
                         </svg>
-                        <?php esc_html_e('Get Directions', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
                     </a>
                 <?php endif; ?>
 
                 <a href="<?php echo esc_url(get_term_link($location)); ?>"
                     class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-secondary">
-                    <?php esc_html_e('View Details', 'multi-location-product-and-inventory-management'); ?>
+                    <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_details')); ?>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor" />
                     </svg>
@@ -796,13 +800,13 @@ class MULOPIMFWC_Frontend_Location_Information
         }
 
         $days_labels = [
-            'mon' => __('Monday', 'multi-location-product-and-inventory-management'),
-            'tue' => __('Tuesday', 'multi-location-product-and-inventory-management'),
-            'wed' => __('Wednesday', 'multi-location-product-and-inventory-management'),
-            'thu' => __('Thursday', 'multi-location-product-and-inventory-management'),
-            'fri' => __('Friday', 'multi-location-product-and-inventory-management'),
-            'sat' => __('Saturday', 'multi-location-product-and-inventory-management'),
-            'sun' => __('Sunday', 'multi-location-product-and-inventory-management'),
+            'mon' => mulopimfwc_get_text_value('text_hours_day_mon'),
+            'tue' => mulopimfwc_get_text_value('text_hours_day_tue'),
+            'wed' => mulopimfwc_get_text_value('text_hours_day_wed'),
+            'thu' => mulopimfwc_get_text_value('text_hours_day_thu'),
+            'fri' => mulopimfwc_get_text_value('text_hours_day_fri'),
+            'sat' => mulopimfwc_get_text_value('text_hours_day_sat'),
+            'sun' => mulopimfwc_get_text_value('text_hours_day_sun'),
         ];
 
         $tz = new DateTimeZone($bh['timezone'] ?? wp_timezone_string());
@@ -817,7 +821,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z" fill="currentColor" />
                 </svg>
-                <?php esc_html_e('Business Hours', 'multi-location-product-and-inventory-management'); ?>
+                <?php echo esc_html(mulopimfwc_get_text_value('text_location_heading_hours')); ?>
             </h3>
 
             <div class="mulopimfwc-hours-status">
@@ -827,7 +831,7 @@ class MULOPIMFWC_Frontend_Location_Information
                     <div class="mulopimfwc-next-change">
                         <?php
                         printf(
-                            esc_html__('Closes at %s', 'multi-location-product-and-inventory-management'),
+                            esc_html(mulopimfwc_get_text_value('text_hours_closes_at')),
                             '<strong>' . esc_html($status['next_change']->format('g:i A')) . '</strong>'
                         );
                         ?>
@@ -836,7 +840,7 @@ class MULOPIMFWC_Frontend_Location_Information
                     <div class="mulopimfwc-next-change">
                         <?php
                         printf(
-                            esc_html__('Opens at %s', 'multi-location-product-and-inventory-management'),
+                            esc_html(mulopimfwc_get_text_value('text_hours_opens_at')),
                             '<strong>' . esc_html($status['next_change']->format('g:i A')) . '</strong>'
                         );
                         ?>
@@ -857,19 +861,19 @@ class MULOPIMFWC_Frontend_Location_Information
                         <span class="mulopimfwc-day-name">
                             <?php echo esc_html($days_labels[$day_key]); ?>
                             <?php if ($is_current): ?>
-                                <span class="mulopimfwc-today-label"><?php esc_html_e('Today', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="mulopimfwc-today-label"><?php echo esc_html(mulopimfwc_get_text_value('text_hours_today_label')); ?></span>
                             <?php endif; ?>
                         </span>
                         <span class="mulopimfwc-day-hours">
                             <?php if (!empty($hours['closed'])): ?>
-                                <span class="mulopimfwc-closed"><?php esc_html_e('Closed', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="mulopimfwc-closed"><?php echo esc_html(mulopimfwc_get_text_value('text_status_closed')); ?></span>
                             <?php elseif (!empty($hours['all_day'])): ?>
-                                <span class="mulopimfwc-all-day"><?php esc_html_e('Open 24 Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="mulopimfwc-all-day"><?php echo esc_html(mulopimfwc_get_text_value('text_hours_open_24')); ?></span>
                             <?php else: ?>
                                 <?php
                                 $open = DateTime::createFromFormat('H:i', $hours['open']);
                                 $close = DateTime::createFromFormat('H:i', $hours['close']);
-                                echo esc_html($open->format('g:i A') . ' - ' . $close->format('g:i A'));
+                                echo esc_html(sprintf(mulopimfwc_get_text_value('text_hours_time_range'), $open->format('g:i A'), $close->format('g:i A')));
                                 ?>
                             <?php endif; ?>
                         </span>
@@ -979,7 +983,7 @@ class MULOPIMFWC_Frontend_Location_Information
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                 <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor" />
                             </svg>
-                            <?php esc_html_e('Get Directions', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
                         </a>
                     </div>
             </div>
@@ -1008,8 +1012,8 @@ class MULOPIMFWC_Frontend_Location_Information
     private function render_status_badge($status, $with_icon = false)
     {
         $label = $status['open']
-            ? __('Open Now', 'multi-location-product-and-inventory-management')
-            : __('Closed', 'multi-location-product-and-inventory-management');
+            ? mulopimfwc_get_text_value('text_status_open_now')
+            : mulopimfwc_get_text_value('text_status_closed');
 
         $class = 'mulopimfwc-status-badge mulopimfwc-status-' . ($status['open'] ? 'open' : 'closed');
 
@@ -1111,7 +1115,7 @@ class MULOPIMFWC_Frontend_Location_Information
 
         if (empty($locations) || is_wp_error($locations)) {
             return '<p class="mulopimfwc-no-locations">' .
-                esc_html__('No locations found.', 'multi-location-product-and-inventory-management') .
+                esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_locations')) .
                 '</p>';
         }
 
@@ -1156,7 +1160,7 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         if (empty($locations) || is_wp_error($locations)) {
             echo '<p class="mulopimfwc-no-locations">' .
-                esc_html__('No locations found.', 'multi-location-product-and-inventory-management') .
+                esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_locations')) .
                 '</p>';
             return;
         }
@@ -1188,7 +1192,7 @@ class MULOPIMFWC_Frontend_Location_Information
             <h3 class="mulopimfwc-locations-heading">
                 <?php
                 printf(
-                    esc_html__('Our Locations (%d)', 'multi-location-product-and-inventory-management'),
+                    esc_html(mulopimfwc_get_text_value('text_location_shortcode_heading')),
                     count($locations)
                 );
                 ?>
@@ -1201,9 +1205,9 @@ class MULOPIMFWC_Frontend_Location_Information
             <div class="mulopimfwc-tabs-sidebar">
                 <?php if ($enable_search): ?>
                     <div class="mulopimfwc-search-wrapper">
-                        <input type="text"
+                            <input type="text"
                             class="mulopimfwc-location-search"
-                            placeholder="<?php esc_attr_e('Search locations...', 'multi-location-product-and-inventory-management'); ?>"
+                            placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_location_shortcode_search')); ?>"
                             data-target="<?php echo esc_attr($unique_id); ?>">
                         <svg class="mulopimfwc-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
                             <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
@@ -1301,7 +1305,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                             <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor" />
                                         </svg>
-                                        <?php esc_html_e('Get Directions', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -1313,7 +1317,7 @@ class MULOPIMFWC_Frontend_Location_Information
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                         <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
                     </svg>
-                    <p><?php esc_html_e('No locations found matching your search.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p><?php echo esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_results')); ?></p>
                 </div>
             </div>
 
@@ -1348,7 +1352,7 @@ class MULOPIMFWC_Frontend_Location_Information
             <h3 class="mulopimfwc-locations-heading">
                 <?php
                 printf(
-                    esc_html__('Our Locations (%d)', 'multi-location-product-and-inventory-management'),
+                    esc_html(mulopimfwc_get_text_value('text_location_shortcode_heading')),
                     count($locations)
                 );
                 ?>
@@ -1358,7 +1362,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 <div class="mulopimfwc-search-wrapper">
                     <input type="text"
                         class="mulopimfwc-location-search"
-                        placeholder="<?php esc_attr_e('Search locations...', 'multi-location-product-and-inventory-management'); ?>"
+                        placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_location_shortcode_search')); ?>"
                         data-target="<?php echo esc_attr($unique_id); ?>">
                     <svg class="mulopimfwc-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
                         <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
@@ -1387,7 +1391,7 @@ class MULOPIMFWC_Frontend_Location_Information
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
             </svg>
-            <p><?php esc_html_e('No locations found matching your search.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p><?php echo esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_results')); ?></p>
         </div>
     </div>
 <?php

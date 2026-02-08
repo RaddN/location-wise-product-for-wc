@@ -9,7 +9,7 @@ $allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']
 <div id="<?php echo esc_attr($modal_id); ?>" class="lwp-store-selector-modal<?php echo esc_attr($modal_class); ?>" data-allow-backdrop-close="<?php echo $allow_backdrop_close ? '1' : '0'; ?>" style="display: <?php echo $show_modal ? 'flex' : 'none'; ?>;">
     <div class="lwp-store-selector-content">
         <?php if (isset($options["title_show_popup"]) && $options["title_show_popup"] === "on") { ?>
-            <h2><?php echo esc_html($options["mulopimfwc_popup_title"] ?? 'Select Your Location'); ?></h2><?php } ?>
+            <h2><?php echo esc_html(mulopimfwc_get_text_value('mulopimfwc_popup_title')); ?></h2><?php } ?>
         <form id="lwp-store-selector-form-modal">
             <?php wp_nonce_field('mulopimfwc_modal_selector', 'mulopimfwc_modal_selector_nonce'); ?>
 
@@ -81,13 +81,13 @@ $allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']
                     $select_id = "lwp-store-selector-level-{$level}";
                     switch ($level) {
                         case 0:
-                            $placeholder = ($options["mulopimfwc_popup_placeholder"] ?? '-- Select a Store --');
+                            $placeholder = mulopimfwc_get_text_value('mulopimfwc_popup_placeholder');
                             break;
                         case 1:
-                            $placeholder = __('-- Select Area --', 'multi-location-product-and-inventory-management');
+                            $placeholder = mulopimfwc_get_text_value('text_popup_placeholder_area');
                             break;
                         case 2:
-                            $placeholder = __('-- Select Sub-area --', 'multi-location-product-and-inventory-management');
+                            $placeholder = mulopimfwc_get_text_value('text_popup_placeholder_subarea');
                             break;
                     }
                 ?>
@@ -118,7 +118,7 @@ $allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']
             <?php else: ?>
                 <!-- Original single dropdown implementation -->
                 <select id="lwp-store-selector-modal-dropdown">
-                    <option value=""><?php echo isset($options["mulopimfwc_popup_placeholder"]) && $options["mulopimfwc_popup_placeholder"] != ' ' ? esc_html($options["mulopimfwc_popup_placeholder"]) : esc_html('-- Select a Store --'); ?></option>
+                    <option value=""><?php echo esc_html(mulopimfwc_get_text_value('mulopimfwc_popup_placeholder')); ?></option>
                     <?php
                     if (!empty($locations) && !is_wp_error($locations)) {
                         if (isset($options["herichical"]) && $options["herichical"] === "on") {
@@ -174,7 +174,7 @@ $allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']
 
             <?php endif; ?>
 
-            <button type="button" id="lwp-store-selector-submit" class="button"><?php echo isset($options["mulopimfwc_popup_btn_txt"]) && $options["mulopimfwc_popup_btn_txt"] !== ''  && $options["mulopimfwc_popup_btn_txt"] !== ' ' ? esc_html($options["mulopimfwc_popup_btn_txt"]) : 'Select Location'; ?></button>
+            <button type="button" id="lwp-store-selector-submit" class="button"><?php echo esc_html(mulopimfwc_get_text_value('mulopimfwc_popup_btn_txt')); ?></button>
         </form>
     </div>
 </div>

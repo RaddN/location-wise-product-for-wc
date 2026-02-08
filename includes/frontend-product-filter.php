@@ -96,14 +96,14 @@ class Location_Wise_Products_Filter
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('mulopimfwc_filter_products'),
             'i18n' => [
-                'loading' => __('Loading products...', 'multi-location-product-and-inventory-management'),
-                'noResults' => __('No products found.', 'multi-location-product-and-inventory-management'),
-                'error' => __('An error occurred. Please try again.', 'multi-location-product-and-inventory-management'),
-                'allLocations' => __('All Locations', 'multi-location-product-and-inventory-management'),
-                'inStock' => __('In Stock', 'multi-location-product-and-inventory-management'),
-                'outOfStock' => __('Out of Stock', 'multi-location-product-and-inventory-management'),
-                'filterProducts' => __('Filter Products', 'multi-location-product-and-inventory-management'),
-                'clearFilters' => __('Clear Filters', 'multi-location-product-and-inventory-management'),
+                'loading' => mulopimfwc_get_text_value('text_filter_msg_loading'),
+                'noResults' => mulopimfwc_get_text_value('text_filter_msg_no_results'),
+                'error' => mulopimfwc_get_text_value('text_filter_msg_error'),
+                'allLocations' => mulopimfwc_get_text_value('text_filter_all_locations'),
+                'inStock' => mulopimfwc_get_text_value('text_filter_in_stock'),
+                'outOfStock' => mulopimfwc_get_text_value('text_filter_out_stock'),
+                'filterProducts' => mulopimfwc_get_text_value('text_filter_msg_filter_products'),
+                'clearFilters' => mulopimfwc_get_text_value('text_filter_msg_clear_filters'),
             ],
         ]);
     }
@@ -188,10 +188,10 @@ class Location_Wise_Products_Filter
                 <?php if (!empty($locations) && $show_location): ?>
                 <div class="mulopimfwc-filter-field mulopimfwc-filter-location">
                     <label for="mulopimfwc-filter-location-select">
-                        <?php esc_html_e('Location', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html(mulopimfwc_get_text_value('text_filter_location_label')); ?>
                     </label>
                     <select id="mulopimfwc-filter-location-select" name="location" class="mulopimfwc-filter-select">
-                        <option value=""><?php esc_html_e('All Locations', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value=""><?php echo esc_html(mulopimfwc_get_text_value('text_filter_all_locations')); ?></option>
                         <?php foreach ($locations as $location): ?>
                             <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>" <?php selected($current_location, rawurldecode($location->slug)); ?>>
                                 <?php echo esc_html($location->name); ?>
@@ -204,15 +204,15 @@ class Location_Wise_Products_Filter
                 <?php if ($this->should_show_stock_filter() && $show_stock): ?>
                 <div class="mulopimfwc-filter-field mulopimfwc-filter-stock">
                     <label for="mulopimfwc-filter-stock-select">
-                        <?php esc_html_e('Stock Status', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html(mulopimfwc_get_text_value('text_filter_stock_label')); ?>
                     </label>
                     <select id="mulopimfwc-filter-stock-select" name="stock" class="mulopimfwc-filter-select">
-                        <option value=""><?php esc_html_e('All Products', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value=""><?php echo esc_html(mulopimfwc_get_text_value('text_filter_all_products')); ?></option>
                         <option value="instock" <?php selected($current_stock, 'instock'); ?>>
-                            <?php esc_html_e('In Stock', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_in_stock')); ?>
                         </option>
                         <option value="outofstock" <?php selected($current_stock, 'outofstock'); ?>>
-                            <?php esc_html_e('Out of Stock', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_out_stock')); ?>
                         </option>
                     </select>
                 </div>
@@ -220,11 +220,11 @@ class Location_Wise_Products_Filter
 
                 <div class="mulopimfwc-filter-actions">
                     <button type="button" class="button mulopimfwc-filter-button" id="mulopimfwc-filter-button">
-                        <?php esc_html_e('Filter', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html(mulopimfwc_get_text_value('text_filter_button')); ?>
                     </button>
                     <?php if ($current_location || $current_stock): ?>
                         <button type="button" class="button mulopimfwc-clear-button" id="mulopimfwc-clear-button">
-                            <?php esc_html_e('Clear', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_clear')); ?>
                         </button>
                     <?php endif; ?>
                 </div>

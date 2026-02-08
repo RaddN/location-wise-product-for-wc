@@ -6,6 +6,11 @@
 (function ($) {
     'use strict';
 
+    const locationInfoConfig = window.mulopimfwcLocationInfo || {};
+    const locationInfoI18n = locationInfoConfig.i18n || {};
+    const getDirectionsLabel = locationInfoI18n.getDirections || 'Get Directions';
+    const viewDetailsLabel = locationInfoI18n.viewDetails || 'View Details';
+
     const MulopimfwcLocationInfo = {
 
         maps: {},
@@ -1220,7 +1225,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor"/>
                         </svg>
-                        Get Directions
+                        ${getDirectionsLabel}
                     </a>
                 ` : ''}
                 ${(() => {
@@ -1240,7 +1245,7 @@
                     
                     return `<a href="${self.escapeHtml(url)}" 
                        class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-secondary">
-                        View Details
+                        ${viewDetailsLabel}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/>
                         </svg>
@@ -1435,7 +1440,7 @@
                                target="_blank" 
                                rel="noopener noreferrer"
                                class="mulopimfwc-popup-link">
-                                Get Directions →
+                                ${getDirectionsLabel} &rarr;
                             </a>
                         </div>
                     </div>

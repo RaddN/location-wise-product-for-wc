@@ -4,7 +4,7 @@ $options = $this->get_display_options();
 global $MULOPIMFWC_Admin;
 
 $show_title = isset($options['title_show_popup']) && $options['title_show_popup'] === 'on';
-$popup_title = $options['mulopimfwc_popup_title'] ?? 'Select Your Location';
+$popup_title = mulopimfwc_get_text_value('mulopimfwc_popup_title');
 
 $locations_data = [];
 if (!empty($locations) && !is_wp_error($locations)) {
@@ -26,15 +26,15 @@ if (!empty($locations) && !is_wp_error($locations)) {
         }
 
         $status_label = $status['open']
-            ? __('Open Now', 'multi-location-product-and-inventory-management')
-            : __('Closed', 'multi-location-product-and-inventory-management');
+            ? mulopimfwc_get_text_value('text_status_open_now')
+            : mulopimfwc_get_text_value('text_status_closed');
 
         $next_change_label = '';
         if (!empty($status['next_change']) && $status['next_change'] instanceof DateTimeInterface) {
             $time_label = $status['next_change']->format('g:i A');
             $next_change_label = $status['open']
-                ? sprintf(__('Closes at %s', 'multi-location-product-and-inventory-management'), $time_label)
-                : sprintf(__('Opens at %s', 'multi-location-product-and-inventory-management'), $time_label);
+                ? sprintf(mulopimfwc_get_text_value('text_hours_closes_at'), $time_label)
+                : sprintf(mulopimfwc_get_text_value('text_hours_opens_at'), $time_label);
         }
 
         $hours_today = '';
@@ -48,9 +48,9 @@ if (!empty($locations) && !is_wp_error($locations)) {
 
             if (is_array($today)) {
                 if (!empty($today['closed'])) {
-                    $hours_today = __('Closed today', 'multi-location-product-and-inventory-management');
+                    $hours_today = mulopimfwc_get_text_value('text_hours_closed_today');
                 } elseif (!empty($today['all_day'])) {
-                    $hours_today = __('Open 24 hours', 'multi-location-product-and-inventory-management');
+                    $hours_today = mulopimfwc_get_text_value('text_hours_open_24');
                 } else {
                     $open_time = $today['open'] ?? '';
                     $close_time = $today['close'] ?? '';
@@ -59,7 +59,7 @@ if (!empty($locations) && !is_wp_error($locations)) {
                         $close_dt = DateTime::createFromFormat('H:i', $close_time, new DateTimeZone($timezone));
                         if ($open_dt && $close_dt) {
                             $hours_today = sprintf(
-                                __('%s - %s', 'multi-location-product-and-inventory-management'),
+                                mulopimfwc_get_text_value('text_hours_time_range'),
                                 $open_dt->format('g:i A'),
                                 $close_dt->format('g:i A')
                             );
@@ -99,20 +99,20 @@ $popup_data = [
     'cookieExpiryDays' => mulopimfwc_get_location_cookie_expiry_days(),
     'locations' => $locations_data,
     'i18n' => [
-        'detecting' => __('Detecting your location...', 'multi-location-product-and-inventory-management'),
-        'searching' => __('Searching...', 'multi-location-product-and-inventory-management'),
-        'searchFailed' => __('Search failed. Try again.', 'multi-location-product-and-inventory-management'),
-        'detectFailed' => __('We could not detect your location. Search for a place instead.', 'multi-location-product-and-inventory-management'),
-        'noLocations' => __('No store locations found.', 'multi-location-product-and-inventory-management'),
-        'noResults' => __('No matches found. Try a more specific address.', 'multi-location-product-and-inventory-management'),
-        'distanceAway' => __('away', 'multi-location-product-and-inventory-management'),
-        'distanceUnit' => __('km', 'multi-location-product-and-inventory-management'),
-        'addressUnavailable' => __('Address unavailable', 'multi-location-product-and-inventory-management'),
-        'hoursToday' => __('Hours today', 'multi-location-product-and-inventory-management'),
-        'approximate' => __('Approximate location', 'multi-location-product-and-inventory-management'),
-        'nearLabel' => __('Near you', 'multi-location-product-and-inventory-management'),
-        'showingNear' => __('Showing stores near your location.', 'multi-location-product-and-inventory-management'),
-        'selectStore' => __('Select this store', 'multi-location-product-and-inventory-management'),
+        'detecting' => mulopimfwc_get_text_value('text_popup_msg_detecting'),
+        'searching' => mulopimfwc_get_text_value('text_popup_msg_searching'),
+        'searchFailed' => mulopimfwc_get_text_value('text_popup_msg_search_failed'),
+        'detectFailed' => mulopimfwc_get_text_value('text_popup_msg_detect_failed'),
+        'noLocations' => mulopimfwc_get_text_value('text_popup_msg_no_locations'),
+        'noResults' => mulopimfwc_get_text_value('text_popup_msg_no_results'),
+        'distanceAway' => mulopimfwc_get_text_value('text_popup_msg_distance_away'),
+        'distanceUnit' => mulopimfwc_get_text_value('text_popup_msg_distance_unit'),
+        'addressUnavailable' => mulopimfwc_get_text_value('text_popup_msg_address_unavailable'),
+        'hoursToday' => mulopimfwc_get_text_value('text_popup_msg_hours_today'),
+        'approximate' => mulopimfwc_get_text_value('text_popup_msg_approximate_location'),
+        'nearLabel' => mulopimfwc_get_text_value('text_popup_msg_near_you'),
+        'showingNear' => mulopimfwc_get_text_value('text_popup_msg_showing_near'),
+        'selectStore' => mulopimfwc_get_text_value('mulopimfwc_popup_btn_txt'),
     ],
 ];
 
@@ -143,19 +143,19 @@ $popup_data_json = wp_json_encode($popup_data);
                 <?php if ($show_title) { ?>
                     <h2><?php echo esc_html($popup_title); ?></h2>
                 <?php } ?>
-                <p class="lwp-modern-popup__subtitle"><?php esc_html_e('Choose a nearby store to continue.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="lwp-modern-popup__subtitle"><?php echo esc_html(mulopimfwc_get_text_value('text_popup_subtitle')); ?></p>
             </div>
         </div>
 
         <div class="lwp-modern-popup__body">
             <div class="lwp-modern-popup__search">
-                <label class="lwp-modern-label" for="lwp-modern-location-search"><?php esc_html_e('Your location', 'multi-location-product-and-inventory-management'); ?></label>
+                <label class="lwp-modern-label" for="lwp-modern-location-search"><?php echo esc_html(mulopimfwc_get_text_value('text_popup_label_your_location')); ?></label>
                 <div class="lwp-modern-search-row">
-                    <input type="text" id="lwp-modern-location-search" placeholder="<?php esc_attr_e('Enter city, address, or postal code', 'multi-location-product-and-inventory-management'); ?>" autocomplete="off">
-                    <button type="button" id="lwp-modern-search-btn" class="lwp-modern-button"><?php esc_html_e('Search', 'multi-location-product-and-inventory-management'); ?></button>
+                    <input type="text" id="lwp-modern-location-search" placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_popup_placeholder_search')); ?>" autocomplete="off">
+                    <button type="button" id="lwp-modern-search-btn" class="lwp-modern-button"><?php echo esc_html(mulopimfwc_get_text_value('text_popup_button_search')); ?></button>
                 </div>
                 <div class="lwp-modern-search-actions">
-                    <button type="button" id="lwp-modern-detect" class="lwp-modern-ghost-button"><?php esc_html_e('Use my location', 'multi-location-product-and-inventory-management'); ?></button>
+                    <button type="button" id="lwp-modern-detect" class="lwp-modern-ghost-button"><?php echo esc_html(mulopimfwc_get_text_value('text_popup_button_use_my_location')); ?></button>
                     <span id="lwp-modern-status" class="lwp-modern-status" data-state="idle"></span>
                 </div>
                 <div id="lwp-modern-suggestions" class="lwp-modern-suggestions" style="display:none;"></div>
@@ -164,14 +164,14 @@ $popup_data_json = wp_json_encode($popup_data);
             <div class="lwp-modern-popup__results">
                 <div class="lwp-modern-section-header">
                     <div>
-                        <h3><?php esc_html_e('Nearest store', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <h3><?php echo esc_html(mulopimfwc_get_text_value('text_popup_heading_nearest_store')); ?></h3>
                         <span id="lwp-modern-origin" class="lwp-modern-origin"></span>
                     </div>
                 </div>
                 <div id="lwp-modern-featured" class="lwp-modern-featured"></div>
 
                 <div class="lwp-modern-section-header lwp-modern-section-header--compact">
-                    <h4><?php esc_html_e('More locations', 'multi-location-product-and-inventory-management'); ?></h4>
+                    <h4><?php echo esc_html(mulopimfwc_get_text_value('text_popup_heading_more_locations')); ?></h4>
                 </div>
                 <div id="lwp-modern-list" class="lwp-modern-list"></div>
             </div>
