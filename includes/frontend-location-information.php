@@ -986,6 +986,7 @@ class MULOPIMFWC_Frontend_Location_Information
                             <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
                         </a>
                     </div>
+                <?php endif; ?>
             </div>
             <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
                 <div class="mulopimfwc-map-wrapper">
@@ -994,15 +995,11 @@ class MULOPIMFWC_Frontend_Location_Information
                         data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
                         data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
                         data-name="<?php echo esc_attr($location->name); ?>"
-                        data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>" style="height: 100%;">
+                        data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>">
                     </div>
                 </div>
             <?php endif; ?>
-        <?php else: ?>
         </div>
-    <?php endif; ?>
-
-    </div>
 <?php
     }
 

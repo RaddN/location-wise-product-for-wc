@@ -133,7 +133,7 @@
   border-radius: 0 0 12px 12px;
 }
 
-.location-modal-footer .button {
+.location-modal-footer .button, .location-manage_page_multi-location-product-and-inventory-management-settings .button {
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
@@ -152,7 +152,7 @@
   background: #4b5563;
 }
 
-.location-modal-footer .button-primary {
+.location-modal-footer .button-primary, .location-manage_page_multi-location-product-and-inventory-management-settings .button-primary {
   background: #667eea;
   color: #ffffff;
 }

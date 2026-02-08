@@ -2411,7 +2411,7 @@ class MULOPIMFWC_Admin
             __('Settings', 'multi-location-product-and-inventory-management'),
             'manage_options',
             'multi-location-product-and-inventory-management-settings',
-            [new mulopimfwc_settings(), 'settings_page_content']
+            class_exists('mulopimfwc_settings') ? [new mulopimfwc_settings(), 'settings_page_content'] : '__return_null'
         );
     }
     /**

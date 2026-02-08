@@ -9,6 +9,7 @@ class mulopimfwc_settings
     {
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_init', [$this, 'handle_reset_settings']);
+        add_action('admin_init', [$this, 'handle_reset_text_management']);
     }
 
     /**
@@ -58,6 +59,75 @@ class mulopimfwc_settings
         set_transient('mulopimfwc_settings_reset', true, 30);
 
         // Redirect to avoid form resubmission
+        wp_redirect(add_query_arg('settings-updated', 'true', wp_get_referer()));
+        exit;
+    }
+
+    /**
+     * Handle reset text management form submission
+     */
+    public function handle_reset_text_management()
+    {
+        if (!isset($_POST['mulopimfwc_reset_text_management'])) {
+            return;
+        }
+
+        if (
+            !isset($_POST['mulopimfwc_reset_text_management_nonce']) ||
+            !wp_verify_nonce($_POST['mulopimfwc_reset_text_management_nonce'], 'mulopimfwc_reset_text_management_action')
+        ) {
+            wp_die(__('Security check failed. Please go back and try again.', 'multi-location-product-and-inventory-management'));
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management'));
+        }
+
+        if (!function_exists('mulopimfwc_get_text_management_defaults')) {
+            add_settings_error(
+                'mulopimfwc_messages',
+                'mulopimfwc_text_reset_error',
+                __('Text management defaults are unavailable. Please reload the page and try again.', 'multi-location-product-and-inventory-management'),
+                'error'
+            );
+            wp_redirect(add_query_arg('settings-updated', 'true', wp_get_referer()));
+            exit;
+        }
+
+        $options = get_option('mulopimfwc_display_options', []);
+        if (!is_array($options)) {
+            $options = [];
+        }
+
+        $defaults = mulopimfwc_get_text_management_defaults();
+        if (empty($defaults)) {
+            add_settings_error(
+                'mulopimfwc_messages',
+                'mulopimfwc_text_reset_empty',
+                __('No text defaults were found to reset.', 'multi-location-product-and-inventory-management'),
+                'warning'
+            );
+            wp_redirect(add_query_arg('settings-updated', 'true', wp_get_referer()));
+            exit;
+        }
+
+        $updated = update_option('mulopimfwc_display_options', array_merge($options, $defaults));
+        if ($updated) {
+            add_settings_error(
+                'mulopimfwc_messages',
+                'mulopimfwc_text_reset_success',
+                __('Text management settings have been reset to default values successfully.', 'multi-location-product-and-inventory-management'),
+                'success'
+            );
+        } else {
+            add_settings_error(
+                'mulopimfwc_messages',
+                'mulopimfwc_text_reset_warning',
+                __('Text management settings may already be at default values.', 'multi-location-product-and-inventory-management'),
+                'warning'
+            );
+        }
+
         wp_redirect(add_query_arg('settings-updated', 'true', wp_get_referer()));
         exit;
     }
@@ -1639,7 +1709,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#f3e8ff;padding:10px;border-radius:6px">
-  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.3.10.1.1.3.10.2.2.3.1.1.1.120.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.3.10-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
+  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.3.20.1.1.3.20.2.2.3.1.1.1.120.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.3.20-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
 </svg>Location Hours & Availability', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure business hours and availability for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
@@ -5103,12 +5173,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                             echo $this->mls_nav_tabs("#inventory-settings", "nav-tab", '<svg class="svg-inline--fa fa-chart-bar" aria-hidden="true" data-prefix="fas" data-icon="chart-bar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#22c55e" d="M1 1a1 1 0 0 1 1 1v10.5c0 .275.225.5.5.5H15a1 1 0 1 1 0 2H2.5A2.5 2.5 0 0 1 0 12.5V2a1 1 0 0 1 1-1m3 3a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1m1 2h4a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2m0 3h8a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2"/></svg>', esc_html__('Inventory', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#product-visibility-settings", "nav-tab", '<svg class="svg-inline--fa fa-eye" aria-hidden="true" data-prefix="fas" data-icon="eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="#14b8a6" d="M9 1C6.475 1 4.453 2.15 2.981 3.519 1.519 4.875.541 6.5.078 7.616a1 1 0 0 0 0 .769c.463 1.115 1.441 2.74 2.903 4.096C4.453 13.85 6.475 15 9 15s4.547-1.15 6.019-2.519c1.462-1.359 2.441-2.981 2.906-4.097a1 1 0 0 0 0-.769c-.466-1.116-1.444-2.741-2.906-4.097C13.547 2.15 11.525 1 9 1M4.5 8a4.5 4.5 0 1 1 9 0 4.5 4.5 0 1 1-9 0M9 6a2.002 2.002 0 0 1-2.634 1.897c-.172-.056-.372.05-.366.231a3.002 3.002 0 0 0 3.775 2.769A3.002 3.002 0 0 0 9.128 5c-.181-.006-.287.191-.231.366q.101.3.103.634"/></svg>', esc_html__('Product Visibility', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#popup-shortcode-settings", "nav-tab", '<svg class="svg-inline--fa fa-window-restore" aria-hidden="true" data-prefix="fas" data-icon="window-restore" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#a855f7" d="M13.5 2h-7c-.275 0-.5.225-.5.5V3H4v-.5A2.5 2.5 0 0 1 6.5 0h7A2.5 2.5 0 0 1 16 2.5v7a2.5 2.5 0 0 1-2.5 2.5H13v-2h.5c.275 0 .5-.225.5-.5v-7c0-.275-.225-.5-.5-.5M0 6c0-1.103.897-2 2-2h8c1.103 0 2 .897 2 2v8c0 1.103-.897 2-2 2H2c-1.103 0-2-.897-2-2zm2 1a1 1 0 0 0 1 1h6a1 1 0 1 0 0-2H3a1 1 0 0 0-1 1"/></svg>', esc_html__('Popup', 'multi-location-product-and-inventory-management'));
-                            echo $this->mls_nav_tabs("#text-management-settings", "nav-tab", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle"><path fill="#0ea5e9" d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 5h10v2H4v-2z"/></svg>', esc_html__('Text Management', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#cross-order-settings", "nav-tab", '<svg class="svg-inline--fa fa-truck" aria-hidden="true" data-prefix="fas" data-icon="truck" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#f97316" d="M1.5 0A1.5 1.5 0 0 0 0 1.5v10A1.5 1.5 0 0 0 1.5 13H2a3.001 3.001 0 0 0 6 0h4a3.001 3.001 0 0 0 6 0h1a1 1 0 1 0 0-2V7.416c0-.531-.209-1.041-.584-1.416L16 3.584A2 2 0 0 0 14.584 3H13V1.5A1.5 1.5 0 0 0 11.5 0zM13 5h1.584L17 7.416V8h-4zm-9.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0M15 11.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3"/></svg>', esc_html__('Order & Cart', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#notification-settings", "nav-tab", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle"><path fill="#f97316" d="M12 2a5 5 0 0 0-5 5v5.586L5.293 14.293a1 1 0 0 0 1.414 1.414L9 13.414V12a3 3 0 1 1 6 0v1.414l2.293 2.293a1 1 0 0 0 1.414-1.414L17 12.586V7a5 5 0 0 0-5-5zm0 18a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3z"/></svg>', esc_html__('Notifications', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#location-wise-everything", "nav-tab", '<svg class="svg-inline--fa fa-map-location-dot" aria-hidden="true" data-prefix="fas" data-icon="map-location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 16" width="18" height="16"><path fill="#ef4444" d="M12.75 3.75c0 1.706-2.284 4.747-3.288 6-.241.3-.688.3-.925 0-1.003-1.253-3.287-4.294-3.287-6C5.25 1.678 6.928 0 9 0s3.75 1.678 3.75 3.75M13 6.263q.163-.324.3-.644l.047-.116 3.625-1.45A.75.75 0 0 1 18 4.75v8.463a.755.755 0 0 1-.472.697L13 15.719zM4.3 4.322c.075.441.225.884.4 1.297q.136.319.3.644v7.856l-3.972 1.59A.75.75 0 0 1 0 15.012V6.55c0-.306.188-.581.472-.697l3.831-1.531zm5.944 6.053A33 33 0 0 0 12 7.969v7.791l-6-1.716V7.969a33 33 0 0 0 1.756 2.406c.641.8 1.847.8 2.487 0M9 4.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 1 0 0 2.5"/></svg>', esc_html__('Location Wise Everything', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#customer-experience", "nav-tab", '<svg class="svg-inline--fa fa-users" aria-hidden="true" data-prefix="fas" data-icon="users" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" width="20" height="16"><path fill="#06b6d4" d="M4.5 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M16 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 1 1 0-5M0 9.334A3.336 3.336 0 0 1 3.334 6h1.334c.497 0 .969.109 1.394.303A4 4 0 0 0 7.356 10H.666A.67.67 0 0 1 0 9.334M12.666 10h-.022a4 4 0 0 0 1.353-3q-.002-.355-.059-.697A3.3 3.3 0 0 1 15.332 6h1.334A3.335 3.335 0 0 1 20 9.334c0 .369-.3.666-.666.666zM7 7a3 3 0 1 1 6 0 3 3 0 1 1-6 0m-3 8.166C4 12.866 5.866 11 8.166 11h3.669c2.3 0 4.166 1.866 4.166 4.166a.834.834 0 0 1-.834.834H4.834A.834.834 0 0 1 4 15.166"/></svg>', esc_html__('User Experience', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#extensions", "nav-tab", '<svg width="16" height="16" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M.04.418V.329h.044A.044.044 0 0 0 .128.277.046.046 0 0 0 .082.24H.04V.151A.02.02 0 0 1 .062.129h.089V.084A.044.044 0 0 1 .203.04.046.046 0 0 1 .24.087v.042h.089a.02.02 0 0 1 .022.022V.24h.042a.046.046 0 0 1 .046.037.044.044 0 0 1-.044.052H.351v.089A.02.02 0 0 1 .329.44H.262V.396A.044.044 0 0 0 .21.352a.046.046 0 0 0-.037.046V.44H.062A.02.02 0 0 1 .04.418"/></svg>', esc_html__('Location Info Management', 'multi-location-product-and-inventory-management'));
+                            echo $this->mls_nav_tabs("#text-management-settings", "nav-tab", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle"><path fill="#0ea5e9" d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 5h10v2H4v-2z"/></svg>', esc_html__('Text Management', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#advance-settings", "nav-tab", '<svg class="svg-inline--fa fa-gear" aria-hidden="true" data-prefix="fas" data-icon="gear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#6366f1" d="M15.497 5.206c.1.272.016.575-.2.769l-1.353 1.231a6 6 0 0 1 0 1.588l1.353 1.231c.216.194.3.497.2.769a8 8 0 0 1-.494 1.072l-.147.253a8 8 0 0 1-.691.975.71.71 0 0 1-.766.212l-1.741-.553a6 6 0 0 1-1.375.794l-.391 1.784a.71.71 0 0 1-.569.556 8 8 0 0 1-2.656 0 .71.71 0 0 1-.569-.556l-.391-1.784a6 6 0 0 1-1.375-.794l-1.738.556a.72.72 0 0 1-.766-.212 8 8 0 0 1-.691-.975l-.147-.253a8 8 0 0 1-.494-1.072.71.71 0 0 1 .2-.769l1.353-1.231Q1.997 8.403 1.996 8c-.001-.403.019-.534.053-.794L.696 5.975a.71.71 0 0 1-.2-.769A8 8 0 0 1 .99 4.134l.147-.253q.31-.516.691-.975a.71.71 0 0 1 .766-.212l1.741.553a6 6 0 0 1 1.375-.794L6.101.669A.71.71 0 0 1 6.67.113Q7.32 0 8 0c.68 0 .897.037 1.328.109a.71.71 0 0 1 .569.556l.391 1.784c.494.203.956.472 1.375.794l1.741-.553a.72.72 0 0 1 .766.212q.38.459.691.975l.147.253q.287.515.494 1.072zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 1 0 0 5"/></svg>', esc_html__('Advanced', 'multi-location-product-and-inventory-management'));
                             echo $this->mls_nav_tabs("#license-settings", "nav-tab", '<svg width="16" height="16" viewBox="-0.026 0 0.943 0.943" xmlns="http://www.w3.org/2000/svg"><path data-name="19" d="M.528.447.571.404.505.338.462.381.393.312A.158.158 0 1 0 .23.062a.126.126 0 1 0-.175.18.158.158 0 1 0 .257.157l.066.066-.037.036.066.066L.444.53l.175.175-.096.096.033.033a.049.049 0 1 1 .068.068l.04.04L.76.846l.047.047.084-.084ZM.355.081a.077.077 0 1 1-.077.077.077.077 0 0 1 .077-.077M.309.309.308.31.307.308ZM.132.081A.062.062 0 1 1 .07.143.06.06 0 0 1 .132.081m.026.357A.077.077 0 1 1 .235.361a.077.077 0 0 1-.077.077" fill="#59bdff"/></svg>', esc_html__('Plugin License', 'multi-location-product-and-inventory-management'));
                             ?>
@@ -7179,35 +7249,133 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
         $is_manual_mode = $this->is_manual_assignment_strict_mode();
         $groups = mulopimfwc_get_text_management_fields();
+        $translation_data = [];
+        $translation_locales = [];
+        $translation_file = plugin_dir_path(__DIR__) . 'assets/i18n/text-management.json';
+        if (file_exists($translation_file)) {
+            $raw_translation = file_get_contents($translation_file);
+            $decoded_translation = json_decode($raw_translation, true);
+            if (is_array($decoded_translation)) {
+                $translation_data = $decoded_translation;
+                if (!empty($decoded_translation['locales']) && is_array($decoded_translation['locales'])) {
+                    $translation_locales = $decoded_translation['locales'];
+                }
+            }
+        }
 
         echo '<style>
             .mulopimfwc-text-management-intro {
+                background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+                padding: 22px 24px;
+                margin-bottom: 22px;
+                box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            }
+            .mulopimfwc-text-management-intro__header {
                 display: flex;
-                gap: 16px;
-                align-items: flex-start;
-                background: #f8fafc;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                padding: 16px 18px;
-                margin-bottom: 20px;
+                flex-direction: column;
+                gap: 6px;
+                max-width: 720px;
+            }
+            .mulopimfwc-text-management-intro__eyebrow {
+                font-size: 12px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                font-weight: 700;
+                color: #6366f1;
             }
             .mulopimfwc-text-management-intro h2 {
-                margin: 0 0 6px 0;
-                font-size: 16px;
+                margin: 0;
+                font-size: 20px;
                 font-weight: 700;
                 color: #0f172a;
             }
             .mulopimfwc-text-management-intro p {
                 margin: 0;
                 color: #475569;
-                line-height: 1.5;
+                line-height: 1.6;
             }
-            .mulopimfwc-text-group {
-                background: #fff;
-                border: 1px solid #e5e7eb;
+            .mulopimfwc-text-management-intro__actions {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 16px;
+                margin-top: 16px;
+            }
+            .mulopimfwc-text-action-card {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
                 border-radius: 14px;
-                padding: 18px 20px;
-                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+                padding: 16px;
+                box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .mulopimfwc-text-action-card__header {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+            }
+            .mulopimfwc-text-action-card__icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #e0f2fe;
+                color: #0284c7;
+                flex-shrink: 0;
+            }
+            .mulopimfwc-text-action-card--reset .mulopimfwc-text-action-card__icon {
+                background: #fee2e2;
+                color: #dc2626;
+            }
+            .mulopimfwc-text-action-title {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            .mulopimfwc-text-action-subtitle {
+                margin: 2px 0 0 0;
+                font-size: 12px;
+                color: #64748b;
+            }
+            .mulopimfwc-text-action-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .mulopimfwc-text-translate-select {
+                flex: 1;
+                min-width: 180px;
+            }
+            .mulopimfwc-text-management-intro__note {
+                margin: 0;
+                font-size: 12px;
+                color: #64748b;
+            }
+            .mulopimfwc-text-reset-button {
+                background: #fef2f2;
+                color: #b91c1c;
+                border-color: #fecaca;
+            }
+            .mulopimfwc-text-reset-button:hover {
+                background: #fee2e2;
+                border-color: #fca5a5;
+                color: #991b1b;
+            }
+            .mulopimfwc-text-reset-button:focus {
+                box-shadow: 0 0 0 1px #fecaca;
+            }
+            @media (max-width: 900px) {
+                .mulopimfwc-text-action-row {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
             }
             .mulopimfwc-text-group + .mulopimfwc-text-group {
                 margin-top: 20px;
@@ -7273,11 +7441,114 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         </style>';
 
         echo '<div class="mulopimfwc-text-management-intro">
-                <div>
+                <div class="mulopimfwc-text-management-intro__header">
+                    <span class="mulopimfwc-text-management-intro__eyebrow">' . esc_html__('Text Management', 'multi-location-product-and-inventory-management') . '</span>
                     <h2>' . esc_html__('Text Management Overview', 'multi-location-product-and-inventory-management') . '</h2>
                     <p>' . esc_html__('Update every customer-facing label, prompt, and message from one place. Each section groups related text so it is clear where the copy appears on the storefront.', 'multi-location-product-and-inventory-management') . '</p>
                 </div>
-            </div>';
+                <div class="mulopimfwc-text-management-intro__actions">';
+
+        if (!empty($translation_locales)) {
+            echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--translate">
+                    <div class="mulopimfwc-text-action-card__header">
+                        <div class="mulopimfwc-text-action-card__icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                                <path fill="currentColor" d="M12 3l8 4v6c0 5-3.4 8-8 8s-8-3-8-8V7l8-4m0 2.2L6 7.3v5.7c0 3.8 2.5 6 6 6s6-2.2 6-6V7.3l-6-2.1M9 9h2.6l1.4 4.2 1.1-3.2h2.1l-2.4 6h-1.6l-1.4-4.2L9.5 16H8l-2.4-6h2.1l1.1 3.2L9 9z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="mulopimfwc-text-action-title">' . esc_html__('Quick Translate', 'multi-location-product-and-inventory-management') . '</p>
+                            <p class="mulopimfwc-text-action-subtitle">' . esc_html__('Apply a preset language pack to all text fields.', 'multi-location-product-and-inventory-management') . '</p>
+                        </div>
+                    </div>
+                    <div class="mulopimfwc-text-action-row">
+                        <select id="mulopimfwc-text-translate-select" class="mulopimfwc-text-translate-select">
+                            <option value="">' . esc_html__('Select language', 'multi-location-product-and-inventory-management') . '</option>';
+            foreach ($translation_locales as $locale_code => $locale_data) {
+                $label = $locale_data['label'] ?? $locale_code;
+                $native = $locale_data['nativeLabel'] ?? '';
+                $display = $label;
+                if (!empty($native) && $native !== $label) {
+                    $display .= ' (' . $native . ')';
+                }
+                echo '<option value="' . esc_attr($locale_code) . '">' . esc_html($display) . '</option>';
+            }
+            echo '</select>
+                        <button type="button" id="mulopimfwc-text-translate-apply" class="button button-primary">' . esc_html__('Apply Translation', 'multi-location-product-and-inventory-management') . '</button>
+                    </div>
+                    <p class="mulopimfwc-text-management-intro__note">' . esc_html__('Applying a language will replace current text values. Save changes to keep them.', 'multi-location-product-and-inventory-management') . '</p>
+                </div>';
+        }
+
+        echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--reset">
+                <div class="mulopimfwc-text-action-card__header">
+                    <div class="mulopimfwc-text-action-card__icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                            <path fill="currentColor" d="M12 4a8 8 0 1 1-7.5 11h2.1A6 6 0 1 0 12 6V2l5 4-5 4V6a6 6 0 0 0-5.5 9H4A8 8 0 0 1 12 4z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="mulopimfwc-text-action-title">' . esc_html__('Reset Text', 'multi-location-product-and-inventory-management') . '</p>
+                        <p class="mulopimfwc-text-action-subtitle">' . esc_html__('Restore the original defaults for all text fields.', 'multi-location-product-and-inventory-management') . '</p>
+                    </div>
+                </div>';
+        wp_nonce_field('mulopimfwc_reset_text_management_action', 'mulopimfwc_reset_text_management_nonce');
+        echo '<button type="submit" name="mulopimfwc_reset_text_management" value="1" class="button mulopimfwc-text-reset-button" formaction="' . esc_url(menu_page_url('multi-location-product-and-inventory-management-settings', false)) . '" onclick="return confirm(\'' . esc_js(__('Reset all text fields to their default values? This action cannot be undone.', 'multi-location-product-and-inventory-management')) . '\');">
+                    ' . esc_html__('Reset Text to Defaults', 'multi-location-product-and-inventory-management') . '
+                </button>
+                <p class="mulopimfwc-text-management-intro__note">' . esc_html__('Reset only the Text Management fields to their defaults.', 'multi-location-product-and-inventory-management') . '</p>
+            </div>
+        </div>
+    </div>';
+
+        if (!empty($translation_data)) {
+            echo '<script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const translations = ' . wp_json_encode($translation_data) . ';
+                    window.mulopimfwcTextTranslations = translations;
+                    const locales = translations.locales || {};
+                    const select = document.getElementById("mulopimfwc-text-translate-select");
+                    const apply = document.getElementById("mulopimfwc-text-translate-apply");
+                    if (!select || !apply || !Object.keys(locales).length) {
+                        return;
+                    }
+
+                    function applyTranslation() {
+                        const localeCode = select.value;
+                        if (!localeCode || !locales[localeCode] || !locales[localeCode].values) {
+                            window.alert("' . esc_js(__('Please choose a language first.', 'multi-location-product-and-inventory-management')) . '");
+                            return;
+                        }
+                        const locale = locales[localeCode];
+                        const label = locale.nativeLabel || locale.label || localeCode;
+                        const template = translations.meta && translations.meta.applyConfirm
+                            ? translations.meta.applyConfirm
+                            : "Apply %s translations to all Text Management fields? This will overwrite your current values.";
+                        const message = template.replace("%s", label);
+                        if (!window.confirm(message)) {
+                            return;
+                        }
+
+                        Object.keys(locale.values).forEach(function(key) {
+                            const value = locale.values[key];
+                            const field = document.getElementById(key);
+                            if (field) {
+                                field.value = value;
+                            }
+                            const hidden = document.querySelector(\'[data-manual-hidden=\"true\"][data-manual-for=\"mulopimfwc_display_options[\' + key + \']\"]\');
+                            if (hidden) {
+                                hidden.value = value;
+                            }
+                        });
+
+                        select.value = "";
+                    }
+
+                    apply.addEventListener("click", applyTranslation);
+                    select.addEventListener("change", applyTranslation);
+                });
+            </script>';
+        }
 
         foreach ($groups as $group) {
             $title = $group['title'] ?? '';
@@ -7286,7 +7557,6 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $fields = $group['fields'] ?? [];
 
             echo '<div class="lwp-settings-section"><div class="lwp-settings-box">';
-            echo '<div class="mulopimfwc-text-group">';
             echo '<div class="mulopimfwc-text-group__header">';
             if (!empty($icon)) {
                 echo '<div class="mulopimfwc-text-group__icon">' . $icon . '</div>';
@@ -7308,7 +7578,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 }
                 echo '</div>';
             }
-            echo '</div></div></div>';
+            echo '</div></div>';
         }
     }
 
@@ -7360,10 +7630,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         echo '<label for="' . esc_attr($key) . '">' . esc_html($label) . '</label>';
         if (!empty($tags)) {
             echo '<div class="mulopimfwc-text-field__tags">';
-            foreach ($tags as $tag) {
-                $tag_class = ($tag === __('Pro', 'multi-location-product-and-inventory-management')) ? 'mulopimfwc-text-field__tag mulopimfwc-text-field__tag--pro' : 'mulopimfwc-text-field__tag';
-                echo '<span class="' . esc_attr($tag_class) . '">' . esc_html($tag) . '</span>';
-            }
+
             echo '</div>';
         }
         echo '</div>';
