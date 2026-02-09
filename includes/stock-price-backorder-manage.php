@@ -731,6 +731,10 @@ add_action('woocommerce_reduce_order_stock', function ($order) {
         return;
     }
 
+    if ($order instanceof WC_Order && $order->get_meta('_mulopimfwc_split_parent_stock_exempt') === 'yes') {
+        return;
+    }
+
     foreach ($order->get_items() as $item) {
         $product_id = $item->get_product_id();
         $variation_id = $item->get_variation_id();
@@ -786,6 +790,10 @@ add_action('woocommerce_restore_order_stock', function ($order) {
         return;
     }
 
+    if ($order instanceof WC_Order && $order->get_meta('_mulopimfwc_split_parent_stock_exempt') === 'yes') {
+        return;
+    }
+
     foreach ($order->get_items() as $item) {
         $product_id = $item->get_product_id();
         $variation_id = $item->get_variation_id();
@@ -816,6 +824,13 @@ add_action('woocommerce_create_refund', function ($refund, $args) {
 
     if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
         return;
+    }
+
+    if (!empty($args['order_id'])) {
+        $order = wc_get_order((int) $args['order_id']);
+        if ($order instanceof WC_Order && $order->get_meta('_mulopimfwc_split_parent_stock_exempt') === 'yes') {
+            return;
+        }
     }
 
     if (empty($args['restock_items']) || empty($args['line_items']) || empty($args['order_id'])) {

@@ -2510,6 +2510,149 @@ class MULOPIMFWC_Admin
 
         return str_replace(array('_', '-'), ' ', ucwords($location_slug));
     }
+
+    private function get_order_edit_url_by_id($order_id): string
+    {
+        $order_id = (int) $order_id;
+        if ($order_id <= 0) {
+            return '';
+        }
+
+        if (class_exists('\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController')) {
+            return admin_url('admin.php?page=wc-orders&action=edit&id=' . $order_id);
+        }
+
+        return admin_url('post.php?post=' . $order_id . '&action=edit');
+    }
+
+    private function is_current_user_location_manager(): bool
+    {
+        if (!class_exists('MULOPIMFWC_Location_Managers') || !is_user_logged_in()) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        return in_array('mulopimfwc_location_manager', (array) $user->roles, true);
+    }
+
+    private function get_current_user_allowed_location_slugs()
+    {
+        if (!class_exists('MULOPIMFWC_Location_Managers')) {
+            return null;
+        }
+
+        if (!$this->is_current_user_location_manager()) {
+            return null;
+        }
+
+        if (MULOPIMFWC_Location_Managers::user_has_capability('all_orders')) {
+            return null;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+        return is_array($assigned_locations) ? array_values(array_filter($assigned_locations)) : [];
+    }
+
+    private function render_split_parent_location_cell($order): string
+    {
+        if (!$order instanceof WC_Order) {
+            return esc_html__('Split Parent', 'multi-location-product-and-inventory-management');
+        }
+
+        $allowed_slugs = $this->get_current_user_allowed_location_slugs();
+        $child_ids = array_filter(array_map('absint', (array) $order->get_meta('_mulopimfwc_split_children')));
+        $child_links = [];
+
+        foreach ($child_ids as $child_id) {
+            $child_order = wc_get_order($child_id);
+            if (!$child_order) {
+                continue;
+            }
+
+            $location_slug = (string) $child_order->get_meta('_store_location');
+            if (is_array($allowed_slugs) && !in_array($location_slug, $allowed_slugs, true)) {
+                continue;
+            }
+            $location_label = $this->get_location_label($location_slug);
+            if ($location_label === '') {
+                $location_label = __('Unassigned', 'multi-location-product-and-inventory-management');
+            }
+
+            $edit_url = $this->get_order_edit_url_by_id($child_id);
+            $child_links[] = sprintf(
+                '<a class="mulopimfwc-order-split-chip" href="%s">#%d<span class="mulopimfwc-order-split-chip-label">%s</span></a>',
+                esc_url($edit_url),
+                (int) $child_id,
+                esc_html($location_label)
+            );
+        }
+
+        $output = '<div class="mulopimfwc-order-split-cell">';
+        $output .= '<span class="mulopimfwc-order-split-badge mulopimfwc-order-split-badge-parent">' . esc_html__('Split Parent', 'multi-location-product-and-inventory-management') . '</span>';
+
+        if (!empty($child_links)) {
+            $output .= '<div class="mulopimfwc-order-split-children">' . implode('', $child_links) . '</div>';
+        } else {
+            $empty_message = is_array($allowed_slugs)
+                ? __('No child orders for your locations.', 'multi-location-product-and-inventory-management')
+                : __('No child orders yet.', 'multi-location-product-and-inventory-management');
+            $output .= '<div class="mulopimfwc-order-split-muted">' . esc_html($empty_message) . '</div>';
+        }
+
+        $output .= '</div>';
+
+        return $output;
+    }
+
+    private function render_split_child_location_cell($order, $is_manual_mode, $show_parent = true): string
+    {
+        if (!$order instanceof WC_Order) {
+            return esc_html__('Split Child', 'multi-location-product-and-inventory-management');
+        }
+
+        $parent_id = (int) $order->get_meta('_mulopimfwc_split_parent_id');
+        $parent_link = '';
+        if ($parent_id > 0) {
+            $parent_edit_url = $this->get_order_edit_url_by_id($parent_id);
+            $parent_link = sprintf(
+                '<a href="%s">#%d</a>',
+                esc_url($parent_edit_url),
+                $parent_id
+            );
+        }
+
+        $location_slug = (string) $order->get_meta('_store_location');
+        $location_line = '';
+        if ($location_slug === '' && $is_manual_mode) {
+            $location_line = '<div class="mulopimfwc-order-split-location-line">' . $this->render_quick_assignment_dropdown($order) . '</div>';
+        } else {
+            $location_label = $this->get_location_label($location_slug);
+            if ($location_label === '') {
+                $location_label = __('Unassigned', 'multi-location-product-and-inventory-management');
+            }
+            $location_line = sprintf(
+                '<div class="mulopimfwc-order-split-location-line"><span class="mulopimfwc-order-split-location-label">%s</span><span class="mulopimfwc-order-split-location-value">%s</span></div>',
+                esc_html__('Location:', 'multi-location-product-and-inventory-management'),
+                esc_html($location_label)
+            );
+        }
+
+        $output = '<div class="mulopimfwc-order-split-cell">';
+        $output .= '<span class="mulopimfwc-order-split-badge mulopimfwc-order-split-badge-child">' . esc_html__('Split Child', 'multi-location-product-and-inventory-management') . '</span>';
+
+        if ($show_parent && $parent_link !== '') {
+            $output .= sprintf(
+                '<div class="mulopimfwc-order-split-parent-line">%s %s</div>',
+                esc_html__('Parent:', 'multi-location-product-and-inventory-management'),
+                $parent_link
+            );
+        }
+
+        $output .= $location_line;
+        $output .= '</div>';
+
+        return $output;
+    }
     /**
      * Display location in orders table column
      *
@@ -2527,14 +2670,27 @@ class MULOPIMFWC_Admin
             echo esc_html('—');
             return;
         }
-
         $location_slug = (string) $order_obj->get_meta('_store_location');
-        
+
         // Check if manual assignment mode is active
         $options = get_option('mulopimfwc_display_options', []);
-        $is_manual_mode = isset($options['order_assignment_method']) 
+        $is_manual_mode = isset($options['order_assignment_method'])
             && $options['order_assignment_method'] === 'manual';
-        
+
+        $is_split_parent = $order_obj->get_meta('_mulopimfwc_split_parent') === 'yes';
+        $is_split_child = $order_obj->get_meta('_mulopimfwc_split_child') === 'yes';
+        $show_parent_link = !$this->is_current_user_location_manager();
+
+        if ($is_split_parent) {
+            echo $this->render_split_parent_location_cell($order_obj);
+            return;
+        }
+
+        if ($is_split_child) {
+            echo $this->render_split_child_location_cell($order_obj, $is_manual_mode, $show_parent_link);
+            return;
+        }
+
         if (empty($location_slug) && $is_manual_mode) {
             // Show quick assignment dropdown for unassigned orders
             echo $this->render_quick_assignment_dropdown($order_obj);
@@ -3053,6 +3209,19 @@ class MULOPIMFWC_Admin
      */
     private function get_unassigned_orders_count()
     {
+        $split_parent_exclude = array(
+            'relation' => 'OR',
+            array(
+                'key' => '_mulopimfwc_split_parent',
+                'compare' => 'NOT EXISTS',
+            ),
+            array(
+                'key' => '_mulopimfwc_split_parent',
+                'value' => 'yes',
+                'compare' => '!=',
+            ),
+        );
+
         $args = array(
             'limit' => -1,
             'return' => 'ids',
@@ -3061,6 +3230,7 @@ class MULOPIMFWC_Admin
                     'key' => '_store_location',
                     'compare' => 'NOT EXISTS',
                 ),
+                $split_parent_exclude,
             ),
         );
 
@@ -3074,6 +3244,7 @@ class MULOPIMFWC_Admin
                     'value' => '',
                     'compare' => '=',
                 ),
+                $split_parent_exclude,
             ),
         );
 
@@ -3152,6 +3323,29 @@ class MULOPIMFWC_Admin
             }
         }
 
+        $split_parent_query = array(
+            'relation' => 'OR',
+            array(
+                'key' => '_mulopimfwc_split_parent',
+                'compare' => 'NOT EXISTS',
+            ),
+            array(
+                'key' => '_mulopimfwc_split_parent',
+                'value' => 'yes',
+                'compare' => '!=',
+            ),
+        );
+
+        if (!empty($query_args['meta_query'])) {
+            $query_args['meta_query'] = array(
+                'relation' => 'AND',
+                $query_args['meta_query'],
+                $split_parent_query,
+            );
+        } else {
+            $query_args['meta_query'] = $split_parent_query;
+        }
+
         return $query_args;
     }
 
@@ -3170,22 +3364,21 @@ class MULOPIMFWC_Admin
 
         global $wpdb;
         $filter = sanitize_text_field($_GET['store_location_filter']);
+        $meta_table = $wpdb->prefix . 'wc_orders_meta';
+        $orders_table = $wpdb->prefix . 'wc_orders';
         
         if ($filter === 'unassigned') {
             // Filter for unassigned orders using LEFT JOIN and WHERE
-            $meta_table = $wpdb->prefix . 'wc_orders_meta';
-            $orders_table = $wpdb->prefix . 'wc_orders';
-            
             $clauses['join'] .= " LEFT JOIN {$meta_table} AS location_meta ON {$orders_table}.id = location_meta.order_id AND location_meta.meta_key = '_store_location'";
             $clauses['where'] .= " AND (location_meta.meta_value IS NULL OR location_meta.meta_value = '')";
         } else {
             // Filter by specific location
-            $meta_table = $wpdb->prefix . 'wc_orders_meta';
-            $orders_table = $wpdb->prefix . 'wc_orders';
-            
             $clauses['join'] .= " INNER JOIN {$meta_table} AS location_meta ON {$orders_table}.id = location_meta.order_id AND location_meta.meta_key = '_store_location'";
             $clauses['where'] .= $wpdb->prepare(" AND location_meta.meta_value = %s", $filter);
         }
+
+        $clauses['join'] .= " LEFT JOIN {$meta_table} AS split_meta ON {$orders_table}.id = split_meta.order_id AND split_meta.meta_key = '_mulopimfwc_split_parent'";
+        $clauses['where'] .= " AND (split_meta.meta_value IS NULL OR split_meta.meta_value != 'yes')";
 
         return $clauses;
     }
@@ -3771,6 +3964,55 @@ class MULOPIMFWC_Admin
         echo '<div class="wc-store-location-container">';
 
         wp_nonce_field('mulopimfwc_store_location_metabox', 'mulopimfwc_store_location_nonce');
+
+        $is_split_parent = $order->get_meta('_mulopimfwc_split_parent') === 'yes';
+        $is_split_child = $order->get_meta('_mulopimfwc_split_child') === 'yes';
+        $is_location_manager = $this->is_current_user_location_manager();
+        $allowed_slugs = $this->get_current_user_allowed_location_slugs();
+
+        if ($is_split_parent || $is_split_child) {
+            echo '<div class="mulopimfwc-order-split-links" style="margin-bottom:10px;padding:10px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:6px;">';
+            if ($is_split_parent) {
+                $child_ids = (array) $order->get_meta('_mulopimfwc_split_children');
+                $child_ids = array_values(array_filter(array_map('absint', $child_ids)));
+                echo '<strong>' . esc_html__('Split Parent', 'multi-location-product-and-inventory-management') . '</strong>';
+                $links = [];
+                foreach ($child_ids as $child_id) {
+                    $child_order = wc_get_order($child_id);
+                    if (!$child_order) {
+                        continue;
+                    }
+                    $child_location_slug = (string) $child_order->get_meta('_store_location');
+                    if (is_array($allowed_slugs) && !in_array($child_location_slug, $allowed_slugs, true)) {
+                        continue;
+                    }
+                    $url = $this->get_order_edit_url_by_id($child_id);
+                    $links[] = '<a href="' . esc_url($url) . '">#' . esc_html($child_id) . '</a>';
+                }
+                if (!empty($links)) {
+                    echo '<div style="margin-top:6px;">' . esc_html__('Children:', 'multi-location-product-and-inventory-management') . ' ' . implode(', ', $links) . '</div>';
+                } else {
+                    $empty_message = is_array($allowed_slugs)
+                        ? __('No child orders for your locations.', 'multi-location-product-and-inventory-management')
+                        : __('No child orders yet.', 'multi-location-product-and-inventory-management');
+                    echo '<div style="margin-top:6px;">' . esc_html($empty_message) . '</div>';
+                }
+            }
+
+            if ($is_split_child) {
+                $parent_id = (int) $order->get_meta('_mulopimfwc_split_parent_id');
+                if ($parent_id > 0) {
+                    echo '<div style="margin-top:6px;"><strong>' . esc_html__('Split Child', 'multi-location-product-and-inventory-management') . '</strong>';
+                    if (!$is_location_manager) {
+                        $url = $this->get_order_edit_url_by_id($parent_id);
+                        echo ' ' . esc_html__('Parent:', 'multi-location-product-and-inventory-management') . ' <a href="' . esc_url($url) . '">#' . esc_html($parent_id) . '</a>';
+                    }
+                    echo '</div>';
+                }
+            }
+            echo '</div>';
+        }
+
 
         if ($is_unassigned && $is_manual_mode) {
             echo '<div class="notice notice-warning inline mulopimfwc-location-alert">';

@@ -2424,3 +2424,86 @@ input.disabled + .mulopimfwc_slider {
     margin-bottom: 5px;
   }
 }
+
+/* Split order badges and links in order list */
+.mulopimfwc-order-split-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mulopimfwc-order-split-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border: 1px solid transparent;
+  width: fit-content;
+}
+
+.mulopimfwc-order-split-badge-parent {
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.mulopimfwc-order-split-badge-child {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.mulopimfwc-order-split-children {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mulopimfwc-order-split-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #1f2937;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.mulopimfwc-order-split-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.mulopimfwc-order-split-chip-label {
+  font-size: 11px;
+  color: #475569;
+  background: #e2e8f0;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.mulopimfwc-order-split-parent-line,
+.mulopimfwc-order-split-location-line,
+.mulopimfwc-order-split-muted {
+  font-size: 12px;
+  color: #475569;
+}
+
+.mulopimfwc-order-split-parent-line a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mulopimfwc-order-split-location-label {
+  font-weight: 600;
+  margin-right: 4px;
+  color: #1f2937;
+}

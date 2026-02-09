@@ -4126,6 +4126,75 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         );
 
         add_settings_field(
+            'split_order_by_location',
+            __('Split Order by Location', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                $allow_mixed = isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
+                $is_premium = mulopimfwc_premium_feature();
+                $disabled = $is_manual_mode || !$allow_mixed || !$is_premium;
+
+                if ($disabled) {
+                    echo '<input type="hidden" name="mulopimfwc_display_options[split_order_by_location]" value="' . esc_attr($options['split_order_by_location'] ?? 'off') . '">';
+                }
+
+                $message = __("Create a separate order for each location when the cart contains items from multiple locations.", 'multi-location-product-and-inventory-management');
+                if (!$allow_mixed) {
+                    $message .= ' ' . __('Requires Allow Mixed-Location Cart to be enabled.', 'multi-location-product-and-inventory-management');
+                }
+                $message = $this->append_manual_disabled_note($message);
+
+                if ($is_premium) {
+                    $this->render_advance_checkbox("split_order_by_location", $message, $disabled);
+                } else {
+                    $this->render_advance_checkbox("_pro", $message, true, false);
+                }
+            },
+            'lwp-checkout-settings',
+            'mulopimfwc_checkout_settings_section'
+        );
+
+        add_settings_field(
+            'split_order_unknown_items',
+            __('Unknown Location Items', 'multi-location-product-and-inventory-management'),
+            function () {
+                $options = $this->get_display_options();
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                $allow_mixed = isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
+                $split_enabled = isset($options['split_order_by_location']) && $options['split_order_by_location'] === 'on';
+                $is_premium = mulopimfwc_premium_feature();
+                $disabled = $is_manual_mode || !$allow_mixed || !$split_enabled || !$is_premium;
+
+                if ($disabled) {
+                    echo '<input type="hidden" name="mulopimfwc_display_options[split_order_unknown_items]" value="' . esc_attr($options['split_order_unknown_items'] ?? 'block_checkout') . '">';
+                }
+
+                $select_options = [
+                    'block_checkout' => __('Block checkout', 'multi-location-product-and-inventory-management'),
+                    'unassigned_child' => __('Create unassigned child order', 'multi-location-product-and-inventory-management'),
+                    'keep_in_parent' => __('Keep items in parent order', 'multi-location-product-and-inventory-management'),
+                ];
+
+                $message = __("Choose how to handle items without a valid location when orders are split by location.", 'multi-location-product-and-inventory-management');
+                if (!$split_enabled) {
+                    $message .= ' ' . __('Enable Split Order by Location to configure this option.', 'multi-location-product-and-inventory-management');
+                }
+                $message = $this->append_manual_disabled_note($message);
+
+                if ($is_premium) {
+                    $this->render_advance_select('split_order_unknown_items', $message, $select_options, $disabled);
+                } else {
+                    echo '<label class="mulopimfwc_pro_only">';
+                    $this->render_advance_select('split_order_unknown_items', $message, $select_options, true, false);
+                    echo '</label>';
+                }
+            },
+            'lwp-checkout-settings',
+            'mulopimfwc_checkout_settings_section'
+        );
+
+        add_settings_field(
             'auto_populate_customer_addresses',
             __('Auto-Populate Customer Addresses', 'multi-location-product-and-inventory-management'),
             function () {
@@ -4543,6 +4612,24 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $sanitized['auto_populate_customer_addresses'] = 'on';
         } else {
             $sanitized['auto_populate_customer_addresses'] = 'off';
+        }
+
+        // Handle split_order_by_location option (checkbox)
+        if (isset($input['split_order_by_location']) && $input['split_order_by_location'] === 'on') {
+            $sanitized['split_order_by_location'] = 'on';
+        } else {
+            $sanitized['split_order_by_location'] = 'off';
+        }
+
+        // Handle split_order_unknown_items option
+        if (isset($input['split_order_unknown_items'])) {
+            $value = sanitize_text_field($input['split_order_unknown_items']);
+            $valid_values = ['block_checkout', 'unassigned_child', 'keep_in_parent'];
+            $sanitized['split_order_unknown_items'] = in_array($value, $valid_values, true)
+                ? $value
+                : 'block_checkout';
+        } else {
+            $sanitized['split_order_unknown_items'] = 'block_checkout';
         }
 
         // Handle enable_product_filter option (checkbox - when unchecked, it's not in input, so default to 'off')

@@ -605,13 +605,6 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'type' => 'text',
                     ],
                     [
-                        'key' => 'text_status_open',
-                        'label' => __('Open (Compact)', 'multi-location-product-and-inventory-management'),
-                        'default' => __('Open', 'multi-location-product-and-inventory-management'),
-                        'description' => __('Short status label used in compact layouts.', 'multi-location-product-and-inventory-management'),
-                        'type' => 'text',
-                    ],
-                    [
                         'key' => 'text_status_closed',
                         'label' => __('Closed', 'multi-location-product-and-inventory-management'),
                         'default' => __('Closed', 'multi-location-product-and-inventory-management'),

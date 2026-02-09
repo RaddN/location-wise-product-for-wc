@@ -4574,6 +4574,8 @@ jQuery(document).ready(function ($) {
         'input[name="mulopimfwc_display_options[allow_mixed_location_cart]"]',
         'input[name="mulopimfwc_display_options[group_cart_by_location]"]',
         'input[name="mulopimfwc_display_options[allow_location_change_in_cart]"]',
+        'input[type="checkbox"][name="mulopimfwc_display_options[split_order_by_location]"]',
+        'select[name="mulopimfwc_display_options[split_order_unknown_items]"]',
         'select[name="mulopimfwc_display_options[location_switching_behavior]"]',
         'input[name="mulopimfwc_display_options[location_change_notification]"]',
         'textarea[name="mulopimfwc_display_options[location_notification_text]"]',
@@ -4585,6 +4587,10 @@ jQuery(document).ready(function ($) {
     var manualAlwaysDisableSelectors = [
         'input[name="mulopimfwc_display_options[location_require_selection]"]'
     ];
+
+    var $allowMixedLocationCart = $('input[type="checkbox"][name="mulopimfwc_display_options[allow_mixed_location_cart]"]');
+    var $splitOrderByLocation = $('input[type="checkbox"][name="mulopimfwc_display_options[split_order_by_location]"]');
+    var $splitOrderUnknownItems = $('select[name="mulopimfwc_display_options[split_order_unknown_items]"]');
 
     function getFieldValue($field) {
         if ($field.is(':checkbox')) {
@@ -4640,18 +4646,68 @@ jQuery(document).ready(function ($) {
         }
     }
 
-    function toggleManualModeSettings() {
+    function normalizeHiddenField($field) {
+        var name = $field.attr('name');
+        if (!name) {
+            return;
+        }
+
+        var selector = 'input[type="hidden"][name="' + name.replace(/"/g, '\\"') + '"]';
+        var $hidden = $(selector).not('[data-manual-hidden="true"]');
+
+        if ($hidden.length) {
+            $hidden
+                .attr('data-manual-hidden', 'true')
+                .attr('data-manual-for', name);
+        }
+    }
+
+    function getManualAssignmentState() {
         var assignmentMethod = $assignmentSelect.val();
         var isOptionalAssignment = assignmentMethod === 'manual' || assignmentMethod === 'inventory_based' || assignmentMethod === 'proximity_based';
         var isOptionalEnabled = isOptionalAssignment && $manualOptional.length && $manualOptional.is(':checked');
 
+        return {
+            isOptionalAssignment: isOptionalAssignment,
+            isOptionalEnabled: isOptionalEnabled,
+            isManualStrict: isOptionalAssignment && !isOptionalEnabled
+        };
+    }
+
+    function toggleSplitOrderSettings(state) {
+        if (!$splitOrderByLocation.length && !$splitOrderUnknownItems.length) {
+            return;
+        }
+
+        var manualState = state || getManualAssignmentState();
+        var allowMixed = $allowMixedLocationCart.length ? $allowMixedLocationCart.is(':checked') : false;
+        var splitEnabled = $splitOrderByLocation.length ? $splitOrderByLocation.is(':checked') : false;
+        var disableSplit = manualState.isManualStrict || !allowMixed;
+        var disableUnknown = manualState.isManualStrict || !allowMixed || !splitEnabled;
+
+        if ($splitOrderByLocation.length) {
+            normalizeHiddenField($splitOrderByLocation);
+            setFieldDisabled($splitOrderByLocation, disableSplit);
+            syncHiddenField($splitOrderByLocation, disableSplit);
+        }
+
+        if ($splitOrderUnknownItems.length) {
+            normalizeHiddenField($splitOrderUnknownItems);
+            setFieldDisabled($splitOrderUnknownItems, disableUnknown);
+            syncHiddenField($splitOrderUnknownItems, disableUnknown);
+        }
+    }
+
+    function toggleManualModeSettings() {
+        var state = getManualAssignmentState();
+
         if ($manualOptionalRow.length) {
-            $manualOptionalRow.toggle(isOptionalAssignment);
+            $manualOptionalRow.toggle(state.isOptionalAssignment);
         }
 
         if ($manualOptional.length) {
-            setFieldDisabled($manualOptional, !isOptionalAssignment);
-            syncHiddenField($manualOptional, !isOptionalAssignment);
+            setFieldDisabled($manualOptional, !state.isOptionalAssignment);
+            syncHiddenField($manualOptional, !state.isOptionalAssignment);
         }
 
         manualFieldSelectors.forEach(function (selector) {
@@ -4661,8 +4717,8 @@ jQuery(document).ready(function ($) {
             }
             $fields.each(function () {
                 var $field = $(this);
-                setFieldDisabled($field, isOptionalAssignment && !isOptionalEnabled);
-                syncHiddenField($field, isOptionalAssignment && !isOptionalEnabled);
+                setFieldDisabled($field, state.isManualStrict);
+                syncHiddenField($field, state.isManualStrict);
             });
         });
 
@@ -4673,14 +4729,18 @@ jQuery(document).ready(function ($) {
             }
             $fields.each(function () {
                 var $field = $(this);
-                setFieldDisabled($field, isOptionalAssignment);
-                syncHiddenField($field, isOptionalAssignment);
+                setFieldDisabled($field, state.isOptionalAssignment);
+                syncHiddenField($field, state.isOptionalAssignment);
             });
         });
+
+        toggleSplitOrderSettings(state);
     }
 
     toggleManualModeSettings();
     $assignmentSelect.on('change', toggleManualModeSettings);
     $manualOptional.on('change', toggleManualModeSettings);
+    $allowMixedLocationCart.on('change', toggleSplitOrderSettings);
+    $splitOrderByLocation.on('change', toggleSplitOrderSettings);
 });
 

@@ -67,7 +67,7 @@ $popup_data_json = wp_json_encode($popup_data);
                         $status = $MULOPIMFWC_Admin->is_location_open_now($term_id);
                     }
                     $status_label = $status['open']
-                        ? mulopimfwc_get_text_value('text_status_open')
+                        ? mulopimfwc_get_text_value('text_status_open_now')
                         : mulopimfwc_get_text_value('text_status_closed');
 
                     $address_line = trim(implode(', ', array_filter([$street, $city, $state, $postal, $country])));

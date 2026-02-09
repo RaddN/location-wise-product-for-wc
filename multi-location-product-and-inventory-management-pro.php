@@ -440,6 +440,38 @@ if (!function_exists('mulopimfwc_is_group_cart_enabled')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_split_order_enabled')) {
+    /**
+     * Check whether split order by location is enabled, respecting manual mode and mixed cart.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_split_order_enabled($options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (!isset($options['allow_mixed_location_cart']) || $options['allow_mixed_location_cart'] !== 'on') {
+            return false;
+        }
+
+        return isset($options['split_order_by_location']) && $options['split_order_by_location'] === 'on';
+    }
+}
+
 if (!function_exists('mulopimfwc_get_default_location_value')) {
     /**
      * Get default location setting, disabled in manual mode.
@@ -2380,6 +2412,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'admin/api-settings.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-based-shipping.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-shipping-payment-tax.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/order-split-by-location.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-coupons.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-reviews.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-wise-seo.php';
@@ -2663,6 +2696,12 @@ if (!function_exists('mulopimfwc_get_values')) {
          */
         public function display_transfer_costs_in_order($order)
         {
+            if ($order instanceof WC_Order) {
+                if ($order->get_meta('_mulopimfwc_split_parent') === 'yes' || $order->get_meta('_mulopimfwc_split_child') === 'yes') {
+                    return;
+                }
+            }
+
             $transfer_costs = $order->get_meta('_inter_location_transfer_costs');
 
             if (empty($transfer_costs) || !is_array($transfer_costs)) {
@@ -2722,6 +2761,10 @@ if (!function_exists('mulopimfwc_get_values')) {
         public function save_transfer_costs_to_order($order_id)
         {
             global $mulopimfwc_options;
+
+            if (function_exists('mulopimfwc_is_split_order_enabled') && mulopimfwc_is_split_order_enabled($mulopimfwc_options)) {
+                return;
+            }
 
             // Check if mixed location cart is enabled
             $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
@@ -2805,6 +2848,10 @@ if (!function_exists('mulopimfwc_get_values')) {
         public function add_inter_location_transfer_fees()
         {
             global $mulopimfwc_options;
+
+            if (function_exists('mulopimfwc_is_split_order_enabled') && mulopimfwc_is_split_order_enabled($mulopimfwc_options)) {
+                return;
+            }
 
             // Check if mixed location cart is enabled
             $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';
@@ -2988,6 +3035,10 @@ if (!function_exists('mulopimfwc_get_values')) {
         public function display_transfer_cost_breakdown()
         {
             global $mulopimfwc_options;
+
+            if (function_exists('mulopimfwc_is_split_order_enabled') && mulopimfwc_is_split_order_enabled($mulopimfwc_options)) {
+                return;
+            }
 
             // Check if mixed location cart is enabled
             $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off';

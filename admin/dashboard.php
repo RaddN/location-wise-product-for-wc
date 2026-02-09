@@ -2072,6 +2072,10 @@ class MULOPIMFWC_Dashboard
             $order = wc_get_order($order_id);
             if (!$order) continue;
 
+            if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
+                continue;
+            }
+
             $order_location = $order->get_meta('_store_location');
             $order_total = (float) $order->get_total();
             $order_status = $order->get_status();
@@ -2492,6 +2496,10 @@ class MULOPIMFWC_Dashboard
         foreach ($all_order_ids as $order_id) {
             $order = wc_get_order($order_id);
             if (!$order) {
+                continue;
+            }
+
+            if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
                 continue;
             }
             
@@ -3114,6 +3122,10 @@ class MULOPIMFWC_Dashboard
         foreach ($order_ids as $order_id) {
             $order = wc_get_order($order_id);
             if (!$order) {
+                continue;
+            }
+
+            if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
                 continue;
             }
 
