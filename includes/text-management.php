@@ -18,7 +18,6 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'default' => __('Select Your Location', 'multi-location-product-and-inventory-management'),
                         'description' => __('Main heading shown in all popup layouts.', 'multi-location-product-and-inventory-management'),
                         'type' => 'text',
-                        'manual_disable' => true,
                         'pro_only' => true,
                     ],
                     [
@@ -35,7 +34,6 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'description' => __('Placeholder for the default popup dropdown.', 'multi-location-product-and-inventory-management'),
                         'type' => 'text',
                         'template_only' => 'default',
-                        'manual_disable' => true,
                         'pro_only' => true,
                     ],
                     [
@@ -58,7 +56,6 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'default' => __('Select Location', 'multi-location-product-and-inventory-management'),
                         'description' => __('Primary action button text across popup layouts and selection lists.', 'multi-location-product-and-inventory-management'),
                         'type' => 'text',
-                        'manual_disable' => true,
                         'pro_only' => true,
                     ],
                     [
