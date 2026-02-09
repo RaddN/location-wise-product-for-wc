@@ -52,11 +52,20 @@ class Location_Wise_Products_Filter
     }
 
     /**
+     * Determine whether the product filter is allowed for the current assignment mode.
+     */
+    private function is_filter_context_allowed(): bool
+    {
+        return function_exists('mulopimfwc_is_manual_assignment_strict_mode')
+            && mulopimfwc_is_manual_assignment_strict_mode();
+    }
+
+    /**
      * Enqueue scripts and styles
      */
     public function enqueue_scripts()
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
+        if (!$this->is_filter_context_allowed()) {
             return;
         }
 
@@ -113,7 +122,7 @@ class Location_Wise_Products_Filter
      */
     public function render_filter_ui()
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
+        if (!$this->is_filter_context_allowed()) {
             return;
         }
 
@@ -143,7 +152,7 @@ class Location_Wise_Products_Filter
      */
     public function shortcode_filter_ui($atts)
     {
-        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
+        if (!$this->is_filter_context_allowed()) {
             return '';
         }
 

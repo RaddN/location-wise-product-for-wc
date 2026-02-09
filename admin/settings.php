@@ -359,8 +359,7 @@ Branding & Styling Settings', 'multi-location-product-and-inventory-management')
                     $checked = in_array($role_key, $selected_roles) ? 'checked' : '';
                     if ($role_key === 'customer') {
                         continue;
-                    }
-                    else if ($role_key === 'mulopimfwc_location_manager' && !mulopimfwc_premium_feature()) {
+                    } else if ($role_key === 'mulopimfwc_location_manager' && !mulopimfwc_premium_feature()) {
                         continue;
                     }
                     echo "<label><input type='checkbox' name='mulopimfwc_display_options[enable_location_by_user_role][]' value='" . esc_attr($role_key) . "' " . esc_attr($checked) . "> " . esc_html($role['name'] ?? $role_key) . "</label><br>";
@@ -519,7 +518,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     }
                     $disabled_attr = $is_manual_mode ? ' disabled' : '';
             ?>
-                <select id="herichical" name="mulopimfwc_display_options[herichical]"<?php echo $disabled_attr; ?>>
+                <select id="herichical" name="mulopimfwc_display_options[herichical]" <?php echo $disabled_attr; ?>>
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html__('on', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html__('off', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="seperately" <?php selected($value, 'seperately'); ?>><?php echo esc_html__('Seperately', 'multi-location-product-and-inventory-management'); ?></option>
@@ -601,11 +600,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     }
                     $disabled_attr = $is_manual_mode ? ' disabled' : '';
             ?>
-                <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}"<?php echo $disabled_attr; ?>><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
+                <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}" <?php echo $disabled_attr; ?>><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
             </textarea>
-            <?php if ($is_manual_mode) : ?>
-                <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
-            <?php endif; ?>
+                <?php if ($is_manual_mode) : ?>
+                    <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'); ?></p>
+                <?php endif; ?>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
                     <textarea disabled style="height: 10rem;" name="_pro[pro]" class="regular-text" placeholder="div#lwp-store-selector-modal{}"></textarea>
@@ -640,9 +639,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Inventory Sync Mode', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['inventory_sync_mode' => 'centralized']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['inventory_sync_mode' => 'centralized']);
                 $value = isset($options['inventory_sync_mode']) ? $options['inventory_sync_mode'] : 'centralized';
             ?>
             <select name="mulopimfwc_display_options[inventory_sync_mode]">
@@ -663,9 +662,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Low Stock Threshold', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['low_stock_threshold' => 5]);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['low_stock_threshold' => 5]);
                 $value = isset($options['low_stock_threshold']) ? $options['low_stock_threshold'] : 5;
 
                 if (mulopimfwc_premium_feature()) {
@@ -689,9 +688,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Low Stock Notification Recipients', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['low_stock_notification_recipients' => 'admin']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['low_stock_notification_recipients' => 'admin']);
                 $value = isset($options['low_stock_notification_recipients']) ? $options['low_stock_notification_recipients'] : 'admin';
         ?>
             <select name="mulopimfwc_display_options[low_stock_notification_recipients]">
@@ -712,9 +711,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Out of Stock Threshold', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['out_of_stock_threshold' => 0]);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['out_of_stock_threshold' => 0]);
                 $value = isset($options['out_of_stock_threshold']) ? $options['out_of_stock_threshold'] : 0;
                 if (mulopimfwc_premium_feature()) {
             ?>
@@ -752,9 +751,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Location-Based Shipping', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_location_shipping' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_location_shipping' => 'off']);
                 $value = isset($options['enable_location_shipping']) ? $options['enable_location_shipping'] : 'off';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -808,9 +807,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Shipping Calculation Method', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['shipping_calculation_method' => 'per_location']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['shipping_calculation_method' => 'per_location']);
                 $value = isset($options['shipping_calculation_method']) ? $options['shipping_calculation_method'] : 'per_location';
 
                 if (mulopimfwc_premium_feature()) {
@@ -840,9 +839,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Inter-Location Transfer Costs', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
                 $transfer_costs = isset($options['inter_location_transfer_costs']) ? $options['inter_location_transfer_costs'] : [];
 
                 // Get all locations
@@ -1040,9 +1039,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Location-wise Payment', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_location_payment_methods' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_location_payment_methods' => 'off']);
                 $value = isset($options['enable_location_payment_methods']) ? $options['enable_location_payment_methods'] : 'off';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -1107,9 +1106,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Location-based Taxes', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_location_taxes' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_location_taxes' => 'off']);
                 $value = isset($options['enable_location_taxes']) ? $options['enable_location_taxes'] : 'off';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
@@ -1164,9 +1163,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Tax Calculation for Mixed Cart', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['tax_calculation_mixed_cart' => 'separate']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['tax_calculation_mixed_cart' => 'separate']);
                 $value = isset($options['tax_calculation_mixed_cart']) ? $options['tax_calculation_mixed_cart'] : 'separate';
             ?>
             <select disabled name="mulopimfwc_display_options[tax_calculation_mixed_cart]">
@@ -1204,9 +1203,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Location Discounts', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_location_discounts' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_location_discounts' => 'off']);
                 $value = isset($options['enable_location_discounts']) ? $options['enable_location_discounts'] : 'off';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
@@ -1268,9 +1267,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location-Specific Coupon Codes', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_specific_coupons' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_specific_coupons' => 'off']);
                 $value = isset($options['location_specific_coupons']) ? $options['location_specific_coupons'] : 'off';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1300,9 +1299,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Coupon Behavior for Cross Location', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['cross_location_coupon_behavior' => 'restrict']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['cross_location_coupon_behavior' => 'restrict']);
                 $value = isset($options['cross_location_coupon_behavior']) ? $options['cross_location_coupon_behavior'] : 'restrict';
                 $choices = [
                     'restrict' => __('Totally restrict (default)', 'multi-location-product-and-inventory-management'),
@@ -1356,9 +1355,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location-Specific Reviews', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_specific_reviews' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_specific_reviews' => 'off']);
                 $value = isset($options['location_specific_reviews']) ? $options['location_specific_reviews'] : 'off';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
@@ -1393,9 +1392,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Show Location in Reviews', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['show_location_in_reviews' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['show_location_in_reviews' => 'on']);
                 $value = isset($options['show_location_in_reviews']) ? $options['show_location_in_reviews'] : 'on';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1440,9 +1439,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location in Meta Title', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_in_meta_title' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_in_meta_title' => 'on']);
                 $value = isset($options['location_in_meta_title']) ? $options['location_in_meta_title'] : 'on';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1472,9 +1471,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location in Meta Description', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_in_meta_description' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_in_meta_description' => 'on']);
                 $value = isset($options['location_in_meta_description']) ? $options['location_in_meta_description'] : 'on';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1504,9 +1503,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location Structured Data', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_structured_data' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_structured_data' => 'on']);
                 $value = isset($options['location_structured_data']) ? $options['location_structured_data'] : 'on';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1550,9 +1549,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location-Specific Email Templates', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_specific_emails' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_specific_emails' => 'off']);
                 $value = isset($options['location_specific_emails']) ? $options['location_specific_emails'] : 'off';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1582,9 +1581,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Include Location Logo in Emails', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['include_location_logo_emails' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['include_location_logo_emails' => 'on']);
                 $value = isset($options['include_location_logo_emails']) ? $options['include_location_logo_emails'] : 'on';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1614,9 +1613,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location-Specific Email Recipients', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_specific_email_recipients' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_specific_email_recipients' => 'on']);
                 $value = isset($options['location_specific_email_recipients']) ? $options['location_specific_email_recipients'] : 'on';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1723,9 +1722,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Business Hours', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_business_hours' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_business_hours' => 'off']);
                 $value = isset($options['enable_business_hours']) ? $options['enable_business_hours'] : 'off';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1755,9 +1754,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Display Hours on Location Archive', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['display_hours_archive_page' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['display_hours_archive_page' => 'off']);
                 $value = isset($options['display_hours_archive_page']) ? $options['display_hours_archive_page'] : 'off';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1787,9 +1786,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Restrict Purchasing to Open Hours', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['restrict_purchase_to_open_hours' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['restrict_purchase_to_open_hours' => 'off']);
                 $value = isset($options['restrict_purchase_to_open_hours']) ? $options['restrict_purchase_to_open_hours'] : 'off';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1836,9 +1835,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Location in URLs', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_location_urls' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_location_urls' => 'off']);
                 $value = isset($options['enable_location_urls']) ? $options['enable_location_urls'] : 'off';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1868,9 +1867,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('URL Location Format', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['url_location_format' => 'query_param']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['url_location_format' => 'query_param']);
                 $value = isset($options['url_location_format']) ? $options['url_location_format'] : 'query_param';
                 $location_url_prefix = isset($options['location_url_prefix']) ? $options['location_url_prefix'] : 'store-location';
 
@@ -1901,9 +1900,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location URL Prefix', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_url_prefix' => 'store-location']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_url_prefix' => 'store-location']);
                 $value = isset($options['location_url_prefix']) ? $options['location_url_prefix'] : 'store-location';
 
                 if (mulopimfwc_premium_feature()) {
@@ -1965,9 +1964,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location Display Position', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_display_position' => 'after_price']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_display_position' => 'after_price']);
                 $value = isset($options['location_display_position']) ? $options['location_display_position'] : 'after_price';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -1975,7 +1974,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 }
                 $disabled_attr = $is_manual_mode ? ' disabled' : '';
         ?>
-            <select name="mulopimfwc_display_options[location_display_position]"<?php echo $disabled_attr; ?>>
+            <select name="mulopimfwc_display_options[location_display_position]" <?php echo $disabled_attr; ?>>
                 <option value="after_title" <?php selected($value, 'after_title'); ?>><?php echo esc_html_e('After Product Title', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="after_price" <?php selected($value, 'after_price'); ?>><?php echo esc_html_e('After Product Price', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="before_add_to_cart" <?php selected($value, 'before_add_to_cart'); ?>><?php echo esc_html_e('Before Add to Cart Button', 'multi-location-product-and-inventory-management'); ?></option>
@@ -1995,9 +1994,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location Selector Layout', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_selector_layout' => 'list']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_selector_layout' => 'list']);
                 $value = isset($options['location_selector_layout']) ? $options['location_selector_layout'] : 'list';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -2007,14 +2006,14 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $label_class = $is_manual_mode ? ' mulopimfwc-setting-disabled' : '';
         ?>
             <label class="<?php echo esc_attr(mulopimfwc_get_pro_class(false) . $label_class); ?>">
-                <select <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', ' disabled ')); ?> name="mulopimfwc_display_options[location_selector_layout]"<?php echo $disabled_attr; ?>>
+                <select <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', ' disabled ')); ?> name="mulopimfwc_display_options[location_selector_layout]" <?php echo $disabled_attr; ?>>
                     <option value="list" <?php selected($value, 'list'); ?>><?php echo esc_html_e('List View', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="buttons" <?php selected($value, 'buttons'); ?>><?php echo esc_html_e('Button Style', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="select" <?php selected($value, 'select'); ?>><?php echo esc_html_e('Select Dropdown', 'multi-location-product-and-inventory-management'); ?></option>
                 </select>
                 <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Choose the layout style for the location selector on single product pages.', 'multi-location-product-and-inventory-management'))); ?></p>
             </label>
-            <?php
+        <?php
             },
             'lwp-location-selection-settings',
             'mulopimfwc_location_display_section'
@@ -2049,7 +2048,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Control the location-based product filter display on shop and archive pages.', 'multi-location-product-and-inventory-management') . '</p>';
             },
-            'lwp-location-selection-settings'
+            'lwp-product-filter-settings'
         );
 
         // Add Enable Product Filter field
@@ -2058,19 +2057,58 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Product Filter', 'multi-location-product-and-inventory-management'),
             function () {
                 if (mulopimfwc_premium_feature()) {
-                    $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                    $is_allowed = $this->is_manual_assignment_strict_mode();
                     $options = $this->get_display_options();
-                    if ($is_manual_mode) {
-                        $this->render_manual_hidden_input('enable_product_filter', $options['enable_product_filter'] ?? 'off');
+                    if (!$is_allowed) {
+                        echo '<input type="hidden" data-manual-hidden="true" data-manual-for="mulopimfwc_display_options[enable_product_filter]" name="mulopimfwc_display_options[enable_product_filter]" value="' . esc_attr($options['enable_product_filter'] ?? 'off') . '">';
                     }
-                    $message = $this->append_manual_disabled_note(__("Enable or disable automatic product filter display on shop/archive pages. Use shortcode [mulopimfwc_product_filter] to place it manually.", 'multi-location-product-and-inventory-management'));
-                    $this->render_advance_checkbox('enable_product_filter', $message, $is_manual_mode);
+                    $message = __("Enable or disable automatic product filter display on shop/archive pages. Use shortcode [mulopimfwc_product_filter] to place it manually.", 'multi-location-product-and-inventory-management');
+                    $message .= ' ' . __('Available only when Manual, Inventory-Based, or Proximity-Based assignment is enabled and Optional Location Selection is disabled.', 'multi-location-product-and-inventory-management');
+                    $this->render_advance_checkbox('enable_product_filter', $message, !$is_allowed);
                 } else {
                     $this->render_advance_checkbox('pro', __("Enable or disable automatic product filter display on shop/archive pages. Use shortcode [mulopimfwc_product_filter] to place it manually.", 'multi-location-product-and-inventory-management'), true, false);
                 }
             },
-            'lwp-location-selection-settings',
+            'lwp-product-filter-settings',
             'mulopimfwc_product_filter_section'
+        );
+
+        // recommended Dynamic AJAX Product Filters for WooCommerce plugins section
+        add_settings_section(
+            'recommended_plugins_section',
+            '',
+            function () {
+                $recommendation_url = 'https://plugincy.com/dynamic-ajax-product-filters-for-woocommerce/';
+                echo '<div class="mulopimfwc-highlight-card" style="display:none">';
+                echo '<div class="mulopimfwc-highlight-card-header">';
+                echo '<span class="mulopimfwc-highlight-card-icon" aria-hidden="true">';
+                echo '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="24" height="24" viewBox="0 0 24 24">';
+                echo '<path d="M0 0h24v24H0z" fill="#941F74"></path>';
+                echo '<path d="m8.087 5.761 0.594 -0.006h0.64l0.66 -0.003h1.381q1.056 0 2.114 -0.009h1.341l0.639 -0.006 0.597 0.003h0.523c0.753 0.108 1.252 0.444 1.758 1.002 0.357 0.889 0.312 1.763 0.309 2.712l0.003 0.631v1.32q0 1.008 0.009 2.016v1.284l0.006 0.608c-0.011 1.141 -0.083 1.82 -0.849 2.686 -0.572 0.407 -1.044 0.417 -1.734 0.399l-0.507 -0.011 -0.384 -0.013v-0.563l0.438 -0.063 0.57 -0.09 0.567 -0.086c0.549 -0.098 0.549 -0.098 0.862 -0.699 0.057 -0.44 0.057 -0.44 0.048 -0.933l0.003 -0.575 -0.003 -0.619 0.002 -0.636 -0.002 -1.333q-0.002 -1.02 0.003 -2.045l-0.002 -1.294 0.003 -0.619 -0.005 -0.575 -0.002 -0.506c-0.019 -0.48 -0.019 -0.48 -0.422 -0.99 -0.538 -0.18 -0.894 -0.214 -1.455 -0.223l-0.547 -0.009q-1.237 -0.013 -2.477 -0.019a141 141 0 0 1 -1.306 -0.015 157.5 157.5 0 0 0 -1.884 -0.017l-0.59 -0.013c-0.837 0.003 -1.352 0.028 -2.083 0.456 -0.515 0.879 -0.477 1.659 -0.464 2.661l-0.002 0.608q0 0.634 0.007 1.269 0.007 0.969 0 1.941l0.006 1.234 -0.003 0.585c0.013 0.836 0.026 1.344 0.461 2.073 0.482 0.42 0.75 0.476 1.383 0.5l0.507 0.027 0.384 0.006v0.563c-1.857 0.117 -1.857 0.117 -2.637 -0.329 -0.597 -0.693 -0.784 -1.203 -0.794 -2.117l-0.007 -0.569 -0.002 -0.61 -0.005 -0.631 -0.003 -1.323q-0.003 -1.01 -0.015 -2.021l-0.003 -1.287 -0.007 -0.609c0.011 -1.145 0.072 -1.83 0.847 -2.692 0.618 -0.413 0.806 -0.423 1.524 -0.426" fill="#F4E5EF"></path>';
+                echo '<path d="M10.875 14.25c0.599 -0.035 0.599 -0.035 1.125 0l0.375 0.75h4.5v0.563h-4.5l-0.375 0.75h-1.313l-0.375 -0.75H7.5V15l0.596 -0.021 0.776 -0.038 0.393 -0.013c0.754 -0.028 0.754 -0.028 1.383 -0.404z" fill="#FBF8FA"></path>';
+                echo '<path d="M13.875 11.063c0.679 -0.035 0.679 -0.035 1.313 0l0.375 0.75h1.313v0.563h-1.313l-0.375 0.75c-0.633 0.036 -0.633 0.036 -1.313 0l-0.375 -0.563a10.5 10.5 0 0 0 -1.349 -0.096l-0.402 -0.011 -1.272 -0.022 -0.862 -0.019Q8.558 12.39 7.5 12.375v-0.563l0.544 -0.007q0.999 -0.017 1.998 -0.041l0.865 -0.017q0.621 -0.011 1.244 -0.027l0.392 -0.005c0.404 -0.005 0.404 -0.005 0.957 -0.091z" fill="#FCF8FA"></path>';
+                echo '<path d="M9.738 7.817c0.575 0.058 0.575 0.058 0.806 0.338 0.507 0.435 1.059 0.373 1.698 0.38l0.402 0.011q0.633 0.015 1.266 0.022l0.859 0.019q1.053 0.024 2.106 0.039v0.563l-0.541 0.007q-0.996 0.017 -1.99 0.041l-0.861 0.017q-0.618 0.011 -1.239 0.027l-0.389 0.005c-0.716 0.015 -0.716 0.015 -1.309 0.375l-0.232 0.279c-0.563 0.071 -0.563 0.071 -1.125 0q-0.286 -0.276 -0.563 -0.563c-0.584 -0.137 -0.584 -0.137 -1.125 -0.188v-0.563l0.633 -0.164c0.684 -0.211 0.918 -0.572 1.605 -0.645" fill="#FCFAFC"></path>';
+                echo '<path d="M9.375 8.438q0.471 0.08 0.938 0.188v0.563l-0.938 0.188c-0.105 -0.363 -0.105 -0.363 -0.188 -0.75z" fill="#9A4289"></path>';
+                echo '<path d="m11.063 14.813 0.75 0.188 -0.188 0.75 -0.75 -0.188z" fill="#95297A"></path>';
+                echo '<path d="m14.25 11.625 0.75 0.188 -0.188 0.75 -0.75 -0.188z" fill="#A52679"></path>';
+                echo '<path d="M12.75 17.813h1.125v0.563H12.75z" fill="#EEDBE8"></path>';
+                echo '</svg>';
+                echo '</span>';
+                echo '<div class="mulopimfwc-highlight-card-title-wrap">';
+                echo '<span class="mulopimfwc-highlight-card-badge">' . esc_html__('Recommended', 'multi-location-product-and-inventory-management') . '</span>';
+                echo '<span class="mulopimfwc-highlight-card-title">' . esc_html__('Dynamic AJAX Product Filters for WooCommerce', 'multi-location-product-and-inventory-management') . '</span>';
+                echo '</div>';
+                echo '</div>';
+                echo '<p class="mulopimfwc-highlight-card-text">' . esc_html__('For the best filtering experience, use our Dynamic AJAX Product Filters for WooCommerce. It is fast, works with all themes and builders, and delivers smooth filtering without full page reloads.', 'multi-location-product-and-inventory-management') . '</p>';
+                echo '<div class="mulopimfwc-highlight-card-tags">';
+                echo '<span class="mulopimfwc-highlight-card-tag">' . esc_html__('Fast', 'multi-location-product-and-inventory-management') . '</span>';
+                echo '<span class="mulopimfwc-highlight-card-tag">' . esc_html__('Theme Friendly', 'multi-location-product-and-inventory-management') . '</span>';
+                echo '<span class="mulopimfwc-highlight-card-tag">' . esc_html__('Builder Ready', 'multi-location-product-and-inventory-management') . '</span>';
+                echo '</div>';
+                echo '<a class="mulopimfwc-highlight-card-button" href="' . esc_url($recommendation_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Learn More', 'multi-location-product-and-inventory-management') . '</a>';
+                echo '</div>';
+            },
+            'lwp-product-filter-settings'
         );
 
         // Add "Default Location/Warehouse" section (separate panel)
@@ -2094,38 +2132,38 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Default Location/Warehouse', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['default_location' => '']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['default_location' => '']);
                 $default_location = isset($options['default_location']) ? $options['default_location'] : '';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('default_location', $default_location);
                 }
                 $disabled_attr = $is_manual_mode ? ' disabled' : '';
-                
+
                 // Get all locations
                 $locations = get_terms([
                     'taxonomy' => 'mulopimfwc_store_location',
                     'hide_empty' => false,
                 ]);
-                
+
                 if (is_wp_error($locations)) {
                     $locations = [];
                 }
-            ?>
-                <select name="mulopimfwc_display_options[default_location]" id="default_location_select"<?php echo $disabled_attr; ?>>
-                    <option value=""><?php echo esc_html__('None', 'multi-location-product-and-inventory-management'); ?></option>
-                    <?php
-                    if (!empty($locations)) {
-                        foreach ($locations as $location) {
-                            $selected = selected($default_location, $location->slug, false);
-                            echo '<option value="' . esc_attr($location->slug) . '" ' . $selected . '>' . esc_html($location->name) . '</option>';
-                        }
+        ?>
+            <select name="mulopimfwc_display_options[default_location]" id="default_location_select" <?php echo $disabled_attr; ?>>
+                <option value=""><?php echo esc_html__('None', 'multi-location-product-and-inventory-management'); ?></option>
+                <?php
+                if (!empty($locations)) {
+                    foreach ($locations as $location) {
+                        $selected = selected($default_location, $location->slug, false);
+                        echo '<option value="' . esc_attr($location->slug) . '" ' . $selected . '>' . esc_html($location->name) . '</option>';
                     }
-                    ?>
-                </select>
-                <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Select a default location/warehouse. This location will be used automatically when popup is disabled and no location cookie is set.', 'multi-location-product-and-inventory-management'))); ?></p>
+                }
+                ?>
+            </select>
+            <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Select a default location/warehouse. This location will be used automatically when popup is disabled and no location cookie is set.', 'multi-location-product-and-inventory-management'))); ?></p>
             <?php
             },
             'lwp-default-location-settings',
@@ -2160,9 +2198,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Store Locator', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_store_locator' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_store_locator' => 'off']);
                 $value = isset($options['enable_store_locator']) ? $options['enable_store_locator'] : 'off';
 
                 if (mulopimfwc_premium_feature()) {
@@ -2192,9 +2230,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Map Provider', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['map_provider' => 'openstreetmap']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['map_provider' => 'openstreetmap']);
                 $value = isset($options['map_provider']) ? $options['map_provider'] : 'openstreetmap';
 
                 if (mulopimfwc_premium_feature()) {
@@ -2249,9 +2287,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Default Map Zoom Level', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['default_map_zoom' => '15']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['default_map_zoom' => '15']);
                 $value = isset($options['default_map_zoom']) ? $options['default_map_zoom'] : '15';
 
                 if (mulopimfwc_premium_feature()) {
@@ -2275,9 +2313,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Map Animation Type', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['map_animation_type' => 'setview']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['map_animation_type' => 'setview']);
                 $value = isset($options['map_animation_type']) ? $options['map_animation_type'] : 'setview';
 
                 if (mulopimfwc_premium_feature()) {
@@ -2311,9 +2349,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Map Animation Duration (seconds)', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['map_animation_duration' => '1.5']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['map_animation_duration' => '1.5']);
                 $value = isset($options['map_animation_duration']) ? $options['map_animation_duration'] : '1.5';
 
                 if (mulopimfwc_premium_feature()) {
@@ -2352,9 +2390,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Single Product Page Position', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['store_locator_single_product_position' => 'in_tabs']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['store_locator_single_product_position' => 'in_tabs']);
                 $value = isset($options['store_locator_single_product_position']) ? $options['store_locator_single_product_position'] : 'in_tabs';
 
                 if (mulopimfwc_premium_feature()) {
@@ -2390,9 +2428,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location Archive Page Position', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['store_locator_archive_position' => 'before_shop_loop']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['store_locator_archive_position' => 'before_shop_loop']);
                 $value = isset($options['store_locator_archive_position']) ? $options['store_locator_archive_position'] : 'before_shop_loop';
 
                 if (mulopimfwc_premium_feature()) {
@@ -2443,9 +2481,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Location Cookie Expiry (Days)', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_cookie_expiry' => '30']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_cookie_expiry' => '30']);
                 $value = isset($options['location_cookie_expiry']) ? $options['location_cookie_expiry'] : '30';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
@@ -2453,7 +2491,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     $this->render_manual_hidden_input('location_cookie_expiry', $value);
                 }
         ?>
-            <input type="number" name="mulopimfwc_display_options[location_cookie_expiry]" value="<?php echo esc_attr($value); ?>" min="1" max="365" class="small-text"<?php echo $is_manual_mode ? ' disabled' : ''; ?>>
+            <input type="number" name="mulopimfwc_display_options[location_cookie_expiry]" value="<?php echo esc_attr($value); ?>" min="1" max="365" class="small-text" <?php echo $is_manual_mode ? ' disabled' : ''; ?>>
             <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Number of days to remember user\'s location choice (1-365).', 'multi-location-product-and-inventory-management'))); ?></p>
         <?php
             },
@@ -2566,8 +2604,8 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['realtime_enabled']) ? $notif['realtime_enabled'] : '';
         ?>
-            <label class="mulopimfwc_switch">
-                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
+            <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on">On</span>
                 <span class="mulopimfwc_switch-off">Off</span>
@@ -2587,8 +2625,8 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['floating_enabled']) ? $notif['floating_enabled'] : '';
         ?>
-            <label class="mulopimfwc_switch">
-                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
+            <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on">On</span>
                 <span class="mulopimfwc_switch-off">Off</span>
@@ -2614,11 +2652,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     'top-left' => __('Top left', 'multi-location-product-and-inventory-management'),
                 ];
         ?>
-            <div class="mulopimfwc-position-selector">
+            <div class="mulopimfwc-position-selector <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
                 <div class="mulopimfwc-position-grid">
                     <?php foreach ($positions as $pos_key => $pos_label): ?>
-                        <label class="mulopimfwc-position-card <?php echo $value === $pos_key ? 'selected' : ''; ?>">
-                            <input type="radio" name="mulopimfwc_display_options[notification_settings][floating_position]" value="<?php echo esc_attr($pos_key); ?>" <?php checked($value, $pos_key); ?>>
+                        <label class="mulopimfwc-position-card <?php echo $value === $pos_key ? 'selected' : ''; ?> <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?>">
+                            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="radio" name="mulopimfwc_display_options[notification_settings][floating_position]" value="<?php echo esc_attr($pos_key); ?>" <?php checked($value, $pos_key); ?>>
                             <div class="mulopimfwc-position-visual">
                                 <div class="mulopimfwc-screen-preview">
                                     <?php
@@ -2722,6 +2760,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             <script>
                 jQuery(document).ready(function($) {
                     $('.mulopimfwc-position-card').on('click', function() {
+                        if ($(this).hasClass('disabled')) {
+                            return;
+                        }
                         $('.mulopimfwc-position-card').removeClass('selected');
                         $(this).addClass('selected');
                         $(this).find('input[type="radio"]').prop('checked', true);
@@ -2749,11 +2790,11 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     'compact' => __('Compact', 'multi-location-product-and-inventory-management'),
                 ];
         ?>
-            <div class="mulopimfwc-size-selector">
+            <div class="mulopimfwc-size-selector <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
                 <div class="mulopimfwc-size-grid">
                     <?php foreach ($sizes as $size_key => $size_label): ?>
-                        <label class="mulopimfwc-size-card <?php echo $value === $size_key ? 'selected' : ''; ?>">
-                            <input type="radio" name="mulopimfwc_display_options[notification_settings][floating_size]" value="<?php echo esc_attr($size_key); ?>" <?php checked($value, $size_key); ?>>
+                        <label class="mulopimfwc-size-card <?php echo $value === $size_key ? 'selected' : ''; ?> <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?>">
+                            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="radio" name="mulopimfwc_display_options[notification_settings][floating_size]" value="<?php echo esc_attr($size_key); ?>" <?php checked($value, $size_key); ?>>
                             <div class="mulopimfwc-size-visual">
                                 <div class="mulopimfwc-size-preview <?php echo $size_key; ?>">
                                     <div class="mulopimfwc-size-icon"></div>
@@ -2906,6 +2947,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             <script>
                 jQuery(document).ready(function($) {
                     $('.mulopimfwc-size-card').on('click', function() {
+                        if ($(this).hasClass('disabled')) {
+                            return;
+                        }
                         $('.mulopimfwc-size-card').removeClass('selected');
                         $(this).addClass('selected');
                         $(this).find('input[type="radio"]').prop('checked', true);
@@ -2940,8 +2984,10 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['floating_duration']) ? $notif['floating_duration'] : '6000';
         ?>
-            <input type="number" min="2000" step="500" name="mulopimfwc_display_options[notification_settings][floating_duration]" value="<?php echo esc_attr($value); ?>">
+            <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="number" min="2000" step="500" name="mulopimfwc_display_options[notification_settings][floating_duration]" value="<?php echo esc_attr($value); ?>">
             <p class="description"><?php echo esc_html__('How long floating alerts remain visible.', 'multi-location-product-and-inventory-management'); ?></p>
+            </div>
         <?php
             },
             'lwp-admin-notification-settings',
@@ -2956,7 +3002,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['notification_template']) ? $notif['notification_template'] : '[{event}] {message}';
         ?>
-            <textarea name="mulopimfwc_display_options[notification_settings][notification_template]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
+        <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <textarea <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?>
+            name="mulopimfwc_display_options[notification_settings][notification_template]" rows="3" class="large-text"><?php echo esc_textarea($value); ?></textarea>
             <p class="description"><?php echo esc_html__('Use {event} and {message} placeholders to customize floating and PWA text.', 'multi-location-product-and-inventory-management'); ?></p>
         <?php
             },
@@ -2972,8 +3020,8 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['pwa_enabled']) ? $notif['pwa_enabled'] : 'off';
         ?>
-            <label class="mulopimfwc_switch">
-                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][pwa_enabled]" value="on" <?php checked($value, 'on'); ?>>
+            <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][pwa_enabled]" value="on" <?php checked($value, 'on'); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on">On</span>
                 <span class="mulopimfwc_switch-off">Off</span>
@@ -2991,7 +3039,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Test PWA Notification', 'multi-location-product-and-inventory-management'),
             function () {
                 // In your settings page
-                echo '<button type="button" id="test-push-notification" class="button">Test Push Notification</button>';
+                echo '<button ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' type="button" id="test-push-notification" class="button">Test Push Notification</button>';
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -3005,54 +3053,54 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 global $mulopimfwc_locations;
 
                 $locations = (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) ? $mulopimfwc_locations : [];
-                ?>
-                <div id="mulopimfwc-test-notifications-panel" style="max-width: 900px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px;">
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
-                        <div>
-                            <strong style="display:block; margin-bottom:2px;"><?php echo esc_html__('Quick tests', 'multi-location-product-and-inventory-management'); ?></strong>
-                            <span class="description"><?php echo esc_html__('Use this to verify floating notifications and email delivery/routing.', 'multi-location-product-and-inventory-management'); ?></span>
-                        </div>
-                        <button type="button" id="mulopimfwc-test-floating-notification" class="button button-secondary">
-                            <?php echo esc_html__('Test Floating Notification', 'multi-location-product-and-inventory-management'); ?>
-                        </button>
+        ?>
+            <div id="mulopimfwc-test-notifications-panel <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>" style="max-width: 900px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+                    <div>
+                        <strong style="display:block; margin-bottom:2px;"><?php echo esc_html__('Quick tests', 'multi-location-product-and-inventory-management'); ?></strong>
+                        <span class="description"><?php echo esc_html__('Use this to verify floating notifications and email delivery/routing.', 'multi-location-product-and-inventory-management'); ?></span>
                     </div>
-
-                    <hr style="margin:14px 0; border:0; border-top:1px solid #e5e7eb;">
-
-                    <div style="display:grid; grid-template-columns: 220px 1fr; gap:10px; align-items:center;">
-                        <label for="mulopimfwc-test-email-recipient-type" style="font-weight:600;"><?php echo esc_html__('Send test email to', 'multi-location-product-and-inventory-management'); ?></label>
-                        <select id="mulopimfwc-test-email-recipient-type">
-                            <option value="admin_email"><?php echo esc_html__('Admin email', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="location_contact"><?php echo esc_html__('Location contact email', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="location_manager"><?php echo esc_html__('Location manager (assigned)', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="custom"><?php echo esc_html__('Custom email address', 'multi-location-product-and-inventory-management'); ?></option>
-                        </select>
-
-                        <label for="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location-label" style="font-weight:600;"><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></label>
-                        <select id="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location">
-                            <option value=""><?php echo esc_html__('Select a location…', 'multi-location-product-and-inventory-management'); ?></option>
-                            <?php foreach ($locations as $loc) : ?>
-                                <option value="<?php echo esc_attr(rawurldecode($loc->slug)); ?>"><?php echo esc_html($loc->name); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-
-                        <label for="mulopimfwc-test-email-manager" class="mulopimfwc-test-email-manager-label" style="font-weight:600;"><?php echo esc_html__('Location manager', 'multi-location-product-and-inventory-management'); ?></label>
-                        <select id="mulopimfwc-test-email-manager" class="mulopimfwc-test-email-manager">
-                            <option value="all"><?php echo esc_html__('All managers for selected location', 'multi-location-product-and-inventory-management'); ?></option>
-                        </select>
-
-                        <label for="mulopimfwc-test-email-custom" class="mulopimfwc-test-email-custom-label" style="font-weight:600;"><?php echo esc_html__('Email address', 'multi-location-product-and-inventory-management'); ?></label>
-                        <input type="email" id="mulopimfwc-test-email-custom" class="mulopimfwc-test-email-custom" placeholder="<?php echo esc_attr__('name@example.com', 'multi-location-product-and-inventory-management'); ?>" />
-                    </div>
-
-                    <div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                        <button type="button" id="mulopimfwc-send-test-email" class="button button-primary"><?php echo esc_html__('Send Test Email', 'multi-location-product-and-inventory-management'); ?></button>
-                        <span class="description"><?php echo esc_html__('This sends a simple test email and reports the resolved recipient(s).', 'multi-location-product-and-inventory-management'); ?></span>
-                    </div>
-
-                    <div id="mulopimfwc-test-email-result" style="margin-top:10px;"></div>
+                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" id="mulopimfwc-test-floating-notification" class="button button-secondary">
+                        <?php echo esc_html__('Test Floating Notification', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
                 </div>
-                <?php
+
+                <hr style="margin:14px 0; border:0; border-top:1px solid #e5e7eb;">
+
+                <div style="display:grid; grid-template-columns: 220px 1fr; gap:10px; align-items:center;">
+                    <label for="mulopimfwc-test-email-recipient-type" style="font-weight:600;"><?php echo esc_html__('Send test email to', 'multi-location-product-and-inventory-management'); ?></label>
+                    <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> id="mulopimfwc-test-email-recipient-type">
+                        <option value="admin_email"><?php echo esc_html__('Admin email', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="location_contact"><?php echo esc_html__('Location contact email', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="location_manager"><?php echo esc_html__('Location manager (assigned)', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="custom"><?php echo esc_html__('Custom email address', 'multi-location-product-and-inventory-management'); ?></option>
+                    </select>
+
+                    <label for="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location-label" style="font-weight:600;"><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></label>
+                    <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> id="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location">
+                        <option value=""><?php echo esc_html__('Select a location…', 'multi-location-product-and-inventory-management'); ?></option>
+                        <?php foreach ($locations as $loc) : ?>
+                            <option value="<?php echo esc_attr(rawurldecode($loc->slug)); ?>"><?php echo esc_html($loc->name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <label for="mulopimfwc-test-email-manager" class="mulopimfwc-test-email-manager-label" style="font-weight:600;"><?php echo esc_html__('Location manager', 'multi-location-product-and-inventory-management'); ?></label>
+                    <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> id="mulopimfwc-test-email-manager" class="mulopimfwc-test-email-manager">
+                        <option value="all"><?php echo esc_html__('All managers for selected location', 'multi-location-product-and-inventory-management'); ?></option>
+                    </select>
+
+                    <label for="mulopimfwc-test-email-custom" class="mulopimfwc-test-email-custom-label" style="font-weight:600;"><?php echo esc_html__('Email address', 'multi-location-product-and-inventory-management'); ?></label>
+                    <input  type="email" <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> id="mulopimfwc-test-email-custom" class="mulopimfwc-test-email-custom" placeholder="<?php echo esc_attr__('name@example.com', 'multi-location-product-and-inventory-management'); ?>" />
+                </div>
+
+                <div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" id="mulopimfwc-send-test-email" class="button button-primary"><?php echo esc_html__('Send Test Email', 'multi-location-product-and-inventory-management'); ?></button>
+                    <span class="description"><?php echo esc_html__('This sends a simple test email and reports the resolved recipient(s).', 'multi-location-product-and-inventory-management'); ?></span>
+                </div>
+
+                <div id="mulopimfwc-test-email-result" style="margin-top:10px;"></div>
+            </div>
+        <?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -3066,8 +3114,10 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['poll_interval']) ? $notif['poll_interval'] : '30000';
         ?>
-            <input type="number" min="5000" step="5000" name="mulopimfwc_display_options[notification_settings][poll_interval]" value="<?php echo esc_attr($value); ?>">
+            <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="number" min="5000" step="5000" name="mulopimfwc_display_options[notification_settings][poll_interval]" value="<?php echo esc_attr($value); ?>">
             <p class="description"><?php echo esc_html__('How often to check for new alerts (minimum 5000ms). Lower values increase server load.', 'multi-location-product-and-inventory-management'); ?></p>
+            </div>
         <?php
             },
             'lwp-admin-notification-settings',
@@ -3082,12 +3132,15 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['notification_style']) ? $notif['notification_style'] : 'modern';
         ?>
-            <select name="mulopimfwc_display_options[notification_settings][notification_style]">
+        <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?>
+             name="mulopimfwc_display_options[notification_settings][notification_style]">
                 <option value="modern" <?php selected($value, 'modern'); ?>><?php echo esc_html__('Modern', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="minimal" <?php selected($value, 'minimal'); ?>><?php echo esc_html__('Minimal', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="classic" <?php selected($value, 'classic'); ?>><?php echo esc_html__('Classic', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html__('Choose the visual style for floating notifications.', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
         <?php
             },
             'lwp-admin-notification-settings',
@@ -3102,8 +3155,8 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['sound_enabled']) ? $notif['sound_enabled'] : 'off';
         ?>
-            <label class="mulopimfwc_switch">
-                <input type="checkbox" name="mulopimfwc_display_options[notification_settings][sound_enabled]" value="on" <?php checked($value, 'on'); ?>>
+            <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][sound_enabled]" value="on" <?php checked($value, 'on'); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on">On</span>
                 <span class="mulopimfwc_switch-off">Off</span>
@@ -3130,9 +3183,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             "",
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
                 $defaults = [
                     'enabled' => 'off',
                     'new_order' => 'on',
@@ -3149,14 +3202,14 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     : $defaults;
                 $test_nonce = wp_create_nonce('mulopimfwc_test_social_channel');
         ?>
-            <div class="mulopimfwc-social-card" style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:10px;max-width:1100px;">
+            <div class="mulopimfwc-social-card <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>" style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:10px;max-width:1100px;">
                 <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
                     <div>
                         <h3 style="margin:0;"><?php echo esc_html__('Social Notifications', 'multi-location-product-and-inventory-management'); ?></h3>
                         <p class="description" style="margin:4px 0 0 0;"><?php echo esc_html__('Enable alerts and choose which events to send to your social/webhook destinations.', 'multi-location-product-and-inventory-management'); ?></p>
                     </div>
                     <label class="mulopimfwc_switch social-master-toggle">
-                        <input type="checkbox" name="mulopimfwc_display_options[social_notifications][enabled]" <?php checked($social['enabled'], 'on'); ?>>
+                        <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][enabled]" <?php checked($social['enabled'], 'on'); ?>>
                         <span class="mulopimfwc_slider round"></span>
                         <span class="mulopimfwc_switch-on">On</span>
                         <span class="mulopimfwc_switch-off">Off</span>
@@ -3164,19 +3217,19 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 </div>
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px;">
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][new_order]" <?php checked($social['new_order'], 'on'); ?>> <?php echo esc_html__('New order alerts', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][low_stock]" <?php checked($social['low_stock'], 'on'); ?>> <?php echo esc_html__('Low stock alerts', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][out_of_stock]" <?php checked($social['out_of_stock'], 'on'); ?>> <?php echo esc_html__('Out of stock alerts', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][daily_digest]" <?php checked($social['daily_digest'], 'on'); ?>> <?php echo esc_html__("Today's performance digest", 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][site_status]" <?php checked($social['site_status'], 'on'); ?>> <?php echo esc_html__('Site down / up monitor', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][payment_failed]" <?php checked(isset($social['payment_failed']) ? $social['payment_failed'] : 'off', 'on'); ?>> <?php echo esc_html__('Payment failed', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][order_refunded]" <?php checked(isset($social['order_refunded']) ? $social['order_refunded'] : 'off', 'on'); ?>> <?php echo esc_html__('Order refunded', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][order_cancelled]" <?php checked(isset($social['order_cancelled']) ? $social['order_cancelled'] : 'off', 'on'); ?>> <?php echo esc_html__('Order cancelled', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][order_completed]" <?php checked(isset($social['order_completed']) ? $social['order_completed'] : 'off', 'on'); ?>> <?php echo esc_html__('Order completed', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][high_value_order]" <?php checked(isset($social['high_value_order']) ? $social['high_value_order'] : 'off', 'on'); ?>> <?php echo esc_html__('High-value order', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][restocked]" <?php checked(isset($social['restocked']) ? $social['restocked'] : 'off', 'on'); ?>> <?php echo esc_html__('Restocked (back above low threshold)', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][low_review_alert]" <?php checked(isset($social['low_review_alert']) ? $social['low_review_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Low-rating product review', 'multi-location-product-and-inventory-management'); ?></label>
-                    <label><input type="checkbox" name="mulopimfwc_display_options[social_notifications][manager_change_alert]" <?php checked(isset($social['manager_change_alert']) ? $social['manager_change_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Manager change (added/updated)', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][new_order]" <?php checked($social['new_order'], 'on'); ?>> <?php echo esc_html__('New order alerts', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][low_stock]" <?php checked($social['low_stock'], 'on'); ?>> <?php echo esc_html__('Low stock alerts', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][out_of_stock]" <?php checked($social['out_of_stock'], 'on'); ?>> <?php echo esc_html__('Out of stock alerts', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][daily_digest]" <?php checked($social['daily_digest'], 'on'); ?>> <?php echo esc_html__("Today's performance digest", 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][site_status]" <?php checked($social['site_status'], 'on'); ?>> <?php echo esc_html__('Site down / up monitor', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][payment_failed]" <?php checked(isset($social['payment_failed']) ? $social['payment_failed'] : 'off', 'on'); ?>> <?php echo esc_html__('Payment failed', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_refunded]" <?php checked(isset($social['order_refunded']) ? $social['order_refunded'] : 'off', 'on'); ?>> <?php echo esc_html__('Order refunded', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_cancelled]" <?php checked(isset($social['order_cancelled']) ? $social['order_cancelled'] : 'off', 'on'); ?>> <?php echo esc_html__('Order cancelled', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_completed]" <?php checked(isset($social['order_completed']) ? $social['order_completed'] : 'off', 'on'); ?>> <?php echo esc_html__('Order completed', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][high_value_order]" <?php checked(isset($social['high_value_order']) ? $social['high_value_order'] : 'off', 'on'); ?>> <?php echo esc_html__('High-value order', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][restocked]" <?php checked(isset($social['restocked']) ? $social['restocked'] : 'off', 'on'); ?>> <?php echo esc_html__('Restocked (back above low threshold)', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][low_review_alert]" <?php checked(isset($social['low_review_alert']) ? $social['low_review_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Low-rating product review', 'multi-location-product-and-inventory-management'); ?></label>
+                    <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][manager_change_alert]" <?php checked(isset($social['manager_change_alert']) ? $social['manager_change_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Manager change (added/updated)', 'multi-location-product-and-inventory-management'); ?></label>
                 </div>
                 <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
                     <?php
@@ -3190,13 +3243,13 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                         <span id="mulopimfwc-digest-clock" data-start-utc="<?php echo esc_attr($now_utc); ?>" data-gmt-offset="<?php echo esc_attr($gmt_offset); ?>" data-tz-label="<?php echo esc_attr($tz_label); ?>">--:--:--</span>
                         <?php echo esc_html(')'); ?>
                     </label>
-                    <input type="time" name="mulopimfwc_display_options[social_notifications][daily_digest_time]" value="<?php echo esc_attr($social['daily_digest_time']); ?>" />
+                    <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="time" name="mulopimfwc_display_options[social_notifications][daily_digest_time]" value="<?php echo esc_attr($social['daily_digest_time']); ?>" />
                     <label style="font-weight:600;"><?php echo esc_html__('Default Telegram bot token', 'multi-location-product-and-inventory-management'); ?></label>
-                    <input type="text" name="mulopimfwc_display_options[social_notifications][telegram_bot_token]" value="<?php echo esc_attr($social['telegram_bot_token']); ?>" placeholder="<?php echo esc_attr__('123456:ABCDEF-TOKEN (optional global fallback)', 'multi-location-product-and-inventory-management'); ?>" style="min-width:260px;">
+                    <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[social_notifications][telegram_bot_token]" value="<?php echo esc_attr($social['telegram_bot_token']); ?>" placeholder="<?php echo esc_attr__('123456:ABCDEF-TOKEN (optional global fallback)', 'multi-location-product-and-inventory-management'); ?>" style="min-width:260px;">
                     <label style="font-weight:600;"><?php echo esc_html__('High value threshold', 'multi-location-product-and-inventory-management'); ?></label>
-                    <input type="number" step="0.01" min="0" name="mulopimfwc_display_options[social_notifications][high_value_threshold]" value="<?php echo esc_attr(isset($social['high_value_threshold']) ? $social['high_value_threshold'] : '500'); ?>" style="width:120px;">
+                    <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="number" step="0.01" min="0" name="mulopimfwc_display_options[social_notifications][high_value_threshold]" value="<?php echo esc_attr(isset($social['high_value_threshold']) ? $social['high_value_threshold'] : '500'); ?>" style="width:120px;">
                     <label style="font-weight:600;"><?php echo esc_html__('Low review rating threshold', 'multi-location-product-and-inventory-management'); ?></label>
-                    <input type="number" step="0.1" min="1" max="5" name="mulopimfwc_display_options[social_notifications][low_review_threshold]" value="<?php echo esc_attr(isset($social['low_review_threshold']) ? $social['low_review_threshold'] : '3'); ?>" style="width:80px;">
+                    <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="number" step="0.1" min="1" max="5" name="mulopimfwc_display_options[social_notifications][low_review_threshold]" value="<?php echo esc_attr(isset($social['low_review_threshold']) ? $social['low_review_threshold'] : '3'); ?>" style="width:80px;">
                 </div>
             </div>
 
@@ -3208,7 +3261,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                 <h4 style="margin:0;"><?php echo esc_html__('Social Channels', 'multi-location-product-and-inventory-management'); ?></h4>
                                 <p class="description" style="margin:4px 0 0 0;"><?php echo esc_html__('Add one or more destinations. Use webhook URL for Slack/Teams/Discord/Custom; use chat ID/token for Telegram.', 'multi-location-product-and-inventory-management'); ?></p>
                             </div>
-                            <button type="button" class="button button-primary" id="mulopimfwc-add-social-channel"><?php echo esc_html__('Add Social Media', 'multi-location-product-and-inventory-management'); ?></button>
+                            <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-primary" id="mulopimfwc-add-social-channel"><?php echo esc_html__('Add Social Media', 'multi-location-product-and-inventory-management'); ?></button>
                         </div>
                         <div id="mulopimfwc-social-empty" class="description" style="margin-top:10px;<?php echo empty($social['channels']) ? '' : 'display:none;'; ?>">
                             <?php echo esc_html__('No social media added yet. Click “Add Social Media” to create one.', 'multi-location-product-and-inventory-management'); ?>
@@ -3227,7 +3280,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
                                         <div>
                                             <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <select name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
+                                            <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
                                                 <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management'); ?></option>
                                                 <option value="slack" <?php selected($type, 'slack'); ?>>Slack</option>
                                                 <option value="teams" <?php selected($type, 'teams'); ?>>Microsoft Teams</option>
@@ -3238,23 +3291,23 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                         </div>
                                         <div>
                                             <label style="font-weight:600;"><?php echo esc_html__('Label (optional)', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][label]" value="<?php echo esc_attr($label); ?>" placeholder="<?php echo esc_attr__('e.g., Admin alerts', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][label]" value="<?php echo esc_attr($label); ?>" placeholder="<?php echo esc_attr__('e.g., Admin alerts', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
                                         </div>
                                         <div class="mulopimfwc-field-webhook">
                                             <label style="font-weight:600;"><?php echo esc_html__('Webhook URL', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="url" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][webhook]" value="<?php echo esc_attr($webhook); ?>" placeholder="<?php echo esc_attr__('https://hooks.slack.com/...', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="url" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][webhook]" value="<?php echo esc_attr($webhook); ?>" placeholder="<?php echo esc_attr__('https://hooks.slack.com/...', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
                                         </div>
                                         <div class="mulopimfwc-field-telegram">
                                             <label style="font-weight:600;"><?php echo esc_html__('Telegram Chat ID', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][chat_id]" value="<?php echo esc_attr($chat_id); ?>" placeholder="<?php echo esc_attr__('@username or 123456789', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][chat_id]" value="<?php echo esc_attr($chat_id); ?>" placeholder="<?php echo esc_attr__('@username or 123456789', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
                                         </div>
                                         <div class="mulopimfwc-field-telegram">
                                             <label style="font-weight:600;"><?php echo esc_html__('Bot Token (Telegram override)', 'multi-location-product-and-inventory-management'); ?></label>
-                                            <input type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][bot_token]" value="<?php echo esc_attr($bot_token); ?>" placeholder="<?php echo esc_attr__('Optional: token for this channel', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
+                                            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][bot_token]" value="<?php echo esc_attr($bot_token); ?>" placeholder="<?php echo esc_attr__('Optional: token for this channel', 'multi-location-product-and-inventory-management'); ?>" style="width:100%;">
                                         </div>
                                         <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
-                                            <button type="button" class="button test-social-channel" data-nonce="<?php echo esc_attr($test_nonce); ?>"><?php echo esc_html__('Test', 'multi-location-product-and-inventory-management'); ?></button>
-                                            <button type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
+                                            <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button test-social-channel" data-nonce="<?php echo esc_attr($test_nonce); ?>"><?php echo esc_html__('Test', 'multi-location-product-and-inventory-management'); ?></button>
+                                            <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
                                         </div>
                                     </div>
                                 </div>
@@ -3543,9 +3596,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Default Store Location', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['default_store_location' => '']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['default_store_location' => '']);
                 $value = isset($options['default_store_location']) ? $options['default_store_location'] : '';
 
                 // Get all locations
@@ -3580,9 +3633,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Remember Customer Location', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['remember_customer_location' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['remember_customer_location' => 'on']);
                 $value = isset($options['remember_customer_location']) ? $options['remember_customer_location'] : 'on';
         ?>
             <select name="mulopimfwc_display_options[remember_customer_location]">
@@ -3602,9 +3655,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Link Location to User Account', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['link_location_to_user' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['link_location_to_user' => 'on']);
                 $value = isset($options['link_location_to_user']) ? $options['link_location_to_user'] : 'on';
         ?>
             <select name="mulopimfwc_display_options[link_location_to_user]">
@@ -3640,9 +3693,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Enable Bulk Location Assignment', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_bulk_location_assignment' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_bulk_location_assignment' => 'on']);
                 $value = isset($options['enable_bulk_location_assignment']) ? $options['enable_bulk_location_assignment'] : 'on';
         ?>
             <select name="mulopimfwc_display_options[enable_bulk_location_assignment]">
@@ -3662,9 +3715,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
             __('Category-Based Location Assignment', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_category_based_location' => 'off']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_category_based_location' => 'off']);
                 $value = isset($options['enable_category_based_location']) ? $options['enable_category_based_location'] : 'off';
         ?>
             <select disabled name="mulopimfwc_display_options[enable_category_based_location]">
@@ -3719,9 +3772,9 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
             __('Product Priority Display', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['product_priority_display' => 'location_first']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['product_priority_display' => 'location_first']);
                 $value = isset($options['product_priority_display']) ? $options['product_priority_display'] : 'location_first';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
@@ -3746,7 +3799,7 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
                 </label>
             <?php } ?>
             <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Set display priority for location-specific vs. global products.', 'multi-location-product-and-inventory-management'))); ?></p>
-        <?php
+            <?php
             },
             'location-product-visibility-settings',
             'mulopimfwc_product_visibility_section'
@@ -3758,9 +3811,9 @@ Product Visibility Rules', 'multi-location-product-and-inventory-management'),
             __('Single Product Unavailable Behavior', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['single_product_unavailable_behavior' => 'show_404']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['single_product_unavailable_behavior' => 'show_404']);
                 $value = isset($options['single_product_unavailable_behavior']) ? $options['single_product_unavailable_behavior'] : 'show_404';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
 
@@ -3810,9 +3863,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Show Out of Stock Products', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['show_out_of_stock_products' => 'none']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['show_out_of_stock_products' => 'none']);
                 $value = isset($options['show_out_of_stock_products']) ? $options['show_out_of_stock_products'] : 'none';
         ?>
             <select name="mulopimfwc_display_options[show_out_of_stock_products]">
@@ -3834,9 +3887,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Stock Display Format', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['stock_display_format' => 'exact_count']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['stock_display_format' => 'exact_count']);
                 $value = isset($options['stock_display_format']) ? $options['stock_display_format'] : 'exact_count';
         ?>
             <select name="mulopimfwc_display_options[stock_display_format]">
@@ -3936,9 +3989,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Order Assignment Method', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['order_assignment_method' => 'customer_selection']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['order_assignment_method' => 'customer_selection']);
                 $value = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
         ?>
             <select name="mulopimfwc_display_options[order_assignment_method]">
@@ -3971,9 +4024,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Order Notification Recipients', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['order_notification_recipients' => 'admin']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['order_notification_recipients' => 'admin']);
                 $value = isset($options['order_notification_recipients']) ? $options['order_notification_recipients'] : 'admin';
 
                 if (mulopimfwc_premium_feature()) {
@@ -4189,6 +4242,14 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     $this->render_advance_select('split_order_unknown_items', $message, $select_options, true, false);
                     echo '</label>';
                 }
+
+                $notes = [
+                    'block_checkout' => __('Blocks checkout if any item lacks a valid location. Customers must update the cart or choose a valid location before placing the order.', 'multi-location-product-and-inventory-management'),
+                    'unassigned_child' => __('Moves unknown-location items into a separate unassigned child order while other locations are split into their own orders.', 'multi-location-product-and-inventory-management'),
+                    'keep_in_parent' => __('Keeps unknown-location items in the parent order while location-assigned items are split into child orders.', 'multi-location-product-and-inventory-management'),
+                ];
+
+                echo '<p class="description mulopimfwc-split-unknown-items-note" data-notes="' . esc_attr(wp_json_encode($notes)) . '"></p>';
             },
             'lwp-checkout-settings',
             'mulopimfwc_checkout_settings_section'
@@ -4253,9 +4314,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Location Switching Behavior', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_switching_behavior' => 'update_cart']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_switching_behavior' => 'update_cart']);
                 $value = isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -4263,13 +4324,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 }
                 $disabled_attr = $is_manual_mode ? ' disabled' : '';
         ?>
-            <select name="mulopimfwc_display_options[location_switching_behavior]"<?php echo $disabled_attr; ?>>
+            <select name="mulopimfwc_display_options[location_switching_behavior]" <?php echo $disabled_attr; ?>>
                 <option value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="update_cart" <?php selected($value, 'update_cart'); ?>><?php echo esc_html_e('Update Cart (Remove unavailable products)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
             <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('How to handle cart contents when a customer changes their location.', 'multi-location-product-and-inventory-management'))); ?></p>
-            <?php
+        <?php
             },
             'location-customer-experience-settings',
             'mulopimfwc_customer_experience_section'
@@ -4298,9 +4359,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             '',
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
                 $allow_mixed = isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
         ?>
             <?php if ($allow_mixed) : ?>
@@ -4351,9 +4412,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Enable Location Pickup', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_location_pickup' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_location_pickup' => 'on']);
                 $value = isset($options['enable_location_pickup']) ? $options['enable_location_pickup'] : 'on';
 
                 // Check if local pickup is enabled in WooCommerce settings
@@ -4400,9 +4461,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Pickup Preparation Time (Hours)', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['pickup_preparation_time' => '24']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['pickup_preparation_time' => '24']);
                 $value = isset($options['pickup_preparation_time']) ? $options['pickup_preparation_time'] : '24';
             ?>
             <input disabled type="number" name="mulopimfwc_display_options[pickup_preparation_time]" value="<?php echo esc_attr($value); ?>" min="1" max="168" class="small-text">
@@ -4434,9 +4495,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Enable Customer Location Tracking', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['enable_customer_location_tracking' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['enable_customer_location_tracking' => 'on']);
                 $value = isset($options['enable_customer_location_tracking']) ? $options['enable_customer_location_tracking'] : 'on';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -4446,7 +4507,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <select name="mulopimfwc_display_options[enable_customer_location_tracking]"<?php echo $disabled_attr; ?>>
+                <select name="mulopimfwc_display_options[enable_customer_location_tracking]" <?php echo $disabled_attr; ?>>
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
                 </select>
@@ -4471,9 +4532,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Customer Location History', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['customer_location_history' => 'latest']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['customer_location_history' => 'latest']);
                 $value = isset($options['customer_location_history']) ? $options['customer_location_history'] : 'latest';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -4481,7 +4542,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 }
                 $disabled_attr = $is_manual_mode ? ' disabled' : '';
         ?>
-            <select name="mulopimfwc_display_options[customer_location_history]"<?php echo $disabled_attr; ?>>
+            <select name="mulopimfwc_display_options[customer_location_history]" <?php echo $disabled_attr; ?>>
                 <option value="latest" <?php selected($value, 'latest'); ?>><?php echo esc_html_e('Store Latest Only', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="all" <?php selected($value, 'all'); ?>><?php echo esc_html_e('Store Full History', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('Do Not Store', 'multi-location-product-and-inventory-management'); ?></option>
@@ -4499,9 +4560,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             __('Location-based Recommendations', 'multi-location-product-and-inventory-management'),
             function () {
                 global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', ['location_based_recommendations' => 'on']);
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', ['location_based_recommendations' => 'on']);
                 $value = isset($options['location_based_recommendations']) ? $options['location_based_recommendations'] : 'on';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
@@ -4511,7 +4572,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <select name="mulopimfwc_display_options[location_based_recommendations]"<?php echo $disabled_attr; ?>>
+                <select name="mulopimfwc_display_options[location_based_recommendations]" <?php echo $disabled_attr; ?>>
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('on', 'multi-location-product-and-inventory-management'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('off', 'multi-location-product-and-inventory-management'); ?></option>
                 </select>
@@ -5293,6 +5354,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                                 cursor: pointer;
                                                 padding: 2px;
                                             }
+
                                             .mulopimfwc-branding-preview {
                                                 background: #f9fafb;
                                                 border: 1px solid #e5e7eb;
@@ -5300,17 +5362,20 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                                 padding: 20px;
                                                 margin-top: 20px;
                                             }
+
                                             .mulopimfwc-branding-preview h3 {
                                                 margin-top: 0;
                                                 color: #1f2937;
                                             }
+
                                             .mulopimfwc-preview-box {
                                                 background: #fff;
                                                 border-radius: 12px;
                                                 padding: 20px;
-                                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                                                 margin-top: 15px;
                                             }
+
                                             .mulopimfwc-preview-button {
                                                 display: inline-block;
                                                 padding: 10px 20px;
@@ -5319,7 +5384,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                                 cursor: default;
                                             }
                                         </style>
-                                        <?php 
+                                        <?php
                                         $options = $this->get_display_options();
                                         ?>
                                         <div class="mulopimfwc-branding-preview">
@@ -5493,6 +5558,11 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 </div>
                                 <div class="lwp-settings-section">
                                     <div class="lwp-settings-box">
+                                        <?php do_settings_sections('lwp-product-filter-settings'); ?>
+                                    </div>
+                                </div>
+                                <div class="lwp-settings-section">
+                                    <div class="lwp-settings-box">
                                         <?php do_settings_sections('lwp-default-location-settings'); ?>
                                     </div>
                                 </div>
@@ -5591,6 +5661,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                 background: #dc2626 !important;
                                 border-color: #b91c1c !important;
                                 box-shadow: 0 0 0 1px #dc2626 !important;
+                            }
+
+                            @media (max-width: 600px) {
+                                .lwp-reset-settings-form {
+                                    margin: 0;
+                                }
                             }
                         </style>
 
@@ -7184,12 +7260,12 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     function toggleDefaultTemplateFields() {
                         var templateSelection = $('#template_selection').val();
                         var isDefault = (templateSelection === 'default');
-                        
+
                         // Find all fields that should only show for default template
                         $('.mulopimfwc-default-template-only').each(function() {
                             var $field = $(this);
                             var $row = $field.closest('tr');
-                            
+
                             if (isDefault) {
                                 $row.show();
                                 $field.show();
@@ -7220,9 +7296,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     {
 
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         return $options;
     }
 
@@ -7282,7 +7358,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $this->render_manual_hidden_input('strict_filtering', $strict);
         }
     ?>
-        <select id="strict_filtering" name="mulopimfwc_display_options[strict_filtering]"<?php echo $is_manual_mode ? ' disabled' : ''; ?>>
+        <select id="strict_filtering" name="mulopimfwc_display_options[strict_filtering]" <?php echo $is_manual_mode ? ' disabled' : ''; ?>>
             <option value="enabled" <?php selected($strict, 'enabled'); ?>><?php echo esc_html_e('Enabled (Only show products from selected location)', 'multi-location-product-and-inventory-management'); ?></option>
             <option value="disabled" <?php selected($strict, 'disabled'); ?>><?php echo esc_html_e('Disabled (Show all products regardless of location)', 'multi-location-product-and-inventory-management'); ?></option>
         </select>
@@ -7536,7 +7612,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 <div class="mulopimfwc-text-management-intro__actions">';
 
         if (!empty($translation_locales)) {
-            echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--translate">
+            echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--translate '.(!mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : '').'">
                     <div class="mulopimfwc-text-action-card__header">
                         <div class="mulopimfwc-text-action-card__icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -7548,8 +7624,8 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                             <p class="mulopimfwc-text-action-subtitle">' . esc_html__('Apply a preset language pack to all text fields.', 'multi-location-product-and-inventory-management') . '</p>
                         </div>
                     </div>
-                    <div class="mulopimfwc-text-action-row">
-                        <select id="mulopimfwc-text-translate-select" class="mulopimfwc-text-translate-select">
+                    <div class="mulopimfwc-text-action-row ">
+                        <select '.(!mulopimfwc_premium_feature() ? 'disabled' : '').' id="mulopimfwc-text-translate-select" class="mulopimfwc-text-translate-select">
                             <option value="">' . esc_html__('Select language', 'multi-location-product-and-inventory-management') . '</option>';
             foreach ($translation_locales as $locale_code => $locale_data) {
                 $label = $locale_data['label'] ?? $locale_code;
@@ -7561,13 +7637,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 echo '<option value="' . esc_attr($locale_code) . '">' . esc_html($display) . '</option>';
             }
             echo '</select>
-                        <button type="button" id="mulopimfwc-text-translate-apply" class="button button-primary">' . esc_html__('Apply Translation', 'multi-location-product-and-inventory-management') . '</button>
+                        <button '.(!mulopimfwc_premium_feature() ? 'disabled' : '').' type="button" id="mulopimfwc-text-translate-apply" class="button button-primary">' . esc_html__('Apply Translation', 'multi-location-product-and-inventory-management') . '</button>
                     </div>
                     <p class="mulopimfwc-text-management-intro__note">' . esc_html__('Applying a language will replace current text values. Save changes to keep them.', 'multi-location-product-and-inventory-management') . '</p>
                 </div>';
         }
 
-        echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--reset">
+        echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--reset '.(!mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : '').'">
                 <div class="mulopimfwc-text-action-card__header">
                     <div class="mulopimfwc-text-action-card__icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -7580,7 +7656,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     </div>
                 </div>';
         wp_nonce_field('mulopimfwc_reset_text_management_action', 'mulopimfwc_reset_text_management_nonce');
-        echo '<button type="submit" name="mulopimfwc_reset_text_management" value="1" class="button mulopimfwc-text-reset-button" formaction="' . esc_url(menu_page_url('multi-location-product-and-inventory-management-settings', false)) . '" onclick="return confirm(\'' . esc_js(__('Reset all text fields to their default values? This action cannot be undone.', 'multi-location-product-and-inventory-management')) . '\');">
+        echo '<button '.(!mulopimfwc_premium_feature() ? 'disabled' : '').' type="submit" name="mulopimfwc_reset_text_management" value="1" class="button mulopimfwc-text-reset-button" formaction="' . esc_url(menu_page_url('multi-location-product-and-inventory-management-settings', false)) . '" onclick="return confirm(\'' . esc_js(__('Reset all text fields to their default values? This action cannot be undone.', 'multi-location-product-and-inventory-management')) . '\');">
                     ' . esc_html__('Reset Text to Defaults', 'multi-location-product-and-inventory-management') . '
                 </button>
                 <p class="mulopimfwc-text-management-intro__note">' . esc_html__('Reset only the Text Management fields to their defaults.', 'multi-location-product-and-inventory-management') . '</p>
@@ -7643,7 +7719,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $icon = $group['icon'] ?? '';
             $fields = $group['fields'] ?? [];
 
-            echo '<div class="lwp-settings-section"><div class="lwp-settings-box">';
+            echo '<div class="lwp-settings-section '.(!mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : '').'"><div class="lwp-settings-box">';
             echo '<div class="mulopimfwc-text-group__header">';
             if (!empty($icon)) {
                 echo '<div class="mulopimfwc-text-group__icon">' . $icon . '</div>';
@@ -7728,9 +7804,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
 
         if ($type === 'textarea') {
             $rows = $rows > 0 ? $rows : 2;
-            echo '<textarea id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . $disabled_attr . '>' . esc_textarea($value) . '</textarea>';
+            echo '<textarea '.(!mulopimfwc_premium_feature() ? 'disabled' : '').' id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . $disabled_attr . '>' . esc_textarea($value) . '</textarea>';
         } else {
-            echo '<input type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text"' . $disabled_attr . '>';
+            echo '<input '.(!mulopimfwc_premium_feature() ? 'disabled' : '').' type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text"' . $disabled_attr . '>';
         }
 
         if ($pro_locked) {
@@ -7774,7 +7850,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             }
             ?>
         </select>
-<?php
+        <?php
         if (isset($message) && !empty($message)) {
             echo "<p class='description' style='max-width: 800px;'>" . wp_kses($message, $mulopimfwc_allowed_tags) . "</p>";
         }
@@ -7796,91 +7872,91 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $field_id = 'branding_' . $field_name;
         $input_name = 'mulopimfwc_display_options[branding_' . $field_name . ']';
         $value = !empty($current_value) ? $current_value : $default_value;
-        
+
         // Default recommended colors if not provided
         if (empty($recommended_colors)) {
             $recommended_colors = ['#000000', '#ffffff', '#f5f5f5', '#e0e0e0', '#808080', '#6366f1'];
         }
         ?>
-        <div class="mulopimfwc-color-picker-wrapper" data-field-id="<?php echo esc_attr($field_id); ?>" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 10px;">
+        <div class="mulopimfwc-color-picker-wrapper <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>" data-field-id="<?php echo esc_attr($field_id); ?>" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                 <div class="mulopimfwc-color-preview" style="width: 48px; height: 48px; border-radius: 8px; background: <?php echo esc_attr($value); ?>; border: 2px solid #d1d5db; flex-shrink: 0; cursor: pointer;"></div>
-                <input type="color" id="<?php echo esc_attr($field_id); ?>_color" name="<?php echo esc_attr($input_name); ?>" value="<?php echo esc_attr($value); ?>" style="display: none;" />
-                <input type="text" id="<?php echo esc_attr($field_id); ?>_hex" value="<?php echo esc_attr($value); ?>" style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; font-size: 13px;" placeholder="#000000" />
-                <button type="button" class="button mulopimfwc-color-reset" data-default="<?php echo esc_attr($default_value); ?>" style="padding: 8px 16px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;"><?php echo esc_html__('Reset', 'multi-location-product-and-inventory-management'); ?></button>
+                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="color" id="<?php echo esc_attr($field_id); ?>_color" name="<?php echo esc_attr($input_name); ?>" value="<?php echo esc_attr($value); ?>" style="display: none;" />
+                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" id="<?php echo esc_attr($field_id); ?>_hex" value="<?php echo esc_attr($value); ?>" style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; font-size: 13px;" placeholder="#000000" />
+                <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button mulopimfwc-color-reset" data-default="<?php echo esc_attr($default_value); ?>" style="padding: 8px 16px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;"><?php echo esc_html__('Reset', 'multi-location-product-and-inventory-management'); ?></button>
             </div>
             <div class="mulopimfwc-color-swatches" style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <?php foreach ($recommended_colors as $rec_color) : ?>
-                    <div class="mulopimfwc-color-swatch" data-color="<?php echo esc_attr($rec_color); ?>" style="width: 32px; height: 32px; border-radius: 50%; background: <?php echo esc_attr($rec_color); ?>; border: 2px solid <?php echo ($rec_color === $value) ? '#6366f1' : '#d1d5db'; ?>; cursor: pointer; transition: all 0.2s;" title="<?php echo esc_attr($rec_color); ?>"></div>
+                    <div class="mulopimfwc-color-swatch <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?>" data-color="<?php echo esc_attr($rec_color); ?>" style="width: 32px; height: 32px; border-radius: 50%; background: <?php echo esc_attr($rec_color); ?>; border: 2px solid <?php echo ($rec_color === $value) ? '#6366f1' : '#d1d5db'; ?>; cursor: pointer; transition: all 0.2s;" title="<?php echo esc_attr($rec_color); ?>"></div>
                 <?php endforeach; ?>
             </div>
         </div>
         <script>
-        (function() {
-            var wrapper = document.querySelector('[data-field-id="<?php echo esc_js($field_id); ?>"]');
-            if (!wrapper) return;
-            
-            var colorInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_color');
-            var hexInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_hex');
-            var preview = wrapper.querySelector('.mulopimfwc-color-preview');
-            var resetBtn = wrapper.querySelector('.mulopimfwc-color-reset');
-            var swatches = wrapper.querySelectorAll('.mulopimfwc-color-swatch');
-            
-            // Update preview and hex input when color input changes
-            colorInput.addEventListener('change', function() {
-                preview.style.background = this.value;
-                hexInput.value = this.value;
-                updateSwatchBorders();
-            });
-            
-            // Update color input and preview when hex input changes
-            hexInput.addEventListener('change', function() {
-                var val = this.value.trim();
-                if (/^#[0-9A-F]{6}$/i.test(val)) {
-                    colorInput.value = val;
-                    preview.style.background = val;
+            (function() {
+                var wrapper = document.querySelector('[data-field-id="<?php echo esc_js($field_id); ?>"]');
+                if (!wrapper) return;
+
+                var colorInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_color');
+                var hexInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_hex');
+                var preview = wrapper.querySelector('.mulopimfwc-color-preview');
+                var resetBtn = wrapper.querySelector('.mulopimfwc-color-reset');
+                var swatches = wrapper.querySelectorAll('.mulopimfwc-color-swatch:not(.disabled)');
+
+                // Update preview and hex input when color input changes
+                colorInput.addEventListener('change', function() {
+                    preview.style.background = this.value;
+                    hexInput.value = this.value;
                     updateSwatchBorders();
+                });
+
+                // Update color input and preview when hex input changes
+                hexInput.addEventListener('change', function() {
+                    var val = this.value.trim();
+                    if (/^#[0-9A-F]{6}$/i.test(val)) {
+                        colorInput.value = val;
+                        preview.style.background = val;
+                        updateSwatchBorders();
+                    }
+                });
+
+                // Click preview to open color picker
+                preview.addEventListener('click', function() {
+                    colorInput.click();
+                });
+
+                // Reset button
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', function() {
+                        var defaultVal = this.getAttribute('data-default');
+                        colorInput.value = defaultVal;
+                        hexInput.value = defaultVal;
+                        preview.style.background = defaultVal;
+                        updateSwatchBorders();
+                    });
                 }
-            });
-            
-            // Click preview to open color picker
-            preview.addEventListener('click', function() {
-                colorInput.click();
-            });
-            
-            // Reset button
-            if (resetBtn) {
-                resetBtn.addEventListener('click', function() {
-                    var defaultVal = this.getAttribute('data-default');
-                    colorInput.value = defaultVal;
-                    hexInput.value = defaultVal;
-                    preview.style.background = defaultVal;
-                    updateSwatchBorders();
-                });
-            }
-            
-            // Swatch selection
-            swatches.forEach(function(swatch) {
-                swatch.addEventListener('click', function() {
-                    var color = this.getAttribute('data-color');
-                    colorInput.value = color;
-                    hexInput.value = color;
-                    preview.style.background = color;
-                    updateSwatchBorders();
-                });
-            });
-            
-            // Update swatch borders based on current value
-            function updateSwatchBorders() {
-                var currentVal = colorInput.value.toLowerCase();
+
+                // Swatch selection
                 swatches.forEach(function(swatch) {
-                    var swatchColor = swatch.getAttribute('data-color').toLowerCase();
-                    swatch.style.borderColor = (swatchColor === currentVal) ? '#6366f1' : '#d1d5db';
+                    swatch.addEventListener('click', function() {
+                        var color = this.getAttribute('data-color');
+                        colorInput.value = color;
+                        hexInput.value = color;
+                        preview.style.background = color;
+                        updateSwatchBorders();
+                    });
                 });
-            }
-        })();
+
+                // Update swatch borders based on current value
+                function updateSwatchBorders() {
+                    var currentVal = colorInput.value.toLowerCase();
+                    swatches.forEach(function(swatch) {
+                        var swatchColor = swatch.getAttribute('data-color').toLowerCase();
+                        swatch.style.borderColor = (swatchColor === currentVal) ? '#6366f1' : '#d1d5db';
+                    });
+                }
+            })();
         </script>
-        <?php
+    <?php
     }
 
     /**
@@ -7892,9 +7968,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $value = isset($options['branding_popup_background']) ? $options['branding_popup_background'] : '#ffffff';
         $recommended = ['#ffffff', '#f9fafb', '#f5f5f5', '#fef3c7', '#e0f2fe', '#fce7f3'];
         $this->render_color_picker('popup_background', $value, '#ffffff', $recommended);
-        ?>
+    ?>
         <p class="description"><?php echo esc_html__('Background color for popup/modal panels.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    <?php
     }
 
     public function branding_popup_text_field_callback()
@@ -7903,19 +7979,21 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $value = isset($options['branding_popup_text']) ? $options['branding_popup_text'] : '#1d1b16';
         $recommended = ['#1d1b16', '#000000', '#1f2937', '#374151', '#4b5563', '#6b7280'];
         $this->render_color_picker('popup_text', $value, '#1d1b16', $recommended);
-        ?>
+    ?>
         <p class="description"><?php echo esc_html__('Text color for popup/modal content.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    <?php
     }
 
     public function branding_popup_overlay_field_callback()
     {
         $options = $this->get_display_options();
         $value = isset($options['branding_popup_overlay']) ? $options['branding_popup_overlay'] : 'rgba(15, 23, 42, 0.65)';
-        ?>
-        <input type="text" name="mulopimfwc_display_options[branding_popup_overlay]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="rgba(15, 23, 42, 0.65)" />
-        <p class="description"><?php echo esc_html__('Background color for popup overlay (supports rgba format).', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    ?>
+        <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[branding_popup_overlay]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="rgba(15, 23, 42, 0.65)" />
+            <p class="description"><?php echo esc_html__('Background color for popup overlay (supports rgba format).', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+    <?php
     }
 
     public function branding_primary_color_field_callback()
@@ -7924,9 +8002,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $value = isset($options['branding_primary_color']) ? $options['branding_primary_color'] : '#2a9d8f';
         $recommended = ['#2a9d8f', '#2563eb', '#059669', '#0d9488', '#14b8a6', '#6366f1'];
         $this->render_color_picker('primary_color', $value, '#2a9d8f', $recommended);
-        ?>
+    ?>
         <p class="description"><?php echo esc_html__('Primary color used for buttons, gradients, and main interactive elements. This replaces the button background color.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    <?php
     }
 
     public function branding_secondary_color_field_callback()
@@ -7935,9 +8013,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $value = isset($options['branding_secondary_color']) ? $options['branding_secondary_color'] : '#f4a261';
         $recommended = ['#f4a261', '#f26419', '#f59e0b', '#ea580c', '#dc2626', '#ef4444'];
         $this->render_color_picker('secondary_color', $value, '#f4a261', $recommended);
-        ?>
+    ?>
         <p class="description"><?php echo esc_html__('Secondary color used for button hover states, gradients, and complementary elements. This replaces the button hover background color.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    <?php
     }
 
     public function branding_border_color_field_callback()
@@ -7946,9 +8024,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $value = isset($options['branding_border_color']) ? $options['branding_border_color'] : '#e7e0d6';
         $recommended = ['#e7e0d6', '#e5e7eb', '#d1d5db', '#9ca3af', '#6b7280', '#4b5563'];
         $this->render_color_picker('border_color', $value, '#e7e0d6', $recommended);
-        ?>
+    ?>
         <p class="description"><?php echo esc_html__('Border color for popups, cards, inputs, and other bordered elements.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    <?php
     }
 
     public function branding_button_text_field_callback()
@@ -7957,19 +8035,21 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         $value = isset($options['branding_button_text']) ? $options['branding_button_text'] : '#ffffff';
         $recommended = ['#ffffff', '#f9fafb', '#f3f4f6', '#e5e7eb', '#ffffff', '#ffffff'];
         $this->render_color_picker('button_text', $value, '#ffffff', $recommended);
-        ?>
+    ?>
         <p class="description"><?php echo esc_html__('Text color for buttons.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    <?php
     }
 
     public function branding_font_size_field_callback()
     {
         $options = $this->get_display_options();
         $value = isset($options['branding_font_size']) ? $options['branding_font_size'] : '15px';
-        ?>
-        <input type="text" name="mulopimfwc_display_options[branding_font_size]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="15px" />
-        <p class="description"><?php echo esc_html__('Base font size (e.g., 15px, 16px, 1rem).', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    ?>
+        <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[branding_font_size]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="15px" />
+            <p class="description"><?php echo esc_html__('Base font size (e.g., 15px, 16px, 1rem).', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+    <?php
     }
 
     public function branding_font_family_field_callback()
@@ -7990,33 +8070,40 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'Montserrat' => 'Montserrat',
             'Poppins' => 'Poppins',
         ];
-        ?>
-        <select name="mulopimfwc_display_options[branding_font_family]" class="regular-text">
-            <?php foreach ($font_options as $font => $label) : ?>
-                <option value="<?php echo esc_attr($font); ?>" <?php selected($value, $font); ?>><?php echo esc_html($label); ?></option>
-            <?php endforeach; ?>
-        </select>
-        <p class="description"><?php echo esc_html__('Font family for popup and frontend elements.', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    ?>
+        <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+
+            <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> name="mulopimfwc_display_options[branding_font_family]" class="regular-text">
+                <?php foreach ($font_options as $font => $label) : ?>
+                    <option value="<?php echo esc_attr($font); ?>" <?php selected($value, $font); ?>><?php echo esc_html($label); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php echo esc_html__('Font family for popup and frontend elements.', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+    <?php
     }
 
     public function branding_box_shadow_field_callback()
     {
         $options = $this->get_display_options();
         $value = isset($options['branding_box_shadow']) ? $options['branding_box_shadow'] : '0 18px 45px rgba(24, 24, 24, 0.18)';
-        ?>
-        <input type="text" name="mulopimfwc_display_options[branding_box_shadow]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="0 18px 45px rgba(24, 24, 24, 0.18)" />
-        <p class="description"><?php echo esc_html__('Box shadow for popups and cards (e.g., 0 18px 45px rgba(24, 24, 24, 0.18)).', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    ?>
+        <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[branding_box_shadow]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="0 18px 45px rgba(24, 24, 24, 0.18)" />
+            <p class="description"><?php echo esc_html__('Box shadow for popups and cards (e.g., 0 18px 45px rgba(24, 24, 24, 0.18)).', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+    <?php
     }
 
     public function branding_border_radius_field_callback()
     {
         $options = $this->get_display_options();
         $value = isset($options['branding_border_radius']) ? $options['branding_border_radius'] : '20px';
-        ?>
-        <input type="text" name="mulopimfwc_display_options[branding_border_radius]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="20px" />
-        <p class="description"><?php echo esc_html__('Border radius for popups and buttons (e.g., 20px, 10px, 5px).', 'multi-location-product-and-inventory-management'); ?></p>
-        <?php
+    ?>
+        <div class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
+            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="text" name="mulopimfwc_display_options[branding_border_radius]" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="20px" />
+            <p class="description"><?php echo esc_html__('Border radius for popups and buttons (e.g., 20px, 10px, 5px).', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+<?php
     }
 }

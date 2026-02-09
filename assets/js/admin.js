@@ -3108,7 +3108,8 @@ jQuery(document).ready(function ($) {
     // handle Display Location on Single Product toggle
 
     const $enableLocationSingleProduct = $('input[name="mulopimfwc_display_options[display_location_single_product]"]');
-    const $relatedSettings = $enableLocationSingleProduct.closest('table').find('input, select').not($enableLocationSingleProduct);
+    const $hid_outof_stock = $('input[name="mulopimfwc_display_options[hide_out_of_stock_locations]"]');
+    const $relatedSettings = $enableLocationSingleProduct.closest('table').find('input, select').not($enableLocationSingleProduct).not($hid_outof_stock);
 
     // Set initial state
     mulopimfwc_toggleDisabledClass(!$enableLocationSingleProduct.is(':checked'), $relatedSettings);
@@ -4558,7 +4559,6 @@ jQuery(document).ready(function ($) {
         'select[name="mulopimfwc_display_options[location_display_position]"]',
         'select[name="mulopimfwc_display_options[location_selector_layout]"]',
         'input[name="mulopimfwc_display_options[hide_out_of_stock_locations]"]',
-        'input[name="mulopimfwc_display_options[enable_product_filter]"]',
         'input[name="mulopimfwc_display_options[enable_location_information]"]',
         'input[name="mulopimfwc_display_options[show_all_products_admin]"]',
         'select[name="mulopimfwc_display_options[enable_location_shipping]"]',
@@ -4722,6 +4722,16 @@ jQuery(document).ready(function ($) {
             });
         });
 
+        var $productFilter = $('input[name="mulopimfwc_display_options[enable_product_filter]"]');
+        if ($productFilter.length) {
+            var disableProductFilter = !state.isManualStrict;
+            $productFilter.each(function () {
+                var $field = $(this);
+                setFieldDisabled($field, disableProductFilter);
+                syncHiddenField($field, disableProductFilter);
+            });
+        }
+
         manualAlwaysDisableSelectors.forEach(function (selector) {
             var $fields = $(selector);
             if (!$fields.length) {
@@ -4742,5 +4752,45 @@ jQuery(document).ready(function ($) {
     $manualOptional.on('change', toggleManualModeSettings);
     $allowMixedLocationCart.on('change', toggleSplitOrderSettings);
     $splitOrderByLocation.on('change', toggleSplitOrderSettings);
+});
+
+jQuery(document).ready(function ($) {
+    var $splitUnknownSelect = $('select[name="mulopimfwc_display_options[split_order_unknown_items]"]');
+    if (!$splitUnknownSelect.length) {
+        return;
+    }
+
+    var $note = $splitUnknownSelect.closest('td').find('.mulopimfwc-split-unknown-items-note');
+    if (!$note.length) {
+        return;
+    }
+
+    var notes = {};
+    var notesRaw = $note.attr('data-notes');
+    if (notesRaw) {
+        try {
+            notes = JSON.parse(notesRaw);
+        } catch (e) {
+            notes = {};
+        }
+    }
+
+    function updateSplitUnknownNote() {
+        var value = $splitUnknownSelect.val() || 'block_checkout';
+        var message = notes[value] || '';
+        var label = $splitUnknownSelect.find('option:selected').text() || '';
+
+        if (!message) {
+            $note.text('');
+            return;
+        }
+
+        $note.empty()
+            .append($('<b>').text(label + ': '))
+            .append(document.createTextNode(message));
+    }
+
+    updateSplitUnknownNote();
+    $splitUnknownSelect.on('change', updateSplitUnknownNote);
 });
 

@@ -168,7 +168,7 @@ class MULOPIMFWC_API_Settings {
         settings_errors('mulopimfwc_api_settings');
         ?>
         <div>           
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px;" class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
                 <table class="form-table">
                     <tr>
                         <th style="width: 200px;"><?php echo esc_html__('API Key', 'multi-location-product-and-inventory-management'); ?></th>
@@ -178,7 +178,7 @@ class MULOPIMFWC_API_Settings {
                                     <code style="font-size: 12px; padding: 8px 12px; background: #f0f0f0; display: inline-block; word-break: break-all; max-width: 600px;"><?php echo esc_html($api_key); ?></code>
                                     <p class="description"><?php echo esc_html__('Include this in the X-API-Key header for API requests.', 'multi-location-product-and-inventory-management'); ?></p>
                                 <?php else: ?>
-                                    <button type="button" class="button button-secondary mulopimfwc-generate-api-key"><?php echo esc_html__('Generate API Key', 'multi-location-product-and-inventory-management'); ?></button>
+                                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-secondary mulopimfwc-generate-api-key"><?php echo esc_html__('Generate API Key', 'multi-location-product-and-inventory-management'); ?></button>
                                     <p class="description"><?php echo esc_html__('Generate an API key to authenticate REST API requests.', 'multi-location-product-and-inventory-management'); ?></p>
                                 <?php endif; ?>
                             </div>
@@ -192,7 +192,7 @@ class MULOPIMFWC_API_Settings {
                                     <code style="font-size: 12px; padding: 8px 12px; background: #f0f0f0; display: inline-block; word-break: break-all; max-width: 600px;"><?php echo esc_html($webhook_secret); ?></code>
                                     <p class="description"><?php echo esc_html__('Include this in the X-Webhook-Secret header for webhook requests.', 'multi-location-product-and-inventory-management'); ?></p>
                                 <?php else: ?>
-                                    <button type="button" class="button button-secondary mulopimfwc-generate-webhook-secret"><?php echo esc_html__('Generate Webhook Secret', 'multi-location-product-and-inventory-management'); ?></button>
+                                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-secondary mulopimfwc-generate-webhook-secret"><?php echo esc_html__('Generate Webhook Secret', 'multi-location-product-and-inventory-management'); ?></button>
                                     <p class="description"><?php echo esc_html__('Generate a webhook secret to authenticate webhook requests from external systems.', 'multi-location-product-and-inventory-management'); ?></p>
                                 <?php endif; ?>
                             </div>
@@ -202,7 +202,7 @@ class MULOPIMFWC_API_Settings {
                         <th><?php echo esc_html__('Log Webhooks', 'multi-location-product-and-inventory-management'); ?></th>
                         <td>
                             <label>
-                                <input type="checkbox" name="mulopimfwc_display_options[log_webhooks]" value="yes" <?php checked($log_webhooks, 'yes'); ?>>
+                                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[log_webhooks]" value="yes" <?php checked($log_webhooks, 'yes'); ?>>
                                 <?php echo esc_html__('Log webhook requests to files', 'multi-location-product-and-inventory-management'); ?>
                             </label>
                             <p class="description"><?php echo esc_html__('Webhook logs are saved to wp-content/uploads/mulopimfwc-webhook-log-YYYY-MM-DD.log', 'multi-location-product-and-inventory-management'); ?></p>
