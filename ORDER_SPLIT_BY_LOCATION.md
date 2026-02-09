@@ -7,9 +7,8 @@ This document lists the features and code changes required to add a new setting 
 - Add a new checkbox setting labeled `Split Order by Location` in Checkout Settings.
 - Place the new setting immediately before `Auto-Populate Customer Addresses`.
 - Only enable the setting when `Allow Mixed-Location Cart` is enabled and premium access is active.
-- Disable the setting when manual assignment strict mode is active, consistent with other mixed-location settings.
+- Disable the setting when Manual/Inventory/Proximity assignment strict mode is active, consistent with other mixed-location settings.
 - Persist the setting under `mulopimfwc_display_options[split_order_by_location]` with default `off`.
-- Add translation strings for the label and description.
 
 ## Split Behavior (Functional Requirements)
 - Condition: `Allow Mixed-Location Cart` is enabled.
@@ -18,7 +17,7 @@ This document lists the features and code changes required to add a new setting 
 - Group items by cart item location `mulopimfwc_location` or order item meta `_mulopimfwc_location`.
 - Create one child order per location and move the matching line items into that child order.
 - The parent order must not retain line items when children exist to avoid double stock reduction.
-- Decision required for unknown or invalid locations. Options: block checkout, create an `unassigned` child order, or keep those items in the parent order.
+- Decision required for unknown or invalid locations. add settings after Split Order by Location so that admin can decide Options: block checkout, create an `unassigned` child order, or keep those items in the parent order.
 
 ## Order Data and Meta
 - Set `_store_location` on each child order to the corresponding location slug.
@@ -66,13 +65,6 @@ This document lists the features and code changes required to add a new setting 
 - Update the settings sanitizer to include `split_order_by_location` as a checkbox field.
 - Add a helper like `mulopimfwc_is_split_order_enabled($options)` to centralize the check and respect manual assignment strict mode.
 
-## Implementation Touchpoints
-- `admin/settings.php` to add the new setting field and sanitize input.
-- `multi-location-product-and-inventory-management-pro.php` to add the split logic and helper function.
-- A new file like `includes/order-splitting.php` for the main splitting logic and helpers.
-- `includes/location-wise-email.php` to ensure child orders drive location-specific email output.
-- `admin/admin.php` to display parent-child links and keep the location filter consistent.
-
 ## Tests and Validation
 - Mixed cart with two locations creates two child orders and correct totals.
 - Single-location cart does not split.
@@ -82,8 +74,3 @@ This document lists the features and code changes required to add a new setting 
 - Stock reduces and restores correctly across child orders.
 - Emails and notifications do not duplicate unexpectedly.
 - Refunds and cancellations affect the correct child order.
-
-## Open Decisions
-- Final behavior for unknown location items.
-- Whether parent orders should be visible in reports and customer emails.
-- Payment handling model for gateways that do not support one parent with unpaid children.
