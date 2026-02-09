@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.3.20
+ * @since 1.1.3.30
  */
 
 if (!defined('ABSPATH')) {
@@ -64,11 +64,6 @@ class Mulopimfwc_Customer_Location_Insights
      */
     private function __construct()
     {
-        $this->manual_disabled = function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode();
-
-        if ($this->manual_disabled) {
-            return;
-        }
 
         $this->init_hooks();
     }
@@ -794,14 +789,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.3.20'
+                '1.1.3.30'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.3.20',
+                '1.1.3.30',
                 true
             );
 
