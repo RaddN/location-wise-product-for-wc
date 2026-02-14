@@ -3212,8 +3212,26 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Always save location data if available, regardless of mixed cart setting
             // This ensures proper stock management and price tracking
             // Only save the internal meta field - display is handled by display_location_in_order_items()
-            if (isset($values['mulopimfwc_location'])) {
+            if (isset($values['mulopimfwc_location']) && $values['mulopimfwc_location'] !== '') {
                 $item->add_meta_data('_mulopimfwc_location', $values['mulopimfwc_location'], true);
+                return;
+            }
+
+            // Fallback: if product has exactly one assigned location, store it automatically
+            $product_id = isset($values['product_id']) ? (int) $values['product_id'] : 0;
+            if (!$product_id && is_object($item) && method_exists($item, 'get_product_id')) {
+                $product_id = (int) $item->get_product_id();
+            }
+
+            if ($product_id) {
+                $product_locations = get_the_terms($product_id, 'mulopimfwc_store_location');
+                if (!empty($product_locations) && !is_wp_error($product_locations) && count($product_locations) === 1) {
+                    $only_location = array_values($product_locations)[0];
+                    $location_slug = rawurldecode($only_location->slug);
+                    if (!empty($location_slug)) {
+                        $item->add_meta_data('_mulopimfwc_location', $location_slug, true);
+                    }
+                }
             }
         }
 
@@ -3307,7 +3325,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             echo '<div class="mulopimfwc-order-item-location-selector" data-item-id="' . esc_attr($item_id) . '" data-order-id="' . esc_attr($order_id_for_attr) . '" data-product-id="' . esc_attr($product_id) . '" data-variation-id="' . esc_attr($variation_id) . '" data-quantity="' . esc_attr($item->get_quantity()) . '">';
             echo '<strong>' . esc_html__('Location:', 'multi-location-product-and-inventory-management') . '</strong> ';
             
-            if ($is_editable && count($available_locations) > 1) {
+            $show_selector = $is_editable && (count($available_locations) > 1 || empty($current_location));
+            if ($show_selector) {
                 // Show dropdown selector for editable orders with multiple locations
                 $current_quantity = $item->get_quantity();
                 echo '<select class="mulopimfwc-order-item-location-select" data-item-id="' . esc_attr($item_id) . '" style="margin-left: 5px; min-width: 200px;">';
@@ -7030,6 +7049,16 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (isset($query->query_vars['mulopimfwc_skip_location_filter']) && $query->query_vars['mulopimfwc_skip_location_filter']) {
                 $skip_location_filtering = true;
             }
+
+            // Fallback: if this is a single product query and behavior is show_message, skip filtering
+            $has_single_identifier = !empty($query->get('p')) || !empty($query->get('name')) || !empty($query->get('product'));
+            $is_single_product_query = $query->is_main_query() && (
+                $query->is_singular('product') ||
+                ($query->query_vars['post_type'] === 'product' && $has_single_identifier)
+            );
+            if ($single_product_behavior === 'show_message' && $is_single_product_query) {
+                $skip_location_filtering = true;
+            }
             
             // Get current location
             $location_slug = '';
@@ -8567,25 +8596,17 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // CRITICAL FIX: Only run on SINGLE product pages, not shop/archive pages
-            // This prevents skip_location_filter from being set on shop queries
-            if (!is_singular('product')) {
-                return;
-            }
-
-            // Check if it's a product post type query
+            // Use query-specific checks (global is_singular can be unreliable in pre_get_posts)
             $post_type = $query->get('post_type');
-            $is_product_query = false;
-            
-            if ($post_type === 'product') {
-                $is_product_query = true;
-            } elseif (is_array($post_type) && in_array('product', $post_type, true)) {
-                $is_product_query = true;
-            } elseif (empty($post_type) && (isset($query->query_vars['p']) || isset($query->query_vars['name']))) {
-                // Might be a single post query, check if it's a product
-                $is_product_query = true;
-            }
+            $has_single_identifier = !empty($query->get('p')) || !empty($query->get('name')) || !empty($query->get('product'));
+            $is_product_query = (
+                $post_type === 'product' ||
+                (is_array($post_type) && in_array('product', $post_type, true)) ||
+                empty($post_type)
+            );
+            $is_single_product_query = $query->is_singular('product') || ($is_product_query && $has_single_identifier);
 
-            if (!$is_product_query) {
+            if (!$is_single_product_query) {
                 return;
             }
 
@@ -8600,6 +8621,13 @@ if (!function_exists('mulopimfwc_get_values')) {
                 }
             } elseif (isset($query->query_vars['name'])) {
                 $product = get_page_by_path($query->query_vars['name'], OBJECT, 'product');
+                if ($product) {
+                    $product_id = $product->ID;
+                } else {
+                    return;
+                }
+            } elseif (isset($query->query_vars['product'])) {
+                $product = get_page_by_path($query->query_vars['product'], OBJECT, 'product');
                 if ($product) {
                     $product_id = $product->ID;
                 } else {
@@ -9313,6 +9341,158 @@ if (!function_exists('mulopimfwc_get_values')) {
     // FIXED: Changed priority from 100 to 20 to ensure proper initialization timing
     // Priority 20 is early enough to avoid conflicts but late enough for WooCommerce to load
     add_action('plugins_loaded', 'mulopimfwc_location_wise_products_init', 20);
+
+    /**
+     * Dashboard cache versioning helpers
+     */
+    if (!function_exists('mulopimfwc_get_dashboard_cache_version')) {
+        function mulopimfwc_get_dashboard_cache_version(): int
+        {
+            $version = (int) get_option('mulopimfwc_dashboard_cache_version', 1);
+            return $version > 0 ? $version : 1;
+        }
+    }
+
+    if (!function_exists('mulopimfwc_bump_dashboard_cache_version')) {
+        function mulopimfwc_bump_dashboard_cache_version(): int
+        {
+            $version = mulopimfwc_get_dashboard_cache_version() + 1;
+            update_option('mulopimfwc_dashboard_cache_version', $version, false);
+            return $version;
+        }
+    }
+
+    if (!function_exists('mulopimfwc_clear_dashboard_cache')) {
+        /**
+         * Clear dashboard-related caches (transients + cache version bump).
+         * Accepts variadic args to stay compatible with WP hooks.
+         */
+        function mulopimfwc_clear_dashboard_cache(...$args): void
+        {
+            static $cleared = false;
+            if ($cleared) {
+                return;
+            }
+            $cleared = true;
+
+            delete_transient('mulopimfwc_total_investment');
+            delete_transient('mulopimfwc_monthly_investment');
+            delete_transient('mulopimfwc_dashboard_live_data');
+
+            mulopimfwc_bump_dashboard_cache_version();
+
+            do_action('mulopimfwc_dashboard_cache_cleared', $args);
+        }
+    }
+
+    /**
+     * Internal helpers for cache invalidation triggers
+     */
+    if (!function_exists('mulopimfwc_is_product_like_post')) {
+        function mulopimfwc_is_product_like_post($post_id, $post = null): bool
+        {
+            if (!empty($post) && isset($post->post_type)) {
+                $post_type = $post->post_type;
+            } else {
+                $post_type = get_post_type($post_id);
+            }
+            return in_array($post_type, ['product', 'product_variation'], true);
+        }
+    }
+
+    if (!function_exists('mulopimfwc_dashboard_meta_affects_cache')) {
+        function mulopimfwc_dashboard_meta_affects_cache(string $meta_key): bool
+        {
+            if ($meta_key === '_purchase_price' || $meta_key === '_purchase_quantity') {
+                return true;
+            }
+            if ($meta_key === '_stock' || $meta_key === '_stock_status') {
+                return true;
+            }
+            return (strpos($meta_key, '_location_stock_') === 0);
+        }
+    }
+
+    if (!function_exists('mulopimfwc_clear_dashboard_cache_on_product_save')) {
+        function mulopimfwc_clear_dashboard_cache_on_product_save($post_id, $post = null, $update = null): void
+        {
+            if (!$post_id || wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+                return;
+            }
+            if (!mulopimfwc_is_product_like_post($post_id, $post)) {
+                return;
+            }
+            mulopimfwc_clear_dashboard_cache('product_save', $post_id);
+        }
+    }
+
+    if (!function_exists('mulopimfwc_clear_dashboard_cache_on_product_meta')) {
+        function mulopimfwc_clear_dashboard_cache_on_product_meta($meta_id, $post_id, $meta_key, $meta_value): void
+        {
+            if (!$post_id || !mulopimfwc_is_product_like_post($post_id)) {
+                return;
+            }
+            if (!mulopimfwc_dashboard_meta_affects_cache((string) $meta_key)) {
+                return;
+            }
+            mulopimfwc_clear_dashboard_cache('product_meta', $post_id, $meta_key);
+        }
+    }
+
+    if (!function_exists('mulopimfwc_clear_dashboard_cache_on_order_save')) {
+        function mulopimfwc_clear_dashboard_cache_on_order_save($post_id, $post = null, $update = null): void
+        {
+            if (!$post_id || wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+                return;
+            }
+            $post_type = !empty($post) && isset($post->post_type) ? $post->post_type : get_post_type($post_id);
+            if ($post_type !== 'shop_order') {
+                return;
+            }
+            mulopimfwc_clear_dashboard_cache('order_save', $post_id);
+        }
+    }
+
+    if (!function_exists('mulopimfwc_clear_dashboard_cache_on_order_event')) {
+        function mulopimfwc_clear_dashboard_cache_on_order_event($order_id = 0, ...$args): void
+        {
+            if (!$order_id) {
+                return;
+            }
+            mulopimfwc_clear_dashboard_cache('order_event', $order_id);
+        }
+    }
+
+    if (!function_exists('mulopimfwc_clear_dashboard_cache_on_post_delete')) {
+        function mulopimfwc_clear_dashboard_cache_on_post_delete($post_id): void
+        {
+            if (!$post_id) {
+                return;
+            }
+            $post_type = get_post_type($post_id);
+            if (!in_array($post_type, ['product', 'product_variation', 'shop_order'], true)) {
+                return;
+            }
+            mulopimfwc_clear_dashboard_cache('post_delete', $post_id);
+        }
+    }
+
+    // Register cache invalidation hooks for products and orders.
+    add_action('save_post_product', 'mulopimfwc_clear_dashboard_cache_on_product_save', 10, 3);
+    add_action('save_post_product_variation', 'mulopimfwc_clear_dashboard_cache_on_product_save', 10, 3);
+    add_action('added_post_meta', 'mulopimfwc_clear_dashboard_cache_on_product_meta', 10, 4);
+    add_action('updated_post_meta', 'mulopimfwc_clear_dashboard_cache_on_product_meta', 10, 4);
+    add_action('deleted_post_meta', 'mulopimfwc_clear_dashboard_cache_on_product_meta', 10, 4);
+
+    add_action('save_post_shop_order', 'mulopimfwc_clear_dashboard_cache_on_order_save', 10, 3);
+    add_action('woocommerce_new_order', 'mulopimfwc_clear_dashboard_cache_on_order_event', 10, 1);
+    add_action('woocommerce_update_order', 'mulopimfwc_clear_dashboard_cache_on_order_event', 10, 1);
+    add_action('woocommerce_order_status_changed', 'mulopimfwc_clear_dashboard_cache_on_order_event', 10, 4);
+    add_action('woocommerce_order_refunded', 'mulopimfwc_clear_dashboard_cache_on_order_event', 10, 2);
+
+    add_action('trashed_post', 'mulopimfwc_clear_dashboard_cache_on_post_delete', 10, 1);
+    add_action('deleted_post', 'mulopimfwc_clear_dashboard_cache_on_post_delete', 10, 1);
+    add_action('untrashed_post', 'mulopimfwc_clear_dashboard_cache_on_post_delete', 10, 1);
 
 
     // Add this to the main plugin file after the class definition
@@ -10227,6 +10407,16 @@ if (!function_exists('mulopimfwc_get_values')) {
             return;
         }
 
+        $product = wc_get_product($product_id);
+        if (!$product) {
+            return;
+        }
+
+        $check_id = $product->is_type('variation') ? $product->get_parent_id() : $product_id;
+        if ($check_id && !has_term($location_term->term_id, 'mulopimfwc_store_location', $check_id)) {
+            return;
+        }
+
         global $mulopimfwc_options;
         $options = is_array($mulopimfwc_options ?? null)
             ? $mulopimfwc_options
@@ -10237,10 +10427,6 @@ if (!function_exists('mulopimfwc_get_values')) {
         $include_manager = ($mode === 'location_manager' || $mode === 'both');
 
         $managers = $include_manager ? mulopimfwc_get_location_managers_for_slug($location_term->slug) : [];
-        $product = wc_get_product($product_id);
-        if (!$product) {
-            return;
-        }
 
         $product_name = $product->get_name();
         $location_name = $location_term->name;

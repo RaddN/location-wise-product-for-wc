@@ -892,7 +892,7 @@ class MULOPIMFWC_Frontend_Location_Information
     /**
      * Render location details (for compact/shortcode use)
      */
-    public function render_location_details($term_id, $context = 'archive', $compact = false)
+    public function render_location_details($term_id, $context = 'archive', $compact = false, $map_id_prefix = '')
     {
         $location = get_term($term_id, 'mulopimfwc_store_location');
 
@@ -918,6 +918,8 @@ class MULOPIMFWC_Frontend_Location_Information
         $wrapper_class = 'mulopimfwc-location-info-wrapper';
         $wrapper_class .= ' mulopimfwc-location-' . esc_attr($context);
         $wrapper_class .= $compact ? ' mulopimfwc-location-compact' : '';
+        $map_id_prefix = trim((string) $map_id_prefix);
+        $map_id_prefix = $map_id_prefix !== '' ? sanitize_html_class($map_id_prefix) . '-' : '';
 
     ?>
         <div class="<?php echo esc_attr($wrapper_class); ?>" data-location-id="<?php echo esc_attr($term_id); ?>">
@@ -986,7 +988,7 @@ class MULOPIMFWC_Frontend_Location_Information
             </div>
             <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
                 <div class="mulopimfwc-map-wrapper">
-                    <div id="mulopimfwc-map-<?php echo esc_attr($term_id); ?>"
+                    <div id="mulopimfwc-map-<?php echo esc_attr($map_id_prefix . $term_id); ?>"
                         class="mulopimfwc-location-map mulopimfwc-map-small"
                         data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
                         data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
@@ -1382,7 +1384,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 <div class="mulopimfwc-grid-location-item"
                     data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                     data-search="<?php echo esc_attr($search_data); ?>">
-                    <?php $this->render_location_details($term_id, 'grid', true); ?>
+                    <?php $this->render_location_details($term_id, 'grid', true, $unique_id); ?>
                 </div>
             <?php endforeach; ?>
         </div>

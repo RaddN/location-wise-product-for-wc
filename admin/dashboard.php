@@ -947,7 +947,8 @@ class MULOPIMFWC_Dashboard
                 'investment' => __('Investment', 'multi-location-product-and-inventory-management'),
                 'orders' => __('Orders', 'multi-location-product-and-inventory-management'),
                 'revenue' => __('Revenue', 'multi-location-product-and-inventory-management'),
-                'previousPeriod' => __('Previous period', 'multi-location-product-and-inventory-management')
+                'previousPeriod' => __('Previous period', 'multi-location-product-and-inventory-management'),
+                'noOrders' => __('No orders yet', 'multi-location-product-and-inventory-management')
             ]
         ]);
 
@@ -1588,6 +1589,9 @@ class MULOPIMFWC_Dashboard
         }
 
         // FIXED: Add caching and memory optimization (Issues #12, #20)
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
         foreach ($locations_to_include as $location) {
             // Validate location exists (Issue #13)
             if (!$location || !isset($location->term_id) || !isset($location->name)) {
@@ -1595,7 +1599,7 @@ class MULOPIMFWC_Dashboard
             }
             
             // FIXED: Use cache for repeated queries (Issue #12)
-            $cache_key = 'mulopimfwc_product_count_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
+            $cache_key = 'mulopimfwc_product_count_v' . $cache_version . '_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
             $cached_count = wp_cache_get($cache_key, 'mulopimfwc_dashboard');
             
             if ($cached_count !== false) {
@@ -1676,6 +1680,9 @@ class MULOPIMFWC_Dashboard
         }
 
         // FIXED: Add caching and memory optimization (Issues #12, #20)
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
         foreach ($locations_to_include as $location) {
             // Validate location exists (Issue #13)
             if (!$location || !isset($location->term_id) || !isset($location->name)) {
@@ -1683,7 +1690,7 @@ class MULOPIMFWC_Dashboard
             }
             
             // FIXED: Use cache for repeated queries (Issue #12)
-            $cache_key = 'mulopimfwc_stock_level_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
+            $cache_key = 'mulopimfwc_stock_level_v' . $cache_version . '_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
             $cached_level = wp_cache_get($cache_key, 'mulopimfwc_dashboard');
             
             if ($cached_level !== false) {
@@ -2142,18 +2149,31 @@ class MULOPIMFWC_Dashboard
                 $threshold = 0;
             }
 
+            $term_taxonomy_id = isset($location->term_taxonomy_id) ? (int) $location->term_taxonomy_id : 0;
+            if ($term_taxonomy_id <= 0) {
+                $term_taxonomy_id = (int) $wpdb->get_var($wpdb->prepare(
+                    "SELECT term_taxonomy_id FROM {$wpdb->term_taxonomy} WHERE term_id = %d AND taxonomy = %s",
+                    $location->term_id,
+                    'mulopimfwc_store_location'
+                ));
+            }
+
+            if ($term_taxonomy_id <= 0) {
+                continue;
+            }
+
             $query = $wpdb->prepare("
             SELECT p.ID, p.post_title, pm.meta_value as stock
             FROM {$wpdb->posts} p
-            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = %s
+            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id AND tr.term_taxonomy_id = %d
             WHERE p.post_type = 'product' 
             AND p.post_status = 'publish'
-            AND pm.meta_key = %s
             AND CAST(pm.meta_value AS SIGNED) <= %d
             AND pm.meta_value != ''
             ORDER BY CAST(pm.meta_value AS SIGNED) ASC
             LIMIT 20
-        ", $meta_key, $threshold);
+        ", $meta_key, $term_taxonomy_id, $threshold);
 
             $results = $wpdb->get_results($query);
 

@@ -519,6 +519,13 @@ jQuery(document).ready(function ($) {
             
             $modal.css('display', 'flex');
             $('body').addClass('mulopimfwc-modal-open');
+
+            // Ensure maps inside the popup render correctly once visible
+            if ($modal.hasClass('lwp-location-info-popup')) {
+                setTimeout(function () {
+                    $(document).trigger('mulopimfwc:popup:opened', [$modal]);
+                }, 60);
+            }
         } else {
             console.warn('Popup modal not found for instance: ' + instanceId);
         }

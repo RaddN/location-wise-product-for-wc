@@ -197,6 +197,9 @@ class mulopimfwc_Import_Export
         if (function_exists('wp_cache_flush')) {
             $cache_flushed = (bool) wp_cache_flush();
         }
+        if (function_exists('mulopimfwc_bump_dashboard_cache_version')) {
+            mulopimfwc_bump_dashboard_cache_version();
+        }
 
         $message = sprintf(
             __('Cache cleared. Removed %d cached entries.', 'multi-location-product-and-inventory-management'),

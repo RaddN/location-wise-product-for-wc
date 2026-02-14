@@ -868,25 +868,39 @@
      * Add small offsets to duplicate values to prevent overlapping in charts
      */
     function addValueOffsets(values) {
+        const numericValues = values.map(value => {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        });
+        const total = numericValues.reduce((sum, value) => sum + value, 0);
+
+        if (total <= 0) {
+            return numericValues;
+        }
+
         const valueMap = {};
-        const offsetValues = [...values];
+        const offsetValues = [...numericValues];
 
         // Group indices by value
-        values.forEach((value, index) => {
-            if (!valueMap[value]) {
-                valueMap[value] = [];
+        numericValues.forEach((value, index) => {
+            if (value <= 0) {
+                return;
             }
-            valueMap[value].push(index);
+            const key = String(value);
+            if (!valueMap[key]) {
+                valueMap[key] = [];
+            }
+            valueMap[key].push(index);
         });
 
         // Add tiny offsets to duplicate values
-        Object.keys(valueMap).forEach(value => {
-            const indices = valueMap[value];
+        Object.keys(valueMap).forEach(key => {
+            const indices = valueMap[key];
             if (indices.length > 1) {
                 // Multiple items with same value - add small offsets
                 indices.forEach((index, offsetIndex) => {
                     // Add very small offset (0.0001 * offsetIndex) to ensure different angles
-                    offsetValues[index] = parseFloat(value) + (offsetIndex * 0.0001);
+                    offsetValues[index] = parseFloat(key) + (offsetIndex * 0.0001);
                 });
             }
         });
@@ -1019,6 +1033,18 @@
 
                     const origValues = chart.data.datasets[0].originalValues || originalValues;
                     const total = origValues.reduce((sum, value) => sum + value, 0);
+                    if (total <= 0) {
+                        const emptyLabel = (mulopimfwc_DashboardData.i18n && mulopimfwc_DashboardData.i18n.noOrders)
+                            ? mulopimfwc_DashboardData.i18n.noOrders
+                            : 'No orders yet';
+                        ctx.fillStyle = '#9ca3af';
+                        ctx.font = '14px Arial, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(emptyLabel, centerX, centerY);
+                        return;
+                    }
+
                     const percentages = origValues.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
                     const datasetColors = chart.data.datasets[0].backgroundColor || bgColors;
                     const chartData = chart.data.datasets[0].data;

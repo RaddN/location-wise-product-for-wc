@@ -143,6 +143,67 @@
         },
 
         /**
+         * Invalidate maps within a container (useful for popups)
+         */
+        invalidateMapsInContainer: function ($container) {
+            const self = this;
+            const $scope = $container && $container.length ? $container : $(document);
+            const $maps = $scope.find('.mulopimfwc-location-map');
+
+            if (!$maps.length) {
+                return;
+            }
+
+            $maps.each(function () {
+                const $map = $(this);
+                const mapId = $map.attr('id');
+
+                if (!mapId) {
+                    return;
+                }
+
+                let mapInstance = null;
+                if (self.maps[mapId]) {
+                    mapInstance = self.maps[mapId].map || self.maps[mapId];
+                } else if (mapId === 'mulopimfwc-tabbed-map' && self.tabbedMap) {
+                    mapInstance = self.tabbedMap;
+                }
+
+                if (mapInstance && typeof mapInstance.invalidateSize === 'function') {
+                    try {
+                        mapInstance.invalidateSize();
+                    } catch (e) {
+                        console.warn('Error invalidating map size for ' + mapId + ':', e);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Handle popup open to ensure maps render correctly
+         */
+        handlePopupOpen: function ($modal) {
+            const self = this;
+
+            if (!$modal || !$modal.length) {
+                return;
+            }
+
+            self.waitForLeaflet(function () {
+                self.initMaps();
+                self.initShortcodeMaps();
+
+                const invalidate = function () {
+                    self.invalidateMapsInContainer($modal);
+                };
+
+                invalidate();
+                setTimeout(invalidate, 150);
+                setTimeout(invalidate, 400);
+            });
+        },
+
+        /**
          * Initialize search functionality
          */
         initSearch: function () {
@@ -1636,6 +1697,11 @@
                         }
                     }
                 }, 250);
+            });
+
+            // Invalidate popup maps once modal is visible
+            $(document).on('mulopimfwc:popup:opened', function (event, $modal) {
+                self.handlePopupOpen($modal);
             });
 
             // Smooth scroll to map on "Get Directions" click (if on same page)
