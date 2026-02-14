@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.3.30
+ * Version: 1.1.3.40
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -79,7 +79,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.1.3.30");
+    define("mulopimfwc_VERSION", "1.1.3.40");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -5648,7 +5648,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.1.3.30',
+                '1.1.3.40',
                 true
             );
 
@@ -5668,7 +5668,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.1.3.30'
+                '1.1.3.40'
             );
         }
 
@@ -6612,7 +6612,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
             $is_manual_strict = mulopimfwc_is_manual_assignment_strict_mode($options);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.3.30');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.3.40');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
             // Add custom branding CSS
@@ -6620,7 +6620,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.3.30', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.3.40', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             wp_add_inline_script('mulopimfwc_select2', 'jQuery.fn.select2&&jQuery.fn.select2.defaults&&jQuery.fn.select2.defaults.set("language",{noResults:function(){return"' . esc_js(mulopimfwc_get_text_value('text_popup_msg_no_results')) . '";}});', 'after');
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
@@ -6629,7 +6629,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -6637,7 +6637,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -6645,7 +6645,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
             }
@@ -6674,7 +6674,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
 
@@ -6696,7 +6696,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
 
@@ -7696,7 +7696,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.3.30');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.3.40');
             }
             
             // Enqueue modern popup script
@@ -7705,7 +7705,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
             }
@@ -7716,7 +7716,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
             }
@@ -7727,7 +7727,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.3.30',
+                    '1.1.3.40',
                     true
                 );
             }
@@ -9147,7 +9147,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.3.30");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.3.40");
         }
 
         /**
@@ -9900,6 +9900,108 @@ if (!function_exists('mulopimfwc_get_values')) {
     }
 
     /**
+     * Calculate order revenue based on purchase and selling prices.
+     *
+     * Revenue = sum of (sell price - purchase price) * quantity for each line item.
+     * Uses line-item subtotal (pre-discount) as the sell price, falling back to line total
+     * or product pricing when needed.
+     *
+     * @param WC_Order $order
+     * @return float
+     */
+    function mulopimfwc_calculate_order_revenue($order)
+    {
+        if (!$order instanceof WC_Order) {
+            return 0.0;
+        }
+
+        $revenue = 0.0;
+
+        foreach ($order->get_items('line_item') as $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
+
+            $quantity = (float) $item->get_quantity();
+            if ($quantity <= 0) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            $purchase_price_raw = '';
+
+            if ($product) {
+                $purchase_price_raw = get_post_meta($product->get_id(), '_purchase_price', true);
+
+                // Fallback to parent purchase price if variation value is missing.
+                if (($purchase_price_raw === '' || $purchase_price_raw === null) && $product->is_type('variation')) {
+                    $parent_id = $product->get_parent_id();
+                    if ($parent_id) {
+                        $purchase_price_raw = get_post_meta($parent_id, '_purchase_price', true);
+                    }
+                }
+            } else {
+                $product_id = $item->get_variation_id() ?: $item->get_product_id();
+                if ($product_id) {
+                    $purchase_price_raw = get_post_meta($product_id, '_purchase_price', true);
+                    if (($purchase_price_raw === '' || $purchase_price_raw === null) && $item->get_variation_id()) {
+                        $parent_id = wp_get_post_parent_id($product_id);
+                        if ($parent_id) {
+                            $purchase_price_raw = get_post_meta($parent_id, '_purchase_price', true);
+                        }
+                    }
+                }
+            }
+
+            $purchase_price = 0.0;
+            if ($purchase_price_raw !== '' && $purchase_price_raw !== null) {
+                $purchase_price = is_numeric($purchase_price_raw)
+                    ? (float) $purchase_price_raw
+                    : (function_exists('wc_format_decimal') ? (float) wc_format_decimal($purchase_price_raw) : 0.0);
+            }
+            if ($purchase_price <= 0) {
+                // Cannot compute revenue without purchase price.
+                continue;
+            }
+
+            // Use line subtotal (pre-discount) as the sell price; fall back as needed.
+            $sell_total = $item->get_subtotal();
+            if ($sell_total === '' || $sell_total === null) {
+                $sell_total = $item->get_total();
+            }
+
+            $sell_total = is_numeric($sell_total) ? (float) $sell_total : 0.0;
+
+            if ($sell_total <= 0 && $product) {
+                $sell_price_raw = $product->get_sale_price();
+                if ($sell_price_raw === '' || $sell_price_raw === null) {
+                    $sell_price_raw = $product->get_regular_price();
+                }
+                $sell_price = is_numeric($sell_price_raw)
+                    ? (float) $sell_price_raw
+                    : (function_exists('wc_format_decimal') ? (float) wc_format_decimal($sell_price_raw) : 0.0);
+                $sell_total = $sell_price * $quantity;
+            }
+            if ($sell_total <= 0) {
+                continue;
+            }
+
+            $line_revenue = $sell_total - ($purchase_price * $quantity);
+
+            $line_revenue = apply_filters('mulopimfwc_line_revenue', $line_revenue, $item, $order, [
+                'quantity' => $quantity,
+                'sell_total' => $sell_total,
+                'purchase_total' => $purchase_price * $quantity,
+                'purchase_price' => $purchase_price,
+            ]);
+
+            $revenue += $line_revenue;
+        }
+
+        return (float) apply_filters('mulopimfwc_order_revenue', $revenue, $order);
+    }
+
+    /**
      * Normalize social channels for a user.
      */
     function mulopimfwc_get_user_social_channels($user_id)
@@ -10383,7 +10485,9 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             $stats[$slug]['orders']++;
             $stats[$slug]['items'] += $order->get_item_count();
-            $stats[$slug]['revenue'] += (float) $order->get_total();
+            $stats[$slug]['revenue'] += function_exists('mulopimfwc_calculate_order_revenue')
+                ? (float) mulopimfwc_calculate_order_revenue($order)
+                : (float) $order->get_total();
         }
 
         // Per-location notifications for managers
@@ -10695,7 +10799,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.3.30",
+                "1.1.3.40",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

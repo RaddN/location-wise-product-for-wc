@@ -9,6 +9,7 @@ class mulopimfwc_Import_Export
         add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_action('wp_ajax_mulopimfwc_export_settings', [$this, 'export_settings']);
         add_action('wp_ajax_mulopimfwc_import_settings', [$this, 'import_settings']);
+        add_action('wp_ajax_mulopimfwc_clear_cache', [$this, 'clear_cache']);
     }
 
     /**
@@ -26,7 +27,7 @@ class mulopimfwc_Import_Export
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '1.1.3.30',
+            '1.1.3.40',
             true
         );
 
@@ -41,7 +42,11 @@ class mulopimfwc_Import_Export
                 'import_success' => __('Settings imported successfully! Please refresh the page.', 'multi-location-product-and-inventory-management'),
                 'import_error' => __('Error importing settings. Please ensure you selected a valid JSON file.', 'multi-location-product-and-inventory-management'),
                 'invalid_file' => __('Please select a valid JSON file.', 'multi-location-product-and-inventory-management'),
-                'confirm_import' => __('This will overwrite your current settings. Are you sure you want to continue?', 'multi-location-product-and-inventory-management')
+                'confirm_import' => __('This will overwrite your current settings. Are you sure you want to continue?', 'multi-location-product-and-inventory-management'),
+                'clearing_cache' => __('Clearing cache...', 'multi-location-product-and-inventory-management'),
+                'clear_cache_success' => __('Cache cleared successfully.', 'multi-location-product-and-inventory-management'),
+                'clear_cache_error' => __('Error clearing cache. Please try again.', 'multi-location-product-and-inventory-management'),
+                'confirm_clear_cache' => __('Clear cached plugin data now?', 'multi-location-product-and-inventory-management')
             ]
         ]);
     }
@@ -159,6 +164,50 @@ class mulopimfwc_Import_Export
                 'message' => __('Failed to update settings. Please try again.', 'multi-location-product-and-inventory-management')
             ]);
         }
+    }
+
+    /**
+     * Clear plugin cache (transients + object cache).
+     */
+    public function clear_cache()
+    {
+        check_ajax_referer('mulopimfwc_import_export_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => __('You do not have permission to clear cache.', 'multi-location-product-and-inventory-management')
+            ]);
+        }
+
+        global $wpdb;
+
+        $like_key = $wpdb->esc_like('_transient_mulopimfwc_') . '%';
+        $like_timeout = $wpdb->esc_like('_transient_timeout_mulopimfwc_') . '%';
+
+        $deleted = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                $like_key,
+                $like_timeout
+            )
+        );
+
+        $deleted = is_numeric($deleted) ? (int) $deleted : 0;
+        $cache_flushed = false;
+        if (function_exists('wp_cache_flush')) {
+            $cache_flushed = (bool) wp_cache_flush();
+        }
+
+        $message = sprintf(
+            __('Cache cleared. Removed %d cached entries.', 'multi-location-product-and-inventory-management'),
+            $deleted
+        );
+
+        wp_send_json_success([
+            'message' => $message,
+            'deleted' => $deleted,
+            'cache_flushed' => $cache_flushed
+        ]);
     }
 
     /**

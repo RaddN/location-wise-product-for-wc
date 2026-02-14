@@ -887,8 +887,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.3.30", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.3.30");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.3.40", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.3.40");
 
         $payload = $this->build_dashboard_payload();
 
@@ -930,7 +930,11 @@ class MULOPIMFWC_Dashboard
             'ordersByLocation' => mulopimfwc_get_pro_class(false, $payload['orders_by_location'], $dummydata),
             'revenueByLocation' => mulopimfwc_get_pro_class(false, $payload['revenue_by_location'], $dummydata),
             'monthlyInvestmentLabels' => $payload['monthly_investment_data']['labels'],
-            'monthlyInvestmentData' => mulopimfwc_get_pro_class(false, $payload['monthly_investment_data']['data'], array_map(fn() => random_int(1, 100), range(1, 12))),
+            'monthlyInvestmentData' => mulopimfwc_get_pro_class(
+                false,
+                $payload['monthly_investment_data']['data'],
+                array_fill(0, count($payload['monthly_investment_data']['data']), 0)
+            ),
             'profitabilityByLocation' => $payload['profitability_by_location'],
             'deadStockDays' => $payload['dead_stock_days'],
             'currency' => get_woocommerce_currency_symbol(),
@@ -2009,6 +2013,7 @@ class MULOPIMFWC_Dashboard
         $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
             ? mulopimfwc_get_revenue_order_statuses()
             : ['completed', 'processing', 'on-hold'];
+        $calculate_revenue = function_exists('mulopimfwc_calculate_order_revenue') ? 'mulopimfwc_calculate_order_revenue' : null;
 
         foreach ($mulopimfwc_locations as $location) {
             $location_slugs[$location->name] = rawurldecode($location->slug);
@@ -2077,7 +2082,6 @@ class MULOPIMFWC_Dashboard
             }
 
             $order_location = $order->get_meta('_store_location');
-            $order_total = (float) $order->get_total();
             $order_status = $order->get_status();
 
             // Location filter
@@ -2095,7 +2099,10 @@ class MULOPIMFWC_Dashboard
 
             $orders_by_location[$location_name]++;
             if (in_array($order_status, $revenue_statuses, true)) {
-                $location_revenue[$location_name] += $order_total;
+                $order_revenue = $calculate_revenue
+                    ? (float) $calculate_revenue($order)
+                    : (float) $order->get_total();
+                $location_revenue[$location_name] += $order_revenue;
             }
         }
 
@@ -2265,8 +2272,8 @@ class MULOPIMFWC_Dashboard
                 FROM {$wpdb->posts} p
                 INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
                 INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                WHERE p.post_type = 'product'
-                AND p.post_status = 'publish'
+                WHERE p.post_type IN ('product', 'product_variation')
+                AND p.post_status IN ('publish', 'private')
                 AND DATE(p.post_date) = %s
                 AND pm_price.meta_value != ''
                 AND pm_price.meta_value > 0
@@ -2282,8 +2289,8 @@ class MULOPIMFWC_Dashboard
                 FROM {$wpdb->posts} p
                 INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
                 INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                WHERE p.post_type = 'product'
-                AND p.post_status = 'publish'
+                WHERE p.post_type IN ('product', 'product_variation')
+                AND p.post_status IN ('publish', 'private')
                 AND DATE(p.post_date) = %s
                 AND pm_price.meta_value != ''
                 AND pm_price.meta_value > 0
@@ -2293,7 +2300,12 @@ class MULOPIMFWC_Dashboard
                     SELECT 1
                     FROM {$wpdb->term_relationships} tr
                     INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE tr.object_id = p.ID
+                    WHERE tr.object_id = (
+                        CASE
+                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                            ELSE p.ID
+                        END
+                    )
                     AND tt.taxonomy = 'mulopimfwc_store_location'
                 )
             ", $date);
@@ -2308,10 +2320,15 @@ class MULOPIMFWC_Dashboard
                     FROM {$wpdb->posts} p
                     INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
                     INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                    INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                    INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
+                        CASE
+                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                            ELSE p.ID
+                        END
+                    )
                     INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE p.post_type = 'product'
-                    AND p.post_status = 'publish'
+                    WHERE p.post_type IN ('product', 'product_variation')
+                    AND p.post_status IN ('publish', 'private')
                     AND DATE(p.post_date) = %s
                     AND tt.taxonomy = 'mulopimfwc_store_location'
                     AND tt.term_id = %d
@@ -2329,8 +2346,8 @@ class MULOPIMFWC_Dashboard
                     FROM {$wpdb->posts} p
                     INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
                     INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                    WHERE p.post_type = 'product'
-                    AND p.post_status = 'publish'
+                    WHERE p.post_type IN ('product', 'product_variation')
+                    AND p.post_status IN ('publish', 'private')
                     AND DATE(p.post_date) = %s
                     AND pm_price.meta_value != ''
                     AND pm_price.meta_value > 0
@@ -2847,18 +2864,13 @@ class MULOPIMFWC_Dashboard
         INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
         WHERE pm1.meta_key = %s
         AND pm2.meta_key = %s
-        AND p.post_type = %s
-        AND p.post_status = %s
+        AND p.post_type IN ('product', 'product_variation')
+        AND p.post_status IN ('publish', 'private')
         AND pm1.meta_value != ''
         AND pm1.meta_value > 0
         AND pm2.meta_value != ''
         AND pm2.meta_value > 0
-        AND pm1.post_id IN (
-            SELECT ID FROM {$wpdb->posts} 
-            WHERE post_type = %s 
-            AND post_status = %s
-        )
-        ", '_purchase_price', '_purchase_quantity', 'product', 'publish', 'product', 'publish'));
+        ", '_purchase_price', '_purchase_quantity'));
 
         $total_investment = floatval($total_investment);
 
@@ -2876,17 +2888,79 @@ class MULOPIMFWC_Dashboard
         $cache_key = 'mulopimfwc_monthly_investment';
         $cached_data = get_transient($cache_key);
 
+        global $wpdb;
+
+        $now = new DateTimeImmutable('first day of this month 00:00:00', new DateTimeZone('UTC'));
+        $start = $now->modify('-11 months');
+        $end = $now->modify('+1 month');
+
+        $labels = [];
+        $cursor = $start;
+        for ($i = 0; $i < 12; $i++) {
+            $labels[] = $cursor->format('M Y');
+            $cursor = $cursor->modify('+1 month');
+        }
+
+        // If no purchase prices exist, investment is zero across the board.
+        $has_purchase_price = (int) $wpdb->get_var("
+            SELECT 1
+            FROM {$wpdb->postmeta} pm
+            INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+            WHERE pm.meta_key = '_purchase_price'
+            AND pm.meta_value != ''
+            AND pm.meta_value > 0
+            AND p.post_type IN ('product', 'product_variation')
+            AND p.post_status IN ('publish', 'private')
+            LIMIT 1
+        ");
+
+        if (!$has_purchase_price) {
+            $result = [
+                'labels' => $labels,
+                'data' => array_fill(0, 12, 0.0),
+            ];
+            set_transient($cache_key, $result, 6 * HOUR_IN_SECONDS);
+            return $result;
+        }
+
         if ($cached_data !== false) {
             return $cached_data;
         }
 
-        $months = 12;
-        $labels = [];
-        $data = [];
+        $query = $wpdb->prepare("
+            SELECT DATE_FORMAT(p.post_date, '%%Y-%%m') AS ym,
+                   COALESCE(SUM(
+                       CAST(pm_price.meta_value AS DECIMAL(10,2)) * 
+                       COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
+                   ), 0) AS total
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
+            INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
+            WHERE p.post_type IN ('product', 'product_variation')
+            AND p.post_status IN ('publish', 'private')
+            AND p.post_date >= %s
+            AND p.post_date < %s
+            AND pm_price.meta_value != ''
+            AND pm_price.meta_value > 0
+            AND pm_qty.meta_value != ''
+            AND pm_qty.meta_value > 0
+            GROUP BY ym
+        ", $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'));
 
-        for ($i = $months - 1; $i >= 0; $i--) {
-            $labels[] = gmdate('M Y', strtotime("-$i months"));
-            $data[] = rand(1000, 10000); // Simplified for performance - replace with actual calculation if needed
+        $rows = $wpdb->get_results($query);
+        $totals_by_month = [];
+        foreach ($rows as $row) {
+            if (isset($row->ym)) {
+                $totals_by_month[$row->ym] = isset($row->total) ? (float) $row->total : 0.0;
+            }
+        }
+
+        $data = [];
+        $cursor = $start;
+        for ($i = 0; $i < 12; $i++) {
+            $key = $cursor->format('Y-m');
+            $data[] = isset($totals_by_month[$key]) ? (float) $totals_by_month[$key] : 0.0;
+            $cursor = $cursor->modify('+1 month');
         }
 
         $result = [

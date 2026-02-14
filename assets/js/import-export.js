@@ -56,6 +56,46 @@
             $('#mulopimfwc_import_settings').click();
         });
 
+        // Clear Plugin Cache
+        $('#mulopimfwc_clear_cache').on('click', function (e) {
+            e.preventDefault();
+
+            if (mulopimfwcImportExport.strings.confirm_clear_cache &&
+                !confirm(mulopimfwcImportExport.strings.confirm_clear_cache)) {
+                return;
+            }
+
+            const $button = $(this);
+            const originalText = $button.html();
+            const $statusDiv = $('#mulopimfwc_clear_cache_status');
+
+            $button.prop('disabled', true)
+                .html('<span class="dashicons dashicons-update-alt" style="animation: rotation 2s infinite linear; margin-top: 3px;"></span> ' +
+                    mulopimfwcImportExport.strings.clearing_cache);
+
+            $.ajax({
+                url: mulopimfwcImportExport.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'mulopimfwc_clear_cache',
+                    nonce: mulopimfwcImportExport.nonce
+                },
+                success: function (response) {
+                    if (response.success) {
+                        showNotice('success', response.data.message || mulopimfwcImportExport.strings.clear_cache_success, $statusDiv);
+                    } else {
+                        showNotice('error', response.data.message || mulopimfwcImportExport.strings.clear_cache_error, $statusDiv);
+                    }
+                },
+                error: function () {
+                    showNotice('error', mulopimfwcImportExport.strings.clear_cache_error, $statusDiv);
+                },
+                complete: function () {
+                    $button.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+
         // Import Settings - Handle file selection
         $('#mulopimfwc_import_settings').on('change', function (e) {
             const file = e.target.files[0];
