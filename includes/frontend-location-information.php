@@ -1040,6 +1040,13 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         global $mulopimfwc_options;
 
+        if(mulopimfwc_is_manual_assignment_strict_mode()) {
+            if (is_user_logged_in() && current_user_can('administrator')) {
+                return '<p>When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).</p>';
+            }
+            return '';
+        }
+
         $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['enable_store_locator']
             : 'off';

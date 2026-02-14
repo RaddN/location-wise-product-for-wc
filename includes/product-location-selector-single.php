@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.1.3.40
+ * @version 1.1.3.45
  * @author Your Name
- * @since 1.1.3.40
+ * @since 1.1.3.45
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.1.3.40';
+    const VERSION = '1.1.3.45';
 
     /**
      * Available display positions
@@ -920,7 +920,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     /**
      * Plugin version
      */
-    const VERSION = '1.1.3.40';
+    const VERSION = '1.1.3.45';
     
     /**
      * @var array Track displayed shortcodes to prevent duplicates
@@ -1089,6 +1089,9 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     public function render_shortcode($atts)
     {
         if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
+            if (is_user_logged_in() && current_user_can('administrator')) {
+                return '<p>When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).</p>';
+            }
             return '';
         }
 

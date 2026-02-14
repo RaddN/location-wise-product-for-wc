@@ -75,8 +75,6 @@ class MULOPIMFWC_Admin
         add_action('edited_mulopimfwc_store_location', array($this, 'save_quick_edit_fields'), 10, 2);
         add_action('admin_footer-edit-tags.php', array($this, 'save_quick_edit_on_submit'));
 
-
-
         // Add AJAX actions for export and live data
         $dashboard_instance = new MULOPIMFWC_Dashboard();
         add_action('wp_ajax_mulopimfwc_export_dashboard_report', array($dashboard_instance, 'export_dashboard_report'));
