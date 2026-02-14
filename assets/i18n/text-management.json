@@ -117,9 +117,8 @@
         "text_restriction_cannot_add": "Cannot add to cart. %s is currently closed.",
         "text_restriction_title": "Location Closed",
         "text_variation_info_heading": "Information for %s",
-        "text_variation_stock_label": "Stock",
+        "text_variation_stock_label": "Stock:",
         "text_variation_in_stock": "%s in stock",
-        "text_variation_out_of_stock": "Out of stock",
         "text_variation_backorder": "Available on backorder",
         "text_variation_price_label": "Price at this location:"
       }
@@ -235,9 +234,8 @@
         "text_restriction_cannot_add": "Kan niet aan winkelwagen worden toegevoegd. %s is momenteel gesloten.",
         "text_restriction_title": "Locatie gesloten",
         "text_variation_info_heading": "Informatie voor %s",
-        "text_variation_stock_label": "Voorraad",
+        "text_variation_stock_label": "Voorraad:",
         "text_variation_in_stock": "%s op voorraad",
-        "text_variation_out_of_stock": "Niet op voorraad",
         "text_variation_backorder": "Beschikbaar op nabestelling",
         "text_variation_price_label": "Prijs op deze locatie:"
       }
@@ -280,7 +278,7 @@
         "text_selector_changed_to": "লোকেশন পরিবর্তন করা হয়েছে: %s",
         "text_selector_all_products": "সব পণ্য",
         "text_selector_error_security": "নিরাপত্তা যাচাই ব্যর্থ হয়েছে",
-        "text_selector_error_invalid": "অবৈধ লোকেশন",
+        "text_selector_error_invalid": "লোকেশনটি সঠিক নয়",
         "text_selector_error_not_found": "লোকেশন পাওয়া যায়নি",
         "text_location_info_tab_title": "লোকেশন তথ্য",
         "text_location_contact_heading": "যোগাযোগের তথ্য",
@@ -353,9 +351,8 @@
         "text_restriction_cannot_add": "কার্টে যোগ করা যাবে না। %s বর্তমানে বন্ধ।",
         "text_restriction_title": "লোকেশন বন্ধ",
         "text_variation_info_heading": "%s এর জন্য তথ্য",
-        "text_variation_stock_label": "স্টক",
+        "text_variation_stock_label": "স্টক:",
         "text_variation_in_stock": "%s টি স্টকে আছে",
-        "text_variation_out_of_stock": "স্টক শেষ",
         "text_variation_backorder": "ব্যাকঅর্ডারে উপলব্ধ",
         "text_variation_price_label": "এই লোকেশনে মূল্য:"
       }

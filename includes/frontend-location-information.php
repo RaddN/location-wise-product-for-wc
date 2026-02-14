@@ -986,7 +986,12 @@ class MULOPIMFWC_Frontend_Location_Information
                     </div>
                 <?php endif; ?>
             </div>
-            <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
+            <?php
+            $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
+            ? $mulopimfwc_options['enable_store_locator']
+            : 'off';
+
+            if ($this->are_valid_coordinates($latitude, $longitude) && $enable_locator === 'on'): ?>
                 <div class="mulopimfwc-map-wrapper">
                     <div id="mulopimfwc-map-<?php echo esc_attr($map_id_prefix . $term_id); ?>"
                         class="mulopimfwc-location-map mulopimfwc-map-small"
@@ -1046,14 +1051,6 @@ class MULOPIMFWC_Frontend_Location_Information
             if (is_user_logged_in() && current_user_can('administrator')) {
                 return '<p>When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).</p>';
             }
-            return '';
-        }
-
-        $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
-            ? $mulopimfwc_options['enable_store_locator']
-            : 'off';
-
-        if ($enable_locator !== 'on') {
             return '';
         }
 

@@ -1237,7 +1237,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.3.45');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.3.48');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -1329,7 +1329,7 @@ function mulopimfwc_display_location_specific_stock_info()
     $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location->term_id, true);
 
     echo '<div class="location-specific-info">';
-    echo '<h4>' . sprintf(esc_html('Information for %s location', 'multi-location-product-and-inventory-management'), esc_attr($location->name)) . '</h4>';
+    echo '<h4>' . sprintf(mulopimfwc_get_text_value('text_variation_info_heading'), esc_attr($location->name)) . '</h4>';
 
     // Display stock status
     if ($location_stock !== '') {
@@ -1341,13 +1341,13 @@ function mulopimfwc_display_location_specific_stock_info()
                 'count_format' => 'phrase',
                 'backorder_label' => 'available',
             ])
-            : ['show' => true, 'label' => ($location_stock > 0 ? sprintf(esc_html('%d item in stock', '%d items in stock', $location_stock, 'multi-location-product-and-inventory-management'), esc_attr($location_stock)) : __('Out of stock', 'multi-location-product-and-inventory-management')), 'status' => ($location_stock > 0 ? 'instock' : 'outofstock'), 'level' => '', 'class' => ''];
+            : ['show' => true, 'label' => ($location_stock > 0 ? sprintf(esc_html(mulopimfwc_get_text_value('text_variation_in_stock'), mulopimfwc_get_text_value('text_variation_in_stock'), $location_stock, 'multi-location-product-and-inventory-management'), esc_attr($location_stock)) : __('Out of stock', 'multi-location-product-and-inventory-management')), 'status' => ($location_stock > 0 ? 'instock' : 'outofstock'), 'level' => '', 'class' => ''];
 
         if (!empty($stock_data['show']) && $stock_data['label'] !== '') {
             $status_class = ($stock_data['status'] === 'outofstock') ? 'out-of-stock' : (($stock_data['status'] === 'onbackorder') ? 'on-backorder' : 'in-stock');
             $level_class = !empty($stock_data['level']) ? ' stock-level-' . $stock_data['level'] : '';
             echo '<p class="location-stock">';
-            echo '<strong>' . esc_html_e('Stock:', 'multi-location-product-and-inventory-management') . '</strong> ';
+            echo '<strong>' . mulopimfwc_get_text_value('text_variation_stock_label') . '</strong> ';
             echo '<span class="' . esc_attr($status_class . $level_class) . '">' . esc_html($stock_data['label']) . '</span>';
             echo '</p>';
         }
@@ -1356,7 +1356,7 @@ function mulopimfwc_display_location_specific_stock_info()
     // Display location-specific prices if they exist
     if (!empty($location_regular_price)) {
         echo '<p class="location-price">';
-        echo '<strong>' . esc_html_e('Price at this location:', 'multi-location-product-and-inventory-management') . '</strong> ';
+        echo '<strong>' . mulopimfwc_get_text_value('text_variation_price_label') . '</strong> ';
 
         if (!empty($location_sale_price)) {
             echo '<del>' . wp_kses_post(wc_price($location_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($location_sale_price)) . '</ins>';

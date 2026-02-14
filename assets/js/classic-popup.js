@@ -1,4 +1,8 @@
 jQuery(function ($) {
+
+    const locationI18n = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.i18n) || {};
+    const selectStoreLocationAlert = locationI18n.selectStoreLocation || 'Please select a store location.';
+
     // Function to initialize classic popup modals
     function initializeClassicPopups() {
         // Handle all classic popup modals (including instance-specific ones)
@@ -328,7 +332,7 @@ jQuery(function ($) {
         e.preventDefault();
         var slug = $selected.val();
         if (!slug) {
-            alert('Please select a store location.');
+            alert(selectStoreLocationAlert);
             return;
         }
         

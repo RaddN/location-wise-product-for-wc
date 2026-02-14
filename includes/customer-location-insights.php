@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.3.45
+ * @since 1.1.3.48
  */
 
 if (!defined('ABSPATH')) {
@@ -789,14 +789,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.3.45'
+                '1.1.3.48'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.3.45',
+                '1.1.3.48',
                 true
             );
 
@@ -2684,7 +2684,7 @@ function mulopimfwc_display_data_size_info()
     $instance = Mulopimfwc_Customer_Location_Insights::get_instance();
     $info = $instance->get_data_size_info();
     ?>
-    <div class="mulopimfwc-data-info" style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0073aa; border-radius: 4px;">
+    <div class="mulopimfwc-data-info" style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-left: 4px solid var(--lwp-primary, #667eea); border-radius: 4px;">
         <h3 style="margin-top: 0;"><?php esc_html_e('Analytics Data Summary', 'multi-location-product-and-inventory-management'); ?></h3>
         <ul style="margin: 0; list-style: none; padding: 0;">
             <li><strong><?php esc_html_e('Tracking Entries:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html($info['tracking_entries']); ?> / <?php echo esc_html(Mulopimfwc_Customer_Location_Insights::MAX_TRACKING_ENTRIES); ?></li>

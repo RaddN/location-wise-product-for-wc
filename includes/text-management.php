@@ -29,7 +29,7 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                     ],
                     [
                         'key' => 'mulopimfwc_popup_placeholder',
-                        'label' => __('Popup Placeholder', 'multi-location-product-and-inventory-management'),
+                        'label' => __('Dropdown Placeholder', 'multi-location-product-and-inventory-management'),
                         'default' => __('-- Select a Store --', 'multi-location-product-and-inventory-management'),
                         'description' => __('Placeholder for the default popup dropdown.', 'multi-location-product-and-inventory-management'),
                         'type' => 'text',
@@ -38,7 +38,7 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                     ],
                     [
                         'key' => 'text_popup_placeholder_subarea',
-                        'label' => __('Popup Placeholder (Sub-area)', 'multi-location-product-and-inventory-management'),
+                        'label' => __('Dropdown Placeholder (Sub-area)', 'multi-location-product-and-inventory-management'),
                         'default' => __('-- Select Sub-area --', 'multi-location-product-and-inventory-management'),
                         'description' => __('Placeholder for deeper hierarchical dropdowns.', 'multi-location-product-and-inventory-management'),
                         'type' => 'text',
@@ -830,8 +830,8 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                 ],
             ],
             'variation_info' => [
-                'title' => __('Product Variation Info', 'multi-location-product-and-inventory-management'),
-                'description' => __('Labels used in the variation-specific location info block.', 'multi-location-product-and-inventory-management'),
+                'title' => __('Location Based Product Info (Single & Archive Pages)', 'multi-location-product-and-inventory-management'),
+                'description' => __('Labels used in the variation-specific location info block displayed on single product and archive pages when Location Information is enabled in Settings → Inventory.', 'multi-location-product-and-inventory-management'),
                 'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0f2fe;padding:10px;border-radius:6px"><path fill="#0ea5e9" d="M5 4h14a2 2 0 0 1 2 2v3H3V6a2 2 0 0 1 2-2zm-2 7h18v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7zm5 2h4v2H8v-2z"/></svg>',
                 'fields' => [
                     [
@@ -853,13 +853,6 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'label' => __('Variation In Stock Label', 'multi-location-product-and-inventory-management'),
                         'default' => __('%s in stock', 'multi-location-product-and-inventory-management'),
                         'description' => __('Used with the stock quantity. Use %s for quantity.', 'multi-location-product-and-inventory-management'),
-                        'type' => 'text',
-                    ],
-                    [
-                        'key' => 'text_variation_out_of_stock',
-                        'label' => __('Variation Out of Stock Label', 'multi-location-product-and-inventory-management'),
-                        'default' => __('Out of stock', 'multi-location-product-and-inventory-management'),
-                        'description' => __('Shown when a variation is out of stock at a location.', 'multi-location-product-and-inventory-management'),
                         'type' => 'text',
                     ],
                     [

@@ -101,7 +101,7 @@
 .mulopimfwc-recommendation-item:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-4px);
-    border-color: #0073aa;
+    border-color: var(--lwp-primary, #667eea);
 }
 
 /* Popularity Badge */
@@ -201,7 +201,7 @@
 }
 
 .mulopimfwc-recommendation-item:hover .mulopimfwc-recommendation-product-title {
-    color: #0073aa;
+    color: var(--lwp-primary, #667eea);
 }
 
 /* Price */
@@ -282,8 +282,8 @@
 
 /* Notice */
 .mulopimfwc-recommendations-notice {
-    background: #f0f8ff;
-    border-left: 4px solid #0073aa;
+    background: color-mix(in srgb, var(--lwp-primary) 5%, transparent);
+    border-left: 4px solid var(--lwp-primary, #667eea);
     padding: 15px 20px;
     border-radius: 4px;
     color: #333;
@@ -294,8 +294,9 @@
 }
 
 .mulopimfwc-recommendations-notice::before {
-    content: "ℹ️";
+    content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xml:space="preserve"><path d="M15 14h2v8h-2zm0-4h2v2h-2z"/><circle fill="none" stroke="%23000" stroke-width="2" stroke-miterlimit="10" cx="16" cy="16" r="12"/></svg>');
     font-size: 20px;
+    width: 20px;
 }
 
 /* Loading State */
@@ -312,7 +313,7 @@
     width: 40px;
     height: 40px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #0073aa;
+    border-top: 4px solid var(--lwp-primary, #667eea);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-left: 15px;
