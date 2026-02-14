@@ -424,7 +424,7 @@ class MULOPIMFWC_Admin
                         
                         // Only truncate if text is longer than 20 characters
                         if (fullText.length > 20) {
-                            var truncated = fullText.substring(0, 20);
+                            var truncated = fullText.substring(0, 60);
                             $p.text(truncated + ".....").addClass("mulopimfwc-truncated-description");
                         }
                     });
@@ -1829,6 +1829,14 @@ class MULOPIMFWC_Admin
             width: 100%;
             max-width: 200px;
         }
+        .mulopimfwc-location-id {
+            color: #646970;
+            font-weight: normal;
+            display:none;
+        }
+        .taxonomy-mulopimfwc_store_location table.wp-list-table tr:hover .mulopimfwc-location-id {
+            display:inline;
+        }
         </style>
         ';
         echo $css;
@@ -1841,7 +1849,7 @@ class MULOPIMFWC_Admin
             $(document).ready(function() {
                 var $tbody = $("#the-list");
                 
-                // Add data-term-id to all rows for easier access
+                // Add data-term-id to all rows and inject styled location ID in Name column
                 $tbody.find("tr").each(function() {
                     var $row = $(this);
                     var rowId = $row.attr("id");
@@ -1850,6 +1858,12 @@ class MULOPIMFWC_Admin
                         $row.attr("data-term-id", termId);
                         // Also add to drag handle if it exists
                         $row.find(".mulopimfwc-drag-handle").attr("data-term-id", termId);
+                        // Insert styled location ID before row-actions in Name column
+                        var $nameCell = $row.find("td.column-name");
+                        var $rowActions = $nameCell.find(".row-actions");
+                        if ($nameCell.length && $rowActions.length && !$nameCell.find(".mulopimfwc-location-id").length) {
+                            $rowActions.before(" <span class=\"mulopimfwc-location-id\">ID: " + termId + "</span>");
+                        }
                     }
                 });
                 
