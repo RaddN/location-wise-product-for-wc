@@ -6622,6 +6622,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
             wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.3.30', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
+            wp_add_inline_script('mulopimfwc_select2', 'jQuery.fn.select2&&jQuery.fn.select2.defaults&&jQuery.fn.select2.defaults.set("language",{noResults:function(){return"' . esc_js(mulopimfwc_get_text_value('text_popup_msg_no_results')) . '";}});', 'after');
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
             if (in_array($template_selection, ['modern', 'modern-simple'], true)) {
                 wp_enqueue_script(

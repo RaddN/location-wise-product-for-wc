@@ -40,7 +40,7 @@ class Location_Wise_Products_Filter
 
         // Display filter UI on shop/archive pages (only if enabled)
         add_action('woocommerce_before_shop_loop', [$this, 'render_filter_ui'], 10);
-        
+
         // Register shortcode for manual placement
         add_shortcode('mulopimfwc_product_filter', [$this, 'shortcode_filter_ui']);
 
@@ -71,12 +71,12 @@ class Location_Wise_Products_Filter
 
         // Load on shop/archive pages or if shortcode is being used
         $load_scripts = is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy();
-        
+
         // Check if shortcode is present in current post/page
         if (!$load_scripts) {
             global $post;
-            if ($post && (has_shortcode($post->post_content, 'mulopimfwc_product_filter') || 
-                         (function_exists('has_block') && has_block('shortcode', $post->post_content)))) {
+            if ($post && (has_shortcode($post->post_content, 'mulopimfwc_product_filter') ||
+                (function_exists('has_block') && has_block('shortcode', $post->post_content)))) {
                 $load_scripts = true;
             }
         }
@@ -110,9 +110,7 @@ class Location_Wise_Products_Filter
                 'error' => mulopimfwc_get_text_value('text_filter_msg_error'),
                 'allLocations' => mulopimfwc_get_text_value('text_filter_all_locations'),
                 'inStock' => mulopimfwc_get_text_value('text_filter_in_stock'),
-                'outOfStock' => mulopimfwc_get_text_value('text_filter_out_stock'),
-                'filterProducts' => mulopimfwc_get_text_value('text_filter_msg_filter_products'),
-                'clearFilters' => mulopimfwc_get_text_value('text_filter_msg_clear_filters'),
+                'outOfStock' => mulopimfwc_get_text_value('text_filter_out_stock')
             ],
         ]);
     }
@@ -128,12 +126,12 @@ class Location_Wise_Products_Filter
 
         // Check if automatic display is enabled
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         // Get setting value, default to 'on' for backward compatibility if not set
         $enable_filter = isset($options['enable_product_filter']) ? $options['enable_product_filter'] : 'off';
-        
+
         // If explicitly set to 'off', don't render
         if ($enable_filter === 'off' || $enable_filter === false || $enable_filter === '0' || $enable_filter === '') {
             return; // Filter is disabled
@@ -178,7 +176,7 @@ class Location_Wise_Products_Filter
         $locations = $this->get_available_locations();
         $show_location = !isset($atts['location']) || $atts['location'] !== 'no';
         $show_stock = !isset($atts['stock']) || $atts['stock'] !== 'no';
-        
+
         if (empty($locations) && (!$this->should_show_stock_filter() || !$show_stock)) {
             if (!$is_shortcode) {
                 return; // No filters to show (only return early if not shortcode)
@@ -191,55 +189,53 @@ class Location_Wise_Products_Filter
         $current_location = ''; //isset($_GET['location']) ? sanitize_text_field($_GET['location']) : '';
         $current_stock = ''; //isset($_GET['stock']) ? sanitize_text_field($_GET['stock']) : '';
 
-        ?>
+?>
         <div class="mulopimfwc-product-filter" id="mulopimfwc-product-filter" <?php echo $is_shortcode ? 'data-shortcode="true"' : ''; ?>>
             <div class="mulopimfwc-filter-container">
                 <?php if (!empty($locations) && $show_location): ?>
-                <div class="mulopimfwc-filter-field mulopimfwc-filter-location">
-                    <label for="mulopimfwc-filter-location-select">
-                        <?php echo esc_html(mulopimfwc_get_text_value('text_filter_location_label')); ?>
-                    </label>
-                    <select id="mulopimfwc-filter-location-select" name="location" class="mulopimfwc-filter-select">
-                        <option value=""><?php echo esc_html(mulopimfwc_get_text_value('text_filter_all_locations')); ?></option>
-                        <?php foreach ($locations as $location): ?>
-                            <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>" <?php selected($current_location, rawurldecode($location->slug)); ?>>
-                                <?php echo esc_html($location->name); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                    <div class="mulopimfwc-filter-field mulopimfwc-filter-location">
+                        <label for="mulopimfwc-filter-location-select">
+                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_location_label')); ?>
+                        </label>
+                        <select id="mulopimfwc-filter-location-select" name="location" class="mulopimfwc-filter-select">
+                            <option value=""><?php echo esc_html(mulopimfwc_get_text_value('text_filter_all_locations')); ?></option>
+                            <?php foreach ($locations as $location): ?>
+                                <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>" <?php selected($current_location, rawurldecode($location->slug)); ?>>
+                                    <?php echo esc_html($location->name); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 <?php endif; ?>
 
                 <?php if ($this->should_show_stock_filter() && $show_stock): ?>
-                <div class="mulopimfwc-filter-field mulopimfwc-filter-stock">
-                    <label for="mulopimfwc-filter-stock-select">
-                        <?php echo esc_html(mulopimfwc_get_text_value('text_filter_stock_label')); ?>
-                    </label>
-                    <select id="mulopimfwc-filter-stock-select" name="stock" class="mulopimfwc-filter-select">
-                        <option value=""><?php echo esc_html(mulopimfwc_get_text_value('text_filter_all_products')); ?></option>
-                        <option value="instock" <?php selected($current_stock, 'instock'); ?>>
-                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_in_stock')); ?>
-                        </option>
-                        <option value="outofstock" <?php selected($current_stock, 'outofstock'); ?>>
-                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_out_stock')); ?>
-                        </option>
-                    </select>
-                </div>
+                    <div class="mulopimfwc-filter-field mulopimfwc-filter-stock">
+                        <label for="mulopimfwc-filter-stock-select">
+                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_stock_label')); ?>
+                        </label>
+                        <select id="mulopimfwc-filter-stock-select" name="stock" class="mulopimfwc-filter-select">
+                            <option value=""><?php echo esc_html(mulopimfwc_get_text_value('text_filter_all_products')); ?></option>
+                            <option value="instock" <?php selected($current_stock, 'instock'); ?>>
+                                <?php echo esc_html(mulopimfwc_get_text_value('text_filter_in_stock')); ?>
+                            </option>
+                            <option value="outofstock" <?php selected($current_stock, 'outofstock'); ?>>
+                                <?php echo esc_html(mulopimfwc_get_text_value('text_filter_out_stock')); ?>
+                            </option>
+                        </select>
+                    </div>
                 <?php endif; ?>
 
                 <div class="mulopimfwc-filter-actions">
                     <button type="button" class="button mulopimfwc-filter-button" id="mulopimfwc-filter-button">
                         <?php echo esc_html(mulopimfwc_get_text_value('text_filter_button')); ?>
                     </button>
-                    <?php if ($current_location || $current_stock): ?>
-                        <button type="button" class="button mulopimfwc-clear-button" id="mulopimfwc-clear-button">
-                            <?php echo esc_html(mulopimfwc_get_text_value('text_filter_clear')); ?>
-                        </button>
-                    <?php endif; ?>
+                    <button type="button" class="button mulopimfwc-clear-button" id="mulopimfwc-clear-button">
+                        <?php echo esc_html(mulopimfwc_get_text_value('text_filter_clear')); ?>
+                    </button>
                 </div>
             </div>
         </div>
-        <?php
+<?php
     }
 
     /**
@@ -276,9 +272,9 @@ class Location_Wise_Products_Filter
     private function should_show_stock_filter()
     {
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         return isset($options['enable_location_stock']) && $options['enable_location_stock'] === 'on';
     }
 
@@ -412,18 +408,18 @@ class Location_Wise_Products_Filter
             $filtered_posts = [];
             // OPTIMIZED: Use cached method instead of direct get_term_by
             $location_term = !empty($location_slug) ? get_term_by('slug', $location_slug, 'mulopimfwc_store_location') : null;
-            
+
             // Increase memory limit for stock filtering
             if (function_exists('ini_set')) {
                 @ini_set('memory_limit', '256M');
             }
-            
+
             do {
                 $all_args = $args;
                 $all_args['posts_per_page'] = $batch_size;
                 $all_args['paged'] = $batch_page;
                 $all_query = new WP_Query($all_args);
-                
+
                 if (!$all_query->have_posts()) {
                     break;
                 }
@@ -445,15 +441,14 @@ class Location_Wise_Products_Filter
                 }
 
                 wp_reset_postdata();
-                
+
                 // Safety check: limit total batches to prevent infinite loops
                 // Max 10,000 products (500 * 20 batches)
                 if ($batch_page >= 20) {
                     break;
                 }
-                
+
                 $batch_page++;
-                
             } while ($all_query->found_posts >= $batch_size);
 
             // Re-query with filtered IDs and proper pagination
@@ -461,15 +456,15 @@ class Location_Wise_Products_Filter
                 $posts_per_page = $args['posts_per_page'];
                 $offset = ($page - 1) * $posts_per_page;
                 $paginated_posts = array_slice($filtered_posts, $offset, $posts_per_page);
-                
+
                 if (!empty($paginated_posts)) {
                     // Update args for paginated query
                     $args['post__in'] = $paginated_posts;
-                    $args['orderby'] = isset($_POST['orderby']) && $_POST['orderby'] !== 'menu_order' 
-                        ? sanitize_text_field($_POST['orderby']) 
+                    $args['orderby'] = isset($_POST['orderby']) && $_POST['orderby'] !== 'menu_order'
+                        ? sanitize_text_field($_POST['orderby'])
                         : 'post__in';
                     $args['paged'] = 1; // Already paginated via array_slice
-                    
+
                     $query = new WP_Query($args);
                     // Update found_posts to reflect filtered total
                     $query->found_posts = count($filtered_posts);
@@ -506,12 +501,12 @@ class Location_Wise_Products_Filter
             // End product loop (closes wrapper)
             woocommerce_product_loop_end();
         } else {
-            wc_get_template('loop/no-products-found.php');
+            echo '<p class="woocommerce-info" style="grid-column: 1 / -1;">' . esc_html(mulopimfwc_get_text_value('text_filter_msg_no_results')) . '</p>';
         }
         wp_reset_postdata();
 
         $products_html = ob_get_clean();
-        
+
         // Extract just the wrapper and content to preserve structure
         // The output should already have the correct wrapper (ul.products or similar)
 
@@ -521,7 +516,7 @@ class Location_Wise_Products_Filter
         $total = $query->found_posts;
         $first = ($page - 1) * $posts_per_page + 1;
         $last = min($page * $posts_per_page, $total);
-        
+
         if ($total <= $posts_per_page) {
             $result_count_text = sprintf(
                 _n('Showing the single result', 'Showing all %d results', $total, 'woocommerce'),
@@ -535,7 +530,7 @@ class Location_Wise_Products_Filter
                 $total
             );
         }
-        
+
         echo '<p class="woocommerce-result-count">';
         echo esc_html($result_count_text);
         echo '</p>';
@@ -589,7 +584,7 @@ class Location_Wise_Products_Filter
             $cache_version = 1;
             set_transient('mulopimfwc_filter_cache_version', $cache_version, self::CACHE_EXPIRATION * 24);
         }
-        
+
         // Sort params for consistent cache keys
         ksort($params);
         $params['cache_version'] = $cache_version;
@@ -614,7 +609,7 @@ class Location_Wise_Products_Filter
             $cache_version = intval($cache_version) + 1;
         }
         set_transient('mulopimfwc_filter_cache_version', $cache_version, self::CACHE_EXPIRATION * 24);
-        
+
         // Also clear available locations cache
         wp_cache_delete('available_locations_frontend', self::CACHE_GROUP);
     }
@@ -627,7 +622,7 @@ class Location_Wise_Products_Filter
         if ($taxonomy === 'mulopimfwc_store_location') {
             // Clear available locations cache
             wp_cache_delete('available_locations_frontend', self::CACHE_GROUP);
-            
+
             // Invalidate filter cache version
             $cache_version = get_transient('mulopimfwc_filter_cache_version');
             if (false === $cache_version) {
@@ -647,7 +642,7 @@ class Location_Wise_Products_Filter
         if ($taxonomy === 'mulopimfwc_store_location') {
             // Clear available locations cache
             wp_cache_delete('available_locations_frontend', self::CACHE_GROUP);
-            
+
             // Invalidate filter cache version
             $cache_version = get_transient('mulopimfwc_filter_cache_version');
             if (false === $cache_version) {
@@ -673,7 +668,7 @@ class Location_Wise_Products_Filter
         // Get location-specific stock
         global $mulopimfwc_options;
         $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
-        $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
+        $terms = array_map('rawurldecode', wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
 
         // If enable_all_locations is on and product has no location terms, use global stock
         if ($enable_all_locations === 'on' && empty($terms)) {

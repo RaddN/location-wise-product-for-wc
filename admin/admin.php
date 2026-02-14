@@ -273,12 +273,14 @@ class MULOPIMFWC_Admin
 
             // Initialize Select2 for all select fields with common class
             $(document).ready(function(){
+                var select2NoResults = ' . wp_json_encode(mulopimfwc_get_text_value('text_popup_msg_no_results')) . ';
                 function initSelect2($select){
                     var placeholder = $select.data("placeholder") || "";
                     $select.select2({
                         width: "100%",
                         placeholder: placeholder,
-                        allowClear: true
+                        allowClear: true,
+                        language: { noResults: function() { return select2NoResults; } }
                     });
                 }
 

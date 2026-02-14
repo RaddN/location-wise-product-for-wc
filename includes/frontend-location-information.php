@@ -186,10 +186,6 @@ class MULOPIMFWC_Frontend_Location_Information
             ? intval($mulopimfwc_options['default_map_zoom'])
             : 15;
 
-        if ($enable_locator !== 'on' && !$force_popup_assets) {
-            return;
-        }
-
         // Check if we're on a location archive or single product with location
         // if (!is_tax('mulopimfwc_store_location') && !is_singular('product')) {
         //     return;

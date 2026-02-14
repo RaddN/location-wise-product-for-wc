@@ -84,7 +84,7 @@ button#mulopimfwc-filter-button{
 }
 
 .mulopimfwc-clear-button {
-    background-color: #6c757d;
+    background-color: var(--lwp-secondary, #ff0000) !important;
     color: #fff;
 }
 

@@ -84,7 +84,7 @@ $allow_backdrop_close = !empty($GLOBALS['mulopimfwc_modal_allow_backdrop_close']
                             $placeholder = mulopimfwc_get_text_value('mulopimfwc_popup_placeholder');
                             break;
                         case 1:
-                            $placeholder = mulopimfwc_get_text_value('text_popup_placeholder_area');
+                            $placeholder = mulopimfwc_get_text_value('mulopimfwc_popup_placeholder');
                             break;
                         case 2:
                             $placeholder = mulopimfwc_get_text_value('text_popup_placeholder_subarea');

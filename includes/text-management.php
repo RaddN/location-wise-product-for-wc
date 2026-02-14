@@ -37,13 +37,6 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'pro_only' => true,
                     ],
                     [
-                        'key' => 'text_popup_placeholder_area',
-                        'label' => __('Popup Placeholder (Area)', 'multi-location-product-and-inventory-management'),
-                        'default' => __('-- Select Area --', 'multi-location-product-and-inventory-management'),
-                        'description' => __('Placeholder for the first level of hierarchical dropdowns.', 'multi-location-product-and-inventory-management'),
-                        'type' => 'text',
-                    ],
-                    [
                         'key' => 'text_popup_placeholder_subarea',
                         'label' => __('Popup Placeholder (Sub-area)', 'multi-location-product-and-inventory-management'),
                         'default' => __('-- Select Sub-area --', 'multi-location-product-and-inventory-management'),
@@ -229,8 +222,8 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                 ],
             ],
             'product_selector' => [
-                'title' => __('Product Selector', 'multi-location-product-and-inventory-management'),
-                'description' => __('Text shown in the product page location selector and shortcode selector.', 'multi-location-product-and-inventory-management'),
+                'title' => __('Product Page Location Texts', 'multi-location-product-and-inventory-management'),
+                'description' => __('Texts used on the single product page for the location selector and related messages.', 'multi-location-product-and-inventory-management'),
                 'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#ecfccb;padding:10px;border-radius:6px"><path fill="#65a30d" d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 5h10v2H4v-2z"/></svg>',
                 'fields' => [
                     [
@@ -476,20 +469,6 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'label' => __('Filter Error Message', 'multi-location-product-and-inventory-management'),
                         'default' => __('An error occurred. Please try again.', 'multi-location-product-and-inventory-management'),
                         'description' => __('Shown when the filter encounters an error.', 'multi-location-product-and-inventory-management'),
-                        'type' => 'text',
-                    ],
-                    [
-                        'key' => 'text_filter_msg_filter_products',
-                        'label' => __('Filter Products Label', 'multi-location-product-and-inventory-management'),
-                        'default' => __('Filter Products', 'multi-location-product-and-inventory-management'),
-                        'description' => __('Accessible label for applying filters.', 'multi-location-product-and-inventory-management'),
-                        'type' => 'text',
-                    ],
-                    [
-                        'key' => 'text_filter_msg_clear_filters',
-                        'label' => __('Clear Filters Label', 'multi-location-product-and-inventory-management'),
-                        'default' => __('Clear Filters', 'multi-location-product-and-inventory-management'),
-                        'description' => __('Accessible label for clearing filters.', 'multi-location-product-and-inventory-management'),
                         'type' => 'text',
                     ],
                 ],
