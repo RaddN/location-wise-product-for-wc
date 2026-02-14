@@ -10,6 +10,7 @@ class mulopimfwc_settings
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_init', [$this, 'handle_reset_settings']);
         add_action('admin_init', [$this, 'handle_reset_text_management']);
+        add_action('admin_init', [$this, 'maybe_flush_rewrite_rules_on_settings_save'], 30);
     }
 
     /**
@@ -4880,6 +4881,40 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         }
 
         return $sanitized;
+    }
+
+    /**
+     * Flush rewrite rules after settings are saved (options.php redirect).
+     */
+    public function maybe_flush_rewrite_rules_on_settings_save()
+    {
+        if (!is_admin()) {
+            return;
+        }
+
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if ($page !== 'multi-location-product-and-inventory-management-settings') {
+            return;
+        }
+
+        $updated = isset($_GET['settings-updated']) ? sanitize_text_field(wp_unslash($_GET['settings-updated'])) : '';
+        if ($updated !== 'true' && $updated !== '1') {
+            return;
+        }
+
+        static $did_flush = false;
+        if ($did_flush) {
+            return;
+        }
+        $did_flush = true;
+
+        global $MULOPIMFWC_Admin;
+        if ($MULOPIMFWC_Admin instanceof MULOPIMFWC_Admin) {
+            $MULOPIMFWC_Admin->register_store_location_taxonomy();
+        }
+
+        delete_option('mulopimfwc_flush_rewrite_pending');
+        flush_rewrite_rules();
     }
 
     public function settings_section_callback()

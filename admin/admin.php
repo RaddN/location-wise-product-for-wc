@@ -11,6 +11,7 @@ class MULOPIMFWC_Admin
         $this->stock_central = new mulopimfwc_Stock_Central();
 
         add_action('init', [$this, 'register_store_location_taxonomy']);
+        add_action('init', [$this, 'maybe_flush_rewrite_rules'], 20);
 
         add_action('admin_enqueue_scripts', [$this, 'mulopimfwc_admin_assets']);
 
@@ -91,25 +92,45 @@ class MULOPIMFWC_Admin
     }
 
     /**
-     * Flush rewrite rules when location URL settings change
+     * Flush rewrite rules after plugin settings change.
      */
     public function flush_rewrite_on_settings_change($old_value, $new_value)
     {
-        // Check if location URL settings changed
-        $old_prefix = isset($old_value['location_url_prefix']) ? $old_value['location_url_prefix'] : 'store-location';
-        $new_prefix = isset($new_value['location_url_prefix']) ? $new_value['location_url_prefix'] : 'store-location';
+        $should_flush = apply_filters('mulopimfwc_flush_rewrite_on_settings_save', true, $old_value, $new_value);
+        if ($should_flush) {
+            update_option('mulopimfwc_flush_rewrite_pending', time(), false);
 
-        $old_enabled = isset($old_value['enable_location_urls']) ? $old_value['enable_location_urls'] : 'on';
-        $new_enabled = isset($new_value['enable_location_urls']) ? $new_value['enable_location_urls'] : 'on';
-
-        // NEW: Check if URL format changed
-        $old_format = isset($old_value['url_location_format']) ? $old_value['url_location_format'] : 'query_param';
-        $new_format = isset($new_value['url_location_format']) ? $new_value['url_location_format'] : 'query_param';
-
-        // If prefix, enabled status, or format changed, flush rewrite rules
-        if ($old_prefix !== $new_prefix || $old_enabled !== $new_enabled || $old_format !== $new_format) {
-            flush_rewrite_rules();
+            if (did_action('init')) {
+                // Re-register taxonomy with the latest settings before flushing.
+                $this->register_store_location_taxonomy();
+                flush_rewrite_rules();
+                delete_option('mulopimfwc_flush_rewrite_pending');
+            }
         }
+    }
+
+    /**
+     * Flush rewrite rules on the next init after settings save.
+     */
+    public function maybe_flush_rewrite_rules()
+    {
+        if (!is_admin() && !wp_doing_ajax()) {
+            return;
+        }
+
+        $pending = (int) get_option('mulopimfwc_flush_rewrite_pending', 0);
+        if ($pending <= 0) {
+            return;
+        }
+
+        static $did_flush = false;
+        if ($did_flush) {
+            return;
+        }
+        $did_flush = true;
+
+        delete_option('mulopimfwc_flush_rewrite_pending');
+        flush_rewrite_rules();
     }
 
     public function shortcode_location_status($atts)
