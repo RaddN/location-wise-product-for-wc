@@ -987,6 +987,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 <?php endif; ?>
             </div>
             <?php
+            global $mulopimfwc_options;
             $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
             ? $mulopimfwc_options['enable_store_locator']
             : 'off';
