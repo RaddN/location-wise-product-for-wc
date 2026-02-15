@@ -400,6 +400,40 @@ function mulopimfwc_get_location_term_id($location_slug)
     return $location ? $location->term_id : false;
 }
 
+if (!function_exists('mulopimfwc_is_product_assigned_to_location_for_info')) {
+    /**
+     * Check whether a product is currently assigned to a specific location slug.
+     *
+     * Used by frontend "location information" blocks so stale post meta does not
+     * render after a location is unassigned from a product.
+     *
+     * @param int    $product_id
+     * @param string $location_slug
+     * @param string $enable_all_locations 'on'|'off'
+     * @return bool
+     */
+    function mulopimfwc_is_product_assigned_to_location_for_info($product_id, $location_slug, $enable_all_locations = 'off')
+    {
+        if (empty($product_id) || empty($location_slug) || $location_slug === 'all-products') {
+            return false;
+        }
+
+        $terms = wp_get_object_terms((int) $product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+        if (is_wp_error($terms)) {
+            return false;
+        }
+
+        $terms = array_map('rawurldecode', (array) $terms);
+
+        // In "all locations" mode, products with no explicit terms use default Woo behavior.
+        if ($enable_all_locations === 'on' && empty($terms)) {
+            return false;
+        }
+
+        return in_array($location_slug, $terms, true);
+    }
+}
+
 // Helper function to get cart item location for a specific product
 function mulopimfwc_get_cart_item_location($product_id, $variation_id = 0)
 {
@@ -1302,9 +1336,9 @@ function mulopimfwc_display_location_specific_stock_info()
         return;
     }
 
-    $terms = array_map('rawurldecode', wp_get_object_terms($product->get_id(), 'mulopimfwc_store_location', ['fields' => 'slugs']));
-    if ($enable_all_locations === 'on' && empty($terms)) {
-        return; // Show default WooCommerce notice
+    // Verify current location is still assigned to this product.
+    if (!mulopimfwc_is_product_assigned_to_location_for_info($product->get_id(), $location_slug, $enable_all_locations)) {
+        return;
     }
 
     $product_id = $product->get_id();
@@ -1389,9 +1423,9 @@ function mulopimfwc_display_location_specific_stock_info_loop()
         return;
     }
 
-    $terms = array_map('rawurldecode', wp_get_object_terms($product->get_id(), 'mulopimfwc_store_location', ['fields' => 'slugs']));
-    if ($enable_all_locations === 'on' && empty($terms)) {
-        return; // Show default WooCommerce notice
+    // Verify current location is still assigned to this product.
+    if (!mulopimfwc_is_product_assigned_to_location_for_info($product->get_id(), $location_slug, $enable_all_locations)) {
+        return;
     }
 
     $product_id = $product->get_id();
@@ -1440,8 +1474,9 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
     }
     global $mulopimfwc_options;
     $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
-    $terms = array_map('rawurldecode', wp_get_object_terms($product->get_id(), 'mulopimfwc_store_location', ['fields' => 'slugs']));
-    if ($enable_all_locations === 'on' && empty($terms)) {
+
+    // Verify current location is still assigned to this product.
+    if (!mulopimfwc_is_product_assigned_to_location_for_info($product->get_id(), $location_slug, $enable_all_locations)) {
         return $variation_data;
     }
     // Get location term
@@ -1511,9 +1546,9 @@ function mulopimfwc_display_location_stock_status_in_loop()
         return; // No specific location selected
     }
 
-    $terms = array_map('rawurldecode', wp_get_object_terms($product->get_id(), 'mulopimfwc_store_location', ['fields' => 'slugs']));
-    if ($enable_all_locations === 'on' && empty($terms)) {
-        return; // Show default WooCommerce notice
+    // Verify current location is still assigned to this product.
+    if (!mulopimfwc_is_product_assigned_to_location_for_info($product->get_id(), $location_slug, $enable_all_locations)) {
+        return;
     }
 
     // Get location term
