@@ -729,15 +729,32 @@ class MULOPIMFWC_Dashboard
         SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)),0)
         FROM {$wpdb->posts} p
         INNER JOIN {$wpdb->postmeta} pm ON pm.post_id=p.ID AND pm.meta_key='_stock'
-        WHERE p.post_type='product'
-          AND p.post_status='publish'
+        WHERE p.post_type IN ('product', 'product_variation')
+          AND p.post_status IN ('publish', 'private')
           AND pm.meta_value IS NOT NULL AND pm.meta_value!=''
-          AND NOT EXISTS (
-            SELECT 1
-            FROM {$wpdb->term_relationships} tr
-            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
-            WHERE tr.object_id=p.ID
-              AND tt.taxonomy='mulopimfwc_store_location'
+          AND (
+            (
+              p.post_type='product'
+              AND NOT EXISTS (
+                SELECT 1
+                FROM {$wpdb->term_relationships} tr
+                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
+                WHERE tr.object_id=p.ID
+                  AND tt.taxonomy='mulopimfwc_store_location'
+              )
+            )
+            OR
+            (
+              p.post_type='product_variation'
+              AND p.post_parent > 0
+              AND NOT EXISTS (
+                SELECT 1
+                FROM {$wpdb->term_relationships} tr
+                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
+                WHERE tr.object_id=p.post_parent
+                  AND tt.taxonomy='mulopimfwc_store_location'
+              )
+            )
           )
     ";
         return (int) $wpdb->get_var($sql);
@@ -887,8 +904,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.3.60", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.3.60");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.3.65", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.3.65");
 
         $payload = $this->build_dashboard_payload();
 
@@ -1554,8 +1571,8 @@ class MULOPIMFWC_Dashboard
             SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)), 0) as total_stock
             FROM {$wpdb->posts} p
             INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-            WHERE p.post_type = 'product' 
-            AND p.post_status = 'publish'
+            WHERE p.post_type IN ('product', 'product_variation')
+            AND p.post_status IN ('publish', 'private')
             AND pm.meta_key = %s
             AND pm.meta_value != ''
             AND pm.meta_value IS NOT NULL
@@ -1702,8 +1719,8 @@ class MULOPIMFWC_Dashboard
                         SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)), 0) as total_stock
                         FROM {$wpdb->posts} p
                         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-                        WHERE p.post_type = 'product' 
-                        AND p.post_status = 'publish'
+                        WHERE p.post_type IN ('product', 'product_variation')
+                        AND p.post_status IN ('publish', 'private')
                         AND pm.meta_key = %s
                         AND pm.meta_value != ''
                         AND pm.meta_value IS NOT NULL
@@ -1728,16 +1745,33 @@ class MULOPIMFWC_Dashboard
                     SELECT COALESCE(SUM(CAST(pm.meta_value AS SIGNED)),0)
                     FROM {$wpdb->posts} p
                     INNER JOIN {$wpdb->postmeta} pm ON pm.post_id=p.ID AND pm.meta_key='_stock'
-                    WHERE p.post_type='product'
-                      AND p.post_status='publish'
+                    WHERE p.post_type IN ('product', 'product_variation')
+                      AND p.post_status IN ('publish', 'private')
                       AND pm.meta_value IS NOT NULL AND pm.meta_value!=''
                       AND DATE(p.post_date) BETWEEN %s AND %s
-                      AND NOT EXISTS (
-                        SELECT 1
-                        FROM {$wpdb->term_relationships} tr
-                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
-                        WHERE tr.object_id=p.ID
-                          AND tt.taxonomy='mulopimfwc_store_location'
+                      AND (
+                        (
+                          p.post_type='product'
+                          AND NOT EXISTS (
+                            SELECT 1
+                            FROM {$wpdb->term_relationships} tr
+                            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
+                            WHERE tr.object_id=p.ID
+                              AND tt.taxonomy='mulopimfwc_store_location'
+                          )
+                        )
+                        OR
+                        (
+                          p.post_type='product_variation'
+                          AND p.post_parent > 0
+                          AND NOT EXISTS (
+                            SELECT 1
+                            FROM {$wpdb->term_relationships} tr
+                            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id=tt.term_taxonomy_id
+                            WHERE tr.object_id=p.post_parent
+                              AND tt.taxonomy='mulopimfwc_store_location'
+                          )
+                        )
                       )
                 ", $date_from, $date_to);
                 $levels['Default'] = (int) $wpdb->get_var($query);

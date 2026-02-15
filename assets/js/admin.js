@@ -1317,8 +1317,8 @@ jQuery(document).ready(function ($) {
             htmlParts.push('</div>');
         }
         
-        // Purchase Quantity - not for grouped or external products
-        if (!isGrouped && !isExternal) {
+        // Purchase Quantity - not for grouped products
+        if (!isGrouped) {
             htmlParts.push('<div class="manage-form-row">');
             htmlParts.push('<label>Purchase Quantity:</label>');
             htmlParts.push('<input type="number" name="default[purchase_quantity]" value="' + (data.default.purchase_quantity || '') + '" min="0" step="1">');
@@ -1635,7 +1635,7 @@ jQuery(document).ready(function ($) {
         if ($stockField.length && !isGrouped && !isExternal) {
             defaultStock = parseFloat($stockField.val()) || 0;
         }
-        if ($purchaseQtyField.length && !isGrouped && !isExternal) {
+        if ($purchaseQtyField.length && !isGrouped) {
             defaultPurchaseQty = parseFloat($purchaseQtyField.val()) || 0;
         }
 
@@ -1872,7 +1872,7 @@ jQuery(document).ready(function ($) {
         } else {
             defaultStock = parseFloat($('#manage-product-modal input[name="default[stock_quantity]"]').val()) || 0;
         }
-        if (!$('#manage-product-modal input[name="default[purchase_quantity]"]').length || isGrouped || isExternal) {
+        if (!$('#manage-product-modal input[name="default[purchase_quantity]"]').length || isGrouped) {
             defaultPurchaseQty = 0;
         } else {
             defaultPurchaseQty = parseFloat($('#manage-product-modal input[name="default[purchase_quantity]"]').val()) || 0;
