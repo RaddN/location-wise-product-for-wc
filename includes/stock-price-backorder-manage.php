@@ -443,40 +443,100 @@ if (!function_exists('mulopimfwc_is_product_assigned_to_location_for_info')) {
 }
 
 // Helper function to get cart item location for a specific product
+if (!function_exists('mulopimfwc_get_item_assigned_location_slugs')) {
+    /**
+     * Get assigned location slugs for an item (variation first, then parent product).
+     *
+     * @param int $product_id
+     * @param int $variation_id
+     * @return array
+     */
+    function mulopimfwc_get_item_assigned_location_slugs($product_id, $variation_id = 0)
+    {
+        $ids_to_check = array_values(array_filter([absint($variation_id), absint($product_id)]));
+
+        foreach ($ids_to_check as $id) {
+            $terms = wp_get_object_terms($id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+            if (is_wp_error($terms) || empty($terms)) {
+                continue;
+            }
+
+            $slugs = array_values(array_unique(array_map('rawurldecode', (array) $terms)));
+            if (!empty($slugs)) {
+                return $slugs;
+            }
+        }
+
+        return [];
+    }
+}
+
+if (!function_exists('mulopimfwc_get_single_assigned_location_slug')) {
+    /**
+     * Get a single assigned location slug for an item.
+     *
+     * Returns a slug only when exactly one location is assigned.
+     *
+     * @param int $product_id
+     * @param int $variation_id
+     * @return string|null
+     */
+    function mulopimfwc_get_single_assigned_location_slug($product_id, $variation_id = 0)
+    {
+        $slugs = mulopimfwc_get_item_assigned_location_slugs($product_id, $variation_id);
+        if (count($slugs) === 1 && !empty($slugs[0])) {
+            return (string) $slugs[0];
+        }
+
+        return null;
+    }
+}
+
 function mulopimfwc_get_cart_item_location($product_id, $variation_id = 0)
 {
+    $product_id = absint($product_id);
+    $variation_id = absint($variation_id);
+    $single_slug = mulopimfwc_get_single_assigned_location_slug($product_id, $variation_id);
+
     if (!function_exists('WC') || !WC()->cart) {
-        return null;
+        return $single_slug;
     }
 
     foreach (WC()->cart->get_cart() as $cart_item) {
-        if (($variation_id && $variation_id == $cart_item['variation_id']) ||
-            (!$variation_id && $product_id == $cart_item['product_id'])
+        $cart_product_id = isset($cart_item['product_id']) ? absint($cart_item['product_id']) : 0;
+        $cart_variation_id = isset($cart_item['variation_id']) ? absint($cart_item['variation_id']) : 0;
+
+        if (($variation_id && $variation_id === $cart_variation_id) ||
+            (!$variation_id && $product_id === $cart_product_id)
         ) {
+            $resolved_variation_id = $variation_id ? $variation_id : $cart_variation_id;
+            $assigned_slugs = mulopimfwc_get_item_assigned_location_slugs($product_id, $resolved_variation_id);
+            $single_slug = mulopimfwc_get_single_assigned_location_slug($product_id, $resolved_variation_id);
+
             // Check if location exists in cart item
-            if (!isset($cart_item['mulopimfwc_location'])) {
-                return null;
+            if (!isset($cart_item['mulopimfwc_location']) || $cart_item['mulopimfwc_location'] === '') {
+                // Fallback for single-location products/variations when location
+                // is not explicitly stored on the cart item.
+                return $single_slug;
             }
 
-            $cart_location = $cart_item['mulopimfwc_location'];
+            $cart_location = rawurldecode((string) $cart_item['mulopimfwc_location']);
 
-            // Check if product has the location in terms
-            $terms = array_map('rawurldecode', wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
-
-            if (is_wp_error($terms) || empty($terms)) {
-                return null;
+            // Check if product/variation has the location in terms
+            if (empty($assigned_slugs)) {
+                return $single_slug;
             }
 
             // Return location only if it exists in both cart item AND product terms
-            if (in_array($cart_location, $terms)) {
+            if (in_array($cart_location, $assigned_slugs, true)) {
                 return $cart_location;
             }
 
-            return null;
+            return $single_slug;
         }
     }
 
-    return null;
+    return $single_slug;
 }
 
 if (!function_exists('mulopimfwc_get_order_item_location_slug')) {
@@ -1279,7 +1339,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.3.65');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.3.70');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }

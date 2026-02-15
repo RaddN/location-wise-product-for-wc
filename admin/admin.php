@@ -2814,6 +2814,71 @@ class MULOPIMFWC_Admin
         return $locations;
     }
 
+    /**
+     * Get assigned location slugs for an order item (variation first, then parent product).
+     * In "all locations" mode, items without explicit assignment are treated as available in all locations.
+     *
+     * @param int $product_id
+     * @param int $variation_id
+     * @return array
+     */
+    private function get_order_item_assigned_location_slugs($product_id, $variation_id)
+    {
+        $product_id = absint($product_id);
+        $variation_id = absint($variation_id);
+
+        static $cache = [];
+        $cache_key = $product_id . ':' . $variation_id;
+        if (isset($cache[$cache_key])) {
+            return $cache[$cache_key];
+        }
+
+        $ids_to_check = array_values(array_filter([$variation_id, $product_id]));
+        foreach ($ids_to_check as $id) {
+            $terms = wp_get_object_terms($id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
+            if (!is_wp_error($terms) && !empty($terms)) {
+                $cache[$cache_key] = array_values(array_unique(array_map('rawurldecode', (array) $terms)));
+                return $cache[$cache_key];
+            }
+        }
+
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+        $enable_all_locations = isset($options['enable_all_locations']) && $options['enable_all_locations'] === 'on';
+
+        if ($enable_all_locations) {
+            $cache[$cache_key] = array_values(array_filter(array_map(
+                'rawurldecode',
+                wp_list_pluck($this->get_all_store_locations(), 'slug')
+            )));
+            return $cache[$cache_key];
+        }
+
+        $cache[$cache_key] = [];
+        return $cache[$cache_key];
+    }
+
+    /**
+     * Check whether an order item is assigned to a specific location slug.
+     *
+     * @param int $product_id
+     * @param int $variation_id
+     * @param string $location_slug
+     * @return bool
+     */
+    private function is_order_item_assigned_to_location($product_id, $variation_id, $location_slug)
+    {
+        $location_slug = (string) $location_slug;
+        if ($location_slug === '') {
+            return false;
+        }
+
+        $assigned_slugs = $this->get_order_item_assigned_location_slugs($product_id, $variation_id);
+        return in_array($location_slug, $assigned_slugs, true);
+    }
+
     private function build_location_stock_snapshot($order, $location_term)
     {
         $snapshot = [
@@ -2861,7 +2926,12 @@ class MULOPIMFWC_Admin
             ];
 
             if ($target_id) {
-                if ($enable_location_stock) {
+                $is_assigned = $this->is_order_item_assigned_to_location($product_id, $variation_id, $location_term->slug);
+
+                if (!$is_assigned) {
+                    $detail['status'] = 'not-assigned';
+                    $insufficient++;
+                } elseif ($enable_location_stock) {
                     $location_stock = get_post_meta($target_id, '_location_stock_' . $location_term->term_id, true);
                     $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_term->term_id, true);
 
@@ -2879,26 +2949,12 @@ class MULOPIMFWC_Admin
                             $detail['status'] = 'ok';
                         }
                     } else {
-                        $assigned_terms_raw = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
-                        $assigned_terms = is_wp_error($assigned_terms_raw) ? [] : array_map('rawurldecode', $assigned_terms_raw);
-                        if (empty($assigned_terms) || !in_array($location_term->slug, $assigned_terms, true)) {
-                            $detail['status'] = 'not-assigned';
-                            $insufficient++;
-                        } else {
-                            $detail['status'] = 'unknown';
-                            $unknown++;
-                        }
-                    }
-                } else {
-                    $assigned_terms_raw = wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']);
-                    $assigned_terms = is_wp_error($assigned_terms_raw) ? [] : array_map('rawurldecode', $assigned_terms_raw);
-                    if (empty($assigned_terms) || !in_array($location_term->slug, $assigned_terms, true)) {
-                        $detail['status'] = 'not-assigned';
-                        $insufficient++;
-                    } else {
                         $detail['status'] = 'unknown';
                         $unknown++;
                     }
+                } else {
+                    $detail['status'] = 'unknown';
+                    $unknown++;
                 }
             } else {
                 $detail['status'] = 'unknown';
@@ -3029,6 +3085,11 @@ class MULOPIMFWC_Admin
                     continue;
                 }
 
+                if (!$this->is_order_item_assigned_to_location($product_id, $variation_id, $location->slug)) {
+                    $all_products_available = false;
+                    break;
+                }
+
                 // Get location stock
                 $location_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
                 $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_id, true);
@@ -3041,15 +3102,6 @@ class MULOPIMFWC_Admin
                     if ($location_backorders === 'off' && $available_stock < $quantity) {
                         $all_products_available = false;
                         break; // This location doesn't have enough stock for this product
-                    }
-                } else {
-                    // No location stock data - check if product is assigned to location
-                    $terms = array_map('rawurldecode', wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
-                    
-                    // If product is not assigned to this location, skip it
-                    if (!in_array($location->slug, $terms)) {
-                        $all_products_available = false;
-                        break;
                     }
                 }
             }
@@ -3127,6 +3179,17 @@ class MULOPIMFWC_Admin
             // Skip if location hasn't changed
             if ($old_location_slug === $new_location_slug) {
                 continue;
+            }
+
+            if (!$this->is_order_item_assigned_to_location($product_id, $variation_id, $new_location_slug)) {
+                return [
+                    'success' => false,
+                    'message' => sprintf(
+                        __('Location "%1$s" is not assigned to product "%2$s"', 'multi-location-product-and-inventory-management'),
+                        $new_location_term->name,
+                        $item->get_name()
+                    )
+                ];
             }
 
             // Update stock if location stock management is enabled
@@ -4088,8 +4151,8 @@ class MULOPIMFWC_Admin
                 }
 
                 $disabled = '';
-                // Disable if stock status is insufficient
-                if (isset($summary['status']) && $summary['status'] === 'insufficient') {
+                // Disable if stock status is insufficient or location is not assigned.
+                if (isset($summary['status']) && in_array($summary['status'], ['insufficient', 'not-assigned'], true)) {
                     $disabled = 'disabled';
                 }
                 echo '<option value="' . esc_attr($location_term->slug) . '" ' . selected($location_slug, $location_term->slug, false) .

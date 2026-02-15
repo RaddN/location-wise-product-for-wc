@@ -462,6 +462,58 @@ jQuery(document).ready(function ($) {
         updateTabErrorIcons(tabErrors);
     }
 
+    function isManageStockEnabledValue(value) {
+        if (value === true || value === 1 || value === '1') {
+            return true;
+        }
+        var normalized = (value === null || value === undefined) ? '' : String(value).toLowerCase();
+        return normalized === 'yes' || normalized === 'on' || normalized === 'true';
+    }
+
+    function isDefaultManageStockEnabled() {
+        var $field = $('#manage-product-modal input[name="default[manage_stock]"]');
+        if (!$field.length) {
+            return true;
+        }
+        return $field.is(':checked');
+    }
+
+    function isVariationManageStockEnabled(variationId) {
+        var $field = $('#manage-product-modal input[name="variations[' + variationId + '][default][manage_stock]"]');
+        if (!$field.length) {
+            return true;
+        }
+        return $field.is(':checked');
+    }
+
+    function toggleDefaultManageStockFields(enabled) {
+        var $rows = $('#manage-product-modal .manage-stock-default-field, #manage-product-modal .manage-stock-location-field');
+        $rows.css('display', enabled ? '' : 'none');
+        $rows.find('input, select').prop('disabled', !enabled);
+    }
+
+    function toggleVariationManageStockFields(variationId, enabled) {
+        var $rows = $('#manage-product-modal .manage-stock-variation-field[data-variation-id="' + variationId + '"]');
+        $rows.css('display', enabled ? '' : 'none');
+        $rows.find('input, select').prop('disabled', !enabled);
+    }
+
+    function initializeManageStockFieldVisibility() {
+        if ($('#manage-product-modal input[name="default[manage_stock]"]').length) {
+            toggleDefaultManageStockFields(isDefaultManageStockEnabled());
+        }
+
+        $('#manage-product-modal input[name^="variations["][name$="[default][manage_stock]"]').each(function() {
+            var name = $(this).attr('name') || '';
+            var match = name.match(/variations\[(\d+)\]\[default\]\[manage_stock\]/);
+            if (!match) {
+                return;
+            }
+            var variationId = match[1];
+            toggleVariationManageStockFields(variationId, $(this).is(':checked'));
+        });
+    }
+
     // Function to open manage product modal with tabs
     function openManageProductModal(productId, productType, $button) {
         // Get product data from data attribute (already loaded on page)
@@ -925,7 +977,7 @@ jQuery(document).ready(function ($) {
                                 regular_price: '',
                                 sale_price: '',
                                 backorders: 'off'
-                            }, currencySymbol) +
+                            }, currencySymbol, isVariationManageStockEnabled(varId)) +
                             '</div>';
                         
                         $tabsContent.append(tabPanelHtml);
@@ -1050,7 +1102,12 @@ jQuery(document).ready(function ($) {
             variation.locations.forEach(function(location) {
                 var locationTabId = 'location-' + variation.id + '-' + location.id;
                 htmlParts.push('<div class="variation-tab-panel" id="' + locationTabId + '">');
-                htmlParts.push(buildVariationLocationTab(variation.id, location, currencySymbol));
+                htmlParts.push(buildVariationLocationTab(
+                    variation.id,
+                    location,
+                    currencySymbol,
+                    isManageStockEnabledValue(variation.default && variation.default.manage_stock)
+                ));
                 htmlParts.push('</div>');
             });
         }
@@ -1066,11 +1123,17 @@ jQuery(document).ready(function ($) {
     // Build default tab content for variation
     function buildVariationDefaultTab(variation, currencySymbol) {
         var htmlParts = [];
+        var manageStockEnabled = isManageStockEnabledValue(variation.default && variation.default.manage_stock);
         htmlParts.push('<form class="manage-product-form" data-section="variation" data-variation-id="' + variation.id + '">');
-        
+
         htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<label>Manage Stock:</label>');
+        htmlParts.push('<label class="manage-checkbox-inline"><input type="checkbox" name="variations[' + variation.id + '][default][manage_stock]" value="yes"' + (manageStockEnabled ? ' checked' : '') + '> Enable</label>');
+        htmlParts.push('</div>');
+        
+        htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
         htmlParts.push('<label>Stock Quantity:</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][stock_quantity]" value="' + (variation.default.stock_quantity || '') + '" min="0" step="1">');
+        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][stock_quantity]" value="' + (variation.default.stock_quantity || '') + '" min="0" step="1"' + (manageStockEnabled ? '' : ' disabled') + '>');
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row">');
@@ -1083,9 +1146,9 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][sale_price]" value="' + (variation.default.sale_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
         
-        htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
         htmlParts.push('<label>Backorders:</label>');
-        htmlParts.push('<select name="variations[' + variation.id + '][default][backorders]">');
+        htmlParts.push('<select name="variations[' + variation.id + '][default][backorders]"' + (manageStockEnabled ? '' : ' disabled') + '>');
         htmlParts.push('<option value="no"' + (variation.default.backorders === 'no' ? ' selected' : '') + '>Do not allow</option>');
         htmlParts.push('<option value="notify"' + (variation.default.backorders === 'notify' ? ' selected' : '') + '>Allow, but notify customer</option>');
         htmlParts.push('<option value="yes"' + (variation.default.backorders === 'yes' ? ' selected' : '') + '>Allow</option>');
@@ -1107,13 +1170,14 @@ jQuery(document).ready(function ($) {
     }
     
     // Build location tab content for variation
-    function buildVariationLocationTab(variationId, location, currencySymbol) {
+    function buildVariationLocationTab(variationId, location, currencySymbol, manageStockEnabled) {
         var htmlParts = [];
+        var stockEnabled = typeof manageStockEnabled === 'boolean' ? manageStockEnabled : true;
         htmlParts.push('<form class="manage-product-form" data-section="variation-location" data-variation-id="' + variationId + '" data-location-id="' + location.id + '">');
         
-        htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variationId + '" style="' + (stockEnabled ? '' : 'display:none;') + '">');
         htmlParts.push('<label>Stock Quantity:</label>');
-        htmlParts.push('<input type="number" name="variations[' + variationId + '][locations][' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1">');
+        htmlParts.push('<input type="number" name="variations[' + variationId + '][locations][' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1"' + (stockEnabled ? '' : ' disabled') + '>');
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row">');
@@ -1126,9 +1190,9 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<input type="number" name="variations[' + variationId + '][locations][' + location.id + '][sale_price]" value="' + (location.sale_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
         
-        htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variationId + '" style="' + (stockEnabled ? '' : 'display:none;') + '">');
         htmlParts.push('<label>Backorders:</label>');
-        htmlParts.push('<select name="variations[' + variationId + '][locations][' + location.id + '][backorders]">');
+        htmlParts.push('<select name="variations[' + variationId + '][locations][' + location.id + '][backorders]"' + (stockEnabled ? '' : ' disabled') + '>');
         htmlParts.push('<option value="off"' + (location.backorders === 'off' ? ' selected' : '') + '>Do not allow</option>');
         htmlParts.push('<option value="notify"' + (location.backorders === 'notify' ? ' selected' : '') + '>Allow, but notify customer</option>');
         htmlParts.push('<option value="on"' + (location.backorders === 'on' ? ' selected' : '') + '>Allow</option>');
@@ -1268,16 +1332,22 @@ jQuery(document).ready(function ($) {
         var productType = data.product_type || data.type || '';
         var isGrouped = productType === 'grouped';
         var isExternal = productType === 'external' || productType === 'affiliate';
+        var manageStockEnabled = isManageStockEnabledValue(data.default && data.default.manage_stock);
         
         htmlParts.push('<div class="manage-tab-panel active" data-tab="' + tabId + '">');
         htmlParts.push('<form class="manage-product-form" data-section="default">');
         htmlParts.push('<div class="manage-section-title">Default Settings</div>');
         
-        // Stock Quantity - not for grouped or external products
+        // Manage stock - not for grouped/external products
         if (!isGrouped && !isExternal) {
             htmlParts.push('<div class="manage-form-row">');
+            htmlParts.push('<label>Manage Stock:</label>');
+            htmlParts.push('<label class="manage-checkbox-inline"><input type="checkbox" name="default[manage_stock]" value="yes"' + (manageStockEnabled ? ' checked' : '') + '> Enable</label>');
+            htmlParts.push('</div>');
+
+            htmlParts.push('<div class="manage-form-row manage-stock-default-field" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
             htmlParts.push('<label>Stock Quantity:</label>');
-            htmlParts.push('<input type="number" name="default[stock_quantity]" value="' + (data.default.stock_quantity || '') + '" min="0" step="1">');
+            htmlParts.push('<input type="number" name="default[stock_quantity]" value="' + (data.default.stock_quantity || '') + '" min="0" step="1"' + (manageStockEnabled ? '' : ' disabled') + '>');
             htmlParts.push('</div>');
         }
         
@@ -1297,11 +1367,11 @@ jQuery(document).ready(function ($) {
             htmlParts.push('</div>');
         }
         
-        // Backorders - not for grouped or external products
+        // Backorders - only when stock management is available/enabled
         if (!isGrouped && !isExternal) {
-            htmlParts.push('<div class="manage-form-row">');
+            htmlParts.push('<div class="manage-form-row manage-stock-default-field" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
             htmlParts.push('<label>Backorders:</label>');
-            htmlParts.push('<select name="default[backorders]">');
+            htmlParts.push('<select name="default[backorders]"' + (manageStockEnabled ? '' : ' disabled') + '>');
             htmlParts.push('<option value="no"' + (data.default.backorders === 'no' ? ' selected' : '') + '>Do not allow</option>');
             htmlParts.push('<option value="notify"' + (data.default.backorders === 'notify' ? ' selected' : '') + '>Allow, but notify customer</option>');
             htmlParts.push('<option value="yes"' + (data.default.backorders === 'yes' ? ' selected' : '') + '>Allow</option>');
@@ -1336,16 +1406,21 @@ jQuery(document).ready(function ($) {
         var productType = data.product_type || data.type || '';
         var isGrouped = productType === 'grouped';
         var isExternal = productType === 'external' || productType === 'affiliate';
+        var manageStockEnabled = isManageStockEnabledValue(data.default && data.default.manage_stock);
+        var $defaultManageStock = $('#manage-product-modal input[name="default[manage_stock]"]');
+        if ($defaultManageStock.length) {
+            manageStockEnabled = $defaultManageStock.is(':checked');
+        }
         
         htmlParts.push('<div class="manage-tab-panel" data-tab="' + tabId + '">');
         htmlParts.push('<form class="manage-product-form" data-section="location" data-location-id="' + location.id + '">');
         htmlParts.push('<div class="manage-section-title">' + escapeHtml(location.name) + ' Settings</div>');
         
-        // Stock Quantity - not for grouped or external products
+        // Stock Quantity - only when stock management is available/enabled
         if (!isGrouped && !isExternal) {
-            htmlParts.push('<div class="manage-form-row">');
+            htmlParts.push('<div class="manage-form-row manage-stock-location-field" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
             htmlParts.push('<label>Stock Quantity:</label>');
-            htmlParts.push('<input type="number" name="locations[' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1">');
+            htmlParts.push('<input type="number" name="locations[' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1"' + (manageStockEnabled ? '' : ' disabled') + '>');
             htmlParts.push('</div>');
         }
         
@@ -1365,11 +1440,11 @@ jQuery(document).ready(function ($) {
             htmlParts.push('</div>');
         }
         
-        // Backorders - not for grouped or external products
+        // Backorders - only when stock management is available/enabled
         if (!isGrouped && !isExternal) {
-            htmlParts.push('<div class="manage-form-row">');
+            htmlParts.push('<div class="manage-form-row manage-stock-location-field" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
             htmlParts.push('<label>Backorders:</label>');
-            htmlParts.push('<select name="locations[' + location.id + '][backorders]">');
+            htmlParts.push('<select name="locations[' + location.id + '][backorders]"' + (manageStockEnabled ? '' : ' disabled') + '>');
             htmlParts.push('<option value="off"' + (location.backorders === 'off' ? ' selected' : '') + '>Do not allow</option>');
             htmlParts.push('<option value="notify"' + (location.backorders === 'notify' ? ' selected' : '') + '>Allow, but notify customer</option>');
             htmlParts.push('<option value="on"' + (location.backorders === 'on' ? ' selected' : '') + '>Allow</option>');
@@ -1428,6 +1503,7 @@ jQuery(document).ready(function ($) {
     // Build variation tab content
     function buildVariationTabContent(variation, data, currencySymbol, tabId) {
         var variationTitle = Object.values(variation.attributes).join(', ') || 'Variation #' + variation.id;
+        var manageStockEnabled = isManageStockEnabledValue(variation.default && variation.default.manage_stock);
         var htmlParts = [];
         htmlParts.push('<div class="manage-tab-panel" data-tab="' + tabId + '">');
         htmlParts.push('<form class="manage-product-form" data-section="variation" data-variation-id="' + variation.id + '">');
@@ -1437,8 +1513,12 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<div class="manage-subsection">');
         htmlParts.push('<h4>Default Settings</h4>');
         htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<label>Manage Stock:</label>');
+        htmlParts.push('<label class="manage-checkbox-inline"><input type="checkbox" name="variations[' + variation.id + '][default][manage_stock]" value="yes"' + (manageStockEnabled ? ' checked' : '') + '> Enable</label>');
+        htmlParts.push('</div>');
+        htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
         htmlParts.push('<label>Stock Quantity:</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][stock_quantity]" value="' + (variation.default.stock_quantity || '') + '" min="0" step="1">');
+        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][stock_quantity]" value="' + (variation.default.stock_quantity || '') + '" min="0" step="1"' + (manageStockEnabled ? '' : ' disabled') + '>');
         htmlParts.push('</div>');
         htmlParts.push('<div class="manage-form-row">');
         htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
@@ -1448,9 +1528,9 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
         htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][sale_price]" value="' + (variation.default.sale_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
-        htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
         htmlParts.push('<label>Backorders:</label>');
-        htmlParts.push('<select name="variations[' + variation.id + '][default][backorders]">');
+        htmlParts.push('<select name="variations[' + variation.id + '][default][backorders]"' + (manageStockEnabled ? '' : ' disabled') + '>');
         htmlParts.push('<option value="no"' + (variation.default.backorders === 'no' ? ' selected' : '') + '>Do not allow</option>');
         htmlParts.push('<option value="notify"' + (variation.default.backorders === 'notify' ? ' selected' : '') + '>Allow, but notify customer</option>');
         htmlParts.push('<option value="yes"' + (variation.default.backorders === 'yes' ? ' selected' : '') + '>Allow</option>');
@@ -1474,9 +1554,9 @@ jQuery(document).ready(function ($) {
             variation.locations.forEach(function(location) {
                 htmlParts.push('<div class="manage-location-group">');
                 htmlParts.push('<h5>' + escapeHtml(location.name) + '</h5>');
-                htmlParts.push('<div class="manage-form-row">');
+                htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
                 htmlParts.push('<label>Stock Quantity:</label>');
-                htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1">');
+                htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1"' + (manageStockEnabled ? '' : ' disabled') + '>');
                 htmlParts.push('</div>');
                 htmlParts.push('<div class="manage-form-row">');
                 htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
@@ -1486,9 +1566,9 @@ jQuery(document).ready(function ($) {
                 htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][sale_price]" value="' + (location.sale_price || '') + '" min="0" step="0.01">');
                 htmlParts.push('</div>');
-                htmlParts.push('<div class="manage-form-row">');
+                htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
                 htmlParts.push('<label>Backorders:</label>');
-                htmlParts.push('<select name="variations[' + variation.id + '][locations][' + location.id + '][backorders]">');
+                htmlParts.push('<select name="variations[' + variation.id + '][locations][' + location.id + '][backorders]"' + (manageStockEnabled ? '' : ' disabled') + '>');
                 htmlParts.push('<option value="off"' + (location.backorders === 'off' ? ' selected' : '') + '>Do not allow</option>');
                 htmlParts.push('<option value="notify"' + (location.backorders === 'notify' ? ' selected' : '') + '>Allow, but notify customer</option>');
                 htmlParts.push('<option value="on"' + (location.backorders === 'on' ? ' selected' : '') + '>Allow</option>');
@@ -1587,10 +1667,27 @@ jQuery(document).ready(function ($) {
             $(this).closest('.manage-form-row').find('.validation-error').remove();
         });
 
+        // Toggle stock fields for simple/external products.
+        $('#manage-product-modal').on('change', 'input[name="default[manage_stock]"]', function() {
+            toggleDefaultManageStockFields($(this).is(':checked'));
+        });
+
+        // Toggle stock fields per variation.
+        $('#manage-product-modal').on('change', 'input[name^="variations["][name$="[default][manage_stock]"]', function() {
+            var name = $(this).attr('name') || '';
+            var match = name.match(/variations\[(\d+)\]\[default\]\[manage_stock\]/);
+            if (!match) {
+                return;
+            }
+            toggleVariationManageStockFields(match[1], $(this).is(':checked'));
+        });
+
         // Validate on blur
         $('#manage-product-modal').on('blur', 'input[type="number"]', function() {
             validateManageField($(this));
         });
+
+        initializeManageStockFieldVisibility();
     }
 
     // Function to validate a single field in manage product form
@@ -1605,6 +1702,7 @@ jQuery(document).ready(function ($) {
         }
         var isGrouped = productType === 'grouped';
         var isExternal = productType === 'external' || productType === 'affiliate';
+        var defaultManageStockEnabled = isDefaultManageStockEnabled();
 
         var value = parseFloat($field.val()) || 0;
         var isValid = true;
@@ -1665,7 +1763,7 @@ jQuery(document).ready(function ($) {
             }
         }
 
-        if (fieldName.indexOf('default[stock_quantity]') !== -1 && !isGrouped && !isExternal) {
+        if (fieldName.indexOf('default[stock_quantity]') !== -1 && !isGrouped && !isExternal && defaultManageStockEnabled) {
             if (defaultPurchaseQty > 0 && value > defaultPurchaseQty) {
                 isValid = false;
                 errorMessage = 'Stock quantity cannot be greater than purchase quantity (' + defaultPurchaseQty + ')';
@@ -1691,6 +1789,9 @@ jQuery(document).ready(function ($) {
                 if ((fieldType === 'stock' || fieldType === 'backorders') && isExternal) {
                     return true; // Skip validation for stock/backorders on external products
                 }
+                if ((fieldType === 'stock' || fieldType === 'backorders') && !defaultManageStockEnabled) {
+                    return true;
+                }
             }
         }
 
@@ -1705,6 +1806,7 @@ jQuery(document).ready(function ($) {
                 var varDefaultPurchasePrice = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][purchase_price]"]').val()) || 0;
                 var varDefaultStock = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][stock_quantity]"]').val()) || 0;
                 var varDefaultPurchaseQty = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][purchase_quantity]"]').val()) || 0;
+                var varManageStockEnabled = isVariationManageStockEnabled(varId);
 
                 if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value < varDefaultPurchasePrice) {
                     isValid = false;
@@ -1714,11 +1816,11 @@ jQuery(document).ready(function ($) {
                     isValid = false;
                     errorMessage = 'Sale price must be less than regular price (' + varDefaultRegularPrice + ')';
                 }
-                if (varFieldType === 'stock_quantity' && varDefaultPurchaseQty > 0 && value > varDefaultPurchaseQty) {
+                if (varFieldType === 'stock_quantity' && varManageStockEnabled && varDefaultPurchaseQty > 0 && value > varDefaultPurchaseQty) {
                     isValid = false;
                     errorMessage = 'Stock quantity cannot be greater than purchase quantity (' + varDefaultPurchaseQty + ')';
                 }
-                if (varFieldType === 'purchase_quantity' && varDefaultStock > 0 && value < varDefaultStock) {
+                if (varFieldType === 'purchase_quantity' && varManageStockEnabled && varDefaultStock > 0 && value < varDefaultStock) {
                     isValid = false;
                     errorMessage = 'Purchase quantity cannot be less than stock quantity (' + varDefaultStock + ')';
                 }
@@ -1850,6 +1952,7 @@ jQuery(document).ready(function ($) {
         var isGrouped = productType === 'grouped';
         var isVariable = productType === 'variable';
         var isExternal = productType === 'external' || productType === 'affiliate';
+        var defaultManageStockEnabled = isDefaultManageStockEnabled();
 
         // Get default values (only if fields exist)
         var defaultRegularPrice = 0;
@@ -1867,7 +1970,7 @@ jQuery(document).ready(function ($) {
         if (!$('#manage-product-modal input[name="default[purchase_price]"]').length || !isGrouped) {
             defaultPurchasePrice = parseFloat($('#manage-product-modal input[name="default[purchase_price]"]').val()) || 0;
         }
-        if (!$('#manage-product-modal input[name="default[stock_quantity]"]').length || isGrouped || isExternal) {
+        if (!$('#manage-product-modal input[name="default[stock_quantity]"]').length || isGrouped || isExternal || !defaultManageStockEnabled) {
             defaultStock = 0;
         } else {
             defaultStock = parseFloat($('#manage-product-modal input[name="default[stock_quantity]"]').val()) || 0;
@@ -1914,7 +2017,7 @@ jQuery(document).ready(function ($) {
             }
 
             // Validation 4: Default quantity can't be greater than purchase quantity (skip for grouped/external products)
-            if (!isGrouped && !isExternal && defaultPurchaseQty > 0 && defaultStock > defaultPurchaseQty) {
+            if (!isGrouped && !isExternal && defaultManageStockEnabled && defaultPurchaseQty > 0 && defaultStock > defaultPurchaseQty) {
                 var $field = $('#manage-product-modal input[name="default[stock_quantity]"]');
                 if ($field.length) {
                     $field.addClass('manage-error');
@@ -1925,7 +2028,7 @@ jQuery(document).ready(function ($) {
             }
 
             // Validation 5: Sum of all location stock can't be greater than default quantity (skip for grouped/external products)
-            if (!isGrouped && !isExternal) {
+            if (!isGrouped && !isExternal && defaultManageStockEnabled) {
                 var totalLocationStock = 0;
             $('#manage-product-modal input[name*="locations["][name*="[stock]"]').each(function() {
                 var name = $(this).attr('name');
@@ -2037,6 +2140,9 @@ jQuery(document).ready(function ($) {
             var varMatch = $(this).attr('name').match(/variations\[(\d+)\]/);
             if (varMatch) {
                 var varId = varMatch[1];
+                if (!isVariationManageStockEnabled(varId)) {
+                    return;
+                }
                 var varDefaultStock = parseFloat($(this).val()) || 0;
                 var totalVarLocationStock = 0;
 
@@ -2250,12 +2356,18 @@ jQuery(document).ready(function ($) {
         $('#manage-product-modal .manage-product-form').each(function() {
             $(this).find('input, select').each(function() {
                 var $field = $(this);
+                if ($field.prop('disabled')) {
+                    return;
+                }
                 var name = $field.attr('name');
-                var value = $field.val();
+                var isCheckbox = $field.is(':checkbox');
+                var value = isCheckbox
+                    ? ($field.is(':checked') ? ($field.val() || 'yes') : 'no')
+                    : $field.val();
                 
                 // Include all fields (even empty) for variation locations to track assignment
                 var isVariationLocation = name && name.indexOf('variations[') === 0 && name.indexOf('[locations][') !== -1;
-                var shouldInclude = name && value !== null && value !== undefined && (value !== '' || isVariationLocation);
+                var shouldInclude = name && value !== null && value !== undefined && (value !== '' || isVariationLocation || isCheckbox);
 
                 if (shouldInclude) {
                     // Handle locations structure
@@ -2903,8 +3015,14 @@ jQuery(document).ready(function ($) {
         // Collect all form fields manually and build proper structure
         $('#quick-edit-form').find('input, select').each(function() {
             var $field = $(this);
+            if ($field.prop('disabled')) {
+                return;
+            }
             var name = $field.attr('name');
-            var value = $field.val();
+            var isCheckbox = $field.is(':checkbox');
+            var value = isCheckbox
+                ? ($field.is(':checked') ? ($field.val() || 'yes') : 'no')
+                : $field.val();
             
             if (name && value !== null && value !== undefined) {
                 // Handle locations structure: locations[ID][field] -> locations: [{id: ID, field: value}]
@@ -4546,7 +4664,13 @@ jQuery(document).ready(function ($) {
             });
         }
 
-        if (status === 'insufficient' || status === 'not-assigned') {
+        if (status === 'not-assigned') {
+            $message
+                .text('Selected location is not assigned to one or more products in this order.')
+                .removeClass('is-info is-warning')
+                .addClass('is-error')
+                .show();
+        } else if (status === 'insufficient') {
             $message
                 .text('Selected location has insufficient stock for this order.')
                 .removeClass('is-info is-warning')
