@@ -1096,6 +1096,11 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
         htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_price]" value="' + (variation.default.purchase_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
+
+        htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<label>Purchase Quantity:</label>');
+        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_quantity]" value="' + (variation.default.purchase_quantity || '') + '" min="0" step="1">');
+        htmlParts.push('</div>');
         
         htmlParts.push('</form>');
         return htmlParts.join('');
@@ -1455,6 +1460,11 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
         htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_price]" value="' + (variation.default.purchase_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
+
+        htmlParts.push('<div class="manage-form-row">');
+        htmlParts.push('<label>Purchase Quantity:</label>');
+        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_quantity]" value="' + (variation.default.purchase_quantity || '') + '" min="0" step="1">');
+        htmlParts.push('</div>');
         htmlParts.push('</div>');
 
         // Location settings for variation
@@ -1693,6 +1703,8 @@ jQuery(document).ready(function ($) {
                 var varDefaultRegularPrice = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][regular_price]"]').val()) || 0;
                 var varDefaultSalePrice = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][sale_price]"]').val()) || 0;
                 var varDefaultPurchasePrice = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][purchase_price]"]').val()) || 0;
+                var varDefaultStock = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][stock_quantity]"]').val()) || 0;
+                var varDefaultPurchaseQty = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][purchase_quantity]"]').val()) || 0;
 
                 if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value < varDefaultPurchasePrice) {
                     isValid = false;
@@ -1701,6 +1713,14 @@ jQuery(document).ready(function ($) {
                 if (varFieldType === 'sale_price' && varDefaultRegularPrice > 0 && value >= varDefaultRegularPrice) {
                     isValid = false;
                     errorMessage = 'Sale price must be less than regular price (' + varDefaultRegularPrice + ')';
+                }
+                if (varFieldType === 'stock_quantity' && varDefaultPurchaseQty > 0 && value > varDefaultPurchaseQty) {
+                    isValid = false;
+                    errorMessage = 'Stock quantity cannot be greater than purchase quantity (' + varDefaultPurchaseQty + ')';
+                }
+                if (varFieldType === 'purchase_quantity' && varDefaultStock > 0 && value < varDefaultStock) {
+                    isValid = false;
+                    errorMessage = 'Purchase quantity cannot be less than stock quantity (' + varDefaultStock + ')';
                 }
             }
         }
@@ -2465,6 +2485,10 @@ jQuery(document).ready(function ($) {
                 htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_price]" value="' + (variation.default.purchase_price || '') + '" min="0" step="0.01">');
                 htmlParts.push('</div>');
+                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
+                htmlParts.push('<label>Purchase Quantity:</label>');
+                htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_quantity]" value="' + (variation.default.purchase_quantity || '') + '" min="0" step="1">');
+                htmlParts.push('</div>');
                 htmlParts.push('</div>');
 
                 // Location settings for variation
@@ -2641,6 +2665,8 @@ jQuery(document).ready(function ($) {
                 var varDefaultRegularPrice = parseFloat($('input[name="variations[' + varMatch[1] + '][default][regular_price]"]').val()) || 0;
                 var varDefaultSalePrice = parseFloat($('input[name="variations[' + varMatch[1] + '][default][sale_price]"]').val()) || 0;
                 var varDefaultPurchasePrice = parseFloat($('input[name="variations[' + varMatch[1] + '][default][purchase_price]"]').val()) || 0;
+                var varDefaultStock = parseFloat($('input[name="variations[' + varMatch[1] + '][default][stock_quantity]"]').val()) || 0;
+                var varDefaultPurchaseQty = parseFloat($('input[name="variations[' + varMatch[1] + '][default][purchase_quantity]"]').val()) || 0;
 
                 if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value < varDefaultPurchasePrice) {
                     isValid = false;
@@ -2649,6 +2675,14 @@ jQuery(document).ready(function ($) {
                 if (varFieldType === 'sale_price' && varDefaultRegularPrice > 0 && value >= varDefaultRegularPrice) {
                     isValid = false;
                     errorMessage = 'Sale price must be less than regular price (' + varDefaultRegularPrice + ')';
+                }
+                if (varFieldType === 'stock_quantity' && varDefaultPurchaseQty > 0 && value > varDefaultPurchaseQty) {
+                    isValid = false;
+                    errorMessage = 'Stock quantity cannot be greater than purchase quantity (' + varDefaultPurchaseQty + ')';
+                }
+                if (varFieldType === 'purchase_quantity' && varDefaultStock > 0 && value < varDefaultStock) {
+                    isValid = false;
+                    errorMessage = 'Purchase quantity cannot be less than stock quantity (' + varDefaultStock + ')';
                 }
             }
         }

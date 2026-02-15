@@ -640,11 +640,15 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 }, array_keys($variation['attributes']), $variation['attributes']));
 
                 $purchase_price = get_post_meta($variation['id'], '_purchase_price', true);
+                $purchase_quantity = get_post_meta($variation['id'], '_purchase_quantity', true);
 
                 $output .= '<div class="variation-purchase-price-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="purchase-price-item">';
-                $output .= '<span class="purchase-price-value">' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
+                $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management') . ' ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
+                $output .= '</div>';
+                $output .= '<div class="purchase-price-item">';
+                $output .= '<span class="purchase-price-value">' . esc_html__('Quantity:', 'multi-location-product-and-inventory-management') . ' ' . (!empty($purchase_quantity) ? esc_html($purchase_quantity) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
                 $output .= '</div>';
                 $output .= '</div>';
             }
@@ -1270,14 +1274,15 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                                 'id' => $variation_id,
                                 'attributes' => $attributes,
                                 'default' => [
-                                    'stock_quantity' => $variation->get_stock_quantity(),
-                                    'regular_price' => $variation->get_regular_price(),
-                                    'sale_price' => $variation->get_sale_price(),
-                                    'backorders' => $variation->get_backorders(),
-                                    'purchase_price' => get_post_meta($variation_id, '_purchase_price', true),
-                                ],
-                                'locations' => [],
-                            ];
+                                'stock_quantity' => $variation->get_stock_quantity(),
+                                'regular_price' => $variation->get_regular_price(),
+                                'sale_price' => $variation->get_sale_price(),
+                                'backorders' => $variation->get_backorders(),
+                                'purchase_price' => get_post_meta($variation_id, '_purchase_price', true),
+                                'purchase_quantity' => get_post_meta($variation_id, '_purchase_quantity', true),
+                            ],
+                            'locations' => [],
+                        ];
 
                             // Get location data for variation - only assigned locations
                             if (!empty($assigned_location_ids)) {

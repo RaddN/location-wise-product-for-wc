@@ -12,6 +12,14 @@ add_action('woocommerce_product_options_general_product_data', 'mulopimfwc_add_p
 
 function mulopimfwc_add_purchase_price_field()
 {
+    global $post;
+    $product = ($post && !empty($post->ID)) ? wc_get_product($post->ID) : null;
+
+    // Variable products should use variation-level purchase fields, not parent-level fields.
+    if ($product && $product->is_type('variable')) {
+        return;
+    }
+
     echo '<div class="options_group pricing">';
 
     woocommerce_wp_text_input(
@@ -93,7 +101,7 @@ function mulopimfwc_add_variation_purchase_price_field($loop, $variation_data, $
                 'step' => 'any',
                 'min'  => '0'
             ),
-            'wrapper_class' => 'form-row form-row-first'
+            'wrapper_class' => 'form-row form-row-last'
         )
     );
 }
@@ -1271,7 +1279,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.3.50');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.3.60');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
