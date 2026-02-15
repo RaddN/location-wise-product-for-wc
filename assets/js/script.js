@@ -118,6 +118,13 @@ jQuery(document).ready(function ($) {
             .trim();
     }
 
+    function normalizeLocationSlug(value) {
+        return (value || '')
+            .toString()
+            .trim()
+            .toLowerCase();
+    }
+
     function savedLocationMatchesStore($item, storeValue, storeLabel) {
         if (!$item || !$item.length) {
             return false;
@@ -169,8 +176,11 @@ jQuery(document).ready(function ($) {
         }
 
         const $currentSelected = $('.saved-location-item.selected').first();
-        if ($currentSelected.length && savedLocationMatchesStore($currentSelected, storeValue, storeLabel)) {
-            return $currentSelected.data('location-id');
+        if ($currentSelected.length) {
+            const selectedId = ($currentSelected.data('location-id') || '').toString().trim();
+            if (selectedId && selectedId !== 'all-products') {
+                return selectedId;
+            }
         }
 
         let matchId = null;
@@ -189,6 +199,45 @@ jQuery(document).ready(function ($) {
         });
 
         return matchId;
+    }
+
+    function getForcedUserLocationSelection() {
+        const forced = window.mulopimfwcForcedUserLocationSelection;
+        if (!forced || typeof forced !== 'object') {
+            return null;
+        }
+
+        const locationId = (forced.locationId || '').toString().trim();
+        if (!locationId) {
+            return null;
+        }
+
+        return {
+            locationId: locationId,
+            storeSlug: normalizeLocationSlug(forced.storeSlug || '')
+        };
+    }
+
+    function clearForcedUserLocationSelection() {
+        if (Object.prototype.hasOwnProperty.call(window, 'mulopimfwcForcedUserLocationSelection')) {
+            delete window.mulopimfwcForcedUserLocationSelection;
+        }
+    }
+
+    function consumeForcedUserLocationId(selectedStore) {
+        const forced = getForcedUserLocationSelection();
+        clearForcedUserLocationSelection();
+
+        if (!forced) {
+            return null;
+        }
+
+        const normalizedSelectedStore = normalizeLocationSlug(selectedStore);
+        if (normalizedSelectedStore !== 'all-products' && normalizeLocationSlug(forced.locationId) === 'all-products') {
+            return null;
+        }
+
+        return forced.locationId;
     }
 
     function clearPluginCookie(name) {
@@ -357,7 +406,8 @@ jQuery(document).ready(function ($) {
         syncShortcodeHiddenValue($form, selectedStore);
 
         const selectedStoreLabel = resolveShortcodeLabel($form, selectedStore, selection.label);
-        const matchedLocationId = findMatchingSavedLocationId(selectedStore, selectedStoreLabel);
+        const forcedLocationId = consumeForcedUserLocationId(selectedStore);
+        const matchedLocationId = forcedLocationId || findMatchingSavedLocationId(selectedStore, selectedStoreLabel);
 
         if (selectedStore === 'all-products') {
             setPluginCookie(storeCookieName, 'all-products');

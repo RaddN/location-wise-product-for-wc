@@ -1315,7 +1315,17 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                             this.addLocationToDropdown(response.data);
                         }
 
-                        const payload = (response.data && response.data.location) ? response.data.location : response.data;
+                        const payload = (response.data && response.data.location && typeof response.data.location === 'object')
+                            ? response.data.location
+                            : ((response.data && typeof response.data === 'object') ? response.data : {});
+                        const savedLocationId = (response.data && response.data.location_id)
+                            ? response.data.location_id
+                            : ((payload && (payload.locationId || payload.id || payload.location_id)) || '');
+                        if (savedLocationId) {
+                            payload.locationId = savedLocationId;
+                            payload.id = savedLocationId;
+                        }
+                        payload.canForceUserLocation = !!(response.data && response.data.logged_in);
                         this.updateCurrentLocation(payload, null);
                     } else {
                         this.showAlert(response.data.message || 'Error saving location');
@@ -1360,6 +1370,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                     return {
                         locationId: locationId,
+                        canForceUserLocation: true,
                         label: label,
                         address: address,
                         street: ($item.data('street') || '').toString().trim(),
@@ -1391,6 +1402,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                     return {
                         locationId: locationId,
+                        canForceUserLocation: locationData.canForceUserLocation !== false,
                         label: label,
                         address: address,
                         street: (locationData.street || '').toString().trim(),
@@ -1407,6 +1419,25 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                             (locationData.country || '').toString().trim()
                         )
                     };
+                },
+
+                setForcedUserLocationSelection: function(locationId, storeSlug) {
+                    const cleanLocationId = (locationId || '').toString().trim();
+                    if (!cleanLocationId) {
+                        this.clearForcedUserLocationSelection();
+                        return;
+                    }
+
+                    window.mulopimfwcForcedUserLocationSelection = {
+                        locationId: cleanLocationId,
+                        storeSlug: (storeSlug || '').toString().trim().toLowerCase()
+                    };
+                },
+
+                clearForcedUserLocationSelection: function() {
+                    if (Object.prototype.hasOwnProperty.call(window, 'mulopimfwcForcedUserLocationSelection')) {
+                        delete window.mulopimfwcForcedUserLocationSelection;
+                    }
                 },
 
                 resolveStoreLocation: function(payload, callback) {
@@ -1480,7 +1511,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     return found;
                 },
 
-                tryLegacyAddressSelection: function(address, $item = null) {
+                tryLegacyAddressSelection: function(address, $item = null, payload = null) {
                     const addrText = (address || '').toString().trim();
                     if (!addrText) {
                         return false;
@@ -1529,6 +1560,10 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     }
 
                     if (found) {
+                        if (payload && payload.canForceUserLocation && payload.locationId) {
+                            const selectedSlug = ($dropdown.val() || '').toString().trim().toLowerCase();
+                            this.setForcedUserLocationSelection(payload.locationId, selectedSlug);
+                        }
                         if ($item) {
                             $('.saved-location-item').removeClass('selected');
                             $item.addClass('selected');
@@ -1567,13 +1602,19 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                     const payload = this.buildResolverPayloadFromLocationData(locationData);
                     if (!payload) {
+                        this.clearForcedUserLocationSelection();
                         $('#location-tooltip').hide();
                         this.showAlert('No matching store found for this address.');
                         return;
                     }
 
+                    if (!payload.canForceUserLocation || !payload.locationId) {
+                        this.clearForcedUserLocationSelection();
+                    }
+
                     if ((payload.locationId || '').toLowerCase() === 'all-products') {
                         if (this.setResolvedDropdownSelection('all-products')) {
+                            this.setForcedUserLocationSelection('all-products', 'all-products');
                             if ($item) {
                                 $('.saved-location-item').removeClass('selected');
                                 $item.addClass('selected');
@@ -1595,6 +1636,9 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                             if (status === 'matched' && matchedSlug) {
                                 if (this.setResolvedDropdownSelection(matchedSlug)) {
+                                    if (payload.canForceUserLocation && payload.locationId) {
+                                        this.setForcedUserLocationSelection(payload.locationId, matchedSlug);
+                                    }
                                     if ($item) {
                                         $('.saved-location-item').removeClass('selected');
                                         $item.addClass('selected');
@@ -1613,7 +1657,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                             }
                         }
 
-                        if (this.tryLegacyAddressSelection(payload.address, $item)) {
+                        if (this.tryLegacyAddressSelection(payload.address, $item, payload)) {
                             return;
                         }
 
@@ -1681,6 +1725,10 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 handleSavedLocationSelect: function(e) {
                     const $item = $(e.currentTarget);
                     const payload = this.buildResolverPayloadFromItem($item);
+
+                    if (payload && payload.locationId) {
+                        this.setForcedUserLocationSelection(payload.locationId, '');
+                    }
 
                     if (this.isAutoPopulateEnabled()) {
                         this.pendingAutoPopulateAddress = this.buildAddressFromItem($item);
