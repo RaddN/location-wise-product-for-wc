@@ -296,6 +296,23 @@ if (!class_exists('MULOPIMFWC_Location_Resolver')) {
                 }
             }
 
+            $auto_select_nearest_geo = (bool) apply_filters(
+                'mulopimfwc_location_resolver_auto_select_nearest_geo',
+                true,
+                $input,
+                $scored,
+                $options
+            );
+            if ($auto_select_nearest_geo) {
+                return $this->build_result(
+                    'matched',
+                    $top['location']['slug'],
+                    max($confidence, 0.82),
+                    $candidates,
+                    'geo'
+                );
+            }
+
             if ($confidence >= (float) $options['min_confidence'] && $margin >= (float) $options['min_margin']) {
                 return $this->build_result(
                     'matched',
