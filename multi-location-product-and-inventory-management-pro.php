@@ -861,12 +861,18 @@ if (!function_exists('mulopimfwc_validate_location_slug')) {
             return false;
         }
         
-        // Sanitize the slug
-        $location_slug = sanitize_title($location_slug);
+        // Preserve original input for alias resolver fallback.
+        $raw_location_slug = trim($location_slug);
+
+        // Sanitize the slug for deterministic slug validation.
+        $location_slug = sanitize_title($raw_location_slug);
+        $cache_lookup_key = $location_slug !== ''
+            ? $location_slug
+            : strtolower($raw_location_slug);
         
         // Check cache first (Issue #12 - Performance optimization)
         if ($use_cache) {
-            $cache_key = 'mulopimfwc_location_' . md5($location_slug);
+            $cache_key = 'mulopimfwc_location_' . md5($cache_lookup_key);
             $cached = wp_cache_get($cache_key, 'mulopimfwc_locations');
             if ($cached !== false) {
                 return $cached === 'invalid' ? false : $cached;
@@ -874,8 +880,36 @@ if (!function_exists('mulopimfwc_validate_location_slug')) {
         }
         
         // Validate location exists
-        $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
-        
+        $term = false;
+        if ($location_slug !== '') {
+            $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+        }
+
+        // Alias fallback: allow deterministic resolver matches for known synonyms.
+        if ((!$term || is_wp_error($term)) && class_exists('MULOPIMFWC_Location_Resolver')) {
+            $resolver = new MULOPIMFWC_Location_Resolver();
+            $resolved = $resolver->resolve_store_location(
+                ['query' => $raw_location_slug],
+                [
+                    'enable_geo' => false,
+                    'allow_fuzzy' => false,
+                    'allow_alias' => true,
+                ]
+            );
+
+            if (
+                is_array($resolved)
+                && isset($resolved['status'], $resolved['slug'])
+                && $resolved['status'] === 'matched'
+                && !empty($resolved['slug'])
+            ) {
+                $resolved_slug = sanitize_title((string) $resolved['slug']);
+                if ($resolved_slug !== '') {
+                    $term = get_term_by('slug', $resolved_slug, 'mulopimfwc_store_location');
+                }
+            }
+        }
+
         if (!$term || is_wp_error($term)) {
             // Cache invalid result to avoid repeated queries
             if ($use_cache) {
@@ -1149,6 +1183,58 @@ if (!function_exists('mulopimfwc_maybe_clear_location_cookie_for_manual_assignme
 }
 
 add_action('init', 'mulopimfwc_maybe_clear_location_cookie_for_manual_assignment', 2);
+
+if (!function_exists('mulopimfwc_flush_location_resolver_cache')) {
+    /**
+     * Flush cached location resolver index when location terms change.
+     *
+     * @param int $term_id
+     * @param int $tt_id
+     * @param string $taxonomy
+     * @return void
+     */
+    function mulopimfwc_flush_location_resolver_cache($term_id = 0, $tt_id = 0, $taxonomy = '')
+    {
+        if ($taxonomy !== '' && $taxonomy !== 'mulopimfwc_store_location') {
+            return;
+        }
+
+        if (class_exists('MULOPIMFWC_Location_Resolver')) {
+            MULOPIMFWC_Location_Resolver::flush_index_cache();
+        }
+    }
+}
+
+add_action('created_term', 'mulopimfwc_flush_location_resolver_cache', 10, 3);
+add_action('edited_term', 'mulopimfwc_flush_location_resolver_cache', 10, 3);
+add_action('delete_term', 'mulopimfwc_flush_location_resolver_cache', 10, 3);
+
+if (!function_exists('mulopimfwc_flush_location_resolver_cache_on_term_meta')) {
+    /**
+     * Flush resolver cache when store-location term meta changes.
+     *
+     * @param int $meta_id
+     * @param int $object_id
+     * @param string $meta_key
+     * @param mixed $meta_value
+     * @return void
+     */
+    function mulopimfwc_flush_location_resolver_cache_on_term_meta($meta_id, $object_id, $meta_key = '', $meta_value = null)
+    {
+        $term = get_term((int) $object_id);
+        if (!$term || is_wp_error($term) || !isset($term->taxonomy) || $term->taxonomy !== 'mulopimfwc_store_location') {
+            return;
+        }
+
+        if (class_exists('MULOPIMFWC_Location_Resolver')) {
+            MULOPIMFWC_Location_Resolver::flush_index_cache();
+        }
+    }
+}
+
+add_action('added_term_meta', 'mulopimfwc_flush_location_resolver_cache_on_term_meta', 10, 4);
+add_action('updated_term_meta', 'mulopimfwc_flush_location_resolver_cache_on_term_meta', 10, 4);
+add_action('deleted_term_meta', 'mulopimfwc_flush_location_resolver_cache_on_term_meta', 10, 4);
 
 // Check if the free version is installed and deactivate it if active
 add_action('init', function () {
@@ -2404,6 +2490,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'admin/license-page.php';
     require_once plugin_dir_path(__FILE__) . 'admin/stock-central.php';
     require_once plugin_dir_path(__FILE__) . 'admin/admin.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/location-resolver.php';
     require_once plugin_dir_path(__FILE__) . 'includes/product-display.php';
     require_once plugin_dir_path(__FILE__) . 'admin/location-based-everythings.php';
     require_once plugin_dir_path(__FILE__) . 'admin/location-managers.php';
@@ -9681,6 +9768,133 @@ if (!function_exists('mulopimfwc_get_values')) {
     // FIXED: Add AJAX handler to validate location cookies set by JavaScript
     add_action('wp_ajax_mulopimfwc_validate_location', 'mulopimfwc_validate_location');
     add_action('wp_ajax_nopriv_mulopimfwc_validate_location', 'mulopimfwc_validate_location');
+
+    // Location resolver endpoint for saved-address selection.
+    add_action('wp_ajax_mulopimfwc_resolve_store_location', 'mulopimfwc_resolve_store_location');
+    add_action('wp_ajax_nopriv_mulopimfwc_resolve_store_location', 'mulopimfwc_resolve_store_location');
+
+    if (!function_exists('mulopimfwc_resolver_rate_limit_allowed')) {
+        /**
+         * Basic resolver endpoint rate limiting by user/ip key.
+         *
+         * @return bool
+         */
+        function mulopimfwc_resolver_rate_limit_allowed()
+        {
+            $window_seconds = (int) apply_filters('mulopimfwc_location_resolver_rate_window', MINUTE_IN_SECONDS * 3);
+            $max_requests = (int) apply_filters('mulopimfwc_location_resolver_rate_max_requests', 45);
+
+            $window_seconds = max(30, $window_seconds);
+            $max_requests = max(5, $max_requests);
+
+            if (is_user_logged_in()) {
+                $identity = 'u_' . get_current_user_id();
+            } else {
+                $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
+                $ua = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+                $identity = 'g_' . md5($ip . '|' . $ua);
+            }
+
+            $key = 'mulopimfwc_resolve_rate_' . $identity;
+            $bucket = get_transient($key);
+            if (!is_array($bucket)) {
+                $bucket = [
+                    'count' => 0,
+                    'started' => time(),
+                ];
+            }
+
+            $bucket['count'] = isset($bucket['count']) ? (int) $bucket['count'] : 0;
+            $bucket['started'] = isset($bucket['started']) ? (int) $bucket['started'] : time();
+
+            if ($bucket['count'] >= $max_requests) {
+                return false;
+            }
+
+            $bucket['count']++;
+            set_transient($key, $bucket, $window_seconds);
+
+            return true;
+        }
+    }
+
+    if (!function_exists('mulopimfwc_log_location_resolution')) {
+        /**
+         * Optional resolver decision logging for tuning.
+         *
+         * @param array $input
+         * @param array $result
+         * @return void
+         */
+        function mulopimfwc_log_location_resolution(array $input, array $result)
+        {
+            do_action('mulopimfwc_location_resolver_decision', $result, $input);
+
+            $enable_debug_log = (bool) apply_filters('mulopimfwc_location_resolver_debug_log', false, $result, $input);
+            if (!$enable_debug_log || !defined('WP_DEBUG_LOG') || !WP_DEBUG_LOG) {
+                return;
+            }
+
+            $payload = [
+                'reason' => isset($result['reason']) ? $result['reason'] : 'none',
+                'status' => isset($result['status']) ? $result['status'] : 'not_found',
+                'confidence' => isset($result['confidence']) ? (float) $result['confidence'] : 0.0,
+                'slug' => isset($result['slug']) ? $result['slug'] : null,
+                'input' => [
+                    'query' => isset($input['query']) ? $input['query'] : '',
+                    'city' => isset($input['city']) ? $input['city'] : '',
+                    'state' => isset($input['state']) ? $input['state'] : '',
+                    'country' => isset($input['country']) ? $input['country'] : '',
+                    'lat' => isset($input['lat']) ? $input['lat'] : null,
+                    'lng' => isset($input['lng']) ? $input['lng'] : null,
+                ],
+            ];
+
+            error_log('[MulopimFWC Resolver] ' . wp_json_encode($payload));
+        }
+    }
+
+    if (!function_exists('mulopimfwc_resolve_store_location')) {
+        /**
+         * AJAX: Resolve address/coordinates/query into a store slug.
+         *
+         * @return void
+         */
+        function mulopimfwc_resolve_store_location()
+        {
+            check_ajax_referer('mulopimfwc_shortcode_selector', 'nonce');
+
+            if (!class_exists('MULOPIMFWC_Location_Resolver')) {
+                wp_send_json_error(['message' => __('Resolver service is unavailable.', 'multi-location-product-and-inventory-management')]);
+                return;
+            }
+
+            if (!mulopimfwc_resolver_rate_limit_allowed()) {
+                wp_send_json_error([
+                    'message' => __('Too many location resolve requests. Please try again shortly.', 'multi-location-product-and-inventory-management'),
+                    'code' => 'rate_limited',
+                ]);
+                return;
+            }
+
+            $input = [
+                'query' => isset($_POST['query']) ? sanitize_text_field(wp_unslash($_POST['query'])) : '',
+                'address' => isset($_POST['address']) ? sanitize_text_field(wp_unslash($_POST['address'])) : '',
+                'city' => isset($_POST['city']) ? sanitize_text_field(wp_unslash($_POST['city'])) : '',
+                'state' => isset($_POST['state']) ? sanitize_text_field(wp_unslash($_POST['state'])) : '',
+                'country' => isset($_POST['country']) ? sanitize_text_field(wp_unslash($_POST['country'])) : '',
+                'lat' => isset($_POST['lat']) && is_numeric($_POST['lat']) ? (float) wp_unslash($_POST['lat']) : null,
+                'lng' => isset($_POST['lng']) && is_numeric($_POST['lng']) ? (float) wp_unslash($_POST['lng']) : null,
+            ];
+
+            $resolver = new MULOPIMFWC_Location_Resolver();
+            $result = $resolver->resolve_store_location($input);
+
+            mulopimfwc_log_location_resolution($input, $result);
+
+            wp_send_json_success($result);
+        }
+    }
     
     function mulopimfwc_validate_location() {
         // Verify nonce
@@ -9696,8 +9910,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             return;
         }
         
-        // Validate location exists
-        $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+        // Validate location exists (supports alias fallback through shared validator)
+        $term = function_exists('mulopimfwc_validate_location_slug')
+            ? mulopimfwc_validate_location_slug($location_slug, false)
+            : get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
         if (!$term || is_wp_error($term)) {
             wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management')));
             return;
@@ -9713,16 +9929,16 @@ if (!function_exists('mulopimfwc_get_values')) {
         check_ajax_referer('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce');
 
         // Get form data
-        $label = isset($_POST['label']) ? sanitize_text_field($_POST['label']) : '';
-        $street = isset($_POST['street']) ? sanitize_text_field($_POST['street']) : '';
-        $apartment = isset($_POST['apartment']) ? sanitize_text_field($_POST['apartment']) : '';
-        $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
-        $state = isset($_POST['state']) ? sanitize_text_field($_POST['state']) : '';
-        $postal = isset($_POST['postal']) ? sanitize_text_field($_POST['postal']) : '';
-        $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
-        $note = isset($_POST['note']) ? sanitize_textarea_field($_POST['note']) : '';
-        $lat = isset($_POST['lat']) ? floatval($_POST['lat']) : 0;
-        $lng = isset($_POST['lng']) ? floatval($_POST['lng']) : 0;
+        $label = isset($_POST['label']) ? sanitize_text_field(wp_unslash($_POST['label'])) : '';
+        $street = isset($_POST['street']) ? sanitize_text_field(wp_unslash($_POST['street'])) : '';
+        $apartment = isset($_POST['apartment']) ? sanitize_text_field(wp_unslash($_POST['apartment'])) : '';
+        $city = isset($_POST['city']) ? sanitize_text_field(wp_unslash($_POST['city'])) : '';
+        $state = isset($_POST['state']) ? sanitize_text_field(wp_unslash($_POST['state'])) : '';
+        $postal = isset($_POST['postal']) ? sanitize_text_field(wp_unslash($_POST['postal'])) : '';
+        $country = isset($_POST['country']) ? sanitize_text_field(wp_unslash($_POST['country'])) : '';
+        $note = isset($_POST['note']) ? sanitize_textarea_field(wp_unslash($_POST['note'])) : '';
+        $lat = isset($_POST['lat']) ? floatval(wp_unslash($_POST['lat'])) : 0;
+        $lng = isset($_POST['lng']) ? floatval(wp_unslash($_POST['lng'])) : 0;
 
         // Check if we're editing an existing location
         $location_id = isset($_POST['location_id']) && !empty($_POST['location_id']) ? sanitize_text_field($_POST['location_id']) : uniqid();
@@ -9774,7 +9990,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'logged_in' => true,
                 'location_id' => $location_id,
                 'label' => $label,
-                'address' => $location_data['address']
+                'address' => $location_data['address'],
+                'location' => $location_data,
             ));
         } else {
             // For non-logged-in users, we can't save the location permanently.
@@ -9783,7 +10000,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'logged_in' => false,
                 'location_id' => $location_id,
                 'label' => $label,
-                'address' => $location_data['address']
+                'address' => $location_data['address'],
+                'location' => $location_data,
             ));
         }
     }

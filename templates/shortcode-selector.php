@@ -1315,39 +1315,191 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                             this.addLocationToDropdown(response.data);
                         }
 
-                        this.updateCurrentLocation(response.data.location_id, response.data.address);
+                        const payload = (response.data && response.data.location) ? response.data.location : response.data;
+                        this.updateCurrentLocation(payload, null);
                     } else {
                         this.showAlert(response.data.message || 'Error saving location');
                     }
                 },
 
 
-                updateCurrentLocation: function(locationId, address, $item = null) {
+                isGenericSavedLabel: function(label) {
+                    const value = (label || '').toString().trim().toLowerCase();
+                    if (!value) {
+                        return true;
+                    }
 
-                    if (!locationId) {
-                        $('#location-tooltip').hide();
-                        this.showAlert('No matching store found for this address.');
+                    return ['home', 'work', 'partner', 'other'].includes(value);
+                },
+
+                buildResolverQueryText: function(label, address, city, state, country) {
+                    const cleanLabel = (label || '').toString().trim();
+                    const cleanAddress = (address || '').toString().trim();
+                    const fallbackAddress = [cleanAddress, city, state, country]
+                        .map((part) => (part || '').toString().trim())
+                        .filter(Boolean)
+                        .join(', ');
+
+                    if (cleanLabel && !this.isGenericSavedLabel(cleanLabel)) {
+                        return cleanLabel;
+                    }
+
+                    return fallbackAddress;
+                },
+
+                buildResolverPayloadFromItem: function($item) {
+                    if (!$item || !$item.length) {
+                        return null;
+                    }
+
+                    const rawLat = parseFloat($item.data('lat'));
+                    const rawLng = parseFloat($item.data('lng'));
+                    const label = ($item.data('label') || '').toString().trim();
+                    const address = ($item.data('address') || '').toString().trim();
+                    const locationId = ($item.data('location-id') || '').toString().trim();
+
+                    return {
+                        locationId: locationId,
+                        label: label,
+                        address: address,
+                        street: ($item.data('street') || '').toString().trim(),
+                        city: ($item.data('city') || '').toString().trim(),
+                        state: ($item.data('state') || '').toString().trim(),
+                        country: ($item.data('country') || '').toString().trim(),
+                        lat: Number.isFinite(rawLat) ? rawLat : null,
+                        lng: Number.isFinite(rawLng) ? rawLng : null,
+                        query: this.buildResolverQueryText(
+                            label,
+                            address,
+                            ($item.data('city') || '').toString().trim(),
+                            ($item.data('state') || '').toString().trim(),
+                            ($item.data('country') || '').toString().trim()
+                        )
+                    };
+                },
+
+                buildResolverPayloadFromLocationData: function(locationData) {
+                    if (!locationData || typeof locationData !== 'object') {
+                        return null;
+                    }
+
+                    const rawLat = parseFloat(locationData.lat);
+                    const rawLng = parseFloat(locationData.lng);
+                    const label = (locationData.label || '').toString().trim();
+                    const address = (locationData.address || '').toString().trim();
+                    const locationId = (locationData.locationId || locationData.id || locationData.location_id || '').toString().trim();
+
+                    return {
+                        locationId: locationId,
+                        label: label,
+                        address: address,
+                        street: (locationData.street || '').toString().trim(),
+                        city: (locationData.city || '').toString().trim(),
+                        state: (locationData.state || '').toString().trim(),
+                        country: (locationData.country || '').toString().trim(),
+                        lat: Number.isFinite(rawLat) ? rawLat : null,
+                        lng: Number.isFinite(rawLng) ? rawLng : null,
+                        query: this.buildResolverQueryText(
+                            label,
+                            address,
+                            (locationData.city || '').toString().trim(),
+                            (locationData.state || '').toString().trim(),
+                            (locationData.country || '').toString().trim()
+                        )
+                    };
+                },
+
+                resolveStoreLocation: function(payload, callback) {
+                    const ajaxUrl = (window.mulopimfwc_locationWiseProducts || {}).ajaxUrl;
+                    const nonce = ($('#mulopimfwc_shortcode_selector_nonce').val() || '').toString();
+
+                    if (!ajaxUrl || !nonce) {
+                        if (typeof callback === 'function') {
+                            callback(null);
+                        }
                         return;
                     }
-                    const addrArray = address.split(',').map(s => s.trim().toLowerCase());
+
+                    const requestData = {
+                        action: 'mulopimfwc_resolve_store_location',
+                        nonce: nonce,
+                        query: (payload.query || [payload.address, payload.city, payload.state, payload.country].filter(Boolean).join(', ')).toString(),
+                        address: (payload.address || '').toString(),
+                        city: (payload.city || '').toString(),
+                        state: (payload.state || '').toString(),
+                        country: (payload.country || '').toString()
+                    };
+
+                    if (payload.lat !== null && payload.lat !== undefined && Number.isFinite(payload.lat)) {
+                        requestData.lat = payload.lat;
+                    }
+                    if (payload.lng !== null && payload.lng !== undefined && Number.isFinite(payload.lng)) {
+                        requestData.lng = payload.lng;
+                    }
+
+                    $.ajax({
+                        url: ajaxUrl,
+                        type: 'POST',
+                        data: requestData
+                    }).done((response) => {
+                        if (typeof callback === 'function') {
+                            callback(response);
+                        }
+                    }).fail(() => {
+                        if (typeof callback === 'function') {
+                            callback(null);
+                        }
+                    });
+                },
+
+                setResolvedDropdownSelection: function(slug) {
+                    const targetSlug = (slug || '').toString().trim().toLowerCase();
+                    if (!targetSlug) {
+                        return false;
+                    }
 
                     const $dropdown = $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown');
                     let found = false;
 
-                    // If already selected, skip
-                    if ($item && $item.hasClass('selected')) {
-                        $('#location-tooltip').hide();
-                        return;
+                    $dropdown.find('option').each(function() {
+                        const optionValue = ($(this).val() || '').toString().trim();
+                        if (!optionValue) {
+                            return;
+                        }
+                        if (optionValue.toLowerCase() === targetSlug) {
+                            $(this).prop('selected', true);
+                            found = true;
+                            return false;
+                        }
+                    });
+
+                    if (found) {
+                        $('#lwp-selected-store-shortcode').val(targetSlug);
                     }
 
-                    // Build an array of dropdown option values (lowercase)
+                    return found;
+                },
+
+                tryLegacyAddressSelection: function(address, $item = null) {
+                    const addrText = (address || '').toString().trim();
+                    if (!addrText) {
+                        return false;
+                    }
+
+                    const addrArray = addrText.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+                    if (!addrArray.length) {
+                        return false;
+                    }
+
+                    const $dropdown = $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown');
+                    let found = false;
+
                     const dropdownValues = [];
                     $dropdown.find('option').each(function() {
                         if (($(this).val() || '').toString().trim() === '') return;
                         dropdownValues.push($(this).val().toLowerCase());
                     });
 
-                    // First, check if any addrArray value matches any dropdown value
                     for (let i = 0; i < addrArray.length; i++) {
                         const addr = addrArray[i];
                         if (dropdownValues.includes(addr)) {
@@ -1362,7 +1514,6 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         }
                     }
 
-                    // If not found by value, fallback to text match
                     if (!found) {
                         for (let i = 0; i < addrArray.length; i++) {
                             const addr = addrArray[i];
@@ -1377,20 +1528,101 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         }
                     }
 
-                    // Trigger change event if selection changed
                     if (found) {
                         if ($item) {
                             $('.saved-location-item').removeClass('selected');
                             $item.addClass('selected');
                             this.updateAddressDisplay($item);
                         }
-
                         $dropdown.trigger('change');
                         $('#location-tooltip').hide();
-                    } else {
-                        this.showAlert('We don\'t have product for this location. Please choose another location.');
-                        this.reloadPage();
+                        return true;
                     }
+
+                    return false;
+                },
+
+                buildResolverSuggestionMessage: function(candidates) {
+                    if (!Array.isArray(candidates) || !candidates.length) {
+                        return 'We could not confidently match this address to a store. Please choose your store manually.';
+                    }
+
+                    const names = candidates
+                        .slice(0, 3)
+                        .map((candidate) => (candidate && candidate.name) ? candidate.name : '')
+                        .filter(Boolean);
+
+                    if (!names.length) {
+                        return 'We could not confidently match this address to a store. Please choose your store manually.';
+                    }
+
+                    return 'Multiple nearby matches found: ' + names.join(', ') + '. Please choose your store manually.';
+                },
+
+                updateCurrentLocation: function(locationData, $item = null) {
+                    if ($item && $item.hasClass('selected')) {
+                        $('#location-tooltip').hide();
+                        return;
+                    }
+
+                    const payload = this.buildResolverPayloadFromLocationData(locationData);
+                    if (!payload) {
+                        $('#location-tooltip').hide();
+                        this.showAlert('No matching store found for this address.');
+                        return;
+                    }
+
+                    if ((payload.locationId || '').toLowerCase() === 'all-products') {
+                        if (this.setResolvedDropdownSelection('all-products')) {
+                            if ($item) {
+                                $('.saved-location-item').removeClass('selected');
+                                $item.addClass('selected');
+                                this.updateAddressDisplay($item);
+                            }
+                            $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown').trigger('change');
+                            $('#location-tooltip').hide();
+                            return;
+                        }
+                    }
+
+                    this.resolveStoreLocation(payload, (resolverResponse) => {
+                        let resolverWasAmbiguous = false;
+
+                        if (resolverResponse && resolverResponse.success && resolverResponse.data) {
+                            const data = resolverResponse.data;
+                            const status = (data.status || '').toString();
+                            const matchedSlug = (data.slug || '').toString();
+
+                            if (status === 'matched' && matchedSlug) {
+                                if (this.setResolvedDropdownSelection(matchedSlug)) {
+                                    if ($item) {
+                                        $('.saved-location-item').removeClass('selected');
+                                        $item.addClass('selected');
+                                        this.updateAddressDisplay($item);
+                                    }
+
+                                    $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown').trigger('change');
+                                    $('#location-tooltip').hide();
+                                    return;
+                                }
+                            }
+
+                            if (status === 'ambiguous') {
+                                resolverWasAmbiguous = true;
+                                this.showAlert(this.buildResolverSuggestionMessage(data.candidates || []));
+                            }
+                        }
+
+                        if (this.tryLegacyAddressSelection(payload.address, $item)) {
+                            return;
+                        }
+
+                        if (resolverWasAmbiguous) {
+                            return;
+                        }
+
+                        this.showAlert('We don\'t have product for this location. Please choose another location.');
+                    });
                 },
 
                 handleUpdateSuccess: function(response) {
@@ -1448,14 +1680,13 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
                 handleSavedLocationSelect: function(e) {
                     const $item = $(e.currentTarget);
-                    const locationId = $item.data('location-id');
-                    const address = $item.data('address');
+                    const payload = this.buildResolverPayloadFromItem($item);
 
                     if (this.isAutoPopulateEnabled()) {
                         this.pendingAutoPopulateAddress = this.buildAddressFromItem($item);
                     }
 
-                    this.updateCurrentLocation(locationId, address, $item);
+                    this.updateCurrentLocation(payload, $item);
 
                 },
 

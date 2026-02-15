@@ -712,6 +712,63 @@ class MULOPIMFWC_Admin
         return $out;
     }
 
+    /**
+     * Normalize aliases from textarea/json/meta into a unique string list.
+     *
+     * @param mixed $raw_aliases
+     * @return array
+     */
+    private function normalize_location_aliases($raw_aliases)
+    {
+        $items = [];
+
+        if (is_array($raw_aliases)) {
+            array_walk_recursive($raw_aliases, function ($value) use (&$items) {
+                if (is_scalar($value)) {
+                    $items[] = (string) $value;
+                }
+            });
+        } elseif (is_string($raw_aliases)) {
+            $raw_aliases = trim($raw_aliases);
+            if ($raw_aliases !== '') {
+                $decoded = json_decode($raw_aliases, true);
+                if (is_array($decoded)) {
+                    return $this->normalize_location_aliases($decoded);
+                }
+                $parts = preg_split('/[\r\n,;|]+/', $raw_aliases);
+                if (is_array($parts)) {
+                    $items = $parts;
+                }
+            }
+        }
+
+        $items = array_map(function ($value) {
+            return sanitize_text_field((string) $value);
+        }, $items);
+
+        $items = array_values(array_filter(array_unique($items), function ($value) {
+            return trim($value) !== '';
+        }));
+
+        return $items;
+    }
+
+    /**
+     * Convert stored aliases to textarea display string.
+     *
+     * @param mixed $raw_aliases
+     * @return string
+     */
+    private function aliases_to_textarea($raw_aliases)
+    {
+        $aliases = $this->normalize_location_aliases($raw_aliases);
+        if (empty($aliases)) {
+            return '';
+        }
+
+        return implode("\n", $aliases);
+    }
+
     public function add_location_fields()
     {
 ?>
@@ -755,6 +812,12 @@ class MULOPIMFWC_Admin
             <label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="text" name="country" id="country" value="" />
             <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="location_aliases"><?php _e('Location Aliases', 'multi-location-product-and-inventory-management'); ?></label>
+            <textarea name="location_aliases" id="location_aliases" rows="4" placeholder="<?php esc_attr_e('kandir par, kandirpur, housing-estate', 'multi-location-product-and-inventory-management'); ?>"></textarea>
+            <p class="description"><?php _e('Add alternate names, misspellings, or local-language names (one per line or comma-separated).', 'multi-location-product-and-inventory-management'); ?></p>
         </div>
 
         <div class="form-field">
@@ -1005,6 +1068,7 @@ class MULOPIMFWC_Admin
         $state = get_term_meta($term->term_id, 'state', true);
         $postal_code = get_term_meta($term->term_id, 'postal_code', true);
         $country = get_term_meta($term->term_id, 'country', true);
+        $location_aliases = get_term_meta($term->term_id, 'location_aliases', true);
         $email = get_term_meta($term->term_id, 'email', true);
         $phone = get_term_meta($term->term_id, 'phone', true);
         $display_order = get_term_meta($term->term_id, 'display_order', true);
@@ -1024,6 +1088,7 @@ class MULOPIMFWC_Admin
         $zone_methods = $this->get_shipping_methods_grouped_by_zone();
         $payments     = $this->get_payment_method_options();
         $tax_classes  = $this->get_tax_class_options();
+        $location_aliases_text = $this->aliases_to_textarea($location_aliases);
 
         $logo_src = $logo_id ? wp_get_attachment_image_url($logo_id, 'thumbnail') : '';
         $gallery_ids_csv = is_array($gallery_ids) ? implode(',', $gallery_ids) : (string) $gallery_ids;
@@ -1085,6 +1150,14 @@ class MULOPIMFWC_Admin
             <td>
                 <input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" />
                 <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="location_aliases"><?php _e('Location Aliases', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <textarea name="location_aliases" id="location_aliases" rows="4" placeholder="<?php esc_attr_e('kandir par, kandirpur, housing-estate', 'multi-location-product-and-inventory-management'); ?>"><?php echo esc_textarea($location_aliases_text); ?></textarea>
+                <p class="description"><?php _e('Add alternate names, misspellings, or local-language names (one per line or comma-separated).', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
@@ -1405,6 +1478,15 @@ class MULOPIMFWC_Admin
 
         if (isset($_POST['country'])) {
             update_term_meta($term_id, 'country', sanitize_text_field(wp_unslash($_POST['country'])));
+        }
+
+        if (isset($_POST['location_aliases'])) {
+            $aliases = $this->normalize_location_aliases(wp_unslash($_POST['location_aliases']));
+            if (!empty($aliases)) {
+                update_term_meta($term_id, 'location_aliases', $aliases);
+            } else {
+                delete_term_meta($term_id, 'location_aliases');
+            }
         }
 
         if (isset($_POST['email'])) {
