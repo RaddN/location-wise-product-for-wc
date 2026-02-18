@@ -570,6 +570,49 @@ if (!function_exists('mulopimfwc_get_order_item_location_slug')) {
     }
 }
 
+if (!function_exists('mulopimfwc_normalize_backorder_value_for_wc')) {
+    /**
+     * Normalize plugin location backorder values to WooCommerce values.
+     *
+     * Plugin values: off|notify|on
+     * Woo values:    no|notify|yes
+     *
+     * @param string $value    Raw value from location meta.
+     * @param string $fallback Fallback value if empty/unknown.
+     * @return string One of: no|notify|yes
+     */
+    function mulopimfwc_normalize_backorder_value_for_wc($value, $fallback = 'no')
+    {
+        $fallback = strtolower(trim((string) $fallback));
+        if ($fallback === 'off') {
+            $fallback = 'no';
+        } elseif ($fallback === 'on') {
+            $fallback = 'yes';
+        } elseif (!in_array($fallback, ['no', 'notify', 'yes'], true)) {
+            $fallback = 'no';
+        }
+
+        $value = strtolower(trim((string) $value));
+        if ($value === '') {
+            return $fallback;
+        }
+
+        if ($value === 'off' || $value === 'no') {
+            return 'no';
+        }
+
+        if ($value === 'on' || $value === 'yes') {
+            return 'yes';
+        }
+
+        if ($value === 'notify') {
+            return 'notify';
+        }
+
+        return $fallback;
+    }
+}
+
 if (!is_admin()) {
     // Override regular price for simple products
     add_filter('woocommerce_product_get_regular_price', function ($price, $product) {
@@ -695,7 +738,7 @@ if (!is_admin()) {
 
         $location_backorders = get_post_meta($product->get_id(), '_location_backorders_' . $location_id, true);
 
-        return !empty($location_backorders) ? $location_backorders : $backorders;
+        return mulopimfwc_normalize_backorder_value_for_wc($location_backorders, $backorders);
     }, 10, 2);
 }
 if (!is_admin()) {
@@ -748,14 +791,15 @@ if (!is_admin()) {
             return 'outofstock'; // Product is not available in the current location
         }
 
-        // Get backorder setting
-        $backorders = wc_get_product_stock_status_options();
+        // Get effective backorder setting for this location.
         $location_backorders = get_post_meta($product_id, '_location_backorders_' . $location_id, true);
+        $effective_backorders = mulopimfwc_normalize_backorder_value_for_wc($location_backorders, $product->get_backorders());
+        $backorders_allowed = ('no' !== $effective_backorders);
 
         // Determine stock status based on quantity and backorder setting
-        if ($location_stock <= 0 && $location_backorders === 'off') {
+        if ($location_stock <= 0 && !$backorders_allowed) {
             return 'outofstock';
-        } elseif ($location_stock <= 0 && $location_backorders !== 'off') {
+        } elseif ($location_stock <= 0 && $backorders_allowed) {
             return 'onbackorder';
         } else {
             return 'instock';
@@ -821,8 +865,55 @@ if (!is_admin()) {
 
         $location_backorders = get_post_meta($variation->get_id(), '_location_backorders_' . $location_id, true);
 
-        return !empty($location_backorders) ? $location_backorders : $backorders;
+        return mulopimfwc_normalize_backorder_value_for_wc($location_backorders, $backorders);
     }, 10, 2);
+}
+
+if (!is_admin()) {
+    /**
+     * Ensure quantity max respects effective location backorder settings.
+     *
+     * When location backorders are allowed, remove max quantity cap.
+     * When disallowed, cap max to location stock when available.
+     */
+    add_filter('woocommerce_quantity_input_args', function ($args, $product) {
+        global $mulopimfwc_options;
+
+        if (!is_product() || !($product instanceof WC_Product)) {
+            return $args;
+        }
+
+        if (!isset($mulopimfwc_options['enable_location_backorder']) || $mulopimfwc_options['enable_location_backorder'] !== 'on') {
+            return $args;
+        }
+
+        $location_slug = mulopimfwc_get_current_store_location();
+        $location_id = mulopimfwc_get_location_term_id($location_slug);
+        if (!$location_id) {
+            return $args;
+        }
+
+        $target_id = $product->get_id();
+        $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_id, true);
+        $effective_backorders = mulopimfwc_normalize_backorder_value_for_wc($location_backorders, $product->get_backorders());
+
+        if ('no' !== $effective_backorders) {
+            $args['max_value'] = -1;
+            return $args;
+        }
+
+        if (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] === 'on') {
+            $location_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+            if ($location_stock !== '' && is_numeric($location_stock)) {
+                $stock_amount = function_exists('wc_stock_amount')
+                    ? wc_stock_amount($location_stock)
+                    : (float) $location_stock;
+                $args['max_value'] = max(0, $stock_amount);
+            }
+        }
+
+        return $args;
+    }, 20, 2);
 }
 
 // Handle stock reduction when order is placed
@@ -1029,8 +1120,13 @@ add_filter('woocommerce_add_to_cart_validation', function ($passed, $product_id,
         return $passed; // Use default WooCommerce stock checking
     }
 
-    // Get backorder setting
+    // Get effective backorder setting
     $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_id, true);
+    $effective_backorders = mulopimfwc_normalize_backorder_value_for_wc(
+        $location_backorders,
+        $product ? $product->get_backorders() : 'no'
+    );
+    $location_backorders_allowed = ('no' !== $effective_backorders);
 
     // Check if we have enough stock
     $qty_in_cart = 0;
@@ -1051,9 +1147,13 @@ add_filter('woocommerce_add_to_cart_validation', function ($passed, $product_id,
     }
 
     $total_required = $qty_in_cart + $quantity;
+    $location_stock_amount = function_exists('wc_stock_amount')
+        ? wc_stock_amount($location_stock)
+        : (float) $location_stock;
+    $location_stock_for_notice = (int) $location_stock_amount;
 
     // If backorders are not allowed and we don't have enough stock
-    if ($location_backorders === 'off' && $location_stock < $total_required) {
+    if (!$location_backorders_allowed && $location_stock_amount < $total_required) {
         $location_term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
         $location_name = $location_term ? $location_term->name : $location_slug;
 
@@ -1061,7 +1161,7 @@ add_filter('woocommerce_add_to_cart_validation', function ($passed, $product_id,
             sprintf(
                 esc_html('Sorry, "%s" has only %d left in stock at %s location. Please adjust your quantity.', 'multi-location-product-and-inventory-management'),
                 $product->get_name(),
-                $location_stock,
+                $location_stock_for_notice,
                 $location_name
             ),
             'error'
