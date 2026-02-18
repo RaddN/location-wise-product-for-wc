@@ -122,15 +122,21 @@ class mulopimfwc_Stock_Central
                 <input type="hidden" name="stock_central_view" value="<?php echo esc_attr($view_mode); ?>" />
                 <?php if ($is_classic_mode && $can_manage_products) : ?>
                     <div class="mulopimfwc-classic-toolbar">
-                        <button type="button" class="button button-primary" id="mulopimfwc-classic-save-all">
-                            <?php echo esc_html__('Save All Product Changes', 'multi-location-product-and-inventory-management'); ?>
-                        </button>
-                        <button type="button" class="button button-secondary" id="mulopimfwc-classic-reset-all" disabled="disabled">
-                            <?php echo esc_html__('Reset All Changes', 'multi-location-product-and-inventory-management'); ?>
-                        </button>
-                        <span id="mulopimfwc-classic-dirty-count" class="description">
-                            <?php echo esc_html__('No unsaved product rows.', 'multi-location-product-and-inventory-management'); ?>
-                        </span>
+                        <div class="mulopimfwc-classic-toolbar-left">
+                            <strong class="mulopimfwc-classic-toolbar-title"><?php echo esc_html__('Classic Row Editor', 'multi-location-product-and-inventory-management'); ?></strong>
+                            <span class="mulopimfwc-classic-toolbar-hint"><?php echo esc_html__('Edit product rows inline, then save or reset all changes.', 'multi-location-product-and-inventory-management'); ?></span>
+                        </div>
+                        <div class="mulopimfwc-classic-toolbar-right">
+                            <button type="button" class="button button-primary" id="mulopimfwc-classic-save-all">
+                                <?php echo esc_html__('Save All Product Changes', 'multi-location-product-and-inventory-management'); ?>
+                            </button>
+                            <button type="button" class="button button-secondary" id="mulopimfwc-classic-reset-all" disabled="disabled">
+                                <?php echo esc_html__('Reset All Changes', 'multi-location-product-and-inventory-management'); ?>
+                            </button>
+                            <span id="mulopimfwc-classic-dirty-count" class="description">
+                                <?php echo esc_html__('No unsaved product rows.', 'multi-location-product-and-inventory-management'); ?>
+                            </span>
+                        </div>
                     </div>
                 <?php endif; ?>
                 <?php $product_table->search_box(__('Search Products', 'multi-location-product-and-inventory-management'), 'search_products'); ?>
@@ -255,7 +261,8 @@ class mulopimfwc_Stock_Central
             .mulopimfwc-classic-toolbar {
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                justify-content: space-between;
+                gap: 16px;
                 margin-bottom: 16px;
                 padding: 12px 14px;
                 border: 1px solid #d6d9df;
@@ -265,8 +272,34 @@ class mulopimfwc_Stock_Central
                 top: 32px;
                 z-index: 20;
                 box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-                justify-content: flex-start;
-                flex-direction: row-reverse;
+            }
+
+            .mulopimfwc-classic-toolbar-left {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                min-width: 220px;
+            }
+
+            .mulopimfwc-classic-toolbar-title {
+                font-size: 13px;
+                font-weight: 700;
+                color: #111827;
+                line-height: 1.3;
+            }
+
+            .mulopimfwc-classic-toolbar-hint {
+                font-size: 12px;
+                color: #6b7280;
+                line-height: 1.35;
+            }
+
+            .mulopimfwc-classic-toolbar-right {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
             }
 
             @media (max-width: 782px) {
@@ -284,6 +317,13 @@ class mulopimfwc_Stock_Central
 
                 .mulopimfwc-classic-toolbar {
                     top: 46px;
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .mulopimfwc-classic-toolbar-right {
+                    width: 100%;
+                    justify-content: flex-start;
                 }
             }
 
