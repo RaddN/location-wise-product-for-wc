@@ -2571,7 +2571,35 @@ class MULOPIMFWC_Admin
         $screen = get_current_screen();
         if ($screen && !empty($screen->id)) {
             $screen_id = $screen->id;
-            add_filter('default_hidden_columns', function ($hidden, $current_screen) use ($screen_id) {
+            $classic_locked_columns = [
+                'classic_manage_stock',
+                'classic_default',
+                'classic_location_wise',
+                'classic_purchase',
+            ];
+
+            $resolve_view_mode = static function () {
+                $requested_mode = isset($_REQUEST['stock_central_view'])
+                    ? sanitize_text_field(wp_unslash($_REQUEST['stock_central_view']))
+                    : '';
+                if (!in_array($requested_mode, ['modern', 'classic'], true)) {
+                    $requested_mode = '';
+                }
+
+                if ($requested_mode === '') {
+                    $user_id = get_current_user_id();
+                    if ($user_id) {
+                        $saved_mode = get_user_meta($user_id, 'mulopimfwc_stock_central_view_mode', true);
+                        if (in_array($saved_mode, ['modern', 'classic'], true)) {
+                            $requested_mode = $saved_mode;
+                        }
+                    }
+                }
+
+                return $requested_mode !== '' ? $requested_mode : 'modern';
+            };
+
+            add_filter('default_hidden_columns', function ($hidden, $current_screen) use ($screen_id, $classic_locked_columns, $resolve_view_mode) {
                 if ($current_screen && $current_screen->id === $screen_id) {
                     $default_hidden = [
                         'sku',
@@ -2586,10 +2614,26 @@ class MULOPIMFWC_Admin
                         'date',
                     ];
                     $hidden = array_values(array_unique(array_merge($hidden, $default_hidden)));
+
+                    if ($resolve_view_mode() === 'classic') {
+                        $hidden = array_values(array_diff($hidden, $classic_locked_columns));
+                    }
                 }
 
                 return $hidden;
             }, 10, 2);
+
+            add_filter('manage_' . $screen_id . '_columns', function ($columns) use ($resolve_view_mode, $classic_locked_columns) {
+                if ($resolve_view_mode() !== 'classic' || !is_array($columns)) {
+                    return $columns;
+                }
+
+                foreach ($classic_locked_columns as $column_key) {
+                    unset($columns[$column_key]);
+                }
+
+                return $columns;
+            });
         }
 
         $this->stock_central->register_screen_options();

@@ -300,6 +300,7 @@ class mulopimfwc_Stock_Central
                 gap: 10px;
                 flex-wrap: wrap;
                 justify-content: flex-end;
+                flex-direction: row-reverse;
             }
 
             @media (max-width: 782px) {

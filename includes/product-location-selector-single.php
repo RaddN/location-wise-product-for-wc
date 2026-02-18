@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.1.3.87
+ * @version 1.1.3.88
  * @author Your Name
- * @since 1.1.3.87
+ * @since 1.1.3.88
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.1.3.87';
+    const VERSION = '1.1.3.88';
 
     /**
      * Available display positions
@@ -920,7 +920,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     /**
      * Plugin version
      */
-    const VERSION = '1.1.3.87';
+    const VERSION = '1.1.3.88';
     
     /**
      * @var array Track displayed shortcodes to prevent duplicates

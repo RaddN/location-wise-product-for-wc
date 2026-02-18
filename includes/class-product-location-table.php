@@ -145,6 +145,16 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return implode(', ', $names);
     }
 
+    private function get_classic_locked_columns()
+    {
+        return [
+            'classic_manage_stock',
+            'classic_default',
+            'classic_location_wise',
+            'classic_purchase',
+        ];
+    }
+
     /**
      * Get table columns
      *
@@ -1609,6 +1619,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         $columns = $this->get_columns();
         $hidden = get_hidden_columns($this->screen);
+        if ($this->is_classic_mode() && $this->user_can_manage_products()) {
+            $hidden = array_values(array_diff($hidden, $this->get_classic_locked_columns()));
+        }
         $sortable = $this->get_sortable_columns();
         $primary = $this->get_primary_column_name();
         $this->_column_headers = [$columns, $hidden, $sortable, $primary];
