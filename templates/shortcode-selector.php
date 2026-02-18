@@ -13,6 +13,46 @@ $max_width = trim($atts['max_width']);
 if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i', $max_width)) {
     $max_width .= 'px';
 }
+
+$shortcode_texts = [
+    'enter_address' => mulopimfwc_get_text_value('text_shortcode_enter_your_address'),
+    'saved_address' => mulopimfwc_get_text_value('text_shortcode_saved_address'),
+    'add_new_address' => mulopimfwc_get_text_value('text_shortcode_add_new_address'),
+    'set_your_location' => mulopimfwc_get_text_value('text_shortcode_set_your_location'),
+    'continue' => mulopimfwc_get_text_value('text_shortcode_continue'),
+    'location_details' => mulopimfwc_get_text_value('text_shortcode_location_details'),
+    'label' => mulopimfwc_get_text_value('text_shortcode_label'),
+    'home' => mulopimfwc_get_text_value('text_shortcode_home'),
+    'work' => mulopimfwc_get_text_value('text_shortcode_work'),
+    'partner' => mulopimfwc_get_text_value('text_shortcode_partner'),
+    'other' => mulopimfwc_get_text_value('text_shortcode_other'),
+    'street_address' => mulopimfwc_get_text_value('text_shortcode_street_address'),
+    'apartment_suite' => mulopimfwc_get_text_value('text_shortcode_apartment_suite'),
+    'note' => mulopimfwc_get_text_value('text_shortcode_note'),
+    'back' => mulopimfwc_get_text_value('text_shortcode_back'),
+    'save_location' => mulopimfwc_get_text_value('text_shortcode_save_location'),
+];
+
+$saved_location_label_map = [
+    'home' => $shortcode_texts['home'],
+    'work' => $shortcode_texts['work'],
+    'partner' => $shortcode_texts['partner'],
+    'other' => $shortcode_texts['other'],
+];
+
+$translate_saved_location_label = function ($label) use ($saved_location_label_map) {
+    $raw_label = is_string($label) ? trim($label) : '';
+    if ($raw_label === '') {
+        return '';
+    }
+
+    $normalized = strtolower($raw_label);
+    if (array_key_exists($normalized, $saved_location_label_map)) {
+        return $saved_location_label_map[$normalized];
+    }
+
+    return $raw_label;
+};
 ?>
 <div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" style="max-width: <?php echo esc_attr($max_width); ?>;">
     <?php if ($atts['show_title'] === 'on'): ?>
@@ -42,7 +82,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                         } elseif (!empty($user_locations) && is_array($user_locations) && $selected_location_id) {
                             foreach ($user_locations as $location) {
                                 if ($location['id'] === $selected_location_id) {
-                                    $current_location = $location['label'] . ' - ' . $location['address'];
+                                    $current_location = $translate_saved_location_label($location['label'] ?? '') . ' - ' . $location['address'];
                                     $location_set = true;
                                     break;
                                 }
@@ -60,7 +100,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                     if ($location_set) {
                         echo esc_html($current_location);
                     } else {
-                        $display_location = $store_location ? str_replace(['_', '-'], ' ', ucwords($store_location)) : esc_html__('Set Your Address', 'multi-location-product-and-inventory-management');
+                        $display_location = $store_location ? str_replace(['_', '-'], ' ', ucwords($store_location)) : $shortcode_texts['set_your_location'];
                         echo esc_html($display_location);
                     }
                     ?>
@@ -68,15 +108,15 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
             </div>
             <div class="tooltip_popup" id="location-tooltip" style="display: none;">
                 <div class="search-input-container">
-                    <input type="text" id="address-search-input" placeholder="<?php esc_attr_e('Enter your address', 'multi-location-product-and-inventory-management'); ?>" aria-label="<?php esc_attr_e('Enter your address', 'multi-location-product-and-inventory-management'); ?>" value="" readonly>
-                    <label><?php _e('Enter Your Address', 'multi-location-product-and-inventory-management'); ?></label>
+                    <input type="text" id="address-search-input" placeholder="<?php echo esc_attr($shortcode_texts['enter_address']); ?>" aria-label="<?php echo esc_attr($shortcode_texts['enter_address']); ?>" value="" readonly>
+                    <label><?php echo esc_html($shortcode_texts['enter_address']); ?></label>
                     <div>
                         <button type="button" aria-label="<?php esc_attr_e('Clear your address', 'multi-location-product-and-inventory-management'); ?>" data-testid="input-clear-icon" id="clear-address-btn">&times;</button>
                     </div>
                 </div>
                 <?php if ($is_user_logged_in): ?>
                     <div class="saved_locations">
-                        <h3 class="title"><?php _e('Saved Address', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <h3 class="title"><?php echo esc_html($shortcode_texts['saved_address']); ?></h3>
                         <div class="saved-locations-list">
                             <?php
                             $user_locations = get_user_meta($current_user->ID, 'mulopimfwc_user_locations', true);
@@ -87,6 +127,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                                     class="saved-location-item <?php echo esc_attr($all_selected); ?>"
                                     data-location-id="all-products"
                                     data-label="<?php echo esc_attr__('All Products', 'multi-location-product-and-inventory-management'); ?>"
+                                    data-label-display="<?php echo esc_attr__('All Products', 'multi-location-product-and-inventory-management'); ?>"
                                     data-address="all-products"
                                     data-street="all-products"
                                     data-city="all-products"
@@ -114,6 +155,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                                         class="saved-location-item <?php echo esc_attr($selected); ?>"
                                         data-location-id="<?php echo esc_attr($location['id']); ?>"
                                         data-label="<?php echo esc_attr($location['label']); ?>"
+                                        data-label-display="<?php echo esc_attr($translate_saved_location_label($location['label'] ?? '')); ?>"
                                         data-address="<?php echo esc_attr($location['address']); ?>"
                                         data-street="<?php echo esc_attr($location['street'] ?? ''); ?>"
                                         data-apartment="<?php echo esc_attr($location['apartment'] ?? ''); ?>"
@@ -145,7 +187,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                                             <?php } ?>
                                         </div>
                                         <div class="location-info">
-                                            <span class="location-label"><?php echo esc_html($location['label']); ?></span>
+                                            <span class="location-label"><?php echo esc_html($translate_saved_location_label($location['label'] ?? '')); ?></span>
                                             <span class="location-address"><?php echo esc_html($location['address']); ?></span>
                                         </div>
                                         <div class="location-actions">
@@ -167,7 +209,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                 <div class="location-actions-container">
                     <?php if ($is_user_logged_in): ?>
                         <button type="button" class="button button-primary lwp-add-location-btn">
-                            <?php _e('Add New Address', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html($shortcode_texts['add_new_address']); ?>
                         </button>
                     <?php endif; ?>
                 </div>
@@ -658,14 +700,14 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
 <div id="lwp-location-popup" class="lwp-location-popup" style="display:none;">
     <div class="lwp-popup-content">
         <div class="lwp-popup-header">
-            <h3><?php _e('Set Your Location', 'multi-location-product-and-inventory-management'); ?></h3>
+            <h3><?php echo esc_html($shortcode_texts['set_your_location']); ?></h3>
             <button type="button" class="lwp-close-popup">&times;</button>
         </div>
         <div id="lwp-location-step1" class="lwp-location-step">
             <div class="lwp-map-container">
                 <div id="lwp-location-map" class="lwp-location-map"></div>
                 <div class="lwp-map-controls">
-                    <button type="button" class="button button-primary lwp-continue-btn"><?php _e('Continue', 'multi-location-product-and-inventory-management');
+                    <button type="button" class="button button-primary lwp-continue-btn"><?php echo esc_html($shortcode_texts['continue']);
                                                                                             echo mulopimfwc_svg_icon('right_arrow'); ?></button>
                 </div>
             </div>
@@ -674,7 +716,7 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
         <div id="lwp-location-step2" class="lwp-location-step" style="display:none;">
             <div class="lwp-location-details">
                 <div class="lwp-details-header">
-                    <h4><?php _e('Location Details', 'multi-location-product-and-inventory-management'); ?></h4>
+                    <h4><?php echo esc_html($shortcode_texts['location_details']); ?></h4>
                     <p class="lwp-address-preview"></p>
                     <span class="edit_location_map" style="cursor: pointer;"><?php echo mulopimfwc_svg_icon('pencil'); ?></span>
                 </div>
@@ -682,24 +724,24 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                     <?php wp_nonce_field('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce'); ?>
                     <input type="hidden" id="lwp-editing-location-id" name="location_id" value="">
                     <div class="lwp-form-group">
-                        <label for="lwp-location-label"><?php _e('Label', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-label"><?php echo esc_html($shortcode_texts['label']); ?></label>
                         <select id="lwp-location-label" name="label" required>
-                            <option value="Home"><?php _e('Home', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="Work"><?php _e('Work', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="Partner"><?php _e('Partner', 'multi-location-product-and-inventory-management'); ?></option>
-                            <option value="Other"><?php _e('Other', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value="Home"><?php echo esc_html($shortcode_texts['home']); ?></option>
+                            <option value="Work"><?php echo esc_html($shortcode_texts['work']); ?></option>
+                            <option value="Partner"><?php echo esc_html($shortcode_texts['partner']); ?></option>
+                            <option value="Other"><?php echo esc_html($shortcode_texts['other']); ?></option>
                         </select>
                     </div>
                     <div class="lwp-form-group">
-                        <label for="lwp-location-street"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-street"><?php echo esc_html($shortcode_texts['street_address']); ?></label>
                         <input type="text" id="lwp-location-street" name="street" required>
                     </div>
                     <div class="lwp-form-group">
-                        <label for="lwp-location-apartment"><?php _e('Apartment, suite, etc.', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-apartment"><?php echo esc_html($shortcode_texts['apartment_suite']); ?></label>
                         <input type="text" id="lwp-location-apartment" name="apartment">
                     </div>
                     <div class="lwp-form-group">
-                        <label for="lwp-location-note"><?php _e('Note', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="lwp-location-note"><?php echo esc_html($shortcode_texts['note']); ?></label>
                         <textarea id="lwp-location-note" name="note"></textarea>
                     </div>
                     <input type="hidden" id="lwp-location-lat" name="lat">
@@ -710,9 +752,9 @@ if ($max_width !== '' && !preg_match('/(px|em|rem|vw|vh|%|pt|cm|mm|in|ex|ch)$/i'
                     <input type="hidden" id="lwp-location-country" name="country">
                     <div class="lwp-form-actions">
                         <button type="button" class="button lwp-back-btn"><?php echo mulopimfwc_svg_icon('left_arrow');
-                                                                            _e('Back', 'multi-location-product-and-inventory-management'); ?></button>
+                                                                            echo esc_html($shortcode_texts['back']); ?></button>
                         <button type="submit" class="button button-primary"><?php echo mulopimfwc_svg_icon('save');
-                                                                            _e('Save Location', 'multi-location-product-and-inventory-management'); ?></button>
+                                                                            echo esc_html($shortcode_texts['save_location']); ?></button>
                     </div>
                 </form>
             </div>
@@ -1741,8 +1783,9 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 updateAddressDisplay: function($item) {
                     const locationId = ($item.data('location-id') || '').toString().trim();
                     const dataLabel = ($item.data('label') || '').toString().trim();
+                    const dataLabelDisplay = ($item.data('label-display') || '').toString().trim();
                     const dataAddress = ($item.data('address') || '').toString().trim();
-                    const locationLabel = dataLabel || $item.find('.location-label').text().trim();
+                    const locationLabel = dataLabelDisplay || dataLabel || $item.find('.location-label').text().trim();
                     const locationAddress = locationId === 'all-products' ?
                         '' :
                         (dataAddress || $item.find('.location-address').text().trim());
@@ -1866,7 +1909,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         }
 
                         if ($('.saved-location-item[data-location-id="' + locationId + '"]').hasClass('selected')) {
-                            $('.address-text').text('Set Your Location');
+                            $('.address-text').text('<?php echo esc_js($shortcode_texts['set_your_location']); ?>');
                             this.clearUserLocation();
                         }
                     } else {

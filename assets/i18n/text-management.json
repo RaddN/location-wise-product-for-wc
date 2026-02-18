@@ -120,7 +120,23 @@
         "text_variation_stock_label": "Stock:",
         "text_variation_in_stock": "%s in stock",
         "text_variation_backorder": "Available on backorder",
-        "text_variation_price_label": "Price at this location:"
+        "text_variation_price_label": "Price at this location:",
+        "text_shortcode_enter_your_address": "Enter Your Address",
+        "text_shortcode_saved_address": "Saved Address",
+        "text_shortcode_add_new_address": "Add New Address",
+        "text_shortcode_set_your_location": "Set Your Location",
+        "text_shortcode_continue": "Continue",
+        "text_shortcode_location_details": "Location Details",
+        "text_shortcode_label": "Label",
+        "text_shortcode_home": "Home",
+        "text_shortcode_work": "Work",
+        "text_shortcode_partner": "Partner",
+        "text_shortcode_other": "Other",
+        "text_shortcode_street_address": "Street Address",
+        "text_shortcode_apartment_suite": "Apartment, suite, etc.",
+        "text_shortcode_note": "Note",
+        "text_shortcode_back": "Back",
+        "text_shortcode_save_location": "Save Location"
       }
     },
     "nl": {
@@ -237,7 +253,23 @@
         "text_variation_stock_label": "Voorraad:",
         "text_variation_in_stock": "%s op voorraad",
         "text_variation_backorder": "Beschikbaar op nabestelling",
-        "text_variation_price_label": "Prijs op deze locatie:"
+        "text_variation_price_label": "Prijs op deze locatie:",
+        "text_shortcode_enter_your_address": "Voer uw adres in",
+        "text_shortcode_saved_address": "Opgeslagen adres",
+        "text_shortcode_add_new_address": "Nieuw adres toevoegen",
+        "text_shortcode_set_your_location": "Stel uw locatie in",
+        "text_shortcode_continue": "Doorgaan",
+        "text_shortcode_location_details": "Locatiegegevens",
+        "text_shortcode_label": "Label",
+        "text_shortcode_home": "Thuis",
+        "text_shortcode_work": "Werk",
+        "text_shortcode_partner": "Partner",
+        "text_shortcode_other": "Overig",
+        "text_shortcode_street_address": "Straatadres",
+        "text_shortcode_apartment_suite": "Appartement, suite, enz.",
+        "text_shortcode_note": "Notitie",
+        "text_shortcode_back": "Terug",
+        "text_shortcode_save_location": "Locatie opslaan"
       }
     },
     "bn": {
@@ -354,7 +386,23 @@
         "text_variation_stock_label": "স্টক:",
         "text_variation_in_stock": "%s টি স্টকে আছে",
         "text_variation_backorder": "ব্যাকঅর্ডারে উপলব্ধ",
-        "text_variation_price_label": "এই লোকেশনে মূল্য:"
+        "text_variation_price_label": "এই লোকেশনে মূল্য:",
+        "text_shortcode_enter_your_address": "Enter Your Address",
+        "text_shortcode_saved_address": "Saved Address",
+        "text_shortcode_add_new_address": "Add New Address",
+        "text_shortcode_set_your_location": "Set Your Location",
+        "text_shortcode_continue": "Continue",
+        "text_shortcode_location_details": "Location Details",
+        "text_shortcode_label": "Label",
+        "text_shortcode_home": "Home",
+        "text_shortcode_work": "Work",
+        "text_shortcode_partner": "Partner",
+        "text_shortcode_other": "Other",
+        "text_shortcode_street_address": "Street Address",
+        "text_shortcode_apartment_suite": "Apartment, suite, etc.",
+        "text_shortcode_note": "Note",
+        "text_shortcode_back": "Back",
+        "text_shortcode_save_location": "Save Location"
       }
     }
   }
