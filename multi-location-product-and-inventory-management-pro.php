@@ -7157,7 +7157,6 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         /**
          * FIXED: Enhanced product filtering to respect visibility settings and handle all scenarios
-         * Now respects strict_filtering and filtered_sections settings
          * FIXED: Always filters [products] shortcode when strict_filtering is enabled
          */
         public function filter_shortcode_products($query_args)
@@ -7174,26 +7173,17 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return $query_args;
             }
             
-            // FIXED: Get filtered_sections with proper default handling
-            // If filtered_sections is not set or empty, default to all sections (backward compatibility)
-            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : null;
-            
-            // If filtered_sections is not configured yet, default to all sections
-            if ($filtered_sections === null || (is_array($filtered_sections) && empty($filtered_sections))) {
-                $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
-            }
+            $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
             
             // Determine which section this is
             $current_section = $this->detect_current_section($query_args);
             
             // FIXED: Always filter shortcodes/blocks if strict_filtering is enabled
-            // This ensures [products] shortcode always works regardless of filtered_sections setting
             // The woocommerce_shortcode_products_query filter is ONLY called for shortcodes
             // So if we're in this filter, it's definitely a shortcode query
             $is_shortcode_query = true; // This filter is only called for shortcodes
             
             // Always filter shortcodes when strict_filtering is enabled
-            // Also check other sections against filtered_sections
             if ($current_section !== 'blocks' && !in_array($current_section, (array)$filtered_sections, true)) {
                 return $query_args;
             }
@@ -8440,7 +8430,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
             $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
-            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
             
             // Check if blocks filtering is enabled
             if ($strict_filtering === 'disabled' || !in_array('blocks', $filtered_sections, true)) {
@@ -8500,7 +8490,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
             $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
-            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
             
             // Check if REST API filtering is enabled
             if ($strict_filtering === 'disabled' || !in_array('rest_api', $filtered_sections, true)) {
@@ -8674,7 +8664,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return false;
             }
 
-            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
             return in_array($section, $filtered_sections);
         }
 
@@ -9114,7 +9104,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
             $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
-            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
             
             // Check if filtering should be applied
             if ($strict_filtering === 'disabled' || !in_array('related', $filtered_sections, true)) {
@@ -9164,7 +9154,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
             $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
-            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
             
             // Check if filtering should be applied
             if ($strict_filtering === 'disabled' || !in_array('cross_sells', $filtered_sections, true)) {
@@ -9214,7 +9204,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
             $strict_filtering = mulopimfwc_get_strict_filtering_value($options);
-            $filtered_sections = isset($options['filtered_sections']) ? $options['filtered_sections'] : [];
+            $filtered_sections = ['shop', 'search', 'related', 'recently_viewed', 'cross_sells', 'upsells', 'widgets', 'blocks', 'rest_api'];
             
             // Check if filtering should be applied
             if ($strict_filtering === 'disabled' || !in_array('upsells', $filtered_sections, true)) {

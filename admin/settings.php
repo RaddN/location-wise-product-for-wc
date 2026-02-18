@@ -3977,13 +3977,13 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             'mulopimfwc_filter_settings_section'
         );
 
-        add_settings_field(
-            'mulopimfwc_filtered_sections',
-            __('Apply Location Filtering To', 'multi-location-product-and-inventory-management'),
-            [$this, 'filtered_sections_field_callback'],
-            'lwp-product-filtering-settings',
-            'mulopimfwc_filter_settings_section'
-        );
+        // add_settings_field(
+        //     'mulopimfwc_filtered_sections',
+        //     __('Apply Location Filtering To', 'multi-location-product-and-inventory-management'),
+        //     [$this, 'filtered_sections_field_callback'],
+        //     'lwp-product-filtering-settings',
+        //     'mulopimfwc_filter_settings_section'
+        // );
 
         // Add Order Fulfillment section
         add_settings_section(
@@ -5643,11 +5643,11 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                                         <?php do_settings_sections('lwp-location-pickup-settings'); ?>
                                     </div>
                                 </div>
-                                <div class="lwp-settings-section">
+                                <!-- <div class="lwp-settings-section">
                                     <div class="lwp-settings-box">
-                                        <?php do_settings_sections('lwp-location-allocation-settings'); ?>
+                                        <?php //do_settings_sections('lwp-location-allocation-settings'); ?>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                             <div id="advance-settings" class="lwp-tab-content" style="display:none;">
                                 <div class="lwp-settings-section">
