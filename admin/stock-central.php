@@ -768,6 +768,68 @@ class mulopimfwc_Stock_Central
             .mulopimfwc-classic-row-status.is-error {
                 color: #b91c1c;
             }
+
+            .mulopimfwc-classic-validation-error {
+                border-color: #dc2626 !important;
+                box-shadow: 0 0 0 1px #dc2626 !important;
+                background: #fef2f2 !important;
+            }
+
+            .mulopimfwc-classic-error-cell {
+                position: relative;
+            }
+
+            .mulopimfwc-classic-error-cell::after {
+                content: attr(data-error);
+                position: absolute;
+                left: 50%;
+                bottom: calc(100% + 10px);
+                transform: translateX(-50%) translateY(4px);
+                background: #111827;
+                color: #fff;
+                font-size: 11px;
+                line-height: 1.35;
+                padding: 7px 9px;
+                border-radius: 6px;
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+                max-width: 250px;
+                min-width: 140px;
+                text-align: left;
+                white-space: normal;
+                z-index: 9999;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+            }
+
+            .mulopimfwc-classic-error-cell::before {
+                content: "";
+                position: absolute;
+                left: 50%;
+                bottom: calc(100% + 4px);
+                transform: translateX(-50%);
+                border-width: 6px 6px 0 6px;
+                border-style: solid;
+                border-color: #111827 transparent transparent transparent;
+                z-index: 9998;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.16s ease, visibility 0.16s ease;
+            }
+
+            .mulopimfwc-classic-error-cell:hover::after,
+            .mulopimfwc-classic-error-cell:focus-within::after,
+            .mulopimfwc-classic-error-cell:hover::before,
+            .mulopimfwc-classic-error-cell:focus-within::before {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .mulopimfwc-classic-error-cell:hover::after,
+            .mulopimfwc-classic-error-cell:focus-within::after {
+                transform: translateX(-50%) translateY(0);
+            }
         </style>
 
         <script>
@@ -989,6 +1051,451 @@ class mulopimfwc_Stock_Central
                         return ($field.val() || '').toString();
                     }
 
+                    function getNumericFieldValue($field) {
+                        if (!$field || !$field.length) {
+                            return 0;
+                        }
+
+                        var raw = ($field.val() || '').toString();
+                        var value = parseFloat(raw);
+                        return isNaN(value) ? 0 : value;
+                    }
+
+                    function clearRowValidationErrors($row) {
+                        $row.find('.mulopimfwc-classic-validation-error').removeClass('mulopimfwc-classic-validation-error');
+                        $row.find('.mulopimfwc-classic-error-cell').removeClass('mulopimfwc-classic-error-cell').removeAttr('data-error');
+                    }
+
+                    function getFieldErrorContainer($field) {
+                        if (!$field || !$field.length) {
+                            return $();
+                        }
+
+                        var $container = $field.closest('.mulopimfwc-classic-location-table td');
+                        if ($container.length) {
+                            return $container.first();
+                        }
+
+                        $container = $field.closest('.mulopimfwc-classic-grid > div');
+                        if ($container.length) {
+                            return $container.first();
+                        }
+
+                        $container = $field.closest('.mulopimfwc-classic-variation-manage-item');
+                        if ($container.length) {
+                            return $container.first();
+                        }
+
+                        return $field.parent();
+                    }
+
+                    function setFieldValidationTooltip($field, message) {
+                        var $container = getFieldErrorContainer($field);
+                        if (!$container.length) {
+                            return;
+                        }
+
+                        $container.addClass('mulopimfwc-classic-error-cell');
+                        if (!$container.attr('data-error')) {
+                            $container.attr('data-error', message);
+                        }
+                    }
+
+                    function clearFieldValidationError($field) {
+                        if (!$field || !$field.length) {
+                            return;
+                        }
+
+                        $field.removeClass('mulopimfwc-classic-validation-error');
+                        var $container = getFieldErrorContainer($field);
+                        if ($container.length) {
+                            $container.removeClass('mulopimfwc-classic-error-cell').removeAttr('data-error');
+                        }
+                    }
+
+                    function isDefaultManageStockEnabledForRow($row) {
+                        var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
+                        var supportsManageStock = ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
+                        if (!supportsManageStock) {
+                            return false;
+                        }
+
+                        var $defaultManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-default-field[data-field=\"manage_stock\"]').first();
+                        return !$defaultManageStockField.length || $defaultManageStockField.is(':checked');
+                    }
+
+                    function isVariationManageStockEnabledForRow($row, variationId) {
+                        var $variationManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-variation-manage-item[data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"manage_stock\"]').first();
+                        return !$variationManageStockField.length || $variationManageStockField.is(':checked');
+                    }
+
+                    function toggleStockFieldVisibility($field, isVisible) {
+                        if (!$field || !$field.length) {
+                            return;
+                        }
+
+                        if (!isVisible) {
+                            clearFieldValidationError($field);
+                        }
+
+                        $field.prop('disabled', !isVisible);
+                        var $container = getFieldErrorContainer($field);
+                        if ($container.length) {
+                            $container.toggle(isVisible);
+                        } else {
+                            $field.toggle(isVisible);
+                        }
+                    }
+
+                    function toggleTableColumnVisibilityByFields($table, fieldNames, isVisible, fallbackIndexes) {
+                        if (!$table || !$table.length) {
+                            return;
+                        }
+
+                        var fields = $.isArray(fieldNames) ? fieldNames : [fieldNames];
+                        if (!fields.length) {
+                            return;
+                        }
+
+                        var hiddenIndexes = [];
+                        var $firstDataRow = $table.find('tbody tr').filter(function() {
+                            return $(this).find('[data-field]').length > 0;
+                        }).first();
+
+                        if ($firstDataRow.length) {
+                            fields.forEach(function(fieldName) {
+                                var $targetField = $firstDataRow.find('[data-field=\"' + fieldName + '\"]').first();
+                                if (!$targetField.length) {
+                                    return;
+                                }
+
+                                var cellIndex = $targetField.closest('td').index();
+                                if (cellIndex >= 0 && hiddenIndexes.indexOf(cellIndex) === -1) {
+                                    hiddenIndexes.push(cellIndex);
+                                }
+                            });
+                        }
+
+                        if (!hiddenIndexes.length && $.isArray(fallbackIndexes) && fallbackIndexes.length) {
+                            fallbackIndexes.forEach(function(index) {
+                                var parsed = parseInt(index, 10);
+                                if (!isNaN(parsed) && parsed >= 0 && hiddenIndexes.indexOf(parsed) === -1) {
+                                    hiddenIndexes.push(parsed);
+                                }
+                            });
+                        }
+
+                        if (!hiddenIndexes.length) {
+                            return;
+                        }
+
+                        hiddenIndexes.sort(function(a, b) {
+                            return a - b;
+                        });
+
+                        if (!isVisible) {
+                            fields.forEach(function(fieldName) {
+                                $table.find('tbody [data-field=\"' + fieldName + '\"]').each(function() {
+                                    clearFieldValidationError($(this));
+                                });
+                            });
+                        }
+
+                        var $headCells = $table.find('thead tr').first().children();
+                        hiddenIndexes.forEach(function(index) {
+                            if ($headCells.length > index) {
+                                $headCells.eq(index).toggle(isVisible);
+                            }
+                        });
+
+                        $table.find('tbody tr').each(function() {
+                            var $cells = $(this).children();
+                            hiddenIndexes.forEach(function(index) {
+                                if ($cells.length > index) {
+                                    $cells.eq(index).toggle(isVisible);
+                                }
+                            });
+                        });
+
+                        fields.forEach(function(fieldName) {
+                            $table.find('tbody [data-field=\"' + fieldName + '\"]').prop('disabled', !isVisible);
+                        });
+                    }
+
+                    function applyClassicManageStockVisibility($row) {
+                        if (!$row || !$row.length) {
+                            return;
+                        }
+
+                        var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
+                        var isVariable = productType === 'variable';
+                        var defaultManageStockEnabled = isDefaultManageStockEnabledForRow($row);
+
+                        var $defaultStockField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"stock_quantity\"]').first();
+                        toggleStockFieldVisibility($defaultStockField, defaultManageStockEnabled);
+
+                        if (!isVariable) {
+                            var $productLocationTable = $row.find('.column-classic_location_wise .mulopimfwc-classic-product-location-table').first();
+                            toggleTableColumnVisibilityByFields($productLocationTable, ['stock', 'backorders'], defaultManageStockEnabled, [1, 4]);
+                            return;
+                        }
+
+                        getVariationIdsForRow($row).forEach(function(variationId) {
+                            var variationManageStockEnabled = isVariationManageStockEnabledForRow($row, variationId);
+                            var $variationStockField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"stock_quantity\"]').first();
+                            var $variationLocationTable = $row.find('.column-classic_location_wise .mulopimfwc-classic-variation-location-table[data-variation-id=\"' + variationId + '\"]').first();
+
+                            toggleStockFieldVisibility($variationStockField, variationManageStockEnabled);
+                            toggleTableColumnVisibilityByFields($variationLocationTable, ['stock'], variationManageStockEnabled, [1]);
+                        });
+                    }
+
+                    function rowHasValidationErrors($row) {
+                        return $row.find('.mulopimfwc-classic-validation-error, .mulopimfwc-classic-error-cell').length > 0;
+                    }
+
+                    function addRowValidationError(errors, $field, message) {
+                        if ($field && $field.length) {
+                            $field.each(function() {
+                                var $target = $(this);
+                                $target.addClass('mulopimfwc-classic-validation-error');
+                                setFieldValidationTooltip($target, message);
+                            });
+                        }
+                        errors.push({
+                            field: $field,
+                            message: message
+                        });
+                    }
+
+                    function getVariationIdsForRow($row) {
+                        var variationIds = [];
+                        $row.find('[data-variation-id]').each(function() {
+                            var variationId = parseInt($(this).data('variation-id'), 10);
+                            if (!isNaN(variationId) && variationId > 0 && variationIds.indexOf(variationId) === -1) {
+                                variationIds.push(variationId);
+                            }
+                        });
+                        variationIds.sort(function(a, b) {
+                            return a - b;
+                        });
+                        return variationIds;
+                    }
+
+                    function validateClassicRow($row) {
+                        clearRowValidationErrors($row);
+
+                        var messages = {
+                            regularVsPurchase: '<?php echo esc_js(__('Regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
+                            saleVsRegular: '<?php echo esc_js(__('Sale price must be less than regular price', 'multi-location-product-and-inventory-management')); ?>',
+                            saleVsPurchase: '<?php echo esc_js(__('Sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
+                            locationRegularVsPurchase: '<?php echo esc_js(__('Location regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
+                            locationSaleVsPurchase: '<?php echo esc_js(__('Location sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
+                            locationSaleVsLocationRegular: '<?php echo esc_js(__('Location sale price must be less than location regular price', 'multi-location-product-and-inventory-management')); ?>',
+                            stockVsPurchaseQty: '<?php echo esc_js(__('Stock quantity cannot be greater than purchase quantity', 'multi-location-product-and-inventory-management')); ?>',
+                            purchaseQtyVsStock: '<?php echo esc_js(__('Purchase quantity cannot be less than stock quantity', 'multi-location-product-and-inventory-management')); ?>',
+                            totalLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds default stock', 'multi-location-product-and-inventory-management')); ?>',
+                            totalVariationLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds variation default stock', 'multi-location-product-and-inventory-management')); ?>',
+                            locationRegularVsDefault: '<?php echo esc_js(__('Location regular price cannot be greater than default regular price', 'multi-location-product-and-inventory-management')); ?>',
+                            locationSaleVsDefault: '<?php echo esc_js(__('Location sale price cannot be greater than default sale price', 'multi-location-product-and-inventory-management')); ?>',
+                            locationRegularVsVariation: '<?php echo esc_js(__('Location regular price cannot be greater than variation default regular price', 'multi-location-product-and-inventory-management')); ?>',
+                            locationSaleVsVariation: '<?php echo esc_js(__('Location sale price cannot be greater than variation default sale price', 'multi-location-product-and-inventory-management')); ?>',
+                            generic: '<?php echo esc_js(__('Please fix the validation errors before saving.', 'multi-location-product-and-inventory-management')); ?>'
+                        };
+
+                        var errors = [];
+                        var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
+                        var isGrouped = productType === 'grouped';
+                        var isVariable = productType === 'variable';
+                        var isExternal = productType === 'external' || productType === 'affiliate';
+                        var supportsManageStock = ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
+
+                        var $defaultManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-default-field[data-field=\"manage_stock\"]').first();
+                        var defaultManageStockEnabled = supportsManageStock ? (!$defaultManageStockField.length || $defaultManageStockField.is(':checked')) : false;
+
+                        var $defaultStockField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"stock_quantity\"]').first();
+                        var $defaultRegularField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"regular_price\"]').first();
+                        var $defaultSaleField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"sale_price\"]').first();
+                        var $defaultPurchasePriceField = $row.find('.column-classic_purchase .mulopimfwc-classic-default-field[data-field=\"purchase_price\"]').first();
+                        var $defaultPurchaseQtyField = $row.find('.column-classic_purchase .mulopimfwc-classic-default-field[data-field=\"purchase_quantity\"]').first();
+
+                        var defaultStock = getNumericFieldValue($defaultStockField);
+                        var defaultRegularPrice = getNumericFieldValue($defaultRegularField);
+                        var defaultSalePrice = getNumericFieldValue($defaultSaleField);
+                        var defaultPurchasePrice = getNumericFieldValue($defaultPurchasePriceField);
+                        var defaultPurchaseQty = getNumericFieldValue($defaultPurchaseQtyField);
+
+                        if (!isGrouped && !isVariable) {
+                            if (defaultPurchasePrice > 0 && defaultRegularPrice > 0 && defaultRegularPrice < defaultPurchasePrice) {
+                                addRowValidationError(errors, $defaultRegularField, messages.regularVsPurchase);
+                            }
+
+                            if (defaultSalePrice > 0 && defaultRegularPrice > 0 && defaultSalePrice >= defaultRegularPrice) {
+                                addRowValidationError(errors, $defaultSaleField, messages.saleVsRegular);
+                            }
+
+                            if (defaultSalePrice > 0 && defaultPurchasePrice > 0 && defaultSalePrice < defaultPurchasePrice) {
+                                addRowValidationError(errors, $defaultSaleField, messages.saleVsPurchase);
+                            }
+                        }
+
+                        if (!isGrouped && !isVariable && !isExternal && defaultManageStockEnabled) {
+                            if (defaultPurchaseQty > 0 && defaultStock > defaultPurchaseQty) {
+                                addRowValidationError(errors, $defaultStockField, messages.stockVsPurchaseQty);
+                            }
+
+                            if (defaultStock > 0 && defaultPurchaseQty < defaultStock) {
+                                addRowValidationError(errors, $defaultPurchaseQtyField, messages.purchaseQtyVsStock);
+                            }
+
+                            var totalLocationStock = 0;
+                            var $positiveLocationStockFields = $();
+                            $row.find('.column-classic_location_wise .mulopimfwc-classic-product-location-table tbody tr.mulopimfwc-classic-product-location-row [data-field=\"stock\"]').each(function() {
+                                var $field = $(this);
+                                var stockValue = getNumericFieldValue($field);
+                                if (stockValue > 0) {
+                                    totalLocationStock += stockValue;
+                                    $positiveLocationStockFields = $positiveLocationStockFields.add($field);
+                                }
+                            });
+
+                            if (defaultStock > 0 && totalLocationStock > defaultStock && $positiveLocationStockFields.length) {
+                                $positiveLocationStockFields.each(function() {
+                                    var $field = $(this);
+                                    $field.addClass('mulopimfwc-classic-validation-error');
+                                    setFieldValidationTooltip($field, messages.totalLocationStockExceeded);
+                                });
+                                addRowValidationError(errors, $positiveLocationStockFields.first(), messages.totalLocationStockExceeded);
+                            }
+                        }
+
+                        if (!isGrouped && !isVariable) {
+                            $row.find('.column-classic_location_wise .mulopimfwc-classic-product-location-table tbody tr.mulopimfwc-classic-product-location-row').each(function() {
+                                var $locationRow = $(this);
+                                var $locationRegularField = $locationRow.find('[data-field=\"regular_price\"]').first();
+                                var $locationSaleField = $locationRow.find('[data-field=\"sale_price\"]').first();
+                                var locationRegularPrice = getNumericFieldValue($locationRegularField);
+                                var locationSalePrice = getNumericFieldValue($locationSaleField);
+
+                                if (locationRegularPrice > 0 && defaultPurchasePrice > 0 && locationRegularPrice < defaultPurchasePrice) {
+                                    addRowValidationError(errors, $locationRegularField, messages.locationRegularVsPurchase);
+                                }
+
+                                if (locationSalePrice > 0 && defaultPurchasePrice > 0 && locationSalePrice < defaultPurchasePrice) {
+                                    addRowValidationError(errors, $locationSaleField, messages.locationSaleVsPurchase);
+                                }
+
+                                if (locationSalePrice > 0 && locationRegularPrice > 0 && locationSalePrice >= locationRegularPrice) {
+                                    addRowValidationError(errors, $locationSaleField, messages.locationSaleVsLocationRegular);
+                                }
+
+                                if (locationRegularPrice > 0 && defaultRegularPrice > 0 && locationRegularPrice > defaultRegularPrice) {
+                                    addRowValidationError(errors, $locationRegularField, messages.locationRegularVsDefault);
+                                }
+
+                                if (locationSalePrice > 0 && defaultSalePrice > 0 && locationSalePrice > defaultSalePrice) {
+                                    addRowValidationError(errors, $locationSaleField, messages.locationSaleVsDefault);
+                                }
+                            });
+                        }
+
+                        if (isVariable) {
+                            getVariationIdsForRow($row).forEach(function(variationId) {
+                                var $variationRegularField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"regular_price\"]').first();
+                                var $variationSaleField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"sale_price\"]').first();
+                                var $variationStockField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"stock_quantity\"]').first();
+                                var $variationPurchasePriceField = $row.find('.column-classic_purchase [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"purchase_price\"]').first();
+                                var $variationPurchaseQtyField = $row.find('.column-classic_purchase [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"purchase_quantity\"]').first();
+                                var $variationManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-variation-manage-item[data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"manage_stock\"]').first();
+
+                                var variationRegularPrice = getNumericFieldValue($variationRegularField);
+                                var variationSalePrice = getNumericFieldValue($variationSaleField);
+                                var variationStock = getNumericFieldValue($variationStockField);
+                                var variationPurchasePrice = getNumericFieldValue($variationPurchasePriceField);
+                                var variationPurchaseQty = getNumericFieldValue($variationPurchaseQtyField);
+                                var variationManageStockEnabled = !$variationManageStockField.length || $variationManageStockField.is(':checked');
+
+                                if (variationPurchasePrice > 0 && variationRegularPrice > 0 && variationRegularPrice < variationPurchasePrice) {
+                                    addRowValidationError(errors, $variationRegularField, messages.regularVsPurchase);
+                                }
+
+                                if (variationSalePrice > 0 && variationRegularPrice > 0 && variationSalePrice >= variationRegularPrice) {
+                                    addRowValidationError(errors, $variationSaleField, messages.saleVsRegular);
+                                }
+
+                                if (variationManageStockEnabled) {
+                                    if (variationPurchaseQty > 0 && variationStock > variationPurchaseQty) {
+                                        addRowValidationError(errors, $variationStockField, messages.stockVsPurchaseQty);
+                                    }
+
+                                    if (variationStock > 0 && variationPurchaseQty < variationStock) {
+                                        addRowValidationError(errors, $variationPurchaseQtyField, messages.purchaseQtyVsStock);
+                                    }
+                                }
+
+                                var $variationLocationRows = $row.find('.column-classic_location_wise .mulopimfwc-classic-variation-location-table[data-variation-id=\"' + variationId + '\"] tbody tr.mulopimfwc-classic-variation-location-row');
+                                var variationLocationStockTotal = 0;
+                                var $positiveVariationLocationStockFields = $();
+
+                                $variationLocationRows.each(function() {
+                                    var $variationLocationRow = $(this);
+                                    var $variationLocationRegularField = $variationLocationRow.find('[data-field=\"regular_price\"]').first();
+                                    var $variationLocationSaleField = $variationLocationRow.find('[data-field=\"sale_price\"]').first();
+                                    var $variationLocationStockField = $variationLocationRow.find('[data-field=\"stock\"]').first();
+                                    var variationLocationRegularPrice = getNumericFieldValue($variationLocationRegularField);
+                                    var variationLocationSalePrice = getNumericFieldValue($variationLocationSaleField);
+                                    var variationLocationStock = getNumericFieldValue($variationLocationStockField);
+
+                                    if (variationLocationRegularPrice > 0 && variationPurchasePrice > 0 && variationLocationRegularPrice < variationPurchasePrice) {
+                                        addRowValidationError(errors, $variationLocationRegularField, messages.locationRegularVsPurchase);
+                                    }
+
+                                    if (variationLocationSalePrice > 0 && variationPurchasePrice > 0 && variationLocationSalePrice < variationPurchasePrice) {
+                                        addRowValidationError(errors, $variationLocationSaleField, messages.locationSaleVsPurchase);
+                                    }
+
+                                    if (variationLocationSalePrice > 0 && variationLocationRegularPrice > 0 && variationLocationSalePrice >= variationLocationRegularPrice) {
+                                        addRowValidationError(errors, $variationLocationSaleField, messages.locationSaleVsLocationRegular);
+                                    }
+
+                                    if (variationLocationRegularPrice > 0 && variationRegularPrice > 0 && variationLocationRegularPrice > variationRegularPrice) {
+                                        addRowValidationError(errors, $variationLocationRegularField, messages.locationRegularVsVariation);
+                                    }
+
+                                    if (variationLocationSalePrice > 0 && variationSalePrice > 0 && variationLocationSalePrice > variationSalePrice) {
+                                        addRowValidationError(errors, $variationLocationSaleField, messages.locationSaleVsVariation);
+                                    }
+
+                                    if (variationManageStockEnabled && variationLocationStock > 0) {
+                                        variationLocationStockTotal += variationLocationStock;
+                                        $positiveVariationLocationStockFields = $positiveVariationLocationStockFields.add($variationLocationStockField);
+                                    }
+                                });
+
+                                if (variationManageStockEnabled && variationStock > 0 && variationLocationStockTotal > variationStock && $positiveVariationLocationStockFields.length) {
+                                    $positiveVariationLocationStockFields.each(function() {
+                                        var $field = $(this);
+                                        $field.addClass('mulopimfwc-classic-validation-error');
+                                        setFieldValidationTooltip($field, messages.totalVariationLocationStockExceeded);
+                                    });
+                                    addRowValidationError(errors, $positiveVariationLocationStockFields.first(), messages.totalVariationLocationStockExceeded);
+                                }
+                            });
+                        }
+
+                        if (errors.length) {
+                            return {
+                                valid: false,
+                                message: errors[0].message || messages.generic
+                            };
+                        }
+
+                        return {
+                            valid: true,
+                            message: ''
+                        };
+                    }
+
                     function storeRowSnapshot($row) {
                         var productId = String($row.data('product-id'));
                         var columnHtml = {};
@@ -1018,6 +1525,8 @@ class mulopimfwc_Stock_Central
                         }
 
                         $row.attr('data-original-location-ids', snapshot.originalLocationIds);
+                        clearRowValidationErrors($row);
+                        applyClassicManageStockVisibility($row);
                         setRowStatus($row, '');
                         setRowDirty($row, false);
                         return true;
@@ -1193,18 +1702,7 @@ class mulopimfwc_Stock_Central
                             return payload.location_ids.indexOf(locationId) === -1;
                         });
 
-                        var variationIds = [];
-                        $row.find('[data-variation-id]').each(function() {
-                            var variationId = parseInt($(this).data('variation-id'), 10);
-                            if (!isNaN(variationId) && variationId > 0 && variationIds.indexOf(variationId) === -1) {
-                                variationIds.push(variationId);
-                            }
-                        });
-
-                        variationIds.sort(function(a, b) {
-                            return a - b;
-                        });
-                        variationIds.forEach(function(variationId) {
+                        getVariationIdsForRow($row).forEach(function(variationId) {
                             var variationPayload = {
                                 id: variationId,
                                 default: {},
@@ -1245,6 +1743,17 @@ class mulopimfwc_Stock_Central
 
                     function saveRow($row) {
                         var deferred = $.Deferred();
+                        var validation = validateClassicRow($row);
+                        if (!validation.valid) {
+                            setRowStatus($row, '');
+                            setRowDirty($row, true);
+                            deferred.reject({
+                                validation: true,
+                                message: validation.message || ''
+                            });
+                            return deferred.promise();
+                        }
+
                         var payload = collectRowPayload($row);
                         var $saveButton = $row.find('.mulopimfwc-classic-save-row');
                         var $resetButton = $row.find('.mulopimfwc-classic-reset-row');
@@ -1283,18 +1792,26 @@ class mulopimfwc_Stock_Central
                     $('.mulopimfwc-classic-product-row').each(function() {
                         var $row = $(this);
                         storeRowSnapshot($row);
+                        applyClassicManageStockVisibility($row);
                         setRowDirty($row, false);
                     });
                     updateDirtyCount();
 
                     $(document).on('input change', '.mulopimfwc-classic-product-row .column-classic_manage_stock [data-field], .mulopimfwc-classic-product-row .column-classic_default [data-field], .mulopimfwc-classic-product-row .column-classic_location_wise [data-field], .mulopimfwc-classic-product-row .column-classic_purchase [data-field]', function() {
                         var $row = $(this).closest('.mulopimfwc-classic-product-row');
+                        var hadValidationErrors = rowHasValidationErrors($row);
+                        clearFieldValidationError($(this));
+                        applyClassicManageStockVisibility($row);
                         setRowStatus($row, '');
                         setRowDirty($row, isRowDirty($row));
+                        if (hadValidationErrors) {
+                            validateClassicRow($row);
+                        }
                     });
 
                     $(document).on('click', '.mulopimfwc-classic-add-location-btn', function() {
                         var $row = $(this).closest('.mulopimfwc-classic-product-row');
+                        var hadValidationErrors = rowHasValidationErrors($row);
                         var $select = $row.find('.mulopimfwc-classic-add-location-select').first();
                         var selectedValue = ($select.val() || '').toString();
                         if (!selectedValue) {
@@ -1373,13 +1890,18 @@ class mulopimfwc_Stock_Central
                         $select.val('');
                         syncAllLocationsOption($select);
                         if (addedCount > 0) {
+                            applyClassicManageStockVisibility($row);
                             setRowDirty($row, true);
+                            if (hadValidationErrors) {
+                                validateClassicRow($row);
+                            }
                         }
                     });
 
                     $(document).on('click', '.mulopimfwc-classic-remove-location', function() {
                         var $locationRow = $(this).closest('.mulopimfwc-classic-product-location-row');
                         var $row = $(this).closest('.mulopimfwc-classic-product-row');
+                        var hadValidationErrors = rowHasValidationErrors($row);
                         var locationId = parseInt($locationRow.data('location-id'), 10);
                         var locationName = ($locationRow.data('location-name') || '').toString();
 
@@ -1401,7 +1923,11 @@ class mulopimfwc_Stock_Central
                             $select.append('<option value=\"' + locationId + '\">' + escapeHtml(locationName) + '</option>');
                         }
                         syncAllLocationsOption($select);
+                        applyClassicManageStockVisibility($row);
                         setRowDirty($row, true);
+                        if (hadValidationErrors) {
+                            validateClassicRow($row);
+                        }
                     });
 
                     $(document).on('click', '.mulopimfwc-classic-reset-row', function() {
@@ -1419,7 +1945,11 @@ class mulopimfwc_Stock_Central
                             if (response && response.data && response.data.message) {
                                 showNotice(response.data.message, 'success');
                             }
-                        }).fail(function(message) {
+                        }).fail(function(errorData) {
+                            if (errorData && errorData.validation) {
+                                return;
+                            }
+                            var message = errorData && errorData.message ? errorData.message : errorData;
                             if (message) {
                                 showNotice(message, 'error');
                             }
