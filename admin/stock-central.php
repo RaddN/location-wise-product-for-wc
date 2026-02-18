@@ -570,6 +570,10 @@ class mulopimfwc_Stock_Central
                 background: #ffffff;
             }
 
+            .view-mode-classic .check-column {
+                width: 2% !important;
+            }
+
             .view-mode-classic .column-actions {
                 width: 5%;
             }
@@ -583,12 +587,16 @@ class mulopimfwc_Stock_Central
                 width: 12%;
             }
 
+            .mlsctock-cenral-main .bulkactions {
+                display: flex;
+            }
+
             .view-mode-classic .column-classic_default {
-                width: 15%;
+                width: 14%;
             }
 
             .view-mode-classic .column-classic_location_wise {
-                width: 29%;
+                width: 27%;
             }
 
             .mulopimfwc-classic-editor {

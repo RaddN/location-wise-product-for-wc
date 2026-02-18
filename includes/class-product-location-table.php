@@ -164,6 +164,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     {
         if ($this->is_classic_mode() && $this->user_can_manage_products()) {
             return [
+                'cb' => '<input type="checkbox" />',
                 'image' => __('Image', 'multi-location-product-and-inventory-management'),
                 'title' => __('Product', 'multi-location-product-and-inventory-management'),
                 'classic_manage_stock' => __('Manage Stock', 'multi-location-product-and-inventory-management'),
@@ -216,10 +217,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     protected function get_bulk_actions()
     {
-        if ($this->is_classic_mode()) {
-            return [];
-        }
-
         if (!$this->user_can_manage_products()) {
             return [];
         }
@@ -724,6 +721,14 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             return '<span style="color: #9ca3af;">--</span>';
         }
 
+        if ($context['product_type'] === 'variable') {
+            if (!empty($context['variations'])) {
+                return $this->render_classic_variation_purchase_section($context['variations']);
+            }
+
+            return '<span style="color: #9ca3af;">--</span>';
+        }
+
         $default = $context['default'];
         $output = '<div class="mulopimfwc-classic-section">';
         $output .= '<div class="mulopimfwc-classic-grid">';
@@ -736,10 +741,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $output .= '</div>';
         $output .= '</div>';
         $output .= '</div>';
-
-        if ($context['product_type'] === 'variable' && !empty($context['variations'])) {
-            $output .= $this->render_classic_variation_purchase_section($context['variations']);
-        }
 
         return $output;
     }
@@ -2071,7 +2072,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             echo '</div>';
 
             // Bulk actions section - location selector for bulk actions
-            if ($this->user_can_manage_products() && !$this->is_classic_mode()) {
+            if ($this->user_can_manage_products()) {
                 echo '<div class="alignleft actions bulk-actions-section">';
                 if (!empty($available_locations)) {
                     $selected_bulk_location = isset($_REQUEST['bulk_location_id']) ? intval($_REQUEST['bulk_location_id']) : '';
