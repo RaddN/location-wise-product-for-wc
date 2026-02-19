@@ -1100,6 +1100,23 @@ class mulopimfwc_Stock_Central
                         }
                     }
 
+                    function hasUnsavedClassicRows() {
+                        return $('.mulopimfwc-classic-product-row.is-dirty').length > 0;
+                    }
+
+                    function handleClassicBeforeUnload(event) {
+                        if (!hasUnsavedClassicRows()) {
+                            return;
+                        }
+
+                        var warningMessage = '<?php echo esc_js(__('You have unsaved Classic row changes. Leaving this page will discard them.', 'multi-location-product-and-inventory-management')); ?>';
+                        event.preventDefault();
+                        event.returnValue = warningMessage;
+                        return warningMessage;
+                    }
+
+                    window.addEventListener('beforeunload', handleClassicBeforeUnload);
+
                     function setRowDirty($row, isDirty) {
                         $row.toggleClass('is-dirty', !!isDirty);
                         $row.find('.mulopimfwc-classic-save-row').prop('disabled', !isDirty);
