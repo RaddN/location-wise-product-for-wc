@@ -480,6 +480,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return $manage_stock;
     }
 
+    private function is_store_manage_stock_enabled()
+    {
+        return get_option('woocommerce_manage_stock', 'no') === 'yes';
+    }
+
     private function get_classic_editor_context($item)
     {
         $product_id = isset($item['id']) ? (int) $item['id'] : 0;
@@ -503,7 +508,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         }
 
         $product_type = isset($item['type']) ? (string) $item['type'] : '';
-        $supports_manage_stock = !in_array($product_type, ['grouped', 'external', 'affiliate'], true);
+        $global_manage_stock_enabled = $this->is_store_manage_stock_enabled();
+        $product_supports_manage_stock = !in_array($product_type, ['grouped', 'external', 'affiliate'], true);
+        $supports_manage_stock = $global_manage_stock_enabled && $product_supports_manage_stock;
         $default = isset($product_data['default']) && is_array($product_data['default']) ? $product_data['default'] : [];
         $locations = isset($product_data['locations']) && is_array($product_data['locations']) ? $product_data['locations'] : [];
         $variations = isset($product_data['variations']) && is_array($product_data['variations']) ? $product_data['variations'] : [];
@@ -518,6 +525,8 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         $context = [
             'product_type' => $product_type,
+            'global_manage_stock_enabled' => $global_manage_stock_enabled,
+            'product_supports_manage_stock' => $product_supports_manage_stock,
             'supports_manage_stock' => $supports_manage_stock,
             'default' => $default,
             'locations' => $locations,
@@ -586,10 +595,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return $output;
     }
 
-    private function render_classic_variation_location_rows($locations)
+    private function render_classic_variation_location_rows($locations, $supports_manage_stock = true)
     {
+        $colspan = $supports_manage_stock ? 5 : 3;
         if (empty($locations)) {
-            return '<tr class="mulopimfwc-classic-no-locations-row"><td colspan="5">' . esc_html__('No locations assigned yet.', 'multi-location-product-and-inventory-management') . '</td></tr>';
+            return '<tr class="mulopimfwc-classic-no-locations-row"><td colspan="' . esc_attr((string) $colspan) . '">' . esc_html__('No locations assigned yet.', 'multi-location-product-and-inventory-management') . '</td></tr>';
         }
 
         $output = '';
@@ -603,14 +613,18 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
             $output .= '<tr class="mulopimfwc-classic-variation-location-row" data-location-id="' . esc_attr($location_id) . '" data-location-name="' . esc_attr($location_name) . '">';
             $output .= '<td class="mulopimfwc-classic-location-label">' . esc_html($location_name) . '</td>';
-            $output .= '<td>' . $this->classic_number_input('stock', $stock, '1', '0') . '</td>';
+            if ($supports_manage_stock) {
+                $output .= '<td>' . $this->classic_number_input('stock', $stock, '1', '0') . '</td>';
+            }
             $output .= '<td>' . $this->classic_number_input('regular_price', $regular_price, '0.01', '0') . '</td>';
             $output .= '<td>' . $this->classic_number_input('sale_price', $sale_price, '0.01', '0') . '</td>';
-            $output .= '<td>' . $this->classic_select_input('backorders', $backorders, [
-                'off' => __('Do not allow', 'multi-location-product-and-inventory-management'),
-                'notify' => __('Allow, but notify', 'multi-location-product-and-inventory-management'),
-                'on' => __('Allow', 'multi-location-product-and-inventory-management'),
-            ]) . '</td>';
+            if ($supports_manage_stock) {
+                $output .= '<td>' . $this->classic_select_input('backorders', $backorders, [
+                    'off' => __('Do not allow', 'multi-location-product-and-inventory-management'),
+                    'notify' => __('Allow, but notify', 'multi-location-product-and-inventory-management'),
+                    'on' => __('Allow', 'multi-location-product-and-inventory-management'),
+                ]) . '</td>';
+            }
             $output .= '</tr>';
         }
 
@@ -640,7 +654,18 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             return '<span style="color: #9ca3af;">--</span>';
         }
 
-        if (!$context['supports_manage_stock']) {
+        if (empty($context['global_manage_stock_enabled'])) {
+            $settings_url = 'admin.php?page=wc-settings&tab=products&section=inventory';
+
+            $output = '<div class="mulopimfwc-classic-manage-stock-disabled">';
+            $output .= '<p>Disabled in <a href="' . esc_url($settings_url) . '" aria-label="stock management store settings">store settings</a></p>';
+            $output .= '<p class="description">' . esc_html__('Enable WooCommerce Manage stock to edit stock quantity and backorders.', 'multi-location-product-and-inventory-management') . '</p>';
+            $output .= '</div>';
+
+            return $output;
+        }
+
+        if (empty($context['product_supports_manage_stock'])) {
             return '<span style="color: #9ca3af;">--</span>';
         }
 
@@ -671,40 +696,49 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         $default = $context['default'];
         $is_variable_product = $context['product_type'] === 'variable';
-        $output = '<div class="mulopimfwc-classic-section">';
-        $output .= '<div class="mulopimfwc-classic-grid">';
+        $output = '';
+        $default_grid = '';
 
         if ($context['supports_manage_stock']) {
-            $output .= '<div><label>' . esc_html__('Stock Qty', 'multi-location-product-and-inventory-management') . '</label>';
-            $output .= $this->classic_number_input('stock_quantity', isset($default['stock_quantity']) ? $default['stock_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-default-field');
-            $output .= '</div>';
+            $default_grid .= '<div><label>' . esc_html__('Stock Qty', 'multi-location-product-and-inventory-management') . '</label>';
+            $default_grid .= $this->classic_number_input('stock_quantity', isset($default['stock_quantity']) ? $default['stock_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-default-field');
+            $default_grid .= '</div>';
         }
 
         if (!$is_variable_product) {
-            $output .= '<div><label>' . esc_html__('Regular Price', 'multi-location-product-and-inventory-management') . '</label>';
-            $output .= $this->classic_number_input('regular_price', isset($default['regular_price']) ? $default['regular_price'] : '', '0.01', '0', false, 'mulopimfwc-classic-default-field');
-            $output .= '</div>';
+            $default_grid .= '<div><label>' . esc_html__('Regular Price', 'multi-location-product-and-inventory-management') . '</label>';
+            $default_grid .= $this->classic_number_input('regular_price', isset($default['regular_price']) ? $default['regular_price'] : '', '0.01', '0', false, 'mulopimfwc-classic-default-field');
+            $default_grid .= '</div>';
 
-            $output .= '<div><label>' . esc_html__('Sale Price', 'multi-location-product-and-inventory-management') . '</label>';
-            $output .= $this->classic_number_input('sale_price', isset($default['sale_price']) ? $default['sale_price'] : '', '0.01', '0', false, 'mulopimfwc-classic-default-field');
-            $output .= '</div>';
+            $default_grid .= '<div><label>' . esc_html__('Sale Price', 'multi-location-product-and-inventory-management') . '</label>';
+            $default_grid .= $this->classic_number_input('sale_price', isset($default['sale_price']) ? $default['sale_price'] : '', '0.01', '0', false, 'mulopimfwc-classic-default-field');
+            $default_grid .= '</div>';
         }
 
         if ($context['supports_manage_stock']) {
-            $output .= '<div><label>' . esc_html__('Backorders', 'multi-location-product-and-inventory-management') . '</label>';
-            $output .= $this->classic_select_input('backorders', $context['default_backorders'], [
+            $default_grid .= '<div><label>' . esc_html__('Backorders', 'multi-location-product-and-inventory-management') . '</label>';
+            $default_grid .= $this->classic_select_input('backorders', $context['default_backorders'], [
                 'no' => __('Do not allow', 'multi-location-product-and-inventory-management'),
                 'notify' => __('Allow, but notify', 'multi-location-product-and-inventory-management'),
                 'yes' => __('Allow', 'multi-location-product-and-inventory-management'),
             ], false, 'mulopimfwc-classic-default-field');
+            $default_grid .= '</div>';
+        }
+
+        if ($default_grid !== '') {
+            $output .= '<div class="mulopimfwc-classic-section">';
+            $output .= '<div class="mulopimfwc-classic-grid">';
+            $output .= $default_grid;
+            $output .= '</div>';
             $output .= '</div>';
         }
 
-        $output .= '</div>';
-        $output .= '</div>';
-
         if ($context['product_type'] === 'variable' && !empty($context['variations'])) {
-            $output .= $this->render_classic_variation_default_section($context['variations']);
+            $output .= $this->render_classic_variation_default_section($context['variations'], $context['supports_manage_stock']);
+        }
+
+        if ($output === '') {
+            return '<span style="color: #9ca3af;">--</span>';
         }
 
         return $output;
@@ -755,10 +789,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $is_variable_product = $context['product_type'] === 'variable';
         $is_grouped_product = $context['product_type'] === 'grouped';
         $is_external_product = $context['product_type'] === 'external';
+        $is_affiliate_product = $context['product_type'] === 'affiliate';
         $location_layout_mode = 'full';
         if ($is_variable_product || $is_grouped_product) {
             $location_layout_mode = 'location_only';
-        } elseif ($is_external_product) {
+        } elseif ($is_external_product || $is_affiliate_product || !$context['supports_manage_stock']) {
             $location_layout_mode = 'price_only';
         }
         $output = '<div class="mulopimfwc-classic-section">';
@@ -799,7 +834,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $output .= '</div>';
 
         if ($context['product_type'] === 'variable' && !empty($context['variations'])) {
-            $output .= $this->render_classic_variation_location_section($context['variations']);
+            $output .= $this->render_classic_variation_location_section($context['variations'], $context['supports_manage_stock']);
         }
 
         return $output;
@@ -832,7 +867,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return $output;
     }
 
-    private function render_classic_variation_default_section($variations)
+    private function render_classic_variation_default_section($variations, $supports_manage_stock = true)
     {
         if (empty($variations)) {
             return '';
@@ -851,9 +886,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<summary>' . esc_html($this->get_classic_variation_label($variation)) . '</summary>';
 
             $output .= '<div class="mulopimfwc-classic-grid mulopimfwc-classic-variation-default-grid">';
-            $output .= '<div><label>' . esc_html__('Stock Qty', 'multi-location-product-and-inventory-management') . '</label>';
-            $output .= $this->classic_number_input('stock_quantity', isset($variation_default['stock_quantity']) ? $variation_default['stock_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-variation-default-field');
-            $output .= '</div>';
+            if ($supports_manage_stock) {
+                $output .= '<div><label>' . esc_html__('Stock Qty', 'multi-location-product-and-inventory-management') . '</label>';
+                $output .= $this->classic_number_input('stock_quantity', isset($variation_default['stock_quantity']) ? $variation_default['stock_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-variation-default-field');
+                $output .= '</div>';
+            }
 
             $output .= '<div><label>' . esc_html__('Regular Price', 'multi-location-product-and-inventory-management') . '</label>';
             $output .= $this->classic_number_input('regular_price', isset($variation_default['regular_price']) ? $variation_default['regular_price'] : '', '0.01', '0', false, 'mulopimfwc-classic-variation-default-field');
@@ -863,13 +900,15 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= $this->classic_number_input('sale_price', isset($variation_default['sale_price']) ? $variation_default['sale_price'] : '', '0.01', '0', false, 'mulopimfwc-classic-variation-default-field');
             $output .= '</div>';
 
-            $output .= '<div><label>' . esc_html__('Backorders', 'multi-location-product-and-inventory-management') . '</label>';
-            $output .= $this->classic_select_input('backorders', $variation_backorders, [
-                'no' => __('Do not allow', 'multi-location-product-and-inventory-management'),
-                'notify' => __('Allow, but notify', 'multi-location-product-and-inventory-management'),
-                'yes' => __('Allow', 'multi-location-product-and-inventory-management'),
-            ], false, 'mulopimfwc-classic-variation-default-field');
-            $output .= '</div>';
+            if ($supports_manage_stock) {
+                $output .= '<div><label>' . esc_html__('Backorders', 'multi-location-product-and-inventory-management') . '</label>';
+                $output .= $this->classic_select_input('backorders', $variation_backorders, [
+                    'no' => __('Do not allow', 'multi-location-product-and-inventory-management'),
+                    'notify' => __('Allow, but notify', 'multi-location-product-and-inventory-management'),
+                    'yes' => __('Allow', 'multi-location-product-and-inventory-management'),
+                ], false, 'mulopimfwc-classic-variation-default-field');
+                $output .= '</div>';
+            }
             $output .= '</div>';
 
             $output .= '</details>';
@@ -916,7 +955,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return $output;
     }
 
-    private function render_classic_variation_location_section($variations)
+    private function render_classic_variation_location_section($variations, $supports_manage_stock = true)
     {
         if (empty($variations)) {
             return '';
@@ -935,13 +974,17 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<table class="widefat striped mulopimfwc-classic-location-table mulopimfwc-classic-variation-location-table" data-variation-id="' . esc_attr($variation_id) . '">';
             $output .= '<thead><tr>';
             $output .= '<th>' . esc_html__('Location', 'multi-location-product-and-inventory-management') . '</th>';
-            $output .= '<th>' . esc_html__('Stock', 'multi-location-product-and-inventory-management') . '</th>';
+            if ($supports_manage_stock) {
+                $output .= '<th>' . esc_html__('Stock', 'multi-location-product-and-inventory-management') . '</th>';
+            }
             $output .= '<th>' . esc_html__('Regular', 'multi-location-product-and-inventory-management') . '</th>';
             $output .= '<th>' . esc_html__('Sale', 'multi-location-product-and-inventory-management') . '</th>';
-            $output .= '<th>' . esc_html__('Backorders', 'multi-location-product-and-inventory-management') . '</th>';
+            if ($supports_manage_stock) {
+                $output .= '<th>' . esc_html__('Backorders', 'multi-location-product-and-inventory-management') . '</th>';
+            }
             $output .= '</tr></thead>';
             $output .= '<tbody>';
-            $output .= $this->render_classic_variation_location_rows($variation_locations);
+            $output .= $this->render_classic_variation_location_rows($variation_locations, $supports_manage_stock);
             $output .= '</tbody>';
             $output .= '</table>';
             $output .= '</details>';

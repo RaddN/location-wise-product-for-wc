@@ -84,6 +84,7 @@ class mulopimfwc_Stock_Central
         $can_manage_products = class_exists('MULOPIMFWC_Location_Managers')
             ? MULOPIMFWC_Location_Managers::user_has_capability('manage_products')
             : current_user_can('manage_woocommerce');
+        $is_store_manage_stock_enabled = get_option('woocommerce_manage_stock', 'no') === 'yes';
 
         $modern_url = add_query_arg([
             'stock_central_view' => 'modern',
@@ -707,6 +708,28 @@ class mulopimfwc_Stock_Central
                 color: #111827;
             }
 
+            .mulopimfwc-classic-manage-stock-disabled {
+                border: 1px solid #f5c2c7;
+                background: #fff5f5;
+                border-radius: 6px;
+                padding: 10px 12px;
+                color: #7f1d1d;
+                line-height: 1.45;
+            }
+
+            .mulopimfwc-classic-manage-stock-disabled p {
+                margin: 0 0 6px;
+            }
+
+            .mulopimfwc-classic-manage-stock-disabled p:last-child {
+                margin-bottom: 0;
+            }
+
+            .mulopimfwc-classic-manage-stock-disabled a {
+                color: #1d4ed8;
+                word-break: break-all;
+            }
+
             .mulopimfwc-classic-no-locations-row td {
                 text-align: center;
                 color: #6b7280;
@@ -870,6 +893,7 @@ class mulopimfwc_Stock_Central
                     var $form = $('#stock-central-form');
                     var isClassicMode = <?php echo $is_classic_mode ? 'true' : 'false'; ?>;
                     var canManageProducts = <?php echo $can_manage_products ? 'true' : 'false'; ?>;
+                    var isStoreManageStockEnabled = <?php echo $is_store_manage_stock_enabled ? 'true' : 'false'; ?>;
                     var rowSnapshots = {};
                     var ajaxNonce = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.nonce) ? mulopimfwc_locationWiseProducts.nonce : '';
                     var editableClassicColumns = ['classic_manage_stock', 'classic_default', 'classic_location_wise', 'classic_purchase'];
@@ -1114,6 +1138,10 @@ class mulopimfwc_Stock_Central
                     }
 
                     function isDefaultManageStockEnabledForRow($row) {
+                        if (!isStoreManageStockEnabled) {
+                            return false;
+                        }
+
                         var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
                         var supportsManageStock = ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
                         if (!supportsManageStock) {
@@ -1125,6 +1153,10 @@ class mulopimfwc_Stock_Central
                     }
 
                     function isVariationManageStockEnabledForRow($row, variationId) {
+                        if (!isStoreManageStockEnabled) {
+                            return false;
+                        }
+
                         var $variationManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-variation-manage-item[data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"manage_stock\"]').first();
                         return !$variationManageStockField.length || $variationManageStockField.is(':checked');
                     }
@@ -1227,12 +1259,30 @@ class mulopimfwc_Stock_Central
                             return;
                         }
 
+                        if (!isStoreManageStockEnabled) {
+                            return;
+                        }
+
                         var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
                         var isVariable = productType === 'variable';
                         var defaultManageStockEnabled = isDefaultManageStockEnabledForRow($row);
 
                         var $defaultStockField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"stock_quantity\"]').first();
+                        var $defaultBackordersField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"backorders\"]').first();
                         toggleStockFieldVisibility($defaultStockField, defaultManageStockEnabled);
+                        toggleStockFieldVisibility($defaultBackordersField, defaultManageStockEnabled);
+                        var $defaultSection = $row.find('.column-classic_default > .mulopimfwc-classic-section').filter(function() {
+                            return $(this).children('.mulopimfwc-classic-grid').length > 0;
+                        }).first();
+                        if ($defaultSection.length) {
+                            var $defaultItems = $defaultSection.find('> .mulopimfwc-classic-grid > div');
+                            var hasRenderedItems = $defaultItems.length > 0;
+                            var hasDisplayedItems = $defaultItems.filter(function() {
+                                return $(this).css('display') !== 'none';
+                            }).length > 0;
+                            var shouldShowDefaultSection = hasRenderedItems && (isVariable ? defaultManageStockEnabled : hasDisplayedItems);
+                            $defaultSection.toggle(shouldShowDefaultSection);
+                        }
 
                         if (!isVariable) {
                             var $productLocationTable = $row.find('.column-classic_location_wise .mulopimfwc-classic-product-location-table').first();
@@ -1243,10 +1293,12 @@ class mulopimfwc_Stock_Central
                         getVariationIdsForRow($row).forEach(function(variationId) {
                             var variationManageStockEnabled = isVariationManageStockEnabledForRow($row, variationId);
                             var $variationStockField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"stock_quantity\"]').first();
+                            var $variationBackordersField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"backorders\"]').first();
                             var $variationLocationTable = $row.find('.column-classic_location_wise .mulopimfwc-classic-variation-location-table[data-variation-id=\"' + variationId + '\"]').first();
 
                             toggleStockFieldVisibility($variationStockField, variationManageStockEnabled);
-                            toggleTableColumnVisibilityByFields($variationLocationTable, ['stock'], variationManageStockEnabled, [1]);
+                            toggleStockFieldVisibility($variationBackordersField, variationManageStockEnabled);
+                            toggleTableColumnVisibilityByFields($variationLocationTable, ['stock', 'backorders'], variationManageStockEnabled, [1, 4]);
                         });
                     }
 
@@ -1308,7 +1360,7 @@ class mulopimfwc_Stock_Central
                         var isGrouped = productType === 'grouped';
                         var isVariable = productType === 'variable';
                         var isExternal = productType === 'external' || productType === 'affiliate';
-                        var supportsManageStock = ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
+                        var supportsManageStock = isStoreManageStockEnabled && ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
 
                         var $defaultManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-default-field[data-field=\"manage_stock\"]').first();
                         var defaultManageStockEnabled = supportsManageStock ? (!$defaultManageStockField.length || $defaultManageStockField.is(':checked')) : false;
@@ -1644,18 +1696,19 @@ class mulopimfwc_Stock_Central
                             '</tr>';
                     }
 
-                    function buildVariationLocationRow(locationId, locationName) {
+                    function buildVariationLocationRow(locationId, locationName, supportsManageStock) {
+                        var includeStockFields = !!supportsManageStock;
                         return '' +
                             '<tr class=\"mulopimfwc-classic-variation-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\">' +
                             '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
-                            '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"></td>' +
+                            (includeStockFields ? '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"></td>' : '') +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"regular_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"sale_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
-                            '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"off\">' +
+                            (includeStockFields ? '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"off\">' +
                             '<option value=\"off\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '<option value=\"on\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management')); ?></option>' +
-                            '</select></td>' +
+                            '</select></td>' : '') +
                             '</tr>';
                     }
 
@@ -1851,11 +1904,11 @@ class mulopimfwc_Stock_Central
                         }
 
                         var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
-                        var supportsManageStock = ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
+                        var supportsManageStock = isStoreManageStockEnabled && ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
                         var rowMode = 'full';
                         if (productType === 'variable' || productType === 'grouped') {
                             rowMode = 'location_only';
-                        } else if (productType === 'external') {
+                        } else if (productType === 'external' || productType === 'affiliate' || !supportsManageStock) {
                             rowMode = 'price_only';
                         }
 
@@ -1880,7 +1933,7 @@ class mulopimfwc_Stock_Central
                                 if ($variationTable.find('.mulopimfwc-classic-variation-location-row[data-location-id=\"' + locationData.id + '\"]').length) {
                                     return;
                                 }
-                                $variationTable.find('tbody').append(buildVariationLocationRow(locationData.id, locationData.name));
+                                $variationTable.find('tbody').append(buildVariationLocationRow(locationData.id, locationData.name, isStoreManageStockEnabled));
                             });
 
                             $select.find('option[value=\"' + locationData.id + '\"]').remove();
@@ -1915,7 +1968,8 @@ class mulopimfwc_Stock_Central
                         var productTableColspan = $row.find('.mulopimfwc-classic-product-location-table thead th').length || 6;
                         ensureNoLocationRow($row.find('.mulopimfwc-classic-product-location-table'), productTableColspan);
                         $row.find('.mulopimfwc-classic-variation-location-table').each(function() {
-                            ensureNoLocationRow($(this), 5);
+                            var variationTableColspan = $(this).find('thead th').length || 5;
+                            ensureNoLocationRow($(this), variationTableColspan);
                         });
 
                         var $select = $row.find('.mulopimfwc-classic-add-location-select').first();

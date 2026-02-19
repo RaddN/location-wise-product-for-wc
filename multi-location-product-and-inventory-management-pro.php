@@ -5505,7 +5505,48 @@ if (!function_exists('mulopimfwc_get_values')) {
             $allowed_location_ids = $this->get_location_manager_allowed_ids();
             $restrict_locations = is_array($allowed_location_ids);
             $product_type = $product->get_type();
-            $product_supports_manage_stock = !in_array($product_type, ['grouped', 'external', 'affiliate'], true);
+            $store_manage_stock_enabled = get_option('woocommerce_manage_stock', 'no') === 'yes';
+            $product_supports_manage_stock = $store_manage_stock_enabled && !in_array($product_type, ['grouped', 'external', 'affiliate'], true);
+            $validated_variation_payloads = [];
+
+            // Pre-validate variation payload ownership before any writes happen.
+            if (isset($_POST['variations'])) {
+                if (!is_array($_POST['variations'])) {
+                    wp_send_json_error(['message' => __('Invalid variation payload.', 'multi-location-product-and-inventory-management')]);
+                }
+
+                if (!empty($_POST['variations'])) {
+                    if ($product_type !== 'variable') {
+                        wp_send_json_error(['message' => __('Variations can only be saved for variable products.', 'multi-location-product-and-inventory-management')]);
+                    }
+
+                    $product_variation_ids = array_map('intval', (array) $product->get_children());
+                    $allowed_variation_lookup = array_fill_keys($product_variation_ids, true);
+
+                    foreach ($_POST['variations'] as $variation_data) {
+                        if (!is_array($variation_data)) {
+                            wp_send_json_error(['message' => __('Invalid variation payload.', 'multi-location-product-and-inventory-management')]);
+                        }
+
+                        $variation_id = isset($variation_data['id']) ? intval($variation_data['id']) : 0;
+                        if ($variation_id <= 0 || !isset($allowed_variation_lookup[$variation_id])) {
+                            wp_send_json_error(['message' => __('One or more submitted variations do not belong to this product.', 'multi-location-product-and-inventory-management')]);
+                        }
+
+                        $variation_post = get_post($variation_id);
+                        if (
+                            !$variation_post ||
+                            $variation_post->post_type !== 'product_variation' ||
+                            (int) $variation_post->post_parent !== (int) $product_id
+                        ) {
+                            wp_send_json_error(['message' => __('One or more submitted variations do not belong to this product.', 'multi-location-product-and-inventory-management')]);
+                        }
+
+                        // Keep one payload per variation ID.
+                        $validated_variation_payloads[$variation_id] = $variation_data;
+                    }
+                }
+            }
 
             // Save default product data
             if (isset($_POST['default'])) {
@@ -5655,28 +5696,28 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Save variation data
-            if (isset($_POST['variations']) && is_array($_POST['variations'])) {
-                foreach ($_POST['variations'] as $variation_data) {
+            if (!empty($validated_variation_payloads)) {
+                foreach ($validated_variation_payloads as $variation_data) {
                     $variation_id = isset($variation_data['id']) ? intval($variation_data['id']) : 0;
                     if (!$variation_id) {
                         continue;
                     }
 
                     $variation = wc_get_product($variation_id);
-                    if (!$variation) {
-                        continue;
+                    if (!$variation || $variation->get_type() !== 'variation' || (int) $variation->get_parent_id() !== (int) $product_id) {
+                        wp_send_json_error(['message' => __('One or more submitted variations do not belong to this product.', 'multi-location-product-and-inventory-management')]);
                     }
 
                     // Save default variation data
                     if (isset($variation_data['default'])) {
                         $default = $variation_data['default'];
                         $variation_manage_stock = $variation->get_manage_stock();
-                        if (isset($default['manage_stock'])) {
+                        if ($store_manage_stock_enabled && isset($default['manage_stock'])) {
                             $manage_stock_raw = strtolower(sanitize_text_field($default['manage_stock']));
                             $variation_manage_stock = in_array($manage_stock_raw, ['yes', 'on', '1', 'true'], true);
                             $variation->set_manage_stock($variation_manage_stock);
                         }
-                        if (isset($default['stock_quantity']) && $variation_manage_stock) {
+                        if (isset($default['stock_quantity']) && $store_manage_stock_enabled && $variation_manage_stock) {
                             $variation->set_stock_quantity(intval($default['stock_quantity']));
                         }
                         if (isset($default['regular_price'])) {
@@ -5685,7 +5726,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                         if (isset($default['sale_price'])) {
                             $variation->set_sale_price(wc_format_decimal($default['sale_price']));
                         }
-                        if (isset($default['backorders']) && $variation_manage_stock) {
+                        if (isset($default['backorders']) && $store_manage_stock_enabled && $variation_manage_stock) {
                             $variation->set_backorders(sanitize_text_field($default['backorders']));
                         }
                         if (isset($default['purchase_price'])) {
@@ -5708,7 +5749,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                 continue;
                             }
 
-                            if (isset($location_data['stock'])) {
+                            if (isset($location_data['stock']) && $store_manage_stock_enabled) {
                                 update_post_meta($variation_id, '_location_stock_' . $location_id, intval($location_data['stock']));
                             }
                             if (isset($location_data['regular_price'])) {
@@ -5717,7 +5758,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                             if (isset($location_data['sale_price'])) {
                                 update_post_meta($variation_id, '_location_sale_price_' . $location_id, wc_format_decimal($location_data['sale_price']));
                             }
-                            if (isset($location_data['backorders'])) {
+                            if (isset($location_data['backorders']) && $store_manage_stock_enabled) {
                                 update_post_meta($variation_id, '_location_backorders_' . $location_id, sanitize_text_field($location_data['backorders']));
                             }
                         }
