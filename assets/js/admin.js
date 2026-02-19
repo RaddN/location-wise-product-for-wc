@@ -1418,7 +1418,7 @@ jQuery(document).ready(function ($) {
         var htmlParts = [];
         var productType = data.product_type || data.type || '';
         var isGrouped = productType === 'grouped';
-        var isExternal = productType === 'external' || productType === 'affiliate';
+        var isExternal = productType === 'external';
         var manageStockEnabled = isManageStockEnabledValue(data.default && data.default.manage_stock);
         
         htmlParts.push('<div class="manage-tab-panel active" data-tab="' + tabId + '">');
@@ -1492,7 +1492,7 @@ jQuery(document).ready(function ($) {
         var htmlParts = [];
         var productType = data.product_type || data.type || '';
         var isGrouped = productType === 'grouped';
-        var isExternal = productType === 'external' || productType === 'affiliate';
+        var isExternal = productType === 'external';
         var manageStockEnabled = isManageStockEnabledValue(data.default && data.default.manage_stock);
         var $defaultManageStock = $('#manage-product-modal input[name="default[manage_stock]"]');
         if ($defaultManageStock.length) {
@@ -1788,7 +1788,7 @@ jQuery(document).ready(function ($) {
             productType = manageModalState.productData.product_type || manageModalState.productData.type || '';
         }
         var isGrouped = productType === 'grouped';
-        var isExternal = productType === 'external' || productType === 'affiliate';
+        var isExternal = productType === 'external';
         var defaultManageStockEnabled = isDefaultManageStockEnabled();
 
         var value = parseFloat($field.val()) || 0;
@@ -2038,7 +2038,7 @@ jQuery(document).ready(function ($) {
         }
         var isGrouped = productType === 'grouped';
         var isVariable = productType === 'variable';
-        var isExternal = productType === 'external' || productType === 'affiliate';
+        var isExternal = productType === 'external';
         var defaultManageStockEnabled = isDefaultManageStockEnabled();
 
         // Get default values (only if fields exist)

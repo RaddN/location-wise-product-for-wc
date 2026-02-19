@@ -134,11 +134,17 @@ class mulopimfwc_Stock_Central
                             <button type="button" class="button button-secondary" id="mulopimfwc-classic-reset-all" disabled="disabled">
                                 <?php echo esc_html__('Reset All Changes', 'multi-location-product-and-inventory-management'); ?>
                             </button>
+                            <button type="button" class="button button-secondary" id="mulopimfwc-classic-retry-failed" style="display:none;" disabled="disabled">
+                                <?php echo esc_html__('Retry Failed Rows', 'multi-location-product-and-inventory-management'); ?>
+                            </button>
+                            <span id="mulopimfwc-classic-save-progress" class="description" aria-live="polite"></span>
+                            <span class="spinner" id="mulopimfwc-classic-save-spinner" aria-hidden="true"></span>
                             <span id="mulopimfwc-classic-dirty-count" class="description">
                                 <?php echo esc_html__('No unsaved product rows.', 'multi-location-product-and-inventory-management'); ?>
                             </span>
                         </div>
                     </div>
+                    <div id="mulopimfwc-classic-save-failures" class="mulopimfwc-classic-save-failures" aria-live="polite" hidden="hidden"></div>
                 <?php endif; ?>
                 <?php $product_table->search_box(__('Search Products', 'multi-location-product-and-inventory-management'), 'search_products'); ?>
                 <?php $product_table->display(); ?>
@@ -302,6 +308,48 @@ class mulopimfwc_Stock_Central
                 flex-wrap: wrap;
                 justify-content: flex-end;
                 flex-direction: row-reverse;
+            }
+
+            #mulopimfwc-classic-save-progress {
+                color: #1f2937;
+                font-weight: 500;
+                min-height: 18px;
+            }
+
+            #mulopimfwc-classic-save-spinner {
+                float: none;
+                margin: 0;
+                visibility: hidden;
+            }
+
+            #mulopimfwc-classic-save-spinner.is-active {
+                visibility: visible;
+            }
+
+            .mulopimfwc-classic-save-failures {
+                margin: -6px 0 14px;
+                padding: 10px 12px;
+                border: 1px solid #f5d18a;
+                background: #fffbeb;
+                border-radius: 6px;
+                color: #92400e;
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            .mulopimfwc-classic-save-failures strong {
+                color: #7c2d12;
+            }
+
+            .mulopimfwc-classic-save-failure-list {
+                margin: 6px 0 0 18px;
+                max-height: 168px;
+                overflow: auto;
+            }
+
+            .mulopimfwc-classic-save-failure-product {
+                font-weight: 600;
+                color: #7c2d12;
             }
 
             @media (max-width: 782px) {
@@ -666,20 +714,48 @@ class mulopimfwc_Stock_Central
 
             .mulopimfwc-classic-section-head {
                 display: flex;
-                align-items: center;
+                align-items: flex-start;
                 justify-content: space-between;
                 gap: 12px;
                 margin-bottom: 8px;
+                flex-wrap: wrap;
             }
 
             .mulopimfwc-classic-add-location-wrap {
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                margin-left: auto;
             }
 
             .mulopimfwc-classic-add-location-wrap select {
                 min-width: 180px;
+            }
+
+            .mulopimfwc-classic-add-location-wrap select:disabled,
+            .mulopimfwc-classic-add-location-wrap .mulopimfwc-classic-add-location-btn:disabled {
+                cursor: not-allowed;
+                opacity: 0.7;
+            }
+
+            .mulopimfwc-classic-add-location-empty-state {
+                margin: 2px 0 0;
+                flex: 1 1 100%;
+                font-size: 12px;
+                color: #6b7280;
+            }
+
+            .mulopimfwc-classic-add-location-empty-state a {
+                color: #1d4ed8;
+                text-decoration: none;
+            }
+
+            .mulopimfwc-classic-add-location-empty-state a:hover {
+                text-decoration: underline;
+            }
+
+            .mulopimfwc-classic-add-location-empty-state.is-hidden {
+                display: none;
             }
 
             .mulopimfwc-classic-grid {
@@ -1030,6 +1106,17 @@ class mulopimfwc_Stock_Central
                         return;
                     }
 
+                    var $saveAllButton = $('#mulopimfwc-classic-save-all');
+                    var $resetAllButton = $('#mulopimfwc-classic-reset-all');
+                    var $retryFailedButton = $('#mulopimfwc-classic-retry-failed');
+                    var $saveProgress = $('#mulopimfwc-classic-save-progress');
+                    var $saveSpinner = $('#mulopimfwc-classic-save-spinner');
+                    var $saveFailures = $('#mulopimfwc-classic-save-failures');
+                    var saveAllInProgress = false;
+                    var failedSaveAllRows = [];
+                    var saveAllButtonDefaultText = '<?php echo esc_js(__('Save All Product Changes', 'multi-location-product-and-inventory-management')); ?>';
+                    var saveAllSavingText = '<?php echo esc_js(__('Saving...', 'multi-location-product-and-inventory-management')); ?>';
+
                     function escapeHtml(text) {
                         return $('<div>').text(text || '').html();
                     }
@@ -1081,12 +1168,197 @@ class mulopimfwc_Stock_Central
                         $status.text(text || '');
                     }
 
+                    function setSaveAllProgressText(text) {
+                        if ($saveProgress.length) {
+                            $saveProgress.text(text || '');
+                        }
+                    }
+
+                    function getRowProductMeta($row) {
+                        var productId = parseInt($row.data('product-id'), 10);
+                        if (isNaN(productId)) {
+                            productId = 0;
+                        }
+
+                        var productLabel = $.trim($row.find('.column-title strong').first().text());
+                        if (!productLabel) {
+                            productLabel = '<?php echo esc_js(__('Product', 'multi-location-product-and-inventory-management')); ?> #' + productId;
+                        }
+
+                        return {
+                            id: productId,
+                            label: productLabel
+                        };
+                    }
+
+                    function normalizeSaveErrorMessage(errorData) {
+                        var fallbackMessage = '<?php echo esc_js(__('Unable to save this product row.', 'multi-location-product-and-inventory-management')); ?>';
+                        if (!errorData) {
+                            return fallbackMessage;
+                        }
+
+                        if (typeof errorData === 'string') {
+                            return errorData;
+                        }
+
+                        if (errorData && typeof errorData.message === 'string' && errorData.message !== '') {
+                            return errorData.message;
+                        }
+
+                        return fallbackMessage;
+                    }
+
+                    function removeFailedRowByProductId(productId) {
+                        failedSaveAllRows = failedSaveAllRows.filter(function(item) {
+                            return parseInt(item.productId, 10) !== parseInt(productId, 10);
+                        });
+                    }
+
+                    function renderSaveAllFailures() {
+                        if (!$saveFailures.length) {
+                            return;
+                        }
+
+                        if (!failedSaveAllRows.length) {
+                            $saveFailures.empty().attr('hidden', 'hidden');
+                            if ($retryFailedButton.length && !saveAllInProgress) {
+                                $retryFailedButton.hide().prop('disabled', true);
+                            }
+                            return;
+                        }
+
+                        var failureTitle = failedSaveAllRows.length === 1
+                            ? '<?php echo esc_js(__('1 row failed to save.', 'multi-location-product-and-inventory-management')); ?>'
+                            : failedSaveAllRows.length + ' <?php echo esc_js(__('rows failed to save.', 'multi-location-product-and-inventory-management')); ?>';
+
+                        var html = '<strong>' + escapeHtml(failureTitle) + '</strong>';
+                        html += '<ul class=\"mulopimfwc-classic-save-failure-list\">';
+                        failedSaveAllRows.forEach(function(item) {
+                            var label = item && item.productLabel ? item.productLabel : '<?php echo esc_js(__('Unknown product', 'multi-location-product-and-inventory-management')); ?>';
+                            var message = item && item.message ? item.message : '';
+                            html += '<li><span class=\"mulopimfwc-classic-save-failure-product\">' + escapeHtml(label) + '</span>';
+                            if (message) {
+                                html += ': ' + escapeHtml(message);
+                            }
+                            html += '</li>';
+                        });
+                        html += '</ul>';
+
+                        $saveFailures.html(html).removeAttr('hidden');
+                        if ($retryFailedButton.length && !saveAllInProgress) {
+                            $retryFailedButton.show().prop('disabled', false);
+                        }
+                    }
+
+                    function clearSaveAllFailures() {
+                        failedSaveAllRows = [];
+                        if ($saveFailures.length) {
+                            $saveFailures.empty().attr('hidden', 'hidden');
+                        }
+                        if ($retryFailedButton.length && !saveAllInProgress) {
+                            $retryFailedButton.hide().prop('disabled', true);
+                        }
+                    }
+
+                    function setSaveAllRunning(isRunning) {
+                        saveAllInProgress = !!isRunning;
+                        if ($saveSpinner.length) {
+                            $saveSpinner.toggleClass('is-active', saveAllInProgress);
+                        }
+                        if ($saveAllButton.length) {
+                            $saveAllButton.prop('disabled', saveAllInProgress);
+                            if (!saveAllInProgress) {
+                                $saveAllButton.text(saveAllButtonDefaultText);
+                            }
+                        }
+                        if ($resetAllButton.length) {
+                            var dirtyCount = $('.mulopimfwc-classic-product-row.is-dirty').length;
+                            $resetAllButton.prop('disabled', saveAllInProgress || dirtyCount === 0);
+                        }
+                        if ($retryFailedButton.length) {
+                            if (saveAllInProgress) {
+                                $retryFailedButton.prop('disabled', true);
+                            } else if (failedSaveAllRows.length) {
+                                $retryFailedButton.show().prop('disabled', false);
+                            } else {
+                                $retryFailedButton.hide().prop('disabled', true);
+                            }
+                        }
+                    }
+
+                    function runSaveAllQueue(rowsToProcess) {
+                        if (saveAllInProgress) {
+                            return;
+                        }
+
+                        var queue = [];
+                        (rowsToProcess || []).forEach(function(rowNode) {
+                            var $row = $(rowNode);
+                            if ($row.length && $row.hasClass('is-dirty')) {
+                                queue.push($row);
+                            }
+                        });
+
+                        if (!queue.length) {
+                            showNotice('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                            setSaveAllProgressText('');
+                            return;
+                        }
+
+                        clearSaveAllFailures();
+                        setSaveAllRunning(true);
+                        if ($saveAllButton.length) {
+                            $saveAllButton.text(saveAllSavingText);
+                        }
+
+                        var totalRows = queue.length;
+                        var completedRows = 0;
+                        var successCount = 0;
+
+                        function processNext() {
+                            if (!queue.length) {
+                                setSaveAllRunning(false);
+                                if (failedSaveAllRows.length > 0) {
+                                    setSaveAllProgressText('<?php echo esc_js(__('Completed with failures:', 'multi-location-product-and-inventory-management')); ?> ' + successCount + '/' + totalRows);
+                                    renderSaveAllFailures();
+                                    showNotice(successCount + ' <?php echo esc_js(__('rows saved,', 'multi-location-product-and-inventory-management')); ?> ' + failedSaveAllRows.length + ' <?php echo esc_js(__('rows failed.', 'multi-location-product-and-inventory-management')); ?>', 'warning');
+                                } else {
+                                    clearSaveAllFailures();
+                                    setSaveAllProgressText('<?php echo esc_js(__('Completed:', 'multi-location-product-and-inventory-management')); ?> ' + successCount + '/' + totalRows);
+                                    showNotice('<?php echo esc_js(__('All changed product rows saved successfully.', 'multi-location-product-and-inventory-management')); ?>', 'success');
+                                }
+                                return;
+                            }
+
+                            var $row = queue.shift();
+                            var rowMeta = getRowProductMeta($row);
+                            setSaveAllProgressText('<?php echo esc_js(__('Saving row', 'multi-location-product-and-inventory-management')); ?> ' + (completedRows + 1) + '/' + totalRows + ': ' + rowMeta.label);
+
+                            saveRow($row).done(function() {
+                                successCount++;
+                                removeFailedRowByProductId(rowMeta.id);
+                            }).fail(function(errorData) {
+                                var message = normalizeSaveErrorMessage(errorData);
+                                removeFailedRowByProductId(rowMeta.id);
+                                failedSaveAllRows.push({
+                                    productId: rowMeta.id,
+                                    productLabel: rowMeta.label,
+                                    message: message
+                                });
+                            }).always(function() {
+                                completedRows++;
+                                processNext();
+                            });
+                        }
+
+                        processNext();
+                    }
+
                     function updateDirtyCount() {
                         var count = $('.mulopimfwc-classic-product-row.is-dirty').length;
                         var $count = $('#mulopimfwc-classic-dirty-count');
-                        var $resetAll = $('#mulopimfwc-classic-reset-all');
-                        if ($resetAll.length) {
-                            $resetAll.prop('disabled', count === 0);
+                        if ($resetAllButton.length) {
+                            $resetAllButton.prop('disabled', count === 0 || saveAllInProgress);
                         }
                         if (!$count.length) {
                             return;
@@ -1200,7 +1472,7 @@ class mulopimfwc_Stock_Central
                         }
 
                         var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
-                        var supportsManageStock = ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
+                        var supportsManageStock = ['grouped', 'external'].indexOf(productType) === -1;
                         if (!supportsManageStock) {
                             return false;
                         }
@@ -1416,8 +1688,8 @@ class mulopimfwc_Stock_Central
                         var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
                         var isGrouped = productType === 'grouped';
                         var isVariable = productType === 'variable';
-                        var isExternal = productType === 'external' || productType === 'affiliate';
-                        var supportsManageStock = isStoreManageStockEnabled && ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
+                        var isExternal = productType === 'external';
+                        var supportsManageStock = isStoreManageStockEnabled && ['grouped', 'external'].indexOf(productType) === -1;
 
                         var $defaultManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-default-field[data-field=\"manage_stock\"]').first();
                         var defaultManageStockEnabled = supportsManageStock ? (!$defaultManageStockField.length || $defaultManageStockField.is(':checked')) : false;
@@ -1636,6 +1908,7 @@ class mulopimfwc_Stock_Central
                         $row.attr('data-original-location-ids', snapshot.originalLocationIds);
                         clearRowValidationErrors($row);
                         applyClassicManageStockVisibility($row);
+                        syncAllLocationsOption($row.find('.mulopimfwc-classic-add-location-select').first());
                         setRowStatus($row, '');
                         setRowDirty($row, false);
                         return true;
@@ -1676,6 +1949,7 @@ class mulopimfwc_Stock_Central
                     }
 
                     function refreshRowAsSaved($row) {
+                        var rowMeta = getRowProductMeta($row);
                         var currentIds = getCurrentLocationIds($row);
                         $row.attr('data-original-location-ids', currentIds.join(','));
                         $row.find(rowFieldSelector).each(function() {
@@ -1684,6 +1958,10 @@ class mulopimfwc_Stock_Central
                         });
                         storeRowSnapshot($row);
                         setRowDirty($row, false);
+                        removeFailedRowByProductId(rowMeta.id);
+                        if (!saveAllInProgress) {
+                            renderSaveAllFailures();
+                        }
                     }
 
                     function ensureNoLocationRow($table, colspan) {
@@ -1696,15 +1974,75 @@ class mulopimfwc_Stock_Central
                         }
                     }
 
+                    function hasRealLocationOptions($select) {
+                        if (!$select || !$select.length) {
+                            return false;
+                        }
+
+                        return $select.find('option').filter(function() {
+                            var value = ($(this).val() || '').toString();
+                            return value !== '' && value !== '__all__';
+                        }).length > 0;
+                    }
+
+                    function refreshAddLocationControls($row) {
+                        if (!$row || !$row.length) {
+                            return;
+                        }
+
+                        var $wrap = $row.find('.mulopimfwc-classic-add-location-wrap').first();
+                        if (!$wrap.length) {
+                            return;
+                        }
+
+                        var $select = $wrap.find('.mulopimfwc-classic-add-location-select').first();
+                        var $button = $wrap.find('.mulopimfwc-classic-add-location-btn').first();
+                        var $message = $row.find('.mulopimfwc-classic-add-location-empty-state').first();
+                        if (!$select.length || !$button.length || !$message.length) {
+                            return;
+                        }
+
+                        var hasRealOptions = hasRealLocationOptions($select);
+                        var hasLocationCatalog = (($wrap.attr('data-has-location-catalog') || 'no') + '').toLowerCase() === 'yes';
+                        if (hasRealOptions && !hasLocationCatalog) {
+                            hasLocationCatalog = true;
+                            $wrap.attr('data-has-location-catalog', 'yes');
+                        }
+
+                        $select.prop('disabled', !hasRealOptions);
+                        $button.prop('disabled', !hasRealOptions);
+
+                        if (hasRealOptions) {
+                            $message.addClass('is-hidden').empty();
+                            return;
+                        }
+
+                        var noLocationsMessage = ($wrap.attr('data-no-locations-message') || '').toString();
+                        var allAssignedMessage = ($wrap.attr('data-all-assigned-message') || '').toString();
+                        var createLocationLabel = ($wrap.attr('data-create-location-label') || '').toString();
+                        var createLocationUrl = ($wrap.attr('data-create-location-url') || '').toString();
+                        var canManageLocations = (($wrap.attr('data-can-manage-locations') || 'no') + '').toLowerCase() === 'yes';
+
+                        $message.removeClass('is-hidden').empty();
+                        if (hasLocationCatalog) {
+                            $message.text(allAssignedMessage);
+                            return;
+                        }
+
+                        $message.text(noLocationsMessage);
+                        if (canManageLocations && createLocationLabel && createLocationUrl) {
+                            $message.append(' ');
+                            $message.append($('<a></a>').attr('href', createLocationUrl).text(createLocationLabel));
+                            $message.append('.');
+                        }
+                    }
+
                     function syncAllLocationsOption($select) {
                         if (!$select || !$select.length) {
                             return;
                         }
 
-                        var hasRealOptions = $select.find('option').filter(function() {
-                            var value = ($(this).val() || '').toString();
-                            return value !== '' && value !== '__all__';
-                        }).length > 0;
+                        var hasRealOptions = hasRealLocationOptions($select);
                         var hasAllOption = $select.find('option[value=\"__all__\"]').length > 0;
 
                         if (hasRealOptions && !hasAllOption) {
@@ -1717,6 +2055,11 @@ class mulopimfwc_Stock_Central
                             }
                         } else if (!hasRealOptions && hasAllOption) {
                             $select.find('option[value=\"__all__\"]').remove();
+                        }
+
+                        var $row = $select.closest('.mulopimfwc-classic-product-row');
+                        if ($row.length) {
+                            refreshAddLocationControls($row);
                         }
                     }
 
@@ -1744,10 +2087,10 @@ class mulopimfwc_Stock_Central
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"' + disabled + '></td>' +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"regular_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"sale_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
-                            '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"off\"' + disabled + '>' +
-                            '<option value=\"off\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
+                            '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\"' + disabled + '>' +
+                            '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management')); ?></option>' +
-                            '<option value=\"on\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management')); ?></option>' +
+                            '<option value=\"yes\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '</select></td>' +
                             '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management')); ?>\">&#10005;</button></td>' +
                             '</tr>';
@@ -1761,10 +2104,10 @@ class mulopimfwc_Stock_Central
                             (includeStockFields ? '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"></td>' : '') +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"regular_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"sale_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
-                            (includeStockFields ? '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"off\">' +
-                            '<option value=\"off\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
+                            (includeStockFields ? '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\">' +
+                            '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management')); ?></option>' +
-                            '<option value=\"on\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management')); ?></option>' +
+                            '<option value=\"yes\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '</select></td>' : '') +
                             '</tr>';
                     }
@@ -1885,12 +2228,17 @@ class mulopimfwc_Stock_Central
                                 var message = response && response.data && response.data.message ? response.data.message : '<?php echo esc_js(__('Unable to save this product row.', 'multi-location-product-and-inventory-management')); ?>';
                                 setRowStatus($row, message, 'error');
                                 setRowDirty($row, true);
-                                deferred.reject(message);
+                                deferred.reject({
+                                    message: message
+                                });
                             }
                         }).fail(function() {
-                            setRowStatus($row, '<?php echo esc_js(__('AJAX error while saving.', 'multi-location-product-and-inventory-management')); ?>', 'error');
+                            var ajaxErrorMessage = '<?php echo esc_js(__('AJAX error while saving.', 'multi-location-product-and-inventory-management')); ?>';
+                            setRowStatus($row, ajaxErrorMessage, 'error');
                             setRowDirty($row, true);
-                            deferred.reject();
+                            deferred.reject({
+                                message: ajaxErrorMessage
+                            });
                         }).always(function() {
                             $saveButton.html('&#10003;');
                             $resetButton.prop('disabled', !$row.hasClass('is-dirty'));
@@ -1903,8 +2251,12 @@ class mulopimfwc_Stock_Central
                         var $row = $(this);
                         storeRowSnapshot($row);
                         applyClassicManageStockVisibility($row);
+                        syncAllLocationsOption($row.find('.mulopimfwc-classic-add-location-select').first());
                         setRowDirty($row, false);
                     });
+                    clearSaveAllFailures();
+                    setSaveAllProgressText('');
+                    setSaveAllRunning(false);
                     updateDirtyCount();
 
                     $(document).on('input change', '.mulopimfwc-classic-product-row .column-classic_manage_stock [data-field], .mulopimfwc-classic-product-row .column-classic_default [data-field], .mulopimfwc-classic-product-row .column-classic_location_wise [data-field], .mulopimfwc-classic-product-row .column-classic_purchase [data-field]', function() {
@@ -1961,11 +2313,11 @@ class mulopimfwc_Stock_Central
                         }
 
                         var productType = (($row.attr('data-product-type') || '') + '').toLowerCase();
-                        var supportsManageStock = isStoreManageStockEnabled && ['grouped', 'external', 'affiliate'].indexOf(productType) === -1;
+                        var supportsManageStock = isStoreManageStockEnabled && ['grouped', 'external'].indexOf(productType) === -1;
                         var rowMode = 'full';
                         if (productType === 'variable' || productType === 'grouped') {
                             rowMode = 'location_only';
-                        } else if (productType === 'external' || productType === 'affiliate' || !supportsManageStock) {
+                        } else if (productType === 'external' || !supportsManageStock) {
                             rowMode = 'price_only';
                         }
 
@@ -2068,49 +2420,46 @@ class mulopimfwc_Stock_Central
                     });
 
                     $('#mulopimfwc-classic-save-all').on('click', function() {
-                        var $button = $(this);
-                        var dirtyRows = $('.mulopimfwc-classic-product-row.is-dirty').toArray();
-                        if (!dirtyRows.length) {
-                            showNotice('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                        runSaveAllQueue($('.mulopimfwc-classic-product-row.is-dirty').toArray());
+                    });
+
+                    $('#mulopimfwc-classic-retry-failed').on('click', function() {
+                        if (saveAllInProgress) {
                             return;
                         }
 
-                        $button.prop('disabled', true).text('<?php echo esc_js(__('Saving...', 'multi-location-product-and-inventory-management')); ?>');
-                        var successCount = 0;
-                        var errorCount = 0;
-                        var index = 0;
-
-                        function saveNext() {
-                            if (index >= dirtyRows.length) {
-                                $button.prop('disabled', false).text('<?php echo esc_js(__('Save All Product Changes', 'multi-location-product-and-inventory-management')); ?>');
-                                if (errorCount > 0) {
-                                    showNotice(successCount + ' <?php echo esc_js(__('rows saved,', 'multi-location-product-and-inventory-management')); ?> ' + errorCount + ' <?php echo esc_js(__('rows failed.', 'multi-location-product-and-inventory-management')); ?>', 'warning');
-                                } else {
-                                    showNotice('<?php echo esc_js(__('All changed product rows saved successfully.', 'multi-location-product-and-inventory-management')); ?>', 'success');
-                                }
-                                return;
-                            }
-
-                            var $row = $(dirtyRows[index]);
-                            index++;
-                            if (!$row.hasClass('is-dirty')) {
-                                saveNext();
-                                return;
-                            }
-
-                            saveRow($row).done(function() {
-                                successCount++;
-                                saveNext();
-                            }).fail(function() {
-                                errorCount++;
-                                saveNext();
-                            });
+                        if (!failedSaveAllRows.length) {
+                            showNotice('<?php echo esc_js(__('No failed product rows to retry.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                            return;
                         }
 
-                        saveNext();
+                        var retryRows = [];
+                        failedSaveAllRows.forEach(function(item) {
+                            var productId = parseInt(item.productId, 10);
+                            if (isNaN(productId) || productId <= 0) {
+                                return;
+                            }
+                            var $row = $('.mulopimfwc-classic-product-row[data-product-id=\"' + productId + '\"]').first();
+                            if ($row.length && $row.hasClass('is-dirty')) {
+                                retryRows.push($row.get(0));
+                            }
+                        });
+
+                        if (!retryRows.length) {
+                            clearSaveAllFailures();
+                            setSaveAllProgressText('');
+                            showNotice('<?php echo esc_js(__('No failed product rows are currently pending changes.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                            return;
+                        }
+
+                        runSaveAllQueue(retryRows);
                     });
 
                     $('#mulopimfwc-classic-reset-all').on('click', function() {
+                        if (saveAllInProgress) {
+                            return;
+                        }
+
                         var dirtyRows = $('.mulopimfwc-classic-product-row.is-dirty').toArray();
                         if (!dirtyRows.length) {
                             showNotice('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management')); ?>', 'info');
@@ -2121,6 +2470,8 @@ class mulopimfwc_Stock_Central
                             resetRowFromSnapshot($(row));
                         });
 
+                        clearSaveAllFailures();
+                        setSaveAllProgressText('');
                         showNotice('<?php echo esc_js(__('All unsaved product row changes were reset.', 'multi-location-product-and-inventory-management')); ?>', 'success');
                     });
                 });

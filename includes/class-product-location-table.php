@@ -524,6 +524,36 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return $manage_stock;
     }
 
+    private function normalize_classic_backorders_value($value, $target = 'woocommerce')
+    {
+        $value = is_string($value) ? strtolower(trim($value)) : '';
+
+        if ($target === 'location') {
+            if ($value === 'yes' || $value === 'on') {
+                return 'on';
+            }
+            if ($value === 'notify') {
+                return 'notify';
+            }
+            if ($value === 'no' || $value === 'off') {
+                return 'off';
+            }
+            return '';
+        }
+
+        if ($value === 'yes' || $value === 'on') {
+            return 'yes';
+        }
+        if ($value === 'notify') {
+            return 'notify';
+        }
+        if ($value === 'no' || $value === 'off') {
+            return 'no';
+        }
+
+        return '';
+    }
+
     private function is_store_manage_stock_enabled()
     {
         return get_option('woocommerce_manage_stock', 'no') === 'yes';
@@ -553,7 +583,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         $product_type = isset($item['type']) ? (string) $item['type'] : '';
         $global_manage_stock_enabled = $this->is_store_manage_stock_enabled();
-        $product_supports_manage_stock = !in_array($product_type, ['grouped', 'external', 'affiliate'], true);
+        $product_supports_manage_stock = !in_array($product_type, ['grouped', 'external'], true);
         $supports_manage_stock = $global_manage_stock_enabled && $product_supports_manage_stock;
         $default = isset($product_data['default']) && is_array($product_data['default']) ? $product_data['default'] : [];
         $locations = isset($product_data['locations']) && is_array($product_data['locations']) ? $product_data['locations'] : [];
@@ -615,7 +645,10 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $stock = isset($location['stock']) ? $location['stock'] : '';
             $regular_price = isset($location['regular_price']) ? $location['regular_price'] : '';
             $sale_price = isset($location['sale_price']) ? $location['sale_price'] : '';
-            $backorders = isset($location['backorders']) && $location['backorders'] !== '' ? $location['backorders'] : 'off';
+            $backorders = $this->normalize_classic_backorders_value(isset($location['backorders']) ? $location['backorders'] : '', 'woocommerce');
+            if ($backorders === '') {
+                $backorders = 'no';
+            }
 
             $output .= '<tr class="mulopimfwc-classic-product-location-row" data-location-id="' . esc_attr($location_id) . '" data-location-name="' . esc_attr($location_name) . '">';
             $output .= '<td class="mulopimfwc-classic-location-label">' . esc_html($location_name) . '</td>';
@@ -624,9 +657,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $output .= '<td>' . $this->classic_number_input('regular_price', $regular_price, '0.01', '0') . '</td>';
                 $output .= '<td>' . $this->classic_number_input('sale_price', $sale_price, '0.01', '0') . '</td>';
                 $output .= '<td>' . $this->classic_select_input('backorders', $backorders, [
-                    'off' => __('Do not allow', 'multi-location-product-and-inventory-management'),
+                    'no' => __('Do not allow', 'multi-location-product-and-inventory-management'),
                     'notify' => __('Allow, but notify', 'multi-location-product-and-inventory-management'),
-                    'on' => __('Allow', 'multi-location-product-and-inventory-management'),
+                    'yes' => __('Allow', 'multi-location-product-and-inventory-management'),
                 ], !$supports_manage_stock) . '</td>';
             } elseif ($layout_mode === 'price_only') {
                 $output .= '<td>' . $this->classic_number_input('regular_price', $regular_price, '0.01', '0') . '</td>';
@@ -653,7 +686,10 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $stock = isset($location['stock']) ? $location['stock'] : '';
             $regular_price = isset($location['regular_price']) ? $location['regular_price'] : '';
             $sale_price = isset($location['sale_price']) ? $location['sale_price'] : '';
-            $backorders = isset($location['backorders']) && $location['backorders'] !== '' ? $location['backorders'] : 'off';
+            $backorders = $this->normalize_classic_backorders_value(isset($location['backorders']) ? $location['backorders'] : '', 'woocommerce');
+            if ($backorders === '') {
+                $backorders = 'no';
+            }
 
             $output .= '<tr class="mulopimfwc-classic-variation-location-row" data-location-id="' . esc_attr($location_id) . '" data-location-name="' . esc_attr($location_name) . '">';
             $output .= '<td class="mulopimfwc-classic-location-label">' . esc_html($location_name) . '</td>';
@@ -664,9 +700,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<td>' . $this->classic_number_input('sale_price', $sale_price, '0.01', '0') . '</td>';
             if ($supports_manage_stock) {
                 $output .= '<td>' . $this->classic_select_input('backorders', $backorders, [
-                    'off' => __('Do not allow', 'multi-location-product-and-inventory-management'),
+                    'no' => __('Do not allow', 'multi-location-product-and-inventory-management'),
                     'notify' => __('Allow, but notify', 'multi-location-product-and-inventory-management'),
-                    'on' => __('Allow', 'multi-location-product-and-inventory-management'),
+                    'yes' => __('Allow', 'multi-location-product-and-inventory-management'),
                 ]) . '</td>';
             }
             $output .= '</tr>';
@@ -833,18 +869,29 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $is_variable_product = $context['product_type'] === 'variable';
         $is_grouped_product = $context['product_type'] === 'grouped';
         $is_external_product = $context['product_type'] === 'external';
-        $is_affiliate_product = $context['product_type'] === 'affiliate';
         $location_layout_mode = 'full';
         if ($is_variable_product || $is_grouped_product) {
             $location_layout_mode = 'location_only';
-        } elseif ($is_external_product || $is_affiliate_product || !$context['supports_manage_stock']) {
+        } elseif ($is_external_product || !$context['supports_manage_stock']) {
             $location_layout_mode = 'price_only';
         }
+
+        $has_available_locations = !empty($context['available_locations']);
+        $has_assigned_locations = !empty($context['locations']);
+        $has_location_catalog = $has_available_locations || $has_assigned_locations;
+        $can_manage_locations = current_user_can('manage_woocommerce') || current_user_can('manage_product_terms') || current_user_can('manage_options');
+        $create_location_url = admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc');
+        $select_disabled_attr = $has_available_locations ? '' : ' disabled="disabled"';
+        $button_disabled_attr = $has_available_locations ? '' : ' disabled="disabled"';
+        $no_locations_message = esc_html__('No store locations are available yet.', 'multi-location-product-and-inventory-management');
+        $all_assigned_message = esc_html__('All available locations are already assigned to this product.', 'multi-location-product-and-inventory-management');
+        $create_location_label = esc_html__('Create your first location', 'multi-location-product-and-inventory-management');
+
         $output = '<div class="mulopimfwc-classic-section">';
         $output .= '<div class="mulopimfwc-classic-section-head">';
         $output .= '<h4>' . esc_html__('Locations', 'multi-location-product-and-inventory-management') . '</h4>';
-        $output .= '<div class="mulopimfwc-classic-add-location-wrap">';
-        $output .= '<select class="mulopimfwc-classic-add-location-select">';
+        $output .= '<div class="mulopimfwc-classic-add-location-wrap" data-has-location-catalog="' . esc_attr($has_location_catalog ? 'yes' : 'no') . '" data-no-locations-message="' . esc_attr($no_locations_message) . '" data-all-assigned-message="' . esc_attr($all_assigned_message) . '" data-create-location-label="' . esc_attr($create_location_label) . '" data-create-location-url="' . esc_url($create_location_url) . '" data-can-manage-locations="' . esc_attr($can_manage_locations ? 'yes' : 'no') . '">';
+        $output .= '<select class="mulopimfwc-classic-add-location-select"' . $select_disabled_attr . '>';
         $output .= '<option value="">' . esc_html__('Select location', 'multi-location-product-and-inventory-management') . '</option>';
         if (!empty($context['available_locations'])) {
             $output .= '<option value="__all__">' . esc_html__('All locations', 'multi-location-product-and-inventory-management') . '</option>';
@@ -853,8 +900,20 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<option value="' . esc_attr((int) $location['id']) . '">' . esc_html((string) $location['name']) . '</option>';
         }
         $output .= '</select>';
-        $output .= '<button type="button" class="button button-secondary mulopimfwc-classic-add-location-btn">' . esc_html__('Add', 'multi-location-product-and-inventory-management') . '</button>';
+        $output .= '<button type="button" class="button button-secondary mulopimfwc-classic-add-location-btn"' . $button_disabled_attr . '>' . esc_html__('Add', 'multi-location-product-and-inventory-management') . '</button>';
         $output .= '</div>';
+        $output .= '<p class="description mulopimfwc-classic-add-location-empty-state' . ($has_available_locations ? ' is-hidden' : '') . '">';
+        if (!$has_available_locations) {
+            if (!$has_location_catalog) {
+                $output .= $no_locations_message;
+                if ($can_manage_locations) {
+                    $output .= ' <a href="' . esc_url($create_location_url) . '">' . $create_location_label . '</a>.';
+                }
+            } else {
+                $output .= $all_assigned_message;
+            }
+        }
+        $output .= '</p>';
         $output .= '</div>';
 
         $output .= '<table class="widefat striped mulopimfwc-classic-location-table mulopimfwc-classic-product-location-table">';
@@ -1047,8 +1106,8 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     private function get_location_stock_display($item)
     {
-        // Show -- for affiliate, external, and grouped products (they don't have stock management)
-        if ($item['type'] === 'affiliate' || $item['type'] === 'external' || $item['type'] === 'grouped') {
+        // Show -- for external and grouped products (they don't have stock management)
+        if ($item['type'] === 'external' || $item['type'] === 'grouped') {
             return '<span style="color: #9ca3af;">--</span>';
         }
 
@@ -1771,7 +1830,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         // Add product type filter
         if (isset($_REQUEST['filter-by-type']) && !empty($_REQUEST['filter-by-type'])) {
             $product_type = sanitize_text_field(wp_unslash($_REQUEST['filter-by-type']));
-            if (in_array($product_type, ['simple', 'variable', 'grouped', 'external', 'affiliate'])) {
+            if (in_array($product_type, ['simple', 'variable', 'grouped', 'external'])) {
                 // WooCommerce stores product type in taxonomy
                 $tax_queries[] = [
                     'taxonomy' => 'product_type',
