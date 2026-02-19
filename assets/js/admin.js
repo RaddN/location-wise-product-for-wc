@@ -514,41 +514,128 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    // Function to open manage product modal with tabs
-    function openManageProductModal(productId, productType, $button) {
-        // Get product data from data attribute (already loaded on page)
-        var productDataJson = $button.data('product-data');
-        var allLocationsJson = $button.data('locations');
-        
-        if (!productDataJson) {
-            showNotice('Product data not available. Please refresh the page.', 'error');
-            return;
+    var manageModalDataCache = {};
+
+    function normalizeManageModalProductData(rawData, productId, productType) {
+        var data = rawData || {};
+        data.id = parseInt(data.id || data.product_id || productId, 10) || productId;
+        data.name = data.name || data.product_name || '';
+        data.type = data.type || data.product_type || productType || '';
+        data.product_type = data.product_type || data.type || productType || '';
+        data.default = data.default || {};
+        data.locations = $.isArray(data.locations) ? data.locations : [];
+        data.variations = $.isArray(data.variations) ? data.variations : [];
+        return data;
+    }
+
+    function normalizeManageModalLocations(rawLocations) {
+        if (!$.isArray(rawLocations)) {
+            return [];
         }
 
-        // Parse JSON data
-        var productData, allLocations;
-        try {
-            productData = typeof productDataJson === 'string' ? JSON.parse(productDataJson) : productDataJson;
-            allLocations = allLocationsJson ? (typeof allLocationsJson === 'string' ? JSON.parse(allLocationsJson) : allLocationsJson) : [];
-        } catch (e) {
-            showNotice('Error parsing product data.', 'error');
-            return;
-        }
+        return rawLocations.map(function(location) {
+            return {
+                id: parseInt(location.id, 10) || 0,
+                name: location.name || '',
+                parent: parseInt(location.parent || 0, 10) || 0,
+                selected: !!location.selected
+            };
+        }).filter(function(location) {
+            return location.id > 0;
+        });
+    }
 
+    function openManageProductModalWithData(productId, productType, $button, productData, allLocations) {
         resetManageModalState(productData, allLocations, productId);
-        
-        // Route to appropriate modal based on product type
+
         var type = productData.product_type || productData.type || productType || '';
-        
         if (type === 'grouped') {
-            // Simple location selector for grouped products
             showGroupedProductModal(productData, allLocations, productId);
         } else if (type === 'variable') {
-            // Variation-first layout for variable products
             showVariableProductModal(productData, allLocations, productId);
         } else {
-            // Default tabbed modal for simple/external/affiliate products
             showManageProductTabs(productData, allLocations, productId);
+        }
+    }
+
+    function fetchManageModalData(productId, productType, $button) {
+        if (manageModalDataCache[productId]) {
+            openManageProductModalWithData(productId, productType, $button, manageModalDataCache[productId].productData, manageModalDataCache[productId].allLocations);
+            return;
+        }
+
+        var originalButtonText = $button.text();
+        $button.addClass('updating-message').prop('disabled', true).text('Loading...');
+
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'get_product_quick_edit_data',
+                product_id: productId,
+                security: mulopimfwc_locationWiseProducts.nonce
+            },
+            success: function(response) {
+                if (!response || !response.success || !response.data) {
+                    var message = response && response.data && response.data.message ? response.data.message : 'Unable to load product data.';
+                    showNotice(message, 'error');
+                    return;
+                }
+
+                var normalizedProductData = normalizeManageModalProductData(response.data, productId, productType);
+                var normalizedAllLocations = normalizeManageModalLocations(response.data.all_locations || []);
+
+                if (!normalizedAllLocations.length && $.isArray(response.data.locations)) {
+                    normalizedAllLocations = normalizeManageModalLocations(response.data.locations.map(function(location) {
+                        return {
+                            id: location.id,
+                            name: location.name,
+                            parent: location.parent || 0,
+                            selected: true
+                        };
+                    }));
+                }
+
+                manageModalDataCache[productId] = {
+                    productData: normalizedProductData,
+                    allLocations: normalizedAllLocations
+                };
+
+                $button.data('product-data', normalizedProductData);
+                $button.data('locations', normalizedAllLocations);
+                openManageProductModalWithData(productId, productType, $button, normalizedProductData, normalizedAllLocations);
+            },
+            error: function() {
+                showNotice(mulopimfwc_locationWiseProducts.i18n.ajaxError || 'Unable to load product data.', 'error');
+            },
+            complete: function() {
+                $button.removeClass('updating-message').prop('disabled', false).text(originalButtonText);
+            }
+        });
+    }
+
+    // Function to open manage product modal with tabs
+    function openManageProductModal(productId, productType, $button) {
+        var productDataJson = $button.data('product-data');
+        var allLocationsJson = $button.data('locations');
+
+        if (!productDataJson) {
+            fetchManageModalData(productId, productType, $button);
+            return;
+        }
+
+        try {
+            var productData = normalizeManageModalProductData(
+                typeof productDataJson === 'string' ? JSON.parse(productDataJson) : productDataJson,
+                productId,
+                productType
+            );
+            var allLocations = normalizeManageModalLocations(
+                allLocationsJson ? (typeof allLocationsJson === 'string' ? JSON.parse(allLocationsJson) : allLocationsJson) : []
+            );
+            openManageProductModalWithData(productId, productType, $button, productData, allLocations);
+        } catch (e) {
+            fetchManageModalData(productId, productType, $button);
         }
     }
 

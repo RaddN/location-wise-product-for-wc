@@ -37,6 +37,13 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     private $classic_editor_context_cache = [];
 
     /**
+     * Cached all-locations template for per-row selected-state mapping.
+     *
+     * @var array<int, array<string, mixed>>|null
+     */
+    private $all_location_data_template = null;
+
+    /**
      * Constructor
      */
     public function __construct($view_mode = 'modern')
@@ -397,8 +404,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         // Prepare data for quick edit (Manage Stock) popup
         $nonce = wp_create_nonce('location_product_action_nonce');
-        $all_locations_data = $this->get_all_location_data_for_item($item);
-        $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
 
         $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . esc_html($item['title']) . '</a></strong>';
         $title .= '<span class="mulopimfwc-product-id"> ID: ' . esc_html($item['id']) . '</span>';
@@ -409,12 +414,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         if (!$this->is_classic_mode()) {
             $manage_attrs = 'class="row-quick-edit manage-product-location" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-nonce="' . esc_attr($nonce) . '"';
-            if ($quick_edit_data) {
-                $manage_attrs .= ' data-product-data="' . esc_attr(wp_json_encode($quick_edit_data)) . '"';
-            }
-            if (!empty($all_locations_data)) {
-                $manage_attrs .= ' data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '"';
-            }
             $title .= '<span class="quick-edit"><a href="#" ' . $manage_attrs . '>' . __('Quick Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
         }
         $title .= '<span class="trash"><a href="' . esc_url($trash_link) . '">' . __('Trash', 'multi-location-product-and-inventory-management') . '</a> | </span>';
@@ -426,22 +425,33 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     private function get_all_location_data_for_item($item)
     {
         $locations = isset($item['location_terms']) && is_array($item['location_terms']) ? $item['location_terms'] : [];
-        $product_location_slugs = array_map('rawurldecode', (array) wp_list_pluck($locations, 'slug'));
+        $selected_slugs = array_fill_keys(array_map('rawurldecode', (array) wp_list_pluck($locations, 'slug')), true);
 
-        global $mulopimfwc_locations;
-        $all_locations_data = [];
+        if ($this->all_location_data_template === null) {
+            $this->all_location_data_template = [];
 
-        if (is_wp_error($mulopimfwc_locations) || empty($mulopimfwc_locations)) {
-            return $all_locations_data;
+            global $mulopimfwc_locations;
+            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                $all_locations = $this->filter_location_terms_for_user($mulopimfwc_locations);
+                foreach ($all_locations as $location) {
+                    $this->all_location_data_template[] = [
+                        'id' => (int) $location->term_id,
+                        'name' => (string) $location->name,
+                        'parent' => (int) $location->parent,
+                        'slug' => rawurldecode((string) $location->slug),
+                    ];
+                }
+            }
         }
 
-        $all_locations = $this->filter_location_terms_for_user($mulopimfwc_locations);
-        foreach ($all_locations as $location) {
+        $all_locations_data = [];
+        foreach ($this->all_location_data_template as $location_template) {
+            $slug = isset($location_template['slug']) ? (string) $location_template['slug'] : '';
             $all_locations_data[] = [
-                'id' => (int) $location->term_id,
-                'name' => (string) $location->name,
-                'parent' => (int) $location->parent,
-                'selected' => in_array(rawurldecode((string) $location->slug), $product_location_slugs, true),
+                'id' => (int) $location_template['id'],
+                'name' => (string) $location_template['name'],
+                'parent' => (int) $location_template['parent'],
+                'selected' => isset($selected_slugs[$slug]),
             ];
         }
 
@@ -1538,19 +1548,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $nonce = wp_create_nonce('location_product_action_nonce');
 
         $locations = $item['location_terms'];
-        $all_locations_data = $this->get_all_location_data_for_item($item);
 
         if (empty($locations)) {
-            $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
-            $button = '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-nonce="' . esc_attr($nonce) . '"';
-            if ($quick_edit_data) {
-                $button .= ' data-product-data="' . esc_attr(wp_json_encode($quick_edit_data)) . '"';
-            }
-            if (!empty($all_locations_data)) {
-                $button .= ' data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '"';
-            }
-            $button .= '>' . __('Add to Location', 'multi-location-product-and-inventory-management') . '</a>';
-            return $button;
+            return '<a href="#" class="button button-small add-location" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Add to Location', 'multi-location-product-and-inventory-management') . '</a>';
         }
         $output = '<div class="location-actions">';
         foreach ($locations as $location) {
@@ -1569,16 +1569,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 esc_html($action_text) . '</a>';
             $output .= '</div>';
         }
-        // Prepare location data for Edit Location popup
-        // Store complete product data in data attribute for instant popup
-        $quick_edit_data = isset($item['quick_edit_data']) ? $item['quick_edit_data'] : null;
-        
-        // Single button for both edit location and quick edit
-        if ($quick_edit_data) {
-            $output .= '<a href="#" class="button button-small manage-product-location" style="margin-top: 5px; display: block;" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-product-data="' . esc_attr(wp_json_encode($quick_edit_data)) . '" data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Manage Stock', 'multi-location-product-and-inventory-management') . '</a>';
-        } else {
-            $output .= '<a href="#" class="button button-small manage-product-location" style="margin-top: 5px; display: block;" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-locations="' . esc_attr(wp_json_encode($all_locations_data)) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Manage Stock', 'multi-location-product-and-inventory-management') . '</a>';
-        }
+        $output .= '<a href="#" class="button button-small manage-product-location" style="margin-top: 5px; display: block;" data-product-id="' . esc_attr($item['id']) . '" data-product-type="' . esc_attr($item['type']) . '" data-nonce="' . esc_attr($nonce) . '">' . __('Manage Stock', 'multi-location-product-and-inventory-management') . '</a>';
         $output .= '</div>';
         return $output;
     }
@@ -1713,6 +1704,9 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             'posts_per_page' => $per_page,
             'paged' => $current_page,
             'post_status' => $this->get_stock_central_post_statuses(),
+            // We'll prefetch term/meta caches in bulk after query with variation IDs included.
+            'update_post_term_cache' => false,
+            'update_post_meta_cache' => false,
         ];
 
         // Add search if set
@@ -1838,199 +1832,268 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 }
             }
 
-            while ($query->have_posts()) {
-                $query->the_post();
-                $product_id = get_the_ID();
+            $posts = is_array($query->posts) ? $query->posts : [];
+            $product_ids = array_map('intval', (array) wp_list_pluck($posts, 'ID'));
+            $is_classic_mode = $this->is_classic_mode();
+            $include_quick_edit_data = $is_classic_mode && $this->user_can_manage_products();
+            $product_types = wc_get_product_types();
+            $date_format = get_option('date_format');
+            $weight_unit = get_option('woocommerce_weight_unit');
+            $dimension_unit = get_option('woocommerce_dimension_unit');
+
+            $show_modern_descriptive_fields = !$is_classic_mode;
+            $show_modern_variations = !$is_classic_mode;
+
+            $location_terms_by_product = [];
+            if (!empty($product_ids)) {
+                // Prime product meta before wc_get_product() calls below.
+                update_meta_cache('post', $product_ids);
+                update_object_term_cache($product_ids, 'product');
+
+                $bulk_location_terms = wp_get_object_terms($product_ids, 'mulopimfwc_store_location', ['fields' => 'all_with_object_id']);
+                if (!is_wp_error($bulk_location_terms)) {
+                    foreach ((array) $bulk_location_terms as $location_term) {
+                        $object_id = isset($location_term->object_id) ? (int) $location_term->object_id : 0;
+                        if ($object_id <= 0) {
+                            continue;
+                        }
+                        if (!isset($location_terms_by_product[$object_id])) {
+                            $location_terms_by_product[$object_id] = [];
+                        }
+                        $location_terms_by_product[$object_id][] = $location_term;
+                    }
+                }
+            }
+
+            $products_by_id = [];
+            $variation_ids_by_product = [];
+            $all_variation_ids = [];
+            foreach ($product_ids as $product_id) {
                 $product = wc_get_product($product_id);
                 if (!$product) {
                     continue;
                 }
-                $post_status = get_post_status($product_id);
 
-                // Get product thumbnail
-                $thumbnail = $product->get_image('thumbnail', ['class' => 'product-thumbnail']);
+                $products_by_id[$product_id] = $product;
 
-                // Get product locations
-                $location_terms = wp_get_object_terms($product_id, 'mulopimfwc_store_location');
-                if (!is_wp_error($location_terms)) {
-                    $location_terms = $this->filter_location_terms_for_user($location_terms);
-                }
-
-                // Get product type
-                $product_type = $product->get_type();
-                $product_types = wc_get_product_types();
-                $type_label = isset($product_types[$product_type]) ? $product_types[$product_type] : ucfirst($product_type);
-
-                $sku = (string) $product->get_sku();
-                $categories_list = $this->get_product_term_list($product_id, 'product_cat');
-                $tags_list = $this->get_product_term_list($product_id, 'product_tag');
-                $brands_list = $this->get_product_term_list($product_id, $brand_taxonomy);
-
-                $short_description = wp_trim_words(wp_strip_all_tags($product->get_short_description()), 20, '...');
-                $description = wp_trim_words(wp_strip_all_tags($product->get_description()), 30, '...');
-
-                $featured = $product->is_featured();
-
-                $dimensions_output = [];
-                if ($product->has_weight()) {
-                    $weight = $product->get_weight();
-                    $weight_unit = get_option('woocommerce_weight_unit');
-                    $dimensions_output[] = esc_html__('Weight:', 'multi-location-product-and-inventory-management') . ' ' . esc_html($weight . ($weight_unit ? ' ' . $weight_unit : ''));
-                }
-                if ($product->has_dimensions()) {
-                    $length = $product->get_length();
-                    $width = $product->get_width();
-                    $height = $product->get_height();
-                    $dimension_unit = get_option('woocommerce_dimension_unit');
-                    $size = trim($length . ' x ' . $width . ' x ' . $height);
-                    if ($size !== '') {
-                        if ($dimension_unit) {
-                            $size .= ' ' . $dimension_unit;
-                        }
-                        $dimensions_output[] = esc_html__('Size:', 'multi-location-product-and-inventory-management') . ' ' . esc_html($size);
+                if ($product->get_type() === 'variable') {
+                    $variation_ids = array_map('intval', (array) $product->get_children());
+                    $variation_ids_by_product[$product_id] = $variation_ids;
+                    if (!empty($variation_ids)) {
+                        $all_variation_ids = array_merge($all_variation_ids, $variation_ids);
                     }
                 }
-                $dimensions = !empty($dimensions_output) ? implode('<br>', $dimensions_output) : '';
+            }
 
-                $date = get_the_date(get_option('date_format'), $product_id);
+            $all_variation_ids = array_values(array_unique($all_variation_ids));
+            if (!empty($all_variation_ids)) {
+                update_meta_cache('post', $all_variation_ids);
+            }
 
-                // Handle variable products
-                if ($product_type === 'variable') {
-                    $variations = [];
-                    $available_variations = $product->get_available_variations();
-                    foreach ($available_variations as $variation) {
+            $meta_rows_by_post = [];
+            $get_cached_meta = static function ($post_id, $meta_key) use (&$meta_rows_by_post) {
+                $post_id = (int) $post_id;
+                $meta_key = (string) $meta_key;
+                if ($post_id <= 0 || $meta_key === '') {
+                    return '';
+                }
+
+                if (!isset($meta_rows_by_post[$post_id])) {
+                    $meta_rows_by_post[$post_id] = get_post_meta($post_id);
+                }
+
+                if (!isset($meta_rows_by_post[$post_id][$meta_key][0])) {
+                    return '';
+                }
+
+                return maybe_unserialize($meta_rows_by_post[$post_id][$meta_key][0]);
+            };
+
+            $location_term_lookup = [];
+            global $mulopimfwc_locations;
+            if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
+                $filtered_locations = $this->filter_location_terms_for_user($mulopimfwc_locations);
+                foreach ($filtered_locations as $location_term) {
+                    $location_term_lookup[(int) $location_term->term_id] = $location_term;
+                }
+            }
+            foreach ($location_terms_by_product as $location_terms) {
+                foreach ($location_terms as $location_term) {
+                    $location_term_lookup[(int) $location_term->term_id] = $location_term;
+                }
+            }
+
+            foreach ($posts as $post) {
+                $product_id = isset($post->ID) ? (int) $post->ID : 0;
+                if ($product_id <= 0 || !isset($products_by_id[$product_id])) {
+                    continue;
+                }
+
+                $product = $products_by_id[$product_id];
+                $post_status = isset($post->post_status) ? (string) $post->post_status : get_post_status($product_id);
+
+                $thumbnail = $product->get_image('thumbnail', ['class' => 'product-thumbnail']);
+                $raw_location_terms = isset($location_terms_by_product[$product_id]) && is_array($location_terms_by_product[$product_id])
+                    ? $location_terms_by_product[$product_id]
+                    : [];
+                $location_terms = $this->filter_location_terms_for_user($raw_location_terms);
+
+                $product_type = $product->get_type();
+                $type_label = isset($product_types[$product_type]) ? $product_types[$product_type] : ucfirst($product_type);
+
+                $variations = [];
+                $variation_ids = isset($variation_ids_by_product[$product_id]) ? $variation_ids_by_product[$product_id] : [];
+                if ($show_modern_variations && $product_type === 'variable' && !empty($variation_ids)) {
+                    foreach ($variation_ids as $variation_id) {
+                        $variation_product = wc_get_product($variation_id);
+                        if (!$variation_product) {
+                            continue;
+                        }
+
+                        $variation_attributes = [];
+                        foreach ((array) $variation_product->get_attributes() as $attribute_key => $attribute_value) {
+                            $normalized_attribute_key = strpos((string) $attribute_key, 'attribute_') === 0
+                                ? (string) $attribute_key
+                                : 'attribute_' . (string) $attribute_key;
+                            $variation_attributes[$normalized_attribute_key] = $attribute_value;
+                        }
+
+                        $variation_stock_quantity = $variation_product->get_stock_quantity();
                         $variations[] = [
-                            'id' => $variation['variation_id'],
-                            'attributes' => $variation['attributes'],
-                            'price' => $variation['display_price'],
-                            'stock' => $variation['is_in_stock'] ? $variation['max_qty'] : 0,
+                            'id' => $variation_id,
+                            'attributes' => $variation_attributes,
+                            'price' => $variation_product->get_price(),
+                            'stock' => $variation_product->is_in_stock()
+                                ? (is_numeric($variation_stock_quantity) ? (int) $variation_stock_quantity : 0)
+                                : 0,
                         ];
                     }
                 }
 
-                // Collect all product data for quick edit popup
-                $product_data = [
+                $item = [
                     'id' => $product_id,
-                    'name' => $product->get_name(),
+                    'title' => $product->get_name(),
+                    'post_status' => $post_status,
+                    'image' => $thumbnail,
+                    'location_terms' => $location_terms,
                     'type' => $product_type,
-                    'product_type' => $product_type, // Also include as product_type for JavaScript compatibility
-                    'default' => [
-                        'manage_stock' => $product->get_manage_stock() ? 'yes' : 'no',
-                        'stock_quantity' => $product->get_stock_quantity(),
-                        'regular_price' => $product->get_regular_price(),
-                        'sale_price' => $product->get_sale_price(),
-                        'backorders' => $product->get_backorders(),
-                        'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
-                        'purchase_quantity' => get_post_meta($product_id, '_purchase_quantity', true),
-                    ],
-                    'locations' => [],
-                    'variations' => [],
+                    'type_label' => $type_label,
+                    'variations' => ($show_modern_variations && $product_type === 'variable') ? $variations : [],
                 ];
 
-                // Get only assigned/activated locations data for this product
-                $assigned_location_ids = [];
-                if (!is_wp_error($location_terms) && !empty($location_terms)) {
-                    $assigned_location_ids = array_map(function($term) {
-                        return $term->term_id;
-                    }, $location_terms);
+                if ($show_modern_descriptive_fields) {
+                    $item['sku'] = (string) $product->get_sku();
+                    $item['categories'] = $this->get_product_term_list($product_id, 'product_cat');
+                    $item['tags'] = $this->get_product_term_list($product_id, 'product_tag');
+                    $item['brands'] = $this->get_product_term_list($product_id, $brand_taxonomy);
+                    $item['short_description'] = wp_trim_words(wp_strip_all_tags($product->get_short_description()), 20, '...');
+                    $item['description'] = wp_trim_words(wp_strip_all_tags($product->get_description()), 30, '...');
+                    $item['featured'] = $product->is_featured();
+
+                    $dimensions_output = [];
+                    if ($product->has_weight()) {
+                        $weight = $product->get_weight();
+                        $dimensions_output[] = esc_html__('Weight:', 'multi-location-product-and-inventory-management') . ' ' . esc_html($weight . ($weight_unit ? ' ' . $weight_unit : ''));
+                    }
+                    if ($product->has_dimensions()) {
+                        $length = $product->get_length();
+                        $width = $product->get_width();
+                        $height = $product->get_height();
+                        $size = trim($length . ' x ' . $width . ' x ' . $height);
+                        if ($size !== '') {
+                            if ($dimension_unit) {
+                                $size .= ' ' . $dimension_unit;
+                            }
+                            $dimensions_output[] = esc_html__('Size:', 'multi-location-product-and-inventory-management') . ' ' . esc_html($size);
+                        }
+                    }
+                    $item['dimensions'] = !empty($dimensions_output) ? implode('<br>', $dimensions_output) : '';
+                    $item['date'] = get_the_date($date_format, $product_id);
                 }
-                
-                if (!empty($assigned_location_ids)) {
+
+                if ($include_quick_edit_data) {
+                    $assigned_location_ids = array_map('intval', (array) wp_list_pluck($location_terms, 'term_id'));
+                    $product_data = [
+                        'id' => $product_id,
+                        'name' => $product->get_name(),
+                        'type' => $product_type,
+                        'product_type' => $product_type,
+                        'default' => [
+                            'manage_stock' => $product->get_manage_stock() ? 'yes' : 'no',
+                            'stock_quantity' => $product->get_stock_quantity(),
+                            'regular_price' => $product->get_regular_price(),
+                            'sale_price' => $product->get_sale_price(),
+                            'backorders' => $product->get_backorders(),
+                            'purchase_price' => $get_cached_meta($product_id, '_purchase_price'),
+                            'purchase_quantity' => $get_cached_meta($product_id, '_purchase_quantity'),
+                        ],
+                        'locations' => [],
+                        'variations' => [],
+                    ];
+
                     foreach ($assigned_location_ids as $location_id) {
-                        $location_term = get_term($location_id, 'mulopimfwc_store_location');
-                        if (!$location_term || is_wp_error($location_term)) {
+                        if (!isset($location_term_lookup[$location_id])) {
                             continue;
                         }
-                        
+
+                        $location_term = $location_term_lookup[$location_id];
                         $product_data['locations'][] = [
                             'id' => $location_id,
                             'name' => $location_term->name,
-                            'stock' => get_post_meta($product_id, '_location_stock_' . $location_id, true),
-                            'regular_price' => get_post_meta($product_id, '_location_regular_price_' . $location_id, true),
-                            'sale_price' => get_post_meta($product_id, '_location_sale_price_' . $location_id, true),
-                            'backorders' => get_post_meta($product_id, '_location_backorders_' . $location_id, true),
+                            'stock' => $get_cached_meta($product_id, '_location_stock_' . $location_id),
+                            'regular_price' => $get_cached_meta($product_id, '_location_regular_price_' . $location_id),
+                            'sale_price' => $get_cached_meta($product_id, '_location_sale_price_' . $location_id),
+                            'backorders' => $get_cached_meta($product_id, '_location_backorders_' . $location_id),
                         ];
                     }
-                }
 
-                // Get variation data for variable products
-                if ($product_type === 'variable') {
-                    $variation_ids = $product->get_children();
-                    if (!empty($variation_ids)) {
+                    if ($product_type === 'variable' && !empty($variation_ids)) {
                         foreach ($variation_ids as $variation_id) {
-                            $variation = wc_get_product($variation_id);
-                            if (!$variation) {
+                            $variation_product = wc_get_product($variation_id);
+                            if (!$variation_product) {
                                 continue;
-                            }
-
-                            // Format attributes for display
-                            $attributes = [];
-                            foreach ($variation->get_attributes() as $key => $value) {
-                                $attributes[$key] = $value;
                             }
 
                             $variation_data = [
                                 'id' => $variation_id,
-                                'attributes' => $attributes,
+                                'attributes' => (array) $variation_product->get_attributes(),
                                 'default' => [
-                                    'manage_stock' => $variation->get_manage_stock() ? 'yes' : 'no',
-                                    'stock_quantity' => $variation->get_stock_quantity(),
-                                    'regular_price' => $variation->get_regular_price(),
-                                    'sale_price' => $variation->get_sale_price(),
-                                    'backorders' => $variation->get_backorders(),
-                                    'purchase_price' => get_post_meta($variation_id, '_purchase_price', true),
-                                    'purchase_quantity' => get_post_meta($variation_id, '_purchase_quantity', true),
+                                    'manage_stock' => $variation_product->get_manage_stock() ? 'yes' : 'no',
+                                    'stock_quantity' => $variation_product->get_stock_quantity(),
+                                    'regular_price' => $variation_product->get_regular_price(),
+                                    'sale_price' => $variation_product->get_sale_price(),
+                                    'backorders' => $variation_product->get_backorders(),
+                                    'purchase_price' => $get_cached_meta($variation_id, '_purchase_price'),
+                                    'purchase_quantity' => $get_cached_meta($variation_id, '_purchase_quantity'),
                                 ],
                                 'locations' => [],
                             ];
 
-                            // Get location data for variation - only assigned locations
-                            if (!empty($assigned_location_ids)) {
-                                foreach ($assigned_location_ids as $location_id) {
-                                    $location_term = get_term($location_id, 'mulopimfwc_store_location');
-                                    if (!$location_term || is_wp_error($location_term)) {
-                                        continue;
-                                    }
-                                    
-                                    $variation_data['locations'][] = [
-                                        'id' => $location_id,
-                                        'name' => $location_term->name,
-                                        'stock' => get_post_meta($variation_id, '_location_stock_' . $location_id, true),
-                                        'regular_price' => get_post_meta($variation_id, '_location_regular_price_' . $location_id, true),
-                                        'sale_price' => get_post_meta($variation_id, '_location_sale_price_' . $location_id, true),
-                                        'backorders' => get_post_meta($variation_id, '_location_backorders_' . $location_id, true),
-                                    ];
+                            foreach ($assigned_location_ids as $location_id) {
+                                if (!isset($location_term_lookup[$location_id])) {
+                                    continue;
                                 }
+
+                                $location_term = $location_term_lookup[$location_id];
+                                $variation_data['locations'][] = [
+                                    'id' => $location_id,
+                                    'name' => $location_term->name,
+                                    'stock' => $get_cached_meta($variation_id, '_location_stock_' . $location_id),
+                                    'regular_price' => $get_cached_meta($variation_id, '_location_regular_price_' . $location_id),
+                                    'sale_price' => $get_cached_meta($variation_id, '_location_sale_price_' . $location_id),
+                                    'backorders' => $get_cached_meta($variation_id, '_location_backorders_' . $location_id),
+                                ];
                             }
 
                             $product_data['variations'][] = $variation_data;
                         }
                     }
+
+                    $item['quick_edit_data'] = $product_data;
                 }
 
-                $this->items[] = [
-                    'id' => $product_id,
-                    'title' => $product->get_name(),
-                    'post_status' => $post_status,
-                    'image' => $thumbnail,
-                    'location_terms' => is_wp_error($location_terms) ? [] : $location_terms,
-                    'type' => $product_type,
-                    'type_label' => $type_label,
-                    'sku' => $sku,
-                    'categories' => $categories_list,
-                    'tags' => $tags_list,
-                    'brands' => $brands_list,
-                    'short_description' => $short_description,
-                    'description' => $description,
-                    'featured' => $featured,
-                    'dimensions' => $dimensions,
-                    'date' => $date,
-                    'variations' => $product_type === 'variable' ? $variations : [],
-                    'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
-                    'quick_edit_data' => $product_data, // Store complete data for popup
-                ];
+                $this->items[] = $item;
             }
-            wp_reset_postdata();
         }
 
         $total_items = $query->found_posts;

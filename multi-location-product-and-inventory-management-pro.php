@@ -5304,19 +5304,70 @@ if (!function_exists('mulopimfwc_get_values')) {
                 wp_send_json_error(['message' => __('Product not found.', 'multi-location-product-and-inventory-management')]);
             }
 
+            if (!current_user_can('edit_post', $product_id)) {
+                wp_send_json_error(['message' => __('You do not have permission to edit this product.', 'multi-location-product-and-inventory-management')]);
+            }
+
             global $mulopimfwc_locations;
             $available_locations = [];
             if (!is_wp_error($mulopimfwc_locations) && !empty($mulopimfwc_locations)) {
                 $available_locations = $this->filter_locations_for_manager($mulopimfwc_locations);
             }
+
+            $assigned_locations = wp_get_object_terms($product_id, 'mulopimfwc_store_location');
+            if (is_wp_error($assigned_locations)) {
+                $assigned_locations = [];
+            } else {
+                $assigned_locations = $this->filter_locations_for_manager($assigned_locations);
+            }
+
+            $assigned_location_ids = array_map('intval', (array) wp_list_pluck($assigned_locations, 'term_id'));
+            $assigned_location_lookup = array_fill_keys($assigned_location_ids, true);
+            $location_lookup = [];
+            foreach ($available_locations as $location_term) {
+                $location_lookup[(int) $location_term->term_id] = $location_term;
+            }
+            foreach ($assigned_locations as $location_term) {
+                $location_lookup[(int) $location_term->term_id] = $location_term;
+            }
+
             $product_type = $product->get_type();
+            $variation_ids = $product_type === 'variable' ? array_map('intval', (array) $product->get_children()) : [];
+            $meta_cache_ids = array_values(array_unique(array_merge([$product_id], $variation_ids)));
+            if (!empty($meta_cache_ids)) {
+                update_meta_cache('post', $meta_cache_ids);
+            }
+
+            $meta_rows_by_post = [];
+            $get_cached_meta = static function ($post_id, $meta_key) use (&$meta_rows_by_post) {
+                $post_id = (int) $post_id;
+                $meta_key = (string) $meta_key;
+                if ($post_id <= 0 || $meta_key === '') {
+                    return '';
+                }
+
+                if (!isset($meta_rows_by_post[$post_id])) {
+                    $meta_rows_by_post[$post_id] = get_post_meta($post_id);
+                }
+
+                if (!isset($meta_rows_by_post[$post_id][$meta_key][0])) {
+                    return '';
+                }
+
+                return maybe_unserialize($meta_rows_by_post[$post_id][$meta_key][0]);
+            };
+
             $data = [
                 'product_id' => $product_id,
+                'id' => $product_id,
                 'product_name' => $product->get_name(),
+                'name' => $product->get_name(),
                 'product_type' => $product_type,
+                'type' => $product_type,
                 'default' => [],
                 'locations' => [],
                 'variations' => [],
+                'all_locations' => [],
             ];
 
             // Get default product data
@@ -5326,152 +5377,82 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'regular_price' => $product->get_regular_price(),
                 'sale_price' => $product->get_sale_price(),
                 'backorders' => $product->get_backorders(),
-                'purchase_price' => get_post_meta($product_id, '_purchase_price', true),
-                'purchase_quantity' => get_post_meta($product_id, '_purchase_quantity', true),
+                'purchase_price' => $get_cached_meta($product_id, '_purchase_price'),
+                'purchase_quantity' => $get_cached_meta($product_id, '_purchase_quantity'),
             ];
 
-            // Get location data - batch meta queries for better performance
             if (!empty($available_locations)) {
-                $location_ids = array_map(function ($loc) {
-                    return $loc->term_id;
-                }, $available_locations);
-
-                // Batch fetch all meta keys at once
-                $meta_keys = [];
-                foreach ($location_ids as $loc_id) {
-                    $meta_keys[] = '_location_stock_' . $loc_id;
-                    $meta_keys[] = '_location_regular_price_' . $loc_id;
-                    $meta_keys[] = '_location_sale_price_' . $loc_id;
-                    $meta_keys[] = '_location_backorders_' . $loc_id;
-                }
-
-                // Get all meta in one query - optimized batch query
-                global $wpdb;
-                if (!empty($meta_keys)) {
-                    $escaped_keys = array_map(function ($key) use ($wpdb) {
-                        return $wpdb->prepare('%s', $key);
-                    }, $meta_keys);
-                    $meta_query = $wpdb->prepare(
-                        "SELECT meta_key, meta_value FROM {$wpdb->postmeta} 
-                        WHERE post_id = %d AND meta_key IN (" . implode(',', $escaped_keys) . ")",
-                        $product_id
-                    );
-                    $meta_results = $wpdb->get_results($meta_query);
-                    $meta_values = [];
-                    foreach ($meta_results as $row) {
-                        $meta_values[$row->meta_key] = $row->meta_value;
-                    }
-                } else {
-                    $meta_values = [];
-                }
-
-                // Build location data from cached meta
                 foreach ($available_locations as $location) {
-                    $location_data = [
-                        'id' => $location->term_id,
-                        'name' => $location->name,
-                        'stock' => isset($meta_values['_location_stock_' . $location->term_id]) ? $meta_values['_location_stock_' . $location->term_id] : '',
-                        'regular_price' => isset($meta_values['_location_regular_price_' . $location->term_id]) ? $meta_values['_location_regular_price_' . $location->term_id] : '',
-                        'sale_price' => isset($meta_values['_location_sale_price_' . $location->term_id]) ? $meta_values['_location_sale_price_' . $location->term_id] : '',
-                        'backorders' => isset($meta_values['_location_backorders_' . $location->term_id]) ? $meta_values['_location_backorders_' . $location->term_id] : '',
+                    $location_id = (int) $location->term_id;
+                    $data['all_locations'][] = [
+                        'id' => $location_id,
+                        'name' => (string) $location->name,
+                        'parent' => (int) $location->parent,
+                        'selected' => isset($assigned_location_lookup[$location_id]),
                     ];
-                    $data['locations'][] = $location_data;
                 }
             }
 
-            // Get variation data for variable products - optimized
-            if ($product_type === 'variable') {
-                // Get variation IDs directly without loading full objects
-                $variation_ids = $product->get_children();
+            foreach ($assigned_location_ids as $location_id) {
+                if (!isset($location_lookup[$location_id])) {
+                    continue;
+                }
 
-                if (!empty($variation_ids)) {
-                    // Get location IDs if available
-                    $loc_ids_for_variations = [];
-                    if (!empty($available_locations)) {
-                        $loc_ids_for_variations = array_map(function ($loc) {
-                            return $loc->term_id;
-                        }, $available_locations);
+                $location = $location_lookup[$location_id];
+                $data['locations'][] = [
+                    'id' => $location_id,
+                    'name' => (string) $location->name,
+                    'stock' => $get_cached_meta($product_id, '_location_stock_' . $location_id),
+                    'regular_price' => $get_cached_meta($product_id, '_location_regular_price_' . $location_id),
+                    'sale_price' => $get_cached_meta($product_id, '_location_sale_price_' . $location_id),
+                    'backorders' => $get_cached_meta($product_id, '_location_backorders_' . $location_id),
+                ];
+            }
+
+            if ($product_type === 'variable' && !empty($variation_ids)) {
+                foreach ($variation_ids as $variation_id) {
+                    $variation = wc_get_product($variation_id);
+                    if (!$variation) {
+                        continue;
                     }
 
-                    // Batch load all variation meta at once
-                    global $wpdb;
-                    $variation_meta_keys = ['_stock', '_regular_price', '_sale_price', '_backorders', '_purchase_price', '_purchase_quantity'];
-                    foreach ($loc_ids_for_variations as $loc_id) {
-                        $variation_meta_keys[] = '_location_stock_' . $loc_id;
-                        $variation_meta_keys[] = '_location_regular_price_' . $loc_id;
-                        $variation_meta_keys[] = '_location_sale_price_' . $loc_id;
-                        $variation_meta_keys[] = '_location_backorders_' . $loc_id;
+                    $attributes = [];
+                    foreach ((array) $variation->get_attributes() as $key => $value) {
+                        $attributes[$key] = $value;
                     }
 
-                    if (!empty($variation_meta_keys)) {
-                        $id_placeholders = implode(',', array_map('intval', $variation_ids));
-                        $prepared_meta_keys = array_map(function ($key) use ($wpdb) {
-                            return $wpdb->prepare('%s', $key);
-                        }, $variation_meta_keys);
-                        $meta_query = $wpdb->prepare(
-                            "SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} 
-                            WHERE post_id IN ($id_placeholders) AND meta_key IN (" . implode(',', $prepared_meta_keys) . ")"
-                        );
-                        $all_variation_meta = $wpdb->get_results($meta_query);
+                    $variation_info = [
+                        'id' => $variation_id,
+                        'attributes' => $attributes,
+                        'default' => [
+                            'manage_stock' => $variation->get_manage_stock() ? 'yes' : 'no',
+                            'stock_quantity' => $variation->get_stock_quantity(),
+                            'regular_price' => $variation->get_regular_price(),
+                            'sale_price' => $variation->get_sale_price(),
+                            'backorders' => $variation->get_backorders(),
+                            'purchase_price' => $get_cached_meta($variation_id, '_purchase_price'),
+                            'purchase_quantity' => $get_cached_meta($variation_id, '_purchase_quantity'),
+                        ],
+                        'locations' => [],
+                    ];
 
-                        // Organize meta by variation ID
-                        $variation_meta_map = [];
-                        foreach ($all_variation_meta as $meta) {
-                            if (!isset($variation_meta_map[$meta->post_id])) {
-                                $variation_meta_map[$meta->post_id] = [];
-                            }
-                            $variation_meta_map[$meta->post_id][$meta->meta_key] = $meta->meta_value;
-                        }
-                    } else {
-                        $variation_meta_map = [];
-                    }
-
-                    // Get variation attributes efficiently
-                    foreach ($variation_ids as $variation_id) {
-                        $variation = wc_get_product($variation_id);
-                        if (!$variation) {
+                    foreach ($assigned_location_ids as $location_id) {
+                        if (!isset($location_lookup[$location_id])) {
                             continue;
                         }
 
-                        $meta = isset($variation_meta_map[$variation_id]) ? $variation_meta_map[$variation_id] : [];
-
-                        // Get attributes
-                        $attributes = [];
-                        foreach ($variation->get_attributes() as $key => $value) {
-                            $attributes[$key] = $value;
-                        }
-
-                        $variation_info = [
-                            'id' => $variation_id,
-                            'attributes' => $attributes,
-                            'default' => [
-                                'manage_stock' => $variation->get_manage_stock() ? 'yes' : 'no',
-                                'stock_quantity' => isset($meta['_stock']) ? $meta['_stock'] : $variation->get_stock_quantity(),
-                                'regular_price' => isset($meta['_regular_price']) ? $meta['_regular_price'] : $variation->get_regular_price(),
-                                'sale_price' => isset($meta['_sale_price']) ? $meta['_sale_price'] : $variation->get_sale_price(),
-                                'backorders' => isset($meta['_backorders']) ? $meta['_backorders'] : $variation->get_backorders(),
-                                'purchase_price' => isset($meta['_purchase_price']) ? $meta['_purchase_price'] : '',
-                                'purchase_quantity' => isset($meta['_purchase_quantity']) ? $meta['_purchase_quantity'] : '',
-                            ],
-                            'locations' => [],
+                        $location = $location_lookup[$location_id];
+                        $variation_info['locations'][] = [
+                            'id' => $location_id,
+                            'name' => (string) $location->name,
+                            'stock' => $get_cached_meta($variation_id, '_location_stock_' . $location_id),
+                            'regular_price' => $get_cached_meta($variation_id, '_location_regular_price_' . $location_id),
+                            'sale_price' => $get_cached_meta($variation_id, '_location_sale_price_' . $location_id),
+                            'backorders' => $get_cached_meta($variation_id, '_location_backorders_' . $location_id),
                         ];
-
-                        // Get location data for variation from cached meta
-                        if (!empty($available_locations)) {
-                            foreach ($available_locations as $location) {
-                                $variation_info['locations'][] = [
-                                    'id' => $location->term_id,
-                                    'name' => $location->name,
-                                    'stock' => isset($meta['_location_stock_' . $location->term_id]) ? $meta['_location_stock_' . $location->term_id] : '',
-                                    'regular_price' => isset($meta['_location_regular_price_' . $location->term_id]) ? $meta['_location_regular_price_' . $location->term_id] : '',
-                                    'sale_price' => isset($meta['_location_sale_price_' . $location->term_id]) ? $meta['_location_sale_price_' . $location->term_id] : '',
-                                    'backorders' => isset($meta['_location_backorders_' . $location->term_id]) ? $meta['_location_backorders_' . $location->term_id] : '',
-                                ];
-                            }
-                        }
-
-                        $data['variations'][] = $variation_info;
                     }
+
+                    $data['variations'][] = $variation_info;
                 }
             }
 
