@@ -145,6 +145,36 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return implode(', ', $names);
     }
 
+    private function get_stock_central_post_statuses()
+    {
+        $post_statuses = get_post_stati(['internal' => false], 'names');
+        if (!is_array($post_statuses) || empty($post_statuses)) {
+            return ['publish', 'future', 'draft', 'pending', 'private'];
+        }
+
+        $post_statuses = array_values(array_diff($post_statuses, ['trash', 'auto-draft', 'inherit']));
+        if (empty($post_statuses)) {
+            return ['publish', 'future', 'draft', 'pending', 'private'];
+        }
+
+        return $post_statuses;
+    }
+
+    private function get_product_status_badge($post_status)
+    {
+        $status = sanitize_key((string) $post_status);
+        if ($status === '' || $status === 'publish') {
+            return '';
+        }
+
+        $status_object = get_post_status_object($status);
+        $status_label = ($status_object && !empty($status_object->label))
+            ? $status_object->label
+            : ucwords(str_replace(['-', '_'], ' ', $status));
+
+        return '<span class="mulopimfwc-product-status mulopimfwc-product-status-' . esc_attr($status) . '">' . esc_html($status_label) . '</span>';
+    }
+
     private function get_classic_locked_columns()
     {
         return [
@@ -347,10 +377,13 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      */
     public function column_title($item)
     {
+        $status_badge = $this->get_product_status_badge(isset($item['post_status']) ? $item['post_status'] : '');
+
         if (!$this->user_can_manage_products()) {
             $view_link = get_permalink($item['id']);
             $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . esc_html($item['title']) . '</a></strong>';
             $title .= '<span class="mulopimfwc-product-id"> ID: ' . esc_html($item['id']) . '</span>';
+            $title .= $status_badge;
             return $title;
         }
 
@@ -369,6 +402,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         $title = '<strong><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . esc_html($item['title']) . '</a></strong>';
         $title .= '<span class="mulopimfwc-product-id"> ID: ' . esc_html($item['id']) . '</span>';
+        $title .= $status_badge;
         $title .= '<div class="row-actions">';
         $title .= '<span class="edit"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($edit_link) . '">' . __('Edit', 'multi-location-product-and-inventory-management') . '</a> | </span>';
         $title .= '<span class="view"><a target="_blank" rel="noopener noreferrer" href="' . esc_url($view_link) . '">' . __('View', 'multi-location-product-and-inventory-management') . '</a> | </span>';
@@ -1678,7 +1712,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             'post_type' => 'product',
             'posts_per_page' => $per_page,
             'paged' => $current_page,
-            'post_status' => 'publish',
+            'post_status' => $this->get_stock_central_post_statuses(),
         ];
 
         // Add search if set
@@ -1811,6 +1845,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 if (!$product) {
                     continue;
                 }
+                $post_status = get_post_status($product_id);
 
                 // Get product thumbnail
                 $thumbnail = $product->get_image('thumbnail', ['class' => 'product-thumbnail']);
@@ -1976,6 +2011,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $this->items[] = [
                     'id' => $product_id,
                     'title' => $product->get_name(),
+                    'post_status' => $post_status,
                     'image' => $thumbnail,
                     'location_terms' => is_wp_error($location_terms) ? [] : $location_terms,
                     'type' => $product_type,
