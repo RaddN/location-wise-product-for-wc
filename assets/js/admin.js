@@ -1862,15 +1862,17 @@ jQuery(document).ready(function ($) {
             var match = fieldName.match(/locations\[(\d+)\]\[(\w+)\]/);
             if (match) {
                 var fieldType = match[2];
-                
-                // Skip stock validation for external products
-                if (fieldType === 'regular_price' && !isExternal && defaultRegularPrice > 0 && value > defaultRegularPrice) {
-                    isValid = false;
-                    errorMessage = 'Location regular price cannot be greater than default regular price (' + defaultRegularPrice + ')';
-                }
-                if (fieldType === 'sale_price' && !isExternal && defaultSalePrice > 0 && value > defaultSalePrice) {
-                    isValid = false;
-                    errorMessage = 'Location sale price cannot be greater than default sale price (' + defaultSalePrice + ')';
+
+                // Simple product location prices cannot go below purchase price.
+                if (fieldName.indexOf('variations[') === -1) {
+                    if (fieldType === 'regular_price' && defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
+                        isValid = false;
+                        errorMessage = 'Location regular price cannot be less than purchase price (' + defaultPurchasePrice + ')';
+                    }
+                    if (fieldType === 'sale_price' && defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
+                        isValid = false;
+                        errorMessage = 'Location sale price cannot be less than purchase price (' + defaultPurchasePrice + ')';
+                    }
                 }
                 // Skip stock and backorders validation for external products
                 if ((fieldType === 'stock' || fieldType === 'backorders') && isExternal) {
@@ -2155,9 +2157,9 @@ jQuery(document).ready(function ($) {
                 // Only validate simple product location prices, not variation locations
                 if (name.indexOf('variations[') === -1) {
                     var locationPrice = parseFloat($(this).val()) || 0;
-                    if (locationPrice > 0 && defaultRegularPrice > 0 && locationPrice > defaultRegularPrice) {
+                    if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
                         $(this).addClass('manage-error');
-                        showManageFieldError($(this), 'Location regular price cannot be greater than default regular price');
+                        showManageFieldError($(this), 'Location regular price cannot be less than purchase price');
                         isValid = false;
                         var $tabPanel = $(this).closest('.manage-tab-panel');
                         if ($tabPanel.length) {
@@ -2175,9 +2177,9 @@ jQuery(document).ready(function ($) {
                     // Only validate simple product location prices, not variation locations
                     if (name.indexOf('variations[') === -1) {
                         var locationPrice = parseFloat($(this).val()) || 0;
-                        if (locationPrice > 0 && defaultSalePrice > 0 && locationPrice > defaultSalePrice) {
+                        if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
                             $(this).addClass('manage-error');
-                            showManageFieldError($(this), 'Location sale price cannot be greater than default sale price');
+                            showManageFieldError($(this), 'Location sale price cannot be less than purchase price');
                             isValid = false;
                             var $tabPanel = $(this).closest('.manage-tab-panel');
                             if ($tabPanel.length) {
@@ -2267,14 +2269,13 @@ jQuery(document).ready(function ($) {
             var varMatch = $(this).attr('name').match(/variations\[(\d+)\]/);
             if (varMatch) {
                 var varId = varMatch[1];
-                var varDefaultRegularPrice = parseFloat($(this).val()) || 0;
-                var varDefaultSalePrice = parseFloat($('#manage-product-modal input[name*="variations[' + varId + '][default][sale_price]"]').val()) || 0;
+                var varDefaultPurchasePrice = parseFloat($('#manage-product-modal input[name*="variations[' + varId + '][default][purchase_price]"]').val()) || 0;
 
                 $('#manage-product-modal input[name*="variations[' + varId + '][locations]["][name*="[regular_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultRegularPrice > 0 && locPrice > varDefaultRegularPrice) {
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
                         $(this).addClass('manage-error');
-                        showManageFieldError($(this), 'Location regular price cannot be greater than variation default regular price');
+                        showManageFieldError($(this), 'Location regular price cannot be less than purchase price');
                         isValid = false;
                         var $accordion = $(this).closest('.variation-accordion');
                         if ($accordion.length) {
@@ -2289,9 +2290,9 @@ jQuery(document).ready(function ($) {
 
                 $('#manage-product-modal input[name*="variations[' + varId + '][locations]["][name*="[sale_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultSalePrice > 0 && locPrice > varDefaultSalePrice) {
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
                         $(this).addClass('manage-error');
-                        showManageFieldError($(this), 'Location sale price cannot be greater than variation default sale price');
+                        showManageFieldError($(this), 'Location sale price cannot be less than purchase price');
                         isValid = false;
                         var $accordion = $(this).closest('.variation-accordion');
                         if ($accordion.length) {
@@ -2840,17 +2841,15 @@ jQuery(document).ready(function ($) {
             var match = fieldName.match(/locations\[(\d+)\]\[(\w+)\]/);
             if (match) {
                 var fieldType = match[2];
-                
-                if (fieldType === 'regular_price' || fieldType === 'sale_price') {
+
+                // Simple product location prices cannot go below purchase price.
+                if (fieldName.indexOf('variations[') === -1 && (fieldType === 'regular_price' || fieldType === 'sale_price')) {
                     var locationPrice = value;
-                    // Location price can't be greater than default price
-                    if (fieldType === 'regular_price' && defaultRegularPrice > 0 && locationPrice > defaultRegularPrice) {
+                    if (defaultPurchasePrice > 0 && locationPrice > 0 && locationPrice < defaultPurchasePrice) {
                         isValid = false;
-                        errorMessage = 'Location regular price cannot be greater than default regular price (' + defaultRegularPrice + ')';
-                    }
-                    if (fieldType === 'sale_price' && defaultSalePrice > 0 && locationPrice > defaultSalePrice) {
-                        isValid = false;
-                        errorMessage = 'Location sale price cannot be greater than default sale price (' + defaultSalePrice + ')';
+                        errorMessage = fieldType === 'regular_price'
+                            ? 'Location regular price cannot be less than purchase price (' + defaultPurchasePrice + ')'
+                            : 'Location sale price cannot be less than purchase price (' + defaultPurchasePrice + ')';
                     }
                 }
             }
@@ -2971,18 +2970,18 @@ jQuery(document).ready(function ($) {
         // Validate location prices
         $('input[name^="locations["][name$="[regular_price]"]').each(function() {
             var locationPrice = parseFloat($(this).val()) || 0;
-            if (locationPrice > 0 && defaultRegularPrice > 0 && locationPrice > defaultRegularPrice) {
+            if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
                 $(this).addClass('quick-edit-error');
-                showFieldError($(this), 'Location regular price cannot be greater than default regular price');
+                showFieldError($(this), 'Location regular price cannot be less than purchase price');
                 isValid = false;
             }
         });
 
         $('input[name^="locations["][name$="[sale_price]"]').each(function() {
             var locationPrice = parseFloat($(this).val()) || 0;
-            if (locationPrice > 0 && defaultSalePrice > 0 && locationPrice > defaultSalePrice) {
+            if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
                 $(this).addClass('quick-edit-error');
-                showFieldError($(this), 'Location sale price cannot be greater than default sale price');
+                showFieldError($(this), 'Location sale price cannot be less than purchase price');
                 isValid = false;
             }
         });
@@ -2999,15 +2998,14 @@ jQuery(document).ready(function ($) {
             var varMatch = $(this).attr('name').match(/variations\[(\d+)\]/);
             if (varMatch) {
                 var varId = varMatch[1];
-                var varDefaultRegularPrice = parseFloat($(this).val()) || 0;
-                var varDefaultSalePrice = parseFloat($('input[name="variations[' + varId + '][default][sale_price]"]').val()) || 0;
+                var varDefaultPurchasePrice = parseFloat($('input[name="variations[' + varId + '][default][purchase_price]"]').val()) || 0;
 
                 // Check variation location regular prices
                 $('#quick-edit-form input[name^="variations[' + varId + '][locations]["][name$="[regular_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultRegularPrice > 0 && locPrice > varDefaultRegularPrice) {
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
                         $(this).addClass('quick-edit-error');
-                        showFieldError($(this), 'Location regular price cannot be greater than variation default regular price');
+                        showFieldError($(this), 'Location regular price cannot be less than purchase price');
                         isValid = false;
                     }
                 });
@@ -3015,9 +3013,9 @@ jQuery(document).ready(function ($) {
                 // Check variation location sale prices
                 $('#quick-edit-form input[name^="variations[' + varId + '][locations]["][name$="[sale_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultSalePrice > 0 && locPrice > varDefaultSalePrice) {
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
                         $(this).addClass('quick-edit-error');
-                        showFieldError($(this), 'Location sale price cannot be greater than variation default sale price');
+                        showFieldError($(this), 'Location sale price cannot be less than purchase price');
                         isValid = false;
                     }
                 });

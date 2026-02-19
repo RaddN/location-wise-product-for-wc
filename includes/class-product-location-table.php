@@ -1345,18 +1345,36 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $output .= '<span class="accordion-icon">' . ($is_first ? '-' : '+') . '</span>';
                 $output .= '</div>';
                 $output .= '<div class="accordion-content' . ($is_first ? ' accordion-open' : '') . '" id="' . esc_attr($accordion_id) . '">';
+                $default_regular_price = $variation['regular_price'] ?? '';
+                $default_sale_price = $variation['sale_price'] ?? '';
+                $default_active_price = $variation['price'] ?? '';
                 if ($show_default) {
                     $output .= '<div class="location-price-item">';
                     $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                    $output .= '<span class="price-value">' . wc_price($variation['price']) . '</span>';
+                    $output .= $this->format_price_by_location_display($default_regular_price, $default_sale_price, $default_active_price);
                     $output .= '</div>';
                 }
                 if (!empty($location_terms)) {
                     foreach ($location_terms as $location) {
-                        $price = get_post_meta($variation['id'], '_location_sale_price_' . $location->term_id, true);
+                        $location_regular_price = get_post_meta($variation['id'], '_location_regular_price_' . $location->term_id, true);
+                        $location_sale_price = get_post_meta($variation['id'], '_location_sale_price_' . $location->term_id, true);
+
+                        if ($this->has_positive_price($location_sale_price)) {
+                            $effective_regular_price = $this->has_positive_price($location_regular_price)
+                                ? $location_regular_price
+                                : $default_regular_price;
+                            $effective_sale_price = $location_sale_price;
+                        } elseif ($this->has_positive_price($location_regular_price)) {
+                            $effective_regular_price = $location_regular_price;
+                            $effective_sale_price = '';
+                        } else {
+                            $effective_regular_price = $default_regular_price;
+                            $effective_sale_price = $default_sale_price;
+                        }
+
                         $output .= '<div class="location-price-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                        $output .= '<span class="price-value">' . (!empty($price) ? wc_price($price) : wc_price($variation['price'])) . '</span>';
+                        $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_active_price);
                         $output .= '</div>';
                     }
                 }
@@ -1365,25 +1383,106 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $variation_index++;
             }
         } else {
+            $default_regular_price = get_post_meta($item['id'], '_regular_price', true);
+            $default_sale_price = get_post_meta($item['id'], '_sale_price', true);
             $default_price = get_post_meta($item['id'], "_price", true);
             if ($show_default) {
                 $output .= '<div class="location-price-item">';
                 $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                $output .= '<span class="price-value">' . wc_price($default_price) . '</span>';
+                $output .= $this->format_price_by_location_display($default_regular_price, $default_sale_price, $default_price);
                 $output .= '</div>';
             }
             if (!empty($location_terms)) {
                 foreach ($location_terms as $location) {
-                    $price = get_post_meta($item['id'], '_location_sale_price_' . $location->term_id, true);
+                    $location_regular_price = get_post_meta($item['id'], '_location_regular_price_' . $location->term_id, true);
+                    $location_sale_price = get_post_meta($item['id'], '_location_sale_price_' . $location->term_id, true);
+
+                    if ($this->has_positive_price($location_sale_price)) {
+                        $effective_regular_price = $this->has_positive_price($location_regular_price)
+                            ? $location_regular_price
+                            : $default_regular_price;
+                        $effective_sale_price = $location_sale_price;
+                    } elseif ($this->has_positive_price($location_regular_price)) {
+                        $effective_regular_price = $location_regular_price;
+                        $effective_sale_price = '';
+                    } else {
+                        $effective_regular_price = $default_regular_price;
+                        $effective_sale_price = $default_sale_price;
+                    }
+
                     $output .= '<div class="location-price-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                    $output .= '<span class="price-value">' . (!empty($price) ? wc_price($price) : wc_price($default_price)) . '</span>';
+                    $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_price);
                     $output .= '</div>';
                 }
             }
         }
         $output .= '</div>';
         return $output;
+    }
+
+    /**
+     * Normalize a stored price-like value to float.
+     *
+     * @param mixed $value
+     * @return float
+     */
+    private function normalize_location_price_value($value)
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        if (function_exists('wc_format_decimal')) {
+            $formatted = wc_format_decimal($value);
+            if (is_numeric($formatted)) {
+                return (float) $formatted;
+            }
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Determine whether a price value is a positive number.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    private function has_positive_price($value)
+    {
+        return $this->normalize_location_price_value($value) > 0;
+    }
+
+    /**
+     * Format price display so sale price shows with struck-through regular price.
+     *
+     * @param mixed $regular_price
+     * @param mixed $sale_price
+     * @param mixed $fallback_price
+     * @return string
+     */
+    private function format_price_by_location_display($regular_price, $sale_price, $fallback_price = '')
+    {
+        $regular = $this->normalize_location_price_value($regular_price);
+        $sale = $this->normalize_location_price_value($sale_price);
+        $fallback = $this->normalize_location_price_value($fallback_price);
+
+        if ($sale > 0) {
+            $base = $regular > 0 ? $regular : $fallback;
+            if ($base > 0 && abs($base - $sale) > 0.0001) {
+                return '<span class="price-value"><del>' . wc_price($base) . '</del> <ins>' . wc_price($sale) . '</ins></span>';
+            }
+
+            return '<span class="price-value">' . wc_price($sale) . '</span>';
+        }
+
+        $display = $regular > 0 ? $regular : $fallback;
+        return '<span class="price-value">' . wc_price($display) . '</span>';
     }
 
     /**
@@ -2021,6 +2120,8 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         $variations[] = [
                             'id' => $variation_id,
                             'attributes' => $variation_attributes,
+                            'regular_price' => $variation_product->get_regular_price(),
+                            'sale_price' => $variation_product->get_sale_price(),
                             'price' => $variation_product->get_price(),
                             'stock' => $variation_product->is_in_stock()
                                 ? (is_numeric($variation_stock_quantity) ? (int) $variation_stock_quantity : 0)

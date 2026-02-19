@@ -219,6 +219,17 @@
   margin-right: 10px;
 }
 
+.location-price-container .price-value del {
+  color: #9ca3af;
+  margin-right: 4px;
+}
+
+.location-price-container .price-value ins {
+  color: #111827;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .product-locations {
   display: flex;
   flex-wrap: wrap;

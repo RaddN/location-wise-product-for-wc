@@ -1677,10 +1677,6 @@ class mulopimfwc_Stock_Central
                             purchaseQtyVsStock: '<?php echo esc_js(__('Purchase quantity cannot be less than stock quantity', 'multi-location-product-and-inventory-management')); ?>',
                             totalLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds default stock', 'multi-location-product-and-inventory-management')); ?>',
                             totalVariationLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds variation default stock', 'multi-location-product-and-inventory-management')); ?>',
-                            locationRegularVsDefault: '<?php echo esc_js(__('Location regular price cannot be greater than default regular price', 'multi-location-product-and-inventory-management')); ?>',
-                            locationSaleVsDefault: '<?php echo esc_js(__('Location sale price cannot be greater than default sale price', 'multi-location-product-and-inventory-management')); ?>',
-                            locationRegularVsVariation: '<?php echo esc_js(__('Location regular price cannot be greater than variation default regular price', 'multi-location-product-and-inventory-management')); ?>',
-                            locationSaleVsVariation: '<?php echo esc_js(__('Location sale price cannot be greater than variation default sale price', 'multi-location-product-and-inventory-management')); ?>',
                             generic: '<?php echo esc_js(__('Please fix the validation errors before saving.', 'multi-location-product-and-inventory-management')); ?>'
                         };
 
@@ -1770,13 +1766,6 @@ class mulopimfwc_Stock_Central
                                     addRowValidationError(errors, $locationSaleField, messages.locationSaleVsLocationRegular);
                                 }
 
-                                if (locationRegularPrice > 0 && defaultRegularPrice > 0 && locationRegularPrice > defaultRegularPrice) {
-                                    addRowValidationError(errors, $locationRegularField, messages.locationRegularVsDefault);
-                                }
-
-                                if (locationSalePrice > 0 && defaultSalePrice > 0 && locationSalePrice > defaultSalePrice) {
-                                    addRowValidationError(errors, $locationSaleField, messages.locationSaleVsDefault);
-                                }
                             });
                         }
 
@@ -1837,14 +1826,6 @@ class mulopimfwc_Stock_Central
 
                                     if (variationLocationSalePrice > 0 && variationLocationRegularPrice > 0 && variationLocationSalePrice >= variationLocationRegularPrice) {
                                         addRowValidationError(errors, $variationLocationSaleField, messages.locationSaleVsLocationRegular);
-                                    }
-
-                                    if (variationLocationRegularPrice > 0 && variationRegularPrice > 0 && variationLocationRegularPrice > variationRegularPrice) {
-                                        addRowValidationError(errors, $variationLocationRegularField, messages.locationRegularVsVariation);
-                                    }
-
-                                    if (variationLocationSalePrice > 0 && variationSalePrice > 0 && variationLocationSalePrice > variationSalePrice) {
-                                        addRowValidationError(errors, $variationLocationSaleField, messages.locationSaleVsVariation);
                                     }
 
                                     if (variationManageStockEnabled && variationLocationStock > 0) {

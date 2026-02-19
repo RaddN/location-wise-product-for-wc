@@ -2642,8 +2642,6 @@ class MULOPIMFWC_Dashboard
         $limit_clause = '';
         if ($limit > 0) {
             $limit_clause = ' LIMIT %d OFFSET %d';
-            $prepare_params[] = $limit;
-            $prepare_params[] = $offset;
         }
 
         $query = "
@@ -2678,6 +2676,11 @@ class MULOPIMFWC_Dashboard
         }
 
         $prepare_params[] = $stock_meta_key;
+
+        if ($limit > 0) {
+            $prepare_params[] = $limit;
+            $prepare_params[] = $offset;
+        }
 
         // Prepare query with all parameters
         if (!empty($prepare_params)) {
