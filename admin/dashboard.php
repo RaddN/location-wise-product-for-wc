@@ -904,8 +904,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.3.90", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.3.90");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.3.91", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.3.91");
 
         $payload = $this->build_dashboard_payload();
 
@@ -2666,7 +2666,10 @@ class MULOPIMFWC_Dashboard
             WHERE pm_stock.meta_key = %s
             AND pm_stock.meta_value != ''
             AND pm_stock.meta_value IS NOT NULL
-            AND CAST(pm_stock.meta_value AS SIGNED) > 0
+            AND (
+                CAST(pm_stock.meta_value AS DECIMAL(20,6)) > 0
+                OR CAST(REPLACE(pm_stock.meta_value, ',', '.') AS DECIMAL(20,6)) > 0
+            )
             " . $limit_clause . "
         ";
 
@@ -2732,6 +2735,37 @@ class MULOPIMFWC_Dashboard
         }
 
         return 0.0;
+    }
+
+    /**
+     * Normalize stock/quantity-like values to a float.
+     */
+    private function normalize_quantity_value($value): float
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        if (function_exists('wc_format_decimal')) {
+            $formatted = wc_format_decimal($value, 6);
+            if (is_numeric($formatted)) {
+                return (float) $formatted;
+            }
+        }
+
+        $sanitized = preg_replace('/[^0-9,.\-]/', '', (string) $value);
+        if ($sanitized === null || $sanitized === '') {
+            return 0.0;
+        }
+
+        // Fallback for locale values like "0,5".
+        $normalized = str_replace(',', '.', $sanitized);
+
+        return is_numeric($normalized) ? (float) $normalized : 0.0;
     }
 
     /**
@@ -2833,7 +2867,7 @@ class MULOPIMFWC_Dashboard
             $age_samples = [];
 
             foreach ($records as $record) {
-                $stock = (float) $record->stock;
+                $stock = $this->normalize_quantity_value($record->stock ?? '');
                 if ($stock <= 0) {
                     continue;
                 }
