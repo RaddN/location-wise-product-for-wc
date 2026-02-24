@@ -6009,6 +6009,14 @@ if (!function_exists('mulopimfwc_get_values')) {
                 if (mulopimfwc_is_manual_optional_location_selection_enabled($options)) {
                     $selected_location = mulopimfwc_get_store_location_cookie();
                     if ($selected_location !== 'all-products' && mulopimfwc_validate_location_slug($selected_location)) {
+                        if (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options)) {
+                            $selected_location = '';
+                        }
+                    } else {
+                        $selected_location = '';
+                    }
+
+                    if ($selected_location !== '') {
                         $existing_location = (string) $order->get_meta('_store_location');
                         if ($existing_location === '') {
                             $order->update_meta_data('_store_location', $selected_location);
@@ -6048,6 +6056,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $selected_location = mulopimfwc_get_store_location_cookie();
                     if ($selected_location === 'all-products' || !mulopimfwc_validate_location_slug($selected_location)) {
                         $selected_location = '';
+                    } elseif (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options)) {
+                        $selected_location = '';
                     }
                 }
 
@@ -6072,6 +6082,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 if (mulopimfwc_is_manual_optional_location_selection_enabled($options)) {
                     $selected_location = mulopimfwc_get_store_location_cookie();
                     if ($selected_location === 'all-products' || !mulopimfwc_validate_location_slug($selected_location)) {
+                        $selected_location = '';
+                    } elseif (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options)) {
                         $selected_location = '';
                     }
                 }
@@ -6367,6 +6379,178 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         /**
+         * Build order-eligible location map by intersecting line-item assignments.
+         *
+         * @param WC_Order $order Order object.
+         * @param array $locations Candidate locations.
+         * @param array|null $options Optional plugin options.
+         * @return array
+         */
+        private function get_order_eligible_location_map(WC_Order $order, array $locations, ?array $options = null): array
+        {
+            if (!is_array($options)) {
+                global $mulopimfwc_options;
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
+            }
+
+            $location_map = [];
+            foreach ($locations as $location) {
+                if (!isset($location->slug, $location->term_id)) {
+                    continue;
+                }
+
+                $location_slug = rawurldecode((string) $location->slug);
+                if ($location_slug === '') {
+                    continue;
+                }
+
+                $display_order = get_term_meta($location->term_id, 'display_order', true);
+                $display_order = $display_order !== '' ? (int) $display_order : 999;
+
+                $location_map[$location_slug] = [
+                    'term_id' => (int) $location->term_id,
+                    'display_order' => $display_order,
+                    'location' => $location,
+                ];
+            }
+
+            if (empty($location_map)) {
+                return [];
+            }
+
+            $all_location_slugs = array_keys($location_map);
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
+            $processed_items = false;
+
+            foreach ($order->get_items() as $item) {
+                if (!$item->is_type('line_item')) {
+                    continue;
+                }
+
+                $product_id = (int) $item->get_product_id();
+                $variation_id = (int) $item->get_variation_id();
+                if (!$product_id) {
+                    continue;
+                }
+
+                $processed_items = true;
+
+                $assigned_slugs = $this->get_item_assigned_location_slugs(
+                    $product_id,
+                    $variation_id,
+                    $all_location_slugs,
+                    $enable_all_locations
+                );
+
+                if (empty($assigned_slugs)) {
+                    return [];
+                }
+
+                $assigned_lookup = array_fill_keys(array_map('rawurldecode', $assigned_slugs), true);
+
+                foreach (array_keys($location_map) as $location_slug) {
+                    if (!isset($assigned_lookup[$location_slug])) {
+                        unset($location_map[$location_slug]);
+                        continue;
+                    }
+
+                    $location_id = $location_map[$location_slug]['term_id'];
+                    if ($this->is_location_disabled_for_item($product_id, $variation_id, $location_id)) {
+                        unset($location_map[$location_slug]);
+                    }
+                }
+
+                if (empty($location_map)) {
+                    return [];
+                }
+            }
+
+            if (!$processed_items) {
+                return [];
+            }
+
+            return $location_map;
+        }
+
+        /**
+         * Check whether a location is eligible for every line item in an order.
+         *
+         * @param WC_Order $order Order object.
+         * @param string $location_slug Location slug.
+         * @param array|null $options Optional plugin options.
+         * @return bool
+         */
+        private function is_location_slug_eligible_for_order(WC_Order $order, string $location_slug, ?array $options = null): bool
+        {
+            $location_slug = rawurldecode(trim($location_slug));
+            if ($location_slug === '') {
+                return false;
+            }
+
+            $location_term = mulopimfwc_validate_location_slug($location_slug);
+            if (!$location_term || !isset($location_term->term_id, $location_term->slug)) {
+                return false;
+            }
+
+            $resolved_location_slug = rawurldecode((string) $location_term->slug);
+            $location_id = (int) $location_term->term_id;
+
+            $is_active = get_term_meta($location_id, 'is_active', true);
+            $is_active_for_frontend = $is_active === '' || $is_active === 'on' || $is_active === '1' || $is_active === true || $is_active === 'yes';
+            if (!$is_active_for_frontend) {
+                return false;
+            }
+
+            if (!is_array($options)) {
+                global $mulopimfwc_options;
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
+            }
+
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
+            $processed_items = false;
+
+            foreach ($order->get_items() as $item) {
+                if (!$item->is_type('line_item')) {
+                    continue;
+                }
+
+                $product_id = (int) $item->get_product_id();
+                $variation_id = (int) $item->get_variation_id();
+                if (!$product_id) {
+                    continue;
+                }
+
+                $processed_items = true;
+
+                $assigned_slugs = $this->get_item_assigned_location_slugs(
+                    $product_id,
+                    $variation_id,
+                    [$resolved_location_slug],
+                    $enable_all_locations
+                );
+
+                if (empty($assigned_slugs)) {
+                    return false;
+                }
+
+                $assigned_lookup = array_fill_keys(array_map('rawurldecode', $assigned_slugs), true);
+                if (!isset($assigned_lookup[$resolved_location_slug])) {
+                    return false;
+                }
+
+                if ($this->is_location_disabled_for_item($product_id, $variation_id, $location_id)) {
+                    return false;
+                }
+            }
+
+            return $processed_items;
+        }
+
+        /**
          * Assign a location to an order based on proximity to the shipping address.
          *
          * @param WC_Order|int $order Order object or ID.
@@ -6390,7 +6574,43 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return '';
             }
 
-            $fallback_slug = $this->get_location_fallback_by_display_order($locations);
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+
+            $location_map = $this->get_order_eligible_location_map($order, $locations, $options);
+            if (empty($location_map)) {
+                return '';
+            }
+
+            $order_country_variants = $this->get_country_match_variants(
+                $this->get_order_country_for_assignment($order, $checkout_data)
+            );
+            if (!empty($order_country_variants)) {
+                $same_country_location_map = [];
+                foreach ($location_map as $location_slug => $location_data) {
+                    $location_country = get_term_meta((int) $location_data['term_id'], 'country', true);
+                    $location_country_variants = $this->get_country_match_variants($location_country);
+                    if (empty($location_country_variants)) {
+                        continue;
+                    }
+
+                    if (!empty(array_intersect_key($location_country_variants, $order_country_variants))) {
+                        $same_country_location_map[$location_slug] = $location_data;
+                    }
+                }
+
+                if (!empty($same_country_location_map)) {
+                    $location_map = $same_country_location_map;
+                }
+            }
+
+            $eligible_locations = array_values(array_map(static function ($location_data) {
+                return $location_data['location'];
+            }, $location_map));
+
+            $fallback_slug = $this->get_location_fallback_by_display_order($eligible_locations);
 
             $address = $this->get_order_shipping_address_string($order, $checkout_data);
             if ($address === '') {
@@ -6406,13 +6626,12 @@ if (!function_exists('mulopimfwc_get_values')) {
             $best_distance = null;
             $best_display_order = null;
 
-            foreach ($locations as $location) {
-                if (!isset($location->term_id, $location->slug)) {
-                    continue;
-                }
+            foreach ($location_map as $location_slug => $location_data) {
+                $location = $location_data['location'];
+                $location_id = (int) $location_data['term_id'];
 
-                $lat = get_term_meta($location->term_id, 'latitude', true);
-                $lng = get_term_meta($location->term_id, 'longitude', true);
+                $lat = get_term_meta($location_id, 'latitude', true);
+                $lng = get_term_meta($location_id, 'longitude', true);
 
                 if (!is_numeric($lat) || !is_numeric($lng)) {
                     continue;
@@ -6432,11 +6651,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $lng
                 );
 
-                $display_order = get_term_meta($location->term_id, 'display_order', true);
-                $display_order = $display_order !== '' ? (int) $display_order : 999;
+                $display_order = (int) $location_data['display_order'];
 
                 if ($best_distance === null || $distance < $best_distance - 0.000001) {
-                    $best_slug = $location->slug;
+                    $best_slug = $location_slug;
                     $best_distance = $distance;
                     $best_display_order = $display_order;
                     continue;
@@ -6444,10 +6662,10 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                 if (abs($distance - $best_distance) <= 0.000001) {
                     if ($best_display_order === null || $display_order < $best_display_order) {
-                        $best_slug = $location->slug;
+                        $best_slug = $location_slug;
                         $best_display_order = $display_order;
-                    } elseif ($display_order === $best_display_order && strcmp($location->slug, $best_slug) < 0) {
-                        $best_slug = $location->slug;
+                    } elseif ($display_order === $best_display_order && strcmp($location_slug, $best_slug) < 0) {
+                        $best_slug = $location_slug;
                     }
                 }
             }
@@ -6470,7 +6688,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $order->get_shipping_city(),
                 $order->get_shipping_state(),
                 $order->get_shipping_postcode(),
-                $order->get_shipping_country(),
+                $this->normalize_country_for_geocoding($order->get_shipping_country()),
             ];
 
             $address = $this->sanitize_address_parts($address_parts);
@@ -6482,7 +6700,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $checkout_data['shipping_city'] ?? '',
                     $checkout_data['shipping_state'] ?? '',
                     $checkout_data['shipping_postcode'] ?? '',
-                    $checkout_data['shipping_country'] ?? '',
+                    $this->normalize_country_for_geocoding($checkout_data['shipping_country'] ?? ''),
                 ];
                 $address = $this->sanitize_address_parts($address_parts);
             }
@@ -6494,7 +6712,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $order->get_billing_city(),
                     $order->get_billing_state(),
                     $order->get_billing_postcode(),
-                    $order->get_billing_country(),
+                    $this->normalize_country_for_geocoding($order->get_billing_country()),
                 ];
                 $address = $this->sanitize_address_parts($address_parts);
             }
@@ -6506,7 +6724,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $checkout_data['billing_city'] ?? '',
                     $checkout_data['billing_state'] ?? '',
                     $checkout_data['billing_postcode'] ?? '',
-                    $checkout_data['billing_country'] ?? '',
+                    $this->normalize_country_for_geocoding($checkout_data['billing_country'] ?? ''),
                 ];
                 $address = $this->sanitize_address_parts($address_parts);
             }
@@ -6516,6 +6734,108 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             return implode(', ', $address);
+        }
+
+        /**
+         * Resolve preferred order country string for assignment checks.
+         *
+         * @param WC_Order $order
+         * @param array|null $checkout_data
+         * @return string
+         */
+        private function get_order_country_for_assignment(WC_Order $order, ?array $checkout_data = null): string
+        {
+            $candidates = [
+                $order->get_shipping_country(),
+                is_array($checkout_data) ? ($checkout_data['shipping_country'] ?? '') : '',
+                $order->get_billing_country(),
+                is_array($checkout_data) ? ($checkout_data['billing_country'] ?? '') : '',
+            ];
+
+            foreach ($candidates as $country_value) {
+                $country = $this->normalize_country_for_geocoding($country_value);
+                if ($country !== '') {
+                    return $country;
+                }
+            }
+
+            return '';
+        }
+
+        /**
+         * Build normalized country variants for matching location country metadata.
+         *
+         * @param mixed $country
+         * @return array
+         */
+        private function get_country_match_variants($country): array
+        {
+            if (!is_scalar($country)) {
+                return [];
+            }
+
+            $country = trim(sanitize_text_field((string) $country));
+            if ($country === '') {
+                return [];
+            }
+
+            $variants = [];
+            $country_upper = strtoupper($country);
+            $variants[$country_upper] = true;
+
+            if (function_exists('WC') && WC() && isset(WC()->countries)) {
+                $countries = WC()->countries->get_countries();
+                if (is_array($countries)) {
+                    if (strlen($country_upper) === 2 && isset($countries[$country_upper])) {
+                        $country_name = trim(sanitize_text_field((string) $countries[$country_upper]));
+                        if ($country_name !== '') {
+                            $variants[strtoupper($country_name)] = true;
+                        }
+                    } else {
+                        foreach ($countries as $country_code => $country_name) {
+                            if (!is_string($country_name)) {
+                                continue;
+                            }
+
+                            if (strcasecmp(trim($country_name), $country) === 0) {
+                                $variants[strtoupper((string) $country_code)] = true;
+                                $variants[strtoupper(trim($country_name))] = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return $variants;
+        }
+
+        /**
+         * Expand ISO country codes for more reliable geocoding queries.
+         *
+         * @param mixed $country Country code or name.
+         * @return string
+         */
+        private function normalize_country_for_geocoding($country): string
+        {
+            if (!is_scalar($country)) {
+                return '';
+            }
+
+            $country = trim(sanitize_text_field((string) $country));
+            if ($country === '') {
+                return '';
+            }
+
+            $country_code = strtoupper($country);
+            if (strlen($country_code) === 2 && function_exists('WC') && WC() && isset(WC()->countries)) {
+                $countries = WC()->countries->get_countries();
+                if (is_array($countries) && isset($countries[$country_code])) {
+                    return (string) $countries[$country_code];
+                }
+            }
+
+            return $country;
         }
 
         /**
@@ -6534,17 +6854,22 @@ if (!function_exists('mulopimfwc_get_values')) {
                     continue;
                 }
 
+                $location_slug = rawurldecode((string) $location->slug);
+                if ($location_slug === '') {
+                    continue;
+                }
+
                 $display_order = get_term_meta($location->term_id, 'display_order', true);
                 $display_order = $display_order !== '' ? (int) $display_order : 999;
 
                 if ($best_display_order === null || $display_order < $best_display_order) {
                     $best_display_order = $display_order;
-                    $best_slug = $location->slug;
+                    $best_slug = $location_slug;
                     continue;
                 }
 
-                if ($display_order === $best_display_order && strcmp($location->slug, $best_slug) < 0) {
-                    $best_slug = $location->slug;
+                if ($display_order === $best_display_order && strcmp($location_slug, $best_slug) < 0) {
+                    $best_slug = $location_slug;
                 }
             }
 
