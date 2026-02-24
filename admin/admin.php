@@ -4632,12 +4632,36 @@ class MULOPIMFWC_Admin
         return $out;
     }
 
+    private function current_user_can_view_admin_bar_notifications(): bool
+    {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        if (!$this->is_current_user_location_manager()) {
+            return current_user_can('manage_woocommerce');
+        }
+
+        if (!class_exists('MULOPIMFWC_Location_Managers')) {
+            return false;
+        }
+
+        return (
+            MULOPIMFWC_Location_Managers::user_has_capability('view_dashboard') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('view_products') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('manage_products') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('view_orders') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('manage_orders') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('run_reports')
+        );
+    }
+
     /**
      * Add notification icon to admin bar
      */
     public function add_admin_bar_notification_icon($wp_admin_bar)
     {
-        if (!current_user_can('manage_woocommerce')) {
+        if (!$this->current_user_can_view_admin_bar_notifications()) {
             return;
         }
 

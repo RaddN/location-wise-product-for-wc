@@ -26,6 +26,7 @@ class MULOPIMFWC_Location_Managers
         add_action('admin_init', [$this, 'restrict_location_manager_access']);
 
         add_action('admin_menu', [$this,  'restrict_location_manager_menus'], 999);
+        add_action('admin_bar_menu', [$this, 'restrict_location_manager_admin_bar'], 999);
 
         // Add location manager meta box to user profile
         add_action('show_user_profile', [$this, 'add_user_profile_fields']);
@@ -1798,6 +1799,288 @@ class MULOPIMFWC_Location_Managers
                     unset($submenu[$parent][$index]);
                 }
             }
+        }
+    }
+
+    private function get_location_manager_admin_bar_permissions()
+    {
+        $can_view_dashboard = self::user_has_capability('view_dashboard');
+        $can_view_products = self::user_has_capability('view_products');
+        $can_manage_products = self::user_has_capability('manage_products');
+        $can_view_orders = self::user_has_capability('view_orders');
+        $can_manage_orders = self::user_has_capability('manage_orders');
+        $can_run_reports = self::user_has_capability('run_reports');
+
+        return [
+            'view_dashboard' => $can_view_dashboard,
+            'view_products' => $can_view_products,
+            'manage_products' => $can_manage_products,
+            'view_orders' => $can_view_orders,
+            'manage_orders' => $can_manage_orders,
+            'run_reports' => $can_run_reports,
+            'can_access_any_plugin_area' => (
+                $can_view_dashboard ||
+                $can_view_products ||
+                $can_manage_products ||
+                $can_view_orders ||
+                $can_manage_orders ||
+                $can_run_reports
+            ),
+        ];
+    }
+
+    private function location_manager_can_access_admin_bar_href($href, $permissions)
+    {
+        if (!is_string($href) || $href === '') {
+            return true;
+        }
+
+        $decoded_href = html_entity_decode($href, ENT_QUOTES, 'UTF-8');
+        $normalized_href = strtolower($decoded_href);
+
+        if (
+            strpos($normalized_href, 'action=logout') !== false ||
+            strpos($normalized_href, 'profile.php') !== false ||
+            strpos($normalized_href, 'user-edit.php') !== false
+        ) {
+            return true;
+        }
+
+        $parsed = wp_parse_url($decoded_href);
+        $path = isset($parsed['path']) ? strtolower((string) $parsed['path']) : '';
+        $basename = $path !== '' ? basename($path) : '';
+        $query = [];
+        if (!empty($parsed['query'])) {
+            parse_str((string) $parsed['query'], $query);
+        }
+
+        $page = isset($query['page']) ? sanitize_key((string) $query['page']) : '';
+        $post_type = isset($query['post_type']) ? sanitize_key((string) $query['post_type']) : '';
+        $taxonomy = isset($query['taxonomy']) ? sanitize_key((string) $query['taxonomy']) : '';
+
+        $looks_like_admin_link = (
+            strpos($normalized_href, 'wp-admin') !== false ||
+            in_array($basename, [
+                'index.php',
+                'admin.php',
+                'edit.php',
+                'post.php',
+                'post-new.php',
+                'edit-tags.php',
+                'themes.php',
+                'theme-editor.php',
+                'customize.php',
+                'widgets.php',
+                'nav-menus.php',
+                'plugins.php',
+                'plugin-editor.php',
+                'tools.php',
+                'import.php',
+                'export.php',
+                'options-general.php',
+                'options-writing.php',
+                'options-reading.php',
+                'options-discussion.php',
+                'options-media.php',
+                'options-permalink.php',
+                'site-health.php',
+                'privacy.php',
+                'update-core.php',
+                'upload.php',
+                'media-new.php',
+                'users.php',
+                'user-new.php',
+                'edit-comments.php',
+            ], true)
+        );
+
+        if (!$looks_like_admin_link && $page === '') {
+            return true;
+        }
+
+        if (in_array($basename, [
+            'themes.php',
+            'theme-editor.php',
+            'customize.php',
+            'widgets.php',
+            'nav-menus.php',
+            'plugins.php',
+            'plugin-editor.php',
+            'tools.php',
+            'import.php',
+            'export.php',
+            'options-general.php',
+            'options-writing.php',
+            'options-reading.php',
+            'options-discussion.php',
+            'options-media.php',
+            'options-permalink.php',
+            'site-health.php',
+            'privacy.php',
+            'update-core.php',
+            'users.php',
+            'user-new.php',
+            'edit-comments.php',
+        ], true)) {
+            return false;
+        }
+
+        if ($basename === 'index.php') {
+            return (bool) $permissions['view_dashboard'];
+        }
+
+        if ($page === 'multi-location-product-and-inventory-management') {
+            return (bool) $permissions['view_dashboard'];
+        }
+
+        if ($page === 'location-stock-management') {
+            return (bool) ($permissions['view_products'] || $permissions['manage_products']);
+        }
+
+        if ($page === 'mulopimfwc-analytics') {
+            return (bool) $permissions['run_reports'];
+        }
+
+        if ($page === 'location-managers' || $page === 'multi-location-product-and-inventory-management-settings') {
+            return false;
+        }
+
+        if ($page === 'wc-admin' || strpos($normalized_href, 'page=wc-admin') !== false) {
+            return (bool) (
+                $permissions['view_dashboard'] ||
+                $permissions['view_products'] ||
+                $permissions['manage_products'] ||
+                $permissions['view_orders'] ||
+                $permissions['manage_orders'] ||
+                $permissions['run_reports']
+            );
+        }
+
+        if ($page === 'wc-orders' || $post_type === 'shop_order' || strpos($normalized_href, 'wc-orders') !== false) {
+            return (bool) ($permissions['view_orders'] || $permissions['manage_orders']);
+        }
+
+        if ($page === 'wc-reports' || strpos($normalized_href, 'wc-reports') !== false) {
+            return (bool) $permissions['run_reports'];
+        }
+
+        if (in_array($page, ['wc-settings', 'wc-status', 'wc-addons'], true)) {
+            return false;
+        }
+
+        if (
+            $post_type === 'product' ||
+            in_array($taxonomy, ['product_cat', 'product_tag', 'product_brand', 'mulopimfwc_store_location'], true) ||
+            $page === 'product_attributes' ||
+            strpos($normalized_href, 'post_type=product') !== false ||
+            strpos($normalized_href, 'mulopimfwc_store_location') !== false
+        ) {
+            return (bool) $permissions['manage_products'];
+        }
+
+        if (in_array($basename, ['upload.php', 'media-new.php'], true)) {
+            return (bool) $permissions['manage_products'];
+        }
+
+        if ($basename === 'post.php') {
+            $post_id = isset($query['post']) ? absint($query['post']) : 0;
+            $resolved_post_type = $post_type;
+            if ($resolved_post_type === '' && $post_id > 0) {
+                $resolved_post_type = (string) get_post_type($post_id);
+            }
+
+            if ($resolved_post_type === 'product') {
+                return (bool) $permissions['manage_products'];
+            }
+
+            if ($resolved_post_type === 'shop_order') {
+                return (bool) ($permissions['view_orders'] || $permissions['manage_orders']);
+            }
+
+            if ($resolved_post_type !== '') {
+                return false;
+            }
+        }
+
+        if ($basename === 'post-new.php') {
+            return false;
+        }
+
+        if ($basename === 'edit.php' && ($post_type === '' || $post_type === 'post' || $post_type === 'page')) {
+            return false;
+        }
+
+        if ($page !== '' || strpos($normalized_href, 'wp-admin') !== false) {
+            return (bool) $permissions['view_dashboard'];
+        }
+
+        return true;
+    }
+
+    public function restrict_location_manager_admin_bar($wp_admin_bar)
+    {
+        if (is_network_admin()) {
+            return;
+        }
+
+        if (current_user_can('administrator') || (is_multisite() && is_super_admin())) {
+            return;
+        }
+
+        if (!is_user_logged_in()) {
+            return;
+        }
+
+        $manager = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', (array) $manager->roles, true)) {
+            return;
+        }
+
+        $permissions = $this->get_location_manager_admin_bar_permissions();
+
+        if (!$permissions['can_access_any_plugin_area']) {
+            $wp_admin_bar->remove_node('mulopimfwc-notifications');
+            $wp_admin_bar->remove_node('mulopimfwc-notifications-dropdown');
+        }
+
+        $nodes = (array) $wp_admin_bar->get_nodes();
+        if (empty($nodes)) {
+            return;
+        }
+
+        $always_allowed_node_ids = [
+            'my-account',
+            'user-actions',
+            'user-info',
+            'logout',
+            'edit-profile',
+        ];
+
+        foreach ($nodes as $node) {
+            if (!is_object($node)) {
+                continue;
+            }
+
+            if (in_array((string) $node->id, $always_allowed_node_ids, true)) {
+                continue;
+            }
+
+            if (!$this->location_manager_can_access_admin_bar_href($node->href ?? '', $permissions)) {
+                $wp_admin_bar->remove_node($node->id);
+            }
+        }
+
+        $remaining_nodes = (array) $wp_admin_bar->get_nodes();
+        $has_new_content_child = false;
+        foreach ($remaining_nodes as $remaining_node) {
+            if (is_object($remaining_node) && isset($remaining_node->parent) && $remaining_node->parent === 'new-content') {
+                $has_new_content_child = true;
+                break;
+            }
+        }
+
+        if (!$has_new_content_child) {
+            $wp_admin_bar->remove_node('new-content');
         }
     }
 
