@@ -472,6 +472,83 @@ if (!function_exists('mulopimfwc_is_split_order_enabled')) {
     }
 }
 
+if (!function_exists('mulopimfwc_get_location_manager_frontend_assigned_locations')) {
+    /**
+     * Get assigned location slugs for location managers when frontend location restrictions apply.
+     *
+     * Returns null when restrictions are not active for the current user.
+     *
+     * @return array|null
+     */
+    function mulopimfwc_get_location_manager_frontend_assigned_locations()
+    {
+        if (!is_user_logged_in() || !class_exists('MULOPIMFWC_Location_Managers')) {
+            return null;
+        }
+
+        $user = wp_get_current_user();
+        if (empty($user) || empty($user->ID)) {
+            return null;
+        }
+
+        if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+            return null;
+        }
+
+        if (!MULOPIMFWC_Location_Managers::user_has_capability('location_specific_products_frontend', $user->ID)) {
+            return null;
+        }
+
+        $assigned_locations = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
+        if (!is_array($assigned_locations)) {
+            return [];
+        }
+
+        $assigned_locations = array_map(function ($location_slug) {
+            return sanitize_title(rawurldecode((string) $location_slug));
+        }, $assigned_locations);
+
+        $assigned_locations = array_values(array_filter($assigned_locations, function ($location_slug) {
+            return is_string($location_slug) && $location_slug !== '';
+        }));
+
+        return array_values(array_unique($assigned_locations));
+    }
+}
+
+if (!function_exists('mulopimfwc_get_location_manager_frontend_default_location')) {
+    /**
+     * Get manager-specific default location for frontend restriction mode.
+     *
+     * @param array|null $allowed_locations Optional assigned location slugs to validate against.
+     * @return string
+     */
+    function mulopimfwc_get_location_manager_frontend_default_location($allowed_locations = null): string
+    {
+        if (!is_array($allowed_locations)) {
+            $allowed_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
+        }
+
+        if (!is_array($allowed_locations) || empty($allowed_locations) || !is_user_logged_in()) {
+            return '';
+        }
+
+        $user = wp_get_current_user();
+        if (empty($user) || empty($user->ID)) {
+            return '';
+        }
+
+        $default_location = get_user_meta($user->ID, 'mulopimfwc_manager_default_location', true);
+        $default_location = sanitize_title(rawurldecode((string) $default_location));
+
+        if ($default_location === '' || !in_array($default_location, $allowed_locations, true)) {
+            return '';
+        }
+
+        return $default_location;
+    }
+}
+
 if (!function_exists('mulopimfwc_get_default_location_value')) {
     /**
      * Get default location setting, disabled in manual mode.
@@ -492,7 +569,23 @@ if (!function_exists('mulopimfwc_get_default_location_value')) {
             return '';
         }
 
-        return isset($options['default_location']) ? trim((string) $options['default_location']) : '';
+        $default_location = isset($options['default_location']) ? trim((string) $options['default_location']) : '';
+        $manager_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
+
+        if (is_array($manager_locations)) {
+            if (empty($manager_locations)) {
+                return '';
+            }
+
+            $manager_default_location = mulopimfwc_get_location_manager_frontend_default_location($manager_locations);
+            if ($manager_default_location !== '') {
+                return $manager_default_location;
+            }
+
+            return (string) $manager_locations[0];
+        }
+
+        return $default_location;
     }
 }
 
@@ -948,12 +1041,21 @@ if (!function_exists('mulopimfwc_get_frontend_locations')) {
      */
     function mulopimfwc_get_frontend_locations()
     {
-        
-        // Get all locations
-        $locations = get_terms([
+        $terms_args = [
             'taxonomy' => 'mulopimfwc_store_location',
             'hide_empty' => false,
-        ]);
+        ];
+        $manager_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
+
+        if (is_array($manager_locations)) {
+            if (empty($manager_locations)) {
+                return [];
+            }
+            $terms_args['slug'] = $manager_locations;
+        }
+
+        // Get all frontend-visible locations
+        $locations = get_terms($terms_args);
         
         if (is_wp_error($locations) || empty($locations)) {
             return $locations;
@@ -1003,9 +1105,25 @@ if (!function_exists('mulopimfwc_get_store_location_cookie')) {
             return '';
         }
 
-          $raw_value = wp_unslash($_COOKIE[$cookie_name]);
-          $decoded_value = is_string($raw_value) ? rawurldecode($raw_value) : $raw_value;
-          return sanitize_text_field($decoded_value);
+        $raw_value = wp_unslash($_COOKIE[$cookie_name]);
+        $decoded_value = is_string($raw_value) ? rawurldecode($raw_value) : $raw_value;
+        $location_slug = sanitize_text_field((string) $decoded_value);
+
+        if ($location_slug === '') {
+            return '';
+        }
+
+        $manager_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
+        if (!is_array($manager_locations)) {
+            return $location_slug;
+        }
+
+        $normalized_location = sanitize_title(rawurldecode($location_slug));
+        if ($normalized_location === 'all-products') {
+            return $normalized_location;
+        }
+
+        return in_array($normalized_location, $manager_locations, true) ? $normalized_location : '';
     }
 }
 
@@ -1381,32 +1499,20 @@ if (!function_exists('mulopimfwc_get_values')) {
             return;
         }
 
-        // Check if current user is a location manager
-        $is_location_manager = false;
-        $assigned_location_slugs = [];
+        $manager_frontend_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
 
-        if (is_user_logged_in()) {
-            $user = wp_get_current_user();
-            if (in_array('mulopimfwc_location_manager', $user->roles)) {
-                $is_location_manager = true;
-                $assigned_location_slugs = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
-
-                if (!is_array($assigned_location_slugs)) {
-                    $assigned_location_slugs = [];
-                }
+        // Get locations based on current frontend restrictions
+        if (is_array($manager_frontend_locations)) {
+            if (empty($manager_frontend_locations)) {
+                $mulopimfwc_locations = [];
+            } else {
+                $mulopimfwc_locations = get_terms([
+                    'taxonomy' => 'mulopimfwc_store_location',
+                    'hide_empty' => false,
+                    'slug' => $manager_frontend_locations,
+                ]);
             }
-        }
-
-        // Get locations based on user role
-        if ($is_location_manager && !empty($assigned_location_slugs)) {
-            // For location managers, only get their assigned locations
-            $mulopimfwc_locations = get_terms([
-                'taxonomy' => 'mulopimfwc_store_location',
-                'hide_empty' => false,
-                'slug' => $assigned_location_slugs,
-            ]);
         } else {
-            // For admins and other users, get all locations
             $mulopimfwc_locations = get_terms([
                 'taxonomy' => 'mulopimfwc_store_location',
                 'hide_empty' => false,
@@ -7165,25 +7271,8 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         private function get_location_manager_frontend_locations()
         {
-            if (!is_user_logged_in() || !class_exists('MULOPIMFWC_Location_Managers')) {
-                return null;
-            }
-
-            $user = wp_get_current_user();
-            if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
-                return null;
-            }
-
-            if (!MULOPIMFWC_Location_Managers::user_has_capability('location_specific_products_frontend')) {
-                return null;
-            }
-
-            $assigned_locations = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
-            if (!is_array($assigned_locations)) {
-                $assigned_locations = [];
-            }
-
-            return array_values(array_filter($assigned_locations));
+            $assigned_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
+            return is_array($assigned_locations) ? $assigned_locations : null;
         }
 
         private function build_location_tax_query($locations, $enable_all_locations, $strict = false)

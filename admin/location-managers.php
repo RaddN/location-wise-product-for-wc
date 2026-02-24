@@ -485,6 +485,7 @@ class MULOPIMFWC_Location_Managers
                                 <?php
                                 $assigned_locations = get_user_meta($manager->ID, 'mulopimfwc_assigned_locations', true);
                                 $manager_capabilities = get_user_meta($manager->ID, 'mulopimfwc_manager_capabilities', true);
+                                $manager_default_location = get_user_meta($manager->ID, 'mulopimfwc_manager_default_location', true);
                                 $social_channels = get_user_meta($manager->ID, 'mulopimfwc_social_channels', true);
                                 if (!is_array($social_channels)) {
                                     $social_channels = [];
@@ -497,6 +498,14 @@ class MULOPIMFWC_Location_Managers
                                     }
                                 }
                                 if (!is_array($assigned_locations)) $assigned_locations = [];
+                                $assigned_locations = array_values(array_filter(array_map(function ($location_slug) {
+                                    return sanitize_title(rawurldecode((string) $location_slug));
+                                }, $assigned_locations)));
+                                $assigned_locations = array_values(array_unique($assigned_locations));
+                                $manager_default_location = sanitize_title(rawurldecode((string) $manager_default_location));
+                                if ($manager_default_location === '' || !in_array($manager_default_location, $assigned_locations, true)) {
+                                    $manager_default_location = '';
+                                }
                                 if (!is_array($manager_capabilities)) {
                                     $manager_capabilities = $global_capabilities;
                                 } else {
@@ -552,7 +561,7 @@ class MULOPIMFWC_Location_Managers
                                     </div>
 
                                     <div class="manager-actions">
-                                        <button type="button" class="button button-small <?php echo esc_attr(mulopimfwc_get_pro_class(false, 'mulopimfwc-edit-manager', ' ')); ?> mulopimfwc-btn-primary" data-manager-id="<?php echo esc_attr($manager->ID); ?>" data-assign-locations=<?php echo wp_json_encode($assigned_locations); ?> data-assign-capabilities=<?php echo wp_json_encode($manager_capabilities); ?> data-social-channels="<?php echo esc_attr(wp_json_encode($social_channels)); ?>">
+                                        <button type="button" class="button button-small <?php echo esc_attr(mulopimfwc_get_pro_class(false, 'mulopimfwc-edit-manager', ' ')); ?> mulopimfwc-btn-primary" data-manager-id="<?php echo esc_attr($manager->ID); ?>" data-assign-locations=<?php echo wp_json_encode($assigned_locations); ?> data-assign-capabilities=<?php echo wp_json_encode($manager_capabilities); ?> data-default-location="<?php echo esc_attr($manager_default_location); ?>" data-social-channels="<?php echo esc_attr(wp_json_encode($social_channels)); ?>">
                                             <svg class="svg-inline--fa fa-pencil" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="pencil" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="">
                                                 <path fill="currentColor" d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"></path>
                                             </svg> <?php echo esc_html__('Edit', 'multi-location-product-and-inventory-management'); ?>
@@ -634,6 +643,14 @@ class MULOPIMFWC_Location_Managers
                                 <p><?php echo esc_html__('No locations available. Please create locations first.', 'multi-location-product-and-inventory-management'); ?></p>
                             <?php endif; ?>
                         </div>
+                    </div>
+
+                    <div class="mulopimfwc-form-row">
+                        <label for="manager-default-location"><?php echo esc_html__('Default Location:', 'multi-location-product-and-inventory-management'); ?></label>
+                        <select id="manager-default-location" name="default_location">
+                            <option value=""><?php echo esc_html__('Use first assigned location', 'multi-location-product-and-inventory-management'); ?></option>
+                        </select>
+                        <p class="description"><?php echo esc_html__('Only assigned locations are available. If not set, the first assigned location is used.', 'multi-location-product-and-inventory-management'); ?></p>
                     </div>
 
                     <div class="mulopimfwc-form-row">
@@ -905,7 +922,7 @@ class MULOPIMFWC_Location_Managers
 
             .mulopimfwc-modal-content {
                 background-color: #fff;
-                margin: 5% auto;
+                margin: 1.5% auto;
                 padding: 0;
                 border-radius: 8px;
                 width: 90%;
@@ -1046,8 +1063,9 @@ class MULOPIMFWC_Location_Managers
                     const managerId = $(this).data('manager-id');
                     const assign_locations = $(this).data('assign-locations');
                     const assign_capabilities = $(this).data('assign-capabilities');
+                    const default_location = $(this).data('default-location') || '';
                     const social_channels = $(this).data('social-channels') || {};
-                    loadManagerData(managerId, assign_locations, assign_capabilities, social_channels);
+                    loadManagerData(managerId, assign_locations, assign_capabilities, default_location, social_channels);
                 });
 
                 // Delete manager button
@@ -1091,6 +1109,10 @@ class MULOPIMFWC_Location_Managers
                     saveManager();
                 });
 
+                $(document).on('change', 'input[name="assigned_locations[]"]', function() {
+                    refreshDefaultLocationOptions();
+                });
+
                 // Functions
                 function resetForm() {
                     $('#mulopimfwc-manager-form')[0].reset();
@@ -1100,9 +1122,39 @@ class MULOPIMFWC_Location_Managers
                     $('#create-new-user').hide();
                     $('#social_slack_webhook, #social_custom_webhook, #social_telegram_chat').val('');
                     $('#toggle-create-user').text('<?php echo esc_js(esc_html_e('Create New User Instead', 'multi-location-product-and-inventory-management')); ?>');
+                    refreshDefaultLocationOptions('');
                 }
 
-                function loadManagerData(managerId, assign_locations, assign_capabilities, social_channels) {
+                function refreshDefaultLocationOptions(preferredLocation) {
+                    const $defaultLocation = $('#manager-default-location');
+                    const fallbackLabel = '<?php echo esc_js(__('Use first assigned location', 'multi-location-product-and-inventory-management')); ?>';
+                    const explicitPreferred = typeof preferredLocation === 'string' ? preferredLocation : null;
+                    const currentValue = explicitPreferred !== null ? explicitPreferred : ($defaultLocation.val() || '');
+                    const assignedLocations = [];
+
+                    $('input[name="assigned_locations[]"]:checked').each(function() {
+                        assignedLocations.push({
+                            value: $(this).val(),
+                            label: $.trim($(this).parent().text())
+                        });
+                    });
+
+                    $defaultLocation.empty();
+                    $defaultLocation.append($('<option></option>').val('').text(fallbackLabel));
+
+                    assignedLocations.forEach(function(locationData) {
+                        $defaultLocation.append(
+                            $('<option></option>').val(locationData.value).text(locationData.label)
+                        );
+                    });
+
+                    const hasCurrent = currentValue !== '' && assignedLocations.some(function(locationData) {
+                        return locationData.value === currentValue;
+                    });
+                    $defaultLocation.val(hasCurrent ? currentValue : '');
+                }
+
+                function loadManagerData(managerId, assign_locations, assign_capabilities, default_location, social_channels) {
                     // Update modal title and form fields
                     $('#mulopimfwc-modal-title').text('<?php echo esc_js(esc_html_e('Edit Location Manager', 'multi-location-product-and-inventory-management')); ?>');
                     $('#manager-id').val(managerId);
@@ -1119,6 +1171,7 @@ class MULOPIMFWC_Location_Managers
                             $('input[name="assigned_locations[]"][value="' + location + '"]').prop('checked', true);
                         });
                     }
+                    refreshDefaultLocationOptions(default_location || '');
 
                     // Check assigned capabilities
                     if (assign_capabilities && assign_capabilities.length > 0) {
@@ -1313,7 +1366,16 @@ class MULOPIMFWC_Location_Managers
         $action_type = sanitize_text_field($_POST['action_type']);
         $manager_id = isset($_POST['manager_id']) ? intval($_POST['manager_id']) : 0;
         $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
-        $assigned_locations = isset($_POST['assigned_locations']) ? array_map('sanitize_text_field', $_POST['assigned_locations']) : [];
+        $assigned_locations = isset($_POST['assigned_locations']) ? array_map('sanitize_text_field', (array) $_POST['assigned_locations']) : [];
+        $assigned_locations = array_values(array_filter(array_map(function ($location_slug) {
+            return sanitize_title(rawurldecode((string) $location_slug));
+        }, $assigned_locations)));
+        $assigned_locations = array_values(array_unique($assigned_locations));
+        $requested_default_location = isset($_POST['default_location']) ? sanitize_title(rawurldecode((string) sanitize_text_field($_POST['default_location']))) : '';
+        $manager_default_location = '';
+        if ($requested_default_location !== '' && in_array($requested_default_location, $assigned_locations, true)) {
+            $manager_default_location = $requested_default_location;
+        }
         $manager_capabilities = isset($_POST['manager_capabilities']) ? array_map('sanitize_text_field', $_POST['manager_capabilities']) : [];
         $social_channels = [
             'slack_webhook' => isset($_POST['social_slack_webhook']) ? esc_url_raw(trim($_POST['social_slack_webhook'])) : '',
@@ -1384,6 +1446,11 @@ class MULOPIMFWC_Location_Managers
 
             // Save assigned locations
             update_user_meta($user_id, 'mulopimfwc_assigned_locations', $assigned_locations);
+            if ($manager_default_location !== '') {
+                update_user_meta($user_id, 'mulopimfwc_manager_default_location', $manager_default_location);
+            } else {
+                delete_user_meta($user_id, 'mulopimfwc_manager_default_location');
+            }
 
             // Save manager capabilities
             update_user_meta($user_id, 'mulopimfwc_manager_capabilities', $manager_capabilities);
@@ -1468,6 +1535,7 @@ class MULOPIMFWC_Location_Managers
         // Remove location manager meta
         delete_user_meta($manager_id, 'mulopimfwc_assigned_locations');
         delete_user_meta($manager_id, 'mulopimfwc_manager_capabilities');
+        delete_user_meta($manager_id, 'mulopimfwc_manager_default_location');
 
         wp_send_json_success(['message' => esc_html_e('Location manager deleted successfully', 'multi-location-product-and-inventory-management')]);
     }
@@ -1954,6 +2022,10 @@ class MULOPIMFWC_Location_Managers
         }
 
         $assigned_locations = isset($_POST['mulopimfwc_assigned_locations']) ? array_map('sanitize_text_field', $_POST['mulopimfwc_assigned_locations']) : [];
+        $assigned_locations = array_values(array_filter(array_map(function ($location_slug) {
+            return sanitize_title(rawurldecode((string) $location_slug));
+        }, $assigned_locations)));
+        $assigned_locations = array_values(array_unique($assigned_locations));
         $manager_capabilities = isset($_POST['mulopimfwc_manager_capabilities']) ? array_map('sanitize_text_field', $_POST['mulopimfwc_manager_capabilities']) : [];
         $social_channels = [
             'slack_webhook' => isset($_POST['mulopimfwc_slack_webhook']) ? esc_url_raw(trim($_POST['mulopimfwc_slack_webhook'])) : '',
@@ -1965,6 +2037,10 @@ class MULOPIMFWC_Location_Managers
         update_user_meta($user_id, 'mulopimfwc_manager_capabilities', $manager_capabilities);
         update_user_meta($user_id, 'mulopimfwc_social_channels', $social_channels);
         update_user_meta($user_id, 'mulopimfwc_slack_webhook', $social_channels['slack_webhook']);
+        $manager_default_location = sanitize_title(rawurldecode((string) get_user_meta($user_id, 'mulopimfwc_manager_default_location', true)));
+        if ($manager_default_location !== '' && !in_array($manager_default_location, $assigned_locations, true)) {
+            delete_user_meta($user_id, 'mulopimfwc_manager_default_location');
+        }
 
         // Social alert for manager change (profile save)
         if (function_exists('mulopimfwc_get_social_settings') && function_exists('mulopimfwc_send_social_message') && function_exists('mulopimfwc_collect_social_channels')) {
