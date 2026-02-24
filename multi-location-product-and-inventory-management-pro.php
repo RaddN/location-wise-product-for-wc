@@ -10418,19 +10418,23 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         $stock_qty = ($args['stock_qty'] === '' || $args['stock_qty'] === null) ? null : (int) $args['stock_qty'];
-        $backorders = $args['backorders'] ? $args['backorders'] : 'off';
+        $raw_backorders = is_string($args['backorders']) ? $args['backorders'] : '';
+        $backorders = $raw_backorders !== '' ? strtolower(trim($raw_backorders)) : 'off';
+        $backorders_allowed = function_exists('mulopimfwc_is_backorder_allowed')
+            ? mulopimfwc_is_backorder_allowed($backorders)
+            : in_array($backorders, ['on', 'yes', 'notify'], true);
 
         $status = '';
         if ($stock_qty !== null) {
             if ($stock_qty > 0) {
                 $status = 'instock';
             } else {
-                $status = ($backorders !== 'off') ? 'onbackorder' : 'outofstock';
+                $status = $backorders_allowed ? 'onbackorder' : 'outofstock';
             }
         } else {
             $status = sanitize_text_field($args['stock_status']);
             if ($status === 'onbackorder' || $status === 'backorder') {
-                $status = 'onbackorder';
+                $status = $backorders_allowed ? 'onbackorder' : 'outofstock';
             } elseif ($status === 'outofstock') {
                 $status = 'outofstock';
             } else {
