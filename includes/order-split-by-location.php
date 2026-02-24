@@ -52,6 +52,11 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             // Avoid double stock reduction if parent keeps items for gateway compatibility.
             add_filter('woocommerce_can_reduce_order_stock', [$this, 'maybe_skip_parent_stock_reduction'], 10, 2);
             add_filter('woocommerce_can_restore_order_stock', [$this, 'maybe_skip_parent_stock_restoration'], 10, 2);
+
+            // Frontend rendering support for split parent orders that remove parent line items.
+            add_action('woocommerce_order_details_before_order_table', [$this, 'render_split_parent_summary_for_customer'], 8);
+            add_action('woocommerce_order_details_after_order_table_items', [$this, 'render_split_parent_line_items_for_customer'], 10);
+            add_filter('woocommerce_get_order_item_totals', [$this, 'filter_split_parent_totals_for_customer'], 10, 3);
         }
 
         private function get_options(): array
@@ -96,6 +101,205 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
         private function is_split_child($order): bool
         {
             return $order instanceof WC_Order && $order->get_meta('_mulopimfwc_split_child') === 'yes';
+        }
+
+        private function is_customer_order_details_context(): bool
+        {
+            $is_ajax = function_exists('wp_doing_ajax') ? wp_doing_ajax() : false;
+            if (is_admin() && !$is_ajax) {
+                return false;
+            }
+
+            if (function_exists('is_order_received_page') && is_order_received_page()) {
+                return true;
+            }
+
+            if (
+                function_exists('is_account_page') &&
+                function_exists('is_wc_endpoint_url') &&
+                is_account_page() &&
+                is_wc_endpoint_url('view-order')
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+
+        private function get_split_child_orders($order): array
+        {
+            if (!$this->is_split_parent($order)) {
+                return [];
+            }
+
+            $child_ids = array_values(array_unique(array_filter(array_map('absint', (array) $order->get_meta('_mulopimfwc_split_children')))));
+            if (empty($child_ids)) {
+                return [];
+            }
+
+            $children = [];
+            foreach ($child_ids as $child_id) {
+                $child = wc_get_order($child_id);
+                if (!$child instanceof WC_Order) {
+                    continue;
+                }
+
+                if (!$this->is_split_child($child)) {
+                    continue;
+                }
+
+                $children[] = $child;
+            }
+
+            return $children;
+        }
+
+        private function should_render_split_parent_customer_items($order): bool
+        {
+            if (!$order instanceof WC_Order) {
+                return false;
+            }
+
+            if (!$this->is_customer_order_details_context()) {
+                return false;
+            }
+
+            if (!$this->is_split_parent($order)) {
+                return false;
+            }
+
+            if (!empty($order->get_items('line_item'))) {
+                return false;
+            }
+
+            return !empty($this->get_split_child_orders($order));
+        }
+
+        private function get_location_label_from_slug(string $location_slug): string
+        {
+            $location_slug = sanitize_title($location_slug);
+            if ($location_slug === '') {
+                return __('Unassigned', 'multi-location-product-and-inventory-management');
+            }
+
+            $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+            if ($term && !is_wp_error($term)) {
+                return $term->name;
+            }
+
+            return ucwords(str_replace(['-', '_'], ' ', $location_slug));
+        }
+
+        public function render_split_parent_summary_for_customer($order)
+        {
+            if (!$this->should_render_split_parent_customer_items($order)) {
+                return;
+            }
+
+            $children = $this->get_split_child_orders($order);
+            if (empty($children)) {
+                return;
+            }
+
+            $child_numbers = array_map(static function (WC_Order $child): string {
+                return '#' . $child->get_order_number();
+            }, $children);
+
+            echo '<div class="woocommerce-info mulopimfwc-split-parent-notice">';
+            echo '<p style="margin:0;">' . esc_html(
+                sprintf(
+                    __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management'),
+                    implode(', ', $child_numbers)
+                )
+            ) . '</p>';
+            echo '</div>';
+        }
+
+        public function render_split_parent_line_items_for_customer($order)
+        {
+            if (!$this->should_render_split_parent_customer_items($order)) {
+                return;
+            }
+
+            $children = $this->get_split_child_orders($order);
+            if (empty($children)) {
+                return;
+            }
+
+            foreach ($children as $child) {
+                $location_slug = (string) $child->get_meta('_store_location');
+                $location_label = $this->get_location_label_from_slug($location_slug);
+
+                echo '<tr class="mulopimfwc-split-order-group">';
+                echo '<td colspan="2"><strong>' . esc_html(sprintf(__('Location: %s', 'multi-location-product-and-inventory-management'), $location_label)) . '</strong> ';
+                echo '<small>(' . esc_html(sprintf(__('Order %s', 'multi-location-product-and-inventory-management'), '#' . $child->get_order_number())) . ')</small></td>';
+                echo '</tr>';
+
+                $show_purchase_note = $child->has_status(apply_filters('woocommerce_purchase_note_order_statuses', ['completed', 'processing']));
+                $child_items = $child->get_items(apply_filters('woocommerce_purchase_order_item_types', 'line_item'));
+
+                foreach ($child_items as $item_id => $item) {
+                    $product = $item->get_product();
+                    wc_get_template(
+                        'order/order-details-item.php',
+                        [
+                            'order' => $child,
+                            'item_id' => $item_id,
+                            'item' => $item,
+                            'show_purchase_note' => $show_purchase_note,
+                            'purchase_note' => $product ? $product->get_purchase_note() : '',
+                            'product' => $product,
+                        ]
+                    );
+                }
+            }
+        }
+
+        public function filter_split_parent_totals_for_customer($total_rows, $order, $tax_display)
+        {
+            if (!$this->should_render_split_parent_customer_items($order)) {
+                return $total_rows;
+            }
+
+            $children = $this->get_split_child_orders($order);
+            if (empty($children)) {
+                return $total_rows;
+            }
+
+            $subtotal_total = 0.0;
+            $discount_total = 0.0;
+            $shipping_total = 0.0;
+            $order_total = 0.0;
+
+            foreach ($children as $child) {
+                $subtotal_total += (float) $child->get_subtotal();
+                $discount_total += (float) $child->get_discount_total();
+                $shipping_total += (float) $child->get_shipping_total();
+                $order_total += (float) $child->get_total();
+            }
+
+            $currency = $order->get_currency();
+
+            if (isset($total_rows['cart_subtotal'])) {
+                $total_rows['cart_subtotal']['value'] = wc_price($subtotal_total, ['currency' => $currency]);
+            } elseif (isset($total_rows['subtotal'])) {
+                // Backward compatibility for older/custom total row keys.
+                $total_rows['subtotal']['value'] = wc_price($subtotal_total, ['currency' => $currency]);
+            }
+
+            if ($discount_total > 0 && isset($total_rows['discount'])) {
+                $total_rows['discount']['value'] = '-' . wc_price($discount_total, ['currency' => $currency]);
+            }
+
+            if (isset($total_rows['shipping'])) {
+                $total_rows['shipping']['value'] = wc_price($shipping_total, ['currency' => $currency]);
+            }
+
+            if (isset($total_rows['order_total'])) {
+                $total_rows['order_total']['value'] = wc_price($order_total, ['currency' => $currency]);
+            }
+
+            return $total_rows;
         }
 
         public function save_package_location_meta($item, $package_key, $package, $order)
