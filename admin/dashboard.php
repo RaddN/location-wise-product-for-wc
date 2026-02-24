@@ -13,6 +13,118 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Normalize a location slug for consistent comparisons.
+     */
+    private function normalize_location_slug($location_slug): string
+    {
+        return sanitize_title(rawurldecode((string) $location_slug));
+    }
+
+    /**
+     * Get assigned location slugs for the current location manager.
+     *
+     * Returns null for non-location-manager users.
+     *
+     * @return array|null
+     */
+    private function get_dashboard_manager_assigned_location_slugs()
+    {
+        if (!is_user_logged_in() || !class_exists('MULOPIMFWC_Location_Managers')) {
+            return null;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+            return null;
+        }
+
+        $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+        if (!is_array($assigned_locations)) {
+            return [];
+        }
+
+        $assigned_locations = array_map([$this, 'normalize_location_slug'], $assigned_locations);
+        $assigned_locations = array_values(array_filter($assigned_locations, function ($slug) {
+            return is_string($slug) && $slug !== '';
+        }));
+
+        return array_values(array_unique($assigned_locations));
+    }
+
+    /**
+     * Get assigned location term IDs for the current location manager.
+     *
+     * Returns null for non-location-manager users.
+     *
+     * @return array|null
+     */
+    private function get_dashboard_manager_assigned_location_term_ids()
+    {
+        $assigned_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        if (!is_array($assigned_slugs)) {
+            return null;
+        }
+
+        if (empty($assigned_slugs)) {
+            return [];
+        }
+
+        $terms = get_terms([
+            'taxonomy' => 'mulopimfwc_store_location',
+            'hide_empty' => false,
+            'slug' => $assigned_slugs,
+            'fields' => 'ids',
+        ]);
+
+        if (is_wp_error($terms)) {
+            return [];
+        }
+
+        return array_values(array_map('intval', (array) $terms));
+    }
+
+    /**
+     * Return current dashboard locations scoped to assigned locations for location managers.
+     *
+     * @return array
+     */
+    private function get_dashboard_scoped_locations(): array
+    {
+        global $mulopimfwc_locations;
+
+        $locations = is_array($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)
+            ? $mulopimfwc_locations
+            : [];
+
+        if (empty($locations)) {
+            $terms = get_terms([
+                'taxonomy' => 'mulopimfwc_store_location',
+                'hide_empty' => false,
+            ]);
+            if (!is_wp_error($terms) && is_array($terms)) {
+                $locations = $terms;
+            }
+        }
+
+        $assigned_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        if (!is_array($assigned_slugs)) {
+            return $locations;
+        }
+
+        if (empty($assigned_slugs)) {
+            return [];
+        }
+
+        return array_values(array_filter($locations, function ($location) use ($assigned_slugs) {
+            if (!is_object($location) || !isset($location->slug)) {
+                return false;
+            }
+
+            return in_array($this->normalize_location_slug($location->slug), $assigned_slugs, true);
+        }));
+    }
+
+    /**
      * Export dashboard report as Excel/CSV
      */
     public function export_dashboard_report()
@@ -39,6 +151,7 @@ class MULOPIMFWC_Dashboard
         }
 
         global $mulopimfwc_locations, $wpdb;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
 
         if (function_exists('ini_set')) {
             ini_set('memory_limit', '512M');
@@ -240,6 +353,7 @@ class MULOPIMFWC_Dashboard
         }
 
         global $mulopimfwc_locations, $wpdb;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
 
         if (function_exists('ini_set')) {
             ini_set('memory_limit', '512M');
@@ -893,6 +1007,7 @@ class MULOPIMFWC_Dashboard
     public function dashboard_page_content()
     {
         global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
 
         // Increase memory limit for dashboard operations
         if (function_exists('ini_set')) {
@@ -924,13 +1039,23 @@ class MULOPIMFWC_Dashboard
 
         $can_manage_products = MULOPIMFWC_Location_Managers::user_has_capability('manage_products');
         $can_view_products = MULOPIMFWC_Location_Managers::user_has_capability('view_products');
+        $can_view_orders = MULOPIMFWC_Location_Managers::user_has_capability('view_orders');
+        $can_manage_orders = MULOPIMFWC_Location_Managers::user_has_capability('manage_orders');
         $can_export_report = MULOPIMFWC_Location_Managers::user_has_capability('export_report');
+        $current_user = wp_get_current_user();
+        $is_location_manager = is_user_logged_in() && in_array('mulopimfwc_location_manager', (array) $current_user->roles, true);
         $products_link = '';
         if ($can_manage_products) {
             $products_link = admin_url('edit.php?post_type=product');
         } elseif ($can_view_products) {
             $products_link = admin_url('admin.php?page=location-stock-management');
         }
+        $orders_link = (!$is_location_manager || $can_view_orders || $can_manage_orders)
+            ? admin_url('admin.php?page=wc-orders')
+            : '';
+        $locations_link = $is_location_manager
+            ? ''
+            : admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc');
 
         wp_localize_script('lwp-dashboard-js', 'mulopimfwc_DashboardData', [
             'ajaxurl' => admin_url('admin-ajax.php'),
@@ -1138,7 +1263,9 @@ class MULOPIMFWC_Dashboard
                                                 <?php echo esc_html($location->name); ?>
                                             </option>
                                         <?php endforeach; ?>
-                                        <option value="default"><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management'); ?></option>
+                                        <?php if (!$is_location_manager): ?>
+                                            <option value="default"><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management'); ?></option>
+                                        <?php endif; ?>
                                     </select>
                                 </div>
 
@@ -1214,6 +1341,10 @@ class MULOPIMFWC_Dashboard
                         <?php
                         $products_tag = $products_link ? 'a' : 'div';
                         $products_attrs = $products_link ? ' href="' . esc_url($products_link) . '"' : '';
+                        $locations_tag = $locations_link ? 'a' : 'div';
+                        $locations_attrs = $locations_link ? ' href="' . esc_url($locations_link) . '"' : '';
+                        $orders_tag = $orders_link ? 'a' : 'div';
+                        $orders_attrs = $orders_link ? ' href="' . esc_url($orders_link) . '"' : '';
                         ?>
                         <<?php echo $products_tag; ?> class="lwp-stat-item"<?php echo $products_attrs; ?>>
                             <div class="lwp-stat-item-icon">
@@ -1228,7 +1359,7 @@ class MULOPIMFWC_Dashboard
                                 <span class="lwp-stat-value"><?php echo esc_html($this->get_total_products_count()); ?></span>
                             </div>
                         </<?php echo $products_tag; ?>>
-                        <a href="<?php echo esc_url(admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc')); ?>" class="lwp-stat-item">
+                        <<?php echo $locations_tag; ?> class="lwp-stat-item"<?php echo $locations_attrs; ?>>
                             <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
 
                                 <svg class="svg-inline--fa fa-location-dot" aria-hidden="true" data-prefix="fas" data-icon="location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18">
@@ -1242,8 +1373,8 @@ class MULOPIMFWC_Dashboard
 
                             </div>
 
-                        </a>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=wc-orders')); ?>" class="lwp-stat-item <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
+                        </<?php echo $locations_tag; ?>>
+                        <<?php echo $orders_tag; ?> class="lwp-stat-item <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>"<?php echo $orders_attrs; ?>>
                             <div class="lwp-stat-item-icon" style="background-color: #f3e8ff;">
 
                                 <svg class="svg-inline--fa fa-cart-shopping" aria-hidden="true" data-prefix="fas" data-icon="cart-shopping" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="18">
@@ -1257,7 +1388,7 @@ class MULOPIMFWC_Dashboard
 
                             </div>
 
-                        </a>
+                        </<?php echo $orders_tag; ?>>
                         <div class="lwp-stat-item">
                             <div class="lwp-stat-item-icon" style="background-color: #cffafe;">
 
@@ -1792,11 +1923,27 @@ class MULOPIMFWC_Dashboard
         }
 
         global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
 
         $date_from = isset($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : '';
         $date_to = isset($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : '';
-        $location_filter = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : 'all';
+        $location_filter_raw = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : 'all';
+        $location_filter = $this->normalize_location_slug($location_filter_raw);
+        if ($location_filter === '') {
+            $location_filter = 'all';
+        }
         $status_filter = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : 'all';
+        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+
+        if (is_array($manager_location_slugs)) {
+            if (empty($manager_location_slugs)) {
+                $location_filter = '__none__';
+            } elseif ($location_filter === 'default') {
+                $location_filter = '__none__';
+            } elseif ($location_filter !== 'all' && !in_array($location_filter, $manager_location_slugs, true)) {
+                $location_filter = '__none__';
+            }
+        }
 
         // Get filtered data
         $orders_data = $this->get_orders_data_efficiently($date_from, $date_to, $location_filter, $status_filter);
@@ -2048,16 +2195,46 @@ class MULOPIMFWC_Dashboard
     {
         global $mulopimfwc_locations;
 
-        $orders_by_location = ['Default' => 0];
-        $location_revenue = ['Default' => 0];
-        $location_slugs = ['Default' => 'default'];
+        $normalized_location_filter = $this->normalize_location_slug($location_filter);
+        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        $is_manager_scope = is_array($manager_location_slugs);
+        $orders_by_location = $is_manager_scope ? [] : ['Default' => 0];
+        $location_revenue = $is_manager_scope ? [] : ['Default' => 0];
+        $location_slugs = $is_manager_scope ? [] : ['Default' => 'default'];
+
+        if ($is_manager_scope) {
+            if (empty($manager_location_slugs)) {
+                return [
+                    'orders' => $orders_by_location,
+                    'revenue' => $location_revenue,
+                ];
+            }
+
+            if ($normalized_location_filter === 'default') {
+                return [
+                    'orders' => $orders_by_location,
+                    'revenue' => $location_revenue,
+                ];
+            }
+
+            if (
+                $normalized_location_filter !== 'all' &&
+                !in_array($normalized_location_filter, $manager_location_slugs, true)
+            ) {
+                return [
+                    'orders' => $orders_by_location,
+                    'revenue' => $location_revenue,
+                ];
+            }
+        }
+
         $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
             ? mulopimfwc_get_revenue_order_statuses()
             : ['completed', 'processing', 'on-hold'];
         $calculate_revenue = function_exists('mulopimfwc_calculate_order_revenue') ? 'mulopimfwc_calculate_order_revenue' : null;
 
         foreach ($mulopimfwc_locations as $location) {
-            $location_slugs[$location->name] = rawurldecode($location->slug);
+            $location_slugs[$location->name] = $this->normalize_location_slug($location->slug);
             $orders_by_location[$location->name] = 0;
             $location_revenue[$location->name] = 0;
         }
@@ -2097,6 +2274,26 @@ class MULOPIMFWC_Dashboard
                 $args['date_created'] = '<=' . $date_to;
             }
 
+            if ($is_manager_scope) {
+                if ($normalized_location_filter !== 'all') {
+                    $args['meta_query'] = [
+                        [
+                            'key' => '_store_location',
+                            'value' => $normalized_location_filter,
+                            'compare' => '=',
+                        ],
+                    ];
+                } else {
+                    $args['meta_query'] = [
+                        [
+                            'key' => '_store_location',
+                            'value' => $manager_location_slugs,
+                            'compare' => 'IN',
+                        ],
+                    ];
+                }
+            }
+
             $order_ids = wc_get_orders($args);
             
             if (empty($order_ids)) {
@@ -2123,19 +2320,28 @@ class MULOPIMFWC_Dashboard
             }
 
             $order_location = $order->get_meta('_store_location');
+            $order_location_slug = $this->normalize_location_slug($order_location);
             $order_status = $order->get_status();
 
-            // Location filter
-            if ($location_filter !== 'all' && $order_location !== $location_filter) {
+            if ($is_manager_scope && !in_array($order_location_slug, $manager_location_slugs, true)) {
                 continue;
             }
 
-            $location_name = 'Default';
+            // Location filter
+            if ($normalized_location_filter !== 'all' && $order_location_slug !== $normalized_location_filter) {
+                continue;
+            }
+
+            $location_name = $is_manager_scope ? '' : 'Default';
             foreach ($location_slugs as $name => $slug) {
-                if ($slug === $order_location) {
+                if ($slug === $order_location_slug) {
                     $location_name = $name;
                     break;
                 }
+            }
+
+            if ($is_manager_scope && $location_name === '') {
+                continue;
             }
 
             $orders_by_location[$location_name]++;
@@ -2231,6 +2437,9 @@ class MULOPIMFWC_Dashboard
     private function get_recent_products_data($date_from = '', $date_to = '', $location_filter = 'all')
     {
         global $wpdb;
+        $normalized_location_filter = $this->normalize_location_slug($location_filter);
+        $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $selected_manager_term_id = 0;
 
         // Determine date range
         if (!empty($date_from) && !empty($date_to)) {
@@ -2246,11 +2455,86 @@ class MULOPIMFWC_Dashboard
         $labels = [];
         $counts = [];
 
+        if (is_array($manager_location_term_ids)) {
+            if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
+                for ($i = 0; $i < $days; $i++) {
+                    $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
+                    $labels[] = gmdate('M d', strtotime($date));
+                    $counts[] = 0;
+                }
+
+                return [
+                    'labels' => $labels,
+                    'counts' => $counts,
+                ];
+            }
+
+            if ($normalized_location_filter !== 'all') {
+                $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+                if (!$selected_term || is_wp_error($selected_term)) {
+                    for ($i = 0; $i < $days; $i++) {
+                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
+                        $labels[] = gmdate('M d', strtotime($date));
+                        $counts[] = 0;
+                    }
+
+                    return [
+                        'labels' => $labels,
+                        'counts' => $counts,
+                    ];
+                }
+
+                $selected_manager_term_id = (int) $selected_term->term_id;
+                if (!in_array($selected_manager_term_id, $manager_location_term_ids, true)) {
+                    for ($i = 0; $i < $days; $i++) {
+                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
+                        $labels[] = gmdate('M d', strtotime($date));
+                        $counts[] = 0;
+                    }
+
+                    return [
+                        'labels' => $labels,
+                        'counts' => $counts,
+                    ];
+                }
+            }
+        }
+
         for ($i = 0; $i < $days; $i++) {
             $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
             $labels[] = gmdate('M d', strtotime($date));
 
-            if ($location_filter === 'all') {
+            if (is_array($manager_location_term_ids)) {
+                if ($selected_manager_term_id > 0) {
+                    $query = $wpdb->prepare("
+                        SELECT COUNT(DISTINCT p.ID)
+                        FROM {$wpdb->posts} p
+                        INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                        WHERE p.post_type = 'product'
+                        AND p.post_status = 'publish'
+                        AND DATE(p.post_date) = %s
+                        AND tt.taxonomy = 'mulopimfwc_store_location'
+                        AND tt.term_id = %d
+                    ", $date, $selected_manager_term_id);
+                } else {
+                    $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
+                    $query = $wpdb->prepare(
+                        "
+                        SELECT COUNT(DISTINCT p.ID)
+                        FROM {$wpdb->posts} p
+                        INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                        WHERE p.post_type = 'product'
+                        AND p.post_status = 'publish'
+                        AND DATE(p.post_date) = %s
+                        AND tt.taxonomy = 'mulopimfwc_store_location'
+                        AND tt.term_id IN ({$term_placeholders})
+                        ",
+                        ...array_merge([$date], $manager_location_term_ids)
+                    );
+                }
+            } elseif ($location_filter === 'all') {
                 $query = $wpdb->prepare("
                 SELECT COUNT(*) 
                 FROM {$wpdb->posts} 
@@ -2298,6 +2582,9 @@ class MULOPIMFWC_Dashboard
     private function get_investment_data($date_from = '', $date_to = '', $location_filter = 'all')
     {
         global $wpdb;
+        $normalized_location_filter = $this->normalize_location_slug($location_filter);
+        $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $selected_manager_term_id = 0;
 
         // Determine date range
         if (!empty($date_from) && !empty($date_to)) {
@@ -2313,11 +2600,114 @@ class MULOPIMFWC_Dashboard
         $labels = [];
         $totals = [];
 
+        if (is_array($manager_location_term_ids)) {
+            if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
+                for ($i = 0; $i < $days; $i++) {
+                    $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
+                    $labels[] = gmdate('M d', strtotime($date));
+                    $totals[] = 0.0;
+                }
+
+                return [
+                    'labels' => $labels,
+                    'totals' => $totals,
+                ];
+            }
+
+            if ($normalized_location_filter !== 'all') {
+                $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+                if (!$selected_term || is_wp_error($selected_term)) {
+                    for ($i = 0; $i < $days; $i++) {
+                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
+                        $labels[] = gmdate('M d', strtotime($date));
+                        $totals[] = 0.0;
+                    }
+
+                    return [
+                        'labels' => $labels,
+                        'totals' => $totals,
+                    ];
+                }
+
+                $selected_manager_term_id = (int) $selected_term->term_id;
+                if (!in_array($selected_manager_term_id, $manager_location_term_ids, true)) {
+                    for ($i = 0; $i < $days; $i++) {
+                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
+                        $labels[] = gmdate('M d', strtotime($date));
+                        $totals[] = 0.0;
+                    }
+
+                    return [
+                        'labels' => $labels,
+                        'totals' => $totals,
+                    ];
+                }
+            }
+        }
+
         for ($i = 0; $i < $days; $i++) {
             $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
             $labels[] = gmdate('M d', strtotime($date));
 
-            if ($location_filter === 'all') {
+            if (is_array($manager_location_term_ids)) {
+                if ($selected_manager_term_id > 0) {
+                    $query = $wpdb->prepare("
+                        SELECT COALESCE(SUM(
+                            CAST(pm_price.meta_value AS DECIMAL(10,2)) *
+                            COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
+                        ), 0)
+                        FROM {$wpdb->posts} p
+                        INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
+                        INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
+                        INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
+                            CASE
+                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                                ELSE p.ID
+                            END
+                        )
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                        WHERE p.post_type IN ('product', 'product_variation')
+                        AND p.post_status IN ('publish', 'private')
+                        AND DATE(p.post_date) = %s
+                        AND tt.taxonomy = 'mulopimfwc_store_location'
+                        AND tt.term_id = %d
+                        AND pm_price.meta_value != ''
+                        AND pm_price.meta_value > 0
+                        AND pm_qty.meta_value != ''
+                        AND pm_qty.meta_value > 0
+                    ", $date, $selected_manager_term_id);
+                } else {
+                    $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
+                    $query = $wpdb->prepare(
+                        "
+                        SELECT COALESCE(SUM(
+                            CAST(pm_price.meta_value AS DECIMAL(10,2)) *
+                            COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
+                        ), 0)
+                        FROM {$wpdb->posts} p
+                        INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
+                        INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
+                        INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
+                            CASE
+                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                                ELSE p.ID
+                            END
+                        )
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                        WHERE p.post_type IN ('product', 'product_variation')
+                        AND p.post_status IN ('publish', 'private')
+                        AND DATE(p.post_date) = %s
+                        AND tt.taxonomy = 'mulopimfwc_store_location'
+                        AND tt.term_id IN ({$term_placeholders})
+                        AND pm_price.meta_value != ''
+                        AND pm_price.meta_value > 0
+                        AND pm_qty.meta_value != ''
+                        AND pm_qty.meta_value > 0
+                        ",
+                        ...array_merge([$date], $manager_location_term_ids)
+                    );
+                }
+            } elseif ($location_filter === 'all') {
                 $query = $wpdb->prepare("
                 SELECT COALESCE(SUM(
                     CAST(pm_price.meta_value AS DECIMAL(10,2)) * 
@@ -2427,33 +2817,14 @@ class MULOPIMFWC_Dashboard
     {
         global $wpdb;
 
-        // Check if current user is a location manager
-        $is_location_manager = false;
-        $assigned_location_slugs = [];
+        $assigned_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
 
-        if (is_user_logged_in()) {
-            $user = wp_get_current_user();
-            if (in_array('mulopimfwc_location_manager', $user->roles)) {
-                $is_location_manager = true;
-                $assigned_location_slugs = get_user_meta($user->ID, 'mulopimfwc_assigned_locations', true);
-
-                if (!is_array($assigned_location_slugs)) {
-                    $assigned_location_slugs = [];
-                }
+        // For location managers, always scope by assigned locations
+        if (is_array($assigned_location_slugs)) {
+            if (empty($assigned_location_slugs)) {
+                return 0;
             }
-        }
 
-        if (
-            $is_location_manager &&
-            class_exists('MULOPIMFWC_Location_Managers') &&
-            MULOPIMFWC_Location_Managers::user_has_capability('all_products')
-        ) {
-            $is_location_manager = false;
-            $assigned_location_slugs = [];
-        }
-
-        // For location managers with assigned locations
-        if ($is_location_manager && !empty($assigned_location_slugs)) {
             // Get term IDs from slugs
             $term_ids = [];
             foreach ($assigned_location_slugs as $slug) {
@@ -2797,6 +3168,7 @@ class MULOPIMFWC_Dashboard
     private function get_location_profitability_data(int $dead_stock_days = 90): array
     {
         global $mulopimfwc_locations;
+        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
 
         $locations = [];
         if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
@@ -2809,11 +3181,13 @@ class MULOPIMFWC_Dashboard
             }
         }
 
-        $locations[] = [
-            'name' => __('Default', 'multi-location-product-and-inventory-management'),
-            'slug' => 'default',
-            'term_id' => null
-        ];
+        if (!is_array($manager_location_slugs)) {
+            $locations[] = [
+                'name' => __('Default', 'multi-location-product-and-inventory-management'),
+                'slug' => 'default',
+                'term_id' => null
+            ];
+        }
 
         $results = [];
         $now = time();
@@ -2933,35 +3307,75 @@ class MULOPIMFWC_Dashboard
      */
     private function calculate_total_investment_efficiently()
     {
-        // Use caching to prevent recalculation
-        $cache_key = 'mulopimfwc_total_investment';
-        // $cached_value = get_transient($cache_key);
-
-        // if ($cached_value !== false) {
-        //     return $cached_value;
-        // }
-
         global $wpdb;
+        $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $cache_scope = is_array($manager_location_term_ids)
+            ? md5(wp_json_encode($manager_location_term_ids))
+            : 'global';
+        $cache_key = 'mulopimfwc_total_investment_' . $cache_scope;
+        $cached_value = get_transient($cache_key);
 
-        // FIXED: Use prepared statement for security
-        // Calculate investment based on _purchase_price and _purchase_quantity
-        $total_investment = $wpdb->get_var($wpdb->prepare("
-        SELECT COALESCE(SUM(
-            CAST(pm1.meta_value AS DECIMAL(10,2)) * 
-            COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
-        ), 0) as total
-        FROM {$wpdb->postmeta} pm1
-        INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
-        INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
-        WHERE pm1.meta_key = %s
-        AND pm2.meta_key = %s
-        AND p.post_type IN ('product', 'product_variation')
-        AND p.post_status IN ('publish', 'private')
-        AND pm1.meta_value != ''
-        AND pm1.meta_value > 0
-        AND pm2.meta_value != ''
-        AND pm2.meta_value > 0
-        ", '_purchase_price', '_purchase_quantity'));
+        if ($cached_value !== false) {
+            return (float) $cached_value;
+        }
+
+        if (is_array($manager_location_term_ids) && empty($manager_location_term_ids)) {
+            set_transient($cache_key, 0.0, HOUR_IN_SECONDS);
+            return 0.0;
+        }
+
+        if (is_array($manager_location_term_ids)) {
+            $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
+            $total_investment = $wpdb->get_var(
+                $wpdb->prepare(
+                    "
+                    SELECT COALESCE(SUM(
+                        CAST(pm1.meta_value AS DECIMAL(10,2)) *
+                        COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
+                    ), 0) as total
+                    FROM {$wpdb->postmeta} pm1
+                    INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
+                    INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
+                    INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
+                        CASE
+                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                            ELSE p.ID
+                        END
+                    )
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE pm1.meta_key = %s
+                    AND pm2.meta_key = %s
+                    AND p.post_type IN ('product', 'product_variation')
+                    AND p.post_status IN ('publish', 'private')
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id IN ({$term_placeholders})
+                    AND pm1.meta_value != ''
+                    AND pm1.meta_value > 0
+                    AND pm2.meta_value != ''
+                    AND pm2.meta_value > 0
+                    ",
+                    ...array_merge(['_purchase_price', '_purchase_quantity'], $manager_location_term_ids)
+                )
+            );
+        } else {
+            $total_investment = $wpdb->get_var($wpdb->prepare("
+                SELECT COALESCE(SUM(
+                    CAST(pm1.meta_value AS DECIMAL(10,2)) *
+                    COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
+                ), 0) as total
+                FROM {$wpdb->postmeta} pm1
+                INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
+                INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
+                WHERE pm1.meta_key = %s
+                AND pm2.meta_key = %s
+                AND p.post_type IN ('product', 'product_variation')
+                AND p.post_status IN ('publish', 'private')
+                AND pm1.meta_value != ''
+                AND pm1.meta_value > 0
+                AND pm2.meta_value != ''
+                AND pm2.meta_value > 0
+            ", '_purchase_price', '_purchase_quantity'));
+        }
 
         $total_investment = floatval($total_investment);
 
@@ -2976,7 +3390,11 @@ class MULOPIMFWC_Dashboard
      */
     private function get_monthly_investment_data_cached()
     {
-        $cache_key = 'mulopimfwc_monthly_investment';
+        $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $cache_scope = is_array($manager_location_term_ids)
+            ? md5(wp_json_encode($manager_location_term_ids))
+            : 'global';
+        $cache_key = 'mulopimfwc_monthly_investment_' . $cache_scope;
         $cached_data = get_transient($cache_key);
 
         global $wpdb;
@@ -2992,18 +3410,54 @@ class MULOPIMFWC_Dashboard
             $cursor = $cursor->modify('+1 month');
         }
 
-        // If no purchase prices exist, investment is zero across the board.
-        $has_purchase_price = (int) $wpdb->get_var("
-            SELECT 1
-            FROM {$wpdb->postmeta} pm
-            INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-            WHERE pm.meta_key = '_purchase_price'
-            AND pm.meta_value != ''
-            AND pm.meta_value > 0
-            AND p.post_type IN ('product', 'product_variation')
-            AND p.post_status IN ('publish', 'private')
-            LIMIT 1
-        ");
+        if (is_array($manager_location_term_ids) && empty($manager_location_term_ids)) {
+            return [
+                'labels' => $labels,
+                'data' => array_fill(0, 12, 0.0),
+            ];
+        }
+
+        // If no purchase prices exist in the scoped dataset, investment is zero across the board.
+        if (is_array($manager_location_term_ids)) {
+            $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
+            $has_purchase_price = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "
+                    SELECT 1
+                    FROM {$wpdb->postmeta} pm
+                    INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                    INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
+                        CASE
+                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                            ELSE p.ID
+                        END
+                    )
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE pm.meta_key = '_purchase_price'
+                    AND pm.meta_value != ''
+                    AND pm.meta_value > 0
+                    AND p.post_type IN ('product', 'product_variation')
+                    AND p.post_status IN ('publish', 'private')
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id IN ({$term_placeholders})
+                    LIMIT 1
+                    ",
+                    ...$manager_location_term_ids
+                )
+            );
+        } else {
+            $has_purchase_price = (int) $wpdb->get_var("
+                SELECT 1
+                FROM {$wpdb->postmeta} pm
+                INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                WHERE pm.meta_key = '_purchase_price'
+                AND pm.meta_value != ''
+                AND pm.meta_value > 0
+                AND p.post_type IN ('product', 'product_variation')
+                AND p.post_status IN ('publish', 'private')
+                LIMIT 1
+            ");
+        }
 
         if (!$has_purchase_price) {
             $result = [
@@ -3018,25 +3472,60 @@ class MULOPIMFWC_Dashboard
             return $cached_data;
         }
 
-        $query = $wpdb->prepare("
-            SELECT DATE_FORMAT(p.post_date, '%%Y-%%m') AS ym,
-                   COALESCE(SUM(
-                       CAST(pm_price.meta_value AS DECIMAL(10,2)) * 
-                       COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                   ), 0) AS total
-            FROM {$wpdb->posts} p
-            INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-            INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-            WHERE p.post_type IN ('product', 'product_variation')
-            AND p.post_status IN ('publish', 'private')
-            AND p.post_date >= %s
-            AND p.post_date < %s
-            AND pm_price.meta_value != ''
-            AND pm_price.meta_value > 0
-            AND pm_qty.meta_value != ''
-            AND pm_qty.meta_value > 0
-            GROUP BY ym
-        ", $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'));
+        if (is_array($manager_location_term_ids)) {
+            $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
+            $query = $wpdb->prepare(
+                "
+                SELECT DATE_FORMAT(p.post_date, '%%Y-%%m') AS ym,
+                       COALESCE(SUM(
+                           CAST(pm_price.meta_value AS DECIMAL(10,2)) *
+                           COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
+                       ), 0) AS total
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
+                INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
+                INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
+                    CASE
+                        WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                        ELSE p.ID
+                    END
+                )
+                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                WHERE p.post_type IN ('product', 'product_variation')
+                AND p.post_status IN ('publish', 'private')
+                AND p.post_date >= %s
+                AND p.post_date < %s
+                AND tt.taxonomy = 'mulopimfwc_store_location'
+                AND tt.term_id IN ({$term_placeholders})
+                AND pm_price.meta_value != ''
+                AND pm_price.meta_value > 0
+                AND pm_qty.meta_value != ''
+                AND pm_qty.meta_value > 0
+                GROUP BY ym
+                ",
+                ...array_merge([$start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s')], $manager_location_term_ids)
+            );
+        } else {
+            $query = $wpdb->prepare("
+                SELECT DATE_FORMAT(p.post_date, '%%Y-%%m') AS ym,
+                       COALESCE(SUM(
+                           CAST(pm_price.meta_value AS DECIMAL(10,2)) *
+                           COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
+                       ), 0) AS total
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
+                INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
+                WHERE p.post_type IN ('product', 'product_variation')
+                AND p.post_status IN ('publish', 'private')
+                AND p.post_date >= %s
+                AND p.post_date < %s
+                AND pm_price.meta_value != ''
+                AND pm_price.meta_value > 0
+                AND pm_qty.meta_value != ''
+                AND pm_qty.meta_value > 0
+                GROUP BY ym
+            ", $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'));
+        }
 
         $rows = $wpdb->get_results($query);
         $totals_by_month = [];
@@ -3071,6 +3560,7 @@ class MULOPIMFWC_Dashboard
     private function build_dashboard_payload(): array
     {
         global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
 
         $product_counts = [];
         $stock_levels = [];
