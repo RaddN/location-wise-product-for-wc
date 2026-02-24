@@ -2659,18 +2659,22 @@ class MULOPIMFWC_Dashboard
                         FROM {$wpdb->posts} p
                         INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
                         INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                        INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
-                            CASE
-                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                                ELSE p.ID
-                            END
-                        )
-                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
                         WHERE p.post_type IN ('product', 'product_variation')
                         AND p.post_status IN ('publish', 'private')
                         AND DATE(p.post_date) = %s
-                        AND tt.taxonomy = 'mulopimfwc_store_location'
-                        AND tt.term_id = %d
+                        AND EXISTS (
+                            SELECT 1
+                            FROM {$wpdb->term_relationships} tr
+                            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                            WHERE tr.object_id = (
+                                CASE
+                                    WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                                    ELSE p.ID
+                                END
+                            )
+                            AND tt.taxonomy = 'mulopimfwc_store_location'
+                            AND tt.term_id = %d
+                        )
                         AND pm_price.meta_value != ''
                         AND pm_price.meta_value > 0
                         AND pm_qty.meta_value != ''
@@ -2687,18 +2691,22 @@ class MULOPIMFWC_Dashboard
                         FROM {$wpdb->posts} p
                         INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
                         INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                        INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
-                            CASE
-                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                                ELSE p.ID
-                            END
-                        )
-                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
                         WHERE p.post_type IN ('product', 'product_variation')
                         AND p.post_status IN ('publish', 'private')
                         AND DATE(p.post_date) = %s
-                        AND tt.taxonomy = 'mulopimfwc_store_location'
-                        AND tt.term_id IN ({$term_placeholders})
+                        AND EXISTS (
+                            SELECT 1
+                            FROM {$wpdb->term_relationships} tr
+                            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                            WHERE tr.object_id = (
+                                CASE
+                                    WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                                    ELSE p.ID
+                                END
+                            )
+                            AND tt.taxonomy = 'mulopimfwc_store_location'
+                            AND tt.term_id IN ({$term_placeholders})
+                        )
                         AND pm_price.meta_value != ''
                         AND pm_price.meta_value > 0
                         AND pm_qty.meta_value != ''
@@ -2847,7 +2855,7 @@ class MULOPIMFWC_Dashboard
             INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
             INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
             WHERE p.post_type = 'product' 
-            AND p.post_status = 'publish'
+            AND p.post_status NOT IN ('trash', 'auto-draft')
             AND tt.taxonomy = 'mulopimfwc_store_location'
             AND tt.term_id IN ({$term_ids_placeholder})",
                 ...$term_ids
@@ -2857,7 +2865,7 @@ class MULOPIMFWC_Dashboard
         }
 
         // For admins and other users, return all products
-        $query = "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status = 'publish'";
+        $query = "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status NOT IN ('trash', 'auto-draft')";
         return (int) $wpdb->get_var($query);
     }
 
@@ -3309,10 +3317,13 @@ class MULOPIMFWC_Dashboard
     {
         global $wpdb;
         $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
         $cache_scope = is_array($manager_location_term_ids)
             ? md5(wp_json_encode($manager_location_term_ids))
             : 'global';
-        $cache_key = 'mulopimfwc_total_investment_' . $cache_scope;
+        $cache_key = 'mulopimfwc_total_investment_v' . $cache_version . '_' . $cache_scope;
         $cached_value = get_transient($cache_key);
 
         if ($cached_value !== false) {
@@ -3336,19 +3347,23 @@ class MULOPIMFWC_Dashboard
                     FROM {$wpdb->postmeta} pm1
                     INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
                     INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
-                    INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
-                        CASE
-                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                            ELSE p.ID
-                        END
-                    )
-                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
                     WHERE pm1.meta_key = %s
                     AND pm2.meta_key = %s
                     AND p.post_type IN ('product', 'product_variation')
                     AND p.post_status IN ('publish', 'private')
-                    AND tt.taxonomy = 'mulopimfwc_store_location'
-                    AND tt.term_id IN ({$term_placeholders})
+                    AND EXISTS (
+                        SELECT 1
+                        FROM {$wpdb->term_relationships} tr
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                        WHERE tr.object_id = (
+                            CASE
+                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                                ELSE p.ID
+                            END
+                        )
+                        AND tt.taxonomy = 'mulopimfwc_store_location'
+                        AND tt.term_id IN ({$term_placeholders})
+                    )
                     AND pm1.meta_value != ''
                     AND pm1.meta_value > 0
                     AND pm2.meta_value != ''
@@ -3391,10 +3406,13 @@ class MULOPIMFWC_Dashboard
     private function get_monthly_investment_data_cached()
     {
         $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
         $cache_scope = is_array($manager_location_term_ids)
             ? md5(wp_json_encode($manager_location_term_ids))
             : 'global';
-        $cache_key = 'mulopimfwc_monthly_investment_' . $cache_scope;
+        $cache_key = 'mulopimfwc_monthly_investment_v' . $cache_version . '_' . $cache_scope;
         $cached_data = get_transient($cache_key);
 
         global $wpdb;
@@ -3426,20 +3444,24 @@ class MULOPIMFWC_Dashboard
                     SELECT 1
                     FROM {$wpdb->postmeta} pm
                     INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-                    INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
-                        CASE
-                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                            ELSE p.ID
-                        END
-                    )
-                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
                     WHERE pm.meta_key = '_purchase_price'
                     AND pm.meta_value != ''
                     AND pm.meta_value > 0
                     AND p.post_type IN ('product', 'product_variation')
                     AND p.post_status IN ('publish', 'private')
-                    AND tt.taxonomy = 'mulopimfwc_store_location'
-                    AND tt.term_id IN ({$term_placeholders})
+                    AND EXISTS (
+                        SELECT 1
+                        FROM {$wpdb->term_relationships} tr
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                        WHERE tr.object_id = (
+                            CASE
+                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                                ELSE p.ID
+                            END
+                        )
+                        AND tt.taxonomy = 'mulopimfwc_store_location'
+                        AND tt.term_id IN ({$term_placeholders})
+                    )
                     LIMIT 1
                     ",
                     ...$manager_location_term_ids
@@ -3484,19 +3506,23 @@ class MULOPIMFWC_Dashboard
                 FROM {$wpdb->posts} p
                 INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
                 INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
-                    CASE
-                        WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                        ELSE p.ID
-                    END
-                )
-                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
                 WHERE p.post_type IN ('product', 'product_variation')
                 AND p.post_status IN ('publish', 'private')
                 AND p.post_date >= %s
                 AND p.post_date < %s
-                AND tt.taxonomy = 'mulopimfwc_store_location'
-                AND tt.term_id IN ({$term_placeholders})
+                AND EXISTS (
+                    SELECT 1
+                    FROM {$wpdb->term_relationships} tr
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE tr.object_id = (
+                        CASE
+                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
+                            ELSE p.ID
+                        END
+                    )
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id IN ({$term_placeholders})
+                )
                 AND pm_price.meta_value != ''
                 AND pm_price.meta_value > 0
                 AND pm_qty.meta_value != ''
