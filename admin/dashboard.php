@@ -3139,6 +3139,42 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Build a cache scope hash for live dashboard payloads.
+     * This prevents location-scoped data from leaking between users.
+     */
+    private function get_live_dashboard_cache_scope_hash(): string
+    {
+        $scope = [
+            'user_id' => (int) get_current_user_id(),
+            'role' => 'default',
+        ];
+
+        if (is_user_logged_in() && class_exists('MULOPIMFWC_Location_Managers')) {
+            $user = wp_get_current_user();
+            if (in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+                $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+                if (!is_array($assigned_locations)) {
+                    $assigned_locations = [];
+                }
+                $assigned_locations = array_values(array_unique(array_filter(array_map('strval', $assigned_locations))));
+                sort($assigned_locations, SORT_STRING);
+
+                $scope['role'] = 'location_manager';
+                $scope['all_products'] = MULOPIMFWC_Location_Managers::user_has_capability('all_products') ? 1 : 0;
+                $scope['all_orders'] = MULOPIMFWC_Location_Managers::user_has_capability('all_orders') ? 1 : 0;
+                $scope['assigned_locations'] = $assigned_locations;
+            }
+        }
+
+        $scope_json = wp_json_encode($scope);
+        if (!is_string($scope_json) || $scope_json === '') {
+            $scope_json = serialize($scope);
+        }
+
+        return md5($scope_json);
+    }
+
+    /**
      * AJAX endpoint for live dashboard updates.
      */
     public function handle_live_dashboard_data()
@@ -3163,8 +3199,11 @@ class MULOPIMFWC_Dashboard
         }
         set_transient($rate_limit_key, time(), 10); // 10 second expiry
 
-        // FIXED: Use caching to reduce database load (Issue #32)
-        $cache_key = 'mulopimfwc_dashboard_live_data';
+        // FIXED: Use scoped caching to reduce database load without cross-user data leakage.
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_dashboard_live_data_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
         $cached_data = get_transient($cache_key);
         if ($cached_data !== false) {
             wp_send_json_success($cached_data);

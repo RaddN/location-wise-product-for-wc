@@ -2696,6 +2696,19 @@ class MULOPIMFWC_Admin
         return in_array('mulopimfwc_location_manager', (array) $user->roles, true);
     }
 
+    private function current_user_can_manage_order_operations(): bool
+    {
+        if (!$this->is_current_user_location_manager()) {
+            return current_user_can('edit_shop_orders') || current_user_can('manage_woocommerce');
+        }
+
+        if (!class_exists('MULOPIMFWC_Location_Managers')) {
+            return false;
+        }
+
+        return MULOPIMFWC_Location_Managers::current_user_can_manage_orders();
+    }
+
     private function get_current_user_allowed_location_slugs()
     {
         if (!class_exists('MULOPIMFWC_Location_Managers')) {
@@ -2868,7 +2881,7 @@ class MULOPIMFWC_Admin
      */
     private function render_quick_assignment_dropdown($order)
     {
-        if (!$order || !current_user_can('edit_shop_order', $order->get_id())) {
+        if (!$order || !current_user_can('edit_shop_order', $order->get_id()) || !$this->current_user_can_manage_order_operations()) {
             return '<span class="mulopimfwc-unassigned-badge">⚠️ ' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management') . '</span>';
         }
 
@@ -3685,7 +3698,7 @@ class MULOPIMFWC_Admin
     {
         check_ajax_referer('mulopimfwc_quick_assign_' . (isset($_POST['order_id']) ? intval($_POST['order_id']) : 0), 'nonce');
 
-        if (!current_user_can('edit_shop_orders')) {
+        if (!current_user_can('edit_shop_orders') || !$this->current_user_can_manage_order_operations()) {
             wp_send_json_error(array('message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')));
         }
 
@@ -3729,6 +3742,10 @@ class MULOPIMFWC_Admin
 
     public function add_bulk_location_assignment($actions)
     {
+        if (!$this->current_user_can_manage_order_operations()) {
+            return $actions;
+        }
+
         $options = get_option('mulopimfwc_display_options', []);
         $is_manual_mode = isset($options['order_assignment_method'])
             && $options['order_assignment_method'] === 'manual';
@@ -3744,6 +3761,10 @@ class MULOPIMFWC_Admin
 
     public function render_bulk_assignment_modal()
     {
+        if (!$this->current_user_can_manage_order_operations()) {
+            return;
+        }
+
         if (!$this->is_orders_list_screen()) {
             return;
         }
@@ -3809,7 +3830,7 @@ class MULOPIMFWC_Admin
     {
         check_ajax_referer('mulopimfwc_bulk_assign_location', 'nonce');
 
-        if (!current_user_can('edit_shop_orders')) {
+        if (!current_user_can('edit_shop_orders') || !$this->current_user_can_manage_order_operations()) {
             wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')]);
         }
 
@@ -3938,7 +3959,7 @@ class MULOPIMFWC_Admin
     {
         check_ajax_referer('mulopimfwc_bulk_assign_location', 'nonce');
 
-        if (!current_user_can('edit_shop_orders')) {
+        if (!current_user_can('edit_shop_orders') || !$this->current_user_can_manage_order_operations()) {
             wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')]);
         }
 
@@ -4108,6 +4129,10 @@ class MULOPIMFWC_Admin
 
     public function enqueue_bulk_assignment_assets($hook)
     {
+        if (!$this->current_user_can_manage_order_operations()) {
+            return;
+        }
+
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
         if (!$this->is_orders_list_screen($screen)) {
             return;
@@ -4173,7 +4198,8 @@ class MULOPIMFWC_Admin
             'orderby' => 'name',
             'order' => 'ASC',
         ));
-        $can_edit = current_user_can('edit_shop_order', $order->get_id()) || current_user_can('manage_woocommerce');
+        $can_edit = (current_user_can('edit_shop_order', $order->get_id()) || current_user_can('manage_woocommerce'))
+            && $this->current_user_can_manage_order_operations();
         $options = get_option('mulopimfwc_display_options', []);
         $is_manual_mode = isset($options['order_assignment_method'])
             && $options['order_assignment_method'] === 'manual';
@@ -4335,6 +4361,10 @@ class MULOPIMFWC_Admin
         }
 
         if (!current_user_can('edit_shop_order', $order_id) && !current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        if (!$this->current_user_can_manage_order_operations()) {
             return;
         }
 

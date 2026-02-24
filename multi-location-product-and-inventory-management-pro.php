@@ -3417,6 +3417,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $order = wc_get_order($order_id);
                 $is_editable = $order && method_exists($order, 'is_editable') && $order->is_editable();
             }
+
+            $can_manage_order = true;
+            if (class_exists('MULOPIMFWC_Location_Managers')) {
+                $can_manage_order = !MULOPIMFWC_Location_Managers::current_user_is_view_only_order_manager();
+            }
             
             // Get order ID for data attribute
             $order_id_for_attr = 0;
@@ -3431,7 +3436,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             echo '<div class="mulopimfwc-order-item-location-selector" data-item-id="' . esc_attr($item_id) . '" data-order-id="' . esc_attr($order_id_for_attr) . '" data-product-id="' . esc_attr($product_id) . '" data-variation-id="' . esc_attr($variation_id) . '" data-quantity="' . esc_attr($item->get_quantity()) . '">';
             echo '<strong>' . esc_html__('Location:', 'multi-location-product-and-inventory-management') . '</strong> ';
             
-            $show_selector = $is_editable && (count($available_locations) > 1 || empty($current_location));
+            $show_selector = $can_manage_order && $is_editable && (count($available_locations) > 1 || empty($current_location));
             if ($show_selector) {
                 // Show dropdown selector for editable orders with multiple locations
                 $current_quantity = $item->get_quantity();
@@ -3534,6 +3539,13 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Check user permissions
             if (!current_user_can('edit_shop_orders')) {
+                wp_send_json_error(['message' => __('You do not have permission to edit orders', 'multi-location-product-and-inventory-management')]);
+            }
+
+            if (
+                class_exists('MULOPIMFWC_Location_Managers') &&
+                MULOPIMFWC_Location_Managers::current_user_is_view_only_order_manager()
+            ) {
                 wp_send_json_error(['message' => __('You do not have permission to edit orders', 'multi-location-product-and-inventory-management')]);
             }
 

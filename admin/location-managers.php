@@ -35,6 +35,10 @@ class MULOPIMFWC_Location_Managers
 
         // Redirect location managers to admin dashboard instead of my-account
         add_action('wp_login', [$this, 'redirect_location_manager_after_login'], 10, 2);
+
+        // Keep order details read-only when manager can view orders but cannot manage them.
+        add_action('admin_head', [$this, 'disable_order_details_editing_for_view_only_managers']);
+        add_filter('woocommerce_order_is_editable', [$this, 'make_order_details_readonly_for_view_only_managers'], 20, 2);
     }
 
     public function redirect_location_manager_after_login($user_login, $user)
@@ -1729,6 +1733,127 @@ class MULOPIMFWC_Location_Managers
         }
     }
 
+    private function is_order_details_screen($screen = null)
+    {
+        if (!is_admin() || !function_exists('get_current_screen')) {
+            return false;
+        }
+
+        $screen = $screen ?: get_current_screen();
+        if (!$screen) {
+            return false;
+        }
+
+        $is_classic_edit = ($screen->base === 'post' && $screen->post_type === 'shop_order');
+        $action = isset($_GET['action']) ? sanitize_text_field(wp_unslash($_GET['action'])) : '';
+        $is_hpos_edit = ($screen->id === 'woocommerce_page_wc-orders' && $action === 'edit');
+
+        return $is_classic_edit || $is_hpos_edit;
+    }
+
+    public function make_order_details_readonly_for_view_only_managers($is_editable, $order = null)
+    {
+        if (!is_admin()) {
+            return $is_editable;
+        }
+
+        if (!self::current_user_is_view_only_order_manager()) {
+            return $is_editable;
+        }
+
+        return false;
+    }
+
+    public function disable_order_details_editing_for_view_only_managers()
+    {
+        if (!self::current_user_is_view_only_order_manager()) {
+            return;
+        }
+
+        if (!$this->is_order_details_screen()) {
+            return;
+        }
+?>
+        <style id="mulopimfwc-order-readonly-style">
+            .mulopimfwc-order-readonly-field {
+                cursor: not-allowed !important;
+            }
+
+            .mulopimfwc-order-readonly-link {
+                pointer-events: none !important;
+                opacity: 0.55 !important;
+            }
+        </style>
+        <script id="mulopimfwc-order-readonly-script">
+            (function () {
+                function shouldSkip(node) {
+                    if (!node) {
+                        return true;
+                    }
+
+                    if (node.matches('.notice-dismiss, .handlediv, .postbox-header button, .hndle button, .toggle-indicator')) {
+                        return true;
+                    }
+
+                    if (node.closest('#screen-options-wrap, #contextual-help-wrap, #wpadminbar, #adminmenuwrap, #adminmenuback')) {
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                function lockOrderEditing() {
+                    var roots = document.querySelectorAll('#post, .woocommerce-layout__main, .woocommerce-order');
+                    if (!roots.length) {
+                        roots = [document];
+                    }
+
+                    roots.forEach(function (root) {
+                        var controls = root.querySelectorAll('input:not([type="hidden"]), select, textarea, button');
+                        controls.forEach(function (control) {
+                            if (shouldSkip(control)) {
+                                return;
+                            }
+
+                            control.disabled = true;
+                            if (control.tagName === 'INPUT' || control.tagName === 'TEXTAREA') {
+                                control.readOnly = true;
+                            }
+                            control.classList.add('mulopimfwc-order-readonly-field');
+                        });
+
+                        var actionLinks = root.querySelectorAll('a.button, a.button-primary, a.button-secondary');
+                        actionLinks.forEach(function (link) {
+                            if (shouldSkip(link)) {
+                                return;
+                            }
+
+                            link.classList.add('mulopimfwc-order-readonly-link');
+                            link.setAttribute('aria-disabled', 'true');
+                            link.setAttribute('tabindex', '-1');
+                        });
+                    });
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', lockOrderEditing);
+                } else {
+                    lockOrderEditing();
+                }
+
+                var observer = new MutationObserver(function () {
+                    lockOrderEditing();
+                });
+
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            })();
+        </script>
+<?php
+    }
+
     /**
      * Add user profile fields for location manager settings
      */
@@ -1924,6 +2049,35 @@ class MULOPIMFWC_Location_Managers
         $manager_capabilities = self::normalize_manager_capabilities($manager_capabilities);
 
         return in_array($capability, $manager_capabilities, true);
+    }
+
+    public static function current_user_can_manage_orders()
+    {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+            return current_user_can('edit_shop_orders') || current_user_can('manage_woocommerce');
+        }
+
+        return self::user_has_capability('manage_orders', $user->ID);
+    }
+
+    public static function current_user_is_view_only_order_manager()
+    {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+            return false;
+        }
+
+        return self::user_has_capability('view_orders', $user->ID)
+            && !self::user_has_capability('manage_orders', $user->ID);
     }
 
     /**
