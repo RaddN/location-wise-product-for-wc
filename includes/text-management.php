@@ -644,6 +644,28 @@ if (!function_exists('mulopimfwc_get_text_management_fields')) {
                         'rows' => 2,
                     ],
                     [
+                        'key' => 'text_cart_split_order_notice',
+                        'label' => __('Split Order Notice', 'multi-location-product-and-inventory-management'),
+                        'default' => __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Shown on thank-you and order details pages when split order is enabled. Use %s for child order numbers.', 'multi-location-product-and-inventory-management'),
+                        'type' => 'textarea',
+                        'rows' => 2,
+                    ],
+                    [
+                        'key' => 'text_cart_split_order_location_label',
+                        'label' => __('Split Order Location Row Label', 'multi-location-product-and-inventory-management'),
+                        'default' => __('Location: %s', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Label shown above each location group on split-order customer pages. Use %s for location name.', 'multi-location-product-and-inventory-management'),
+                        'type' => 'text',
+                    ],
+                    [
+                        'key' => 'text_cart_split_order_child_label',
+                        'label' => __('Split Order Child Label', 'multi-location-product-and-inventory-management'),
+                        'default' => __('Order %s', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Label shown beside each split child order number. Use %s for order number.', 'multi-location-product-and-inventory-management'),
+                        'type' => 'text',
+                    ],
+                    [
                         'key' => 'text_cart_unable_change',
                         'label' => __('Unable to Change Location', 'multi-location-product-and-inventory-management'),
                         'default' => __('Unable to change location. Please try again.', 'multi-location-product-and-inventory-management'),
@@ -1047,3 +1069,126 @@ if (!function_exists('mulopimfwc_get_text_value')) {
         return $default;
     }
 }
+
+if (!function_exists('mulopimfwc_get_text_management_runtime_map')) {
+    /**
+     * Build a runtime map of default plugin strings => customized text-management values.
+     *
+     * This provides backward-compatible translation for legacy strings that still
+     * call __() directly instead of mulopimfwc_get_text_value().
+     *
+     * @return array<string, string>
+     */
+    function mulopimfwc_get_text_management_runtime_map(): array
+    {
+        static $map_cache = null;
+        static $is_building = false;
+
+        if (is_array($map_cache)) {
+            return $map_cache;
+        }
+
+        if ($is_building) {
+            return [];
+        }
+
+        $is_building = true;
+
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        $defaults = mulopimfwc_get_text_management_defaults();
+        $map = [];
+
+        foreach ($defaults as $key => $default_value) {
+            if (!is_string($default_value) || $default_value === '') {
+                continue;
+            }
+
+            if (!is_array($options) || !array_key_exists($key, $options) || !is_string($options[$key])) {
+                continue;
+            }
+
+            $custom_value = trim($options[$key]) === '' ? $default_value : (string) $options[$key];
+
+            if ($custom_value !== '' && $custom_value !== $default_value) {
+                $map[$default_value] = $custom_value;
+            }
+        }
+
+        $is_building = false;
+        $map_cache = $map;
+
+        return $map_cache;
+    }
+}
+
+if (!function_exists('mulopimfwc_apply_text_management_gettext_override')) {
+    /**
+     * Apply Text Management overrides for plugin-domain gettext strings.
+     *
+     * @param string $translated
+     * @param string $original
+     * @param string $domain
+     * @return string
+     */
+    function mulopimfwc_apply_text_management_gettext_override($translated, $original, $domain)
+    {
+        if ($domain !== 'multi-location-product-and-inventory-management' || !is_string($original) || $original === '') {
+            return $translated;
+        }
+
+        $map = mulopimfwc_get_text_management_runtime_map();
+        if (isset($map[$original])) {
+            return $map[$original];
+        }
+
+        return $translated;
+    }
+}
+
+if (!function_exists('mulopimfwc_apply_text_management_ngettext_override')) {
+    /**
+     * Apply Text Management overrides for plugin-domain plural gettext strings.
+     *
+     * @param string $translated
+     * @param string $single
+     * @param string $plural
+     * @param int    $number
+     * @param string $domain
+     * @return string
+     */
+    function mulopimfwc_apply_text_management_ngettext_override($translated, $single, $plural, $number, $domain)
+    {
+        if ($domain !== 'multi-location-product-and-inventory-management') {
+            return $translated;
+        }
+
+        $map = mulopimfwc_get_text_management_runtime_map();
+
+        if (is_string($translated) && isset($map[$translated])) {
+            return $map[$translated];
+        }
+
+        if ((int) $number === 1 && is_string($single) && isset($map[$single])) {
+            return $map[$single];
+        }
+
+        if ((int) $number !== 1 && is_string($plural) && isset($map[$plural])) {
+            return $map[$plural];
+        }
+
+        return $translated;
+    }
+}
+
+add_filter('gettext', 'mulopimfwc_apply_text_management_gettext_override', 20, 3);
+add_filter('gettext_with_context', function ($translated, $original, $context, $domain) {
+    return mulopimfwc_apply_text_management_gettext_override($translated, $original, $domain);
+}, 20, 4);
+add_filter('ngettext', 'mulopimfwc_apply_text_management_ngettext_override', 20, 5);
+add_filter('ngettext_with_context', function ($translated, $single, $plural, $number, $context, $domain) {
+    return mulopimfwc_apply_text_management_ngettext_override($translated, $single, $plural, $number, $domain);
+}, 20, 6);

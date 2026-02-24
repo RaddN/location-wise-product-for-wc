@@ -3,7 +3,7 @@
     "version": 1,
     "defaultLocale": "en",
     "applyConfirm": "Apply %s translations to all Text Management fields? This will overwrite your current values.",
-    "lastUpdated": "2026-02-08"
+    "lastUpdated": "2026-02-24"
   },
   "locales": {
     "en": {
@@ -78,6 +78,9 @@
         "text_cart_update_error": "Error updating location. Please try again.",
         "text_cart_clear_error": "Failed to clear the cart. Please try again.",
         "text_cart_removed_items": "The following items were removed because they are not available at the selected location: %s",
+        "text_cart_split_order_notice": "Your order was split by location into child orders: %s. Products are listed below by child order.",
+        "text_cart_split_order_location_label": "Location: %s",
+        "text_cart_split_order_child_label": "Order %s",
         "text_cart_unable_change": "Unable to change location. Please try again.",
         "text_cart_unable_change_now": "Unable to change location right now. Please try again.",
         "text_reviews_heading": "Reviews from your neighbours",
@@ -211,6 +214,9 @@
         "text_cart_update_error": "Fout bij het bijwerken van de locatie. Probeer het opnieuw.",
         "text_cart_clear_error": "Winkelwagen legen mislukt. Probeer het opnieuw.",
         "text_cart_removed_items": "De volgende items zijn verwijderd omdat ze niet beschikbaar zijn op de geselecteerde locatie: %s",
+        "text_cart_split_order_notice": "Uw bestelling is per locatie opgesplitst in deelbestellingen: %s. Producten staan hieronder per deelbestelling.",
+        "text_cart_split_order_location_label": "Locatie: %s",
+        "text_cart_split_order_child_label": "Bestelling %s",
         "text_cart_unable_change": "Locatie wijzigen niet mogelijk. Probeer het opnieuw.",
         "text_cart_unable_change_now": "Locatie kan momenteel niet worden gewijzigd. Probeer het opnieuw.",
         "text_reviews_heading": "Beoordelingen van uw buren",
@@ -344,6 +350,9 @@
         "text_cart_update_error": "লোকেশন আপডেট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।",
         "text_cart_clear_error": "কার্ট খালি করা যায়নি। আবার চেষ্টা করুন।",
         "text_cart_removed_items": "নির্বাচিত লোকেশনে উপলব্ধ না হওয়ায় নিচের পণ্যগুলো সরানো হয়েছে: %s",
+        "text_cart_split_order_notice": "আপনার অর্ডার লোকেশনভিত্তিকভাবে ভাগ হয়ে চাইল্ড অর্ডারে গেছে: %s। পণ্যগুলো নিচে চাইল্ড অর্ডার অনুযায়ী দেখানো হয়েছে।",
+        "text_cart_split_order_location_label": "লোকেশন: %s",
+        "text_cart_split_order_child_label": "অর্ডার %s",
         "text_cart_unable_change": "লোকেশন পরিবর্তন করা যায়নি। আবার চেষ্টা করুন।",
         "text_cart_unable_change_now": "এই মুহূর্তে লোকেশন পরিবর্তন করা যাচ্ছে না। আবার চেষ্টা করুন।",
         "text_reviews_heading": "আপনার এলাকার গ্রাহকদের রিভিউ",
@@ -387,22 +396,23 @@
         "text_variation_in_stock": "%s টি স্টকে আছে",
         "text_variation_backorder": "ব্যাকঅর্ডারে উপলব্ধ",
         "text_variation_price_label": "এই লোকেশনে মূল্য:",
-        "text_shortcode_enter_your_address": "Enter Your Address",
-        "text_shortcode_saved_address": "Saved Address",
-        "text_shortcode_add_new_address": "Add New Address",
-        "text_shortcode_set_your_location": "Set Your Location",
-        "text_shortcode_continue": "Continue",
-        "text_shortcode_location_details": "Location Details",
-        "text_shortcode_label": "Label",
-        "text_shortcode_home": "Home",
-        "text_shortcode_work": "Work",
-        "text_shortcode_partner": "Partner",
-        "text_shortcode_other": "Other",
-        "text_shortcode_street_address": "Street Address",
-        "text_shortcode_apartment_suite": "Apartment, suite, etc.",
-        "text_shortcode_note": "Note",
-        "text_shortcode_back": "Back",
-        "text_shortcode_save_location": "Save Location"
+        "text_shortcode_enter_your_address": "আপনার ঠিকানা লিখুন",
+        "text_shortcode_saved_address": "সংরক্ষিত ঠিকানা",
+        "text_shortcode_add_new_address": "নতুন ঠিকানা যোগ করুন",
+        "text_shortcode_set_your_location": "আপনার লোকেশন সেট করুন",
+        "text_shortcode_continue": "এগিয়ে যান",
+        "text_shortcode_location_details": "লোকেশনের বিস্তারিত",
+        "text_shortcode_label": "লেবেল",
+        "text_shortcode_home": "বাসা",
+        "text_shortcode_work": "কর্মস্থল",
+        "text_shortcode_partner": "পার্টনার",
+        "text_shortcode_other": "অন্যান্য",
+        "text_shortcode_street_address": "রাস্তার ঠিকানা",
+        "text_shortcode_apartment_suite": "অ্যাপার্টমেন্ট, সুইট, ইত্যাদি",
+        "text_shortcode_note": "নোট",
+        "text_shortcode_back": "ফিরে যান",
+        "text_shortcode_save_location": "লোকেশন সংরক্ষণ করুন"
+
       }
     }
   }

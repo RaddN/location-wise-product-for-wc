@@ -205,13 +205,15 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                 return '#' . $child->get_order_number();
             }, $children);
 
-            echo '<div class="woocommerce-info mulopimfwc-split-parent-notice">';
-            echo '<p style="margin:0;">' . esc_html(
-                sprintf(
-                    __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management'),
-                    implode(', ', $child_numbers)
+            $notice_template = function_exists('mulopimfwc_get_text_value')
+                ? mulopimfwc_get_text_value(
+                    'text_cart_split_order_notice',
+                    __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management')
                 )
-            ) . '</p>';
+                : __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management');
+
+            echo '<div class="woocommerce-info mulopimfwc-split-parent-notice">';
+            echo '<p style="margin:0;">' . esc_html(sprintf($notice_template, implode(', ', $child_numbers))) . '</p>';
             echo '</div>';
         }
 
@@ -229,10 +231,22 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             foreach ($children as $child) {
                 $location_slug = (string) $child->get_meta('_store_location');
                 $location_label = $this->get_location_label_from_slug($location_slug);
+                $location_row_template = function_exists('mulopimfwc_get_text_value')
+                    ? mulopimfwc_get_text_value(
+                        'text_cart_split_order_location_label',
+                        __('Location: %s', 'multi-location-product-and-inventory-management')
+                    )
+                    : __('Location: %s', 'multi-location-product-and-inventory-management');
+                $child_order_template = function_exists('mulopimfwc_get_text_value')
+                    ? mulopimfwc_get_text_value(
+                        'text_cart_split_order_child_label',
+                        __('Order %s', 'multi-location-product-and-inventory-management')
+                    )
+                    : __('Order %s', 'multi-location-product-and-inventory-management');
 
                 echo '<tr class="mulopimfwc-split-order-group">';
-                echo '<td colspan="2"><strong>' . esc_html(sprintf(__('Location: %s', 'multi-location-product-and-inventory-management'), $location_label)) . '</strong> ';
-                echo '<small>(' . esc_html(sprintf(__('Order %s', 'multi-location-product-and-inventory-management'), '#' . $child->get_order_number())) . ')</small></td>';
+                echo '<td colspan="2"><strong>' . esc_html(sprintf($location_row_template, $location_label)) . '</strong> ';
+                echo '<small>(' . esc_html(sprintf($child_order_template, '#' . $child->get_order_number())) . ')</small></td>';
                 echo '</tr>';
 
                 $show_purchase_note = $child->has_status(apply_filters('woocommerce_purchase_note_order_statuses', ['completed', 'processing']));
