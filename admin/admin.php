@@ -815,12 +815,6 @@ class MULOPIMFWC_Admin
         </div>
 
         <div class="form-field">
-            <label for="location_aliases"><?php _e('Location Aliases', 'multi-location-product-and-inventory-management'); ?></label>
-            <textarea name="location_aliases" id="location_aliases" rows="4" placeholder="<?php esc_attr_e('kandir par, kandirpur, housing-estate', 'multi-location-product-and-inventory-management'); ?>"></textarea>
-            <p class="description"><?php _e('Add alternate names, misspellings, or local-language names (one per line or comma-separated).', 'multi-location-product-and-inventory-management'); ?></p>
-        </div>
-
-        <div class="form-field">
             <label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management'); ?></label>
             <input type="email" name="email" id="email" value="" />
             <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
@@ -1150,14 +1144,6 @@ class MULOPIMFWC_Admin
             <td>
                 <input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" />
                 <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
-            </td>
-        </tr>
-
-        <tr class="form-field">
-            <th scope="row"><label for="location_aliases"><?php _e('Location Aliases', 'multi-location-product-and-inventory-management'); ?></label></th>
-            <td>
-                <textarea name="location_aliases" id="location_aliases" rows="4" placeholder="<?php esc_attr_e('kandir par, kandirpur, housing-estate', 'multi-location-product-and-inventory-management'); ?>"><?php echo esc_textarea($location_aliases_text); ?></textarea>
-                <p class="description"><?php _e('Add alternate names, misspellings, or local-language names (one per line or comma-separated).', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
 
