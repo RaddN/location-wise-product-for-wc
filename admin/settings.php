@@ -2135,8 +2135,10 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 global $mulopimfwc_options;
                 $options = is_array($mulopimfwc_options ?? null)
                     ? $mulopimfwc_options
-                    : get_option('mulopimfwc_display_options', ['default_location' => '']);
+                    : get_option('mulopimfwc_display_options', ['default_location' => '', 'enable_popup' => 'off']);
                 $default_location = isset($options['default_location']) ? $options['default_location'] : '';
+                $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
+                $show_popup_priority_notice = ($enable_popup === 'on' && !empty($default_location));
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('default_location', $default_location);
@@ -2165,6 +2167,17 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 ?>
             </select>
             <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('Select a default location/warehouse. This location will be used automatically when popup is disabled and no location cookie is set.', 'multi-location-product-and-inventory-management'))); ?></p>
+            <?php
+            $popup_notice_classes = 'mulopimfwc-default-location-popup-info' . ($show_popup_priority_notice ? ' is-active' : '');
+            ?>
+            <div
+                id="mulopimfwc-default-location-popup-info"
+                class="<?php echo esc_attr($popup_notice_classes); ?>"
+                aria-live="polite"
+                aria-hidden="<?php echo esc_attr($show_popup_priority_notice ? 'false' : 'true'); ?>">
+                <span class="mulopimfwc-default-location-popup-info__title"><?php echo esc_html__('Popup Priority Active', 'multi-location-product-and-inventory-management'); ?></span>
+                <p><?php echo esc_html__('Popup is currently enabled and a default location/warehouse is selected. Customers will follow popup-based location selection first. This default location is applied when popup is turned off.', 'multi-location-product-and-inventory-management'); ?></p>
+            </div>
             <?php
             },
             'lwp-default-location-settings',

@@ -3367,6 +3367,40 @@ jQuery(document).ready(function ($) {
         mulopimfwc_toggleDisabledClass(!$(this).is(':checked'), $popup_related_settings);
     });
 
+    const $defaultLocationSelect = $('select[name="mulopimfwc_display_options[default_location]"], #default_location_select');
+    const $popupEnableSelect = $('select[name="mulopimfwc_display_options[enable_popup]"], #enable_popup');
+    const $defaultLocationPopupInfo = $('#mulopimfwc-default-location-popup-info');
+
+    function isPopupEnabledForDefaultLocationNotice() {
+        if ($enable_popup.length) {
+            return $enable_popup.is(':checked');
+        }
+
+        if ($popupEnableSelect.length) {
+            return $popupEnableSelect.val() === 'on';
+        }
+
+        return false;
+    }
+
+    function toggleDefaultLocationPopupNotice() {
+        if (!$defaultLocationPopupInfo.length || !$defaultLocationSelect.length) {
+            return;
+        }
+
+        const hasDefaultLocation = ($defaultLocationSelect.val() || '') !== '';
+        const shouldShowNotice = isPopupEnabledForDefaultLocationNotice() && hasDefaultLocation;
+
+        $defaultLocationPopupInfo
+            .toggleClass('is-active', shouldShowNotice)
+            .attr('aria-hidden', shouldShowNotice ? 'false' : 'true');
+    }
+
+    toggleDefaultLocationPopupNotice();
+    $defaultLocationSelect.on('change', toggleDefaultLocationPopupNotice);
+    $popupEnableSelect.on('change', toggleDefaultLocationPopupNotice);
+    $enable_popup.on('change', toggleDefaultLocationPopupNotice);
+
     const $enable_all_locations = $('input[name="mulopimfwc_display_options[enable_all_locations]"]');
     const $all_locations_related_settings = $enable_all_locations.closest('table').find('select[name="mulopimfwc_display_options[product_priority_display]"]').not($enable_all_locations);
 

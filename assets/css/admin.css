@@ -2642,3 +2642,37 @@ input.disabled + .mulopimfwc_slider {
   transform: translateY(-1px);
   box-shadow: 0 8px 16px rgba(67, 56, 202, 0.25);
 }
+
+/* Default location notice when popup and default location are both enabled */
+.mulopimfwc-default-location-popup-info {
+  display: none;
+  margin-top: 12px;
+  max-width: 800px;
+  padding: 12px 14px;
+  border: 1px solid #facc15;
+  border-left: 4px solid #f59e0b;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  box-shadow: 0 6px 14px rgba(180, 83, 9, 0.12);
+}
+
+.mulopimfwc-default-location-popup-info.is-active {
+  display: block;
+}
+
+.mulopimfwc-default-location-popup-info__title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #92400e;
+}
+
+.mulopimfwc-default-location-popup-info p {
+  margin: 0;
+  color: #78350f;
+  font-size: 12px;
+  line-height: 1.5;
+}
