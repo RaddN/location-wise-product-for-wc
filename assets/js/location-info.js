@@ -10,6 +10,7 @@
     const locationInfoI18n = locationInfoConfig.i18n || {};
     const getDirectionsLabel = locationInfoI18n.getDirections || 'Get Directions';
     const viewDetailsLabel = locationInfoI18n.viewDetails || 'View Details';
+    const useJsOverlayDetailsButtonOnly = !!locationInfoConfig.useJsOverlayDetailsButtonOnly;
 
     const MulopimfwcLocationInfo = {
 
@@ -310,6 +311,7 @@
                     const lng = self.parseCoordinate($firstValidTab.data('lng'));
                     const name = $firstValidTab.data('name');
                     const address = $firstValidTab.data('address');
+                    const locationId = String($firstValidTab.data('tab') || '').replace('location-', '');
 
                     if (!$activeTab.is($firstValidTab)) {
                         $container.find('.mulopimfwc-tab-item').removeClass('active');
@@ -318,6 +320,9 @@
 
                     self.waitForLeaflet(function () {
                         self.createShortcodeMap(mapId, lat, lng, name, address, $container);
+                        if (useJsOverlayDetailsButtonOnly && locationId) {
+                            self.updateOverlayContent(locationId, $container);
+                        }
                     });
                 }
             });
@@ -792,6 +797,10 @@
 
                     // Show overlay by default
                     $('.mulopimfwc-map-info-overlay').addClass('visible');
+
+                    if (useJsOverlayDetailsButtonOnly && locationId) {
+                        self.updateOverlayContent(locationId);
+                    }
                 }
             });
 
@@ -1290,6 +1299,10 @@
                     </a>
                 ` : ''}
                 ${(() => {
+                    if (useJsOverlayDetailsButtonOnly) {
+                        return '';
+                    }
+
                     // Get URL from data-url attribute, or from the link in tab-title
                     let url = $tab.attr('data-url') || $tab.find('.mulopimfwc-tab-title a').attr('href');
                     

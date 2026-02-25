@@ -54,6 +54,30 @@ class MULOPIMFWC_Frontend_Location_Information
     }
 
     /**
+     * Use JS overlay details link only when popup is enabled and no location cookie exists.
+     *
+     * @return bool
+     */
+    private function should_use_js_overlay_details_button_only()
+    {
+        if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
+        if ($enable_popup !== 'on') {
+            return false;
+        }
+
+        return mulopimfwc_get_store_location_cookie() === '';
+    }
+
+    /**
      * Retrieve the current instance (if initialized).
      *
      * @return MULOPIMFWC_Frontend_Location_Information|null
@@ -219,6 +243,7 @@ class MULOPIMFWC_Frontend_Location_Information
         $map_animation_duration = isset($mulopimfwc_options['map_animation_duration']) && mulopimfwc_premium_feature()
             ? floatval($mulopimfwc_options['map_animation_duration'])
             : 1.5;
+        $use_js_overlay_details_button_only = $this->should_use_js_overlay_details_button_only();
 
         // Localize script
         wp_localize_script('mulopimfwc-location-info', 'mulopimfwcLocationInfo', [
@@ -229,6 +254,7 @@ class MULOPIMFWC_Frontend_Location_Information
             'defaultMapZoom' => $default_map_zoom,
             'mapAnimationType' => $map_animation_type,
             'mapAnimationDuration' => $map_animation_duration,
+            'useJsOverlayDetailsButtonOnly' => $use_js_overlay_details_button_only,
             'i18n' => [
                 'getDirections' => mulopimfwc_get_text_value('text_location_button_directions'),
                 'viewDetails' => mulopimfwc_get_text_value('text_location_button_details'),
@@ -662,6 +688,7 @@ class MULOPIMFWC_Frontend_Location_Information
         $latitude = get_term_meta($term_id, 'latitude', true);
         $longitude = get_term_meta($term_id, 'longitude', true);
         $status = $MULOPIMFWC_Admin->is_location_open_now($term_id);
+        $show_php_details_button = !$this->should_use_js_overlay_details_button_only();
 
     ?>
         <div class="mulopimfwc-overlay-content" data-location="<?php echo esc_attr($term_id); ?>">
@@ -767,13 +794,15 @@ class MULOPIMFWC_Frontend_Location_Information
                     </a>
                 <?php endif; ?>
 
-                <a href="<?php echo esc_url(get_term_link($location)); ?>"
-                    class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-secondary">
-                    <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_details')); ?>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor" />
-                    </svg>
-                </a>
+                <?php if ($show_php_details_button): ?>
+                    <a href="<?php echo esc_url(get_term_link($location)); ?>"
+                        class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-secondary">
+                        <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_details')); ?>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor" />
+                        </svg>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     <?php
