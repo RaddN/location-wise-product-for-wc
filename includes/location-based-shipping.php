@@ -5,7 +5,7 @@
  * Handles shipping zone and method filtering based on selected store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.3.92
+ * @since 1.1.3.94
  */
 
 if (!defined('ABSPATH')) {
@@ -31,8 +31,10 @@ class MULOPIMFWC_Location_Based_Shipping
         add_action('woocommerce_shipping_zone_method_added', array($this, 'save_method_location_settings'), 10, 3);
         add_action('woocommerce_shipping_zone_method_status_toggled', array($this, 'save_method_location_settings'), 10, 3);
         
-        // Filter available shipping methods based on location
-        add_filter('woocommerce_package_rates', array($this, 'filter_shipping_methods_by_location'), 100, 2);
+        // Filter available shipping methods based on location only in per-location mode.
+        if ($this->is_per_location_shipping_calculation()) {
+            add_filter('woocommerce_package_rates', array($this, 'filter_shipping_methods_by_location'), 100, 2);
+        }
         
         // Add location info to shipping zones list
         add_filter('woocommerce_shipping_zone_methods_html', array($this, 'add_location_info_to_zone_methods'), 10, 2);
@@ -65,6 +67,25 @@ class MULOPIMFWC_Location_Based_Shipping
             ? $mulopimfwc_options
             : get_option('mulopimfwc_display_options', []);
         return mulopimfwc_is_location_shipping_enabled($options);
+    }
+
+    /**
+     * Check if shipping calculation is in per-location mode.
+     *
+     * @return bool
+     */
+    private function is_per_location_shipping_calculation()
+    {
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        $shipping_calculation_method = isset($options['shipping_calculation_method']) && mulopimfwc_premium_feature()
+            ? (string) $options['shipping_calculation_method']
+            : 'per_location';
+
+        return $shipping_calculation_method === 'per_location';
     }
 
     /**
@@ -284,6 +305,11 @@ class MULOPIMFWC_Location_Based_Shipping
      */
     public function filter_shipping_methods_by_location($rates, $package)
     {
+        // nearest_with_transfer should keep default WooCommerce shipping-rate behavior.
+        if (!$this->is_per_location_shipping_calculation()) {
+            return $rates;
+        }
+
         $current_location = $this->get_current_location();
 
         // If no location selected, don't filter
@@ -410,14 +436,14 @@ class MULOPIMFWC_Location_Based_Shipping
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/css/shipping-admin.css',
             array(),
-            '1.1.3.92'
+            '1.1.3.94'
         );
 
         wp_enqueue_script(
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/js/shipping-admin.js',
             array('jquery'),
-            '1.1.3.92',
+            '1.1.3.94',
             true
         );
 

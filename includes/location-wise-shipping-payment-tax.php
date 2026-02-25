@@ -27,7 +27,7 @@ class MULOPIMFWC_Runtime_Filters
             ? mulopimfwc_is_location_shipping_enabled($options)
             : (isset($options['enable_location_shipping']) && $options['enable_location_shipping'] === 'on');
 
-        if ($shipping_enabled) {
+        if ($shipping_enabled && $this->is_per_location_shipping_calculation($options)) {
             // Shipping: remove disallowed shipping method instances
             add_filter('woocommerce_package_rates', [$this, 'filter_package_rates'], 50, 2);
         }
@@ -125,6 +125,25 @@ class MULOPIMFWC_Runtime_Filters
     }
 
     /**
+     * Check if shipping calculation is in per-location mode.
+     */
+    protected function is_per_location_shipping_calculation($options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        $shipping_calculation_method = isset($options['shipping_calculation_method']) && mulopimfwc_premium_feature()
+            ? (string) $options['shipping_calculation_method']
+            : 'per_location';
+
+        return $shipping_calculation_method === 'per_location';
+    }
+
+    /**
      * Check if location-wise pickup feature is enabled.
      */
     protected function is_location_pickup_enabled($options = null): bool
@@ -171,6 +190,11 @@ class MULOPIMFWC_Runtime_Filters
      */
     public function filter_package_rates($rates, $package)
     {
+        // nearest_with_transfer should keep default WooCommerce shipping-rate behavior.
+        if (!$this->is_per_location_shipping_calculation()) {
+            return $rates;
+        }
+
         $cfg = $this->get_location_config();
         if (empty($cfg['shipping_instances'])) {
             // No restriction configured -> leave as is
