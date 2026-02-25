@@ -1689,7 +1689,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                     )
                                 )
                             ),
-                            esc_url('https://plugincy.com/documentations/multi-location-product-inventory-management-for-woocommerce/')
+                            esc_url('https://plugincy.com/documentations/multi-location-product-inventory-management-for-woocommerce/email-notification/location-specific-info-in-email/')
                         );
                         ?>
                     </p>
@@ -3515,7 +3515,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                     __('Paste the URL into the Webhook field above and save settings.', 'multi-location-product-and-inventory-management'),
                                     __('Enable events and click Test.', 'multi-location-product-and-inventory-management'),
                                 ],
-                                'links' => [],
+                                'links' => [
+                                    ['https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks', __('Discord Docs: Webhooks', 'multi-location-product-and-inventory-management')],
+                                ],
                             ],
                             'telegram' => [
                                 'title' => __('How to connect Telegram', 'multi-location-product-and-inventory-management'),
@@ -3525,7 +3527,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                     __('Enter chat ID and bot token above (or use the global token), then save.', 'multi-location-product-and-inventory-management'),
                                     __('Enable events and click Test.', 'multi-location-product-and-inventory-management'),
                                 ],
-                                'links' => [],
+                                'links' => [['https://core.telegram.org/bots/api', __('Telegram Docs: Bots API', 'multi-location-product-and-inventory-management')],],
                             ],
                             'custom' => [
                                 'title' => __('How to connect a Custom Webhook', 'multi-location-product-and-inventory-management'),
@@ -3534,7 +3536,9 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                     __('Paste the endpoint URL above and save.', 'multi-location-product-and-inventory-management'),
                                     __('Enable events and click Test.', 'multi-location-product-and-inventory-management'),
                                 ],
-                                'links' => [],
+                                'links' => [
+                                    ['https://plugincy.com/documentations/multi-location-product-inventory-management-for-woocommerce/email-notification/social-channel-real-time-notifications/', __('Example: Custom Webhook setup guide', 'multi-location-product-and-inventory-management')]
+                                ],
                             ],
                         ];
 
