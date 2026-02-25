@@ -8,6 +8,15 @@ jQuery(document).ready(function ($) {
     const selectStoreLocationAlert = i18n.selectStoreLocation || 'Please select a store location.';
     const cartClearError = i18n.cartClearError || 'Failed to clear the cart. Please try again.';
 
+    function syncModalScrollLock() {
+        var hasVisibleModal = $('[id^="lwp-store-selector-modal"]').filter(':visible').length > 0;
+        $('body').toggleClass('mulopimfwc-modal-open', hasVisibleModal);
+    }
+
+    // Ensure auto-opened modals (rendered with display:flex server-side) lock scroll.
+    syncModalScrollLock();
+    setTimeout(syncModalScrollLock, 100);
+
     function getLocationCookieExpiryDays() {
         if (typeof mulopimfwc_locationWiseProducts === 'undefined') {
             return 30;
@@ -287,7 +296,7 @@ jQuery(document).ready(function ($) {
                 if (selectedStore) {
                     setPluginCookie(getStoreCookieName(), selectedStore);
                     $modal.css('display', 'none');
-                    $('body').removeClass('mulopimfwc-modal-open');
+                    syncModalScrollLock();
                     location.reload();
                 } else {
                     alert(selectStoreAlert);
@@ -304,6 +313,7 @@ jQuery(document).ready(function ($) {
             if (selectedStore) {
                 setPluginCookie(getStoreCookieName(), selectedStore);
                 modal.style.display = 'none';
+                syncModalScrollLock();
                 location.reload();
             } else {
                 alert(selectStoreAlert);
@@ -568,7 +578,7 @@ jQuery(document).ready(function ($) {
             }
             
             $modal.css('display', 'flex');
-            $('body').addClass('mulopimfwc-modal-open');
+            syncModalScrollLock();
 
             // Ensure maps inside the popup render correctly once visible
             if ($modal.hasClass('lwp-location-info-popup')) {
@@ -594,17 +604,17 @@ jQuery(document).ready(function ($) {
         }
 
         $modal.css('display', 'none');
-        $('body').removeClass('mulopimfwc-modal-open');
+        syncModalScrollLock();
     });
 
     // Handle close button clicks
     $(document).on('click', '.lwp-store-selector-close, .lwp-location-info-popup__close', function (e) {
         e.preventDefault();
         var $closeBtn = $(this);
-        var $modal = $closeBtn.closest('#lwp-store-selector-modal');
+        var $modal = $closeBtn.closest('[id^="lwp-store-selector-modal"]');
         if ($modal.length) {
             $modal.css('display', 'none');
-            $('body').removeClass('mulopimfwc-modal-open');
+            syncModalScrollLock();
         }
     });
 });

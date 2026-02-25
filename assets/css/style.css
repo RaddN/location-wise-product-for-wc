@@ -19,6 +19,12 @@
   z-index: 9999;
 }
 
+body.mulopimfwc-modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
 .lwp-store-selector-content {
   background: var(--lwp-background, #fff);
   padding: 20px;
