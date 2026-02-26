@@ -2,8 +2,10 @@
 /**
  * Location-wise SEO integration for WooCommerce products
  *
- * - Adds store location(s) to product meta title & description (Yoast, Rank Math, or native fallback)
+ * - Adds store location(s) to product/location-archive meta title & description
+ *   (Yoast, Rank Math, or native fallback)
  * - Adds location(s) into WooCommerce Product structured data (JSON-LD)
+ * - Outputs location archive JSON-LD (CollectionPage + Place)
  *
  * Toggle with:
  *  - mulopimfwc_display_options['location_in_meta_title']        = 'on'|'off'
@@ -23,6 +25,7 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
 
             // Fallback <meta name="description"> when no SEO plugin is active
             add_action('wp_head', [$this, 'seo_output_fallback_meta_description'], 1);
+            add_action('wp_head', [$this, 'seo_output_location_archive_structured_data'], 2);
 
             // Yoast SEO
             add_filter('wpseo_title',    [$this, 'yoast_add_location_to_title'], 20);
@@ -47,10 +50,22 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
                 : get_option('mulopimfwc_display_options', []);
         }
 
+        private function is_supported_seo_context() {
+            return is_singular('product') || is_tax('mulopimfwc_store_location');
+        }
+
         private function is_enabled($option_key) {
-            if (!is_singular('product')) return false;
+            if (!$this->is_supported_seo_context()) return false;
             $opts = $this->get_options();
             return isset($opts[$option_key]) && $opts[$option_key] === 'on';
+        }
+
+        private function get_current_location_archive_term() {
+            if (!is_tax('mulopimfwc_store_location')) return null;
+            $term = get_queried_object();
+            if (!$term || is_wp_error($term)) return null;
+            if (!isset($term->taxonomy) || $term->taxonomy !== 'mulopimfwc_store_location') return null;
+            return $term;
         }
 
         /**
@@ -65,11 +80,19 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
             return implode(', ', $names);
         }
 
-        private function build_title_with_location($base_title, $product_id) {
+        private function get_context_location_text($product_id = 0) {
+            if ($product_id) {
+                return $this->get_product_location_text($product_id);
+            }
+            $term = $this->get_current_location_archive_term();
+            return $term ? $term->name : '';
+        }
+
+        private function build_title_with_location($base_title, $product_id = 0) {
             $opts = $this->get_options();
             $sep  = isset($opts['separator']) ? $opts['separator'] : ' - ';
             $fmt  = isset($opts['display_format']) ? $opts['display_format'] : 'append'; // prepend|append|brackets|none
-            $loc  = $this->get_product_location_text($product_id);
+            $loc  = $this->get_context_location_text($product_id);
 
             if (!$loc) return $base_title;
 
@@ -82,8 +105,8 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
             }
         }
 
-        private function build_description_with_location($base_description, $product_id) {
-            $loc = $this->get_product_location_text($product_id);
+        private function build_description_with_location($base_description, $product_id = 0) {
+            $loc = $this->get_context_location_text($product_id);
             if (!$loc) return $base_description;
 
             $suffix = ' Available at: ' . $loc . '.';
@@ -95,12 +118,20 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
 
             $desc = trim((string) $base_description);
 
-            // If empty, fall back to product short description
+            // If empty, fall back to product short description or archive term description
             if ($desc === '') {
-                $product = wc_get_product($product_id);
-                if ($product) {
-                    $excerpt = wp_strip_all_tags($product->get_short_description());
-                    $desc = mb_substr(trim($excerpt), 0, 140);
+                if ($product_id) {
+                    $product = wc_get_product($product_id);
+                    if ($product) {
+                        $excerpt = wp_strip_all_tags($product->get_short_description());
+                        $desc = mb_substr(trim($excerpt), 0, 140);
+                    }
+                } else {
+                    $term = $this->get_current_location_archive_term();
+                    if ($term) {
+                        $term_desc = wp_strip_all_tags(term_description($term->term_id, 'mulopimfwc_store_location'));
+                        $desc = mb_substr(trim($term_desc), 0, 140);
+                    }
                 }
             }
 
@@ -115,9 +146,8 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
 
         public function seo_add_location_to_title($parts) {
             if (!$this->is_enabled('location_in_meta_title') || !mulopimfwc_premium_feature()) return $parts;
-            if (!is_singular('product')) return $parts;
-            $product_id = get_the_ID();
-            if (!$product_id) return $parts;
+            $product_id = is_singular('product') ? get_the_ID() : 0;
+            if (is_singular('product') && !$product_id) return $parts;
 
             if (isset($parts['title'])) {
                 $parts['title'] = $this->build_title_with_location($parts['title'], $product_id);
@@ -127,14 +157,14 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
 
         public function yoast_add_location_to_title($title) {
             if (!$this->is_enabled('location_in_meta_title') || !mulopimfwc_premium_feature()) return $title;
-            if (!is_singular('product')) return $title;
-            return $this->build_title_with_location($title, get_the_ID());
+            $product_id = is_singular('product') ? get_the_ID() : 0;
+            return $this->build_title_with_location($title, $product_id);
         }
 
         public function rankmath_add_location_to_title($title) {
             if (!$this->is_enabled('location_in_meta_title') || !mulopimfwc_premium_feature()) return $title;
-            if (!is_singular('product')) return $title;
-            return $this->build_title_with_location($title, get_the_ID());
+            $product_id = is_singular('product') ? get_the_ID() : 0;
+            return $this->build_title_with_location($title, $product_id);
         }
 
         /* -------------------------
@@ -143,14 +173,14 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
 
         public function yoast_add_location_to_description($desc) {
             if (!$this->is_enabled('location_in_meta_description') || !mulopimfwc_premium_feature()) return $desc;
-            if (!is_singular('product')) return $desc;
-            return $this->build_description_with_location((string)$desc, get_the_ID());
+            $product_id = is_singular('product') ? get_the_ID() : 0;
+            return $this->build_description_with_location((string)$desc, $product_id);
         }
 
         public function rankmath_add_location_to_description($desc) {
             if (!$this->is_enabled('location_in_meta_description') || !mulopimfwc_premium_feature()) return $desc;
-            if (!is_singular('product')) return $desc;
-            return $this->build_description_with_location((string)$desc, get_the_ID());
+            $product_id = is_singular('product') ? get_the_ID() : 0;
+            return $this->build_description_with_location((string)$desc, $product_id);
         }
 
         /**
@@ -158,12 +188,12 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          */
         public function seo_output_fallback_meta_description() {
             if (!$this->is_enabled('location_in_meta_description') || !mulopimfwc_premium_feature()) return;
-            if (!is_singular('product')) return;
 
             // Skip if Yoast or Rank Math is active
             if (defined('WPSEO_VERSION') || defined('RANK_MATH_VERSION')) return;
 
-            $desc = $this->build_description_with_location('', get_the_ID());
+            $product_id = is_singular('product') ? get_the_ID() : 0;
+            $desc = $this->build_description_with_location('', $product_id);
             $desc = esc_attr(mb_substr(trim($desc), 0, 160));
             if ($desc !== '') {
                 echo '<meta name="description" content="' . $desc . '">' . "\n";
@@ -183,7 +213,7 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          */
         public function schema_add_location_to_product($markup, $product) {
             if (!$this->is_enabled('location_structured_data') || !mulopimfwc_premium_feature()) return $markup;
-            if (!is_singular('product') || !$product) return $markup;
+            if (!$product) return $markup;
 
             $terms = get_the_terms($product->get_id(), 'mulopimfwc_store_location');
             if (empty($terms) || is_wp_error($terms)) return $markup;
@@ -203,6 +233,84 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
             }
 
             return $markup;
+        }
+
+        /**
+         * Output archive-level schema for location taxonomy pages.
+         */
+        public function seo_output_location_archive_structured_data() {
+            if (!$this->is_enabled('location_structured_data') || !mulopimfwc_premium_feature()) return;
+            if (!is_tax('mulopimfwc_store_location')) return;
+
+            $term = $this->get_current_location_archive_term();
+            if (!$term) return;
+
+            $place = [
+                '@type' => 'Place',
+                'name'  => $term->name,
+            ];
+
+            $street = trim((string) get_term_meta($term->term_id, 'street_address', true));
+            $city   = trim((string) get_term_meta($term->term_id, 'city', true));
+            $state  = trim((string) get_term_meta($term->term_id, 'state', true));
+            $zip    = trim((string) get_term_meta($term->term_id, 'postal_code', true));
+            $country = trim((string) get_term_meta($term->term_id, 'country', true));
+            $phone  = trim((string) get_term_meta($term->term_id, 'phone', true));
+            $email  = trim((string) get_term_meta($term->term_id, 'email', true));
+            $lat    = trim((string) get_term_meta($term->term_id, 'latitude', true));
+            $lng    = trim((string) get_term_meta($term->term_id, 'longitude', true));
+
+            $address = array_filter([
+                'streetAddress'   => $street,
+                'addressLocality' => $city,
+                'addressRegion'   => $state,
+                'postalCode'      => $zip,
+                'addressCountry'  => $country,
+            ], function($value) {
+                return $value !== '';
+            });
+
+            if (!empty($address)) {
+                $place['address'] = array_merge(['@type' => 'PostalAddress'], $address);
+            }
+
+            if ($phone !== '') {
+                $place['telephone'] = $phone;
+            }
+            if ($email !== '') {
+                $place['email'] = $email;
+            }
+
+            if ($lat !== '' && $lng !== '' && is_numeric($lat) && is_numeric($lng)) {
+                $place['geo'] = [
+                    '@type' => 'GeoCoordinates',
+                    'latitude' => (float) $lat,
+                    'longitude' => (float) $lng,
+                ];
+            }
+
+            $term_link = get_term_link($term);
+            if (!is_wp_error($term_link)) {
+                $place['url'] = $term_link;
+            }
+
+            $schema = [
+                '@context'   => 'https://schema.org',
+                '@type'      => 'CollectionPage',
+                'name'       => single_term_title('', false),
+                'mainEntity' => $place,
+            ];
+
+            if (!is_wp_error($term_link)) {
+                $schema['url'] = $term_link;
+            }
+
+            $term_desc = wp_strip_all_tags(term_description($term->term_id, 'mulopimfwc_store_location'));
+            if ($term_desc !== '') {
+                $schema['description'] = $term_desc;
+            }
+
+            echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "\n";
         }
     }
 }
