@@ -12,6 +12,102 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+if (!function_exists('mulopimfwc_is_gateway_allowed_for_active_location')) {
+    /**
+     * Check whether a payment gateway is allowed for the currently selected location.
+     *
+     * Follows the same behavior as location payment filtering:
+     * - If location-based payment filtering is disabled, allow.
+     * - If no location (or all-products) is selected, allow.
+     * - If location has no payment list configured, allow.
+     * - Otherwise require gateway ID to be in location payment_methods.
+     *
+     * @param string $gateway_id Gateway ID.
+     * @return bool
+     */
+    function mulopimfwc_is_gateway_allowed_for_active_location(string $gateway_id): bool
+    {
+        $gateway_id = sanitize_key($gateway_id);
+        if ($gateway_id === '') {
+            return false;
+        }
+
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
+            return true;
+        }
+
+        $location_payment_filter_active = function_exists('mulopimfwc_is_location_payment_methods_enabled')
+            ? mulopimfwc_is_location_payment_methods_enabled()
+            : false;
+
+        if (!function_exists('mulopimfwc_get_store_location_cookie')) {
+            return true;
+        }
+
+        $candidate_locations = [];
+
+        if (function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
+            $location_slug = sanitize_title(rawurldecode((string) mulopimfwc_get_effective_runtime_location_slug()));
+        } else {
+            $location_slug = sanitize_title(rawurldecode((string) mulopimfwc_get_store_location_cookie()));
+        }
+
+        if ($location_slug !== '' && $location_slug !== 'all-products' && $location_slug !== 'unknown') {
+            $candidate_locations[] = $location_slug;
+        }
+
+        if (function_exists('mulopimfwc_get_runtime_cart_location_slugs')) {
+            $candidate_locations = array_merge($candidate_locations, mulopimfwc_get_runtime_cart_location_slugs());
+        }
+
+        $candidate_locations = array_values(array_unique(array_filter(array_map(static function ($slug) {
+            return sanitize_title(rawurldecode((string) $slug));
+        }, $candidate_locations), static function ($slug) {
+            return $slug !== '' && $slug !== 'all-products' && $slug !== 'unknown';
+        })));
+
+        if (empty($candidate_locations)) {
+            return !$location_payment_filter_active;
+        }
+
+        $evaluated_location = false;
+
+        foreach ($candidate_locations as $candidate_location) {
+            if (function_exists('mulopimfwc_validate_location_slug')) {
+                $term = mulopimfwc_validate_location_slug($candidate_location, false);
+            } else {
+                $term = get_term_by('slug', $candidate_location, 'mulopimfwc_store_location');
+            }
+
+            if (!$term || is_wp_error($term)) {
+                continue;
+            }
+
+            $evaluated_location = true;
+
+            $payments = (array) get_term_meta((int) $term->term_id, 'payment_methods', true);
+            $payments = array_values(array_filter(array_map('sanitize_key', $payments), static function ($value) {
+                return $value !== '';
+            }));
+
+            // Empty payment list means unrestricted for this location.
+            if (empty($payments)) {
+                continue;
+            }
+
+            if (!in_array($gateway_id, $payments, true)) {
+                return false;
+            }
+        }
+
+        if (!$evaluated_location && $location_payment_filter_active) {
+            return false;
+        }
+
+        return true;
+    }
+}
+
 // Only load payment gateway after WooCommerce is loaded
 add_action('plugins_loaded', 'mulopimfwc_init_cash_on_pickup_gateway', 0);
 
@@ -73,7 +169,7 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                 // Customer Emails.
                 add_action('woocommerce_email_before_order_table', array($this, 'email_instructions'), 10, 3);
                 
-                // Ensure gateway is available even if location filtering removes it (run after location filter)
+                // Keep gateway visible for checkout contexts, but respect location payment restrictions.
                 add_filter('woocommerce_available_payment_gateways', array($this, 'ensure_gateway_available'), 100);
                 
                 // Support for WooCommerce Blocks checkout
@@ -112,8 +208,13 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
              * Ensure gateway is available even if location filtering tries to remove it
              */
             public function ensure_gateway_available($gateways) {
+                if (!mulopimfwc_is_gateway_allowed_for_active_location($this->id)) {
+                    unset($gateways[$this->id]);
+                    return $gateways;
+                }
+
                 // If gateway is enabled and not in the list, add it back
-                // This ensures it shows up even if location-based payment filtering removes it
+                // This helps checkout contexts where gateway list is loaded before shipping state is ready
                 // Works for both classic checkout and blocks checkout
                 if ($this->enabled === 'yes' && !isset($gateways[$this->id])) {
                     // Check if gateway should be available
@@ -221,6 +322,10 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                     return false;
                 }
 
+                if (function_exists('mulopimfwc_is_gateway_allowed_for_active_location') && !mulopimfwc_is_gateway_allowed_for_active_location($this->id)) {
+                    return false;
+                }
+
                 // Always available in admin
                 if (is_admin()) {
                     return true;
@@ -277,6 +382,16 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
              * @return array
              */
             public function process_payment($order_id) {
+                if (function_exists('mulopimfwc_is_gateway_allowed_for_active_location') && !mulopimfwc_is_gateway_allowed_for_active_location($this->id)) {
+                    wc_add_notice(
+                        __('Cash on Pickup is not available for the selected location.', 'multi-location-product-and-inventory-management'),
+                        'error'
+                    );
+                    return array(
+                        'result' => 'failure',
+                    );
+                }
+
                 $order = wc_get_order($order_id);
 
                 if ($order->get_total() > 0) {
@@ -350,6 +465,11 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
         add_filter('woocommerce_available_payment_gateways', 'mulopimfwc_ensure_cash_on_pickup_in_blocks', 999);
         if (!function_exists('mulopimfwc_ensure_cash_on_pickup_in_blocks')) {
             function mulopimfwc_ensure_cash_on_pickup_in_blocks($gateways) {
+                if (!mulopimfwc_is_gateway_allowed_for_active_location('cash_on_pickup')) {
+                    unset($gateways['cash_on_pickup']);
+                    return $gateways;
+                }
+
                 // Check if this is a REST API or AJAX request (blocks checkout)
                 $is_rest = defined('REST_REQUEST') && REST_REQUEST;
                 $is_ajax = defined('DOING_AJAX') && DOING_AJAX;
@@ -425,7 +545,16 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                          * @return bool
                          */
                         public function is_active() {
-                            return filter_var($this->get_setting('enabled', false), FILTER_VALIDATE_BOOLEAN);
+                            $enabled = filter_var($this->get_setting('enabled', false), FILTER_VALIDATE_BOOLEAN);
+                            if (!$enabled) {
+                                return false;
+                            }
+
+                            if (function_exists('mulopimfwc_is_gateway_allowed_for_active_location')) {
+                                return mulopimfwc_is_gateway_allowed_for_active_location($this->name);
+                            }
+
+                            return true;
                         }
 
                         /**
@@ -482,6 +611,9 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                                 'title'                    => $this->get_setting('title'),
                                 'description'              => $this->get_setting('description'),
                                 'enableForShippingMethods' => $this->get_enable_for_methods(),
+                                'locationAllowed'          => function_exists('mulopimfwc_is_gateway_allowed_for_active_location')
+                                    ? mulopimfwc_is_gateway_allowed_for_active_location($this->name)
+                                    : true,
                                 'supports'                 => $this->get_supported_features(),
                             ];
                         }

@@ -1,6 +1,106 @@
 <?php
 if (! defined('ABSPATH')) exit;
 
+if (!function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
+    /**
+     * Get unique location slugs currently present in cart/shipping packages.
+     *
+     * @return string[]
+     */
+    function mulopimfwc_get_runtime_cart_location_slugs(): array
+    {
+        if (!function_exists('WC') || !WC()) {
+            return [];
+        }
+
+        $slugs = [];
+
+        if (isset(WC()->cart) && is_object(WC()->cart) && method_exists(WC()->cart, 'get_cart')) {
+            foreach ((array) WC()->cart->get_cart() as $cart_item) {
+                $slug = isset($cart_item['mulopimfwc_location']) ? (string) $cart_item['mulopimfwc_location'] : '';
+                $slug = sanitize_title(rawurldecode($slug));
+                if ($slug !== '' && $slug !== 'all-products' && $slug !== 'unknown') {
+                    $slugs[] = $slug;
+                }
+            }
+        }
+
+        if (isset(WC()->shipping) && is_object(WC()->shipping) && method_exists(WC()->shipping, 'get_packages')) {
+            foreach ((array) WC()->shipping()->get_packages() as $package) {
+                $slug = isset($package['location_slug']) ? (string) $package['location_slug'] : '';
+                $slug = sanitize_title(rawurldecode($slug));
+                if ($slug !== '' && $slug !== 'all-products' && $slug !== 'unknown') {
+                    $slugs[] = $slug;
+                }
+            }
+        }
+
+        return array_values(array_unique($slugs));
+    }
+
+    /**
+     * Resolve the effective location slug used by runtime filters.
+     *
+     * Priority:
+     * - Selected location cookie (including "all-products")
+     * - Single location detected from cart/package location data
+     * - Default location when popup is disabled
+     *
+     * @param array|null $options Optional plugin options.
+     * @return string
+     */
+    function mulopimfwc_get_effective_runtime_location_slug($options = null): string
+    {
+        $cookie_location = function_exists('mulopimfwc_get_store_location_cookie')
+            ? sanitize_title(rawurldecode((string) mulopimfwc_get_store_location_cookie()))
+            : '';
+
+        if ($cookie_location !== '') {
+            return $cookie_location;
+        }
+
+        $cart_locations = mulopimfwc_get_runtime_cart_location_slugs();
+        if (count($cart_locations) === 1) {
+            return (string) $cart_locations[0];
+        }
+
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return '';
+        }
+
+        $enable_popup = isset($options['enable_popup']) ? (string) $options['enable_popup'] : 'off';
+        if ($enable_popup !== 'off' || !function_exists('mulopimfwc_get_default_location_value')) {
+            return '';
+        }
+
+        $default_location = sanitize_title(rawurldecode((string) mulopimfwc_get_default_location_value($options)));
+        if ($default_location === '') {
+            return '';
+        }
+
+        if ($default_location === 'all-products') {
+            return $default_location;
+        }
+
+        if (function_exists('mulopimfwc_validate_location_slug')) {
+            $term = mulopimfwc_validate_location_slug($default_location, false);
+            if ($term && !is_wp_error($term)) {
+                return sanitize_title(rawurldecode((string) $term->slug));
+            }
+            return '';
+        }
+
+        return $default_location;
+    }
+}
+
 /**
  * Runtime filters to enforce location-scoped shipping, payments & tax class
  */
@@ -73,6 +173,10 @@ class MULOPIMFWC_Runtime_Filters
 
     private function get_current_location()
     {
+        if (function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
+            return mulopimfwc_get_effective_runtime_location_slug();
+        }
+
         return mulopimfwc_get_store_location_cookie();
     }
 

@@ -19,6 +19,7 @@
      var title = methodData.title || __('Cash on Pickup', 'multi-location-product-and-inventory-management');
      var description = methodData.description || '';
      var sanitizedDescription = sanitizeHTML(description);
+     var isLocationAllowed = methodData.locationAllowed !== false;
      var RawHTML = window.wp.element.RawHTML;
      var createElement = window.wp.element.createElement;
 
@@ -48,7 +49,7 @@
         content: contentElement,
         edit: contentElement,
         canMakePayment: function () {
-            return true;
+            return !!isLocationAllowed;
         },
         ariaLabel: title,
         supports: {
