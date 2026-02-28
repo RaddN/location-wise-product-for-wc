@@ -1095,6 +1095,10 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             return '';
         }
 
+        // Ensure shortcode assets are available even when rendered from builders/templates
+        // where content detection at wp_enqueue_scripts may miss the shortcode instance.
+        $this->enqueue_shortcode_scripts();
+
         // Check if product_id was explicitly provided BEFORE shortcode_atts merges defaults
         $product_id_provided = isset($atts['product_id']) && !empty($atts['product_id']) && $atts['product_id'] != '0';
         
@@ -1104,14 +1108,17 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             'label' => '',
         ], $atts, 'mulopimfwc_location_selector');
 
-        // If product_id was explicitly provided, use it; otherwise show all locations
+        // If product_id is provided, keep product-specific behavior.
+        // If not provided, auto-detect from runtime context (single product, builders, loops).
         if ($product_id_provided) {
-            $product_id = absint($atts['product_id']);
+            $product_id = $this->get_product_id($atts['product_id']);
+            if ($product_id <= 0) {
+                return '';
+            }
             $show_all_locations = false;
         } else {
-            // No product_id provided - show all locations
-            $product_id = 0;
-            $show_all_locations = true;
+            $product_id = $this->get_product_id(0);
+            $show_all_locations = $product_id <= 0;
         }
         
         // Create a unique key for tracking displayed shortcodes
@@ -1193,17 +1200,200 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     private function get_product_id($provided_id)
     {
-        if ($provided_id > 0) {
-            return absint($provided_id);
+        $normalized_provided_id = $this->normalize_product_id($provided_id);
+        if ($normalized_provided_id > 0) {
+            return $normalized_provided_id;
         }
 
         global $product;
         if ($product && is_a($product, 'WC_Product')) {
-            return $product->get_id();
+            $product_id = $this->normalize_product_id($product->get_id());
+            if ($product_id > 0) {
+                return $product_id;
+            }
         }
 
-        if (is_product() || in_the_loop()) {
-            return get_the_ID();
+        $queried_object_id = function_exists('get_queried_object_id') ? absint(get_queried_object_id()) : 0;
+        $queried_product_id = $this->normalize_product_id($queried_object_id);
+        if ($queried_product_id > 0) {
+            return $queried_product_id;
+        }
+
+        $queried_object = function_exists('get_queried_object') ? get_queried_object() : null;
+        if (is_object($queried_object) && !empty($queried_object->ID)) {
+            $queried_id = $this->normalize_product_id((int) $queried_object->ID);
+            if ($queried_id > 0) {
+                return $queried_id;
+            }
+        }
+
+        global $post;
+        if ($post && is_a($post, 'WP_Post')) {
+            $post_product_id = $this->normalize_product_id((int) $post->ID);
+            if ($post_product_id > 0) {
+                return $post_product_id;
+            }
+        }
+
+        global $wp_query;
+        if ($wp_query && is_a($wp_query, 'WP_Query') && !empty($wp_query->post) && is_a($wp_query->post, 'WP_Post')) {
+            $query_post_id = $this->normalize_product_id((int) $wp_query->post->ID);
+            if ($query_post_id > 0) {
+                return $query_post_id;
+            }
+        }
+
+        $current_product = function_exists('wc_get_product') ? wc_get_product() : null;
+        if ($current_product && is_a($current_product, 'WC_Product')) {
+            $current_product_id = $this->normalize_product_id($current_product->get_id());
+            if ($current_product_id > 0) {
+                return $current_product_id;
+            }
+        }
+
+        $loop_product_id = $this->normalize_product_id(get_the_ID());
+        if ($loop_product_id > 0) {
+            return $loop_product_id;
+        }
+
+        if ($wp_query && is_a($wp_query, 'WP_Query') && !empty($wp_query->query_vars) && is_array($wp_query->query_vars)) {
+            $query_var_product_id = $this->get_product_id_from_query_vars($wp_query->query_vars);
+            if ($query_var_product_id > 0) {
+                return $query_var_product_id;
+            }
+        }
+
+        $request_product_id = $this->get_product_id_from_request();
+        if ($request_product_id > 0) {
+            return $request_product_id;
+        }
+
+        $filtered_product_id = apply_filters('mulopimfwc_location_selector_shortcode_product_id', 0, $provided_id, $this);
+        $filtered_product_id = $this->normalize_product_id($filtered_product_id);
+        if ($filtered_product_id > 0) {
+            return $filtered_product_id;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Normalize a product/variation ID into a valid parent product ID.
+     *
+     * @param mixed $candidate_id
+     * @return int
+     */
+    private function normalize_product_id($candidate_id)
+    {
+        if (is_array($candidate_id) || is_object($candidate_id)) {
+            return 0;
+        }
+
+        $candidate_id = absint($candidate_id);
+        if ($candidate_id <= 0) {
+            return 0;
+        }
+
+        $post_type = get_post_type($candidate_id);
+        if ($post_type === 'product') {
+            return $candidate_id;
+        }
+
+        if ($post_type === 'product_variation') {
+            $parent_id = wp_get_post_parent_id($candidate_id);
+            return $parent_id > 0 ? absint($parent_id) : 0;
+        }
+
+        $product = function_exists('wc_get_product') ? wc_get_product($candidate_id) : null;
+        if (!$product || !is_a($product, 'WC_Product')) {
+            return 0;
+        }
+
+        $product_type = method_exists($product, 'get_type') ? $product->get_type() : '';
+        if ($product_type === 'variation' && method_exists($product, 'get_parent_id')) {
+            $parent_id = (int) $product->get_parent_id();
+            return $parent_id > 0 ? $parent_id : 0;
+        }
+
+        return (int) $product->get_id();
+    }
+
+    /**
+     * Resolve product ID from query vars.
+     *
+     * @param array $query_vars
+     * @return int
+     */
+    private function get_product_id_from_query_vars($query_vars)
+    {
+        if (empty($query_vars) || !is_array($query_vars)) {
+            return 0;
+        }
+
+        foreach (['p', 'post', 'product_id', 'page_id'] as $id_key) {
+            if (!empty($query_vars[$id_key])) {
+                $id_candidate = $this->normalize_product_id($query_vars[$id_key]);
+                if ($id_candidate > 0) {
+                    return $id_candidate;
+                }
+            }
+        }
+
+        foreach (['product', 'name'] as $slug_key) {
+            if (empty($query_vars[$slug_key]) || !is_string($query_vars[$slug_key])) {
+                continue;
+            }
+
+            $slug_value = sanitize_text_field(wp_unslash($query_vars[$slug_key]));
+            $id_candidate = $this->normalize_product_id($slug_value);
+            if ($id_candidate > 0) {
+                return $id_candidate;
+            }
+
+            $product_post = get_page_by_path($slug_value, OBJECT, 'product');
+            if ($product_post && !empty($product_post->ID)) {
+                $id_candidate = $this->normalize_product_id((int) $product_post->ID);
+                if ($id_candidate > 0) {
+                    return $id_candidate;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Resolve product ID from request payload for builder-driven contexts.
+     *
+     * @return int
+     */
+    private function get_product_id_from_request()
+    {
+        foreach (['product_id', 'product', 'p', 'post', 'post_id'] as $request_key) {
+            if (!isset($_GET[$request_key])) {
+                continue;
+            }
+
+            $raw_value = wp_unslash($_GET[$request_key]);
+            if (is_array($raw_value) || is_object($raw_value)) {
+                continue;
+            }
+
+            $value = sanitize_text_field((string) $raw_value);
+            $id_candidate = $this->normalize_product_id($value);
+            if ($id_candidate > 0) {
+                return $id_candidate;
+            }
+
+            if (is_string($value) && $value !== '') {
+                $product_post = get_page_by_path($value, OBJECT, 'product');
+                if ($product_post && !empty($product_post->ID)) {
+                    $id_candidate = $this->normalize_product_id((int) $product_post->ID);
+                    if ($id_candidate > 0) {
+                        return $id_candidate;
+                    }
+                }
+            }
         }
 
         return 0;

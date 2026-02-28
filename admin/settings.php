@@ -6705,7 +6705,6 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     padding: 40px 20px;
                     border-radius: 12px;
                     margin-top: 40px;
-                    display: none;
                 }
 
                 /* Header */
@@ -6816,6 +6815,7 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     padding-bottom: 56.25%;
                     background: #1a1a1a;
                     overflow: hidden;
+                    display: none;
                 }
 
                 .lwp-tutorial-iframe {
