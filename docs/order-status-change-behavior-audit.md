@@ -30,7 +30,7 @@ Relevant plugin refs:
 
 ---
 
-## Pending
+## Pending **fixed**
 
 Default WC:
 - If stock was previously reduced, moving to `pending` restores stock (`wc_maybe_increase_stock_levels`).
@@ -109,7 +109,7 @@ Relevant refs:
 
 ---
 
-## Cancelled
+## Cancelled 
 
 Default WC:
 - Restores stock (only previously reduced amounts) and releases reserved hold stock.
