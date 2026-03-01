@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.4.5
+ * Version: 1.1.4.9
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -79,7 +79,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.1.4.5");
+    define("mulopimfwc_VERSION", "1.1.4.9");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -384,6 +384,26 @@ if (!function_exists('mulopimfwc_is_manual_assignment_strict_mode')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_location_wise_currency_enabled')) {
+    /**
+     * Check whether location-wise currency is enabled.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_wise_currency_enabled($options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['location_wise_currency']) && $options['location_wise_currency'] === 'on';
+    }
+}
+
 if (!function_exists('mulopimfwc_is_mixed_location_cart_enabled')) {
     /**
      * Check whether mixed-location cart is enabled, respecting manual mode.
@@ -408,7 +428,39 @@ if (!function_exists('mulopimfwc_is_mixed_location_cart_enabled')) {
             return false;
         }
 
+        if (mulopimfwc_is_location_wise_currency_enabled($options)) {
+            return false;
+        }
+
         return isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_change_in_cart_enabled')) {
+    /**
+     * Check whether location change in cart is enabled, respecting manual mode and location-wise currency.
+     *
+     * @param array|null $options Optional options array.
+     * @return bool
+     */
+    function mulopimfwc_is_location_change_in_cart_enabled($options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            return false;
+        }
+
+        if (mulopimfwc_is_location_wise_currency_enabled($options)) {
+            return false;
+        }
+
+        return isset($options['allow_location_change_in_cart']) && $options['allow_location_change_in_cart'] === 'on';
     }
 }
 
@@ -461,6 +513,10 @@ if (!function_exists('mulopimfwc_is_split_order_enabled')) {
         }
 
         if (!mulopimfwc_premium_feature()) {
+            return false;
+        }
+
+        if (mulopimfwc_is_location_wise_currency_enabled($options)) {
             return false;
         }
 
@@ -1032,6 +1088,85 @@ if (!function_exists('mulopimfwc_get_location_cookie_name')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_location_currency_debug_enabled')) {
+    /**
+     * Check if location-wise currency debug logging is enabled.
+     *
+     * @param string $event
+     * @param array $context
+     * @return bool
+     */
+    function mulopimfwc_is_location_currency_debug_enabled(string $event = '', array $context = []): bool
+    {
+        $enabled = defined('MULOPIMFWC_LOCATION_CURRENCY_DEBUG') && (bool) MULOPIMFWC_LOCATION_CURRENCY_DEBUG;
+        $enabled = (bool) apply_filters('mulopimfwc_location_currency_debug_log', $enabled, $event, $context);
+        $enabled = (bool) apply_filters('mulopimfwc_currency_debug_log', $enabled, $event, $context);
+
+        return $enabled && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG;
+    }
+}
+
+if (!function_exists('mulopimfwc_log_location_currency_debug')) {
+    /**
+     * Write structured debug logs for location-wise currency resolution.
+     *
+     * @param string $event
+     * @param array $context
+     * @return void
+     */
+    function mulopimfwc_log_location_currency_debug(string $event, array $context = []): void
+    {
+        if (!mulopimfwc_is_location_currency_debug_enabled($event, $context)) {
+            return;
+        }
+
+        $sanitize = static function ($value) use (&$sanitize) {
+            if (is_null($value) || is_scalar($value)) {
+                return $value;
+            }
+
+            if (is_array($value)) {
+                $normalized = [];
+                foreach ($value as $key => $item) {
+                    $normalized[(string) $key] = $sanitize($item);
+                }
+                return $normalized;
+            }
+
+            if (is_object($value)) {
+                if ($value instanceof WP_Term) {
+                    return [
+                        'term_id' => (int) $value->term_id,
+                        'slug' => (string) $value->slug,
+                        'taxonomy' => (string) $value->taxonomy,
+                    ];
+                }
+
+                if (method_exists($value, '__toString')) {
+                    return (string) $value;
+                }
+
+                return get_class($value);
+            }
+
+            return (string) $value;
+        };
+
+        $payload = [
+            'event' => $event,
+            'context' => $sanitize($context),
+            'request' => [
+                'method' => isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : '',
+                'uri' => isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '',
+                'is_ajax' => wp_doing_ajax(),
+                'is_admin' => is_admin(),
+            ],
+        ];
+
+        error_log('[MulopimFWC Currency] ' . wp_json_encode($payload));
+    }
+}
+
 if (!function_exists('mulopimfwc_get_frontend_locations')) {
     /**
      * Get locations for frontend display, filtered by is_active status and ordered by display_order.
@@ -1100,6 +1235,18 @@ if (!function_exists('mulopimfwc_get_store_location_cookie')) {
      */
     function mulopimfwc_get_store_location_cookie(): string
     {
+        $log_currency_cookie = static function (string $event, array $context = []) {
+            static $count = 0;
+            if ($count >= 20) {
+                return;
+            }
+            $count++;
+            $context['event_count'] = $count;
+            if (function_exists('mulopimfwc_log_location_currency_debug')) {
+                mulopimfwc_log_location_currency_debug($event, $context);
+            }
+        };
+
         $cookie_name = mulopimfwc_get_location_cookie_name();
         if (empty($cookie_name) || !isset($_COOKIE[$cookie_name])) {
             return '';
@@ -1110,20 +1257,86 @@ if (!function_exists('mulopimfwc_get_store_location_cookie')) {
         $location_slug = sanitize_text_field((string) $decoded_value);
 
         if ($location_slug === '') {
+            $log_currency_cookie('cookie_read_rejected', [
+                'reason' => 'empty_cookie_value',
+                'cookie_name' => $cookie_name,
+            ]);
             return '';
+        }
+
+        $normalized_location = sanitize_title(rawurldecode($location_slug));
+        if ($normalized_location === '') {
+            $log_currency_cookie('cookie_read_rejected', [
+                'reason' => 'empty_normalized_slug',
+                'cookie_name' => $cookie_name,
+                'location_slug' => $location_slug,
+            ]);
+            return '';
+        }
+
+        if ($normalized_location !== 'all-products') {
+            $resolved_term = false;
+            if (function_exists('mulopimfwc_validate_location_slug')) {
+                // Use uncached resolution here so stale invalid caches do not break runtime location.
+                $resolved_term = mulopimfwc_validate_location_slug($location_slug, false);
+            } else {
+                $resolved_term = get_term_by('slug', $normalized_location, 'mulopimfwc_store_location');
+            }
+
+            if ($resolved_term && !is_wp_error($resolved_term) && isset($resolved_term->slug)) {
+                $normalized_location = sanitize_title(rawurldecode((string) $resolved_term->slug));
+            } else {
+                // Keep normalized raw value as fallback; currency resolver has its own term lookup fallbacks.
+                $log_currency_cookie('cookie_read_unverified', [
+                    'reason' => 'location_term_not_resolved',
+                    'cookie_name' => $cookie_name,
+                    'location_slug' => $location_slug,
+                    'normalized_location' => $normalized_location,
+                ]);
+            }
         }
 
         $manager_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
         if (!is_array($manager_locations)) {
-            return $location_slug;
-        }
-
-        $normalized_location = sanitize_title(rawurldecode($location_slug));
-        if ($normalized_location === 'all-products') {
+            $log_currency_cookie('cookie_read', [
+                'cookie_name' => $cookie_name,
+                'location_slug' => $normalized_location,
+                'raw_location_slug' => $location_slug,
+                'restricted_mode' => false,
+            ]);
             return $normalized_location;
         }
 
-        return in_array($normalized_location, $manager_locations, true) ? $normalized_location : '';
+        if ($normalized_location === 'all-products') {
+            $log_currency_cookie('cookie_read', [
+                'cookie_name' => $cookie_name,
+                'location_slug' => $normalized_location,
+                'restricted_mode' => true,
+                'is_all_products' => true,
+            ]);
+            return $normalized_location;
+        }
+
+        $is_allowed = in_array($normalized_location, $manager_locations, true);
+
+        if (!$is_allowed) {
+            $log_currency_cookie('cookie_read_rejected', [
+                'reason' => 'manager_restriction',
+                'cookie_name' => $cookie_name,
+                'location_slug' => $normalized_location,
+                'allowed_locations' => $manager_locations,
+            ]);
+            return '';
+        }
+
+        $log_currency_cookie('cookie_read', [
+            'cookie_name' => $cookie_name,
+            'location_slug' => $normalized_location,
+            'restricted_mode' => true,
+            'is_allowed' => true,
+        ]);
+
+        return $normalized_location;
     }
 }
 
@@ -1152,6 +1365,12 @@ if (!function_exists('mulopimfwc_set_location_cookie')) {
         $location_slug = sanitize_title($location_slug);
         
         if (empty($location_slug)) {
+            if (function_exists('mulopimfwc_log_location_currency_debug')) {
+                mulopimfwc_log_location_currency_debug('cookie_set_rejected', [
+                    'reason' => 'empty_location',
+                    'cookie_name' => $cookie_name,
+                ]);
+            }
             return false;
         }
 
@@ -1160,6 +1379,13 @@ if (!function_exists('mulopimfwc_set_location_cookie')) {
             $location_obj = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
             if (!$location_obj || is_wp_error($location_obj)) {
                 // Invalid location - don't set cookie
+                if (function_exists('mulopimfwc_log_location_currency_debug')) {
+                    mulopimfwc_log_location_currency_debug('cookie_set_rejected', [
+                        'reason' => 'invalid_location',
+                        'location_slug' => $location_slug,
+                        'cookie_name' => $cookie_name,
+                    ]);
+                }
                 return false;
             }
         }
@@ -1211,6 +1437,17 @@ if (!function_exists('mulopimfwc_set_location_cookie')) {
         // Set $_COOKIE for same-request access
         if ($set) {
             $_COOKIE[$cookie_name] = $cookie_value;
+        }
+
+        if (function_exists('mulopimfwc_log_location_currency_debug')) {
+            mulopimfwc_log_location_currency_debug('cookie_set', [
+                'cookie_name' => $cookie_name,
+                'location_slug' => $location_slug,
+                'cookie_value' => $cookie_value,
+                'setcookie_result' => (bool) $set,
+                'headers_sent' => headers_sent(),
+                'term_id' => ($location_obj instanceof WP_Term) ? (int) $location_obj->term_id : null,
+            ]);
         }
 
         return $set;
@@ -2625,6 +2862,8 @@ if (!function_exists('mulopimfwc_get_values')) {
         private $cart_items_cache = null;
         private $should_group_cache = null;
         private $transfer_destination_cache = [];
+        private $location_currency_runtime_settings = [];
+        private $location_currency_debug_counts = [];
         
         /**
          * Cache for product location relationships (per request)
@@ -2653,6 +2892,12 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
             add_action('pre_get_posts', [$this, 'filter_products_by_location']);
+            add_filter('woocommerce_currency', [$this, 'filter_currency_by_selected_location'], 999);
+            add_filter('woocommerce_currency_pos', [$this, 'filter_currency_position_by_selected_location'], 999);
+            add_filter('wc_price_args', [$this, 'filter_wc_price_args_by_selected_location'], 999);
+            add_filter('woocommerce_price_format', [$this, 'filter_price_format_by_selected_location'], 999, 2);
+            add_filter('pre_option_woocommerce_currency', [$this, 'filter_pre_option_currency_by_selected_location'], 999, 3);
+            add_filter('pre_option_woocommerce_currency_pos', [$this, 'filter_pre_option_currency_position_by_selected_location'], 999, 3);
             
             // FIXED: Comprehensive product filtering for all display methods
             add_filter('woocommerce_shortcode_products_query', [$this, 'filter_shortcode_products']);
@@ -2804,6 +3049,549 @@ if (!function_exists('mulopimfwc_get_values')) {
         public function clear_cart_cache()
         {
             $this->cart_items_cache = null;
+        }
+
+        /**
+         * Log currency-debug events with per-request event throttling.
+         *
+         * @param string $event
+         * @param array $context
+         * @param int $limit_per_event
+         * @return void
+         */
+        private function currency_debug_log(string $event, array $context = [], int $limit_per_event = 12): void
+        {
+            if (!function_exists('mulopimfwc_log_location_currency_debug')) {
+                return;
+            }
+
+            $count = isset($this->location_currency_debug_counts[$event])
+                ? (int) $this->location_currency_debug_counts[$event]
+                : 0;
+
+            if ($count >= $limit_per_event) {
+                return;
+            }
+
+            $count++;
+            $this->location_currency_debug_counts[$event] = $count;
+            $context['event_count'] = $count;
+
+            mulopimfwc_log_location_currency_debug($event, $context);
+        }
+
+        /**
+         * Resolve store-location term by slug directly from DB.
+         * Used as fallback when taxonomy registration timing makes get_term_by unavailable.
+         *
+         * @param string $location_slug
+         * @return object|null
+         */
+        private function get_location_term_by_slug_db_fallback(string $location_slug): ?object
+        {
+            $location_slug = sanitize_title(rawurldecode(trim($location_slug)));
+            if ($location_slug === '') {
+                return null;
+            }
+
+            global $wpdb;
+
+            $term_id = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT t.term_id
+                     FROM {$wpdb->terms} AS t
+                     INNER JOIN {$wpdb->term_taxonomy} AS tt
+                        ON tt.term_id = t.term_id
+                     WHERE tt.taxonomy = %s
+                       AND t.slug = %s
+                     LIMIT 1",
+                    'mulopimfwc_store_location',
+                    $location_slug
+                )
+            );
+
+            if ($term_id <= 0) {
+                return null;
+            }
+
+            return (object) [
+                'term_id' => $term_id,
+                'slug' => $location_slug,
+                'taxonomy' => 'mulopimfwc_store_location',
+            ];
+        }
+
+        /**
+         * Return the only assigned location slug for the current location manager.
+         *
+         * @return string Empty string when not applicable.
+         */
+        private function get_single_assigned_location_for_currency(): string
+        {
+            if (!class_exists('MULOPIMFWC_Location_Managers') || !is_user_logged_in()) {
+                return '';
+            }
+
+            $user = wp_get_current_user();
+            if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+                return '';
+            }
+
+            $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+            if (!is_array($assigned_locations)) {
+                return '';
+            }
+
+            $assigned_locations = array_map(function ($location_slug) {
+                return sanitize_title(rawurldecode((string) $location_slug));
+            }, $assigned_locations);
+            $assigned_locations = array_values(array_filter($assigned_locations, function ($location_slug) {
+                return is_string($location_slug) && $location_slug !== '';
+            }));
+            $assigned_locations = array_values(array_unique($assigned_locations));
+
+            if (count($assigned_locations) !== 1) {
+                return '';
+            }
+
+            return (string) $assigned_locations[0];
+        }
+
+        /**
+         * Determine if admin non-AJAX requests should still use location-wise currency runtime.
+         *
+         * @return bool
+         */
+        private function should_enable_admin_currency_runtime(): bool
+        {
+            if (!is_admin() || wp_doing_ajax()) {
+                return true;
+            }
+
+            if ($this->get_single_assigned_location_for_currency() !== '') {
+                return true;
+            }
+
+            $request_keys = [
+                'mulopimfwc_loc',
+                'location',
+                'mulopimfwc_store_location',
+                'location_filter',
+                'store_location',
+            ];
+
+            foreach ($request_keys as $request_key) {
+                if (isset($_REQUEST[$request_key])) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private function get_runtime_location_slug_for_currency(): string
+        {
+            if (is_admin() && wp_doing_ajax()) {
+                $ajax_action = isset($_REQUEST['action'])
+                    ? sanitize_key((string) wp_unslash($_REQUEST['action']))
+                    : '';
+
+                if ($ajax_action === 'mulopimfwc_dashboard_live_data') {
+                    $has_explicit_dashboard_location = isset($_REQUEST['location'])
+                        || isset($_REQUEST['location_filter'])
+                        || isset($_REQUEST['mulopimfwc_loc'])
+                        || isset($_REQUEST['mulopimfwc_store_location']);
+
+                    if (!$has_explicit_dashboard_location) {
+                        $single_assigned_location = $this->get_single_assigned_location_for_currency();
+                        if ($single_assigned_location !== '') {
+                            $this->currency_debug_log('currency_location_selected', [
+                                'source' => 'location_manager_single_assigned',
+                                'resolved_location' => $single_assigned_location,
+                                'reason' => 'dashboard_live_single_assigned_location',
+                            ], 25);
+                            return $single_assigned_location;
+                        }
+
+                        $this->currency_debug_log('currency_location_selected', [
+                            'source' => 'dashboard_live_default_scope',
+                            'resolved_location' => '',
+                            'reason' => 'dashboard_live_no_explicit_location',
+                        ], 25);
+                        return '';
+                    }
+                }
+            }
+
+            $candidates = [];
+
+            if (isset($_REQUEST['mulopimfwc_loc'])) {
+                $candidates['request_mulopimfwc_loc'] = (string) wp_unslash($_REQUEST['mulopimfwc_loc']);
+            }
+
+            if (isset($_REQUEST['location'])) {
+                $candidates['request_location'] = (string) wp_unslash($_REQUEST['location']);
+            }
+
+            if (isset($_REQUEST['mulopimfwc_store_location'])) {
+                $candidates['request_store_location'] = (string) wp_unslash($_REQUEST['mulopimfwc_store_location']);
+            }
+
+            if (isset($_REQUEST['location_filter'])) {
+                $candidates['request_location_filter'] = (string) wp_unslash($_REQUEST['location_filter']);
+            }
+
+            $single_assigned_location = $this->get_single_assigned_location_for_currency();
+            if ($single_assigned_location !== '') {
+                $candidates['location_manager_single_assigned'] = $single_assigned_location;
+            }
+
+            if (function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
+                $candidates['effective_runtime'] = (string) mulopimfwc_get_effective_runtime_location_slug();
+            }
+
+            $candidates['current_location'] = (string) $this->get_current_location();
+
+            if (function_exists('mulopimfwc_get_store_location_cookie')) {
+                $candidates['store_cookie'] = (string) mulopimfwc_get_store_location_cookie();
+            }
+
+            $this->currency_debug_log('currency_location_candidates', [
+                'candidates' => $candidates,
+            ]);
+
+            foreach ($candidates as $source => $candidate) {
+                $candidate_raw = trim((string) $candidate);
+                $candidate_slug = sanitize_title(rawurldecode($candidate_raw));
+                if ($candidate_slug === '') {
+                    $this->currency_debug_log('currency_location_candidate_skipped', [
+                        'source' => $source,
+                        'raw' => $candidate,
+                        'reason' => 'empty_after_sanitize',
+                    ], 25);
+                    continue;
+                }
+
+                if (
+                    in_array($source, ['request_location', 'request_location_filter'], true) &&
+                    in_array($candidate_slug, ['all', 'default', 'none'], true)
+                ) {
+                    $this->currency_debug_log('currency_location_selected', [
+                        'source' => $source,
+                        'resolved_location' => '',
+                        'reason' => 'explicit_default_scope',
+                        'raw' => $candidate,
+                    ], 25);
+                    return '';
+                }
+
+                if ($candidate_slug === 'all-products') {
+                    $this->currency_debug_log('currency_location_selected', [
+                        'source' => $source,
+                        'resolved_location' => $candidate_slug,
+                        'reason' => 'all_products',
+                    ], 25);
+                    return $candidate_slug;
+                }
+
+                $location_resolution_method = 'validator';
+                $location_term = function_exists('mulopimfwc_validate_location_slug')
+                    // Use uncached validation to avoid stale invalid-cache blocking currency resolution.
+                    ? mulopimfwc_validate_location_slug($candidate_raw, false)
+                    : get_term_by('slug', $candidate_slug, 'mulopimfwc_store_location');
+
+                if ((!$location_term || is_wp_error($location_term)) && $candidate_slug !== '') {
+                    $location_term = $this->get_location_term_by_slug_db_fallback($candidate_slug);
+                    if ($location_term && !is_wp_error($location_term)) {
+                        $location_resolution_method = 'db_fallback';
+                    }
+                }
+
+                if ($location_term && !is_wp_error($location_term)) {
+                    $resolved_slug = sanitize_title(rawurldecode((string) $location_term->slug));
+                    $this->currency_debug_log('currency_location_selected', [
+                        'source' => $source,
+                        'resolved_location' => $resolved_slug,
+                        'reason' => 'validated_term',
+                        'term_id' => (int) $location_term->term_id,
+                        'resolution_method' => $location_resolution_method,
+                    ], 25);
+                    return $resolved_slug;
+                }
+
+                $this->currency_debug_log('currency_location_candidate_skipped', [
+                    'source' => $source,
+                    'raw' => $candidate,
+                    'candidate_slug' => $candidate_slug,
+                    'reason' => 'term_not_found',
+                ], 25);
+            }
+
+            $this->currency_debug_log('currency_location_selected', [
+                'source' => '',
+                'resolved_location' => '',
+                'reason' => 'no_valid_candidate',
+            ], 25);
+
+            return '';
+        }
+
+        private function get_location_currency_runtime_settings(): array
+        {
+            $empty_settings = [
+                'currency' => '',
+                'position' => '',
+            ];
+
+            if (is_admin() && !wp_doing_ajax() && !$this->should_enable_admin_currency_runtime()) {
+                $this->currency_debug_log('currency_runtime_settings_skipped', [
+                    'reason' => 'admin_non_ajax_no_context',
+                ], 25);
+                return $empty_settings;
+            }
+
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+
+            if (!mulopimfwc_is_location_wise_currency_enabled($options)) {
+                $this->currency_debug_log('currency_runtime_settings_skipped', [
+                    'reason' => 'location_wise_currency_disabled',
+                    'location_wise_currency_option' => isset($options['location_wise_currency'])
+                        ? (string) $options['location_wise_currency']
+                        : '',
+                ], 25);
+                return $empty_settings;
+            }
+
+            $location_slug = $this->get_runtime_location_slug_for_currency();
+            $cache_key = $location_slug === '' ? '__none' : $location_slug;
+
+            if (isset($this->location_currency_runtime_settings[$cache_key])) {
+                $this->currency_debug_log('currency_runtime_settings_cache_hit', [
+                    'cache_key' => $cache_key,
+                    'location_slug' => $location_slug,
+                    'settings' => $this->location_currency_runtime_settings[$cache_key],
+                ], 25);
+                return $this->location_currency_runtime_settings[$cache_key];
+            }
+
+            $settings = $empty_settings;
+
+            if ($location_slug === '' || $location_slug === 'all-products') {
+                $this->location_currency_runtime_settings[$cache_key] = $settings;
+                $this->currency_debug_log('currency_runtime_settings_empty', [
+                    'reason' => $location_slug === 'all-products' ? 'all_products_selected' : 'location_missing',
+                    'location_slug' => $location_slug,
+                    'cache_key' => $cache_key,
+                ], 25);
+                return $settings;
+            }
+
+            $location_resolution_method = 'validator';
+            $location_term = function_exists('mulopimfwc_validate_location_slug')
+                // Use uncached lookup for currency settings to avoid stale invalid slug cache.
+                ? mulopimfwc_validate_location_slug($location_slug, false)
+                : get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+            if ((!$location_term || is_wp_error($location_term)) && $location_slug !== '') {
+                $location_term = $this->get_location_term_by_slug_db_fallback($location_slug);
+                if ($location_term && !is_wp_error($location_term)) {
+                    $location_resolution_method = 'db_fallback';
+                }
+            }
+            if (!$location_term || is_wp_error($location_term)) {
+                $this->location_currency_runtime_settings[$cache_key] = $settings;
+                $this->currency_debug_log('currency_runtime_settings_empty', [
+                    'reason' => 'location_term_not_found',
+                    'location_slug' => $location_slug,
+                    'cache_key' => $cache_key,
+                ], 25);
+                return $settings;
+            }
+
+            $configured_currency = strtoupper(trim((string) get_term_meta((int) $location_term->term_id, 'location_currency', true)));
+            $currency_is_valid = false;
+            if ($configured_currency !== '' && function_exists('get_woocommerce_currencies')) {
+                $available_currencies = (array) get_woocommerce_currencies();
+                if (isset($available_currencies[$configured_currency])) {
+                    $settings['currency'] = $configured_currency;
+                    $currency_is_valid = true;
+                }
+            }
+
+            $configured_position = sanitize_key((string) get_term_meta((int) $location_term->term_id, 'location_currency_position', true));
+            $position_is_valid = false;
+            if (in_array($configured_position, ['left', 'right', 'left_space', 'right_space'], true)) {
+                $settings['position'] = $configured_position;
+                $position_is_valid = true;
+            }
+
+            $this->location_currency_runtime_settings[$cache_key] = $settings;
+            $this->currency_debug_log('currency_runtime_settings_resolved', [
+                'location_slug' => $location_slug,
+                'cache_key' => $cache_key,
+                'term_id' => (int) $location_term->term_id,
+                'raw_term_currency' => $configured_currency,
+                'raw_term_position' => $configured_position,
+                'currency_is_valid' => $currency_is_valid,
+                'position_is_valid' => $position_is_valid,
+                'resolution_method' => $location_resolution_method,
+                'default_currency' => (string) get_option('woocommerce_currency', ''),
+                'default_position' => (string) get_option('woocommerce_currency_pos', ''),
+                'settings' => $settings,
+            ], 25);
+            return $settings;
+        }
+
+        public function filter_currency_by_selected_location($currency)
+        {
+            $settings = $this->get_location_currency_runtime_settings();
+            $resolved_currency = !empty($settings['currency']) ? $settings['currency'] : $currency;
+
+            $this->currency_debug_log('hook_woocommerce_currency', [
+                'incoming_currency' => $currency,
+                'resolved_currency' => $resolved_currency,
+                'settings' => $settings,
+            ], 20);
+
+            return $resolved_currency;
+        }
+
+        public function filter_currency_position_by_selected_location($position)
+        {
+            $settings = $this->get_location_currency_runtime_settings();
+            $resolved_position = !empty($settings['position']) ? $settings['position'] : $position;
+
+            $this->currency_debug_log('hook_woocommerce_currency_pos', [
+                'incoming_position' => $position,
+                'resolved_position' => $resolved_position,
+                'settings' => $settings,
+            ], 20);
+
+            return $resolved_position;
+        }
+
+        private function get_price_format_for_currency_position(string $position): string
+        {
+            switch ($position) {
+                case 'right':
+                    return '%2$s%1$s';
+                case 'left_space':
+                    return '%1$s&nbsp;%2$s';
+                case 'right_space':
+                    return '%2$s&nbsp;%1$s';
+                case 'left':
+                default:
+                    return '%1$s%2$s';
+            }
+        }
+
+        public function filter_wc_price_args_by_selected_location($args)
+        {
+            $settings = $this->get_location_currency_runtime_settings();
+            if (empty($settings['currency']) && empty($settings['position'])) {
+                $this->currency_debug_log('hook_wc_price_args', [
+                    'settings' => $settings,
+                    'args_type' => gettype($args),
+                    'changed' => false,
+                ], 12);
+                return $args;
+            }
+
+            if (!is_array($args)) {
+                $args = [];
+            }
+
+            if (!empty($settings['currency'])) {
+                $args['currency'] = $settings['currency'];
+            }
+
+            if (!empty($settings['position'])) {
+                $args['price_format'] = $this->get_price_format_for_currency_position((string) $settings['position']);
+            }
+
+            $this->currency_debug_log('hook_wc_price_args', [
+                'settings' => $settings,
+                'changed' => true,
+                'args_after' => $args,
+            ], 12);
+
+            return $args;
+        }
+
+        public function filter_price_format_by_selected_location($format, $currency_pos = '')
+        {
+            $settings = $this->get_location_currency_runtime_settings();
+            if (!empty($settings['position'])) {
+                $resolved_format = $this->get_price_format_for_currency_position((string) $settings['position']);
+                $this->currency_debug_log('hook_woocommerce_price_format', [
+                    'incoming_format' => $format,
+                    'incoming_currency_pos' => $currency_pos,
+                    'resolved_format' => $resolved_format,
+                    'settings' => $settings,
+                ], 20);
+                return $resolved_format;
+            }
+
+            $this->currency_debug_log('hook_woocommerce_price_format', [
+                'incoming_format' => $format,
+                'incoming_currency_pos' => $currency_pos,
+                'resolved_format' => $format,
+                'settings' => $settings,
+            ], 20);
+
+            return $format;
+        }
+
+        public function filter_pre_option_currency_by_selected_location($pre_value, $option, $default_value)
+        {
+            $settings = $this->get_location_currency_runtime_settings();
+            if (!empty($settings['currency'])) {
+                $this->currency_debug_log('hook_pre_option_woocommerce_currency', [
+                    'incoming_pre_value' => $pre_value,
+                    'option' => $option,
+                    'default_value' => $default_value,
+                    'resolved_pre_value' => $settings['currency'],
+                    'settings' => $settings,
+                ], 20);
+                return $settings['currency'];
+            }
+
+            $this->currency_debug_log('hook_pre_option_woocommerce_currency', [
+                'incoming_pre_value' => $pre_value,
+                'option' => $option,
+                'default_value' => $default_value,
+                'resolved_pre_value' => $pre_value,
+                'settings' => $settings,
+            ], 20);
+
+            return $pre_value;
+        }
+
+        public function filter_pre_option_currency_position_by_selected_location($pre_value, $option, $default_value)
+        {
+            $settings = $this->get_location_currency_runtime_settings();
+            if (!empty($settings['position'])) {
+                $this->currency_debug_log('hook_pre_option_woocommerce_currency_pos', [
+                    'incoming_pre_value' => $pre_value,
+                    'option' => $option,
+                    'default_value' => $default_value,
+                    'resolved_pre_value' => $settings['position'],
+                    'settings' => $settings,
+                ], 20);
+                return $settings['position'];
+            }
+
+            $this->currency_debug_log('hook_pre_option_woocommerce_currency_pos', [
+                'incoming_pre_value' => $pre_value,
+                'option' => $option,
+                'default_value' => $default_value,
+                'resolved_pre_value' => $pre_value,
+                'settings' => $settings,
+            ], 20);
+
+            return $pre_value;
         }
 
         /**
@@ -4715,12 +5503,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
-            // Check if feature is enabled
-            $allow_location_change = isset($options['allow_location_change_in_cart'])
-                ? $options['allow_location_change_in_cart']
-                : 'off';
-
-            if ($allow_location_change !== 'on') {
+            if (!mulopimfwc_is_location_change_in_cart_enabled($options)) {
                 return;
             }
 
@@ -4821,6 +5604,14 @@ if (!function_exists('mulopimfwc_get_values')) {
                 wp_send_json_error(['message' => __('Cart not available.', 'multi-location-product-and-inventory-management')]);
             }
 
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            if (!mulopimfwc_is_location_change_in_cart_enabled($options)) {
+                wp_send_json_error(['message' => __('Location change in cart is disabled.', 'multi-location-product-and-inventory-management')]);
+            }
+
             $cart = WC()->cart;
             $cart_item = $cart->get_cart_item($cart_item_key);
 
@@ -4879,6 +5670,14 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             if (!function_exists('WC') || !WC()->cart) {
                 wp_send_json_error(['message' => __('Cart not available.', 'multi-location-product-and-inventory-management')]);
+            }
+
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            if (!mulopimfwc_is_location_change_in_cart_enabled($options)) {
+                wp_send_json_error(['message' => __('Location change in cart is disabled.', 'multi-location-product-and-inventory-management')]);
             }
 
             $cart = WC()->cart;
@@ -6315,7 +7114,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.1.4.5',
+                '1.1.4.9',
                 true
             );
 
@@ -6335,7 +7134,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.1.4.5'
+                '1.1.4.9'
             );
         }
 
@@ -7848,9 +8647,8 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
             $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
-            $is_manual_strict = mulopimfwc_is_manual_assignment_strict_mode($options);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.5');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.9');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
             // Add custom branding CSS
@@ -7858,7 +8656,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.4.5', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.4.9', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             wp_add_inline_script('mulopimfwc_select2', 'jQuery.fn.select2&&jQuery.fn.select2.defaults&&jQuery.fn.select2.defaults.set("language",{noResults:function(){return"' . esc_js(mulopimfwc_get_text_value('text_popup_msg_no_results')) . '";}});', 'after');
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
@@ -7867,7 +8665,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -7875,7 +8673,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -7883,7 +8681,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
             }
@@ -7912,7 +8710,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
 
@@ -7921,20 +8719,14 @@ if (!function_exists('mulopimfwc_get_values')) {
 
 
             // Check if allow location change in cart is enabled
-            $allow_location_change_in_cart = isset($options['allow_location_change_in_cart'])
-                ? $options['allow_location_change_in_cart']
-                : 'off';
-
-            if ($is_manual_strict) {
-                $allow_location_change_in_cart = 'off';
-            }
+            $allow_location_change_in_cart = mulopimfwc_is_location_change_in_cart_enabled($options) ? 'on' : 'off';
 
             if ($allow_location_change_in_cart === 'on' && (is_cart() || is_checkout())) {
                 wp_enqueue_script(
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
 
@@ -7989,12 +8781,18 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $options['auto_populate_customer_addresses']
                 : 'off';
             $is_checkout_page = function_exists('is_checkout') ? is_checkout() : false;
+            $location_switching_behavior = isset($options['location_switching_behavior'])
+                ? $options['location_switching_behavior']
+                : 'update_cart';
+            if (mulopimfwc_is_location_wise_currency_enabled($options) && $location_switching_behavior === 'preserve_cart') {
+                $location_switching_behavior = 'update_cart';
+            }
 
             wp_localize_script('mulopimfwc_script', 'mulopimfwc_locationWiseProducts', [
                 'cartHasProducts' => !WC()->cart->is_empty(),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'location_change_notification' => isset($mulopimfwc_options["location_change_notification"]) || (isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] === "prompt_user"),
+                'location_change_notification' => isset($mulopimfwc_options["location_change_notification"]) || $location_switching_behavior === "prompt_user",
                 'nonce' => wp_create_nonce('multi-location-product-and-inventory-management'),
                 'cookie_expiry' => $cookie_expiry_days,
                 'cookieExpiryDays' => $cookie_expiry_days,
@@ -8005,8 +8803,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'cookieSecure' => is_ssl(),
                 'currentLocation' => $this->get_current_location(),
                 'allow_mixed_in_cart' => mulopimfwc_is_mixed_location_cart_enabled($mulopimfwc_options) ? 'on' : 'off',
-                'allow_cart_update' => isset($mulopimfwc_options["location_switching_behavior"]) && $mulopimfwc_options["location_switching_behavior"] !== "preserve_cart",
-                'location_switching_behavior' => isset($mulopimfwc_options["location_switching_behavior"]) ? $mulopimfwc_options["location_switching_behavior"] : 'update_cart',
+                'allow_cart_update' => $location_switching_behavior !== "preserve_cart",
+                'location_switching_behavior' => $location_switching_behavior,
                 'location_notification_text' => mulopimfwc_premium_feature()
                     ? mulopimfwc_get_text_value('location_notification_text')
                     : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management'),
@@ -8927,7 +9725,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.5');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.9');
             }
             
             // Enqueue modern popup script
@@ -8936,7 +9734,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
             }
@@ -8947,7 +9745,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
             }
@@ -8958,7 +9756,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.5',
+                    '1.1.4.9',
                     true
                 );
             }
@@ -10233,6 +11031,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $location = isset($_POST['location']) ? sanitize_text_field(wp_unslash(rawurldecode($_POST['location']))) : '';
 
             if (empty($location)) {
+                $this->currency_debug_log('ajax_switch_location_rejected', [
+                    'reason' => 'empty_location',
+                    'posted_location' => isset($_POST['location']) ? wp_unslash($_POST['location']) : null,
+                ], 25);
                 wp_send_json_error(['message' => __('Invalid location.', 'multi-location-product-and-inventory-management')]);
             }
 
@@ -10244,6 +11046,21 @@ if (!function_exists('mulopimfwc_get_values')) {
             $allow_mixed = mulopimfwc_is_mixed_location_cart_enabled($options) ? 'on' : 'off';
 
             $behavior = isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart';
+            $initial_behavior = $behavior;
+            if (mulopimfwc_is_location_wise_currency_enabled($options) && $behavior === 'preserve_cart') {
+                $behavior = 'update_cart';
+            }
+
+            $this->currency_debug_log('ajax_switch_location_request', [
+                'location' => $location,
+                'allow_mixed' => $allow_mixed,
+                'initial_behavior' => $initial_behavior,
+                'effective_behavior' => $behavior,
+                'location_wise_currency_enabled' => mulopimfwc_is_location_wise_currency_enabled($options),
+                'cookie_before' => function_exists('mulopimfwc_get_store_location_cookie')
+                    ? mulopimfwc_get_store_location_cookie()
+                    : '',
+            ], 25);
 
             // Store the selected location cookie immediately
             $this->set_store_location_cookie($location);
@@ -10253,6 +11070,16 @@ if (!function_exists('mulopimfwc_get_values')) {
             if ($allow_mixed !== 'on' && $behavior !== 'preserve_cart') {
                 $removed_items = $this->remove_unavailable_cart_items($location);
             }
+
+            $this->currency_debug_log('ajax_switch_location_response', [
+                'location' => $location,
+                'behavior' => $behavior,
+                'allow_mixed' => $allow_mixed,
+                'removed_count' => count($removed_items),
+                'cookie_after' => function_exists('mulopimfwc_get_store_location_cookie')
+                    ? mulopimfwc_get_store_location_cookie()
+                    : '',
+            ], 25);
 
             wp_send_json_success([
                 'location' => $location,
@@ -10269,17 +11096,48 @@ if (!function_exists('mulopimfwc_get_values')) {
             $location = sanitize_title($location);
             
             if (empty($location)) {
+                $this->currency_debug_log('set_store_location_cookie_skipped', [
+                    'reason' => 'empty_location',
+                ], 25);
                 return;
             }
 
             // Get location term object for hooks
             $location_obj = null;
             if ($location !== 'all-products') {
-                $location_obj = get_term_by('slug', $location, 'mulopimfwc_store_location');
+                if (function_exists('mulopimfwc_validate_location_slug')) {
+                    // Resolve using uncached validator so aliases and fresh term updates work immediately.
+                    $location_obj = mulopimfwc_validate_location_slug($location, false);
+                } else {
+                    $location_obj = get_term_by('slug', $location, 'mulopimfwc_store_location');
+                }
+
+                if ($location_obj && !is_wp_error($location_obj) && isset($location_obj->slug)) {
+                    $location = sanitize_title(rawurldecode((string) $location_obj->slug));
+                } else {
+                    $location_obj = null;
+                    $this->currency_debug_log('set_store_location_cookie_unverified', [
+                        'reason' => 'location_term_not_resolved',
+                        'location' => $location,
+                    ], 25);
+                }
             }
 
             // Set cookie using standardized helper function
-            mulopimfwc_set_location_cookie($location, null, $location_obj);
+            $cookie_set = mulopimfwc_set_location_cookie($location, null, $location_obj);
+
+            $this->currency_debug_log('set_store_location_cookie', [
+                'location' => $location,
+                'cookie_set' => (bool) $cookie_set,
+                'cookie_name' => function_exists('mulopimfwc_get_location_cookie_name')
+                    ? mulopimfwc_get_location_cookie_name()
+                    : '',
+                'cookie_after_set' => function_exists('mulopimfwc_get_store_location_cookie')
+                    ? mulopimfwc_get_store_location_cookie()
+                    : '',
+                'term_id' => ($location_obj instanceof WP_Term) ? (int) $location_obj->term_id : null,
+                'term_found' => ($location === 'all-products') ? true : (bool) ($location_obj && !is_wp_error($location_obj)),
+            ], 25);
 
             // Fire action hook after location is selected
             do_action('mulopimfwc_location_selected', $location, $location_obj);
@@ -10381,7 +11239,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.4.5");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.4.9");
         }
 
         /**
@@ -12330,7 +13188,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.4.5",
+                "1.1.4.9",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

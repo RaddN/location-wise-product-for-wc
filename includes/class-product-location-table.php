@@ -44,6 +44,13 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     private $all_location_data_template = null;
 
     /**
+     * Cache resolved currency settings by location term id.
+     *
+     * @var array<string, array{currency: string, position: string}>
+     */
+    private $location_currency_settings_cache = [];
+
+    /**
      * Constructor
      */
     public function __construct($view_mode = 'modern')
@@ -1351,7 +1358,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 if ($show_default) {
                     $output .= '<div class="location-price-item">';
                     $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                    $output .= $this->format_price_by_location_display($default_regular_price, $default_sale_price, $default_active_price);
+                    $output .= $this->format_price_by_location_display($default_regular_price, $default_sale_price, $default_active_price, null);
                     $output .= '</div>';
                 }
                 if (!empty($location_terms)) {
@@ -1374,7 +1381,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
                         $output .= '<div class="location-price-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                        $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_active_price);
+                        $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_active_price, (int) $location->term_id);
                         $output .= '</div>';
                     }
                 }
@@ -1389,7 +1396,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             if ($show_default) {
                 $output .= '<div class="location-price-item">';
                 $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management') . ':</span> ';
-                $output .= $this->format_price_by_location_display($default_regular_price, $default_sale_price, $default_price);
+                $output .= $this->format_price_by_location_display($default_regular_price, $default_sale_price, $default_price, null);
                 $output .= '</div>';
             }
             if (!empty($location_terms)) {
@@ -1412,7 +1419,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
                     $output .= '<div class="location-price-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                    $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_price);
+                    $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_price, (int) $location->term_id);
                     $output .= '</div>';
                 }
             }
@@ -1459,30 +1466,108 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     }
 
     /**
+     * Get WooCommerce-compatible price format from currency position.
+     *
+     * @param string $position
+     * @return string
+     */
+    private function get_price_format_for_currency_position($position)
+    {
+        switch ((string) $position) {
+            case 'right':
+                return '%2$s%1$s';
+            case 'left_space':
+                return '%1$s&nbsp;%2$s';
+            case 'right_space':
+                return '%2$s&nbsp;%1$s';
+            case 'left':
+            default:
+                return '%1$s%2$s';
+        }
+    }
+
+    /**
+     * Resolve currency settings for a specific location.
+     *
+     * @param int|null $location_term_id Null means WooCommerce default currency settings.
+     * @return array{currency: string, position: string}
+     */
+    private function get_currency_settings_for_location($location_term_id = null)
+    {
+        $default_currency = strtoupper((string) get_option('woocommerce_currency', 'USD'));
+        if ($default_currency === '') {
+            $default_currency = 'USD';
+        }
+
+        $default_position = (string) get_option('woocommerce_currency_pos', 'left');
+        if (!in_array($default_position, ['left', 'right', 'left_space', 'right_space'], true)) {
+            $default_position = 'left';
+        }
+
+        $cache_key = ($location_term_id && (int) $location_term_id > 0)
+            ? 'term_' . (int) $location_term_id
+            : 'default';
+
+        if (isset($this->location_currency_settings_cache[$cache_key])) {
+            return $this->location_currency_settings_cache[$cache_key];
+        }
+
+        $settings = [
+            'currency' => $default_currency,
+            'position' => $default_position,
+        ];
+
+        $term_id = (int) $location_term_id;
+        if ($term_id > 0) {
+            $configured_currency = strtoupper(trim((string) get_term_meta($term_id, 'location_currency', true)));
+            if ($configured_currency !== '' && function_exists('get_woocommerce_currencies')) {
+                $available_currencies = (array) get_woocommerce_currencies();
+                if (isset($available_currencies[$configured_currency])) {
+                    $settings['currency'] = $configured_currency;
+                }
+            }
+
+            $configured_position = sanitize_key((string) get_term_meta($term_id, 'location_currency_position', true));
+            if (in_array($configured_position, ['left', 'right', 'left_space', 'right_space'], true)) {
+                $settings['position'] = $configured_position;
+            }
+        }
+
+        $this->location_currency_settings_cache[$cache_key] = $settings;
+        return $settings;
+    }
+
+    /**
      * Format price display so sale price shows with struck-through regular price.
      *
      * @param mixed $regular_price
      * @param mixed $sale_price
      * @param mixed $fallback_price
+     * @param int|null $location_term_id
      * @return string
      */
-    private function format_price_by_location_display($regular_price, $sale_price, $fallback_price = '')
+    private function format_price_by_location_display($regular_price, $sale_price, $fallback_price = '', $location_term_id = null)
     {
         $regular = $this->normalize_location_price_value($regular_price);
         $sale = $this->normalize_location_price_value($sale_price);
         $fallback = $this->normalize_location_price_value($fallback_price);
+        $currency_settings = $this->get_currency_settings_for_location($location_term_id);
+        $price_args = [
+            'currency' => $currency_settings['currency'],
+            'price_format' => $this->get_price_format_for_currency_position($currency_settings['position']),
+        ];
 
         if ($sale > 0) {
             $base = $regular > 0 ? $regular : $fallback;
             if ($base > 0 && abs($base - $sale) > 0.0001) {
-                return '<span class="price-value"><del>' . wc_price($base) . '</del> <ins>' . wc_price($sale) . '</ins></span>';
+                return '<span class="price-value"><del>' . wc_price($base, $price_args) . '</del> <ins>' . wc_price($sale, $price_args) . '</ins></span>';
             }
 
-            return '<span class="price-value">' . wc_price($sale) . '</span>';
+            return '<span class="price-value">' . wc_price($sale, $price_args) . '</span>';
         }
 
         $display = $regular > 0 ? $regular : $fallback;
-        return '<span class="price-value">' . wc_price($display) . '</span>';
+        return '<span class="price-value">' . wc_price($display, $price_args) . '</span>';
     }
 
     /**

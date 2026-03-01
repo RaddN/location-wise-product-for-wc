@@ -51,16 +51,36 @@ if (!function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
      */
     function mulopimfwc_get_effective_runtime_location_slug($options = null): string
     {
+        $debug = static function (string $reason, array $context = []) {
+            static $count = 0;
+            if ($count >= 25) {
+                return;
+            }
+            $count++;
+            if (function_exists('mulopimfwc_log_location_currency_debug')) {
+                $context['event_count'] = $count;
+                $context['reason'] = $reason;
+                mulopimfwc_log_location_currency_debug('effective_runtime_location', $context);
+            }
+        };
+
         $cookie_location = function_exists('mulopimfwc_get_store_location_cookie')
             ? sanitize_title(rawurldecode((string) mulopimfwc_get_store_location_cookie()))
             : '';
 
         if ($cookie_location !== '') {
+            $debug('cookie_location', [
+                'resolved_location' => $cookie_location,
+            ]);
             return $cookie_location;
         }
 
         $cart_locations = mulopimfwc_get_runtime_cart_location_slugs();
         if (count($cart_locations) === 1) {
+            $debug('single_cart_location', [
+                'resolved_location' => (string) $cart_locations[0],
+                'cart_locations' => $cart_locations,
+            ]);
             return (string) $cart_locations[0];
         }
 
@@ -72,31 +92,61 @@ if (!function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
         }
 
         if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode($options)) {
+            $debug('manual_assignment_mode', [
+                'resolved_location' => '',
+            ]);
             return '';
         }
 
         $enable_popup = isset($options['enable_popup']) ? (string) $options['enable_popup'] : 'off';
         if ($enable_popup !== 'off' || !function_exists('mulopimfwc_get_default_location_value')) {
+            $debug('popup_enabled_or_missing_default_helper', [
+                'resolved_location' => '',
+                'enable_popup' => $enable_popup,
+                'has_default_helper' => function_exists('mulopimfwc_get_default_location_value'),
+                'cart_locations' => $cart_locations,
+            ]);
             return '';
         }
 
         $default_location = sanitize_title(rawurldecode((string) mulopimfwc_get_default_location_value($options)));
         if ($default_location === '') {
+            $debug('default_location_empty', [
+                'resolved_location' => '',
+                'cart_locations' => $cart_locations,
+            ]);
             return '';
         }
 
         if ($default_location === 'all-products') {
+            $debug('default_location_all_products', [
+                'resolved_location' => $default_location,
+            ]);
             return $default_location;
         }
 
         if (function_exists('mulopimfwc_validate_location_slug')) {
             $term = mulopimfwc_validate_location_slug($default_location, false);
             if ($term && !is_wp_error($term)) {
-                return sanitize_title(rawurldecode((string) $term->slug));
+                $resolved = sanitize_title(rawurldecode((string) $term->slug));
+                $debug('default_location_validated', [
+                    'resolved_location' => $resolved,
+                    'default_location' => $default_location,
+                    'term_id' => (int) $term->term_id,
+                ]);
+                return $resolved;
             }
+            $debug('default_location_invalid', [
+                'resolved_location' => '',
+                'default_location' => $default_location,
+            ]);
             return '';
         }
 
+        $debug('default_location_unvalidated', [
+            'resolved_location' => $default_location,
+            'default_location' => $default_location,
+        ]);
         return $default_location;
     }
 }

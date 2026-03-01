@@ -4845,6 +4845,7 @@ jQuery(document).ready(function ($) {
         'select[name="mulopimfwc_display_options[product_priority_display]"]',
         'input[name="mulopimfwc_display_options[enable_all_locations]"]',
         'select[name="mulopimfwc_display_options[single_product_unavailable_behavior]"]',
+        'input[name="mulopimfwc_display_options[location_wise_currency]"]',
         'input[name="mulopimfwc_display_options[allow_mixed_location_cart]"]',
         'input[name="mulopimfwc_display_options[group_cart_by_location]"]',
         'input[name="mulopimfwc_display_options[allow_location_change_in_cart]"]',
@@ -4862,7 +4863,9 @@ jQuery(document).ready(function ($) {
         'input[name="mulopimfwc_display_options[location_require_selection]"]'
     ];
 
+    var $locationWiseCurrency = $('input[type="checkbox"][name="mulopimfwc_display_options[location_wise_currency]"]');
     var $allowMixedLocationCart = $('input[type="checkbox"][name="mulopimfwc_display_options[allow_mixed_location_cart]"]');
+    var $allowLocationChangeInCart = $('input[type="checkbox"][name="mulopimfwc_display_options[allow_location_change_in_cart]"]');
     var $splitOrderByLocation = $('input[type="checkbox"][name="mulopimfwc_display_options[split_order_by_location]"]');
     var $splitOrderUnknownItems = $('select[name="mulopimfwc_display_options[split_order_unknown_items]"]');
 
@@ -4972,6 +4975,30 @@ jQuery(document).ready(function ($) {
         }
     }
 
+    function toggleLocationCurrencyDependencies(state) {
+        var manualState = state || getManualAssignmentState();
+        var locationWiseCurrencyEnabled = $locationWiseCurrency.length ? $locationWiseCurrency.is(':checked') : false;
+        var disableCrossLocationFields = manualState.isManualStrict || locationWiseCurrencyEnabled;
+
+        if ($allowMixedLocationCart.length) {
+            normalizeHiddenField($allowMixedLocationCart);
+            if (locationWiseCurrencyEnabled && $allowMixedLocationCart.is(':checked')) {
+                $allowMixedLocationCart.prop('checked', false);
+            }
+            setFieldDisabled($allowMixedLocationCart, disableCrossLocationFields);
+            syncHiddenField($allowMixedLocationCart, disableCrossLocationFields);
+        }
+
+        if ($allowLocationChangeInCart.length) {
+            normalizeHiddenField($allowLocationChangeInCart);
+            if (locationWiseCurrencyEnabled && $allowLocationChangeInCart.is(':checked')) {
+                $allowLocationChangeInCart.prop('checked', false);
+            }
+            setFieldDisabled($allowLocationChangeInCart, disableCrossLocationFields);
+            syncHiddenField($allowLocationChangeInCart, disableCrossLocationFields);
+        }
+    }
+
     function toggleManualModeSettings() {
         var state = getManualAssignmentState();
 
@@ -5018,12 +5045,14 @@ jQuery(document).ready(function ($) {
             });
         });
 
+        toggleLocationCurrencyDependencies(state);
         toggleSplitOrderSettings(state);
     }
 
     toggleManualModeSettings();
     $assignmentSelect.on('change', toggleManualModeSettings);
     $manualOptional.on('change', toggleManualModeSettings);
+    $locationWiseCurrency.on('change', toggleManualModeSettings);
     $allowMixedLocationCart.on('change', toggleSplitOrderSettings);
     $splitOrderByLocation.on('change', toggleSplitOrderSettings);
 });

@@ -213,6 +213,24 @@ General Settings', 'multi-location-product-and-inventory-management'),
             'location_stock_general_section'
         );
 
+        // Add "Enable Location Wise Currency" field
+        add_settings_field(
+            'location_wise_currency',
+            __('Enable Location Wise Currency', 'multi-location-product-and-inventory-management'),
+            function () {
+                $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                $options = $this->get_display_options();
+                if ($is_manual_mode) {
+                    $this->render_manual_hidden_input('location_wise_currency', $options['location_wise_currency'] ?? 'off');
+                }
+                $message = __('Enable location-specific currency and currency position based on selected location. When enabled, mixed-location cart and location change in cart are disabled.', 'multi-location-product-and-inventory-management');
+                $message = $this->append_manual_disabled_note($message);
+                $this->render_advance_checkbox("location_wise_currency", $message, $is_manual_mode);
+            },
+            'lwp-general-settings',
+            'location_stock_general_section'
+        );
+
         // Add "Enable Location Backorder" field
         add_settings_field(
             'enable_location_backorder',
@@ -1709,7 +1727,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#f3e8ff;padding:10px;border-radius:6px">
-  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.4.5.1.1.4.5.2.2.3.1.1.1.120.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.4.5-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
+  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.4.9.1.1.4.9.2.2.3.1.1.1.120.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.4.9-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
 </svg>Location Hours & Availability', 'multi-location-product-and-inventory-management'),
             function () {
                 echo '<p>' . esc_html__('Configure business hours and availability for each store location.', 'multi-location-product-and-inventory-management') . '</p>';
@@ -4112,11 +4130,19 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 if (mulopimfwc_premium_feature()) {
                     $is_manual_mode = $this->is_manual_assignment_strict_mode();
                     $options = $this->get_display_options();
+                    $location_wise_currency_enabled = function_exists('mulopimfwc_is_location_wise_currency_enabled')
+                        ? mulopimfwc_is_location_wise_currency_enabled($options)
+                        : (isset($options['location_wise_currency']) && $options['location_wise_currency'] === 'on');
+                    $disabled = $is_manual_mode || $location_wise_currency_enabled;
+
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('allow_mixed_location_cart', $options['allow_mixed_location_cart'] ?? 'off');
+                    } elseif ($location_wise_currency_enabled) {
+                        echo '<input type="hidden" name="mulopimfwc_display_options[allow_mixed_location_cart]" value="off">';
                     }
-                    $message = $this->append_manual_disabled_note(__("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'));
-                    $this->render_advance_checkbox("allow_mixed_location_cart", $message, $is_manual_mode);
+                    $message = __("Allow customers to add products from different locations to their cart. When Enable Location Wise Currency is enabled, this option will be disabled.", 'multi-location-product-and-inventory-management');
+                    $message = $this->append_manual_disabled_note($message);
+                    $this->render_advance_checkbox("allow_mixed_location_cart", $message, $disabled);
                 } else {
                     $this->render_advance_checkbox("_pro", __("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management'), true, false);
                 }
@@ -4191,11 +4217,19 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             function () {
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
+                $location_wise_currency_enabled = function_exists('mulopimfwc_is_location_wise_currency_enabled')
+                    ? mulopimfwc_is_location_wise_currency_enabled($options)
+                    : (isset($options['location_wise_currency']) && $options['location_wise_currency'] === 'on');
+                $disabled = $is_manual_mode || $location_wise_currency_enabled;
+
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('allow_location_change_in_cart', $options['allow_location_change_in_cart'] ?? 'off');
+                } elseif ($location_wise_currency_enabled) {
+                    echo '<input type="hidden" name="mulopimfwc_display_options[allow_location_change_in_cart]" value="off">';
                 }
-                $message = $this->append_manual_disabled_note(__("Allow customers to change the location for products in their cart if the product is available in multiple locations.", 'multi-location-product-and-inventory-management'));
-                $this->render_advance_checkbox("allow_location_change_in_cart", $message, $is_manual_mode);
+                $message = __("Allow customers to change the location for products in their cart if the product is available in multiple locations. When Enable Location Wise Currency is enabled, this option will be disabled.", 'multi-location-product-and-inventory-management');
+                $message = $this->append_manual_disabled_note($message);
+                $this->render_advance_checkbox("allow_location_change_in_cart", $message, $disabled);
             },
             'lwp-cart-settings',
             'mulopimfwc_cart_settings_section'
@@ -4219,7 +4253,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             function () {
                 $options = $this->get_display_options();
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
-                $allow_mixed = isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
+                $allow_mixed = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
+                    ? mulopimfwc_is_mixed_location_cart_enabled($options)
+                    : (isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on');
                 $is_premium = mulopimfwc_premium_feature();
                 $disabled = $is_manual_mode || !$allow_mixed || !$is_premium;
 
@@ -4249,7 +4285,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             function () {
                 $options = $this->get_display_options();
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
-                $allow_mixed = isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
+                $allow_mixed = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
+                    ? mulopimfwc_is_mixed_location_cart_enabled($options)
+                    : (isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on');
                 $split_enabled = isset($options['split_order_by_location']) && $options['split_order_by_location'] === 'on';
                 $is_premium = mulopimfwc_premium_feature();
                 $disabled = $is_manual_mode || !$allow_mixed || !$split_enabled || !$is_premium;
@@ -4397,7 +4435,9 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $options = is_array($mulopimfwc_options ?? null)
                     ? $mulopimfwc_options
                     : get_option('mulopimfwc_display_options', []);
-                $allow_mixed = isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on';
+                $allow_mixed = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
+                    ? mulopimfwc_is_mixed_location_cart_enabled($options)
+                    : (isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on');
         ?>
             <?php if ($allow_mixed) : ?>
                 <div style="display:flex;gap:16px;align-items:flex-start;background:#f8fafc;border:1px solid #e6eef8;padding:16px;border-radius:10px;max-width:820px;">
@@ -4703,6 +4743,35 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $sanitized['enable_location_price'] = sanitize_text_field($input['enable_location_price']);
         }
 
+        // Handle location_wise_currency option (checkbox)
+        if (isset($input['location_wise_currency']) && $input['location_wise_currency'] === 'on') {
+            $sanitized['location_wise_currency'] = 'on';
+        } else {
+            $sanitized['location_wise_currency'] = 'off';
+        }
+
+        // Handle allow_mixed_location_cart option (checkbox)
+        if (
+            isset($input['allow_mixed_location_cart']) &&
+            $input['allow_mixed_location_cart'] === 'on' &&
+            $sanitized['location_wise_currency'] !== 'on'
+        ) {
+            $sanitized['allow_mixed_location_cart'] = 'on';
+        } else {
+            $sanitized['allow_mixed_location_cart'] = 'off';
+        }
+
+        // Handle allow_location_change_in_cart option (checkbox)
+        if (
+            isset($input['allow_location_change_in_cart']) &&
+            $input['allow_location_change_in_cart'] === 'on' &&
+            $sanitized['location_wise_currency'] !== 'on'
+        ) {
+            $sanitized['allow_location_change_in_cart'] = 'on';
+        } else {
+            $sanitized['allow_location_change_in_cart'] = 'off';
+        }
+
         // Handle auto_populate_customer_addresses option (checkbox)
         if (isset($input['auto_populate_customer_addresses']) && $input['auto_populate_customer_addresses'] === 'on') {
             $sanitized['auto_populate_customer_addresses'] = 'on';
@@ -4711,7 +4780,11 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         }
 
         // Handle split_order_by_location option (checkbox)
-        if (isset($input['split_order_by_location']) && $input['split_order_by_location'] === 'on') {
+        if (
+            isset($input['split_order_by_location']) &&
+            $input['split_order_by_location'] === 'on' &&
+            $sanitized['allow_mixed_location_cart'] === 'on'
+        ) {
             $sanitized['split_order_by_location'] = 'on';
         } else {
             $sanitized['split_order_by_location'] = 'off';

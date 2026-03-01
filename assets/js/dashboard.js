@@ -246,6 +246,8 @@
      * Update dashboard with filtered data
      */
     function updateDashboardData(data) {
+        syncDashboardCurrencyFromResponse(data);
+
         if (data.summary) {
             $('.lwp-stat-item').each(function () {
                 const label = $(this).find('.lwp-stat-label').text();
@@ -437,11 +439,83 @@
         return window.mulopimfwcFiltersApplied === true;
     }
 
+    function getDashboardCurrencyCode() {
+        const currencyCode = mulopimfwc_DashboardData.currency_code;
+        if (typeof currencyCode === 'string' && currencyCode.trim() !== '') {
+            return currencyCode.trim().toUpperCase();
+        }
+        return 'USD';
+    }
+
+    function resolveCurrencySymbolFromCode(currencyCode) {
+        try {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currencyCode,
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(0).replace(/\d/g, '').trim();
+        } catch (error) {
+            return '$';
+        }
+    }
+
+    function getDashboardCurrencySymbol() {
+        const symbol = mulopimfwc_DashboardData.currency;
+        if (typeof symbol === 'string' && symbol !== '') {
+            return symbol;
+        }
+        return resolveCurrencySymbolFromCode(getDashboardCurrencyCode());
+    }
+
+    function updateCurrencyLabelsOnCharts() {
+        const currencySymbol = resolveCurrencySymbolFromCode(getDashboardCurrencyCode());
+
+        if (window.investmentChart && window.investmentChart.options && window.investmentChart.options.scales && window.investmentChart.options.scales.y) {
+            const investmentLabel = mulopimfwc_DashboardData.i18n.investment || 'Investment';
+            window.investmentChart.options.scales.y.title.text = `${investmentLabel} (${currencySymbol})`;
+            window.investmentChart.update();
+        }
+
+        if (window.revenueByLocationChart && window.revenueByLocationChart.options && window.revenueByLocationChart.options.scales && window.revenueByLocationChart.options.scales.y) {
+            const revenueLabel = mulopimfwc_DashboardData.i18n.revenue || 'Revenue';
+            window.revenueByLocationChart.options.scales.y.title.text = `${revenueLabel} (${currencySymbol})`;
+            window.revenueByLocationChart.update();
+        }
+    }
+
+    function syncDashboardCurrencyFromResponse(data) {
+        if (!data || typeof data !== 'object') {
+            return;
+        }
+
+        let changed = false;
+
+        if (typeof data.currency === 'string' && data.currency !== '') {
+            if (mulopimfwc_DashboardData.currency !== data.currency) {
+                mulopimfwc_DashboardData.currency = data.currency;
+                changed = true;
+            }
+        }
+
+        if (typeof data.currency_code === 'string' && data.currency_code !== '') {
+            const normalizedCode = data.currency_code.toUpperCase();
+            if (mulopimfwc_DashboardData.currency_code !== normalizedCode) {
+                mulopimfwc_DashboardData.currency_code = normalizedCode;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            updateCurrencyLabelsOnCharts();
+        }
+    }
+
     /**
      * Format currency
      */
     function formatCurrency(amount) {
-        const symbol = mulopimfwc_DashboardData.currency || '$';
+        const symbol = getDashboardCurrencySymbol();
         return symbol + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
     }
 
@@ -1281,13 +1355,7 @@
         const ctx = document.getElementById('investment-30day');
         if (!ctx) return;
 
-        const currency_code = mulopimfwc_DashboardData.currency_code;
-        const currencySymbol = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency_code,
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(0).replace(/\d/g, '').trim();
+        const currencySymbol = resolveCurrencySymbolFromCode(getDashboardCurrencyCode());
 
         window.investmentChart = new Chart(ctx, {
             type: 'line',
@@ -1349,10 +1417,11 @@
                                 const datasetLabel = context.dataset.label && context.dataset.label !== baseLabel
                                     ? context.dataset.label + ' - '
                                     : '';
+                                const currencyCode = getDashboardCurrencyCode();
                                 return datasetLabel + baseLabel + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
-                                        currency: currency_code
+                                        currency: currencyCode
                                     }).format(context.raw);
                             }
                         }
@@ -1499,14 +1568,7 @@
         const values = Object.values(mulopimfwc_DashboardData.revenueByLocation);
         const bgColors = labels.map(label => mulopimfwc_DashboardData.locationColors[label] || 'rgba(75, 192, 192, 0.7)');
         const borderColors = labels.map(label => mulopimfwc_DashboardData.locationBorderColors[label] || 'rgba(75, 192, 192, 1)');
-        const currency_code = mulopimfwc_DashboardData.currency_code;
-
-        const currencySymbol = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency_code,
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(0).replace(/\d/g, '').trim();
+        const currencySymbol = resolveCurrencySymbolFromCode(getDashboardCurrencyCode());
 
         window.revenueByLocationChart = new Chart(ctx, {
             type: 'bar',
@@ -1562,10 +1624,11 @@
                                 const datasetLabel = context.dataset.label && context.dataset.label !== baseLabel
                                     ? context.dataset.label + ' - '
                                     : '';
+                                const currencyCode = getDashboardCurrencyCode();
                                 return datasetLabel + baseLabel + ': ' +
                                     new Intl.NumberFormat('en-US', {
                                         style: 'currency',
-                                        currency: currency_code
+                                        currency: currencyCode
                                     }).format(context.raw);
                             }
                         },

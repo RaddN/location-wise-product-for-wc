@@ -397,6 +397,8 @@ class MULOPIMFWC_Admin
                     clearSelectValue($("#shipping_zones"));
                     clearSelectValue($("#payment_methods"));
                     clearSelectValue($("#pickup_locations"));
+                    clearSelectValue($("#location_currency"));
+                    clearSelectValue($("#location_currency_position"));
                     if (typeof rebuildShippingMethods === "function") {
                         clearSelectValue($methods);
                         rebuildShippingMethods();
@@ -712,6 +714,39 @@ class MULOPIMFWC_Admin
         return $out;
     }
 
+    private function get_currency_options()
+    {
+        if (!function_exists('get_woocommerce_currencies')) {
+            return array();
+        }
+
+        return (array) get_woocommerce_currencies();
+    }
+
+    private function get_currency_position_options()
+    {
+        return array(
+            'left' => __('Left', 'multi-location-product-and-inventory-management'),
+            'right' => __('Right', 'multi-location-product-and-inventory-management'),
+            'left_space' => __('Left With Space', 'multi-location-product-and-inventory-management'),
+            'right_space' => __('Right With Space', 'multi-location-product-and-inventory-management'),
+        );
+    }
+
+    private function get_default_currency_code(): string
+    {
+        $currency = get_option('woocommerce_currency', 'USD');
+        return is_string($currency) ? strtoupper($currency) : 'USD';
+    }
+
+    private function get_default_currency_position(): string
+    {
+        $default_position = (string) get_option('woocommerce_currency_pos', 'left');
+        $positions = $this->get_currency_position_options();
+
+        return isset($positions[$default_position]) ? $default_position : 'left';
+    }
+
     /**
      * Normalize aliases from textarea/json/meta into a unique string list.
      *
@@ -1015,6 +1050,45 @@ class MULOPIMFWC_Admin
             </div>
         <?php endif; ?>
 
+        <?php
+        $currencies = $this->get_currency_options();
+        $currency_positions = $this->get_currency_position_options();
+        $default_currency_code = $this->get_default_currency_code();
+        $default_currency_label = isset($currencies[$default_currency_code])
+            ? ($default_currency_code . ' - ' . $currencies[$default_currency_code])
+            : $default_currency_code;
+        $default_currency_position = $this->get_default_currency_position();
+        ?>
+        <div class="form-field">
+            <label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management'); ?></label>
+            <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management'); ?>">
+                <option value="" selected><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management'), $default_currency_label)); ?></option>
+                <?php foreach ($currencies as $currency_code => $currency_name): ?>
+                    <?php
+                    $currency_code = strtoupper((string) $currency_code);
+                    $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($currency_code) : '';
+                    $currency_label = $currency_code . ' - ' . $currency_name;
+                    if ($currency_symbol !== '') {
+                        $currency_label .= ' (' . $currency_symbol . ')';
+                    }
+                    ?>
+                    <option value="<?php echo esc_attr($currency_code); ?>"><?php echo esc_html($currency_label); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management'); ?></label>
+            <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
+                <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $currency_positions[$default_currency_position])); ?></option>
+                <?php foreach ($currency_positions as $position_key => $position_label): ?>
+                    <option value="<?php echo esc_attr($position_key); ?>"><?php echo esc_html($position_label); ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
         <!-- Tax Class -->
         <?php $tax_classes = $this->get_tax_class_options(); ?>
         <div class="form-field">
@@ -1077,11 +1151,20 @@ class MULOPIMFWC_Admin
         $sel_methods   = (array) get_term_meta($term->term_id, 'shipping_methods', true); // array of "zoneId:instanceId"
         $sel_payments  = (array) get_term_meta($term->term_id, 'payment_methods', true);
         $sel_tax_class = (string) get_term_meta($term->term_id, 'tax_class', true);
+        $location_currency = (string) get_term_meta($term->term_id, 'location_currency', true);
+        $location_currency_position = (string) get_term_meta($term->term_id, 'location_currency_position', true);
 
         $zones        = $this->get_shipping_zones_options();
         $zone_methods = $this->get_shipping_methods_grouped_by_zone();
         $payments     = $this->get_payment_method_options();
         $tax_classes  = $this->get_tax_class_options();
+        $currencies   = $this->get_currency_options();
+        $currency_positions = $this->get_currency_position_options();
+        $default_currency_code = $this->get_default_currency_code();
+        $default_currency_label = isset($currencies[$default_currency_code])
+            ? ($default_currency_code . ' - ' . $currencies[$default_currency_code])
+            : $default_currency_code;
+        $default_currency_position = $this->get_default_currency_position();
         $location_aliases_text = $this->aliases_to_textarea($location_aliases);
 
         $logo_src = $logo_id ? wp_get_attachment_image_url($logo_id, 'thumbnail') : '';
@@ -1378,6 +1461,44 @@ class MULOPIMFWC_Admin
         <?php endif; ?>
 
         <tr class="form-field">
+            <th scope="row"><label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management'); ?>">
+                    <option value="" <?php selected((string) $location_currency, ''); ?>><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management'), $default_currency_label)); ?></option>
+                    <?php foreach ($currencies as $currency_code => $currency_name): ?>
+                        <?php
+                        $currency_code = strtoupper((string) $currency_code);
+                        $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($currency_code) : '';
+                        $currency_label = $currency_code . ' - ' . $currency_name;
+                        if ($currency_symbol !== '') {
+                            $currency_label .= ' (' . $currency_symbol . ')';
+                        }
+                        ?>
+                        <option value="<?php echo esc_attr($currency_code); ?>" <?php selected(strtoupper((string) $location_currency), $currency_code); ?>>
+                            <?php echo esc_html($currency_label); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
+            <th scope="row"><label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
+                    <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $currency_positions[$default_currency_position])); ?></option>
+                    <?php foreach ($currency_positions as $position_key => $position_label): ?>
+                        <option value="<?php echo esc_attr($position_key); ?>" <?php selected($location_currency_position, $position_key); ?>>
+                            <?php echo esc_html($position_label); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
             <th scope="row"><label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <select name="tax_class" id="tax_class" style="min-width: 220px;">
@@ -1652,6 +1773,30 @@ class MULOPIMFWC_Admin
             }
         } else {
             delete_term_meta($term_id, 'pickup_locations');
+        }
+
+        // Location currency (empty means inherit global WooCommerce currency)
+        if (isset($_POST['location_currency'])) {
+            $currency = strtoupper(sanitize_text_field(wp_unslash($_POST['location_currency'])));
+            $valid_currency_codes = array_keys($this->get_currency_options());
+
+            if ($currency !== '' && in_array($currency, $valid_currency_codes, true)) {
+                update_term_meta($term_id, 'location_currency', $currency);
+            } else {
+                delete_term_meta($term_id, 'location_currency');
+            }
+        }
+
+        // Location currency symbol position (empty means inherit global WooCommerce position)
+        if (isset($_POST['location_currency_position'])) {
+            $currency_position = sanitize_key((string) wp_unslash($_POST['location_currency_position']));
+            $valid_positions = array_keys($this->get_currency_position_options());
+
+            if ($currency_position !== '' && in_array($currency_position, $valid_positions, true)) {
+                update_term_meta($term_id, 'location_currency_position', $currency_position);
+            } else {
+                delete_term_meta($term_id, 'location_currency_position');
+            }
         }
 
         // Tax Class (slug or empty for Standard)

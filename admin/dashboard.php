@@ -1019,8 +1019,8 @@ class MULOPIMFWC_Dashboard
 
         // Enqueue necessary scripts and styles
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.4.5", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.4.5");
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.4.9", true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.4.9");
 
         $payload = $this->build_dashboard_payload();
 
@@ -2041,6 +2041,8 @@ class MULOPIMFWC_Dashboard
             'dateCounts' => $recent_products_data['counts'],
             'low_stock' => $low_stock_products,
             'summary' => $summary,
+            'currency' => get_woocommerce_currency_symbol(),
+            'currency_code' => get_woocommerce_currency(),
         );
 
         if (!empty($investment_data)) {
@@ -3752,6 +3754,8 @@ class MULOPIMFWC_Dashboard
             'low_stock' => $payload['low_stock_products'],
             'alerts' => $alerts,
             'site_status' => $site_status,
+            'currency' => get_woocommerce_currency_symbol(),
+            'currency_code' => get_woocommerce_currency(),
         ];
 
         // Cache for 30 seconds

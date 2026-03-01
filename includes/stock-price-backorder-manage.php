@@ -1743,6 +1743,105 @@ function mulopimfwc_display_location_stock_status_in_loop()
 
     echo '</div>';
 }
+if (!function_exists('mulopimfwc_get_price_format_for_currency_position')) {
+    /**
+     * Map WooCommerce currency position into a price format string.
+     *
+     * @param string $position Currency position key.
+     * @return string
+     */
+    function mulopimfwc_get_price_format_for_currency_position($position)
+    {
+        switch ((string) $position) {
+            case 'right':
+                return '%2$s%1$s';
+            case 'left_space':
+                return '%1$s&nbsp;%2$s';
+            case 'right_space':
+                return '%2$s&nbsp;%1$s';
+            case 'left':
+            default:
+                return '%1$s%2$s';
+        }
+    }
+}
+
+if (!function_exists('mulopimfwc_get_currency_settings_for_location')) {
+    /**
+     * Resolve currency and position for a location term (or Woo defaults).
+     *
+     * @param int|null $location_term_id Location term ID. Null means default store settings.
+     * @return array{currency: string, position: string}
+     */
+    function mulopimfwc_get_currency_settings_for_location($location_term_id = null)
+    {
+        static $defaults = null;
+        static $settings_cache = [];
+
+        if ($defaults === null) {
+            $default_currency = strtoupper((string) get_option('woocommerce_currency', 'USD'));
+            if ($default_currency === '') {
+                $default_currency = 'USD';
+            }
+
+            $default_position = (string) get_option('woocommerce_currency_pos', 'left');
+            if (!in_array($default_position, ['left', 'right', 'left_space', 'right_space'], true)) {
+                $default_position = 'left';
+            }
+
+            $defaults = [
+                'currency' => $default_currency,
+                'position' => $default_position,
+            ];
+        }
+
+        $term_id = (int) $location_term_id;
+        $cache_key = $term_id > 0 ? 'term_' . $term_id : 'default';
+
+        if (isset($settings_cache[$cache_key])) {
+            return $settings_cache[$cache_key];
+        }
+
+        $settings = $defaults;
+
+        if ($term_id > 0) {
+            $configured_currency = strtoupper(trim((string) get_term_meta($term_id, 'location_currency', true)));
+            if ($configured_currency !== '' && function_exists('get_woocommerce_currencies')) {
+                $available_currencies = (array) get_woocommerce_currencies();
+                if (isset($available_currencies[$configured_currency])) {
+                    $settings['currency'] = $configured_currency;
+                }
+            }
+
+            $configured_position = sanitize_key((string) get_term_meta($term_id, 'location_currency_position', true));
+            if (in_array($configured_position, ['left', 'right', 'left_space', 'right_space'], true)) {
+                $settings['position'] = $configured_position;
+            }
+        }
+
+        $settings_cache[$cache_key] = $settings;
+        return $settings;
+    }
+}
+
+if (!function_exists('mulopimfwc_format_price_by_location_in_admin_list')) {
+    /**
+     * Format a price value using location-specific currency settings.
+     *
+     * @param mixed    $price            Price amount.
+     * @param int|null $location_term_id Location term ID. Null means default currency settings.
+     * @return string
+     */
+    function mulopimfwc_format_price_by_location_in_admin_list($price, $location_term_id = null)
+    {
+        $currency_settings = mulopimfwc_get_currency_settings_for_location($location_term_id);
+        return wc_price($price, [
+            'currency' => $currency_settings['currency'],
+            'price_format' => mulopimfwc_get_price_format_for_currency_position($currency_settings['position']),
+        ]);
+    }
+}
+
 // add product stock & price status in all product page admin
 
 add_filter('manage_product_posts_columns', 'mulopimfwc_add_location_column_to_product_list', 20);
@@ -1810,7 +1909,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                             }
 
                             if ($location_price) {
-                                $output .= ' - ' . wc_price($location_price);
+                                $output .= ' - ' . mulopimfwc_format_price_by_location_in_admin_list($location_price, (int) $location->term_id);
                             }
                             $output .= '</div>'; // New line for each location
                         }
@@ -1838,7 +1937,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                     }
 
                     if ($default_price) {
-                        $output .= ' - ' . wc_price($default_price);
+                        $output .= ' - ' . mulopimfwc_format_price_by_location_in_admin_list($default_price);
                     }
                     $output .= '</div><br>';
                 }
@@ -1865,7 +1964,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                         }
 
                         if ($location_price) {
-                            $output .= ' - ' . wc_price($location_price);
+                            $output .= ' - ' . mulopimfwc_format_price_by_location_in_admin_list($location_price, (int) $location->term_id);
                         }
                         $output .= '</div>';
                     }
@@ -1893,7 +1992,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                 }
 
                 if ($default_price) {
-                    $output .= ' - ' . wc_price($default_price);
+                    $output .= ' - ' . mulopimfwc_format_price_by_location_in_admin_list($default_price);
                 }
                 $output .= '</div>';
             }
@@ -1932,7 +2031,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                     }
 
                     if ($default_price) {
-                        $output .= ' - ' . wc_price($default_price);
+                        $output .= ' - ' . mulopimfwc_format_price_by_location_in_admin_list($default_price);
                     }
                     $output .= '</div><br>';
                 }
@@ -1959,7 +2058,7 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
                 }
 
                 if ($default_price) {
-                    $output .= ' - ' . wc_price($default_price);
+                    $output .= ' - ' . mulopimfwc_format_price_by_location_in_admin_list($default_price);
                 }
                 $output .= '</div>';
 

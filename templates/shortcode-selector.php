@@ -1605,6 +1605,9 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         if (payload && payload.canForceUserLocation && payload.locationId) {
                             const selectedSlug = ($dropdown.val() || '').toString().trim().toLowerCase();
                             this.setForcedUserLocationSelection(payload.locationId, selectedSlug);
+                            if (selectedSlug) {
+                                this.setStoreLocation(selectedSlug);
+                            }
                         }
                         if ($item) {
                             $('.saved-location-item').removeClass('selected');
@@ -1657,6 +1660,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     if ((payload.locationId || '').toLowerCase() === 'all-products') {
                         if (this.setResolvedDropdownSelection('all-products')) {
                             this.setForcedUserLocationSelection('all-products', 'all-products');
+                            this.setStoreLocation('all-products');
                             if ($item) {
                                 $('.saved-location-item').removeClass('selected');
                                 $item.addClass('selected');
@@ -1681,6 +1685,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                                     if (payload.canForceUserLocation && payload.locationId) {
                                         this.setForcedUserLocationSelection(payload.locationId, matchedSlug);
                                     }
+                                    this.setStoreLocation(matchedSlug);
                                     if ($item) {
                                         $('.saved-location-item').removeClass('selected');
                                         $item.addClass('selected');
@@ -2309,6 +2314,53 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     document.cookie = `mulopimfwc_user_location=${locationId};expires=${expires};path=/;samesite=lax`;
                 },
 
+                setStoreLocation: function(storeSlug) {
+                    const slug = (storeSlug || '').toString().trim();
+                    if (!slug) {
+                        return;
+                    }
+
+                    const settings = window.mulopimfwc_locationWiseProducts || {};
+                    const cookieName = settings.cookieName || 'mulopimfwc_store_location';
+                    const cookiePath = settings.cookiePath || '/';
+                    const sameSite = settings.cookieSameSite ? String(settings.cookieSameSite).toLowerCase() : 'lax';
+                    const isSecure = typeof settings.cookieSecure === 'boolean'
+                        ? settings.cookieSecure
+                        : window.location.protocol === 'https:';
+                    const cookieDomain = settings.cookieDomain || '';
+                    const days = (settings.cookie_expiry && Number.isFinite(parseInt(settings.cookie_expiry, 10)))
+                        ? Math.max(parseInt(settings.cookie_expiry, 10), 1)
+                        : 30;
+                    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+
+                    let cookie = `${cookieName}=${encodeURIComponent(slug)};expires=${expires};path=${cookiePath};samesite=${sameSite}`;
+                    if (cookieDomain) {
+                        cookie += `;domain=${cookieDomain}`;
+                    }
+                    if (isSecure) {
+                        cookie += ';secure';
+                    }
+                    document.cookie = cookie;
+                },
+
+                getStoreLocation: function() {
+                    const settings = window.mulopimfwc_locationWiseProducts || {};
+                    const cookieName = settings.cookieName || 'mulopimfwc_store_location';
+                    const name = cookieName + '=';
+                    const decodedCookie = decodeURIComponent(document.cookie);
+                    const ca = decodedCookie.split(';');
+                    for (let i = 0; i < ca.length; i++) {
+                        let c = ca[i];
+                        while (c.charAt(0) === ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) === 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return '';
+                },
+
                 clearUserLocation: function() {
                     document.cookie = 'mulopimfwc_user_location=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT';
                 },
@@ -2317,7 +2369,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     // Reload with cache-busting parameter to bypass cache
                     var url = window.location.href.split('?')[0];
                     var separator = '?';
-                    var location = this.getUserLocation() || '';
+                    var location = this.getStoreLocation() || this.getUserLocation() || '';
                     if (location) {
                         url += separator + 'mulopimfwc_loc=' + encodeURIComponent(location) + '&_t=' + Date.now();
                     } else {
