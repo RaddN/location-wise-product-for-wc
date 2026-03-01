@@ -1925,14 +1925,31 @@ class MULOPIMFWC_Dashboard
         global $mulopimfwc_locations;
         $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
 
-        $date_from = isset($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : '';
-        $date_to = isset($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : '';
-        $location_filter_raw = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : 'all';
+        $date_from_raw = isset($_POST['date_from']) ? wp_unslash($_POST['date_from']) : '';
+        $date_to_raw = isset($_POST['date_to']) ? wp_unslash($_POST['date_to']) : '';
+        if (is_array($date_from_raw)) {
+            $date_from_raw = reset($date_from_raw);
+        }
+        if (is_array($date_to_raw)) {
+            $date_to_raw = reset($date_to_raw);
+        }
+        $date_from = is_string($date_from_raw) ? sanitize_text_field($date_from_raw) : '';
+        $date_to = is_string($date_to_raw) ? sanitize_text_field($date_to_raw) : '';
+
+        $location_raw = isset($_POST['location']) ? wp_unslash($_POST['location']) : 'all';
+        if (is_array($location_raw)) {
+            $location_raw = reset($location_raw);
+        }
+        $location_filter_raw = is_string($location_raw) ? sanitize_text_field(rawurldecode($location_raw)) : 'all';
         $location_filter = $this->normalize_location_slug($location_filter_raw);
         if ($location_filter === '') {
             $location_filter = 'all';
         }
-        $status_filter = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : 'all';
+        $status_raw = isset($_POST['status']) ? wp_unslash($_POST['status']) : 'all';
+        if (is_array($status_raw)) {
+            $status_raw = reset($status_raw);
+        }
+        $status_filter = is_string($status_raw) ? sanitize_text_field($status_raw) : 'all';
         $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
 
         if (is_array($manager_location_slugs)) {
@@ -2442,15 +2459,33 @@ class MULOPIMFWC_Dashboard
         $normalized_location_filter = $this->normalize_location_slug($location_filter);
         $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
         $selected_manager_term_id = 0;
+        if (is_array($date_from)) {
+            $date_from = reset($date_from);
+        }
+        if (is_array($date_to)) {
+            $date_to = reset($date_to);
+        }
+        $date_from = is_string($date_from) ? sanitize_text_field($date_from) : '';
+        $date_to = is_string($date_to) ? sanitize_text_field($date_to) : '';
 
         // Determine date range
         if (!empty($date_from) && !empty($date_to)) {
             $start_date = $date_from;
             $end_date = $date_to;
-            $days = (strtotime($end_date) - strtotime($start_date)) / (60 * 60 * 24) + 1;
+            $start_ts = strtotime($start_date);
+            $end_ts = strtotime($end_date);
+            if ($start_ts === false || $end_ts === false || $end_ts < $start_ts) {
+                $days = 30;
+                $start_ts = strtotime('-29 days');
+                $start_date = gmdate('Y-m-d', $start_ts);
+                $end_date = gmdate('Y-m-d');
+            } else {
+                $days = (int) floor(($end_ts - $start_ts) / DAY_IN_SECONDS) + 1;
+            }
         } else {
             $days = 30;
-            $start_date = gmdate('Y-m-d', strtotime("-29 days"));
+            $start_ts = strtotime('-29 days');
+            $start_date = gmdate('Y-m-d', $start_ts);
             $end_date = gmdate('Y-m-d');
         }
 
@@ -2460,8 +2495,9 @@ class MULOPIMFWC_Dashboard
         if (is_array($manager_location_term_ids)) {
             if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
                 for ($i = 0; $i < $days; $i++) {
-                    $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-                    $labels[] = gmdate('M d', strtotime($date));
+                    $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+                    $date = gmdate('Y-m-d', $date_ts);
+                    $labels[] = gmdate('M d', $date_ts);
                     $counts[] = 0;
                 }
 
@@ -2475,8 +2511,9 @@ class MULOPIMFWC_Dashboard
                 $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
                 if (!$selected_term || is_wp_error($selected_term)) {
                     for ($i = 0; $i < $days; $i++) {
-                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-                        $labels[] = gmdate('M d', strtotime($date));
+                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+                        $date = gmdate('Y-m-d', $date_ts);
+                        $labels[] = gmdate('M d', $date_ts);
                         $counts[] = 0;
                     }
 
@@ -2489,8 +2526,9 @@ class MULOPIMFWC_Dashboard
                 $selected_manager_term_id = (int) $selected_term->term_id;
                 if (!in_array($selected_manager_term_id, $manager_location_term_ids, true)) {
                     for ($i = 0; $i < $days; $i++) {
-                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-                        $labels[] = gmdate('M d', strtotime($date));
+                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+                        $date = gmdate('Y-m-d', $date_ts);
+                        $labels[] = gmdate('M d', $date_ts);
                         $counts[] = 0;
                     }
 
@@ -2503,8 +2541,9 @@ class MULOPIMFWC_Dashboard
         }
 
         for ($i = 0; $i < $days; $i++) {
-            $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-            $labels[] = gmdate('M d', strtotime($date));
+            $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+            $date = gmdate('Y-m-d', $date_ts);
+            $labels[] = gmdate('M d', $date_ts);
 
             if (is_array($manager_location_term_ids)) {
                 if ($selected_manager_term_id > 0) {
@@ -2587,15 +2626,33 @@ class MULOPIMFWC_Dashboard
         $normalized_location_filter = $this->normalize_location_slug($location_filter);
         $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
         $selected_manager_term_id = 0;
+        if (is_array($date_from)) {
+            $date_from = reset($date_from);
+        }
+        if (is_array($date_to)) {
+            $date_to = reset($date_to);
+        }
+        $date_from = is_string($date_from) ? sanitize_text_field($date_from) : '';
+        $date_to = is_string($date_to) ? sanitize_text_field($date_to) : '';
 
         // Determine date range
         if (!empty($date_from) && !empty($date_to)) {
             $start_date = $date_from;
             $end_date = $date_to;
-            $days = (strtotime($end_date) - strtotime($start_date)) / (60 * 60 * 24) + 1;
+            $start_ts = strtotime($start_date);
+            $end_ts = strtotime($end_date);
+            if ($start_ts === false || $end_ts === false || $end_ts < $start_ts) {
+                $days = 30;
+                $start_ts = strtotime('-29 days');
+                $start_date = gmdate('Y-m-d', $start_ts);
+                $end_date = gmdate('Y-m-d');
+            } else {
+                $days = (int) floor(($end_ts - $start_ts) / DAY_IN_SECONDS) + 1;
+            }
         } else {
             $days = 30;
-            $start_date = gmdate('Y-m-d', strtotime("-29 days"));
+            $start_ts = strtotime('-29 days');
+            $start_date = gmdate('Y-m-d', $start_ts);
             $end_date = gmdate('Y-m-d');
         }
 
@@ -2605,8 +2662,9 @@ class MULOPIMFWC_Dashboard
         if (is_array($manager_location_term_ids)) {
             if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
                 for ($i = 0; $i < $days; $i++) {
-                    $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-                    $labels[] = gmdate('M d', strtotime($date));
+                    $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+                    $date = gmdate('Y-m-d', $date_ts);
+                    $labels[] = gmdate('M d', $date_ts);
                     $totals[] = 0.0;
                 }
 
@@ -2620,8 +2678,9 @@ class MULOPIMFWC_Dashboard
                 $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
                 if (!$selected_term || is_wp_error($selected_term)) {
                     for ($i = 0; $i < $days; $i++) {
-                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-                        $labels[] = gmdate('M d', strtotime($date));
+                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+                        $date = gmdate('Y-m-d', $date_ts);
+                        $labels[] = gmdate('M d', $date_ts);
                         $totals[] = 0.0;
                     }
 
@@ -2634,8 +2693,9 @@ class MULOPIMFWC_Dashboard
                 $selected_manager_term_id = (int) $selected_term->term_id;
                 if (!in_array($selected_manager_term_id, $manager_location_term_ids, true)) {
                     for ($i = 0; $i < $days; $i++) {
-                        $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-                        $labels[] = gmdate('M d', strtotime($date));
+                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+                        $date = gmdate('Y-m-d', $date_ts);
+                        $labels[] = gmdate('M d', $date_ts);
                         $totals[] = 0.0;
                     }
 
@@ -2648,8 +2708,9 @@ class MULOPIMFWC_Dashboard
         }
 
         for ($i = 0; $i < $days; $i++) {
-            $date = gmdate('Y-m-d', strtotime($start_date . " +$i days"));
-            $labels[] = gmdate('M d', strtotime($date));
+            $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+            $date = gmdate('Y-m-d', $date_ts);
+            $labels[] = gmdate('M d', $date_ts);
 
             if (is_array($manager_location_term_ids)) {
                 if ($selected_manager_term_id > 0) {

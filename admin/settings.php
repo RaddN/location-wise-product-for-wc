@@ -3250,6 +3250,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                     ? wp_parse_args($options['social_notifications'], $defaults)
                     : $defaults;
                 $test_nonce = wp_create_nonce('mulopimfwc_test_social_channel');
+                $test_digest_nonce = wp_create_nonce('mulopimfwc_test_social_digest_channel');
         ?>
             <div class="mulopimfwc-social-card <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>" style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:10px;max-width:1100px;">
                 <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
@@ -3356,6 +3357,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                         </div>
                                         <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
                                             <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button test-social-channel" data-nonce="<?php echo esc_attr($test_nonce); ?>"><?php echo esc_html__('Test', 'multi-location-product-and-inventory-management'); ?></button>
+                                            <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button test-social-digest-channel" data-nonce="<?php echo esc_attr($test_digest_nonce); ?>"><?php echo esc_html__('Test Digest', 'multi-location-product-and-inventory-management'); ?></button>
                                             <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
                                         </div>
                                     </div>
@@ -3394,6 +3396,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                     </div>
                                     <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
                                         <button type="button" class="button test-social-channel" data-nonce="<?php echo esc_attr($test_nonce); ?>"><?php echo esc_html__('Test', 'multi-location-product-and-inventory-management'); ?></button>
+                                        <button type="button" class="button test-social-digest-channel" data-nonce="<?php echo esc_attr($test_digest_nonce); ?>"><?php echo esc_html__('Test Digest', 'multi-location-product-and-inventory-management'); ?></button>
                                         <button type="button" class="button button-link-delete remove-social-channel"><?php echo esc_html__('Remove', 'multi-location-product-and-inventory-management'); ?></button>
                                     </div>
                                 </div>
@@ -3405,6 +3408,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                 const tmpl = $('#mulopimfwc-social-channel-template').html();
                                 const emptyRow = $('#mulopimfwc-social-empty');
                                 const ajaxAction = 'mulopimfwc_test_social_channel';
+                                const digestAjaxAction = 'mulopimfwc_test_social_digest_channel';
                                 const digestClock = $('#mulopimfwc-digest-clock');
                                 if (digestClock.length) {
                                     const startUtcMs = parseInt(digestClock.data('start-utc'), 10) * 1000;
@@ -3480,6 +3484,30 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                                         alert('<?php echo esc_js(__('Test failed. Check the details and try again.', 'multi-location-product-and-inventory-management')); ?>');
                                     }).always(function() {
                                         btn.prop('disabled', false).text('<?php echo esc_js(__('Test', 'multi-location-product-and-inventory-management')); ?>');
+                                    });
+                                });
+
+                                container.on('click', '.test-social-digest-channel', function(e) {
+                                    e.preventDefault();
+                                    const row = $(this).closest('.mulopimfwc-social-channel-row');
+                                    const data = {
+                                        action: digestAjaxAction,
+                                        nonce: $(this).data('nonce'),
+                                        type: row.find('.mulopimfwc-channel-type').val(),
+                                        label: row.find('input[name*=\"[label]\"]').val(),
+                                        webhook: row.find('input[name*=\"[webhook]\"]').val(),
+                                        chat_id: row.find('input[name*=\"[chat_id]\"]').val(),
+                                        bot_token: row.find('input[name*=\"[bot_token]\"]').val()
+                                    };
+                                    const btn = $(this);
+                                    btn.prop('disabled', true).text('<?php echo esc_js(__('Testing digest...', 'multi-location-product-and-inventory-management')); ?>');
+                                    $.post(ajaxurl, data, function(res) {
+                                        const ok = res && res.success;
+                                        alert(ok ? '<?php echo esc_js(__('Digest test sent! Check your channel.', 'multi-location-product-and-inventory-management')); ?>' : (res?.data?.message || '<?php echo esc_js(__('Digest test failed. Check the details and try again.', 'multi-location-product-and-inventory-management')); ?>'));
+                                    }).fail(function() {
+                                        alert('<?php echo esc_js(__('Digest test failed. Check the details and try again.', 'multi-location-product-and-inventory-management')); ?>');
+                                    }).always(function() {
+                                        btn.prop('disabled', false).text('<?php echo esc_js(__('Test Digest', 'multi-location-product-and-inventory-management')); ?>');
                                     });
                                 });
 
@@ -4851,8 +4879,15 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             if (!empty($social_input['telegram_bot_token'])) {
                 $social['telegram_bot_token'] = sanitize_text_field($social_input['telegram_bot_token']);
             }
-            if (!empty($social_input['daily_digest_time'])) {
-                $social['daily_digest_time'] = sanitize_text_field($social_input['daily_digest_time']);
+            if (isset($social_input['daily_digest_time'])) {
+                $digest_time_raw = $social_input['daily_digest_time'];
+                if (is_array($digest_time_raw)) {
+                    $digest_time_raw = reset($digest_time_raw);
+                }
+                $digest_time = is_string($digest_time_raw) ? sanitize_text_field($digest_time_raw) : '';
+                if (preg_match('/^\d{1,2}:\d{2}$/', $digest_time)) {
+                    $social['daily_digest_time'] = $digest_time;
+                }
             }
 
             if (isset($social_input['high_value_threshold'])) {

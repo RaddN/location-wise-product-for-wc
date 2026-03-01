@@ -12773,6 +12773,17 @@ if (!function_exists('mulopimfwc_get_values')) {
      */
     function mulopimfwc_get_next_digest_timestamp($time_string)
     {
+        if (is_array($time_string)) {
+            $time_string = reset($time_string);
+        }
+        if (!is_string($time_string)) {
+            $time_string = '07:00';
+        }
+        $time_string = trim($time_string);
+        if (!preg_match('/^\d{1,2}:\d{2}$/', $time_string)) {
+            $time_string = '07:00';
+        }
+
         $now = current_time('timestamp');
         $parts = explode(':', $time_string);
         $hour = isset($parts[0]) ? max(0, min(23, (int) $parts[0])) : 7;
@@ -12780,47 +12791,36 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         $next = mktime($hour, $minute, 0, (int) wp_date('n', $now), (int) wp_date('j', $now), (int) wp_date('Y', $now));
         if ($next <= $now) {
-            $next = strtotime('+1 day', $next);
+            $next += DAY_IN_SECONDS;
         }
 
         return $next;
     }
 
     /**
-     * Send the daily performance digest per location.
+     * Build daily digest stats for today's orders.
      */
-    function mulopimfwc_send_daily_social_digest()
+    function mulopimfwc_get_daily_social_digest_stats()
     {
-        $settings = mulopimfwc_get_social_settings();
-        if (
-            !isset($settings['enabled'], $settings['daily_digest']) ||
-            $settings['enabled'] !== 'on' ||
-            $settings['daily_digest'] !== 'on'
-        ) {
-            return;
-        }
-
         $revenue_statuses = mulopimfwc_get_revenue_order_statuses();
         $now = current_time('timestamp');
         $start = strtotime('today', $now);
         $end = strtotime('tomorrow', $now);
 
-        // Process orders in batches to prevent memory exhaustion
-        // For daily digest, we only need orders from today, so limit is reasonable
+        // Process orders in batches to prevent memory exhaustion.
+        // For daily digest, we only need orders from today.
         $batch_size = 1000;
         $page = 1;
         $all_orders = [];
-        
+
         do {
+            $date_range = gmdate('Y-m-d H:i:s', $start) . '...' . gmdate('Y-m-d H:i:s', max($start, $end - 1));
             $orders = wc_get_orders([
                 'limit' => $batch_size,
                 'offset' => ($page - 1) * $batch_size,
                 'status' => $revenue_statuses,
-                'date_created' => [
-                    'after' => gmdate('Y-m-d H:i:s', $start),
-                    'before' => gmdate('Y-m-d H:i:s', $end),
-                    'inclusive' => true,
-                ],
+                // Use HPOS-safe range syntax; array date queries can trigger type errors in some WC versions.
+                'date_created' => $date_range,
                 'meta_query' => [
                     [
                         'key' => '_store_location',
@@ -12828,27 +12828,28 @@ if (!function_exists('mulopimfwc_get_values')) {
                     ],
                 ],
             ]);
-            
+
             if (empty($orders)) {
                 break;
             }
-            
+
             $all_orders = array_merge($all_orders, $orders);
-            
-            // Safety check: limit to 10 batches (10,000 orders max per day)
+
+            // Safety check: limit to 10 batches (10,000 orders max per day).
             if ($page >= 10) {
                 break;
             }
-            
+
             $page++;
-            
         } while (count($orders) === $batch_size);
 
-        if (empty($all_orders)) {
-            return;
-        }
-
         $stats = [];
+        $totals = [
+            'orders' => 0,
+            'items' => 0,
+            'revenue' => 0.0,
+        ];
+
         foreach ($all_orders as $order) {
             if (!$order instanceof WC_Order) {
                 continue;
@@ -12865,15 +12866,47 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'name' => ($term && !is_wp_error($term)) ? $term->name : __('Unassigned location', 'multi-location-product-and-inventory-management'),
                     'orders' => 0,
                     'items' => 0,
-                    'revenue' => 0,
+                    'revenue' => 0.0,
                 ];
             }
 
-            $stats[$slug]['orders']++;
-            $stats[$slug]['items'] += $order->get_item_count();
-            $stats[$slug]['revenue'] += function_exists('mulopimfwc_calculate_order_revenue')
+            $order_revenue = function_exists('mulopimfwc_calculate_order_revenue')
                 ? (float) mulopimfwc_calculate_order_revenue($order)
                 : (float) $order->get_total();
+
+            $stats[$slug]['orders']++;
+            $stats[$slug]['items'] += (int) $order->get_item_count();
+            $stats[$slug]['revenue'] += $order_revenue;
+
+            $totals['orders']++;
+            $totals['items'] += (int) $order->get_item_count();
+            $totals['revenue'] += $order_revenue;
+        }
+
+        return [
+            'stats' => $stats,
+            'totals' => $totals,
+        ];
+    }
+
+    /**
+     * Send the daily performance digest per location.
+     */
+    function mulopimfwc_send_daily_social_digest()
+    {
+        $settings = mulopimfwc_get_social_settings();
+        if (
+            !isset($settings['enabled'], $settings['daily_digest']) ||
+            $settings['enabled'] !== 'on' ||
+            $settings['daily_digest'] !== 'on'
+        ) {
+            return;
+        }
+
+        $digest = mulopimfwc_get_daily_social_digest_stats();
+        $stats = isset($digest['stats']) && is_array($digest['stats']) ? $digest['stats'] : [];
+        if (empty($stats)) {
+            return;
         }
 
         // Per-location notifications for managers
@@ -13059,6 +13092,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     add_action('mulopimfwc_social_daily_digest', 'mulopimfwc_send_daily_social_digest');
     add_action('mulopimfwc_social_site_check', 'mulopimfwc_check_site_status_for_social');
     add_action('wp_ajax_mulopimfwc_test_social_channel', 'mulopimfwc_test_social_channel');
+    add_action('wp_ajax_mulopimfwc_test_social_digest_channel', 'mulopimfwc_test_social_digest_channel');
     add_action('comment_post', 'mulopimfwc_social_low_review_alert', 20, 3);
 
     /**
@@ -13113,6 +13147,95 @@ if (!function_exists('mulopimfwc_get_values')) {
         );
 
         wp_send_json_success(['message' => __('Test sent (check your channel).', 'multi-location-product-and-inventory-management')]);
+    }
+
+    /**
+     * AJAX: Send a digest preview to one social channel.
+     */
+    function mulopimfwc_test_social_digest_channel()
+    {
+        check_ajax_referer('mulopimfwc_test_social_digest_channel', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
+        }
+
+        $type = isset($_POST['type']) ? sanitize_text_field(wp_unslash($_POST['type'])) : '';
+        $webhook = isset($_POST['webhook']) ? esc_url_raw(wp_unslash($_POST['webhook'])) : '';
+        $chat_id = isset($_POST['chat_id']) ? sanitize_text_field(wp_unslash($_POST['chat_id'])) : '';
+        $bot_token = isset($_POST['bot_token']) ? sanitize_text_field(wp_unslash($_POST['bot_token'])) : '';
+        $settings = mulopimfwc_get_social_settings();
+
+        if (empty($type)) {
+            wp_send_json_error(['message' => __('Select a platform to test.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        if ($type === 'telegram' && empty($chat_id) && empty($webhook)) {
+            wp_send_json_error(['message' => __('Telegram requires a chat ID (and bot token).', 'multi-location-product-and-inventory-management')]);
+        }
+
+        if ($type !== 'telegram' && empty($webhook)) {
+            wp_send_json_error(['message' => __('Webhook URL is required for this platform.', 'multi-location-product-and-inventory-management')]);
+        }
+
+        if ($type === 'telegram') {
+            $channel = [
+                'type' => 'telegram',
+                'chat_id' => $chat_id,
+                'bot_token' => !empty($bot_token) ? $bot_token : (isset($settings['telegram_bot_token']) ? $settings['telegram_bot_token'] : ''),
+            ];
+        } else {
+            $channel = [
+                'type' => 'webhook',
+                'url' => $webhook,
+            ];
+        }
+
+        $digest = mulopimfwc_get_daily_social_digest_stats();
+        $stats = isset($digest['stats']) && is_array($digest['stats']) ? $digest['stats'] : [];
+        $totals = isset($digest['totals']) && is_array($digest['totals']) ? $digest['totals'] : ['orders' => 0, 'items' => 0, 'revenue' => 0.0];
+        $date_format = get_option('date_format');
+        if (empty($date_format)) {
+            $date_format = 'Y-m-d';
+        }
+        $date_label = wp_date($date_format, current_time('timestamp'));
+        $title = sprintf(__('Digest preview - %s', 'multi-location-product-and-inventory-management'), $date_label);
+
+        if (empty($stats)) {
+            $message = __('No orders found for today yet. This is a digest preview test.', 'multi-location-product-and-inventory-management');
+        } else {
+            $lines = [];
+            $lines[] = sprintf(
+                __('Totals - Orders: %d | Items: %d | Revenue: %s', 'multi-location-product-and-inventory-management'),
+                intval($totals['orders']),
+                intval($totals['items']),
+                wp_strip_all_tags(wc_price((float) $totals['revenue']))
+            );
+
+            foreach ($stats as $data) {
+                $lines[] = sprintf(
+                    '%s - %d %s, %d %s, %s',
+                    isset($data['name']) ? $data['name'] : __('Location', 'multi-location-product-and-inventory-management'),
+                    intval(isset($data['orders']) ? $data['orders'] : 0),
+                    __('orders', 'multi-location-product-and-inventory-management'),
+                    intval(isset($data['items']) ? $data['items'] : 0),
+                    __('items', 'multi-location-product-and-inventory-management'),
+                    wp_strip_all_tags(wc_price((float) (isset($data['revenue']) ? $data['revenue'] : 0)))
+                );
+            }
+
+            $message = implode("\n", $lines);
+        }
+
+        mulopimfwc_send_social_message(
+            $title,
+            $message,
+            [$channel],
+            $settings,
+            admin_url('edit.php?post_type=shop_order')
+        );
+
+        wp_send_json_success(['message' => __('Digest test sent (check your channel).', 'multi-location-product-and-inventory-management')]);
     }
 
     /**
