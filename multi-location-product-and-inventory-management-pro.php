@@ -12259,11 +12259,8 @@ if (!function_exists('mulopimfwc_get_values')) {
      */
     function mulopimfwc_get_revenue_order_statuses()
     {
-        $default_statuses = ['completed', 'processing', 'on-hold'];
-
-        if (function_exists('wc_get_is_paid_statuses')) {
-            $default_statuses = array_merge($default_statuses, wc_get_is_paid_statuses());
-        }
+        // Revenue is paid-only and must match WooCommerce paid semantics used by this plugin.
+        $default_statuses = ['processing', 'completed'];
 
         $statuses = apply_filters('mulopimfwc_revenue_order_statuses', $default_statuses);
         if (!is_array($statuses)) {

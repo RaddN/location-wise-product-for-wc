@@ -74,6 +74,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         echo '<div class="hr-section hr-section-coupon_restrictions">And</div>';
         woocommerce_wp_select([
             'id'                => self::META_INCLUDE,
+            'name'              => self::META_INCLUDE . '[]',
             'label'             => __('Product locations', 'woocommerce'),
             'description'       => __('Coupon applies only to products that have at least one of the selected locations. Leave empty for no location-based inclusion.', 'woocommerce'),
             'desc_tip'          => true,
@@ -90,6 +91,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         // Exclude
         woocommerce_wp_select([
             'id'                => self::META_EXCLUDE,
+            'name'              => self::META_EXCLUDE . '[]',
             'label'             => __('Exclude locations', 'woocommerce'),
             'description'       => __('Products with these locations will NOT qualify for this coupon.', 'woocommerce'),
             'desc_tip'          => true,
@@ -102,7 +104,102 @@ class MULOPIMFWC_Coupon_Location_Restrictions
             'class'             => 'wc-enhanced-select',
             'style'             => 'width:50%;',
         ]);
+
+        $this->render_include_exclude_sync_script();
         echo '</div>';
+    }
+
+    private function render_include_exclude_sync_script()
+    {
+        $include_id = esc_js(self::META_INCLUDE);
+        $exclude_id = esc_js(self::META_EXCLUDE);
+?>
+        <script type="text/javascript">
+            jQuery(function($) {
+                var $include = $('#<?php echo $include_id; ?>');
+                var $exclude = $('#<?php echo $exclude_id; ?>');
+                var syncing = false;
+
+                if (!$include.length || !$exclude.length) {
+                    return;
+                }
+
+                function asArray(values) {
+                    if (!values) {
+                        return [];
+                    }
+
+                    return Array.isArray(values) ? values : [values];
+                }
+
+                function removeOverlap(primaryValues, secondaryValues) {
+                    var blocked = {};
+
+                    $.each(primaryValues, function(_, value) {
+                        blocked[String(value)] = true;
+                    });
+
+                    return $.grep(secondaryValues, function(value) {
+                        return !blocked[String(value)];
+                    });
+                }
+
+                function syncOneWay($source, $target) {
+                    var sourceValues = asArray($source.val());
+                    var targetValues = asArray($target.val());
+                    var cleanTargetValues = removeOverlap(sourceValues, targetValues);
+                    var blocked = {};
+
+                    $.each(sourceValues, function(_, value) {
+                        blocked[String(value)] = true;
+                    });
+
+                    if (cleanTargetValues.length !== targetValues.length) {
+                        $target.val(cleanTargetValues);
+                    }
+
+                    $target.find('option').each(function() {
+                        var value = String($(this).val());
+                        var shouldDisable = !!blocked[value] && !$(this).prop('selected');
+                        $(this).prop('disabled', shouldDisable);
+                    });
+                }
+
+                function syncBoth(preferred) {
+                    if (syncing) {
+                        return;
+                    }
+
+                    syncing = true;
+
+                    if (preferred === 'exclude') {
+                        syncOneWay($exclude, $include);
+                        syncOneWay($include, $exclude);
+                    } else {
+                        syncOneWay($include, $exclude);
+                        syncOneWay($exclude, $include);
+                    }
+
+                    // Refresh Select2 UI after changing selected/disabled options.
+                    $include.trigger('change.select2');
+                    $exclude.trigger('change.select2');
+
+                    syncing = false;
+                }
+
+                $include.on('change select2:select select2:unselect', function() {
+                    syncBoth('include');
+                });
+
+                $exclude.on('change select2:select select2:unselect', function() {
+                    syncBoth('exclude');
+                });
+
+                // Initial load: if overlap already exists, keep include values and clean exclude.
+                syncBoth('include');
+            });
+        </script>
+<?php
     }
 
     private function get_term_breadcrumb(WP_Term $term)
@@ -160,11 +257,19 @@ class MULOPIMFWC_Coupon_Location_Restrictions
      * ------------------------*/
     public function save_usage_restriction_fields($post_id, $coupon)
     {
-        $include = isset($_POST[self::META_INCLUDE]) ? (array) $_POST[self::META_INCLUDE] : [];
-        $exclude = isset($_POST[self::META_EXCLUDE]) ? (array) $_POST[self::META_EXCLUDE] : [];
+        $include = isset($_POST[self::META_INCLUDE]) ? wp_unslash($_POST[self::META_INCLUDE]) : [];
+        $exclude = isset($_POST[self::META_EXCLUDE]) ? wp_unslash($_POST[self::META_EXCLUDE]) : [];
+
+        // Keep compatibility with both scalar and array request payloads.
+        $include = is_array($include) ? $include : [$include];
+        $exclude = is_array($exclude) ? $exclude : [$exclude];
 
         $include = array_values(array_unique(array_filter(array_map('absint', $include))));
         $exclude = array_values(array_unique(array_filter(array_map('absint', $exclude))));
+        if (! empty($include) && ! empty($exclude)) {
+            // Never allow the same term in both include and exclude.
+            $exclude = array_values(array_diff($exclude, $include));
+        }
 
         $allowed_term_ids = $this->get_location_manager_allowed_term_ids();
         if (is_array($allowed_term_ids)) {

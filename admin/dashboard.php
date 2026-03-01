@@ -2232,7 +2232,7 @@ class MULOPIMFWC_Dashboard
 
         $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
             ? mulopimfwc_get_revenue_order_statuses()
-            : ['completed', 'processing', 'on-hold'];
+            : ['processing', 'completed'];
         $calculate_revenue = function_exists('mulopimfwc_calculate_order_revenue') ? 'mulopimfwc_calculate_order_revenue' : null;
 
         foreach ($mulopimfwc_locations as $location) {
@@ -2879,7 +2879,7 @@ class MULOPIMFWC_Dashboard
         $since_date = gmdate('Y-m-d', $since_timestamp);
         $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
             ? mulopimfwc_get_revenue_order_statuses()
-            : ['completed', 'processing', 'on-hold'];
+            : ['processing', 'completed'];
 
         // Process orders in batches to prevent memory exhaustion
         $batch_size = 1000;
