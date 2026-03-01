@@ -190,7 +190,7 @@ Relevant ref:
 
 ---
 
-## Revenue Status Rules (core revenue dependency)
+## Revenue Status Rules (core revenue dependency) **Fixed**
 
 Default WC:
 - Paid-order logic is based on `wc_get_is_paid_statuses()` which defaults to `processing` and `completed`.
