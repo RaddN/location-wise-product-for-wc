@@ -926,7 +926,7 @@ add_action('woocommerce_reduce_order_stock', function ($order) {
     foreach ($order->get_items() as $item) {
         $product_id = $item->get_product_id();
         $variation_id = $item->get_variation_id();
-        $quantity = $item->get_quantity();
+        $quantity = (int) $item->get_quantity();
 
         $target_id = $variation_id ? $variation_id : $product_id;
 
@@ -970,7 +970,56 @@ add_action('woocommerce_reduce_order_stock', function ($order) {
     }
 });
 
-// Handle stock restoration when order is canceled
+// Handle location-stock restoration when WooCommerce restores stock per order item.
+add_action('woocommerce_restore_order_item_stock', function ($item, $new_stock, $old_stock, $order) {
+    global $mulopimfwc_options;
+
+    if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
+        return;
+    }
+
+    if ($order instanceof WC_Order && $order->get_meta('_mulopimfwc_split_parent_stock_exempt') === 'yes') {
+        return;
+    }
+
+    if (!$item instanceof WC_Order_Item_Product) {
+        return;
+    }
+
+    $restore_qty = function_exists('wc_stock_amount')
+        ? wc_stock_amount((float) $new_stock - (float) $old_stock)
+        : ((float) $new_stock - (float) $old_stock);
+    $restore_qty = absint($restore_qty);
+
+    if ($restore_qty <= 0) {
+        return;
+    }
+
+    $product_id = $item->get_product_id();
+    $variation_id = $item->get_variation_id();
+    $target_id = $variation_id ? $variation_id : $product_id;
+
+    if (!$target_id) {
+        return;
+    }
+
+    // Get location from order item meta (stored during checkout), with order fallback.
+    $location_slug = mulopimfwc_get_order_item_location_slug($item, $order);
+    $location_id = mulopimfwc_get_location_term_id($location_slug);
+    if (!$location_id) {
+        return;
+    }
+
+    $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
+    if ($current_stock === '') {
+        return;
+    }
+
+    $updated_stock = (int) $current_stock + $restore_qty;
+    update_post_meta($target_id, '_location_stock_' . $location_id, $updated_stock);
+}, 10, 4);
+
+// Fallback restore path for items that do not use WooCommerce core stock management.
 add_action('woocommerce_restore_order_stock', function ($order) {
     global $mulopimfwc_options;
 
@@ -983,26 +1032,41 @@ add_action('woocommerce_restore_order_stock', function ($order) {
     }
 
     foreach ($order->get_items() as $item) {
+        if (!$item instanceof WC_Order_Item_Product) {
+            continue;
+        }
+
+        $product = $item->get_product();
+        if ($product && $product->managing_stock()) {
+            continue;
+        }
+
+        $qty = (int) $item->get_quantity();
+        if ($qty <= 0) {
+            continue;
+        }
+
         $product_id = $item->get_product_id();
         $variation_id = $item->get_variation_id();
-        $quantity = $item->get_quantity();
-
         $target_id = $variation_id ? $variation_id : $product_id;
 
-        // Get location from order item meta (stored during checkout), with order fallback
-        $location_slug = mulopimfwc_get_order_item_location_slug($item, $order);
+        if (!$target_id) {
+            continue;
+        }
 
+        $location_slug = mulopimfwc_get_order_item_location_slug($item, $order);
         $location_id = mulopimfwc_get_location_term_id($location_slug);
         if (!$location_id) {
             continue;
         }
 
         $current_stock = get_post_meta($target_id, '_location_stock_' . $location_id, true);
-
-        if ($current_stock !== '') {
-            $new_stock = (int)$current_stock + $quantity;
-            update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
+        if ($current_stock === '') {
+            continue;
         }
+
+        $updated_stock = (int) $current_stock + $qty;
+        update_post_meta($target_id, '_location_stock_' . $location_id, $updated_stock);
     }
 });
 
@@ -1047,6 +1111,14 @@ add_action('woocommerce_create_refund', function ($refund, $args) {
         $item = $order->get_item($item_id);
         if (!$item || !$item->is_type('line_item')) {
             continue;
+        }
+
+        $reduced_qty = absint($item->get_meta('_reduced_stock', true));
+        if ($reduced_qty > 0) {
+            $qty = min($qty, $reduced_qty);
+            if ($qty <= 0) {
+                continue;
+            }
         }
 
         $product_id = $item->get_product_id();

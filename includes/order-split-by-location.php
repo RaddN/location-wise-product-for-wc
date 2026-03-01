@@ -6,6 +6,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
     class MULOPIMFWC_Order_Split_By_Location
     {
         private $is_splitting = false;
+        private $is_syncing_status = false;
 
         public function __construct()
         {
@@ -22,7 +23,10 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
 
             // Sync child statuses when parent updates.
             add_action('woocommerce_order_status_changed', [$this, 'sync_child_status_from_parent'], 10, 4);
+            add_action('woocommerce_order_status_changed', [$this, 'sync_parent_status_from_child'], 20, 4);
             add_action('woocommerce_payment_complete', [$this, 'sync_children_on_payment_complete'], 10, 1);
+            add_action('woocommerce_order_status_cancelled', [$this, 'prepare_split_child_stock_restore'], 1, 3);
+            add_action('woocommerce_order_status_pending', [$this, 'prepare_split_child_stock_restore'], 1, 3);
 
             // Avoid duplicate customer emails on child orders.
             $customer_emails = [
@@ -152,6 +156,196 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             }
 
             return $children;
+        }
+
+        private function normalize_status_name(string $status): string
+        {
+            $status = sanitize_key($status);
+            if (strpos($status, 'wc-') === 0) {
+                $status = substr($status, 3);
+            }
+            return $status;
+        }
+
+        private function get_split_sync_statuses(): array
+        {
+            $statuses = apply_filters(
+                'mulopimfwc_split_sync_statuses',
+                ['pending', 'processing', 'completed', 'on-hold', 'cancelled', 'refunded', 'failed']
+            );
+
+            if (!is_array($statuses)) {
+                $statuses = ['pending', 'processing', 'completed', 'on-hold', 'cancelled', 'refunded', 'failed'];
+            }
+
+            $statuses = array_map(function ($status) {
+                return $this->normalize_status_name((string) $status);
+            }, $statuses);
+
+            return array_values(array_unique(array_filter($statuses, 'strlen')));
+        }
+
+        private function get_stock_reduction_statuses(): array
+        {
+            $statuses = apply_filters('mulopimfwc_split_stock_reduction_statuses', ['processing', 'completed', 'on-hold']);
+            if (!is_array($statuses)) {
+                $statuses = ['processing', 'completed', 'on-hold'];
+            }
+
+            $statuses = array_map(function ($status) {
+                return $this->normalize_status_name((string) $status);
+            }, $statuses);
+
+            return array_values(array_unique(array_filter($statuses, 'strlen')));
+        }
+
+        private function order_status_reduces_stock(string $status): bool
+        {
+            return in_array($this->normalize_status_name($status), $this->get_stock_reduction_statuses(), true);
+        }
+
+        private function is_order_stock_reduced(WC_Order $order): bool
+        {
+            $order_id = $order->get_id();
+            if (!$order_id) {
+                return false;
+            }
+
+            $data_store = $order->get_data_store();
+            if ($data_store && method_exists($data_store, 'get_stock_reduced')) {
+                return (bool) $data_store->get_stock_reduced($order_id);
+            }
+
+            $raw = $order->get_meta('_order_stock_reduced', true);
+            return function_exists('wc_string_to_bool')
+                ? wc_string_to_bool((string) $raw)
+                : in_array(strtolower((string) $raw), ['yes', 'true', '1'], true);
+        }
+
+        private function set_order_stock_reduced(WC_Order $order, bool $is_reduced): void
+        {
+            $order_id = $order->get_id();
+            if (!$order_id) {
+                return;
+            }
+
+            $data_store = $order->get_data_store();
+            if ($data_store && method_exists($data_store, 'set_stock_reduced')) {
+                $data_store->set_stock_reduced($order_id, $is_reduced);
+                return;
+            }
+
+            $order->update_meta_data('_order_stock_reduced', $is_reduced ? 'yes' : 'no');
+        }
+
+        private function mark_order_items_reduced_for_split_child(WC_Order $order): void
+        {
+            foreach ($order->get_items('line_item') as $item) {
+                if (!$item instanceof WC_Order_Item_Product) {
+                    continue;
+                }
+
+                $product = $item->get_product();
+                if (!$product || !$product->managing_stock()) {
+                    continue;
+                }
+
+                $qty = (int) $item->get_quantity();
+                if ($qty <= 0) {
+                    continue;
+                }
+
+                if ((int) $item->get_meta('_reduced_stock', true) > 0) {
+                    continue;
+                }
+
+                $item->add_meta_data('_reduced_stock', $qty, true);
+                $item->save();
+            }
+        }
+
+        private function all_children_have_status(WC_Order $parent, string $status): bool
+        {
+            $children = $this->get_split_child_orders($parent);
+            if (empty($children)) {
+                return false;
+            }
+
+            foreach ($children as $child) {
+                if ($child->get_status() !== $status) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private function order_has_reduced_items(WC_Order $order): bool
+        {
+            foreach ($order->get_items('line_item') as $item) {
+                if (!$item instanceof WC_Order_Item_Product) {
+                    continue;
+                }
+
+                if (absint($item->get_meta('_reduced_stock', true)) > 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private function order_has_core_managed_stock_items(WC_Order $order): bool
+        {
+            foreach ($order->get_items('line_item') as $item) {
+                if (!$item instanceof WC_Order_Item_Product) {
+                    continue;
+                }
+
+                $product = $item->get_product();
+                if ($product && $product->managing_stock()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private function sync_child_from_parent_target_state(WC_Order $parent, WC_Order $child, string $context_note = ''): void
+        {
+            $new_status = $this->normalize_status_name($parent->get_status());
+            $parent_stock_reduced = $this->is_order_stock_reduced($parent);
+            $parent_has_reduced_items = $this->order_has_reduced_items($parent);
+            $child_has_core_managed_stock_items = $this->order_has_core_managed_stock_items($child);
+
+            if ($parent_stock_reduced && $parent_has_reduced_items && $this->order_status_reduces_stock($new_status)) {
+                // Parent stock was already reduced before split: carry reduction markers to child
+                // so later pending/cancelled/refund transitions restore correctly.
+                $this->mark_order_items_reduced_for_split_child($child);
+                $this->set_order_stock_reduced($child, true);
+            } elseif ($parent_stock_reduced && !$child_has_core_managed_stock_items && $this->order_status_reduces_stock($new_status)) {
+                // Non-core-managed products (location-stock only) have no per-item "_reduced_stock"
+                // markers, so inherit order-level reduced state to keep restore flow consistent.
+                $this->set_order_stock_reduced($child, true);
+            } elseif (
+                $this->order_status_reduces_stock($new_status)
+                && $child_has_core_managed_stock_items
+                && $this->is_order_stock_reduced($child)
+                && !$this->order_has_reduced_items($child)
+            ) {
+                // Defensive recovery for pre-existing split children that have a stale
+                // "_order_stock_reduced" flag but no per-item reduced markers.
+                $this->set_order_stock_reduced($child, false);
+            }
+
+            if ($child->get_status() !== $new_status) {
+                $child->set_status($new_status, $context_note, true);
+            }
+
+            $paid_date = $parent->get_date_paid();
+            if ($paid_date && in_array($new_status, ['processing', 'completed'], true)) {
+                $child->set_date_paid($paid_date);
+            }
         }
 
         private function should_render_split_parent_customer_items($order): bool
@@ -518,6 +712,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
 
                     $this->apply_location_tax_classes($child, $location_slug);
                     $child->calculate_totals(true);
+                    $this->sync_child_from_parent_target_state($order, $child);
                     $child->save();
 
                     $children_ids[] = $child->get_id();
@@ -597,8 +792,6 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
 
             $child->update_meta_data('_mulopimfwc_split_child', 'yes');
             $child->update_meta_data('_mulopimfwc_split_parent_id', $parent->get_id());
-
-            $child->set_status($parent->get_status(), '', true);
             $child->save();
 
             return $child;
@@ -725,38 +918,34 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                 return;
             }
 
-            $new_status = $order->get_status();
-            $paid_date = $order->get_date_paid();
-
             foreach ($children_ids as $child_id) {
                 $child = wc_get_order($child_id);
                 if (!$child) {
                     continue;
                 }
 
-                if ($child->get_status() !== $new_status) {
-                    $child->set_status($new_status, __('Paid via parent order.', 'multi-location-product-and-inventory-management'), true);
-                }
-
-                if ($paid_date) {
-                    $child->set_date_paid($paid_date);
-                }
-
+                $this->sync_child_from_parent_target_state(
+                    $order,
+                    $child,
+                    __('Paid via parent order.', 'multi-location-product-and-inventory-management')
+                );
                 $child->save();
             }
         }
 
         public function sync_child_status_from_parent($order_id, $old_status, $new_status, $order)
         {
+            if ($this->is_syncing_status) {
+                return;
+            }
+
             $order = $order instanceof WC_Order ? $order : wc_get_order($order_id);
             if (!$this->is_split_parent($order)) {
                 return;
             }
 
-            $sync_statuses = apply_filters(
-                'mulopimfwc_split_sync_statuses',
-                ['processing', 'completed', 'on-hold', 'cancelled', 'refunded', 'failed']
-            );
+            $sync_statuses = $this->get_split_sync_statuses();
+            $new_status = $this->normalize_status_name((string) $new_status);
 
             if (!in_array($new_status, $sync_statuses, true)) {
                 return;
@@ -767,24 +956,109 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                 return;
             }
 
-            $paid_date = $order->get_date_paid();
+            $this->is_syncing_status = true;
+            try {
+                foreach ($children_ids as $child_id) {
+                    $child = wc_get_order($child_id);
+                    if (!$child) {
+                        continue;
+                    }
 
-            foreach ($children_ids as $child_id) {
-                $child = wc_get_order($child_id);
-                if (!$child) {
-                    continue;
+                    $this->sync_child_from_parent_target_state(
+                        $order,
+                        $child,
+                        sprintf(__('Parent order status changed to %s.', 'multi-location-product-and-inventory-management'), $new_status)
+                    );
+                    $child->save();
                 }
-
-                if ($child->get_status() !== $new_status) {
-                    $child->set_status($new_status, sprintf(__('Parent order status changed to %s.', 'multi-location-product-and-inventory-management'), $new_status), true);
-                }
-
-                if (in_array($new_status, ['processing', 'completed'], true) && $paid_date) {
-                    $child->set_date_paid($paid_date);
-                }
-
-                $child->save();
+            } finally {
+                $this->is_syncing_status = false;
             }
+        }
+
+        public function sync_parent_status_from_child($order_id, $old_status, $new_status, $order)
+        {
+            if ($this->is_syncing_status) {
+                return;
+            }
+
+            $order = $order instanceof WC_Order ? $order : wc_get_order($order_id);
+            if (!$this->is_split_child($order)) {
+                return;
+            }
+
+            $new_status = $this->normalize_status_name((string) $new_status);
+            if (!in_array($new_status, $this->get_split_sync_statuses(), true)) {
+                return;
+            }
+
+            $parent_id = (int) $order->get_meta('_mulopimfwc_split_parent_id');
+            if ($parent_id <= 0) {
+                return;
+            }
+
+            $parent = wc_get_order($parent_id);
+            if (!$this->is_split_parent($parent)) {
+                return;
+            }
+
+            if (!$this->all_children_have_status($parent, $new_status)) {
+                return;
+            }
+
+            if ($parent->get_status() === $new_status) {
+                return;
+            }
+
+            $this->is_syncing_status = true;
+            try {
+                $parent->set_status(
+                    $new_status,
+                    sprintf(__('All child orders are now %s.', 'multi-location-product-and-inventory-management'), $new_status),
+                    true
+                );
+
+                if (in_array($new_status, ['processing', 'completed'], true) && !$parent->get_date_paid()) {
+                    $paid_date = $order->get_date_paid();
+                    if ($paid_date) {
+                        $parent->set_date_paid($paid_date);
+                    }
+                }
+
+                $parent->save();
+            } finally {
+                $this->is_syncing_status = false;
+            }
+        }
+
+        public function prepare_split_child_stock_restore($order_id, $order, $status_transition = [])
+        {
+            $order = $order instanceof WC_Order ? $order : wc_get_order($order_id);
+            if (!$this->is_split_child($order)) {
+                return;
+            }
+
+            // If WooCommerce already considers this order reduced, no repair is needed.
+            if ($this->is_order_stock_reduced($order)) {
+                return;
+            }
+
+            // Repair only for location-stock-only products where WooCommerce has no per-item
+            // reduced markers to infer restore eligibility.
+            if ($this->order_has_core_managed_stock_items($order)) {
+                return;
+            }
+
+            $from_status = '';
+            if (is_array($status_transition) && isset($status_transition['from'])) {
+                $from_status = $this->normalize_status_name((string) $status_transition['from']);
+            }
+
+            if (!$this->order_status_reduces_stock($from_status)) {
+                return;
+            }
+
+            $this->set_order_stock_reduced($order, true);
         }
 
         public function maybe_disable_customer_email_for_child($recipient, $order)
