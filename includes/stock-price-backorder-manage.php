@@ -209,8 +209,6 @@ add_action('woocommerce_product_data_panels', function () {
                             </td>
                         </tr>
                         <?php
-                        $regular_price = $product->get_regular_price();
-                        $sale_price = $product->get_sale_price();
                         foreach ($mulopimfwc_locations as $location) :
                             $location_currency_symbol = mulopimfwc_get_currency_symbol_for_admin_input((int) $location->term_id);
                             $location_stock = get_post_meta($post->ID, '_location_stock_' . $location->term_id, true);
@@ -228,11 +226,11 @@ add_action('woocommerce_product_data_panels', function () {
                                 </td>
                                 <td>
                                     <input type="text" name="location_regular_price[<?php echo esc_attr($location->term_id); ?>]"
-                                        value="<?php echo esc_attr($location_regular_price ? $location_regular_price : ($location_regular_price === '' ? $regular_price : '')); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                                        value="<?php echo esc_attr($location_regular_price); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                                 </td>
                                 <td>
                                     <input type="text" name="location_sale_price[<?php echo esc_attr($location->term_id); ?>]"
-                                        value="<?php echo esc_attr($location_sale_price ? $location_sale_price : ($location_sale_price === '' ? $sale_price : '')); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                                        value="<?php echo esc_attr($location_sale_price); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                                 </td>
 
                                 <td>
@@ -274,8 +272,20 @@ add_action('woocommerce_process_product_meta', function ($post_id) {
     // Save location regular prices
     if (isset($_POST['location_regular_price']) && is_array($_POST['location_regular_price'])) {
         foreach (array_map('sanitize_text_field', wp_unslash($_POST['location_regular_price'])) as $location_id => $price) {
-            if (is_numeric($location_id) && is_numeric($price)) {
-                update_post_meta($post_id, '_location_regular_price_' . intval($location_id), wc_format_decimal($price));
+            if (!is_numeric($location_id)) {
+                continue;
+            }
+
+            $price = trim((string) $price);
+            $meta_key = '_location_regular_price_' . intval($location_id);
+
+            if ($price === '') {
+                delete_post_meta($post_id, $meta_key);
+                continue;
+            }
+
+            if (is_numeric($price)) {
+                update_post_meta($post_id, $meta_key, wc_format_decimal($price));
             }
         }
     }
@@ -283,8 +293,20 @@ add_action('woocommerce_process_product_meta', function ($post_id) {
     // Save location sale prices
     if (isset($_POST['location_sale_price']) && is_array($_POST['location_sale_price'])) {
         foreach (array_map('sanitize_text_field', wp_unslash($_POST['location_sale_price'])) as $location_id => $price) {
-            if (is_numeric($location_id) && is_numeric($price)) {
-                update_post_meta($post_id, '_location_sale_price_' . intval($location_id), wc_format_decimal($price));
+            if (!is_numeric($location_id)) {
+                continue;
+            }
+
+            $price = trim((string) $price);
+            $meta_key = '_location_sale_price_' . intval($location_id);
+
+            if ($price === '') {
+                delete_post_meta($post_id, $meta_key);
+                continue;
+            }
+
+            if (is_numeric($price)) {
+                update_post_meta($post_id, $meta_key, wc_format_decimal($price));
             }
         }
     }
@@ -388,8 +410,20 @@ add_action('woocommerce_save_product_variation', function ($variation_id, $loop)
     // Save variation location regular prices
     if (isset($_POST['variation_location_regular_price'][$loop]) && is_array($_POST['variation_location_regular_price'][$loop])) {
         foreach (array_map('sanitize_text_field', wp_unslash($_POST['variation_location_regular_price'][$loop])) as $location_id => $price) {
-            if (is_numeric($location_id) && is_numeric($price)) {
-                update_post_meta($variation_id, '_location_regular_price_' . intval($location_id), wc_format_decimal($price));
+            if (!is_numeric($location_id)) {
+                continue;
+            }
+
+            $price = trim((string) $price);
+            $meta_key = '_location_regular_price_' . intval($location_id);
+
+            if ($price === '') {
+                delete_post_meta($variation_id, $meta_key);
+                continue;
+            }
+
+            if (is_numeric($price)) {
+                update_post_meta($variation_id, $meta_key, wc_format_decimal($price));
             }
         }
     }
@@ -397,8 +431,20 @@ add_action('woocommerce_save_product_variation', function ($variation_id, $loop)
     // Save variation location sale prices
     if (isset($_POST['variation_location_sale_price'][$loop]) && is_array($_POST['variation_location_sale_price'][$loop])) {
         foreach (array_map('sanitize_text_field', wp_unslash($_POST['variation_location_sale_price'][$loop])) as $location_id => $price) {
-            if (is_numeric($location_id) && is_numeric($price)) {
-                update_post_meta($variation_id, '_location_sale_price_' . intval($location_id), wc_format_decimal($price));
+            if (!is_numeric($location_id)) {
+                continue;
+            }
+
+            $price = trim((string) $price);
+            $meta_key = '_location_sale_price_' . intval($location_id);
+
+            if ($price === '') {
+                delete_post_meta($variation_id, $meta_key);
+                continue;
+            }
+
+            if (is_numeric($price)) {
+                update_post_meta($variation_id, $meta_key, wc_format_decimal($price));
             }
         }
     }
