@@ -1762,6 +1762,61 @@ input.disabled + .mulopimfwc_slider {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+.manage-price-input-wrap {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.manage-price-input-wrap:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.manage-price-prefix {
+  min-width: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: #f9fafb;
+  color: #374151;
+  border-right: 1px solid #e5e7eb;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.manage-price-input-wrap .manage-price-input {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 10px 12px;
+  background: transparent;
+  width: 100%;
+  min-width: 0;
+}
+
+.manage-price-input-wrap .manage-price-input:focus {
+  outline: none;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.manage-price-input.manage-error {
+  background: #fff5f5;
+}
+
+.manage-price-input-wrap:has(.manage-price-input.manage-error) {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
 .manage-location-group {
   background: #f9fafb;
   border: 1px solid #e5e7eb;

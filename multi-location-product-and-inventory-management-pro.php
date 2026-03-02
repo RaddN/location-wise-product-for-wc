@@ -6633,6 +6633,44 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return maybe_unserialize($meta_rows_by_post[$post_id][$meta_key][0]);
             };
 
+            $resolve_currency_data = static function ($location_term_id = 0) {
+                $location_term_id = (int) $location_term_id;
+                $settings = function_exists('mulopimfwc_get_currency_settings_for_location')
+                    ? (array) mulopimfwc_get_currency_settings_for_location($location_term_id > 0 ? $location_term_id : null)
+                    : [
+                        'currency' => strtoupper((string) get_option('woocommerce_currency', 'USD')),
+                        'position' => (string) get_option('woocommerce_currency_pos', 'left'),
+                    ];
+
+                $currency_code = strtoupper(trim((string) ($settings['currency'] ?? '')));
+                if ($currency_code === '') {
+                    $currency_code = strtoupper((string) get_option('woocommerce_currency', 'USD'));
+                }
+                if ($currency_code === '') {
+                    $currency_code = 'USD';
+                }
+
+                $currency_position = sanitize_key((string) ($settings['position'] ?? 'left'));
+                if (!in_array($currency_position, ['left', 'right', 'left_space', 'right_space'], true)) {
+                    $currency_position = 'left';
+                }
+
+                $currency_symbol = function_exists('get_woocommerce_currency_symbol')
+                    ? (string) get_woocommerce_currency_symbol($currency_code)
+                    : '';
+                if ($currency_symbol === '') {
+                    $currency_symbol = $currency_code;
+                }
+
+                return [
+                    'currency_code' => $currency_code,
+                    'currency_symbol' => $currency_symbol,
+                    'currency_position' => $currency_position,
+                ];
+            };
+
+            $default_currency_data = $resolve_currency_data(0);
+
             $data = [
                 'product_id' => $product_id,
                 'id' => $product_id,
@@ -6640,6 +6678,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'name' => $product->get_name(),
                 'product_type' => $product_type,
                 'type' => $product_type,
+                'currency_code' => $default_currency_data['currency_code'],
+                'currency_symbol' => $default_currency_data['currency_symbol'],
+                'currency_position' => $default_currency_data['currency_position'],
                 'default' => [],
                 'locations' => [],
                 'variations' => [],
@@ -6660,11 +6701,15 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($available_locations)) {
                 foreach ($available_locations as $location) {
                     $location_id = (int) $location->term_id;
+                    $location_currency_data = $resolve_currency_data($location_id);
                     $data['all_locations'][] = [
                         'id' => $location_id,
                         'name' => (string) $location->name,
                         'parent' => (int) $location->parent,
                         'selected' => isset($assigned_location_lookup[$location_id]),
+                        'currency_code' => $location_currency_data['currency_code'],
+                        'currency_symbol' => $location_currency_data['currency_symbol'],
+                        'currency_position' => $location_currency_data['currency_position'],
                     ];
                 }
             }
@@ -6675,6 +6720,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 }
 
                 $location = $location_lookup[$location_id];
+                $location_currency_data = $resolve_currency_data($location_id);
                 $data['locations'][] = [
                     'id' => $location_id,
                     'name' => (string) $location->name,
@@ -6682,6 +6728,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'regular_price' => $get_cached_meta($product_id, '_location_regular_price_' . $location_id),
                     'sale_price' => $get_cached_meta($product_id, '_location_sale_price_' . $location_id),
                     'backorders' => $get_cached_meta($product_id, '_location_backorders_' . $location_id),
+                    'currency_code' => $location_currency_data['currency_code'],
+                    'currency_symbol' => $location_currency_data['currency_symbol'],
+                    'currency_position' => $location_currency_data['currency_position'],
                 ];
             }
 
@@ -6718,6 +6767,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                         }
 
                         $location = $location_lookup[$location_id];
+                        $location_currency_data = $resolve_currency_data($location_id);
                         $variation_info['locations'][] = [
                             'id' => $location_id,
                             'name' => (string) $location->name,
@@ -6725,6 +6775,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                             'regular_price' => $get_cached_meta($variation_id, '_location_regular_price_' . $location_id),
                             'sale_price' => $get_cached_meta($variation_id, '_location_sale_price_' . $location_id),
                             'backorders' => $get_cached_meta($variation_id, '_location_backorders_' . $location_id),
+                            'currency_code' => $location_currency_data['currency_code'],
+                            'currency_symbol' => $location_currency_data['currency_symbol'],
+                            'currency_position' => $location_currency_data['currency_position'],
                         ];
                     }
 
@@ -7111,16 +7164,41 @@ if (!function_exists('mulopimfwc_get_values')) {
             //     return;
             // }
 
+            $admin_js_version = '1.1.4.11';
+            $admin_js_path = plugin_dir_path(__FILE__) . 'assets/js/admin.js';
+            if (file_exists($admin_js_path)) {
+                $admin_js_version = (string) filemtime($admin_js_path);
+            }
+
+            $admin_css_version = '1.1.4.11';
+            $admin_css_path = plugin_dir_path(__FILE__) . 'assets/css/admin.css';
+            if (file_exists($admin_css_path)) {
+                $admin_css_version = (string) filemtime($admin_css_path);
+            }
+
             wp_enqueue_script(
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/js/admin.js',
                 ['jquery'],
-                '1.1.4.11',
+                $admin_js_version,
                 true
             );
 
+            $default_currency_code = strtoupper((string) get_option('woocommerce_currency', 'USD'));
+            if ($default_currency_code === '') {
+                $default_currency_code = 'USD';
+            }
+            $default_currency_symbol = function_exists('get_woocommerce_currency_symbol')
+                ? (string) get_woocommerce_currency_symbol($default_currency_code)
+                : '';
+            if ($default_currency_symbol === '') {
+                $default_currency_symbol = $default_currency_code;
+            }
+
             wp_localize_script('mulopimfwc-multi-location-product-and-inventory-managements-admin', 'mulopimfwc_locationWiseProducts', [
                 'nonce' => wp_create_nonce('location_wise_products_nonce'),
+                'currencySymbol' => $default_currency_symbol,
+                'currencyCode' => $default_currency_code,
                 'i18n' => [
                     'activate' => __('Activate', 'multi-location-product-and-inventory-management'),
                     'deactivate' => __('Deactivate', 'multi-location-product-and-inventory-management'),
@@ -7135,7 +7213,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'mulopimfwc-multi-location-product-and-inventory-managements-admin',
                 plugin_dir_url(__FILE__) . 'assets/css/admin.css',
                 [],
-                '1.1.4.11'
+                $admin_css_version
             );
         }
 

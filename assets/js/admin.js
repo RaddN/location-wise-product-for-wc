@@ -306,6 +306,90 @@ jQuery(document).ready(function ($) {
         }
     }
 
+    function normalizeCurrencySymbol(symbol) {
+        if (symbol === null || symbol === undefined) {
+            return '';
+        }
+        return String(symbol).trim();
+    }
+
+    function getDefaultCurrencySymbol() {
+        var localizedSymbol = normalizeCurrencySymbol(
+            mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.currencySymbol
+                ? mulopimfwc_locationWiseProducts.currencySymbol
+                : ''
+        );
+        if (localizedSymbol) {
+            return localizedSymbol;
+        }
+
+        if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.currency_format_symbol) {
+            var wcSymbol = normalizeCurrencySymbol(wc_add_to_cart_params.currency_format_symbol);
+            if (wcSymbol) {
+                return wcSymbol;
+            }
+        }
+
+        return '$';
+    }
+
+    function getDefaultCurrencySymbolForData(data) {
+        var dataSymbol = normalizeCurrencySymbol(
+            data && (data.currency_symbol || data.currencySymbol)
+                ? (data.currency_symbol || data.currencySymbol)
+                : ''
+        );
+        if (dataSymbol) {
+            return dataSymbol;
+        }
+        return getDefaultCurrencySymbol();
+    }
+
+    function getLocationCurrencySymbol(location, fallbackSymbol) {
+        var locationSymbol = normalizeCurrencySymbol(
+            location && (location.currency_symbol || location.currencySymbol)
+                ? (location.currency_symbol || location.currencySymbol)
+                : ''
+        );
+        if (locationSymbol) {
+            return locationSymbol;
+        }
+
+        var fallback = normalizeCurrencySymbol(fallbackSymbol);
+        return fallback || getDefaultCurrencySymbol();
+    }
+
+    function getEscapedCurrencySymbol(symbol) {
+        var resolvedSymbol = normalizeCurrencySymbol(symbol) || '$';
+        if (resolvedSymbol.indexOf('&') !== -1) {
+            resolvedSymbol = $('<textarea/>').html(resolvedSymbol).text();
+        }
+        return escapeHtml(resolvedSymbol);
+    }
+
+    function buildManagePriceInput(fieldName, fieldValue, currencySymbol) {
+        var value = (fieldValue === null || fieldValue === undefined) ? '' : String(fieldValue);
+        return '<div class="manage-price-input-wrap">' +
+            '<span class="manage-price-prefix">' + getEscapedCurrencySymbol(currencySymbol) + '</span>' +
+            '<input type="number" class="manage-price-input" name="' + fieldName + '" value="' + escapeHtml(value) + '" min="0" step="0.01">' +
+            '</div>';
+    }
+
+    function normalizeManageLocationRecord(location, fallbackCurrencySymbol) {
+        var source = location || {};
+        var resolvedSymbol = getLocationCurrencySymbol(source, fallbackCurrencySymbol);
+
+        return {
+            id: parseInt(source.id, 10) || 0,
+            name: source.name || '',
+            parent: parseInt(source.parent || 0, 10) || 0,
+            selected: !!source.selected,
+            currency_code: source.currency_code || source.currencyCode || '',
+            currency_symbol: resolvedSymbol,
+            currency_position: source.currency_position || source.currencyPosition || ''
+        };
+    }
+
     function resetManageModalState(productData, allLocations, productId) {
         var assignedLocations = (productData.locations || []).map(function(loc) {
             return $.extend({}, loc);
@@ -323,7 +407,7 @@ jQuery(document).ready(function ($) {
             removedLocationIds: [],
             addedLocationIds: [],
             allLocations: allLocations || [],
-            currencySymbol: '$'
+            currencySymbol: getDefaultCurrencySymbolForData(productData)
         };
     }
 
@@ -398,7 +482,7 @@ jQuery(document).ready(function ($) {
             '<span class="tab-remove" data-location-id="' + location.id + '" title="Remove location">&times;</span>' +
             '</button>';
         $('.manage-tab-add').before(tabBtnHtml);
-        var panelHtml = buildLocationTabContent(location, manageModalState.productData, manageModalState.currencySymbol || '$', tabId);
+        var panelHtml = buildLocationTabContent(location, manageModalState.productData, manageModalState.currencySymbol, tabId);
         $('.manage-product-tab-content').append(panelHtml);
         activateManageTab(tabId);
     }
@@ -523,23 +607,39 @@ jQuery(document).ready(function ($) {
         data.type = data.type || data.product_type || productType || '';
         data.product_type = data.product_type || data.type || productType || '';
         data.default = data.default || {};
-        data.locations = $.isArray(data.locations) ? data.locations : [];
-        data.variations = $.isArray(data.variations) ? data.variations : [];
+        data.currency_symbol = getDefaultCurrencySymbolForData(data);
+        data.currency_code = data.currency_code || data.currencyCode || (mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.currencyCode ? mulopimfwc_locationWiseProducts.currencyCode : '');
+        data.currency_position = data.currency_position || data.currencyPosition || '';
+
+        data.locations = $.isArray(data.locations) ? data.locations.map(function(location) {
+            return $.extend({}, location, normalizeManageLocationRecord(location, data.currency_symbol));
+        }).filter(function(location) {
+            return location.id > 0;
+        }) : [];
+
+        data.variations = $.isArray(data.variations) ? data.variations.map(function(variation) {
+            var normalizedVariation = $.extend({}, variation || {});
+            normalizedVariation.default = normalizedVariation.default || {};
+            normalizedVariation.locations = $.isArray(normalizedVariation.locations)
+                ? normalizedVariation.locations.map(function(location) {
+                    return $.extend({}, location, normalizeManageLocationRecord(location, data.currency_symbol));
+                }).filter(function(location) {
+                    return location.id > 0;
+                })
+                : [];
+            return normalizedVariation;
+        }) : [];
+
         return data;
     }
 
-    function normalizeManageModalLocations(rawLocations) {
+    function normalizeManageModalLocations(rawLocations, fallbackCurrencySymbol) {
         if (!$.isArray(rawLocations)) {
             return [];
         }
 
         return rawLocations.map(function(location) {
-            return {
-                id: parseInt(location.id, 10) || 0,
-                name: location.name || '',
-                parent: parseInt(location.parent || 0, 10) || 0,
-                selected: !!location.selected
-            };
+            return normalizeManageLocationRecord(location, fallbackCurrencySymbol);
         }).filter(function(location) {
             return location.id > 0;
         });
@@ -583,7 +683,7 @@ jQuery(document).ready(function ($) {
                 }
 
                 var normalizedProductData = normalizeManageModalProductData(response.data, productId, productType);
-                var normalizedAllLocations = normalizeManageModalLocations(response.data.all_locations || []);
+                var normalizedAllLocations = normalizeManageModalLocations(response.data.all_locations || [], normalizedProductData.currency_symbol);
 
                 if (!normalizedAllLocations.length && $.isArray(response.data.locations)) {
                     normalizedAllLocations = normalizeManageModalLocations(response.data.locations.map(function(location) {
@@ -591,9 +691,12 @@ jQuery(document).ready(function ($) {
                             id: location.id,
                             name: location.name,
                             parent: location.parent || 0,
-                            selected: true
+                            selected: true,
+                            currency_code: location.currency_code || '',
+                            currency_symbol: location.currency_symbol || normalizedProductData.currency_symbol,
+                            currency_position: location.currency_position || ''
                         };
-                    }));
+                    }), normalizedProductData.currency_symbol);
                 }
 
                 manageModalDataCache[productId] = {
@@ -631,7 +734,8 @@ jQuery(document).ready(function ($) {
                 productType
             );
             var allLocations = normalizeManageModalLocations(
-                allLocationsJson ? (typeof allLocationsJson === 'string' ? JSON.parse(allLocationsJson) : allLocationsJson) : []
+                allLocationsJson ? (typeof allLocationsJson === 'string' ? JSON.parse(allLocationsJson) : allLocationsJson) : [],
+                productData.currency_symbol
             );
             openManageProductModalWithData(productId, productType, $button, productData, allLocations);
         } catch (e) {
@@ -748,10 +852,7 @@ jQuery(document).ready(function ($) {
     
     // Function to show variation-first variable product modal
     function showVariableProductModal(data, allLocations, productId) {
-        var currencySymbol = '$';
-        if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.currency_format_symbol) {
-            currencySymbol = wc_add_to_cart_params.currency_format_symbol;
-        }
+        var currencySymbol = getDefaultCurrencySymbolForData(data);
         if (manageModalState) {
             manageModalState.currencySymbol = currencySymbol;
         }
@@ -1063,7 +1164,10 @@ jQuery(document).ready(function ($) {
                                 stock: '',
                                 regular_price: '',
                                 sale_price: '',
-                                backorders: 'off'
+                                backorders: 'off',
+                                currency_code: location.currency_code || '',
+                                currency_symbol: location.currency_symbol || '',
+                                currency_position: location.currency_position || ''
                             }, currencySymbol, isVariationManageStockEnabled(varId)) +
                             '</div>';
                         
@@ -1224,13 +1328,13 @@ jQuery(document).ready(function ($) {
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][regular_price]" value="' + (variation.default.regular_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Regular Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][regular_price]', variation.default.regular_price || '', currencySymbol));
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][sale_price]" value="' + (variation.default.sale_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Sale Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][sale_price]', variation.default.sale_price || '', currencySymbol));
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
@@ -1243,8 +1347,8 @@ jQuery(document).ready(function ($) {
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_price]" value="' + (variation.default.purchase_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Purchase Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][purchase_price]', variation.default.purchase_price || '', currencySymbol));
         htmlParts.push('</div>');
 
         htmlParts.push('<div class="manage-form-row">');
@@ -1260,6 +1364,7 @@ jQuery(document).ready(function ($) {
     function buildVariationLocationTab(variationId, location, currencySymbol, manageStockEnabled) {
         var htmlParts = [];
         var stockEnabled = typeof manageStockEnabled === 'boolean' ? manageStockEnabled : true;
+        var locationCurrencySymbol = getLocationCurrencySymbol(location, currencySymbol);
         htmlParts.push('<form class="manage-product-form" data-section="variation-location" data-variation-id="' + variationId + '" data-location-id="' + location.id + '">');
         
         htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variationId + '" style="' + (stockEnabled ? '' : 'display:none;') + '">');
@@ -1268,13 +1373,13 @@ jQuery(document).ready(function ($) {
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variationId + '][locations][' + location.id + '][regular_price]" value="' + (location.regular_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Regular Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variationId + '][locations][' + location.id + '][regular_price]', location.regular_price || '', locationCurrencySymbol));
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variationId + '][locations][' + location.id + '][sale_price]" value="' + (location.sale_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Sale Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variationId + '][locations][' + location.id + '][sale_price]', location.sale_price || '', locationCurrencySymbol));
         htmlParts.push('</div>');
         
         htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variationId + '" style="' + (stockEnabled ? '' : 'display:none;') + '">');
@@ -1293,10 +1398,7 @@ jQuery(document).ready(function ($) {
 
     // Function to show manage product tabs modal
     function showManageProductTabs(data, allLocations, productId) {
-        var currencySymbol = '$';
-        if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.currency_format_symbol) {
-            currencySymbol = wc_add_to_cart_params.currency_format_symbol;
-        }
+        var currencySymbol = getDefaultCurrencySymbolForData(data);
         if (manageModalState) {
             manageModalState.currencySymbol = currencySymbol;
         }
@@ -1441,16 +1543,16 @@ jQuery(document).ready(function ($) {
         // Regular Price - not for grouped products
         if (!isGrouped) {
             htmlParts.push('<div class="manage-form-row">');
-            htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
-            htmlParts.push('<input type="number" name="default[regular_price]" value="' + (data.default.regular_price || '') + '" min="0" step="0.01">');
+            htmlParts.push('<label>Regular Price:</label>');
+            htmlParts.push(buildManagePriceInput('default[regular_price]', data.default.regular_price || '', currencySymbol));
             htmlParts.push('</div>');
         }
         
         // Sale Price - not for grouped products
         if (!isGrouped) {
             htmlParts.push('<div class="manage-form-row">');
-            htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
-            htmlParts.push('<input type="number" name="default[sale_price]" value="' + (data.default.sale_price || '') + '" min="0" step="0.01">');
+            htmlParts.push('<label>Sale Price:</label>');
+            htmlParts.push(buildManagePriceInput('default[sale_price]', data.default.sale_price || '', currencySymbol));
             htmlParts.push('</div>');
         }
         
@@ -1469,8 +1571,8 @@ jQuery(document).ready(function ($) {
         // Purchase Price - not for grouped products
         if (!isGrouped) {
             htmlParts.push('<div class="manage-form-row">');
-            htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
-            htmlParts.push('<input type="number" name="default[purchase_price]" value="' + (data.default.purchase_price || '') + '" min="0" step="0.01">');
+            htmlParts.push('<label>Purchase Price:</label>');
+            htmlParts.push(buildManagePriceInput('default[purchase_price]', data.default.purchase_price || '', currencySymbol));
             htmlParts.push('</div>');
         }
         
@@ -1494,6 +1596,7 @@ jQuery(document).ready(function ($) {
         var isGrouped = productType === 'grouped';
         var isExternal = productType === 'external';
         var manageStockEnabled = isManageStockEnabledValue(data.default && data.default.manage_stock);
+        var locationCurrencySymbol = getLocationCurrencySymbol(location, currencySymbol);
         var $defaultManageStock = $('#manage-product-modal input[name="default[manage_stock]"]');
         if ($defaultManageStock.length) {
             manageStockEnabled = $defaultManageStock.is(':checked');
@@ -1514,16 +1617,16 @@ jQuery(document).ready(function ($) {
         // Regular Price - not for grouped products
         if (!isGrouped) {
             htmlParts.push('<div class="manage-form-row">');
-            htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
-            htmlParts.push('<input type="number" name="locations[' + location.id + '][regular_price]" value="' + (location.regular_price || '') + '" min="0" step="0.01">');
+            htmlParts.push('<label>Regular Price:</label>');
+            htmlParts.push(buildManagePriceInput('locations[' + location.id + '][regular_price]', location.regular_price || '', locationCurrencySymbol));
             htmlParts.push('</div>');
         }
         
         // Sale Price - not for grouped products
         if (!isGrouped) {
             htmlParts.push('<div class="manage-form-row">');
-            htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
-            htmlParts.push('<input type="number" name="locations[' + location.id + '][sale_price]" value="' + (location.sale_price || '') + '" min="0" step="0.01">');
+            htmlParts.push('<label>Sale Price:</label>');
+            htmlParts.push(buildManagePriceInput('locations[' + location.id + '][sale_price]', location.sale_price || '', locationCurrencySymbol));
             htmlParts.push('</div>');
         }
         
@@ -1608,12 +1711,12 @@ jQuery(document).ready(function ($) {
         htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][stock_quantity]" value="' + (variation.default.stock_quantity || '') + '" min="0" step="1"' + (manageStockEnabled ? '' : ' disabled') + '>');
         htmlParts.push('</div>');
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][regular_price]" value="' + (variation.default.regular_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Regular Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][regular_price]', variation.default.regular_price || '', currencySymbol));
         htmlParts.push('</div>');
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][sale_price]" value="' + (variation.default.sale_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Sale Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][sale_price]', variation.default.sale_price || '', currencySymbol));
         htmlParts.push('</div>');
         htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
         htmlParts.push('<label>Backorders:</label>');
@@ -1624,8 +1727,8 @@ jQuery(document).ready(function ($) {
         htmlParts.push('</select>');
         htmlParts.push('</div>');
         htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_price]" value="' + (variation.default.purchase_price || '') + '" min="0" step="0.01">');
+        htmlParts.push('<label>Purchase Price:</label>');
+        htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][purchase_price]', variation.default.purchase_price || '', currencySymbol));
         htmlParts.push('</div>');
 
         htmlParts.push('<div class="manage-form-row">');
@@ -1639,6 +1742,7 @@ jQuery(document).ready(function ($) {
             htmlParts.push('<div class="manage-subsection">');
             htmlParts.push('<h4>Location-Wise Settings</h4>');
             variation.locations.forEach(function(location) {
+                var locationCurrencySymbol = getLocationCurrencySymbol(location, currencySymbol);
                 htmlParts.push('<div class="manage-location-group">');
                 htmlParts.push('<h5>' + escapeHtml(location.name) + '</h5>');
                 htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
@@ -1646,12 +1750,12 @@ jQuery(document).ready(function ($) {
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][stock]" value="' + (location.stock || '') + '" min="0" step="1"' + (manageStockEnabled ? '' : ' disabled') + '>');
                 htmlParts.push('</div>');
                 htmlParts.push('<div class="manage-form-row">');
-                htmlParts.push('<label>Regular Price (' + currencySymbol + '):</label>');
-                htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][regular_price]" value="' + (location.regular_price || '') + '" min="0" step="0.01">');
+                htmlParts.push('<label>Regular Price:</label>');
+                htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][locations][' + location.id + '][regular_price]', location.regular_price || '', locationCurrencySymbol));
                 htmlParts.push('</div>');
                 htmlParts.push('<div class="manage-form-row">');
-                htmlParts.push('<label>Sale Price (' + currencySymbol + '):</label>');
-                htmlParts.push('<input type="number" name="variations[' + variation.id + '][locations][' + location.id + '][sale_price]" value="' + (location.sale_price || '') + '" min="0" step="0.01">');
+                htmlParts.push('<label>Sale Price:</label>');
+                htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][locations][' + location.id + '][sale_price]', location.sale_price || '', locationCurrencySymbol));
                 htmlParts.push('</div>');
                 htmlParts.push('<div class="manage-form-row manage-stock-variation-field" data-variation-id="' + variation.id + '" style="' + (manageStockEnabled ? '' : 'display:none;') + '">');
                 htmlParts.push('<label>Backorders:</label>');
@@ -1730,7 +1834,10 @@ jQuery(document).ready(function ($) {
                 stock: '',
                 regular_price: '',
                 sale_price: '',
-                backorders: 'off'
+                backorders: 'off',
+                currency_code: locData.currency_code || '',
+                currency_symbol: locData.currency_symbol || '',
+                currency_position: locData.currency_position || ''
             });
             if (manageModalState.removedLocationIds.indexOf(locId) !== -1) {
                 manageModalState.removedLocationIds = manageModalState.removedLocationIds.filter(function(val) { return val !== locId; });
@@ -2567,10 +2674,7 @@ jQuery(document).ready(function ($) {
         $('body').append(modalHtml);
         $('#quick-edit-modal').show();
 
-        var currencySymbol = '$'; // Default, can be localized
-        if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.currency_format_symbol) {
-            currencySymbol = wc_add_to_cart_params.currency_format_symbol;
-        }
+        var currencySymbol = getDefaultCurrencySymbolForData(data);
 
         // Use array join instead of string concatenation for better performance
         var htmlParts = [];
