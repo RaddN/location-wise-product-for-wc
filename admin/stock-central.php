@@ -812,6 +812,27 @@ class mulopimfwc_Stock_Central
                 font-size: 12px;
             }
 
+            .mulopimfwc-classic-price-input-wrap {
+                position: relative;
+                display: block;
+            }
+
+            .mulopimfwc-classic-price-input-wrap .mulopimfwc-classic-number {
+                padding-right: 10px;
+            }
+
+            .mulopimfwc-classic-price-suffix {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 11px;
+                line-height: 1;
+                color: #6b7280;
+                pointer-events: none;
+                white-space: nowrap;
+            }
+
             .mulopimfwc-classic-location-table th,
             .mulopimfwc-classic-location-table td {
                 padding: 6px !important;
@@ -1119,6 +1140,37 @@ class mulopimfwc_Stock_Central
 
                     function escapeHtml(text) {
                         return $('<div>').text(text || '').html();
+                    }
+
+                    function normalizeClassicCurrencySymbol(symbol) {
+                        var normalized = (symbol || '').toString().trim();
+                        return normalized || '$';
+                    }
+
+                    function getDefaultCurrencySymbolForRow($row) {
+                        if (!$row || !$row.length) {
+                            return normalizeClassicCurrencySymbol('');
+                        }
+
+                        var $wrap = $row.find('.mulopimfwc-classic-add-location-wrap').first();
+                        return normalizeClassicCurrencySymbol($wrap.attr('data-default-currency-symbol'));
+                    }
+
+                    function getOptionCurrencySymbol($option, fallbackSymbol) {
+                        if (!$option || !$option.length) {
+                            return normalizeClassicCurrencySymbol(fallbackSymbol);
+                        }
+
+                        return normalizeClassicCurrencySymbol($option.attr('data-currency-symbol') || fallbackSymbol);
+                    }
+
+                    function buildClassicPriceInput(fieldName, currencySymbol) {
+                        var safeSymbol = escapeHtml(normalizeClassicCurrencySymbol(currencySymbol));
+                        return '' +
+                            '<div class=\"mulopimfwc-classic-price-input-wrap\" data-currency-symbol=\"' + safeSymbol + '\">' +
+                            '<input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"' + fieldName + '\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\">' +
+                            '<span class=\"mulopimfwc-classic-price-suffix\" aria-hidden=\"true\">' + safeSymbol + '</span>' +
+                            '</div>';
                     }
 
                     function parseIds(raw) {
@@ -2044,30 +2096,32 @@ class mulopimfwc_Stock_Central
                         }
                     }
 
-                    function buildProductLocationRow(locationId, locationName, supportsManageStock, rowMode) {
+                    function buildProductLocationRow(locationId, locationName, supportsManageStock, rowMode, currencySymbol) {
                         var disabled = supportsManageStock ? '' : ' disabled=\"disabled\"';
+                        var safeCurrencySymbol = normalizeClassicCurrencySymbol(currencySymbol);
+                        var escapedCurrencySymbol = escapeHtml(safeCurrencySymbol);
                         if (rowMode === 'location_only') {
                             return '' +
-                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\">' +
+                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
                                 '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                                 '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management')); ?>\">&#10005;</button></td>' +
                                 '</tr>';
                         } else if (rowMode === 'price_only') {
                             return '' +
-                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\">' +
+                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
                                 '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
-                                '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"regular_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
-                                '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"sale_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
+                                '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
+                                '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
                                 '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management')); ?>\">&#10005;</button></td>' +
                                 '</tr>';
                         }
 
                         return '' +
-                            '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\">' +
+                            '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
                             '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"' + disabled + '></td>' +
-                            '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"regular_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
-                            '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"sale_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
+                            '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
+                            '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
                             '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\"' + disabled + '>' +
                             '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management')); ?></option>' +
@@ -2077,14 +2131,16 @@ class mulopimfwc_Stock_Central
                             '</tr>';
                     }
 
-                    function buildVariationLocationRow(locationId, locationName, supportsManageStock) {
+                    function buildVariationLocationRow(locationId, locationName, supportsManageStock, currencySymbol) {
                         var includeStockFields = !!supportsManageStock;
+                        var safeCurrencySymbol = normalizeClassicCurrencySymbol(currencySymbol);
+                        var escapedCurrencySymbol = escapeHtml(safeCurrencySymbol);
                         return '' +
-                            '<tr class=\"mulopimfwc-classic-variation-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\">' +
+                            '<tr class=\"mulopimfwc-classic-variation-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
                             '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                             (includeStockFields ? '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"></td>' : '') +
-                            '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"regular_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
-                            '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"sale_price\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"0.01\"></td>' +
+                            '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
+                            '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
                             (includeStockFields ? '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\">' +
                             '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
                             '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management')); ?></option>' +
@@ -2256,6 +2312,7 @@ class mulopimfwc_Stock_Central
                         var $row = $(this).closest('.mulopimfwc-classic-product-row');
                         var hadValidationErrors = rowHasValidationErrors($row);
                         var $select = $row.find('.mulopimfwc-classic-add-location-select').first();
+                        var rowDefaultCurrencySymbol = getDefaultCurrencySymbolForRow($row);
                         var selectedValue = ($select.val() || '').toString();
                         if (!selectedValue) {
                             return;
@@ -2272,9 +2329,11 @@ class mulopimfwc_Stock_Central
                                 if (isNaN(locationId) || locationId <= 0) {
                                     return;
                                 }
+                                var $option = $(this);
                                 locationsToAdd.push({
                                     id: locationId,
-                                    name: $(this).text()
+                                    name: $option.text(),
+                                    currencySymbol: getOptionCurrencySymbol($option, rowDefaultCurrencySymbol)
                                 });
                             });
                         } else {
@@ -2282,9 +2341,11 @@ class mulopimfwc_Stock_Central
                             if (isNaN(locationId) || locationId <= 0) {
                                 return;
                             }
+                            var $selectedOption = $select.find('option:selected');
                             locationsToAdd.push({
                                 id: locationId,
-                                name: $select.find('option:selected').text()
+                                name: $selectedOption.text(),
+                                currencySymbol: getOptionCurrencySymbol($selectedOption, rowDefaultCurrencySymbol)
                             });
                         }
 
@@ -2316,14 +2377,14 @@ class mulopimfwc_Stock_Central
                                 return;
                             }
 
-                            $productTbody.append(buildProductLocationRow(locationData.id, locationData.name, supportsManageStock, rowMode));
+                            $productTbody.append(buildProductLocationRow(locationData.id, locationData.name, supportsManageStock, rowMode, locationData.currencySymbol));
 
                             $variationTables.each(function() {
                                 var $variationTable = $(this);
                                 if ($variationTable.find('.mulopimfwc-classic-variation-location-row[data-location-id=\"' + locationData.id + '\"]').length) {
                                     return;
                                 }
-                                $variationTable.find('tbody').append(buildVariationLocationRow(locationData.id, locationData.name, isStoreManageStockEnabled));
+                                $variationTable.find('tbody').append(buildVariationLocationRow(locationData.id, locationData.name, isStoreManageStockEnabled, locationData.currencySymbol));
                             });
 
                             $select.find('option[value=\"' + locationData.id + '\"]').remove();
@@ -2347,6 +2408,7 @@ class mulopimfwc_Stock_Central
                         var hadValidationErrors = rowHasValidationErrors($row);
                         var locationId = parseInt($locationRow.data('location-id'), 10);
                         var locationName = ($locationRow.data('location-name') || '').toString();
+                        var locationCurrencySymbol = normalizeClassicCurrencySymbol($locationRow.attr('data-currency-symbol') || getDefaultCurrencySymbolForRow($row));
 
                         if (isNaN(locationId) || locationId <= 0) {
                             return;
@@ -2364,7 +2426,7 @@ class mulopimfwc_Stock_Central
 
                         var $select = $row.find('.mulopimfwc-classic-add-location-select').first();
                         if ($select.find('option[value=\"' + locationId + '\"]').length === 0) {
-                            $select.append('<option value=\"' + locationId + '\">' + escapeHtml(locationName) + '</option>');
+                            $select.append('<option value=\"' + locationId + '\" data-currency-symbol=\"' + escapeHtml(locationCurrencySymbol) + '\">' + escapeHtml(locationName) + '</option>');
                         }
                         syncAllLocationsOption($select);
                         applyClassicManageStockVisibility($row);
