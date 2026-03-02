@@ -72,6 +72,7 @@ class MULOPIMFWC_Admin
         add_action('wp_ajax_mulopimfwc_update_location_order', array($this, 'ajax_update_location_order'));
         add_action('wp_ajax_mulopimfwc_toggle_location_status', array($this, 'ajax_toggle_location_status'));
         add_action('wp_ajax_mulopimfwc_save_quick_edit', array($this, 'ajax_save_quick_edit'));
+        add_action('wp_ajax_mulopimfwc_sync_currency_rate', array($this, 'ajax_sync_currency_rate'));
         add_action('quick_edit_custom_box', array($this, 'add_quick_edit_fields'), 10, 3);
         add_action('edited_mulopimfwc_store_location', array($this, 'save_quick_edit_fields'), 10, 2);
         add_action('admin_footer-edit-tags.php', array($this, 'save_quick_edit_on_submit'));
@@ -527,6 +528,199 @@ class MULOPIMFWC_Admin
         })(jQuery);
         ';
         wp_add_inline_script('jquery', $js);
+
+        $rate_sync_config = array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('mulopimfwc_sync_currency_rate'),
+            'defaultCurrency' => $this->get_default_currency_code(),
+            'messages' => array(
+                'syncing' => __('Syncing rate...', 'multi-location-product-and-inventory-management'),
+                'syncFailed' => __('Unable to sync rate. Please try again.', 'multi-location-product-and-inventory-management'),
+            ),
+        );
+
+        $rate_sync_js = <<<'JS'
+(function($){
+    var config = __MULOPIMFWC_RATE_SYNC_CONFIG__;
+    if (!config || typeof config !== "object") {
+        return;
+    }
+
+    function parseAjaxPayload(settings){
+        var payload = { action: "", taxonomy: "" };
+        if (!settings || !settings.data) {
+            return payload;
+        }
+
+        if (typeof settings.data === "string") {
+            try {
+                var params = new URLSearchParams(settings.data);
+                payload.action = params.get("action") || "";
+                payload.taxonomy = params.get("taxonomy") || "";
+            } catch (error) {
+                payload.action = "";
+                payload.taxonomy = "";
+            }
+        } else if (typeof settings.data === "object") {
+            payload.action = settings.data.action || "";
+            payload.taxonomy = settings.data.taxonomy || "";
+        }
+
+        return payload;
+    }
+
+    function setRateStatus($wrap, message, isError){
+        var $status = $wrap.find(".mulopimfwc-currency-rate-status").first();
+        if (!$status.length) {
+            return;
+        }
+
+        if (!message) {
+            $status.text("").hide().css("color", "");
+            return;
+        }
+
+        $status
+            .text(message)
+            .css("color", isError ? "#b32d2e" : "#2271b1")
+            .show();
+    }
+
+    function toggleRateModeState($wrap){
+        var $mode = $wrap.find(".mulopimfwc-currency-rate-mode").first();
+        var $rateInput = $wrap.find(".mulopimfwc-currency-rate-value").first();
+        var $syncButton = $wrap.find(".mulopimfwc-sync-rate").first();
+
+        if (!$mode.length || !$rateInput.length || !$syncButton.length) {
+            return;
+        }
+
+        var modeValue = ($mode.val() || "auto").toString().toLowerCase();
+        var isAuto = modeValue === "auto";
+        var isSyncing = !!$syncButton.data("mulopimfwcSyncing");
+
+        $rateInput.prop("readonly", isAuto);
+        $syncButton.toggle(isAuto);
+
+        if (isSyncing) {
+            $syncButton.prop("disabled", true);
+        } else {
+            $syncButton.prop("disabled", !isAuto);
+        }
+    }
+
+    function syncRate($wrap){
+        var $form = $wrap.closest("form");
+        var $currencySelect = $form.find("#location_currency").first();
+        var $syncButton = $wrap.find(".mulopimfwc-sync-rate").first();
+        var $rateInput = $wrap.find(".mulopimfwc-currency-rate-value").first();
+
+        if (!$syncButton.length || !$rateInput.length) {
+            return;
+        }
+
+        var fromCurrency = (config.defaultCurrency || "USD").toString().toUpperCase();
+        var toCurrency = (($currencySelect.val() || fromCurrency) + "").toUpperCase();
+
+        $syncButton.data("mulopimfwcSyncing", true).addClass("is-busy").prop("disabled", true);
+        setRateStatus($wrap, config.messages.syncing || "", false);
+
+        $.ajax({
+            url: config.ajaxUrl,
+            method: "POST",
+            dataType: "json",
+            data: {
+                action: "mulopimfwc_sync_currency_rate",
+                nonce: config.nonce,
+                from_currency: fromCurrency,
+                to_currency: toCurrency
+            }
+        }).done(function(response){
+            if (response && response.success && response.data && response.data.rate) {
+                var parsedRate = parseFloat(response.data.rate);
+                if (isFinite(parsedRate) && parsedRate > 0) {
+                    var normalized = parsedRate.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+                    $rateInput.val(normalized || "1");
+                    setRateStatus($wrap, response.data.message || "", false);
+                    return;
+                }
+            }
+
+            var failedMessage = config.messages.syncFailed || "Unable to sync rate.";
+            if (response && response.data && response.data.message) {
+                failedMessage = response.data.message;
+            }
+            setRateStatus($wrap, failedMessage, true);
+        }).fail(function(xhr){
+            var failedMessage = config.messages.syncFailed || "Unable to sync rate.";
+            if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                failedMessage = xhr.responseJSON.data.message;
+            }
+            setRateStatus($wrap, failedMessage, true);
+        }).always(function(){
+            $syncButton.data("mulopimfwcSyncing", false).removeClass("is-busy");
+            toggleRateModeState($wrap);
+        });
+    }
+
+    function initRateWrap($wrap){
+        if (!$wrap || !$wrap.length || $wrap.data("mulopimfwcRateInit")) {
+            return;
+        }
+        $wrap.data("mulopimfwcRateInit", true);
+
+        toggleRateModeState($wrap);
+
+        $wrap.on("change", ".mulopimfwc-currency-rate-mode", function(){
+            toggleRateModeState($wrap);
+        });
+
+        $wrap.on("click", ".mulopimfwc-sync-rate", function(event){
+            event.preventDefault();
+            syncRate($wrap);
+        });
+
+        $wrap.closest("form").on("change", "#location_currency", function(){
+            var $mode = $wrap.find(".mulopimfwc-currency-rate-mode").first();
+            var modeValue = ($mode.val() || "auto").toString().toLowerCase();
+
+            if (modeValue !== "auto") {
+                setRateStatus($wrap, "", false);
+                return;
+            }
+
+            syncRate($wrap);
+        });
+    }
+
+    function initAllRateFields(){
+        $(".mulopimfwc-currency-rate-wrap").each(function(){
+            initRateWrap($(this));
+        });
+    }
+
+    $(document).ready(function(){
+        initAllRateFields();
+    });
+
+    $(document).ajaxComplete(function(event, xhr, settings){
+        initAllRateFields();
+
+        var payload = parseAjaxPayload(settings);
+        if (payload.action === "add-tag" && payload.taxonomy === "mulopimfwc_store_location") {
+            $("#addtag .mulopimfwc-currency-rate-wrap").each(function(){
+                var $wrap = $(this);
+                $wrap.find(".mulopimfwc-currency-rate-value").val("1");
+                $wrap.find(".mulopimfwc-currency-rate-mode").val("auto");
+                setRateStatus($wrap, "", false);
+                toggleRateModeState($wrap);
+            });
+        }
+    });
+})(jQuery);
+JS;
+        $rate_sync_js = str_replace('__MULOPIMFWC_RATE_SYNC_CONFIG__', wp_json_encode($rate_sync_config), $rate_sync_js);
+        wp_add_inline_script('jquery', $rate_sync_js);
     }
 
     public function filter_nav_menu_meta_box_object($object)
@@ -745,6 +939,192 @@ class MULOPIMFWC_Admin
         $positions = $this->get_currency_position_options();
 
         return isset($positions[$default_position]) ? $default_position : 'left';
+    }
+
+    private function get_location_rate_mode_options(): array
+    {
+        return array(
+            'auto' => __('Auto', 'multi-location-product-and-inventory-management'),
+            'fixed' => __('Fixed', 'multi-location-product-and-inventory-management'),
+        );
+    }
+
+    private function normalize_location_rate_mode($mode): string
+    {
+        $normalized = sanitize_key((string) $mode);
+        $allowed_modes = array_keys($this->get_location_rate_mode_options());
+
+        return in_array($normalized, $allowed_modes, true) ? $normalized : 'auto';
+    }
+
+    private function format_location_currency_rate_input($rate): string
+    {
+        if (!is_numeric($rate)) {
+            return '';
+        }
+
+        $rate_value = (float) $rate;
+        if ($rate_value <= 0) {
+            return '';
+        }
+
+        $formatted = number_format($rate_value, 6, '.', '');
+        $formatted = rtrim(rtrim($formatted, '0'), '.');
+
+        return $formatted !== '' ? $formatted : '';
+    }
+
+    private function fetch_currency_rate_from_remote(string $from_currency, string $to_currency): ?float
+    {
+        $from_currency = strtoupper(trim($from_currency));
+        $to_currency = strtoupper(trim($to_currency));
+
+        if ($from_currency === '' || $to_currency === '') {
+            return null;
+        }
+
+        if ($from_currency === $to_currency) {
+            return 1.0;
+        }
+
+        $cache_key = 'mulopimfwc_currency_rate_' . strtolower($from_currency . '_' . $to_currency);
+        $cached = get_transient($cache_key);
+        if (is_numeric($cached) && (float) $cached > 0) {
+            return (float) $cached;
+        }
+
+        $request_args = array(
+            'timeout' => 12,
+            'user-agent' => 'MULOPIMFWC/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0'),
+        );
+
+        $sources = array(
+            array(
+                'url' => 'https://open.er-api.com/v6/latest/' . rawurlencode($from_currency),
+                'parser' => static function ($body) use ($to_currency) {
+                    if (!is_array($body) || empty($body['rates']) || !is_array($body['rates'])) {
+                        return null;
+                    }
+                    if (!isset($body['rates'][$to_currency]) || !is_numeric($body['rates'][$to_currency])) {
+                        return null;
+                    }
+
+                    $rate = (float) $body['rates'][$to_currency];
+                    return $rate > 0 ? $rate : null;
+                },
+            ),
+            array(
+                'url' => 'https://www.floatrates.com/daily/' . strtolower($from_currency) . '.json',
+                'parser' => static function ($body) use ($to_currency) {
+                    $target_key = strtolower($to_currency);
+                    if (!is_array($body) || empty($body[$target_key]) || !is_array($body[$target_key])) {
+                        return null;
+                    }
+                    if (!isset($body[$target_key]['rate']) || !is_numeric($body[$target_key]['rate'])) {
+                        return null;
+                    }
+
+                    $rate = (float) $body[$target_key]['rate'];
+                    return $rate > 0 ? $rate : null;
+                },
+            ),
+        );
+
+        foreach ($sources as $source) {
+            $response = wp_safe_remote_get($source['url'], $request_args);
+            if (is_wp_error($response)) {
+                continue;
+            }
+
+            $http_code = (int) wp_remote_retrieve_response_code($response);
+            if ($http_code < 200 || $http_code >= 300) {
+                continue;
+            }
+
+            $body = wp_remote_retrieve_body($response);
+            if (!is_string($body) || $body === '') {
+                continue;
+            }
+
+            $decoded = json_decode($body, true);
+            if (!is_array($decoded)) {
+                continue;
+            }
+
+            $rate = $source['parser']($decoded);
+            if (!is_numeric($rate) || (float) $rate <= 0) {
+                continue;
+            }
+
+            $rate = (float) $rate;
+            set_transient($cache_key, $rate, HOUR_IN_SECONDS);
+            return $rate;
+        }
+
+        return null;
+    }
+
+    public function ajax_sync_currency_rate()
+    {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array(
+                'message' => __('You do not have permission to sync exchange rates.', 'multi-location-product-and-inventory-management'),
+            ), 403);
+        }
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if (!wp_verify_nonce($nonce, 'mulopimfwc_sync_currency_rate')) {
+            wp_send_json_error(array(
+                'message' => __('Invalid request. Please refresh the page and try again.', 'multi-location-product-and-inventory-management'),
+            ), 403);
+        }
+
+        $currencies = $this->get_currency_options();
+        $default_currency = $this->get_default_currency_code();
+
+        $from_currency = isset($_POST['from_currency']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['from_currency']))) : $default_currency;
+        $to_currency = isset($_POST['to_currency']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['to_currency']))) : $default_currency;
+
+        if ($from_currency === '' || !isset($currencies[$from_currency])) {
+            $from_currency = $default_currency;
+        }
+
+        if ($to_currency === '' || !isset($currencies[$to_currency])) {
+            wp_send_json_error(array(
+                'message' => __('Please select a valid target currency first.', 'multi-location-product-and-inventory-management'),
+            ), 400);
+        }
+
+        if ($from_currency === $to_currency) {
+            wp_send_json_success(array(
+                'rate' => '1',
+                'from_currency' => $from_currency,
+                'to_currency' => $to_currency,
+                'message' => sprintf(
+                    __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management'),
+                    $from_currency,
+                    $to_currency
+                ),
+            ));
+        }
+
+        $rate = $this->fetch_currency_rate_from_remote($from_currency, $to_currency);
+        if (!is_numeric($rate) || (float) $rate <= 0) {
+            wp_send_json_error(array(
+                'message' => __('Unable to fetch the latest exchange rate right now. Please try again.', 'multi-location-product-and-inventory-management'),
+            ), 500);
+        }
+
+        wp_send_json_success(array(
+            'rate' => $this->format_location_currency_rate_input($rate),
+            'from_currency' => $from_currency,
+            'to_currency' => $to_currency,
+            'message' => sprintf(
+                __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management'),
+                $from_currency,
+                $to_currency
+            ),
+        ));
     }
 
     /**
@@ -1058,6 +1438,7 @@ class MULOPIMFWC_Admin
             ? ($default_currency_code . ' - ' . $currencies[$default_currency_code])
             : $default_currency_code;
         $default_currency_position = $this->get_default_currency_position();
+        $rate_mode_options = $this->get_location_rate_mode_options();
         ?>
         <div class="form-field">
             <label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management'); ?></label>
@@ -1087,6 +1468,40 @@ class MULOPIMFWC_Admin
                 <?php endforeach; ?>
             </select>
             <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+        </div>
+
+        <div class="form-field">
+            <label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management'); ?></label>
+            <div class="mulopimfwc-currency-rate-wrap" style="display:flex;align-items:center;gap:8px;max-width:430px;">
+                <input
+                    type="number"
+                    name="location_currency_rate"
+                    id="location_currency_rate"
+                    value="1"
+                    min="0.000001"
+                    step="0.000001"
+                    class="mulopimfwc-currency-rate-value"
+                    style="width:140px;" />
+                <select name="location_currency_rate_mode" id="location_currency_rate_mode" class="mulopimfwc-currency-rate-mode" style="width:110px;">
+                    <?php foreach ($rate_mode_options as $mode_key => $mode_label): ?>
+                        <option value="<?php echo esc_attr($mode_key); ?>" <?php selected($mode_key, 'auto'); ?>><?php echo esc_html($mode_label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="button mulopimfwc-sync-rate" title="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" aria-label="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" style="min-width:36px;padding:0 8px;">
+                    <span class="dashicons dashicons-update" style="margin-top:3px;"></span>
+                </button>
+            </div>
+            <p class="description">
+                <?php
+                echo esc_html(
+                    sprintf(
+                        __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management'),
+                        $default_currency_code
+                    )
+                );
+                ?>
+            </p>
+            <p class="description mulopimfwc-currency-rate-status" style="display:none;"></p>
         </div>
 
         <!-- Tax Class -->
@@ -1153,6 +1568,11 @@ class MULOPIMFWC_Admin
         $sel_tax_class = (string) get_term_meta($term->term_id, 'tax_class', true);
         $location_currency = (string) get_term_meta($term->term_id, 'location_currency', true);
         $location_currency_position = (string) get_term_meta($term->term_id, 'location_currency_position', true);
+        $location_currency_rate = $this->format_location_currency_rate_input(get_term_meta($term->term_id, 'location_currency_rate', true));
+        if ($location_currency_rate === '') {
+            $location_currency_rate = '1';
+        }
+        $location_currency_rate_mode = $this->normalize_location_rate_mode(get_term_meta($term->term_id, 'location_currency_rate_mode', true));
 
         $zones        = $this->get_shipping_zones_options();
         $zone_methods = $this->get_shipping_methods_grouped_by_zone();
@@ -1165,6 +1585,7 @@ class MULOPIMFWC_Admin
             ? ($default_currency_code . ' - ' . $currencies[$default_currency_code])
             : $default_currency_code;
         $default_currency_position = $this->get_default_currency_position();
+        $rate_mode_options = $this->get_location_rate_mode_options();
         $location_aliases_text = $this->aliases_to_textarea($location_aliases);
 
         $logo_src = $logo_id ? wp_get_attachment_image_url($logo_id, 'thumbnail') : '';
@@ -1499,6 +1920,42 @@ class MULOPIMFWC_Admin
         </tr>
 
         <tr class="form-field">
+            <th scope="row"><label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <td>
+                <div class="mulopimfwc-currency-rate-wrap" style="display:flex;align-items:center;gap:8px;max-width:430px;">
+                    <input
+                        type="number"
+                        name="location_currency_rate"
+                        id="location_currency_rate"
+                        value="<?php echo esc_attr($location_currency_rate); ?>"
+                        min="0.000001"
+                        step="0.000001"
+                        class="mulopimfwc-currency-rate-value"
+                        style="width:140px;" />
+                    <select name="location_currency_rate_mode" id="location_currency_rate_mode" class="mulopimfwc-currency-rate-mode" style="width:110px;">
+                        <?php foreach ($rate_mode_options as $mode_key => $mode_label): ?>
+                            <option value="<?php echo esc_attr($mode_key); ?>" <?php selected($location_currency_rate_mode, $mode_key); ?>><?php echo esc_html($mode_label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="button" class="button mulopimfwc-sync-rate" title="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" aria-label="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" style="min-width:36px;padding:0 8px;">
+                        <span class="dashicons dashicons-update" style="margin-top:3px;"></span>
+                    </button>
+                </div>
+                <p class="description">
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management'),
+                            $default_currency_code
+                        )
+                    );
+                    ?>
+                </p>
+                <p class="description mulopimfwc-currency-rate-status" style="display:none;"></p>
+            </td>
+        </tr>
+
+        <tr class="form-field">
             <th scope="row"><label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management'); ?></label></th>
             <td>
                 <select name="tax_class" id="tax_class" style="min-width: 220px;">
@@ -1796,6 +2253,22 @@ class MULOPIMFWC_Admin
                 update_term_meta($term_id, 'location_currency_position', $currency_position);
             } else {
                 delete_term_meta($term_id, 'location_currency_position');
+            }
+        }
+
+        if (isset($_POST['location_currency_rate_mode'])) {
+            $rate_mode = $this->normalize_location_rate_mode(wp_unslash($_POST['location_currency_rate_mode']));
+            update_term_meta($term_id, 'location_currency_rate_mode', $rate_mode);
+        }
+
+        if (isset($_POST['location_currency_rate'])) {
+            $raw_rate = str_replace(',', '.', sanitize_text_field(wp_unslash($_POST['location_currency_rate'])));
+            $rate_value = is_numeric($raw_rate) ? (float) $raw_rate : 0.0;
+
+            if ($rate_value > 0) {
+                update_term_meta($term_id, 'location_currency_rate', $this->format_location_currency_rate_input($rate_value));
+            } else {
+                delete_term_meta($term_id, 'location_currency_rate');
             }
         }
 
