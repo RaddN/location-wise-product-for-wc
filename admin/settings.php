@@ -4420,17 +4420,35 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                     : get_option('mulopimfwc_display_options', ['location_switching_behavior' => 'update_cart']);
                 $value = isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart';
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                $allow_mixed = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
+                    ? mulopimfwc_is_mixed_location_cart_enabled($options)
+                    : (isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on');
+                $disabled = $is_manual_mode || $allow_mixed;
+                $default_message = __('How to handle cart contents when a customer changes their location.', 'multi-location-product-and-inventory-management');
+                $mixed_message = __('Disabled because Allow Mixed-Location Cart is enabled. Mixed-location carts keep items from multiple locations, so this behavior is not applied.', 'multi-location-product-and-inventory-management');
+                $manual_note = __('Disabled while Manual, Inventory-Based, or Proximity-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management');
+                $description = $allow_mixed ? $mixed_message : $default_message;
+                $description = $this->append_manual_disabled_note($description);
+
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_switching_behavior', $value);
                 }
-                $disabled_attr = $is_manual_mode ? ' disabled' : '';
+                if (!$is_manual_mode && $allow_mixed) {
+                    echo '<input type="hidden" name="mulopimfwc_display_options[location_switching_behavior]" value="' . esc_attr($value) . '">';
+                }
+
+                $disabled_attr = $disabled ? ' disabled' : '';
         ?>
             <select name="mulopimfwc_display_options[location_switching_behavior]" <?php echo $disabled_attr; ?>>
                 <option value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="update_cart" <?php selected($value, 'update_cart'); ?>><?php echo esc_html_e('Update Cart (Remove unavailable products)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
-            <p class="description"><?php echo esc_html($this->append_manual_disabled_note(__('How to handle cart contents when a customer changes their location.', 'multi-location-product-and-inventory-management'))); ?></p>
+            <p
+                class="description mulopimfwc-location-switching-behavior-description"
+                data-default-message="<?php echo esc_attr($default_message); ?>"
+                data-mixed-message="<?php echo esc_attr($mixed_message); ?>"
+                data-manual-note="<?php echo esc_attr($manual_note); ?>"><?php echo esc_html($description); ?></p>
         <?php
             },
             'location-customer-experience-settings',
@@ -4444,11 +4462,24 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             function () {
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
+                $allow_mixed = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
+                    ? mulopimfwc_is_mixed_location_cart_enabled($options)
+                    : (isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on');
+                $disabled = $is_manual_mode || $allow_mixed;
+                $default_message = __("Display a notification when a customer changes their location.", 'multi-location-product-and-inventory-management');
+                $mixed_message = __('Disabled because Allow Mixed-Location Cart is enabled. Customers can keep items from multiple locations, so no location-change notification is shown.', 'multi-location-product-and-inventory-management');
+                $manual_note = __('Disabled while Manual, Inventory-Based, or Proximity-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management');
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_change_notification', $options['location_change_notification'] ?? 'off');
                 }
-                $message = $this->append_manual_disabled_note(__("Display a notification when a customer changes their location.", 'multi-location-product-and-inventory-management'));
-                $this->render_advance_checkbox("location_change_notification", $message, $is_manual_mode);
+                if (!$is_manual_mode && $allow_mixed) {
+                    echo '<input type="hidden" name="mulopimfwc_display_options[location_change_notification]" value="' . esc_attr($options['location_change_notification'] ?? 'off') . '">';
+                }
+
+                $message = $allow_mixed ? $mixed_message : $default_message;
+                $message = $this->append_manual_disabled_note($message);
+                $this->render_advance_checkbox("location_change_notification", $message, $disabled);
+                echo '<span class="mulopimfwc-location-change-notification-meta" style="display:none;" data-default-message="' . esc_attr($default_message) . '" data-mixed-message="' . esc_attr($mixed_message) . '" data-manual-note="' . esc_attr($manual_note) . '"></span>';
             },
             'location-customer-experience-settings',
             'mulopimfwc_customer_experience_section'

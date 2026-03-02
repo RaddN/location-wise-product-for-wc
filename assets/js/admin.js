@@ -5055,6 +5055,19 @@ jQuery(document).ready(function ($) {
     var $allowLocationChangeInCart = $('input[type="checkbox"][name="mulopimfwc_display_options[allow_location_change_in_cart]"]');
     var $splitOrderByLocation = $('input[type="checkbox"][name="mulopimfwc_display_options[split_order_by_location]"]');
     var $splitOrderUnknownItems = $('select[name="mulopimfwc_display_options[split_order_unknown_items]"]');
+    var $locationSwitchingBehavior = $('select[name="mulopimfwc_display_options[location_switching_behavior]"]');
+    var $locationChangeNotification = $('input[type="checkbox"][name="mulopimfwc_display_options[location_change_notification]"]');
+    var $locationSwitchingBehaviorDescription = $('.mulopimfwc-location-switching-behavior-description').first();
+    var $locationChangeNotificationMeta = $('.mulopimfwc-location-change-notification-meta').first();
+    var $locationChangeNotificationDescription = $locationChangeNotification.closest('td').find('p.description').first();
+
+    var defaultLocationSwitchingDescription = $locationSwitchingBehaviorDescription.data('default-message') || 'How to handle cart contents when a customer changes their location.';
+    var mixedLocationSwitchingDescription = $locationSwitchingBehaviorDescription.data('mixed-message') || 'Disabled because Allow Mixed-Location Cart is enabled. Mixed-location carts keep items from multiple locations, so this behavior is not applied.';
+    var locationSwitchingManualNote = $locationSwitchingBehaviorDescription.data('manual-note') || 'Disabled while Manual, Inventory-Based, or Proximity-Based assignment is enabled without optional selection.';
+
+    var defaultLocationChangeNotificationDescription = $locationChangeNotificationMeta.data('default-message') || 'Display a notification when a customer changes their location.';
+    var mixedLocationChangeNotificationDescription = $locationChangeNotificationMeta.data('mixed-message') || 'Disabled because Allow Mixed-Location Cart is enabled. Customers can keep items from multiple locations, so no location-change notification is shown.';
+    var locationChangeNotificationManualNote = $locationChangeNotificationMeta.data('manual-note') || 'Disabled while Manual, Inventory-Based, or Proximity-Based assignment is enabled without optional selection.';
 
     function getFieldValue($field) {
         if ($field.is(':checkbox')) {
@@ -5162,6 +5175,54 @@ jQuery(document).ready(function ($) {
         }
     }
 
+    function updateDependencyDescription($description, defaultMessage, mixedMessage, manualNote, allowMixed, isManualStrict) {
+        if (!$description.length) {
+            return;
+        }
+
+        var message = allowMixed ? mixedMessage : defaultMessage;
+        if (isManualStrict && manualNote) {
+            message += ' ' + manualNote;
+        }
+        $description.text(message);
+    }
+
+    function toggleMixedLocationCartDependencies(state) {
+        var manualState = state || getManualAssignmentState();
+        var allowMixed = $allowMixedLocationCart.length ? $allowMixedLocationCart.is(':checked') : false;
+        var disableFields = manualState.isManualStrict || allowMixed;
+
+        if ($locationSwitchingBehavior.length) {
+            normalizeHiddenField($locationSwitchingBehavior);
+            setFieldDisabled($locationSwitchingBehavior, disableFields);
+            syncHiddenField($locationSwitchingBehavior, disableFields);
+        }
+
+        if ($locationChangeNotification.length) {
+            normalizeHiddenField($locationChangeNotification);
+            setFieldDisabled($locationChangeNotification, disableFields);
+            syncHiddenField($locationChangeNotification, disableFields);
+        }
+
+        updateDependencyDescription(
+            $locationSwitchingBehaviorDescription,
+            defaultLocationSwitchingDescription,
+            mixedLocationSwitchingDescription,
+            locationSwitchingManualNote,
+            allowMixed,
+            manualState.isManualStrict
+        );
+
+        updateDependencyDescription(
+            $locationChangeNotificationDescription,
+            defaultLocationChangeNotificationDescription,
+            mixedLocationChangeNotificationDescription,
+            locationChangeNotificationManualNote,
+            allowMixed,
+            manualState.isManualStrict
+        );
+    }
+
     function toggleLocationCurrencyDependencies(state) {
         var manualState = state || getManualAssignmentState();
         var locationWiseCurrencyEnabled = $locationWiseCurrency.length ? $locationWiseCurrency.is(':checked') : false;
@@ -5233,6 +5294,7 @@ jQuery(document).ready(function ($) {
         });
 
         toggleLocationCurrencyDependencies(state);
+        toggleMixedLocationCartDependencies(state);
         toggleSplitOrderSettings(state);
     }
 
@@ -5240,7 +5302,10 @@ jQuery(document).ready(function ($) {
     $assignmentSelect.on('change', toggleManualModeSettings);
     $manualOptional.on('change', toggleManualModeSettings);
     $locationWiseCurrency.on('change', toggleManualModeSettings);
-    $allowMixedLocationCart.on('change', toggleSplitOrderSettings);
+    $allowMixedLocationCart.on('change', function () {
+        toggleMixedLocationCartDependencies();
+        toggleSplitOrderSettings();
+    });
     $splitOrderByLocation.on('change', toggleSplitOrderSettings);
 });
 
