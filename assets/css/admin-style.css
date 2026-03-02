@@ -40,6 +40,54 @@
   width: 100%;
 }
 
+.mulopimfwc-currency-prefix-wrap {
+  position: relative;
+  display: block;
+  float: left;
+  width: 50%;
+}
+
+.woocommerce_variations
+  .woocommerce_variation
+  .mulopimfwc-currency-prefix-wrap {
+  width: 100%;
+  float: none;
+}
+
+.woocommerce_variations
+  .woocommerce_variation
+  .location_variation_table
+  .mulopimfwc-currency-prefix-wrap {
+  float: left;
+}
+
+#location_stock_price_options table .mulopimfwc-currency-prefix-wrap {
+  width: 100%;
+}
+
+.mulopimfwc-currency-prefix-wrap input {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.mulopimfwc-currency-prefix-wrap .mulopimfwc-currency-prefix {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.mulopimfwc-currency-prefix-wrap input[type="text"],
+.mulopimfwc-currency-prefix-wrap input[type="number"] {
+  padding-left: 28px !important;
+}
+
 .fixed .column-locations div {
   margin-bottom: 5px; /* Space between location entries */
 }

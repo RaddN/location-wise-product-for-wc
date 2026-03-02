@@ -2,6 +2,42 @@
 if (!defined('ABSPATH')) exit;
 
 
+if (!function_exists('mulopimfwc_get_currency_symbol_for_admin_input')) {
+    /**
+     * Resolve a human-readable currency symbol for admin input prefix display.
+     *
+     * @param int|null $location_term_id Null means default store currency.
+     * @return string
+     */
+    function mulopimfwc_get_currency_symbol_for_admin_input($location_term_id = null)
+    {
+        $currency_code = strtoupper((string) get_option('woocommerce_currency', 'USD'));
+        if ($currency_code === '') {
+            $currency_code = 'USD';
+        }
+
+        if (function_exists('mulopimfwc_get_currency_settings_for_location')) {
+            $settings = (array) mulopimfwc_get_currency_settings_for_location($location_term_id);
+            $resolved_code = strtoupper(trim((string) ($settings['currency'] ?? '')));
+            if ($resolved_code !== '') {
+                $currency_code = $resolved_code;
+            }
+        }
+
+        $currency_symbol = function_exists('get_woocommerce_currency_symbol')
+            ? (string) get_woocommerce_currency_symbol($currency_code)
+            : '';
+
+        if ($currency_symbol === '') {
+            $currency_symbol = $currency_code;
+        }
+
+        $currency_symbol = html_entity_decode($currency_symbol, ENT_QUOTES, get_bloginfo('charset'));
+        return $currency_symbol !== '' ? $currency_symbol : $currency_code;
+    }
+}
+
+
 
 /**
  * Add Purchase Price & Purchase Quantity field to WooCommerce product general tab
@@ -14,6 +50,7 @@ function mulopimfwc_add_purchase_price_field()
 {
     global $post;
     $product = ($post && !empty($post->ID)) ? wc_get_product($post->ID) : null;
+    $default_currency_symbol = mulopimfwc_get_currency_symbol_for_admin_input(null);
 
     // Variable products should use variation-level purchase fields, not parent-level fields.
     if ($product && $product->is_type('variable')) {
@@ -25,14 +62,17 @@ function mulopimfwc_add_purchase_price_field()
     woocommerce_wp_text_input(
         array(
             'id'          => '_purchase_price',
-            'label'       => __('Purchase Price', 'multi-location-product-and-inventory-management') . ' (' . get_woocommerce_currency_symbol() . ')',
+            'label'       => __('Purchase Price', 'multi-location-product-and-inventory-management'),
             'desc_tip'    => true,
             'description' => __('Enter the purchase price for this product.', 'multi-location-product-and-inventory-management'),
             'type'        => 'number',
+            'class'       => 'wc_input_price mulopimfwc-currency-prefix-source',
             'custom_attributes' => array(
                 'step' => 'any',
-                'min'  => '0'
-            )
+                'min'  => '0',
+                'data-currency-symbol' => $default_currency_symbol,
+            ),
+            'wrapper_class' => 'mulopimfwc-currency-prefix-field',
         )
     );
 
@@ -73,19 +113,23 @@ add_action('woocommerce_variation_options_pricing', 'mulopimfwc_add_variation_pu
 
 function mulopimfwc_add_variation_purchase_price_field($loop, $variation_data, $variation)
 {
+    $default_currency_symbol = mulopimfwc_get_currency_symbol_for_admin_input(null);
+
     woocommerce_wp_text_input(
         array(
             'id'            => '_purchase_price[' . $loop . ']',
-            'label'         => __('Purchase Price', 'multi-location-product-and-inventory-management') . ' (' . get_woocommerce_currency_symbol() . ')',
+            'label'         => __('Purchase Price', 'multi-location-product-and-inventory-management'),
             'desc_tip'      => true,
             'description'   => __('Enter the purchase price for this variation.', 'multi-location-product-and-inventory-management'),
             'value'         => get_post_meta($variation->ID, '_purchase_price', true),
             'type'          => 'number',
+            'class'         => 'wc_input_price mulopimfwc-currency-prefix-source',
             'custom_attributes' => array(
                 'step' => 'any',
-                'min'  => '0'
+                'min'  => '0',
+                'data-currency-symbol' => $default_currency_symbol,
             ),
-            'wrapper_class' => 'form-row form-row-first'
+            'wrapper_class' => 'form-row form-row-first mulopimfwc-currency-prefix-field',
         )
     );
 
@@ -168,6 +212,7 @@ add_action('woocommerce_product_data_panels', function () {
                         $regular_price = $product->get_regular_price();
                         $sale_price = $product->get_sale_price();
                         foreach ($mulopimfwc_locations as $location) :
+                            $location_currency_symbol = mulopimfwc_get_currency_symbol_for_admin_input((int) $location->term_id);
                             $location_stock = get_post_meta($post->ID, '_location_stock_' . $location->term_id, true);
                             $location_regular_price = get_post_meta($post->ID, '_location_regular_price_' . $location->term_id, true);
                             $location_sale_price = get_post_meta($post->ID, '_location_sale_price_' . $location->term_id, true);
@@ -175,7 +220,7 @@ add_action('woocommerce_product_data_panels', function () {
                             $location_backorders = get_post_meta($post->ID, '_location_backorders_' . $location->term_id, true);
                         ?>
 
-                            <tr id="location-<?php echo esc_attr($location->term_id); ?>">
+                            <tr id="location-<?php echo esc_attr($location->term_id); ?>" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                                 <td><?php echo esc_html($location->name); ?></td>
                                 <td class="location-stock-quantity">
                                     <input type="number" name="location_stock[<?php echo esc_attr($location->term_id); ?>]"
@@ -183,11 +228,11 @@ add_action('woocommerce_product_data_panels', function () {
                                 </td>
                                 <td>
                                     <input type="text" name="location_regular_price[<?php echo esc_attr($location->term_id); ?>]"
-                                        value="<?php echo esc_attr($location_regular_price ? $location_regular_price : ($location_regular_price === '' ? $regular_price : '')); ?>" class="wc_input_price">
+                                        value="<?php echo esc_attr($location_regular_price ? $location_regular_price : ($location_regular_price === '' ? $regular_price : '')); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                                 </td>
                                 <td>
                                     <input type="text" name="location_sale_price[<?php echo esc_attr($location->term_id); ?>]"
-                                        value="<?php echo esc_attr($location_sale_price ? $location_sale_price : ($location_sale_price === '' ? $sale_price : '')); ?>" class="wc_input_price">
+                                        value="<?php echo esc_attr($location_sale_price ? $location_sale_price : ($location_sale_price === '' ? $sale_price : '')); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                                 </td>
 
                                 <td>
@@ -281,12 +326,13 @@ add_action('woocommerce_product_after_variable_attributes', function ($loop, $va
                 </thead>
                 <tbody>
                     <?php foreach ($mulopimfwc_locations as $location) :
+                        $location_currency_symbol = mulopimfwc_get_currency_symbol_for_admin_input((int) $location->term_id);
                         $location_stock = get_post_meta($variation->ID, '_location_stock_' . $location->term_id, true);
                         $location_regular_price = get_post_meta($variation->ID, '_location_regular_price_' . $location->term_id, true);
                         $location_sale_price = get_post_meta($variation->ID, '_location_sale_price_' . $location->term_id, true);
                         $location_backorders = get_post_meta($variation->ID, '_location_backorders_' . $location->term_id, true);
                     ?>
-                        <tr id="location-<?php echo esc_attr($location->term_id); ?>">
+                        <tr id="location-<?php echo esc_attr($location->term_id); ?>" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                             <td><?php echo esc_html($location->name); ?></td>
                             <td>
                                 <input type="number"
@@ -298,13 +344,15 @@ add_action('woocommerce_product_after_variable_attributes', function ($loop, $va
                                 <input type="text"
                                     name="variation_location_regular_price[<?php echo esc_attr($loop); ?>][<?php echo esc_attr($location->term_id); ?>]"
                                     value="<?php echo esc_attr($location_regular_price); ?>"
-                                    class="wc_input_price short">
+                                    class="wc_input_price short mulopimfwc-currency-prefix-source"
+                                    data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                             </td>
                             <td>
                                 <input type="text"
                                     name="variation_location_sale_price[<?php echo esc_attr($loop); ?>][<?php echo esc_attr($location->term_id); ?>]"
                                     value="<?php echo esc_attr($location_sale_price); ?>"
-                                    class="wc_input_price short">
+                                    class="wc_input_price short mulopimfwc-currency-prefix-source"
+                                    data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
                             </td>
                             <td>
                                 <select name="variation_location_backorders[<?php echo esc_attr($loop); ?>][<?php echo esc_attr($location->term_id); ?>]">

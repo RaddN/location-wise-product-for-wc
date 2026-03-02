@@ -3866,6 +3866,84 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    function normalizeProductEditCurrencySymbol(symbol) {
+        if (symbol === null || symbol === undefined) {
+            return '';
+        }
+        return String(symbol).trim();
+    }
+
+    function getProductEditDefaultCurrencySymbol() {
+        const localizedSymbol = normalizeProductEditCurrencySymbol(
+            window.mulopimfwc_locationWiseProducts && window.mulopimfwc_locationWiseProducts.currencySymbol
+                ? window.mulopimfwc_locationWiseProducts.currencySymbol
+                : ''
+        );
+        if (localizedSymbol) {
+            return localizedSymbol;
+        }
+
+        if (typeof window.wc_add_to_cart_params !== 'undefined' && window.wc_add_to_cart_params.currency_format_symbol) {
+            const wcSymbol = normalizeProductEditCurrencySymbol(window.wc_add_to_cart_params.currency_format_symbol);
+            if (wcSymbol) {
+                return wcSymbol;
+            }
+        }
+
+        return '$';
+    }
+
+    function applyCurrencyPrefixToInput($input, fallbackSymbol) {
+        if (!$input || !$input.length) {
+            return;
+        }
+
+        let symbol = normalizeProductEditCurrencySymbol($input.attr('data-currency-symbol'));
+        if (!symbol) {
+            const $currencyRow = $input.closest('tr[data-currency-symbol]');
+            symbol = normalizeProductEditCurrencySymbol($currencyRow.attr('data-currency-symbol'));
+        }
+        if (!symbol) {
+            symbol = normalizeProductEditCurrencySymbol(fallbackSymbol) || '$';
+        }
+
+        let $wrap = $input.closest('.mulopimfwc-currency-prefix-wrap');
+        if (!$wrap.length) {
+            $input.wrap('<span class="mulopimfwc-currency-prefix-wrap"></span>');
+            $wrap = $input.parent();
+        }
+
+        let $prefix = $wrap.children('.mulopimfwc-currency-prefix').first();
+        if (!$prefix.length) {
+            $prefix = $('<span class="mulopimfwc-currency-prefix" aria-hidden="true"></span>');
+            $wrap.prepend($prefix);
+        }
+
+        $prefix.text(symbol);
+        $wrap.attr('data-currency-symbol', symbol);
+        $input.addClass('mulopimfwc-currency-prefixed');
+    }
+
+    function applyProductEditCurrencyPrefixes() {
+        const fallbackSymbol = getProductEditDefaultCurrencySymbol();
+        const selector = [
+            '#_regular_price',
+            '#_sale_price',
+            '#_purchase_price',
+            'input[name^="variable_regular_price["]',
+            'input[name^="variable_sale_price["]',
+            'input[name^="_purchase_price["]',
+            'input[name^="location_regular_price["]',
+            'input[name^="location_sale_price["]',
+            'input[name^="variation_location_regular_price["]',
+            'input[name^="variation_location_sale_price["]'
+        ].join(', ');
+
+        $(selector).each(function () {
+            applyCurrencyPrefixToInput($(this), fallbackSymbol);
+        });
+    }
+
     // Validation Rules
     const ProductValidator = {
         initialized: false,
@@ -3876,6 +3954,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             this.initialized = true;
             this.bindEvents();
+            applyProductEditCurrencyPrefixes();
             NotificationSystem.init();
         },
 
@@ -3926,6 +4005,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (value > 0) {
                     self.checkManageStock();
                 }
+            });
+
+            $(document.body).on('woocommerce_variations_loaded woocommerce_variations_added', function () {
+                applyProductEditCurrencyPrefixes();
             });
         },
 
