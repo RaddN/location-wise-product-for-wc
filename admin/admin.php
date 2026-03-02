@@ -72,6 +72,8 @@ class MULOPIMFWC_Admin
         add_action('wp_ajax_mulopimfwc_update_location_order', array($this, 'ajax_update_location_order'));
         add_action('wp_ajax_mulopimfwc_toggle_location_status', array($this, 'ajax_toggle_location_status'));
         add_action('wp_ajax_mulopimfwc_save_quick_edit', array($this, 'ajax_save_quick_edit'));
+        add_action('wp_ajax_mulopimfwc_update_location_rate', array($this, 'ajax_update_location_rate'));
+        add_action('wp_ajax_mulopimfwc_sync_location_rate', array($this, 'ajax_sync_location_rate'));
         add_action('wp_ajax_mulopimfwc_sync_currency_rate', array($this, 'ajax_sync_currency_rate'));
         add_action('quick_edit_custom_box', array($this, 'add_quick_edit_fields'), 10, 3);
         add_action('edited_mulopimfwc_store_location', array($this, 'save_quick_edit_fields'), 10, 2);
@@ -972,6 +974,86 @@ JS;
         $formatted = rtrim(rtrim($formatted, '0'), '.');
 
         return $formatted !== '' ? $formatted : '';
+    }
+
+    private function get_effective_location_currency_settings(int $term_id): array
+    {
+        $currencies = $this->get_currency_options();
+
+        $currency = $this->get_default_currency_code();
+        $configured_currency = strtoupper(trim((string) get_term_meta($term_id, 'location_currency', true)));
+        if ($configured_currency !== '' && isset($currencies[$configured_currency])) {
+            $currency = $configured_currency;
+        }
+
+        $position = $this->get_default_currency_position();
+        $configured_position = sanitize_key((string) get_term_meta($term_id, 'location_currency_position', true));
+        if (in_array($configured_position, array_keys($this->get_currency_position_options()), true)) {
+            $position = $configured_position;
+        }
+
+        $symbol = function_exists('get_woocommerce_currency_symbol')
+            ? (string) get_woocommerce_currency_symbol($currency)
+            : '';
+        if ($symbol === '') {
+            $symbol = $currency;
+        }
+
+        $symbol = html_entity_decode($symbol, ENT_QUOTES, get_bloginfo('charset'));
+        if ($symbol === '') {
+            $symbol = $currency;
+        }
+
+        return array(
+            'currency' => $currency,
+            'position' => $position,
+            'symbol' => $symbol,
+        );
+    }
+
+    private function get_location_currency_rate_value_for_term(int $term_id): string
+    {
+        $rate = $this->format_location_currency_rate_input(get_term_meta($term_id, 'location_currency_rate', true));
+
+        return $rate !== '' ? $rate : '1';
+    }
+
+    private function parse_location_currency_rate($raw_rate): ?string
+    {
+        $normalized = str_replace(',', '.', sanitize_text_field((string) $raw_rate));
+        if (!is_numeric($normalized)) {
+            return null;
+        }
+
+        $rate_value = (float) $normalized;
+        if ($rate_value <= 0) {
+            return null;
+        }
+
+        $formatted = $this->format_location_currency_rate_input($rate_value);
+        return $formatted !== '' ? $formatted : null;
+    }
+
+    private function get_location_rate_table_payload(int $term_id): array
+    {
+        $currency_settings = $this->get_effective_location_currency_settings($term_id);
+        $mode = $this->normalize_location_rate_mode(get_term_meta($term_id, 'location_currency_rate_mode', true));
+        $position = (string) $currency_settings['position'];
+        $symbol = (string) $currency_settings['symbol'];
+
+        $prefix = in_array($position, array('left', 'left_space'), true) ? $symbol : '';
+        $suffix = in_array($position, array('right', 'right_space'), true) ? $symbol : '';
+
+        return array(
+            'term_id' => $term_id,
+            'rate' => $this->get_location_currency_rate_value_for_term($term_id),
+            'mode' => $mode,
+            'is_auto' => $mode === 'auto',
+            'currency' => (string) $currency_settings['currency'],
+            'position' => $position,
+            'symbol_prefix' => $prefix,
+            'symbol_suffix' => $suffix,
+        );
     }
 
     private function fetch_currency_rate_from_remote(string $from_currency, string $to_currency): ?float
@@ -2329,8 +2411,8 @@ JS;
             $new_columns['cb'] = $columns['cb'];
         }
 
-        // Add drag handle column
-        $new_columns['drag_handle'] = 'Reorder';
+        // Add actions column (drag + sync)
+        $new_columns['drag_handle'] = __('Actions', 'multi-location-product-and-inventory-management');
 
         // Add other columns
         foreach ($columns as $key => $value) {
@@ -2344,6 +2426,7 @@ JS;
                 $new_columns['status'] = __('Open Status', 'multi-location-product-and-inventory-management');
                 $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
                 $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
+                $new_columns['rate'] = __('Rate', 'multi-location-product-and-inventory-management');
                 $new_columns[$key] = $value;
             } else {
                 $new_columns[$key] = $value;
@@ -2360,7 +2443,10 @@ JS;
     {
         switch ($column_name) {
             case 'drag_handle':
+                echo '<div class="mulopimfwc-actions-cell">';
                 echo '<span class="mulopimfwc-drag-handle dashicons dashicons-menu-alt" data-term-id="' . esc_attr($term_id) . '" style="cursor:move;color:#646970;font-size:18px;vertical-align:middle;" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management') . '"></span>';
+                echo '<button type="button" class="button mulopimfwc-rate-row-sync" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '" aria-label="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '"><span class="dashicons dashicons-update"></span></button>';
+                echo '</div>';
                 break;
             case 'is_active':
                 $is_active = get_term_meta($term_id, 'is_active', true);
@@ -2380,6 +2466,28 @@ JS;
             case 'city':
                 $city = get_term_meta($term_id, 'city', true);
                 echo $city ? esc_html($city) : '—';
+                break;
+
+            case 'rate':
+                $row_data = $this->get_location_rate_table_payload((int) $term_id);
+                $mode_options = $this->get_location_rate_mode_options();
+                echo '<div class="mulopimfwc-rate-cell" data-term-id="' . esc_attr((string) $row_data['term_id']) . '" data-currency="' . esc_attr((string) $row_data['currency']) . '" data-position="' . esc_attr((string) $row_data['position']) . '">';
+                echo '<div class="mulopimfwc-rate-controls">';
+                if ($row_data['symbol_prefix'] !== '') {
+                    echo '<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix">' . esc_html((string) $row_data['symbol_prefix']) . '</span>';
+                }
+                echo '<input type="number" class="mulopimfwc-rate-input" min="0.000001" step="0.000001" value="' . esc_attr((string) $row_data['rate']) . '" />';
+                if ($row_data['symbol_suffix'] !== '') {
+                    echo '<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-suffix">' . esc_html((string) $row_data['symbol_suffix']) . '</span>';
+                }
+                echo '<select class="mulopimfwc-rate-mode">';
+                foreach ($mode_options as $mode_key => $mode_label) {
+                    echo '<option value="' . esc_attr($mode_key) . '" ' . selected((string) $row_data['mode'], (string) $mode_key, false) . '>' . esc_html($mode_label) . '</option>';
+                }
+                echo '</select>';
+                echo '</div>';
+                echo '<div class="mulopimfwc-rate-inline-status" aria-live="polite"></div>';
+                echo '</div>';
                 break;
 
             case 'country':
@@ -2577,7 +2685,7 @@ JS;
                 // Initialize sortable
                 if ($tbody.length) {
                     $tbody.sortable({
-                        handle: ".mulopimfwc-drag-handle, td.column-drag_handle",
+                        handle: ".mulopimfwc-drag-handle",
                         items: "tr:not(.no-items):not(.mulopimfwc-quick-edit-row)",
                         placeholder: "ui-sortable-placeholder",
                         helper: function(e, tr) {
@@ -2820,6 +2928,461 @@ JS;
         </script>
         ';
         echo $js;
+
+        $rate_css = <<<'CSS'
+<style>
+.column-drag_handle {
+    min-width: 130px;
+    width: 130px;
+}
+.column-rate {
+    min-width: 260px;
+}
+.mulopimfwc-actions-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.mulopimfwc-rate-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 240px;
+}
+.mulopimfwc-rate-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.mulopimfwc-rate-symbol {
+    color: #1d2327;
+    font-weight: 600;
+    font-size: 13px;
+}
+.mulopimfwc-rate-input {
+    width: 90px;
+}
+.mulopimfwc-rate-mode {
+    min-width: 86px;
+}
+.mulopimfwc-rate-row-sync {
+    min-width: 34px;
+    padding: 0 7px;
+}
+.mulopimfwc-rate-row-sync .dashicons {
+    margin-top: 3px;
+}
+.mulopimfwc-rate-row-sync.is-loading .dashicons {
+    animation: mulopimfwc-rate-spin 0.9s linear infinite;
+}
+.mulopimfwc-rate-row-sync.is-disabled {
+    opacity: 0.55;
+}
+.mulopimfwc-rate-sync-all {
+    margin-left: 8px;
+    font-size: 12px;
+}
+.mulopimfwc-rate-sync-all.is-loading .dashicons {
+    animation: mulopimfwc-rate-spin 0.9s linear infinite;
+}
+.mulopimfwc-rate-inline-status {
+    min-height: 16px;
+    font-size: 11px;
+    color: #646970;
+}
+.mulopimfwc-rate-inline-status.is-error {
+    color: #b32d2e;
+}
+@keyframes mulopimfwc-rate-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+CSS;
+        echo $rate_css;
+
+        $rate_js_config = array(
+            'nonce' => $ajax_nonce,
+            'messages' => array(
+                'saving' => __('Saving rate...', 'multi-location-product-and-inventory-management'),
+                'saved' => __('Saved', 'multi-location-product-and-inventory-management'),
+                'syncing' => __('Syncing rate...', 'multi-location-product-and-inventory-management'),
+                'synced' => __('Rate synced', 'multi-location-product-and-inventory-management'),
+                'saveFailed' => __('Unable to save rate.', 'multi-location-product-and-inventory-management'),
+                'syncFailed' => __('Unable to sync rate.', 'multi-location-product-and-inventory-management'),
+                'autoOnly' => __('Sync works only in Auto mode.', 'multi-location-product-and-inventory-management'),
+                'syncAll' => __('Sync All', 'multi-location-product-and-inventory-management'),
+                'noAutoRows' => __('No Auto rows found to sync.', 'multi-location-product-and-inventory-management'),
+                'syncAllDone' => __('All Auto rates synced successfully.', 'multi-location-product-and-inventory-management'),
+                'syncAllPartial' => __('Some rates could not be synced. Please check row messages.', 'multi-location-product-and-inventory-management'),
+            ),
+        );
+
+        $rate_js = <<<'JS'
+<script type="text/javascript">
+(function($) {
+    var config = __MULOPIMFWC_RATE_TABLE_CONFIG__;
+    if (!config || typeof config !== 'object') {
+        return;
+    }
+
+    function showTopNotice(type, message) {
+        if (!message) {
+            return;
+        }
+        var cssClass = type === 'error' ? 'notice-error' : (type === 'warning' ? 'notice-warning' : 'notice-success');
+        var $notice = $('<div class="notice ' + cssClass + ' is-dismissible"><p></p></div>');
+        $notice.find('p').text(message);
+        $('.wrap h1').first().after($notice);
+        setTimeout(function() {
+            $notice.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3500);
+    }
+
+    function setInlineStatus($cell, message, isError) {
+        var $status = $cell.find('.mulopimfwc-rate-inline-status').first();
+        if (!$status.length) {
+            return;
+        }
+        if (!message) {
+            $status.text('').removeClass('is-error');
+            return;
+        }
+        $status.text(message);
+        $status.toggleClass('is-error', !!isError);
+    }
+
+    function applyRowPayload($cell, rowData) {
+        if (!rowData || typeof rowData !== 'object') {
+            return;
+        }
+
+        if (rowData.rate) {
+            $cell.find('.mulopimfwc-rate-input').val(rowData.rate);
+        }
+        if (rowData.mode) {
+            $cell.find('.mulopimfwc-rate-mode').val(rowData.mode);
+        }
+
+        var prefix = rowData.symbol_prefix || '';
+        var suffix = rowData.symbol_suffix || '';
+        var $prefix = $cell.find('.mulopimfwc-rate-symbol-prefix');
+        var $suffix = $cell.find('.mulopimfwc-rate-symbol-suffix');
+
+        if (prefix) {
+            if ($prefix.length) {
+                $prefix.text(prefix);
+            } else {
+                $cell.find('.mulopimfwc-rate-controls').prepend(
+                    $('<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix"></span>').text(prefix)
+                );
+            }
+        } else {
+            $prefix.remove();
+        }
+
+        if (suffix) {
+            if ($suffix.length) {
+                $suffix.text(suffix);
+            } else {
+                $cell.find('.mulopimfwc-rate-input').after(
+                    $('<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-suffix"></span>').text(suffix)
+                );
+            }
+        } else {
+            $suffix.remove();
+        }
+    }
+
+    function getRowSyncButton($cell) {
+        var termId = parseInt($cell.data('term-id'), 10) || 0;
+        if (termId <= 0) {
+            return $();
+        }
+
+        var $row = $('#tag-' + termId);
+        if (!$row.length) {
+            $row = $cell.closest('tr');
+        }
+
+        return $row.find('.mulopimfwc-rate-row-sync').first();
+    }
+
+    function toggleSyncButtonState($cell) {
+        var $mode = $cell.find('.mulopimfwc-rate-mode').first();
+        var $sync = getRowSyncButton($cell);
+        if (!$sync.length) {
+            return;
+        }
+        var mode = ($mode.val() || 'auto').toString().toLowerCase();
+        var syncing = !!$sync.data('syncing');
+        var disabled = mode !== 'auto' || syncing;
+
+        $sync.prop('disabled', disabled);
+        $sync.toggleClass('is-disabled', mode !== 'auto');
+    }
+
+    function saveRateCell($cell, options) {
+        options = options || {};
+
+        var termId = parseInt($cell.data('term-id'), 10) || 0;
+        if (termId <= 0) {
+            return $.Deferred().reject().promise();
+        }
+
+        var $input = $cell.find('.mulopimfwc-rate-input').first();
+        var $mode = $cell.find('.mulopimfwc-rate-mode').first();
+        var $sync = getRowSyncButton($cell);
+
+        if (!options.silent) {
+            setInlineStatus($cell, config.messages.saving || '', false);
+        }
+
+        $cell.addClass('is-saving');
+        $input.prop('disabled', true);
+        $mode.prop('disabled', true);
+        $sync.prop('disabled', true);
+
+        return $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'mulopimfwc_update_location_rate',
+                term_id: termId,
+                rate: $input.val(),
+                mode: $mode.val(),
+                nonce: config.nonce
+            }
+        }).done(function(response) {
+            if (response && response.success) {
+                if (response.data && response.data.row) {
+                    applyRowPayload($cell, response.data.row);
+                }
+                if (!options.silent) {
+                    setInlineStatus($cell, (response.data && response.data.message) ? response.data.message : config.messages.saved, false);
+                }
+                return;
+            }
+
+            var message = config.messages.saveFailed;
+            if (response && response.data && response.data.message) {
+                message = response.data.message;
+            }
+            if (response && response.data && response.data.row) {
+                applyRowPayload($cell, response.data.row);
+            }
+            setInlineStatus($cell, message, true);
+        }).fail(function(xhr) {
+            var message = config.messages.saveFailed;
+            if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                message = xhr.responseJSON.data.message;
+            }
+            if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.row) {
+                applyRowPayload($cell, xhr.responseJSON.data.row);
+            }
+            setInlineStatus($cell, message, true);
+        }).always(function() {
+            $cell.removeClass('is-saving');
+            $input.prop('disabled', false);
+            $mode.prop('disabled', false);
+            toggleSyncButtonState($cell);
+        });
+    }
+
+    function syncRateCell($cell, options) {
+        options = options || {};
+
+        var termId = parseInt($cell.data('term-id'), 10) || 0;
+        if (termId <= 0) {
+            return $.Deferred().reject().promise();
+        }
+
+        var $mode = $cell.find('.mulopimfwc-rate-mode').first();
+        var $sync = getRowSyncButton($cell);
+        var modeValue = ($mode.val() || 'auto').toString().toLowerCase();
+
+        if (modeValue !== 'auto') {
+            if (!options.silent) {
+                setInlineStatus($cell, config.messages.autoOnly, true);
+            }
+            return $.Deferred().resolve({ skipped: true }).promise();
+        }
+
+        $sync.data('syncing', true).addClass('is-loading');
+        toggleSyncButtonState($cell);
+
+        if (!options.silent) {
+            setInlineStatus($cell, config.messages.syncing || '', false);
+        }
+
+        return $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'mulopimfwc_sync_location_rate',
+                term_id: termId,
+                nonce: config.nonce
+            }
+        }).done(function(response) {
+            if (response && response.success) {
+                if (response.data && response.data.row) {
+                    applyRowPayload($cell, response.data.row);
+                }
+                if (!options.silent) {
+                    setInlineStatus($cell, (response.data && response.data.message) ? response.data.message : config.messages.synced, false);
+                }
+                return;
+            }
+
+            var message = config.messages.syncFailed;
+            if (response && response.data && response.data.message) {
+                message = response.data.message;
+            }
+            if (response && response.data && response.data.row) {
+                applyRowPayload($cell, response.data.row);
+            }
+            setInlineStatus($cell, message, true);
+        }).fail(function(xhr) {
+            var message = config.messages.syncFailed;
+            if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                message = xhr.responseJSON.data.message;
+            }
+            if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.row) {
+                applyRowPayload($cell, xhr.responseJSON.data.row);
+            }
+            setInlineStatus($cell, message, true);
+        }).always(function() {
+            $sync.data('syncing', false).removeClass('is-loading');
+            toggleSyncButtonState($cell);
+        });
+    }
+
+    function ensureSyncAllButton() {
+        var $header = $('.wp-list-table thead th.column-rate').first();
+        if (!$header.length || $header.find('.mulopimfwc-rate-sync-all').length) {
+            return;
+        }
+
+        var $btn = $('<button type="button" class="button-link mulopimfwc-rate-sync-all"></button>');
+        $btn.append('<span class="dashicons dashicons-update" style="margin-top:3px;"></span> ');
+        $btn.append(document.createTextNode(config.messages.syncAll || 'Sync All'));
+        $header.append($btn);
+    }
+
+    function initRateCells() {
+        ensureSyncAllButton();
+        $('.mulopimfwc-rate-cell').each(function() {
+            toggleSyncButtonState($(this));
+        });
+    }
+
+    $(document).on('change', '.mulopimfwc-rate-input', function() {
+        var $cell = $(this).closest('.mulopimfwc-rate-cell');
+        saveRateCell($cell, { silent: false });
+    });
+
+    $(document).on('keydown', '.mulopimfwc-rate-input', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            $(this).trigger('change');
+        }
+    });
+
+    $(document).on('change', '.mulopimfwc-rate-mode', function() {
+        var $cell = $(this).closest('.mulopimfwc-rate-cell');
+        toggleSyncButtonState($cell);
+
+        saveRateCell($cell, { silent: true }).done(function(response) {
+            var mode = '';
+            if (response && response.success && response.data && response.data.row) {
+                mode = (response.data.row.mode || '').toString().toLowerCase();
+            } else {
+                mode = ($cell.find('.mulopimfwc-rate-mode').val() || '').toString().toLowerCase();
+            }
+
+            if (mode === 'auto') {
+                syncRateCell($cell, { silent: false });
+            }
+        });
+    });
+
+    $(document).on('click', '.mulopimfwc-rate-row-sync', function(e) {
+        e.preventDefault();
+        var termId = parseInt($(this).data('term-id'), 10) || 0;
+        var $cell = termId > 0
+            ? $('#tag-' + termId).find('.mulopimfwc-rate-cell').first()
+            : $(this).closest('tr').find('.mulopimfwc-rate-cell').first();
+        if (!$cell.length) {
+            return;
+        }
+        syncRateCell($cell, { silent: false });
+    });
+
+    $(document).on('click', '.mulopimfwc-rate-sync-all', function(e) {
+        e.preventDefault();
+        var $button = $(this);
+        if ($button.hasClass('is-loading')) {
+            return;
+        }
+
+        var $cells = $('.mulopimfwc-rate-cell').filter(function() {
+            var mode = ($(this).find('.mulopimfwc-rate-mode').val() || '').toString().toLowerCase();
+            return mode === 'auto';
+        });
+
+        if (!$cells.length) {
+            showTopNotice('warning', config.messages.noAutoRows);
+            return;
+        }
+
+        var total = $cells.length;
+        var successCount = 0;
+        var failCount = 0;
+
+        $button.addClass('is-loading').prop('disabled', true);
+
+        var runAt = function(index) {
+            if (index >= total) {
+                $button.removeClass('is-loading').prop('disabled', false);
+                if (failCount === 0) {
+                    showTopNotice('success', config.messages.syncAllDone);
+                } else {
+                    showTopNotice('warning', config.messages.syncAllPartial);
+                }
+                return;
+            }
+
+            syncRateCell($($cells[index]), { silent: true })
+                .done(function(response) {
+                    if (response && response.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                })
+                .fail(function() {
+                    failCount++;
+                })
+                .always(function() {
+                    runAt(index + 1);
+                });
+        };
+
+        runAt(0);
+    });
+
+    $(document).ready(function() {
+        initRateCells();
+    });
+})(jQuery);
+</script>
+JS;
+        $rate_js = str_replace('__MULOPIMFWC_RATE_TABLE_CONFIG__', wp_json_encode($rate_js_config), $rate_js);
+        echo $rate_js;
     }
 
     /**
@@ -2871,6 +3434,100 @@ JS;
 
         $status_text = $status === '1' ? __('Active', 'multi-location-product-and-inventory-management') : __('Inactive', 'multi-location-product-and-inventory-management');
         wp_send_json_success(array('message' => sprintf(__('Location status updated to %s', 'multi-location-product-and-inventory-management'), $status_text)));
+    }
+
+    public function ajax_update_location_rate()
+    {
+        check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')), 403);
+        }
+
+        $term_id = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
+        if ($term_id <= 0) {
+            wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management')), 400);
+        }
+
+        $term = get_term($term_id, 'mulopimfwc_store_location');
+        if (!$term || is_wp_error($term)) {
+            wp_send_json_error(array('message' => __('Location not found.', 'multi-location-product-and-inventory-management')), 404);
+        }
+
+        $mode = isset($_POST['mode'])
+            ? $this->normalize_location_rate_mode(wp_unslash($_POST['mode']))
+            : $this->normalize_location_rate_mode(get_term_meta($term_id, 'location_currency_rate_mode', true));
+        update_term_meta($term_id, 'location_currency_rate_mode', $mode);
+
+        if (isset($_POST['rate'])) {
+            $parsed_rate = $this->parse_location_currency_rate(wp_unslash($_POST['rate']));
+            if ($parsed_rate === null) {
+                wp_send_json_error(array(
+                    'message' => __('Please enter a valid rate greater than 0.', 'multi-location-product-and-inventory-management'),
+                    'row' => $this->get_location_rate_table_payload($term_id),
+                ), 400);
+            }
+            update_term_meta($term_id, 'location_currency_rate', $parsed_rate);
+        }
+
+        wp_send_json_success(array(
+            'message' => __('Rate updated successfully.', 'multi-location-product-and-inventory-management'),
+            'row' => $this->get_location_rate_table_payload($term_id),
+        ));
+    }
+
+    public function ajax_sync_location_rate()
+    {
+        check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')), 403);
+        }
+
+        $term_id = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
+        if ($term_id <= 0) {
+            wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management')), 400);
+        }
+
+        $term = get_term($term_id, 'mulopimfwc_store_location');
+        if (!$term || is_wp_error($term)) {
+            wp_send_json_error(array('message' => __('Location not found.', 'multi-location-product-and-inventory-management')), 404);
+        }
+
+        $mode = $this->normalize_location_rate_mode(get_term_meta($term_id, 'location_currency_rate_mode', true));
+        if ($mode !== 'auto') {
+            wp_send_json_error(array(
+                'message' => __('Sync is available only when mode is Auto.', 'multi-location-product-and-inventory-management'),
+                'row' => $this->get_location_rate_table_payload($term_id),
+            ), 400);
+        }
+
+        $default_currency = $this->get_default_currency_code();
+        $currency_settings = $this->get_effective_location_currency_settings($term_id);
+        $target_currency = strtoupper((string) ($currency_settings['currency'] ?? $default_currency));
+
+        $rate = $this->fetch_currency_rate_from_remote($default_currency, $target_currency);
+        if (!is_numeric($rate) || (float) $rate <= 0) {
+            wp_send_json_error(array(
+                'message' => __('Unable to fetch the latest exchange rate right now. Please try again.', 'multi-location-product-and-inventory-management'),
+                'row' => $this->get_location_rate_table_payload($term_id),
+            ), 500);
+        }
+
+        $formatted_rate = $this->format_location_currency_rate_input($rate);
+        if ($formatted_rate === '') {
+            $formatted_rate = '1';
+        }
+        update_term_meta($term_id, 'location_currency_rate', $formatted_rate);
+
+        wp_send_json_success(array(
+            'message' => sprintf(
+                __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management'),
+                $default_currency,
+                $target_currency
+            ),
+            'row' => $this->get_location_rate_table_payload($term_id),
+        ));
     }
 
     /**
