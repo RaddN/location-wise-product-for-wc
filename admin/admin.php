@@ -30,21 +30,21 @@ class MULOPIMFWC_Admin
         add_filter('manage_edit-shop_order_columns', array($this, 'add_location_column'), 20);
         add_filter('manage_shop_order_posts_columns', array($this, 'add_location_column'), 20);
         add_action('manage_shop_order_posts_custom_column', array($this, 'display_location_column_content'), 20, 2);
-        
+
         // Add query filtering for wc-orders page (HPOS)
         add_filter('woocommerce_shop_order_list_table_prepare_items_query_args', array($this, 'filter_orders_by_location'), 20, 1);
         add_filter('woocommerce_orders_table_query_clauses', array($this, 'filter_orders_query_clauses'), 20, 2);
-        
+
         // Add unassigned orders link to subsubsub menu
         add_filter('views_woocommerce_page_wc-orders', array($this, 'add_unassigned_orders_view'), 20, 1);
-        
+
         // Add metabox to order details
         add_action('add_meta_boxes', array($this, 'add_location_metabox'));
         add_action('woocommerce_process_shop_order_meta', array($this, 'save_location_metabox'), 20, 2);
-        
+
         // AJAX handler for quick location assignment
         add_action('wp_ajax_mulopimfwc_quick_assign_location', array($this, 'ajax_quick_assign_location'));
-        
+
         // Bulk assignment for orders
         add_filter('bulk_actions-edit-shop_order', array($this, 'add_bulk_location_assignment'), 20, 1);
         add_filter('bulk_actions-woocommerce_page_wc-orders', array($this, 'add_bulk_location_assignment'), 20, 1);
@@ -63,7 +63,7 @@ class MULOPIMFWC_Admin
         add_filter('manage_edit-mulopimfwc_store_location_columns', array($this, 'add_location_taxonomy_columns'));
         add_filter('manage_mulopimfwc_store_location_custom_column', array($this, 'add_location_taxonomy_column_content'), 10, 3);
         add_filter('manage_edit-mulopimfwc_store_location_sortable_columns', array($this, 'add_location_taxonomy_sortable_columns'));
-        
+
         // Add row actions and modify term query for ordering
         add_filter('get_terms', array($this, 'order_locations_by_display_order'), 10, 4);
         add_filter('tag_row_actions', array($this, 'add_quick_edit_link'), 10, 2);
@@ -1036,13 +1036,16 @@ JS;
 
     private function get_location_rate_table_payload(int $term_id): array
     {
+        $currencies = $this->get_currency_options();
+        $configured_currency = strtoupper(trim((string) get_term_meta($term_id, 'location_currency', true)));
+        $currency_selected = ($configured_currency !== '' && isset($currencies[$configured_currency])) ? $configured_currency : '';
+
         $currency_settings = $this->get_effective_location_currency_settings($term_id);
         $mode = $this->normalize_location_rate_mode(get_term_meta($term_id, 'location_currency_rate_mode', true));
         $position = (string) $currency_settings['position'];
         $symbol = (string) $currency_settings['symbol'];
 
-        $prefix = in_array($position, array('left', 'left_space'), true) ? $symbol : '';
-        $suffix = in_array($position, array('right', 'right_space'), true) ? $symbol : '';
+        $prefix = $symbol !== '' ? $symbol : (string) $currency_settings['currency'];
 
         return array(
             'term_id' => $term_id,
@@ -1050,9 +1053,10 @@ JS;
             'mode' => $mode,
             'is_auto' => $mode === 'auto',
             'currency' => (string) $currency_settings['currency'],
+            'currency_selected' => $currency_selected,
             'position' => $position,
             'symbol_prefix' => $prefix,
-            'symbol_suffix' => $suffix,
+            'symbol_suffix' => '',
         );
     }
 
@@ -1402,7 +1406,7 @@ JS;
 
                 <table class="form-table" style="width:auto;border-collapse:collapse;">
                     <tbody>
-                        <?php foreach ($def['days'] as $key => $vals): 
+                        <?php foreach ($def['days'] as $key => $vals):
                             // Determine default selection (custom is default if neither closed nor all_day)
                             $default_mode = (!empty($vals['closed']) ? 'closed' : (!empty($vals['all_day']) ? 'all_day' : 'custom'));
                         ?>
@@ -1434,24 +1438,24 @@ JS;
                     </tbody>
                 </table>
                 <script type="text/javascript">
-                (function($){
-                    $(document).ready(function(){
-                        $('.mulopimfwc-bh-mode').on('change', function(){
-                            var day = $(this).data('day');
-                            var mode = $(this).val();
-                            var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
-                            
-                            if(mode === 'custom'){
-                                $times.show();
-                            } else {
-                                $times.hide();
-                            }
+                    (function($) {
+                        $(document).ready(function() {
+                            $('.mulopimfwc-bh-mode').on('change', function() {
+                                var day = $(this).data('day');
+                                var mode = $(this).val();
+                                var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
+
+                                if (mode === 'custom') {
+                                    $times.show();
+                                } else {
+                                    $times.hide();
+                                }
+                            });
+
+                            // Trigger on page load to set initial state
+                            $('.mulopimfwc-bh-mode:checked').trigger('change');
                         });
-                        
-                        // Trigger on page load to set initial state
-                        $('.mulopimfwc-bh-mode:checked').trigger('change');
-                    });
-                })(jQuery);
+                    })(jQuery);
                 </script>
             </div>
         </div>
@@ -1839,7 +1843,7 @@ JS;
 
                     <table class="form-table" style="width:auto;border-collapse:collapse;">
                         <tbody>
-                            <?php foreach ($bh['days'] as $key => $vals): 
+                            <?php foreach ($bh['days'] as $key => $vals):
                                 // Determine current selection (closed, all_day, or custom)
                                 $current_mode = (!empty($vals['closed']) ? 'closed' : (!empty($vals['all_day']) ? 'all_day' : 'custom'));
                             ?>
@@ -1871,24 +1875,24 @@ JS;
                         </tbody>
                     </table>
                     <script type="text/javascript">
-                    (function($){
-                        $(document).ready(function(){
-                            $('.mulopimfwc-bh-mode').on('change', function(){
-                                var day = $(this).data('day');
-                                var mode = $(this).val();
-                                var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
-                                
-                                if(mode === 'custom'){
-                                    $times.show();
-                                } else {
-                                    $times.hide();
-                                }
+                        (function($) {
+                            $(document).ready(function() {
+                                $('.mulopimfwc-bh-mode').on('change', function() {
+                                    var day = $(this).data('day');
+                                    var mode = $(this).val();
+                                    var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
+
+                                    if (mode === 'custom') {
+                                        $times.show();
+                                    } else {
+                                        $times.hide();
+                                    }
+                                });
+
+                                // Trigger on page load to set initial state
+                                $('.mulopimfwc-bh-mode:checked').trigger('change');
                             });
-                            
-                            // Trigger on page load to set initial state
-                            $('.mulopimfwc-bh-mode:checked').trigger('change');
-                        });
-                    })(jQuery);
+                        })(jQuery);
                     </script>
                 </div>
             </td>
@@ -2073,7 +2077,7 @@ JS;
                 <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management'); ?></p>
             </td>
         </tr>
-<?php
+    <?php
     }
 
     /**
@@ -2212,10 +2216,10 @@ JS;
             $keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
             foreach ($keys as $k) {
                 $row = isset($raw['days'][$k]) ? (array) $raw['days'][$k] : [];
-                
+
                 // Get the mode from radio button (closed, all_day, or custom)
                 $mode = isset($row['mode']) ? sanitize_text_field($row['mode']) : 'custom';
-                
+
                 // Set closed and all_day based on mode
                 $closed = ($mode === 'closed') ? 1 : 0;
                 $all_day = ($mode === 'all_day') ? 1 : 0;
@@ -2411,7 +2415,7 @@ JS;
             $new_columns['cb'] = $columns['cb'];
         }
 
-        // Add actions column (drag + sync)
+        // Add actions column (drag + visibility + sync)
         $new_columns['drag_handle'] = __('Actions', 'multi-location-product-and-inventory-management');
 
         // Add other columns
@@ -2421,9 +2425,7 @@ JS;
             }
             if ($key === 'name') {
                 $new_columns[$key] = $value;
-                $new_columns['is_active'] = __('Status', 'multi-location-product-and-inventory-management');
             } elseif ($key === 'slug') {
-                $new_columns['status'] = __('Open Status', 'multi-location-product-and-inventory-management');
                 $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
                 $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
                 $new_columns['rate'] = __('Rate', 'multi-location-product-and-inventory-management');
@@ -2443,46 +2445,56 @@ JS;
     {
         switch ($column_name) {
             case 'drag_handle':
-                echo '<div class="mulopimfwc-actions-cell">';
-                echo '<span class="mulopimfwc-drag-handle dashicons dashicons-menu-alt" data-term-id="' . esc_attr($term_id) . '" style="cursor:move;color:#646970;font-size:18px;vertical-align:middle;" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management') . '"></span>';
-                echo '<button type="button" class="button mulopimfwc-rate-row-sync" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '" aria-label="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '"><span class="dashicons dashicons-update"></span></button>';
-                echo '</div>';
-                break;
-            case 'is_active':
                 $is_active = get_term_meta($term_id, 'is_active', true);
                 $is_active = ($is_active === '' || $is_active === '1' || $is_active === true) ? '1' : '0';
-                $status_class = $is_active === '1' ? 'active' : 'inactive';
-                $status_text = $is_active === '1' ? __('Active', 'multi-location-product-and-inventory-management') : __('Inactive', 'multi-location-product-and-inventory-management');
-                echo '<span class="mulopimfwc-status-toggle ' . esc_attr($status_class) . '" data-term-id="' . esc_attr($term_id) . '" data-status="' . esc_attr($is_active) . '" style="cursor:pointer;display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:500;color:#fff;background:' . ($is_active === '1' ? '#16a34a' : '#dc2626') . ';">' . esc_html($status_text) . '</span>';
-                break;
-            case 'status':
-                echo $this->render_status_badge($term_id);
+                $toggle_class = $is_active === '1' ? 'is-active' : 'is-inactive';
+                $toggle_icon = $is_active === '1' ? 'dashicons-visibility' : 'dashicons-hidden';
+                $toggle_label = $is_active === '1'
+                    ? __('Mark as inactive', 'multi-location-product-and-inventory-management')
+                    : __('Mark as active', 'multi-location-product-and-inventory-management');
+                $open_state = $this->is_location_open_now($term_id);
+                $open_key = !empty($open_state['open']) ? 'open' : 'closed';
+
+                echo '<div class="mulopimfwc-actions-cell" data-open-state="' . esc_attr($open_key) . '">';
+                echo '<span class="mulopimfwc-drag-handle dashicons dashicons-menu-alt" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management') . '"></span>';
+                echo '<button type="button" class="button mulopimfwc-action-btn mulopimfwc-visibility-toggle ' . esc_attr($toggle_class) . '" data-term-id="' . esc_attr($term_id) . '" data-status="' . esc_attr($is_active) . '" title="' . esc_attr($toggle_label) . '" aria-label="' . esc_attr($toggle_label) . '" aria-pressed="' . ($is_active === '1' ? 'true' : 'false') . '"><span class="dashicons ' . esc_attr($toggle_icon) . '" aria-hidden="true"></span></button>';
+                echo '<button type="button" class="button mulopimfwc-action-btn mulopimfwc-rate-row-sync" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '" aria-label="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '"><span class="dashicons dashicons-update"></span></button>';
+                echo '</div>';
                 break;
             case 'display_order':
                 $display_order = get_term_meta($term_id, 'display_order', true);
-                echo $display_order ? esc_html($display_order) : '—';
+                echo $display_order ? esc_html($display_order) : '&mdash;';
                 break;
 
             case 'city':
                 $city = get_term_meta($term_id, 'city', true);
-                echo $city ? esc_html($city) : '—';
+                echo $city ? esc_html($city) : '&mdash;';
                 break;
 
             case 'rate':
                 $row_data = $this->get_location_rate_table_payload((int) $term_id);
                 $mode_options = $this->get_location_rate_mode_options();
+                $currency_options = $this->get_currency_options();
+                $default_currency = $this->get_default_currency_code();
+                $selected_currency = isset($row_data['currency_selected']) ? (string) $row_data['currency_selected'] : '';
                 echo '<div class="mulopimfwc-rate-cell" data-term-id="' . esc_attr((string) $row_data['term_id']) . '" data-currency="' . esc_attr((string) $row_data['currency']) . '" data-position="' . esc_attr((string) $row_data['position']) . '">';
                 echo '<div class="mulopimfwc-rate-controls">';
-                if ($row_data['symbol_prefix'] !== '') {
-                    echo '<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix">' . esc_html((string) $row_data['symbol_prefix']) . '</span>';
-                }
+                echo '<button type="button" class="button mulopimfwc-rate-currency-trigger" aria-label="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management') . '" title="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management') . '">';
+                echo '<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix">' . esc_html((string) $row_data['symbol_prefix']) . '</span>';
+                echo '<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>';
+                echo '</button>';
                 echo '<input type="number" class="mulopimfwc-rate-input" min="0.000001" step="0.000001" value="' . esc_attr((string) $row_data['rate']) . '" />';
-                if ($row_data['symbol_suffix'] !== '') {
-                    echo '<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-suffix">' . esc_html((string) $row_data['symbol_suffix']) . '</span>';
-                }
                 echo '<select class="mulopimfwc-rate-mode">';
                 foreach ($mode_options as $mode_key => $mode_label) {
                     echo '<option value="' . esc_attr($mode_key) . '" ' . selected((string) $row_data['mode'], (string) $mode_key, false) . '>' . esc_html($mode_label) . '</option>';
+                }
+                echo '</select>';
+                echo '</div>';
+                echo '<div class="mulopimfwc-rate-currency-popover" aria-hidden="true">';
+                echo '<select class="mulopimfwc-rate-currency" aria-label="' . esc_attr__('Currency', 'multi-location-product-and-inventory-management') . '">';
+                echo '<option value="" ' . selected($selected_currency, '', false) . '>' . esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $default_currency)) . '</option>';
+                foreach ($currency_options as $currency_code => $currency_name) {
+                    echo '<option value="' . esc_attr((string) $currency_code) . '" ' . selected($selected_currency, (string) $currency_code, false) . '>' . esc_html($currency_code . ' - ' . $currency_name) . '</option>';
                 }
                 echo '</select>';
                 echo '</div>';
@@ -2492,7 +2504,7 @@ JS;
 
             case 'country':
                 $country = get_term_meta($term_id, 'country', true);
-                echo $country ? esc_html($country) : '—';
+                echo $country ? esc_html($country) : '&mdash;';
                 break;
         }
 
@@ -2552,14 +2564,14 @@ JS;
 
         // Sort terms by display_order
         if (!empty($terms) && !is_wp_error($terms)) {
-            usort($terms, function($a, $b) {
+            usort($terms, function ($a, $b) {
                 $order_a = (int) get_term_meta($a->term_id, 'display_order', true);
                 $order_b = (int) get_term_meta($b->term_id, 'display_order', true);
-                
+
                 if ($order_a === $order_b) {
                     return strcmp($a->name, $b->name);
                 }
-                
+
                 return ($order_a < $order_b) ? -1 : 1;
             });
         }
@@ -2579,7 +2591,7 @@ JS;
 
         // Enqueue jQuery UI Sortable
         wp_enqueue_script('jquery-ui-sortable');
-        
+
         // Add inline CSS
         $css = '
         <style>
@@ -2587,30 +2599,64 @@ JS;
             cursor: move !important;
             color: #646970;
             font-size: 18px;
+            line-height: 1;
             vertical-align: middle;
         }
         .mulopimfwc-drag-handle:hover {
-            color: #2271b1;
+            color: #1d4ed8;
         }
-        .mulopimfwc-status-toggle {
-            cursor: pointer;
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            color: #fff;
-            transition: all 0.2s ease;
+        .mulopimfwc-action-btn {
+            min-width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            border-color: #c3c4c7 !important;
+            box-shadow: none !important;
+            transition: all 0.18s ease;
         }
-        .mulopimfwc-status-toggle:hover {
-            opacity: 0.9;
-            transform: scale(1.05);
+        .mulopimfwc-action-btn .dashicons {
+            width: 16px;
+            height: 16px;
+            font-size: 16px;
+            line-height: 16px;
         }
-        .mulopimfwc-status-toggle.active {
-            background: #16a34a;
+        .mulopimfwc-action-btn:hover,
+        .mulopimfwc-action-btn:focus {
+            border-color: #2271b1 !important;
+            color: #2271b1 !important;
         }
-        .mulopimfwc-status-toggle.inactive {
-            background: #dc2626;
+        .mulopimfwc-visibility-toggle.is-active {
+            color: #2271b1 !important;
+            background: #f0f6fc !important;
+        }
+        .mulopimfwc-visibility-toggle.is-inactive {
+            color: #8c8f94 !important;
+            background: #f6f7f7 !important;
+        }
+        .mulopimfwc-visibility-toggle.is-loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .mulopimfwc-name-open-badge {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.5;
+            vertical-align: middle;
+        }
+        .mulopimfwc-name-open-badge.is-open {
+            color: #166534;
+            background: #dcfce7;
+        }
+        .mulopimfwc-name-open-badge.is-closed {
+            color: #b91c1c;
+            background: #fee2e2;
         }
         #the-list.ui-sortable tr {
             cursor: move;
@@ -2626,7 +2672,13 @@ JS;
             border: 2px dashed #c3c4c7;
             visibility: visible !important;
         }
-        /* Custom fields in WordPress quick edit */
+        #the-list tr.mulopimfwc-location-inactive > th,
+        #the-list tr.mulopimfwc-location-inactive > td {
+            opacity: 0.55;
+        }
+        #the-list tr.mulopimfwc-location-inactive > td.column-drag_handle {
+            opacity: 1;
+        }
         .inline-edit-col-right .inline-edit-col {
             margin-bottom: 10px;
         }
@@ -2647,10 +2699,10 @@ JS;
         .mulopimfwc-location-id {
             color: #646970;
             font-weight: normal;
-            display:none;
+            display: none;
         }
         .taxonomy-mulopimfwc_store_location table.wp-list-table tr:hover .mulopimfwc-location-id {
-            display:inline;
+            display: inline;
         }
         </style>
         ';
@@ -2663,23 +2715,83 @@ JS;
         (function($) {
             $(document).ready(function() {
                 var $tbody = $("#the-list");
-                
-                // Add data-term-id to all rows and inject styled location ID in Name column
-                $tbody.find("tr").each(function() {
-                    var $row = $(this);
-                    var rowId = $row.attr("id");
-                    if (rowId && rowId.indexOf("tag-") === 0) {
-                        var termId = rowId.replace("tag-", "");
-                        $row.attr("data-term-id", termId);
-                        // Also add to drag handle if it exists
-                        $row.find(".mulopimfwc-drag-handle").attr("data-term-id", termId);
-                        // Insert styled location ID before row-actions in Name column
-                        var $nameCell = $row.find("td.column-name");
-                        var $rowActions = $nameCell.find(".row-actions");
-                        if ($nameCell.length && $rowActions.length && !$nameCell.find(".mulopimfwc-location-id").length) {
-                            $rowActions.before(" <span class=\"mulopimfwc-location-id\">ID: " + termId + "</span>");
-                        }
+                var openLabel = "' . esc_js(__('Open', 'multi-location-product-and-inventory-management')) . '";
+                var closedLabel = "' . esc_js(__('Closed', 'multi-location-product-and-inventory-management')) . '";
+                var markActiveLabel = "' . esc_js(__('Mark as active', 'multi-location-product-and-inventory-management')) . '";
+                var markInactiveLabel = "' . esc_js(__('Mark as inactive', 'multi-location-product-and-inventory-management')) . '";
+
+                function normalizeStatus(value) {
+                    var normalized = String(value === undefined || value === null ? "" : value);
+                    return normalized === "1" ? "1" : "0";
+                }
+
+                function updateNameOpenBadge($row) {
+                    var $actionsCell = $row.find(".mulopimfwc-actions-cell").first();
+                    var openState = String($actionsCell.attr("data-open-state") || "").toLowerCase();
+                    if (openState !== "open" && openState !== "closed") {
+                        return;
                     }
+
+                    var $title = $row.find("td.column-name .row-title").first();
+                    if (!$title.length) {
+                        return;
+                    }
+
+                    $row.find(".mulopimfwc-name-open-badge").remove();
+                    $("<span/>", {
+                        "class": "mulopimfwc-name-open-badge " + (openState === "open" ? "is-open" : "is-closed"),
+                        text: openState === "open" ? openLabel : closedLabel
+                    }).insertAfter($title);
+                }
+
+                function applyVisibilityState($toggle, statusValue) {
+                    var normalized = normalizeStatus(statusValue);
+                    var isActive = normalized === "1";
+                    var $icon = $toggle.find(".dashicons").first();
+                    var $row = $toggle.closest("tr");
+
+                    $toggle.attr("data-status", normalized).data("status", normalized);
+                    $toggle.attr("aria-pressed", isActive ? "true" : "false");
+                    $toggle.attr("title", isActive ? markInactiveLabel : markActiveLabel);
+                    $toggle.attr("aria-label", isActive ? markInactiveLabel : markActiveLabel);
+                    $toggle.toggleClass("is-active", isActive).toggleClass("is-inactive", !isActive);
+
+                    if ($icon.length) {
+                        $icon.removeClass("dashicons-visibility dashicons-hidden");
+                        $icon.addClass(isActive ? "dashicons-visibility" : "dashicons-hidden");
+                    }
+
+                    if ($row.length) {
+                        $row.toggleClass("mulopimfwc-location-inactive", !isActive);
+                    }
+                }
+
+                function initializeLocationRow($row) {
+                    var rowId = $row.attr("id") || "";
+                    if (rowId.indexOf("tag-") !== 0) {
+                        return;
+                    }
+
+                    var termId = rowId.replace("tag-", "");
+                    $row.attr("data-term-id", termId);
+                    $row.find(".mulopimfwc-drag-handle").attr("data-term-id", termId);
+
+                    var $nameCell = $row.find("td.column-name");
+                    var $rowActions = $nameCell.find(".row-actions");
+                    if ($nameCell.length && $rowActions.length && !$nameCell.find(".mulopimfwc-location-id").length) {
+                        $rowActions.before(" <span class=\"mulopimfwc-location-id\">ID: " + termId + "</span>");
+                    }
+
+                    updateNameOpenBadge($row);
+
+                    var $toggle = $row.find(".mulopimfwc-visibility-toggle").first();
+                    if ($toggle.length) {
+                        applyVisibilityState($toggle, $toggle.attr("data-status"));
+                    }
+                }
+
+                $tbody.find("tr").each(function() {
+                    initializeLocationRow($(this));
                 });
                 
                 // Initialize sortable
@@ -2765,14 +2877,13 @@ JS;
                 }
 
                 // Toggle active/inactive status
-                $(document).on("click", ".mulopimfwc-status-toggle", function(e) {
+                $(document).on("click", ".mulopimfwc-visibility-toggle", function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     var $toggle = $(this);
                     var termId = $toggle.data("term-id");
-                    var currentStatus = String($toggle.data("status") || $toggle.attr("data-status") || "1");
-                    // Toggle: if current is "1", make it "0", otherwise make it "1"
-                    var newStatus = (currentStatus === "1" || currentStatus === 1) ? "0" : "1";
+                    var currentStatus = normalizeStatus($toggle.data("status") || $toggle.attr("data-status"));
+                    var newStatus = currentStatus === "1" ? "0" : "1";
                     
                     if (!termId) {
                         console.error("Term ID not found");
@@ -2789,31 +2900,20 @@ JS;
                             nonce: "' . esc_js($ajax_nonce) . '"
                         },
                         beforeSend: function() {
-                            $toggle.css("opacity", "0.5").css("pointer-events", "none");
+                            $toggle.addClass("is-loading");
                         },
                         success: function(response) {
                             if (response.success) {
-                                // Update the data attribute
-                                $toggle.attr("data-status", newStatus).data("status", newStatus);
-                                
-                                if (newStatus === "1") {
-                                    $toggle.removeClass("inactive").addClass("active");
-                                    $toggle.css("background", "#16a34a");
-                                    $toggle.text("' . esc_js(__('Active', 'multi-location-product-and-inventory-management')) . '");
-                                } else {
-                                    $toggle.removeClass("active").addClass("inactive");
-                                    $toggle.css("background", "#dc2626");
-                                    $toggle.text("' . esc_js(__('Inactive', 'multi-location-product-and-inventory-management')) . '");
-                                }
+                                applyVisibilityState($toggle, newStatus);
                             } else {
                                 alert(response.data.message || "Error updating status");
                             }
-                            $toggle.css("opacity", "1").css("pointer-events", "auto");
+                            $toggle.removeClass("is-loading");
                         },
                         error: function(xhr, status, error) {
                             console.error("AJAX error:", error);
                             alert("Error updating status. Please try again.");
-                            $toggle.css("opacity", "1").css("pointer-events", "auto");
+                            $toggle.removeClass("is-loading");
                         }
                     });
                 });
@@ -2842,7 +2942,7 @@ JS;
                     
                     // Get current values from the row
                     var $row = $("#tag-" + termId);
-                    var $statusToggle = $row.find(".mulopimfwc-status-toggle");
+                    var $statusToggle = $row.find(".mulopimfwc-visibility-toggle");
                     // Get status from data attribute or HTML attribute (handle "0" properly)
                     var isActive = $statusToggle.attr("data-status") || $statusToggle.data("status");
                     // If status is undefined, null, or empty, default to "1", otherwise use the actual value
@@ -2856,7 +2956,7 @@ JS;
                     var $orderCell = $row.find("td.column-display_order");
                     if ($orderCell.length) {
                         var text = $orderCell.text().trim();
-                        if (text !== "—" && text !== "") {
+                        if (text !== "" && !Number.isNaN(parseInt(text, 10))) {
                             displayOrder = text;
                         }
                     }
@@ -2895,7 +2995,7 @@ JS;
                     }
                     
                     // Get current values
-                    var $statusToggle = $row.find(".mulopimfwc-status-toggle");
+                    var $statusToggle = $row.find(".mulopimfwc-visibility-toggle");
                     // Get status from data attribute or HTML attribute (handle "0" properly)
                     var isActive = $statusToggle.attr("data-status") || $statusToggle.data("status");
                     // If status is undefined, null, or empty, default to "1", otherwise use the actual value
@@ -2909,7 +3009,7 @@ JS;
                     var $orderCell = $row.find("td.column-display_order");
                     if ($orderCell.length) {
                         var text = $orderCell.text().trim();
-                        if (text !== "—" && text !== "") {
+                        if (text !== "" && !Number.isNaN(parseInt(text, 10))) {
                             displayOrder = text;
                         }
                     }
@@ -2932,45 +3032,119 @@ JS;
         $rate_css = <<<'CSS'
 <style>
 .column-drag_handle {
-    min-width: 130px;
-    width: 130px;
+    min-width: 100px;
+    width: 100px;
 }
 .column-rate {
-    min-width: 260px;
+    min-width: 160px;
+    width: 160px;
 }
 .mulopimfwc-actions-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+}
+.mulopimfwc-rate-cell.is-saving {
+    opacity: 0.78;
 }
 .mulopimfwc-rate-cell {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-width: 240px;
+    gap: 5px;
+    min-width: 280px;
+}
+.mulopimfwc-rate-cell.is-currency-open {
+    z-index: 30;
 }
 .mulopimfwc-rate-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 0px;
+}
+.mulopimfwc-rate-currency-trigger {
+    min-width: 35px !important;
+    max-width: 35px;
+    height: 34px !important;
+    padding: 0 8px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0px !important;
+    border-color: #d0d7de !important;
+    border-radius: 8px 0 0 8px !important;
+    background: #fff !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05) !important;
+}
+.mulopimfwc-rate-currency-trigger:hover,
+.mulopimfwc-rate-currency-trigger:focus {
+    border-color: #2271b1;
+    color: #2271b1;
+}
+.mulopimfwc-rate-currency-trigger.is-disabled {
+    opacity: 0.65;
+    pointer-events: none;
+}
+.mulopimfwc-rate-currency-trigger .dashicons {
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
+    line-height: 12px;
+    color: #646970;
 }
 .mulopimfwc-rate-symbol {
     color: #1d2327;
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: 700;
+    font-size: 14px;
+    min-width: 14px;
+    text-align: center;
 }
 .mulopimfwc-rate-input {
-    width: 90px;
+    width: 70px;
+    height: 34px;
+    border-radius: 0 !important;
+    border-color: #d0d7de !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    margin: 0 !important;
+    padding-right: 0 !important;
+}
+.mulopimfwc-rate-currency {
+    width: 100%;
+    max-width: 260px;
+    min-height: 34px;
+    border-radius: 8px;
+}
+.mulopimfwc-rate-currency-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    display: none;
+    min-width: 230px;
+    max-width: 280px;
+    padding: 8px;
+    border: 1px solid #c3c4c7;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+}
+.mulopimfwc-rate-cell.is-currency-open .mulopimfwc-rate-currency-popover {
+    display: block;
 }
 .mulopimfwc-rate-mode {
-    min-width: 86px;
+    min-width: 66px;
+    max-width: 66px !important;
+    height: 34px;
+    border-color: #d0d7de !important;
+    border-radius: 0 8px 8px 0 !important;
+    margin: 0 !important;
 }
 .mulopimfwc-rate-row-sync {
-    min-width: 34px;
-    padding: 0 7px;
+    min-width: 32px;
+    padding: 0;
 }
 .mulopimfwc-rate-row-sync .dashicons {
-    margin-top: 3px;
+    margin: 0;
 }
 .mulopimfwc-rate-row-sync.is-loading .dashicons {
     animation: mulopimfwc-rate-spin 0.9s linear infinite;
@@ -2979,8 +3153,21 @@ JS;
     opacity: 0.55;
 }
 .mulopimfwc-rate-sync-all {
-    margin-left: 8px;
-    font-size: 12px;
+    margin-left: 8px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    color: #2271b1 !important;
+    text-decoration: none !important;
+        float: right;
+}
+.mulopimfwc-rate-sync-all .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
 }
 .mulopimfwc-rate-sync-all.is-loading .dashicons {
     animation: mulopimfwc-rate-spin 0.9s linear infinite;
@@ -3059,41 +3246,51 @@ CSS;
             return;
         }
 
-        if (rowData.rate) {
+        if (rowData.rate !== undefined) {
             $cell.find('.mulopimfwc-rate-input').val(rowData.rate);
         }
         if (rowData.mode) {
             $cell.find('.mulopimfwc-rate-mode').val(rowData.mode);
         }
+        if (Object.prototype.hasOwnProperty.call(rowData, 'currency_selected')) {
+            $cell.find('.mulopimfwc-rate-currency').val(rowData.currency_selected || '');
+        }
+        if (rowData.currency) {
+            $cell.attr('data-currency', rowData.currency);
+        }
 
-        var prefix = rowData.symbol_prefix || '';
-        var suffix = rowData.symbol_suffix || '';
+        var prefix = rowData.symbol_prefix || rowData.symbol || rowData.currency || '';
         var $prefix = $cell.find('.mulopimfwc-rate-symbol-prefix');
-        var $suffix = $cell.find('.mulopimfwc-rate-symbol-suffix');
-
-        if (prefix) {
-            if ($prefix.length) {
-                $prefix.text(prefix);
-            } else {
-                $cell.find('.mulopimfwc-rate-controls').prepend(
-                    $('<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix"></span>').text(prefix)
-                );
-            }
+        var $trigger = $cell.find('.mulopimfwc-rate-currency-trigger').first();
+        if ($prefix.length) {
+            $prefix.text(prefix);
+        } else if ($trigger.length) {
+            $('<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix"></span>').text(prefix).prependTo($trigger);
         } else {
-            $prefix.remove();
+            $cell.find('.mulopimfwc-rate-controls').prepend(
+                $('<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix"></span>').text(prefix)
+            );
+        }
+    }
+
+    function setCurrencyPopoverState($cell, isOpen) {
+        if (!$cell || !$cell.length) {
+            return;
         }
 
-        if (suffix) {
-            if ($suffix.length) {
-                $suffix.text(suffix);
-            } else {
-                $cell.find('.mulopimfwc-rate-input').after(
-                    $('<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-suffix"></span>').text(suffix)
-                );
+        var open = !!isOpen;
+        $cell.toggleClass('is-currency-open', open);
+        $cell.find('.mulopimfwc-rate-currency-popover').attr('aria-hidden', open ? 'false' : 'true');
+    }
+
+    function closeCurrencyPopovers($exceptCell) {
+        $('.mulopimfwc-rate-cell.is-currency-open').each(function() {
+            var $cell = $(this);
+            if ($exceptCell && $exceptCell.length && $cell.is($exceptCell)) {
+                return;
             }
-        } else {
-            $suffix.remove();
-        }
+            setCurrencyPopoverState($cell, false);
+        });
     }
 
     function getRowSyncButton($cell) {
@@ -3133,6 +3330,8 @@ CSS;
         }
 
         var $input = $cell.find('.mulopimfwc-rate-input').first();
+        var $currency = $cell.find('.mulopimfwc-rate-currency').first();
+        var $currencyTrigger = $cell.find('.mulopimfwc-rate-currency-trigger').first();
         var $mode = $cell.find('.mulopimfwc-rate-mode').first();
         var $sync = getRowSyncButton($cell);
 
@@ -3141,7 +3340,10 @@ CSS;
         }
 
         $cell.addClass('is-saving');
+        setCurrencyPopoverState($cell, false);
         $input.prop('disabled', true);
+        $currency.prop('disabled', true);
+        $currencyTrigger.prop('disabled', true).addClass('is-disabled');
         $mode.prop('disabled', true);
         $sync.prop('disabled', true);
 
@@ -3153,6 +3355,7 @@ CSS;
                 action: 'mulopimfwc_update_location_rate',
                 term_id: termId,
                 rate: $input.val(),
+                currency: $currency.val(),
                 mode: $mode.val(),
                 nonce: config.nonce
             }
@@ -3187,6 +3390,8 @@ CSS;
         }).always(function() {
             $cell.removeClass('is-saving');
             $input.prop('disabled', false);
+            $currency.prop('disabled', false);
+            $currencyTrigger.prop('disabled', false).removeClass('is-disabled');
             $mode.prop('disabled', false);
             toggleSyncButtonState($cell);
         });
@@ -3267,18 +3472,61 @@ CSS;
             return;
         }
 
+        var syncAllLabel = config.messages.syncAll || 'Sync All';
         var $btn = $('<button type="button" class="button-link mulopimfwc-rate-sync-all"></button>');
-        $btn.append('<span class="dashicons dashicons-update" style="margin-top:3px;"></span> ');
-        $btn.append(document.createTextNode(config.messages.syncAll || 'Sync All'));
+        $btn.attr('title', syncAllLabel);
+        $btn.attr('aria-label', syncAllLabel);
+        $btn.append('<span class="dashicons dashicons-update" aria-hidden="true"></span>');
         $header.append($btn);
     }
 
     function initRateCells() {
         ensureSyncAllButton();
         $('.mulopimfwc-rate-cell').each(function() {
-            toggleSyncButtonState($(this));
+            var $cell = $(this);
+            toggleSyncButtonState($cell);
+            setCurrencyPopoverState($cell, false);
         });
     }
+
+    $(document).on('click', '.mulopimfwc-rate-currency-trigger', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $cell = $(this).closest('.mulopimfwc-rate-cell');
+        if (!$cell.length || $cell.hasClass('is-saving')) {
+            return;
+        }
+
+        var shouldOpen = !$cell.hasClass('is-currency-open');
+        closeCurrencyPopovers(shouldOpen ? $cell : null);
+        setCurrencyPopoverState($cell, shouldOpen);
+
+        if (shouldOpen) {
+            var $select = $cell.find('.mulopimfwc-rate-currency').first();
+            if ($select.length) {
+                setTimeout(function() {
+                    $select.trigger('focus');
+                }, 20);
+            }
+        }
+    });
+
+    $(document).on('click', '.mulopimfwc-rate-currency-popover', function(e) {
+        e.stopPropagation();
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.mulopimfwc-rate-cell').length) {
+            closeCurrencyPopovers();
+        }
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCurrencyPopovers();
+        }
+    });
 
     $(document).on('change', '.mulopimfwc-rate-input', function() {
         var $cell = $(this).closest('.mulopimfwc-rate-cell');
@@ -3290,6 +3538,25 @@ CSS;
             e.preventDefault();
             $(this).trigger('change');
         }
+    });
+
+    $(document).on('change', '.mulopimfwc-rate-currency', function() {
+        var $cell = $(this).closest('.mulopimfwc-rate-cell');
+        setCurrencyPopoverState($cell, false);
+        saveRateCell($cell, { silent: true }).done(function(response) {
+            var mode = '';
+            if (response && response.success && response.data && response.data.row) {
+                mode = (response.data.row.mode || '').toString().toLowerCase();
+            } else {
+                mode = ($cell.find('.mulopimfwc-rate-mode').val() || '').toString().toLowerCase();
+            }
+
+            if (mode === 'auto') {
+                syncRateCell($cell, { silent: false });
+            } else {
+                setInlineStatus($cell, config.messages.saved || '', false);
+            }
+        });
     });
 
     $(document).on('change', '.mulopimfwc-rate-mode', function() {
@@ -3459,6 +3726,17 @@ JS;
             : $this->normalize_location_rate_mode(get_term_meta($term_id, 'location_currency_rate_mode', true));
         update_term_meta($term_id, 'location_currency_rate_mode', $mode);
 
+        if (isset($_POST['currency'])) {
+            $requested_currency = strtoupper(sanitize_text_field(wp_unslash($_POST['currency'])));
+            $available_currencies = $this->get_currency_options();
+
+            if ($requested_currency !== '' && isset($available_currencies[$requested_currency])) {
+                update_term_meta($term_id, 'location_currency', $requested_currency);
+            } else {
+                delete_term_meta($term_id, 'location_currency');
+            }
+        }
+
         if (isset($_POST['rate'])) {
             $parsed_rate = $this->parse_location_currency_rate(wp_unslash($_POST['rate']));
             if ($parsed_rate === null) {
@@ -3545,7 +3823,7 @@ JS;
             return;
         }
         $printed = true;
-        ?>
+    ?>
         <fieldset class="inline-edit-col-right">
             <div class="inline-edit-col">
                 <label>
@@ -3563,7 +3841,7 @@ JS;
                 </label>
             </div>
         </fieldset>
-        <?php
+    <?php
     }
 
     /**
@@ -3606,72 +3884,72 @@ JS;
         if ($taxonomy !== 'mulopimfwc_store_location') {
             return;
         }
-        
+
         $ajax_nonce = wp_create_nonce('mulopimfwc_location_ajax');
-        ?>
+    ?>
         <script type="text/javascript">
-        (function($) {
-            // Override WordPress quick edit save function
-            var inlineEditTax = inlineEditTax || {};
-            var originalSave = inlineEditTax.save;
-            
-            inlineEditTax.save = function(id) {
-                // Get term ID
-                var termId = 0;
-                if (typeof(id) === 'object') {
-                    termId = parseInt(id, 10);
-                } else {
-                    termId = parseInt(id.replace('tag-', ''), 10);
-                }
-                
-                // Get our custom field values before WordPress saves
-                var $quickEditRow = $("#edit-" + termId);
-                var isActive = '1';
-                var displayOrder = '';
-                
-                if ($quickEditRow.length) {
-                    var $statusField = $quickEditRow.find("#inline-edit-is-active");
-                    var $orderField = $quickEditRow.find("#inline-edit-display-order");
-                    
-                    if ($statusField.length) {
-                        isActive = $statusField.val() || '1';
+            (function($) {
+                // Override WordPress quick edit save function
+                var inlineEditTax = inlineEditTax || {};
+                var originalSave = inlineEditTax.save;
+
+                inlineEditTax.save = function(id) {
+                    // Get term ID
+                    var termId = 0;
+                    if (typeof(id) === 'object') {
+                        termId = parseInt(id, 10);
+                    } else {
+                        termId = parseInt(id.replace('tag-', ''), 10);
                     }
-                    if ($orderField.length) {
-                        displayOrder = $orderField.val() || '';
-                    }
-                }
-                
-                // Call original WordPress save function
-                if (typeof originalSave === 'function') {
-                    var result = originalSave.apply(this, arguments);
-                }
-                
-                // Save our custom fields via AJAX
-                if (termId > 0) {
-                    $.ajax({
-                        url: ajaxurl,
-                        type: 'POST',
-                        data: {
-                            action: 'mulopimfwc_save_quick_edit',
-                            term_id: termId,
-                            is_active: isActive,
-                            display_order: displayOrder,
-                            nonce: '<?php echo esc_js($ajax_nonce); ?>'
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // Reload to show updated values
-                                location.reload();
-                            }
+
+                    // Get our custom field values before WordPress saves
+                    var $quickEditRow = $("#edit-" + termId);
+                    var isActive = '1';
+                    var displayOrder = '';
+
+                    if ($quickEditRow.length) {
+                        var $statusField = $quickEditRow.find("#inline-edit-is-active");
+                        var $orderField = $quickEditRow.find("#inline-edit-display-order");
+
+                        if ($statusField.length) {
+                            isActive = $statusField.val() || '1';
                         }
-                    });
-                }
-                
-                return result;
-            };
-        })(jQuery);
+                        if ($orderField.length) {
+                            displayOrder = $orderField.val() || '';
+                        }
+                    }
+
+                    // Call original WordPress save function
+                    if (typeof originalSave === 'function') {
+                        var result = originalSave.apply(this, arguments);
+                    }
+
+                    // Save our custom fields via AJAX
+                    if (termId > 0) {
+                        $.ajax({
+                            url: ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'mulopimfwc_save_quick_edit',
+                                term_id: termId,
+                                is_active: isActive,
+                                display_order: displayOrder,
+                                nonce: '<?php echo esc_js($ajax_nonce); ?>'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // Reload to show updated values
+                                    location.reload();
+                                }
+                            }
+                        });
+                    }
+
+                    return result;
+                };
+            })(jQuery);
         </script>
-        <?php
+    <?php
     }
 
     /**
@@ -4153,9 +4431,9 @@ JS;
         $order_id = $order->get_id();
         // Get available locations based on order products stock availability
         $locations = $this->get_available_locations_for_order($order);
-        
+
         ob_start();
-        ?>
+    ?>
         <div class="mulopimfwc-quick-assignment-wrapper">
             <span class="mulopimfwc-unassigned-badge">🔴 <?php echo esc_html__('Needs Assignment', 'multi-location-product-and-inventory-management'); ?></span>
             <?php if (empty($locations)): ?>
@@ -4175,9 +4453,9 @@ JS;
                 <div class="mulopimfwc-no-locations-message" style="margin-top: 5px; padding: 8px; background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; font-size: 12px;">
                     <strong><?php echo esc_html__('No locations available', 'multi-location-product-and-inventory-management'); ?></strong><br>
                     <?php echo esc_html__('Insufficient stock for all products at any location.', 'multi-location-product-and-inventory-management'); ?>
-                        <span style="font-style: italic;">
-                            <?php echo esc_html__('Please edit the order and set locations for each product individually', 'multi-location-product-and-inventory-management'); ?>
-                        </span>
+                    <span style="font-style: italic;">
+                        <?php echo esc_html__('Please edit the order and set locations for each product individually', 'multi-location-product-and-inventory-management'); ?>
+                    </span>
                 </div>
             <?php else: ?>
                 <select class="mulopimfwc-quick-assignment-select" data-order-id="<?php echo esc_attr($order_id); ?>" data-nonce="<?php echo esc_attr(wp_create_nonce('mulopimfwc_quick_assign_' . $order_id)); ?>">
@@ -4189,7 +4467,7 @@ JS;
                 <span class="mulopimfwc-assignment-spinner" style="display: none;">⏳</span>
             <?php endif; ?>
         </div>
-        <?php
+    <?php
         return ob_get_clean();
     }
 
@@ -4497,7 +4775,7 @@ JS;
                 // Check stock availability
                 if ($location_stock !== '') {
                     $available_stock = (int) $location_stock;
-                    
+
                     // If backorders are not allowed and we don't have enough stock
                     if ($location_backorders === 'off' && $available_stock < $quantity) {
                         $all_products_available = false;
@@ -4575,7 +4853,7 @@ JS;
 
             // Get old location for stock restoration
             $old_location_slug = $item->get_meta('_mulopimfwc_location');
-            
+
             // Skip if location hasn't changed
             if ($old_location_slug === $new_location_slug) {
                 continue;
@@ -4600,7 +4878,7 @@ JS;
                     if ($old_location_term && !is_wp_error($old_location_term)) {
                         $old_location_id = $old_location_term->term_id;
                         $old_stock = get_post_meta($target_id, '_location_stock_' . $old_location_id, true);
-                        
+
                         if ($old_stock !== '') {
                             $new_old_stock = (int) $old_stock + (int) $quantity;
                             update_post_meta($target_id, '_location_stock_' . $old_location_id, $new_old_stock);
@@ -4610,7 +4888,7 @@ JS;
 
                 // Reduce stock from new location
                 $new_stock = get_post_meta($target_id, '_location_stock_' . $new_location_id, true);
-                
+
                 if ($new_stock !== '') {
                     $current_stock_int = (int) $new_stock;
                     $updated_stock = max(0, $current_stock_int - (int) $quantity);
@@ -4621,12 +4899,12 @@ JS;
             // Update order item price if location pricing is enabled
             $old_price = $item->get_subtotal();
             $new_price = $old_price;
-            
+
             if ($enable_location_price) {
                 // Get location-specific price
                 $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $new_location_id, true);
                 $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $new_location_id, true);
-                
+
                 // Use sale price if available, otherwise regular price, otherwise keep current price
                 if (!empty($location_sale_price)) {
                     $new_price_per_unit = floatval($location_sale_price);
@@ -4645,29 +4923,29 @@ JS;
                         $new_price_per_unit = floatval($old_price) / floatval($quantity);
                     }
                 }
-                
+
                 // Calculate new subtotal and total
                 $new_subtotal = $new_price_per_unit * floatval($quantity);
                 $new_total = $new_subtotal; // Subtotal and total are the same before taxes
-                
+
                 // Update order item prices
                 $item->set_subtotal($new_subtotal);
                 $item->set_total($new_total);
-                
+
                 // Update the price per unit in meta (for display purposes)
                 $item->update_meta_data('_price', $new_price_per_unit);
-                
+
                 $new_price = $new_subtotal;
-                
+
                 if ($old_price != $new_price) {
                     $price_changed = true;
                 }
             }
-            
+
             // Update order item meta
             $item->update_meta_data('_mulopimfwc_location', $new_location_slug);
             $item->save();
-            
+
             $items_updated++;
         }
 
@@ -4681,11 +4959,11 @@ JS;
                 __('All order items assigned to location: %s', 'multi-location-product-and-inventory-management'),
                 $new_location_term->name
             );
-            
+
             if ($price_changed) {
                 $note_message .= ' ' . __('| Prices updated based on location pricing', 'multi-location-product-and-inventory-management');
             }
-            
+
             $order->add_order_note($note_message);
         }
 
@@ -4748,10 +5026,10 @@ JS;
 
         $orders1 = wc_get_orders($args);
         $orders2 = wc_get_orders($args2);
-        
+
         // Combine and get unique count
         $all_order_ids = array_unique(array_merge($orders1, $orders2));
-        
+
         return count($all_order_ids);
     }
 
@@ -4768,14 +5046,14 @@ JS;
         }
 
         $filter = sanitize_text_field($_GET['store_location_filter']);
-        
+
         if (!isset($query_args['meta_query'])) {
             $query_args['meta_query'] = array();
         }
-        
+
         // If there are existing meta queries, we need to wrap them properly
         $has_existing = !empty($query_args['meta_query']);
-        
+
         if ($filter === 'unassigned') {
             // Filter for unassigned orders
             $unassigned_query = array(
@@ -4790,7 +5068,7 @@ JS;
                     'compare' => '=',
                 ),
             );
-            
+
             if ($has_existing) {
                 // Wrap existing queries and add our filter
                 $query_args['meta_query'] = array(
@@ -4808,7 +5086,7 @@ JS;
                 'value' => $filter,
                 'compare' => '=',
             );
-            
+
             if ($has_existing) {
                 // Wrap existing queries and add our filter
                 $query_args['meta_query'] = array(
@@ -4864,7 +5142,7 @@ JS;
         $filter = sanitize_text_field($_GET['store_location_filter']);
         $meta_table = $wpdb->prefix . 'wc_orders_meta';
         $orders_table = $wpdb->prefix . 'wc_orders';
-        
+
         if ($filter === 'unassigned') {
             // Filter for unassigned orders using LEFT JOIN and WHERE
             $clauses['join'] .= " LEFT JOIN {$meta_table} AS location_meta ON {$orders_table}.id = location_meta.order_id AND location_meta.meta_key = '_store_location'";
@@ -4895,9 +5173,9 @@ JS;
         }
 
         $options = get_option('mulopimfwc_display_options', []);
-        $is_manual_mode = isset($options['order_assignment_method']) 
+        $is_manual_mode = isset($options['order_assignment_method'])
             && $options['order_assignment_method'] === 'manual';
-        
+
         if (!$is_manual_mode) {
             return $views;
         }
@@ -4905,26 +5183,26 @@ JS;
         $unassigned_count = $this->get_unassigned_orders_count();
         $current_filter = isset($_GET['store_location_filter']) ? sanitize_text_field($_GET['store_location_filter']) : '';
         $is_current = ($current_filter === 'unassigned');
-        
+
         $base_url = admin_url('admin.php?page=wc-orders');
-        
+
         // Preserve all query parameters except store_location_filter
         $url_params = $_GET;
         unset($url_params['store_location_filter']);
         $url_params['store_location_filter'] = 'unassigned';
-        
+
         $url = add_query_arg($url_params, $base_url);
-        
+
         $class = $is_current ? 'current' : '';
         $count_html = $unassigned_count > 0 ? ' <span class="count">(' . $unassigned_count . ')</span>' : '';
-        
+
         // Insert after draft if it exists, otherwise at the end
         $new_views = array();
         $inserted = false;
-        
+
         foreach ($views as $key => $view) {
             $new_views[$key] = $view;
-            
+
             // Insert after draft
             if ($key === 'wc-checkout-draft' && !$inserted) {
                 $new_views['unassigned-location'] = sprintf(
@@ -4937,7 +5215,7 @@ JS;
                 $inserted = true;
             }
         }
-        
+
         // If draft doesn't exist, add at the end
         if (!$inserted) {
             $new_views['unassigned-location'] = sprintf(
@@ -4948,7 +5226,7 @@ JS;
                 $count_html
             );
         }
-        
+
         return $new_views;
     }
 
@@ -4981,7 +5259,7 @@ JS;
 
         // Update all order items for the selected location using reusable function
         $update_result = $this->update_all_order_items_location($order, $location_slug);
-        
+
         if (!$update_result['success']) {
             wp_send_json_error(array('message' => $update_result['message']));
         }
@@ -4991,7 +5269,7 @@ JS;
         $order->save();
 
         $location_label = $this->get_location_label($location_slug);
-        
+
         wp_send_json_success(array(
             'message' => $update_result['message'],
             'location_label' => $location_label !== '' ? $location_label : '—',
@@ -5037,7 +5315,7 @@ JS;
         if (!$is_manual_mode) {
             return;
         }
-        ?>
+    ?>
         <div id="mulopimfwc-bulk-assign-modal" class="mulopimfwc-modal" aria-hidden="true">
             <div class="mulopimfwc-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="mulopimfwc-bulk-assign-title">
                 <button type="button" class="mulopimfwc-modal__close" aria-label="<?php echo esc_attr__('Close', 'multi-location-product-and-inventory-management'); ?>">&times;</button>
@@ -5084,7 +5362,7 @@ JS;
                 </div>
             </div>
         </div>
-        <?php
+<?php
     }
 
     public function ajax_get_bulk_assignment_data()
