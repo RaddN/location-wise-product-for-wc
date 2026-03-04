@@ -2533,10 +2533,21 @@ JS;
                 echo '</select>';
                 echo '</div>';
                 echo '<div class="mulopimfwc-rate-currency-popover" aria-hidden="true">';
-                echo '<select class="mulopimfwc-rate-currency" aria-label="' . esc_attr__('Currency', 'multi-location-product-and-inventory-management') . '">';
-                echo '<option value="" ' . selected($selected_currency, '', false) . '>' . esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $default_currency)) . '</option>';
+                echo '<select class="mulopimfwc-rate-currency" aria-label="' . esc_attr__('Currency', 'multi-location-product-and-inventory-management') . '" data-placeholder="' . esc_attr__('Search currency...', 'multi-location-product-and-inventory-management') . '">';
+                $default_currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($default_currency) : '';
+                $default_currency_label = sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $default_currency);
+                if ($default_currency_symbol !== '') {
+                    $default_currency_label .= ' (' . $default_currency_symbol . ')';
+                }
+                echo '<option value="" ' . selected($selected_currency, '', false) . '>' . esc_html($default_currency_label) . '</option>';
                 foreach ($currency_options as $currency_code => $currency_name) {
-                    echo '<option value="' . esc_attr((string) $currency_code) . '" ' . selected($selected_currency, (string) $currency_code, false) . '>' . esc_html($currency_code . ' - ' . $currency_name) . '</option>';
+                    $currency_code = strtoupper((string) $currency_code);
+                    $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($currency_code) : '';
+                    $currency_label = $currency_code . ' - ' . $currency_name;
+                    if ($currency_symbol !== '') {
+                        $currency_label .= ' (' . $currency_symbol . ')';
+                    }
+                    echo '<option value="' . esc_attr((string) $currency_code) . '" ' . selected($selected_currency, (string) $currency_code, false) . '>' . esc_html($currency_label) . '</option>';
                 }
                 echo '</select>';
                 echo '</div>';
@@ -3173,6 +3184,20 @@ JS;
 .mulopimfwc-rate-cell.is-currency-open .mulopimfwc-rate-currency-popover {
     display: block;
 }
+.mulopimfwc-rate-currency-popover .select2-container {
+    width: 100% !important;
+}
+.mulopimfwc-rate-currency-popover .select2-container .select2-selection--single {
+    min-height: 34px;
+    border-radius: 8px;
+    border-color: #d0d7de;
+}
+.mulopimfwc-rate-currency-popover .select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: 32px;
+}
+.mulopimfwc-rate-currency-popover .select2-container .select2-selection--single .select2-selection__arrow {
+    height: 32px;
+}
 .mulopimfwc-rate-mode {
     min-width: 66px;
     max-width: 66px !important;
@@ -3295,7 +3320,11 @@ CSS;
             $cell.find('.mulopimfwc-rate-mode').val(rowData.mode);
         }
         if (Object.prototype.hasOwnProperty.call(rowData, 'currency_selected')) {
-            $cell.find('.mulopimfwc-rate-currency').val(rowData.currency_selected || '');
+            var $currencySelect = $cell.find('.mulopimfwc-rate-currency');
+            $currencySelect.val(rowData.currency_selected || '');
+            if ($currencySelect.data('select2')) {
+                $currencySelect.trigger('change.select2');
+            }
         }
         if (rowData.currency) {
             $cell.attr('data-currency', rowData.currency);
@@ -3323,6 +3352,32 @@ CSS;
         var open = !!isOpen;
         $cell.toggleClass('is-currency-open', open);
         $cell.find('.mulopimfwc-rate-currency-popover').attr('aria-hidden', open ? 'false' : 'true');
+        if (!open) {
+            var $currency = $cell.find('.mulopimfwc-rate-currency').first();
+            if ($currency.length && $currency.data('select2')) {
+                $currency.select2('close');
+            }
+        }
+    }
+
+    function initRateCurrencySelect($cell) {
+        var $currency = $cell.find('.mulopimfwc-rate-currency').first();
+        if (!$currency.length || typeof $.fn.select2 === 'undefined' || $currency.data('select2')) {
+            return $currency;
+        }
+
+        var $popover = $cell.find('.mulopimfwc-rate-currency-popover').first();
+        var placeholder = $currency.data('placeholder') || '';
+
+        $currency.select2({
+            width: '100%',
+            dropdownParent: $popover,
+            placeholder: placeholder,
+            allowClear: true,
+            minimumResultsForSearch: 0
+        });
+
+        return $currency;
     }
 
     function closeCurrencyPopovers($exceptCell) {
@@ -3545,10 +3600,14 @@ CSS;
         setCurrencyPopoverState($cell, shouldOpen);
 
         if (shouldOpen) {
-            var $select = $cell.find('.mulopimfwc-rate-currency').first();
+            var $select = initRateCurrencySelect($cell);
             if ($select.length) {
                 setTimeout(function() {
-                    $select.trigger('focus');
+                    if ($select.data('select2')) {
+                        $select.select2('open');
+                    } else {
+                        $select.trigger('focus');
+                    }
                 }, 20);
             }
         }
