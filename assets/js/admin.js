@@ -29,6 +29,7 @@ function mulopimfwc_toggleDisabledClass(isDisabled, allinputFields) {
 
 jQuery(document).ready(function ($) {
     var manageModalState = null;
+    var quickEditValidationData = null;
     // Handle "Manage Product" button click (combined Edit Location + Quick Edit)
     $(document).on('click', '.manage-product-location', function (e) {
         e.preventDefault();
@@ -313,6 +314,131 @@ jQuery(document).ready(function ($) {
         return String(symbol).trim();
     }
 
+    function normalizeCurrencyRate(rate) {
+        var parsed = parseFloat(rate);
+        if (isNaN(parsed) || parsed <= 0) {
+            return 1;
+        }
+        return parsed;
+    }
+
+    function normalizeCurrencyShouldConvert(value) {
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        var normalized = (value || '').toString().toLowerCase();
+        return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
+    }
+
+    function convertAmountToBaseCurrency(amount, locationMeta) {
+        var numericAmount = parseFloat(amount);
+        if (!isFinite(numericAmount)) {
+            return 0;
+        }
+        if (!locationMeta) {
+            return numericAmount;
+        }
+
+        var shouldConvert = normalizeCurrencyShouldConvert(
+            locationMeta.currency_should_convert !== undefined
+                ? locationMeta.currency_should_convert
+                : locationMeta.should_convert
+        );
+        if (!shouldConvert) {
+            return numericAmount;
+        }
+
+        var rate = normalizeCurrencyRate(
+            locationMeta.currency_rate !== undefined
+                ? locationMeta.currency_rate
+                : locationMeta.rate
+        );
+        if (rate <= 0) {
+            return numericAmount;
+        }
+
+        return numericAmount / rate;
+    }
+
+    function parseLocationIdFromFieldName(fieldName) {
+        if (!fieldName) {
+            return 0;
+        }
+
+        var locationMatch = fieldName.match(/\[locations\]\[(\d+)\]/);
+        if (locationMatch && locationMatch[1]) {
+            return parseInt(locationMatch[1], 10) || 0;
+        }
+
+        var simpleMatch = fieldName.match(/^locations\[(\d+)\]/);
+        if (simpleMatch && simpleMatch[1]) {
+            return parseInt(simpleMatch[1], 10) || 0;
+        }
+
+        return 0;
+    }
+
+    function findLocationMetaInCollection(collection, locationId) {
+        if (!$.isArray(collection) || !locationId) {
+            return null;
+        }
+
+        for (var i = 0; i < collection.length; i++) {
+            var candidate = collection[i] || {};
+            if ((parseInt(candidate.id, 10) || 0) === locationId) {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    function getLocationMetaFromProductData(productData, locationId) {
+        if (!productData || !locationId) {
+            return null;
+        }
+
+        var direct = findLocationMetaInCollection(productData.locations, locationId);
+        if (direct) {
+            return direct;
+        }
+
+        if ($.isArray(productData.variations)) {
+            for (var i = 0; i < productData.variations.length; i++) {
+                var variation = productData.variations[i] || {};
+                var inVariation = findLocationMetaInCollection(variation.locations, locationId);
+                if (inVariation) {
+                    return inVariation;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function getManageFieldLocationMeta(fieldName) {
+        var locationId = parseLocationIdFromFieldName(fieldName);
+        if (!locationId || !manageModalState) {
+            return null;
+        }
+
+        var productData = manageModalState.productData || {};
+        return getLocationMetaFromProductData(productData, locationId)
+            || findLocationMetaInCollection(manageModalState.assignedLocations, locationId)
+            || findLocationMetaInCollection(manageModalState.availableLocations, locationId)
+            || findLocationMetaInCollection(manageModalState.allLocations, locationId)
+            || null;
+    }
+
+    function getQuickEditFieldLocationMeta(fieldName) {
+        var locationId = parseLocationIdFromFieldName(fieldName);
+        if (!locationId || !quickEditValidationData) {
+            return null;
+        }
+
+        return getLocationMetaFromProductData(quickEditValidationData, locationId);
+    }
+
     function getDefaultCurrencySymbol() {
         var localizedSymbol = normalizeCurrencySymbol(
             mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.currencySymbol
@@ -378,6 +504,16 @@ jQuery(document).ready(function ($) {
     function normalizeManageLocationRecord(location, fallbackCurrencySymbol) {
         var source = location || {};
         var resolvedSymbol = getLocationCurrencySymbol(source, fallbackCurrencySymbol);
+        var resolvedRate = normalizeCurrencyRate(
+            source.currency_rate !== undefined
+                ? source.currency_rate
+                : (source.currencyRate !== undefined ? source.currencyRate : source.rate)
+        );
+        var resolvedShouldConvert = normalizeCurrencyShouldConvert(
+            source.currency_should_convert !== undefined
+                ? source.currency_should_convert
+                : (source.currencyShouldConvert !== undefined ? source.currencyShouldConvert : source.should_convert)
+        );
 
         return {
             id: parseInt(source.id, 10) || 0,
@@ -386,7 +522,9 @@ jQuery(document).ready(function ($) {
             selected: !!source.selected,
             currency_code: source.currency_code || source.currencyCode || '',
             currency_symbol: resolvedSymbol,
-            currency_position: source.currency_position || source.currencyPosition || ''
+            currency_position: source.currency_position || source.currencyPosition || '',
+            currency_rate: resolvedRate,
+            currency_should_convert: resolvedShouldConvert
         };
     }
 
@@ -694,7 +832,9 @@ jQuery(document).ready(function ($) {
                             selected: true,
                             currency_code: location.currency_code || '',
                             currency_symbol: location.currency_symbol || normalizedProductData.currency_symbol,
-                            currency_position: location.currency_position || ''
+                            currency_position: location.currency_position || '',
+                            currency_rate: location.currency_rate !== undefined ? location.currency_rate : 1,
+                            currency_should_convert: location.currency_should_convert !== undefined ? location.currency_should_convert : false
                         };
                     }), normalizedProductData.currency_symbol);
                 }
@@ -1972,11 +2112,14 @@ jQuery(document).ready(function ($) {
 
                 // Simple product location prices cannot go below purchase price.
                 if (fieldName.indexOf('variations[') === -1) {
-                    if (fieldType === 'regular_price' && defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
+                    var locationMeta = getManageFieldLocationMeta(fieldName);
+                    var valueInBaseCurrency = convertAmountToBaseCurrency(value, locationMeta);
+
+                    if (fieldType === 'regular_price' && defaultPurchasePrice > 0 && value > 0 && valueInBaseCurrency < defaultPurchasePrice) {
                         isValid = false;
                         errorMessage = 'Location regular price cannot be less than purchase price (' + defaultPurchasePrice + ')';
                     }
-                    if (fieldType === 'sale_price' && defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
+                    if (fieldType === 'sale_price' && defaultPurchasePrice > 0 && value > 0 && valueInBaseCurrency < defaultPurchasePrice) {
                         isValid = false;
                         errorMessage = 'Location sale price cannot be less than purchase price (' + defaultPurchasePrice + ')';
                     }
@@ -2264,7 +2407,9 @@ jQuery(document).ready(function ($) {
                 // Only validate simple product location prices, not variation locations
                 if (name.indexOf('variations[') === -1) {
                     var locationPrice = parseFloat($(this).val()) || 0;
-                    if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
+                    var locationMeta = getManageFieldLocationMeta(name);
+                    var locationPriceInBase = convertAmountToBaseCurrency(locationPrice, locationMeta);
+                    if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPriceInBase < defaultPurchasePrice) {
                         $(this).addClass('manage-error');
                         showManageFieldError($(this), 'Location regular price cannot be less than purchase price');
                         isValid = false;
@@ -2284,7 +2429,9 @@ jQuery(document).ready(function ($) {
                     // Only validate simple product location prices, not variation locations
                     if (name.indexOf('variations[') === -1) {
                         var locationPrice = parseFloat($(this).val()) || 0;
-                        if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
+                        var locationMeta = getManageFieldLocationMeta(name);
+                        var locationPriceInBase = convertAmountToBaseCurrency(locationPrice, locationMeta);
+                        if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPriceInBase < defaultPurchasePrice) {
                             $(this).addClass('manage-error');
                             showManageFieldError($(this), 'Location sale price cannot be less than purchase price');
                             isValid = false;
@@ -2380,7 +2527,10 @@ jQuery(document).ready(function ($) {
 
                 $('#manage-product-modal input[name*="variations[' + varId + '][locations]["][name*="[regular_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
+                    var fieldName = $(this).attr('name') || '';
+                    var locationMeta = getManageFieldLocationMeta(fieldName);
+                    var locPriceInBase = convertAmountToBaseCurrency(locPrice, locationMeta);
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPriceInBase < varDefaultPurchasePrice) {
                         $(this).addClass('manage-error');
                         showManageFieldError($(this), 'Location regular price cannot be less than purchase price');
                         isValid = false;
@@ -2397,7 +2547,10 @@ jQuery(document).ready(function ($) {
 
                 $('#manage-product-modal input[name*="variations[' + varId + '][locations]["][name*="[sale_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
+                    var fieldName = $(this).attr('name') || '';
+                    var locationMeta = getManageFieldLocationMeta(fieldName);
+                    var locPriceInBase = convertAmountToBaseCurrency(locPrice, locationMeta);
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPriceInBase < varDefaultPurchasePrice) {
                         $(this).addClass('manage-error');
                         showManageFieldError($(this), 'Location sale price cannot be less than purchase price');
                         isValid = false;
@@ -2674,6 +2827,12 @@ jQuery(document).ready(function ($) {
         $('body').append(modalHtml);
         $('#quick-edit-modal').show();
 
+        quickEditValidationData = normalizeManageModalProductData(
+            data,
+            parseInt(data && (data.id || data.product_id), 10) || 0,
+            data && (data.product_type || data.type) ? (data.product_type || data.type) : ''
+        );
+
         var currencySymbol = getDefaultCurrencySymbolForData(data);
 
         // Use array join instead of string concatenation for better performance
@@ -2845,6 +3004,7 @@ jQuery(document).ready(function ($) {
 
         // Handle close button
         $('.quick-edit-close, .quick-edit-cancel').on('click', function () {
+            quickEditValidationData = null;
             $('#quick-edit-modal').remove();
         });
 
@@ -2858,6 +3018,7 @@ jQuery(document).ready(function ($) {
         // Close on outside click
         $('#quick-edit-modal').on('click', function (e) {
             if ($(e.target).is('#quick-edit-modal')) {
+                quickEditValidationData = null;
                 $('#quick-edit-modal').remove();
             }
         });
@@ -2949,7 +3110,9 @@ jQuery(document).ready(function ($) {
                 // Simple product location prices cannot go below purchase price.
                 if (fieldName.indexOf('variations[') === -1 && (fieldType === 'regular_price' || fieldType === 'sale_price')) {
                     var locationPrice = value;
-                    if (defaultPurchasePrice > 0 && locationPrice > 0 && locationPrice < defaultPurchasePrice) {
+                    var locationMeta = getQuickEditFieldLocationMeta(fieldName);
+                    var locationPriceInBase = convertAmountToBaseCurrency(locationPrice, locationMeta);
+                    if (defaultPurchasePrice > 0 && locationPrice > 0 && locationPriceInBase < defaultPurchasePrice) {
                         isValid = false;
                         errorMessage = fieldType === 'regular_price'
                             ? 'Location regular price cannot be less than purchase price (' + defaultPurchasePrice + ')'
@@ -3074,7 +3237,10 @@ jQuery(document).ready(function ($) {
         // Validate location prices
         $('input[name^="locations["][name$="[regular_price]"]').each(function() {
             var locationPrice = parseFloat($(this).val()) || 0;
-            if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
+            var fieldName = $(this).attr('name') || '';
+            var locationMeta = getQuickEditFieldLocationMeta(fieldName);
+            var locationPriceInBase = convertAmountToBaseCurrency(locationPrice, locationMeta);
+            if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPriceInBase < defaultPurchasePrice) {
                 $(this).addClass('quick-edit-error');
                 showFieldError($(this), 'Location regular price cannot be less than purchase price');
                 isValid = false;
@@ -3083,7 +3249,10 @@ jQuery(document).ready(function ($) {
 
         $('input[name^="locations["][name$="[sale_price]"]').each(function() {
             var locationPrice = parseFloat($(this).val()) || 0;
-            if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPrice < defaultPurchasePrice) {
+            var fieldName = $(this).attr('name') || '';
+            var locationMeta = getQuickEditFieldLocationMeta(fieldName);
+            var locationPriceInBase = convertAmountToBaseCurrency(locationPrice, locationMeta);
+            if (locationPrice > 0 && defaultPurchasePrice > 0 && locationPriceInBase < defaultPurchasePrice) {
                 $(this).addClass('quick-edit-error');
                 showFieldError($(this), 'Location sale price cannot be less than purchase price');
                 isValid = false;
@@ -3107,7 +3276,10 @@ jQuery(document).ready(function ($) {
                 // Check variation location regular prices
                 $('#quick-edit-form input[name^="variations[' + varId + '][locations]["][name$="[regular_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
+                    var fieldName = $(this).attr('name') || '';
+                    var locationMeta = getQuickEditFieldLocationMeta(fieldName);
+                    var locPriceInBase = convertAmountToBaseCurrency(locPrice, locationMeta);
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPriceInBase < varDefaultPurchasePrice) {
                         $(this).addClass('quick-edit-error');
                         showFieldError($(this), 'Location regular price cannot be less than purchase price');
                         isValid = false;
@@ -3117,7 +3289,10 @@ jQuery(document).ready(function ($) {
                 // Check variation location sale prices
                 $('#quick-edit-form input[name^="variations[' + varId + '][locations]["][name$="[sale_price]"]').each(function() {
                     var locPrice = parseFloat($(this).val()) || 0;
-                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPrice < varDefaultPurchasePrice) {
+                    var fieldName = $(this).attr('name') || '';
+                    var locationMeta = getQuickEditFieldLocationMeta(fieldName);
+                    var locPriceInBase = convertAmountToBaseCurrency(locPrice, locationMeta);
+                    if (locPrice > 0 && varDefaultPurchasePrice > 0 && locPriceInBase < varDefaultPurchasePrice) {
                         $(this).addClass('quick-edit-error');
                         showFieldError($(this), 'Location sale price cannot be less than purchase price');
                         isValid = false;
@@ -3294,6 +3469,7 @@ jQuery(document).ready(function ($) {
             data: data,
             success: function (response) {
                 if (response.success) {
+                    quickEditValidationData = null;
                     $('#quick-edit-modal').remove();
                     showNotice(response.data.message || 'Product data saved successfully', 'success');
                     // Reload page to show updated data
@@ -3944,6 +4120,67 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function normalizeProductEditCurrencyRate(rate) {
+        const parsed = parseFloat(rate);
+        if (!isFinite(parsed) || parsed <= 0) {
+            return 1;
+        }
+        return parsed;
+    }
+
+    function normalizeProductEditCurrencyShouldConvert(value) {
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        const normalized = String(value || '').toLowerCase();
+        return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
+    }
+
+    function getProductEditCurrencyContext($field) {
+        const $row = $field.closest('tr[data-currency-rate], tr[data-currency-symbol]').first();
+        const fieldRate = $field.attr('data-currency-rate');
+        const rowRate = $row.attr('data-currency-rate');
+        const fieldShouldConvert = $field.attr('data-currency-should-convert');
+        const rowShouldConvert = $row.attr('data-currency-should-convert');
+
+        const rate = normalizeProductEditCurrencyRate(fieldRate !== undefined ? fieldRate : rowRate);
+        const shouldConvert = normalizeProductEditCurrencyShouldConvert(
+            fieldShouldConvert !== undefined ? fieldShouldConvert : rowShouldConvert
+        );
+
+        return {
+            rate,
+            shouldConvert,
+            row: $row
+        };
+    }
+
+    function convertProductEditAmountToBase(amount, $field) {
+        const numericAmount = parseFloat(amount);
+        if (!isFinite(numericAmount)) {
+            return 0;
+        }
+
+        const context = getProductEditCurrencyContext($field);
+        if (!context.shouldConvert) {
+            return numericAmount;
+        }
+
+        if (context.rate <= 0) {
+            return numericAmount;
+        }
+
+        return numericAmount / context.rate;
+    }
+
+    function isProductEditRowVisible($row) {
+        if (!$row || !$row.length) {
+            return false;
+        }
+        const rowStyle = $row.attr('style') || '';
+        return !rowStyle.includes('display: none');
+    }
+
     // Validation Rules
     const ProductValidator = {
         initialized: false,
@@ -3978,6 +4215,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 self.validateLocationPrices();
             });
 
+            // Revalidate variation/location prices when variation purchase prices change.
+            $(document).on('change', 'input[name^="_purchase_price["]', function () {
+                self.validateLocationPrices();
+            });
+
             // Validate on purchase quantity change
             $(document).on('change', '#_purchase_quantity', function () {
                 self.validateStock();
@@ -3990,7 +4232,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             // Validate location prices
-            $(document).on('blur', 'input[name^="location_regular_price"], input[name^="location_sale_price"]', function () {
+            $(document).on('blur', 'input[name^="location_regular_price"], input[name^="location_sale_price"], input[name^="variation_location_regular_price"], input[name^="variation_location_sale_price"]', function () {
                 self.validateLocationPrices();
             });
 
@@ -4082,61 +4324,121 @@ document.addEventListener('DOMContentLoaded', function () {
             const purchasePrice = parseFloat($('#_purchase_price').val()) || 0;
             let isValid = true;
 
-            if (purchasePrice <= 0) return true;
+            $('input[name^="location_regular_price"], input[name^="location_sale_price"], input[name^="variation_location_regular_price"], input[name^="variation_location_sale_price"]').removeClass('product-field-error');
 
             $('input[name^="location_regular_price"]').each(function () {
                 const $field = $(this);
                 const locationPrice = parseFloat($field.val()) || 0;
-                const nameAttr = $field.attr('name');
-                const match = nameAttr ? nameAttr.match(/\[(\d+)\]/) : null;
+                const context = getProductEditCurrencyContext($field);
+                const $row = context.row;
 
-                if (!match) return true;
+                if ($row.length && !isProductEditRowVisible($row)) {
+                    return true;
+                }
 
-                const locationId = match[1];
-                const $row = $(`#location-${locationId}`);
-
-                // Check if row is not hidden by style attribute
-                const rowStyle = $row.attr('style') || '';
-                const isRowVisible = $row.length > 0 && !rowStyle.includes('display: none');
-
-                if (isRowVisible && locationPrice > 0 && locationPrice < purchasePrice) {
-                    $field.addClass('product-field-error');
-                    const locationName = $row.find('td:first').text();
-                    NotificationSystem.show(
-                        `${locationName}: Regular price (${locationPrice}) cannot be less than purchase price (${purchasePrice})`,
-                        'error'
-                    );
-                    isValid = false;
-                } else {
-                    $field.removeClass('product-field-error');
+                if (purchasePrice > 0 && locationPrice > 0) {
+                    const locationPriceInBase = convertProductEditAmountToBase(locationPrice, $field);
+                    if (locationPriceInBase < purchasePrice) {
+                        $field.addClass('product-field-error');
+                        const locationName = $row.length ? $row.find('td:first').text().trim() : '';
+                        const conversionNote = context.shouldConvert ? ' after currency conversion' : '';
+                        NotificationSystem.show(
+                            `${locationName ? locationName + ': ' : ''}Regular price (${locationPrice}) cannot be less than purchase price (${purchasePrice})${conversionNote}`,
+                            'error'
+                        );
+                        isValid = false;
+                    }
                 }
             });
 
             $('input[name^="location_sale_price"]').each(function () {
                 const $field = $(this);
                 const locationPrice = parseFloat($field.val()) || 0;
-                const nameAttr = $field.attr('name');
-                const match = nameAttr ? nameAttr.match(/\[(\d+)\]/) : null;
+                const context = getProductEditCurrencyContext($field);
+                const $row = context.row;
 
-                if (!match) return true;
+                if ($row.length && !isProductEditRowVisible($row)) {
+                    return true;
+                }
 
-                const locationId = match[1];
-                const $row = $(`#location-${locationId}`);
+                if (purchasePrice > 0 && locationPrice > 0) {
+                    const locationPriceInBase = convertProductEditAmountToBase(locationPrice, $field);
+                    if (locationPriceInBase < purchasePrice) {
+                        $field.addClass('product-field-error');
+                        const locationName = $row.length ? $row.find('td:first').text().trim() : '';
+                        const conversionNote = context.shouldConvert ? ' after currency conversion' : '';
+                        NotificationSystem.show(
+                            `${locationName ? locationName + ': ' : ''}Sale price (${locationPrice}) cannot be less than purchase price (${purchasePrice})${conversionNote}`,
+                            'error'
+                        );
+                        isValid = false;
+                    }
+                }
+            });
 
-                // Check if row is not hidden by style attribute
-                const rowStyle = $row.attr('style') || '';
-                const isRowVisible = $row.length > 0 && !rowStyle.includes('display: none');
+            $('input[name^="variation_location_regular_price"]').each(function () {
+                const $field = $(this);
+                const locationPrice = parseFloat($field.val()) || 0;
+                const match = (($field.attr('name') || '').match(/variation_location_regular_price\[(\d+)\]\[(\d+)\]/));
+                if (!match) {
+                    return true;
+                }
 
-                if (isRowVisible && locationPrice > 0 && locationPrice < purchasePrice) {
+                const variationIndex = match[1];
+                const variationPurchasePrice = parseFloat($('input[name="_purchase_price[' + variationIndex + ']"]').val()) || 0;
+                if (variationPurchasePrice <= 0 || locationPrice <= 0) {
+                    return true;
+                }
+
+                const context = getProductEditCurrencyContext($field);
+                const $row = context.row;
+                if ($row.length && !isProductEditRowVisible($row)) {
+                    return true;
+                }
+
+                const locationPriceInBase = convertProductEditAmountToBase(locationPrice, $field);
+                if (locationPriceInBase < variationPurchasePrice) {
                     $field.addClass('product-field-error');
-                    const locationName = $row.find('td:first').text();
+                    const locationName = $row.length ? $row.find('td:first').text().trim() : '';
+                    const conversionNote = context.shouldConvert ? ' after currency conversion' : '';
                     NotificationSystem.show(
-                        `${locationName}: Sale price (${locationPrice}) cannot be less than purchase price (${purchasePrice})`,
+                        `${locationName ? locationName + ': ' : ''}Variation regular price (${locationPrice}) cannot be less than purchase price (${variationPurchasePrice})${conversionNote}`,
                         'error'
                     );
                     isValid = false;
-                } else {
-                    $field.removeClass('product-field-error');
+                }
+            });
+
+            $('input[name^="variation_location_sale_price"]').each(function () {
+                const $field = $(this);
+                const locationPrice = parseFloat($field.val()) || 0;
+                const match = (($field.attr('name') || '').match(/variation_location_sale_price\[(\d+)\]\[(\d+)\]/));
+                if (!match) {
+                    return true;
+                }
+
+                const variationIndex = match[1];
+                const variationPurchasePrice = parseFloat($('input[name="_purchase_price[' + variationIndex + ']"]').val()) || 0;
+                if (variationPurchasePrice <= 0 || locationPrice <= 0) {
+                    return true;
+                }
+
+                const context = getProductEditCurrencyContext($field);
+                const $row = context.row;
+                if ($row.length && !isProductEditRowVisible($row)) {
+                    return true;
+                }
+
+                const locationPriceInBase = convertProductEditAmountToBase(locationPrice, $field);
+                if (locationPriceInBase < variationPurchasePrice) {
+                    $field.addClass('product-field-error');
+                    const locationName = $row.length ? $row.find('td:first').text().trim() : '';
+                    const conversionNote = context.shouldConvert ? ' after currency conversion' : '';
+                    NotificationSystem.show(
+                        `${locationName ? locationName + ': ' : ''}Variation sale price (${locationPrice}) cannot be less than purchase price (${variationPurchasePrice})${conversionNote}`,
+                        'error'
+                    );
+                    isValid = false;
                 }
             });
 

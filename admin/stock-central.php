@@ -1147,6 +1147,22 @@ class mulopimfwc_Stock_Central
                         return normalized || '$';
                     }
 
+                    function normalizeClassicCurrencyRate(rate) {
+                        var parsed = parseFloat(rate);
+                        if (isNaN(parsed) || parsed <= 0) {
+                            return 1;
+                        }
+                        return parsed;
+                    }
+
+                    function normalizeClassicCurrencyShouldConvert(value) {
+                        if (typeof value === 'boolean') {
+                            return value;
+                        }
+                        var normalized = (value || '').toString().toLowerCase();
+                        return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
+                    }
+
                     function getDefaultCurrencySymbolForRow($row) {
                         if (!$row || !$row.length) {
                             return normalizeClassicCurrencySymbol('');
@@ -1156,12 +1172,51 @@ class mulopimfwc_Stock_Central
                         return normalizeClassicCurrencySymbol($wrap.attr('data-default-currency-symbol'));
                     }
 
+                    function getDefaultCurrencyRateForRow($row) {
+                        if (!$row || !$row.length) {
+                            return 1;
+                        }
+
+                        var $wrap = $row.find('.mulopimfwc-classic-add-location-wrap').first();
+                        return normalizeClassicCurrencyRate($wrap.attr('data-default-currency-rate'));
+                    }
+
+                    function getDefaultCurrencyShouldConvertForRow($row) {
+                        if (!$row || !$row.length) {
+                            return false;
+                        }
+
+                        var $wrap = $row.find('.mulopimfwc-classic-add-location-wrap').first();
+                        return normalizeClassicCurrencyShouldConvert($wrap.attr('data-default-currency-should-convert'));
+                    }
+
                     function getOptionCurrencySymbol($option, fallbackSymbol) {
                         if (!$option || !$option.length) {
                             return normalizeClassicCurrencySymbol(fallbackSymbol);
                         }
 
                         return normalizeClassicCurrencySymbol($option.attr('data-currency-symbol') || fallbackSymbol);
+                    }
+
+                    function getOptionCurrencyRate($option, fallbackRate) {
+                        if (!$option || !$option.length) {
+                            return normalizeClassicCurrencyRate(fallbackRate);
+                        }
+
+                        return normalizeClassicCurrencyRate($option.attr('data-currency-rate') || fallbackRate);
+                    }
+
+                    function getOptionCurrencyShouldConvert($option, fallbackShouldConvert) {
+                        if (!$option || !$option.length) {
+                            return normalizeClassicCurrencyShouldConvert(fallbackShouldConvert);
+                        }
+
+                        var optionValue = $option.attr('data-currency-should-convert');
+                        if (optionValue === undefined) {
+                            return normalizeClassicCurrencyShouldConvert(fallbackShouldConvert);
+                        }
+
+                        return normalizeClassicCurrencyShouldConvert(optionValue);
                     }
 
                     function buildClassicPriceInput(fieldName, currencySymbol) {
@@ -1464,6 +1519,33 @@ class mulopimfwc_Stock_Central
                         var raw = ($field.val() || '').toString();
                         var value = parseFloat(raw);
                         return isNaN(value) ? 0 : value;
+                    }
+
+                    function convertClassicPriceToBaseCurrency(value, $field) {
+                        if (!isFinite(value) || value <= 0) {
+                            return value;
+                        }
+
+                        if (!$field || !$field.length) {
+                            return value;
+                        }
+
+                        var $currencyContainer = $field.closest('tr[data-currency-rate], .mulopimfwc-classic-price-input-wrap[data-currency-rate]').first();
+                        if (!$currencyContainer.length) {
+                            return value;
+                        }
+
+                        var shouldConvert = normalizeClassicCurrencyShouldConvert($currencyContainer.attr('data-currency-should-convert'));
+                        if (!shouldConvert) {
+                            return value;
+                        }
+
+                        var rate = normalizeClassicCurrencyRate($currencyContainer.attr('data-currency-rate'));
+                        if (rate <= 0) {
+                            return value;
+                        }
+
+                        return value / rate;
                     }
 
                     function clearRowValidationErrors($row) {
@@ -1805,12 +1887,14 @@ class mulopimfwc_Stock_Central
                                 var $locationSaleField = $locationRow.find('[data-field=\"sale_price\"]').first();
                                 var locationRegularPrice = getNumericFieldValue($locationRegularField);
                                 var locationSalePrice = getNumericFieldValue($locationSaleField);
+                                var locationRegularPriceBase = convertClassicPriceToBaseCurrency(locationRegularPrice, $locationRegularField);
+                                var locationSalePriceBase = convertClassicPriceToBaseCurrency(locationSalePrice, $locationSaleField);
 
-                                if (locationRegularPrice > 0 && defaultPurchasePrice > 0 && locationRegularPrice < defaultPurchasePrice) {
+                                if (locationRegularPrice > 0 && defaultPurchasePrice > 0 && locationRegularPriceBase < defaultPurchasePrice) {
                                     addRowValidationError(errors, $locationRegularField, messages.locationRegularVsPurchase);
                                 }
 
-                                if (locationSalePrice > 0 && defaultPurchasePrice > 0 && locationSalePrice < defaultPurchasePrice) {
+                                if (locationSalePrice > 0 && defaultPurchasePrice > 0 && locationSalePriceBase < defaultPurchasePrice) {
                                     addRowValidationError(errors, $locationSaleField, messages.locationSaleVsPurchase);
                                 }
 
@@ -1867,12 +1951,14 @@ class mulopimfwc_Stock_Central
                                     var variationLocationRegularPrice = getNumericFieldValue($variationLocationRegularField);
                                     var variationLocationSalePrice = getNumericFieldValue($variationLocationSaleField);
                                     var variationLocationStock = getNumericFieldValue($variationLocationStockField);
+                                    var variationLocationRegularPriceBase = convertClassicPriceToBaseCurrency(variationLocationRegularPrice, $variationLocationRegularField);
+                                    var variationLocationSalePriceBase = convertClassicPriceToBaseCurrency(variationLocationSalePrice, $variationLocationSaleField);
 
-                                    if (variationLocationRegularPrice > 0 && variationPurchasePrice > 0 && variationLocationRegularPrice < variationPurchasePrice) {
+                                    if (variationLocationRegularPrice > 0 && variationPurchasePrice > 0 && variationLocationRegularPriceBase < variationPurchasePrice) {
                                         addRowValidationError(errors, $variationLocationRegularField, messages.locationRegularVsPurchase);
                                     }
 
-                                    if (variationLocationSalePrice > 0 && variationPurchasePrice > 0 && variationLocationSalePrice < variationPurchasePrice) {
+                                    if (variationLocationSalePrice > 0 && variationPurchasePrice > 0 && variationLocationSalePriceBase < variationPurchasePrice) {
                                         addRowValidationError(errors, $variationLocationSaleField, messages.locationSaleVsPurchase);
                                     }
 
@@ -2096,19 +2182,22 @@ class mulopimfwc_Stock_Central
                         }
                     }
 
-                    function buildProductLocationRow(locationId, locationName, supportsManageStock, rowMode, currencySymbol) {
+                    function buildProductLocationRow(locationId, locationName, supportsManageStock, rowMode, currencySymbol, currencyRate, currencyShouldConvert) {
                         var disabled = supportsManageStock ? '' : ' disabled=\"disabled\"';
                         var safeCurrencySymbol = normalizeClassicCurrencySymbol(currencySymbol);
                         var escapedCurrencySymbol = escapeHtml(safeCurrencySymbol);
+                        var safeCurrencyRate = normalizeClassicCurrencyRate(currencyRate);
+                        var escapedCurrencyRate = escapeHtml(String(safeCurrencyRate));
+                        var escapedShouldConvert = escapeHtml(normalizeClassicCurrencyShouldConvert(currencyShouldConvert) ? 'yes' : 'no');
                         if (rowMode === 'location_only') {
                             return '' +
-                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
+                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\" data-currency-rate=\"' + escapedCurrencyRate + '\" data-currency-should-convert=\"' + escapedShouldConvert + '\">' +
                                 '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                                 '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management')); ?>\">&#10005;</button></td>' +
                                 '</tr>';
                         } else if (rowMode === 'price_only') {
                             return '' +
-                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
+                                '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\" data-currency-rate=\"' + escapedCurrencyRate + '\" data-currency-should-convert=\"' + escapedShouldConvert + '\">' +
                                 '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                                 '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
                                 '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
@@ -2117,7 +2206,7 @@ class mulopimfwc_Stock_Central
                         }
 
                         return '' +
-                            '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
+                            '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\" data-currency-rate=\"' + escapedCurrencyRate + '\" data-currency-should-convert=\"' + escapedShouldConvert + '\">' +
                             '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                             '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"' + disabled + '></td>' +
                             '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
@@ -2131,12 +2220,15 @@ class mulopimfwc_Stock_Central
                             '</tr>';
                     }
 
-                    function buildVariationLocationRow(locationId, locationName, supportsManageStock, currencySymbol) {
+                    function buildVariationLocationRow(locationId, locationName, supportsManageStock, currencySymbol, currencyRate, currencyShouldConvert) {
                         var includeStockFields = !!supportsManageStock;
                         var safeCurrencySymbol = normalizeClassicCurrencySymbol(currencySymbol);
                         var escapedCurrencySymbol = escapeHtml(safeCurrencySymbol);
+                        var safeCurrencyRate = normalizeClassicCurrencyRate(currencyRate);
+                        var escapedCurrencyRate = escapeHtml(String(safeCurrencyRate));
+                        var escapedShouldConvert = escapeHtml(normalizeClassicCurrencyShouldConvert(currencyShouldConvert) ? 'yes' : 'no');
                         return '' +
-                            '<tr class=\"mulopimfwc-classic-variation-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\">' +
+                            '<tr class=\"mulopimfwc-classic-variation-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\" data-currency-rate=\"' + escapedCurrencyRate + '\" data-currency-should-convert=\"' + escapedShouldConvert + '\">' +
                             '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                             (includeStockFields ? '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"></td>' : '') +
                             '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
@@ -2313,6 +2405,8 @@ class mulopimfwc_Stock_Central
                         var hadValidationErrors = rowHasValidationErrors($row);
                         var $select = $row.find('.mulopimfwc-classic-add-location-select').first();
                         var rowDefaultCurrencySymbol = getDefaultCurrencySymbolForRow($row);
+                        var rowDefaultCurrencyRate = getDefaultCurrencyRateForRow($row);
+                        var rowDefaultCurrencyShouldConvert = getDefaultCurrencyShouldConvertForRow($row);
                         var selectedValue = ($select.val() || '').toString();
                         if (!selectedValue) {
                             return;
@@ -2333,7 +2427,9 @@ class mulopimfwc_Stock_Central
                                 locationsToAdd.push({
                                     id: locationId,
                                     name: $option.text(),
-                                    currencySymbol: getOptionCurrencySymbol($option, rowDefaultCurrencySymbol)
+                                    currencySymbol: getOptionCurrencySymbol($option, rowDefaultCurrencySymbol),
+                                    currencyRate: getOptionCurrencyRate($option, rowDefaultCurrencyRate),
+                                    currencyShouldConvert: getOptionCurrencyShouldConvert($option, rowDefaultCurrencyShouldConvert)
                                 });
                             });
                         } else {
@@ -2345,7 +2441,9 @@ class mulopimfwc_Stock_Central
                             locationsToAdd.push({
                                 id: locationId,
                                 name: $selectedOption.text(),
-                                currencySymbol: getOptionCurrencySymbol($selectedOption, rowDefaultCurrencySymbol)
+                                currencySymbol: getOptionCurrencySymbol($selectedOption, rowDefaultCurrencySymbol),
+                                currencyRate: getOptionCurrencyRate($selectedOption, rowDefaultCurrencyRate),
+                                currencyShouldConvert: getOptionCurrencyShouldConvert($selectedOption, rowDefaultCurrencyShouldConvert)
                             });
                         }
 
@@ -2377,14 +2475,14 @@ class mulopimfwc_Stock_Central
                                 return;
                             }
 
-                            $productTbody.append(buildProductLocationRow(locationData.id, locationData.name, supportsManageStock, rowMode, locationData.currencySymbol));
+                            $productTbody.append(buildProductLocationRow(locationData.id, locationData.name, supportsManageStock, rowMode, locationData.currencySymbol, locationData.currencyRate, locationData.currencyShouldConvert));
 
                             $variationTables.each(function() {
                                 var $variationTable = $(this);
                                 if ($variationTable.find('.mulopimfwc-classic-variation-location-row[data-location-id=\"' + locationData.id + '\"]').length) {
                                     return;
                                 }
-                                $variationTable.find('tbody').append(buildVariationLocationRow(locationData.id, locationData.name, isStoreManageStockEnabled, locationData.currencySymbol));
+                                $variationTable.find('tbody').append(buildVariationLocationRow(locationData.id, locationData.name, isStoreManageStockEnabled, locationData.currencySymbol, locationData.currencyRate, locationData.currencyShouldConvert));
                             });
 
                             $select.find('option[value=\"' + locationData.id + '\"]').remove();
@@ -2409,6 +2507,8 @@ class mulopimfwc_Stock_Central
                         var locationId = parseInt($locationRow.data('location-id'), 10);
                         var locationName = ($locationRow.data('location-name') || '').toString();
                         var locationCurrencySymbol = normalizeClassicCurrencySymbol($locationRow.attr('data-currency-symbol') || getDefaultCurrencySymbolForRow($row));
+                        var locationCurrencyRate = normalizeClassicCurrencyRate($locationRow.attr('data-currency-rate') || getDefaultCurrencyRateForRow($row));
+                        var locationCurrencyShouldConvert = normalizeClassicCurrencyShouldConvert($locationRow.attr('data-currency-should-convert') || getDefaultCurrencyShouldConvertForRow($row));
 
                         if (isNaN(locationId) || locationId <= 0) {
                             return;
@@ -2426,7 +2526,7 @@ class mulopimfwc_Stock_Central
 
                         var $select = $row.find('.mulopimfwc-classic-add-location-select').first();
                         if ($select.find('option[value=\"' + locationId + '\"]').length === 0) {
-                            $select.append('<option value=\"' + locationId + '\" data-currency-symbol=\"' + escapeHtml(locationCurrencySymbol) + '\">' + escapeHtml(locationName) + '</option>');
+                            $select.append('<option value=\"' + locationId + '\" data-currency-symbol=\"' + escapeHtml(locationCurrencySymbol) + '\" data-currency-rate=\"' + escapeHtml(String(locationCurrencyRate)) + '\" data-currency-should-convert=\"' + escapeHtml(locationCurrencyShouldConvert ? 'yes' : 'no') + '\">' + escapeHtml(locationName) + '</option>');
                         }
                         syncAllLocationsOption($select);
                         applyClassicManageStockVisibility($row);

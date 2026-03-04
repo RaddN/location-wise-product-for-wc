@@ -37,6 +37,50 @@ if (!function_exists('mulopimfwc_get_currency_symbol_for_admin_input')) {
     }
 }
 
+if (!function_exists('mulopimfwc_get_currency_conversion_for_admin_input')) {
+    /**
+     * Resolve conversion metadata for admin price validation/presentation.
+     *
+     * @param int|null $location_term_id Null means default/base currency context.
+     * @return array{rate: string, should_convert: string}
+     */
+    function mulopimfwc_get_currency_conversion_for_admin_input($location_term_id = null)
+    {
+        $term_id = (int) $location_term_id;
+        $rate = 1.0;
+        $should_convert = false;
+
+        if ($term_id > 0 && function_exists('mulopimfwc_get_location_currency_conversion_context')) {
+            $context = (array) mulopimfwc_get_location_currency_conversion_context($term_id);
+            if (isset($context['rate']) && is_numeric($context['rate']) && (float) $context['rate'] > 0) {
+                $rate = (float) $context['rate'];
+            }
+            $should_convert = !empty($context['should_convert']) && $rate > 0;
+        }
+
+        if (function_exists('wc_format_decimal')) {
+            $formatted = wc_format_decimal($rate, 6, false);
+            if ($formatted !== '' && is_numeric($formatted)) {
+                return [
+                    'rate' => (string) $formatted,
+                    'should_convert' => $should_convert ? 'yes' : 'no',
+                ];
+            }
+        }
+
+        $fallback = number_format($rate, 6, '.', '');
+        $fallback = rtrim(rtrim($fallback, '0'), '.');
+        if ($fallback === '') {
+            $fallback = '1';
+        }
+
+        return [
+            'rate' => $fallback,
+            'should_convert' => $should_convert ? 'yes' : 'no',
+        ];
+    }
+}
+
 
 
 /**
@@ -211,6 +255,7 @@ add_action('woocommerce_product_data_panels', function () {
                         <?php
                         foreach ($mulopimfwc_locations as $location) :
                             $location_currency_symbol = mulopimfwc_get_currency_symbol_for_admin_input((int) $location->term_id);
+                            $location_currency_conversion = mulopimfwc_get_currency_conversion_for_admin_input((int) $location->term_id);
                             $location_stock = get_post_meta($post->ID, '_location_stock_' . $location->term_id, true);
                             $location_regular_price = get_post_meta($post->ID, '_location_regular_price_' . $location->term_id, true);
                             $location_sale_price = get_post_meta($post->ID, '_location_sale_price_' . $location->term_id, true);
@@ -218,7 +263,7 @@ add_action('woocommerce_product_data_panels', function () {
                             $location_backorders = get_post_meta($post->ID, '_location_backorders_' . $location->term_id, true);
                         ?>
 
-                            <tr id="location-<?php echo esc_attr($location->term_id); ?>" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                            <tr id="location-<?php echo esc_attr($location->term_id); ?>" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>" data-currency-rate="<?php echo esc_attr($location_currency_conversion['rate']); ?>" data-currency-should-convert="<?php echo esc_attr($location_currency_conversion['should_convert']); ?>">
                                 <td><?php echo esc_html($location->name); ?></td>
                                 <td class="location-stock-quantity">
                                     <input type="number" name="location_stock[<?php echo esc_attr($location->term_id); ?>]"
@@ -226,11 +271,11 @@ add_action('woocommerce_product_data_panels', function () {
                                 </td>
                                 <td>
                                     <input type="text" name="location_regular_price[<?php echo esc_attr($location->term_id); ?>]"
-                                        value="<?php echo esc_attr($location_regular_price); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                                        value="<?php echo esc_attr($location_regular_price); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>" data-currency-rate="<?php echo esc_attr($location_currency_conversion['rate']); ?>" data-currency-should-convert="<?php echo esc_attr($location_currency_conversion['should_convert']); ?>">
                                 </td>
                                 <td>
                                     <input type="text" name="location_sale_price[<?php echo esc_attr($location->term_id); ?>]"
-                                        value="<?php echo esc_attr($location_sale_price); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                                        value="<?php echo esc_attr($location_sale_price); ?>" class="wc_input_price mulopimfwc-currency-prefix-source" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>" data-currency-rate="<?php echo esc_attr($location_currency_conversion['rate']); ?>" data-currency-should-convert="<?php echo esc_attr($location_currency_conversion['should_convert']); ?>">
                                 </td>
 
                                 <td>
@@ -349,12 +394,13 @@ add_action('woocommerce_product_after_variable_attributes', function ($loop, $va
                 <tbody>
                     <?php foreach ($mulopimfwc_locations as $location) :
                         $location_currency_symbol = mulopimfwc_get_currency_symbol_for_admin_input((int) $location->term_id);
+                        $location_currency_conversion = mulopimfwc_get_currency_conversion_for_admin_input((int) $location->term_id);
                         $location_stock = get_post_meta($variation->ID, '_location_stock_' . $location->term_id, true);
                         $location_regular_price = get_post_meta($variation->ID, '_location_regular_price_' . $location->term_id, true);
                         $location_sale_price = get_post_meta($variation->ID, '_location_sale_price_' . $location->term_id, true);
                         $location_backorders = get_post_meta($variation->ID, '_location_backorders_' . $location->term_id, true);
                     ?>
-                        <tr id="location-<?php echo esc_attr($location->term_id); ?>" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                        <tr id="location-<?php echo esc_attr($location->term_id); ?>" data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>" data-currency-rate="<?php echo esc_attr($location_currency_conversion['rate']); ?>" data-currency-should-convert="<?php echo esc_attr($location_currency_conversion['should_convert']); ?>">
                             <td><?php echo esc_html($location->name); ?></td>
                             <td>
                                 <input type="number"
@@ -367,14 +413,18 @@ add_action('woocommerce_product_after_variable_attributes', function ($loop, $va
                                     name="variation_location_regular_price[<?php echo esc_attr($loop); ?>][<?php echo esc_attr($location->term_id); ?>]"
                                     value="<?php echo esc_attr($location_regular_price); ?>"
                                     class="wc_input_price short mulopimfwc-currency-prefix-source"
-                                    data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                                    data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>"
+                                    data-currency-rate="<?php echo esc_attr($location_currency_conversion['rate']); ?>"
+                                    data-currency-should-convert="<?php echo esc_attr($location_currency_conversion['should_convert']); ?>">
                             </td>
                             <td>
                                 <input type="text"
                                     name="variation_location_sale_price[<?php echo esc_attr($loop); ?>][<?php echo esc_attr($location->term_id); ?>]"
                                     value="<?php echo esc_attr($location_sale_price); ?>"
                                     class="wc_input_price short mulopimfwc-currency-prefix-source"
-                                    data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>">
+                                    data-currency-symbol="<?php echo esc_attr($location_currency_symbol); ?>"
+                                    data-currency-rate="<?php echo esc_attr($location_currency_conversion['rate']); ?>"
+                                    data-currency-should-convert="<?php echo esc_attr($location_currency_conversion['should_convert']); ?>">
                             </td>
                             <td>
                                 <select name="variation_location_backorders[<?php echo esc_attr($loop); ?>][<?php echo esc_attr($location->term_id); ?>]">

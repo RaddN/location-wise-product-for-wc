@@ -6662,10 +6662,25 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $currency_symbol = $currency_code;
                 }
 
+                $conversion_context = ($location_term_id > 0 && function_exists('mulopimfwc_get_location_currency_conversion_context'))
+                    ? (array) mulopimfwc_get_location_currency_conversion_context($location_term_id)
+                    : [
+                        'should_convert' => false,
+                        'rate' => 1.0,
+                    ];
+
+                $currency_rate = 1.0;
+                if (isset($conversion_context['rate']) && is_numeric($conversion_context['rate']) && (float) $conversion_context['rate'] > 0) {
+                    $currency_rate = (float) $conversion_context['rate'];
+                }
+                $currency_should_convert = !empty($conversion_context['should_convert']) && $currency_rate > 0;
+
                 return [
                     'currency_code' => $currency_code,
                     'currency_symbol' => $currency_symbol,
                     'currency_position' => $currency_position,
+                    'currency_rate' => $currency_rate,
+                    'currency_should_convert' => $currency_should_convert,
                 ];
             };
 
@@ -6710,6 +6725,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                         'currency_code' => $location_currency_data['currency_code'],
                         'currency_symbol' => $location_currency_data['currency_symbol'],
                         'currency_position' => $location_currency_data['currency_position'],
+                        'currency_rate' => $location_currency_data['currency_rate'],
+                        'currency_should_convert' => $location_currency_data['currency_should_convert'],
                     ];
                 }
             }
@@ -6731,6 +6748,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'currency_code' => $location_currency_data['currency_code'],
                     'currency_symbol' => $location_currency_data['currency_symbol'],
                     'currency_position' => $location_currency_data['currency_position'],
+                    'currency_rate' => $location_currency_data['currency_rate'],
+                    'currency_should_convert' => $location_currency_data['currency_should_convert'],
                 ];
             }
 
@@ -6778,6 +6797,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                             'currency_code' => $location_currency_data['currency_code'],
                             'currency_symbol' => $location_currency_data['currency_symbol'],
                             'currency_position' => $location_currency_data['currency_position'],
+                            'currency_rate' => $location_currency_data['currency_rate'],
+                            'currency_should_convert' => $location_currency_data['currency_should_convert'],
                         ];
                     }
 
