@@ -2073,7 +2073,7 @@ jQuery(document).ready(function ($) {
 
         // Validation rules (skip for grouped/external products where applicable)
         if (fieldName.indexOf('default[regular_price]') !== -1 && !isGrouped) {
-            if (defaultPurchasePrice > 0 && value < defaultPurchasePrice) {
+            if (defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
                 isValid = false;
                 errorMessage = 'Regular price cannot be less than purchase price (' + defaultPurchasePrice + ')';
             }
@@ -2147,7 +2147,7 @@ jQuery(document).ready(function ($) {
                 var varDefaultPurchaseQty = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][purchase_quantity]"]').val()) || 0;
                 var varManageStockEnabled = isVariationManageStockEnabled(varId);
 
-                if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value < varDefaultPurchasePrice) {
+                if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value > 0 && value < varDefaultPurchasePrice) {
                     isValid = false;
                     errorMessage = 'Regular price cannot be less than purchase price (' + varDefaultPurchasePrice + ')';
                 }
@@ -2713,9 +2713,8 @@ jQuery(document).ready(function ($) {
                     ? ($field.is(':checked') ? ($field.val() || 'yes') : 'no')
                     : $field.val();
                 
-                // Include all fields (even empty) for variation locations to track assignment
-                var isVariationLocation = name && name.indexOf('variations[') === 0 && name.indexOf('[locations][') !== -1;
-                var shouldInclude = name && value !== null && value !== undefined && (value !== '' || isVariationLocation || isCheckbox);
+                // Include all named form fields so cleared values are persisted.
+                var shouldInclude = !!name && value !== null && value !== undefined;
 
                 if (shouldInclude) {
                     // Handle locations structure
@@ -3060,7 +3059,7 @@ jQuery(document).ready(function ($) {
         // Validation rules
         if (fieldName.indexOf('default[regular_price]') !== -1) {
             // Regular price can't be less than purchase price
-            if (defaultPurchasePrice > 0 && value < defaultPurchasePrice) {
+            if (defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
                 isValid = false;
                 errorMessage = 'Regular price cannot be less than purchase price (' + defaultPurchasePrice + ')';
             }
@@ -3133,7 +3132,7 @@ jQuery(document).ready(function ($) {
                 var varDefaultStock = parseFloat($('input[name="variations[' + varMatch[1] + '][default][stock_quantity]"]').val()) || 0;
                 var varDefaultPurchaseQty = parseFloat($('input[name="variations[' + varMatch[1] + '][default][purchase_quantity]"]').val()) || 0;
 
-                if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value < varDefaultPurchasePrice) {
+                if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value > 0 && value < varDefaultPurchasePrice) {
                     isValid = false;
                     errorMessage = 'Regular price cannot be less than purchase price (' + varDefaultPurchasePrice + ')';
                 }
