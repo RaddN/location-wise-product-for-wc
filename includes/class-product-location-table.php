@@ -1522,6 +1522,63 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     }
 
     /**
+     * Convert a location-entered price into base currency when required.
+     *
+     * @param float    $price
+     * @param int|null $location_term_id
+     * @return float
+     */
+    private function normalize_location_price_to_base_currency($price, $location_term_id = null)
+    {
+        $normalized_price = $this->normalize_location_price_value($price);
+        $term_id = (int) $location_term_id;
+        if ($term_id <= 0 || $normalized_price <= 0) {
+            return $normalized_price;
+        }
+
+        $conversion_context = $this->get_currency_conversion_context_for_location($term_id);
+        $rate = isset($conversion_context['rate']) && is_numeric($conversion_context['rate'])
+            ? (float) $conversion_context['rate']
+            : 1.0;
+        $should_convert = !empty($conversion_context['should_convert']) && $rate > 0;
+
+        if (!$should_convert) {
+            return $normalized_price;
+        }
+
+        return $normalized_price / $rate;
+    }
+
+    /**
+     * Resolve the effective sale price for gross profit in base currency.
+     *
+     * @param int        $target_id
+     * @param mixed      $default_price
+     * @param int|null   $location_term_id
+     * @return float
+     */
+    private function get_effective_sale_price_for_profit($target_id, $default_price, $location_term_id = null)
+    {
+        $default_price_base = $this->normalize_location_price_value($default_price);
+        $term_id = (int) $location_term_id;
+        if ($term_id <= 0) {
+            return $default_price_base;
+        }
+
+        $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $term_id, true);
+        if ($this->has_positive_price($location_sale_price)) {
+            return $this->normalize_location_price_to_base_currency($location_sale_price, $term_id);
+        }
+
+        $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $term_id, true);
+        if ($this->has_positive_price($location_regular_price)) {
+            return $this->normalize_location_price_to_base_currency($location_regular_price, $term_id);
+        }
+
+        return $default_price_base;
+    }
+
+    /**
      * Get WooCommerce-compatible price format from currency position.
      *
      * @param string $position
@@ -1834,8 +1891,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 // Location-specific gross profit
                 if (!empty($location_terms)) {
                     foreach ($location_terms as $location) {
-                        $location_price = get_post_meta($variation['id'], '_location_sale_price_' . $location->term_id, true);
-                        $price_to_use = !empty($location_price) ? $location_price : $default_price;
+                        $price_to_use = $this->get_effective_sale_price_for_profit(
+                            (int) $variation['id'],
+                            $default_price,
+                            (int) $location->term_id
+                        );
 
                         $output .= '<div class="location-gross-profit-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
@@ -1863,8 +1923,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             // Location-specific gross profit
             if (!empty($location_terms)) {
                 foreach ($location_terms as $location) {
-                    $location_price = get_post_meta($item['id'], '_location_sale_price_' . $location->term_id, true);
-                    $price_to_use = !empty($location_price) ? $location_price : $default_price;
+                    $price_to_use = $this->get_effective_sale_price_for_profit(
+                        (int) $item['id'],
+                        $default_price,
+                        (int) $location->term_id
+                    );
 
                     $output .= '<div class="location-gross-profit-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
