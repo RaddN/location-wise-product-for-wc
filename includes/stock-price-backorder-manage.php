@@ -856,7 +856,7 @@ if (!is_admin()) {
         }
 
         $location_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location_id, true);
-        if (!empty($location_price)) {
+        if (mulopimfwc_has_price_value($location_price)) {
             return $location_price;
         }
 
@@ -885,7 +885,7 @@ if (!is_admin()) {
         }
 
         $location_price = get_post_meta($product->get_id(), '_location_sale_price_' . $location_id, true);
-        if (!empty($location_price)) {
+        if (mulopimfwc_has_price_value($location_price)) {
             return $location_price;
         }
 
@@ -1414,16 +1414,16 @@ if (!is_admin()) {
         // First check if there's a location-specific sale price
         $location_sale_price = get_post_meta($product->get_id(), '_location_sale_price_' . $location_id, true);
 
-        // If there's a valid sale price and it's not empty, use it
-        if (!empty($location_sale_price)) {
+        // If there's a valid sale price (including zero), use it
+        if (mulopimfwc_has_price_value($location_sale_price)) {
             return $location_sale_price;
         }
 
         // Otherwise, check for location-specific regular price
         $location_regular_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location_id, true);
 
-        // If there's a location-specific regular price, use it
-        if (!empty($location_regular_price)) {
+        // If there's a location-specific regular price (including zero), use it
+        if (mulopimfwc_has_price_value($location_regular_price)) {
             return $location_regular_price;
         }
 
@@ -1461,16 +1461,16 @@ if (!is_admin()) {
         // First check if there's a location-specific sale price
         $location_sale_price = get_post_meta($variation->get_id(), '_location_sale_price_' . $location_id, true);
 
-        // If there's a valid sale price and it's not empty, use it
-        if (!empty($location_sale_price)) {
+        // If there's a valid sale price (including zero), use it
+        if (mulopimfwc_has_price_value($location_sale_price)) {
             return $location_sale_price;
         }
 
         // Otherwise, check for location-specific regular price
         $location_regular_price = get_post_meta($variation->get_id(), '_location_regular_price_' . $location_id, true);
 
-        // If there's a location-specific regular price, use it
-        if (!empty($location_regular_price)) {
+        // If there's a location-specific regular price (including zero), use it
+        if (mulopimfwc_has_price_value($location_regular_price)) {
             return $location_regular_price;
         }
 
@@ -1501,14 +1501,14 @@ if (!is_admin()) {
             foreach ($variation_ids as $variation_id) {
                 // Update regular price
                 $location_regular_price = get_post_meta($variation_id, '_location_regular_price_' . $location_id, true);
-                if (!empty($location_regular_price)) {
+                if (mulopimfwc_has_price_value($location_regular_price)) {
                     $prices['regular_price'][$variation_id] = $location_regular_price;
                 }
 
                 // Update sale price
                 $location_sale_price = get_post_meta($variation_id, '_location_sale_price_' . $location_id, true);
-                if (!empty($location_sale_price)) {
-                    if (!empty($location_regular_price)) {
+                if (mulopimfwc_has_price_value($location_sale_price)) {
+                    if (mulopimfwc_has_price_value($location_regular_price)) {
                         $prices['regular_price'][$variation_id] = $location_regular_price;
                     } else {
                         $prices['regular_price'][$variation_id] = mulopimfwc_convert_price_amount_for_location(
@@ -1519,7 +1519,7 @@ if (!is_admin()) {
                     $prices['sale_price'][$variation_id] = $location_sale_price;
                     // Also update the final price when sale price exists
                     $prices['price'][$variation_id] = $location_sale_price;
-                } elseif (!empty($location_regular_price)) {
+                } elseif (mulopimfwc_has_price_value($location_regular_price)) {
                     // If no sale price but has location regular price, update the final price
                     $prices['price'][$variation_id] = $location_regular_price;
                     $prices['regular_price'][$variation_id] = $location_regular_price;
@@ -1742,12 +1742,12 @@ function mulopimfwc_display_location_specific_stock_info()
 
     $display_regular_price = '';
     $display_sale_price = '';
-    if (!empty($location_sale_price)) {
-        $display_regular_price = !empty($location_regular_price)
+    if (mulopimfwc_has_price_value($location_sale_price)) {
+        $display_regular_price = mulopimfwc_has_price_value($location_regular_price)
             ? $location_regular_price
             : mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
         $display_sale_price = $location_sale_price;
-    } elseif (!empty($location_regular_price)) {
+    } elseif (mulopimfwc_has_price_value($location_regular_price)) {
         $display_regular_price = $location_regular_price;
     } else {
         $display_regular_price = mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
@@ -1783,13 +1783,16 @@ function mulopimfwc_display_location_specific_stock_info()
     }
 
     // Display location price (location-specific first, converted fallback when needed).
-    if (($normalized_regular = mulopimfwc_normalize_price_amount($display_regular_price)) !== null && $normalized_regular > 0) {
-        $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
+    $normalized_regular = mulopimfwc_normalize_price_amount($display_regular_price);
+    $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
+    if ($normalized_regular !== null || $normalized_sale !== null) {
         echo '<p class="location-price">';
         echo '<strong>' . mulopimfwc_get_text_value('text_variation_price_label') . '</strong> ';
 
-        if ($normalized_sale !== null && $normalized_sale > 0) {
+        if ($normalized_sale !== null && $normalized_regular !== null && abs((float) $normalized_regular - (float) $normalized_sale) > 0.0001) {
             echo '<del>' . wp_kses_post(wc_price($display_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($display_sale_price)) . '</ins>';
+        } elseif ($normalized_sale !== null) {
+            echo wp_kses_post(wc_price($display_sale_price));
         } else {
             echo wp_kses_post(wc_price($display_regular_price));
         }
@@ -1894,12 +1897,12 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
 
     $display_regular_price = '';
     $display_sale_price = '';
-    if (!empty($location_sale_price)) {
-        $display_regular_price = !empty($location_regular_price)
+    if (mulopimfwc_has_price_value($location_sale_price)) {
+        $display_regular_price = mulopimfwc_has_price_value($location_regular_price)
             ? $location_regular_price
             : mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
         $display_sale_price = $location_sale_price;
-    } elseif (!empty($location_regular_price)) {
+    } elseif (mulopimfwc_has_price_value($location_regular_price)) {
         $display_regular_price = $location_regular_price;
     } else {
         $display_regular_price = mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
@@ -1929,10 +1932,10 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
     $variation_data['location_data'] = [
         'location_name' => $location->name,
         'location_stock' => $location_stock,
-        'location_regular_price' => ($normalized_display_regular !== null && $normalized_display_regular > 0)
+        'location_regular_price' => ($normalized_display_regular !== null)
             ? wc_price($display_regular_price)
             : '',
-        'location_sale_price' => ($normalized_display_sale !== null && $normalized_display_sale > 0)
+        'location_sale_price' => ($normalized_display_sale !== null)
             ? wc_price($display_sale_price)
             : '',
         'location_backorders' => mulopimfwc_normalize_backorder_value($location_backorders, 'location'),
@@ -1991,12 +1994,12 @@ function mulopimfwc_display_location_stock_status_in_loop()
 
     $display_regular_price = '';
     $display_sale_price = '';
-    if (!empty($location_sale_price)) {
-        $display_regular_price = !empty($location_regular_price)
+    if (mulopimfwc_has_price_value($location_sale_price)) {
+        $display_regular_price = mulopimfwc_has_price_value($location_regular_price)
             ? $location_regular_price
             : mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
         $display_sale_price = $location_sale_price;
-    } elseif (!empty($location_regular_price)) {
+    } elseif (mulopimfwc_has_price_value($location_regular_price)) {
         $display_regular_price = $location_regular_price;
     } else {
         $display_regular_price = mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
@@ -2027,13 +2030,16 @@ function mulopimfwc_display_location_stock_status_in_loop()
     }
 
     // Display location price (location-specific first, converted fallback when needed).
-    if (($normalized_regular = mulopimfwc_normalize_price_amount($display_regular_price)) !== null && $normalized_regular > 0) {
-        $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
+    $normalized_regular = mulopimfwc_normalize_price_amount($display_regular_price);
+    $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
+    if ($normalized_regular !== null || $normalized_sale !== null) {
         echo '<div class="location-price-loop">';
         echo '<small>' . sprintf(esc_html('%s price:', 'multi-location-product-and-inventory-management'), esc_attr($location->name)) . '</small> ';
 
-        if ($normalized_sale !== null && $normalized_sale > 0) {
+        if ($normalized_sale !== null && $normalized_regular !== null && abs((float) $normalized_regular - (float) $normalized_sale) > 0.0001) {
             echo '<del>' . wp_kses_post(wc_price($display_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($display_sale_price)) . '</ins>';
+        } elseif ($normalized_sale !== null) {
+            echo wp_kses_post(wc_price($display_sale_price));
         } else {
             echo wp_kses_post(wc_price($display_regular_price));
         }
@@ -2149,6 +2155,19 @@ if (!function_exists('mulopimfwc_normalize_price_amount')) {
         }
 
         return null;
+    }
+}
+
+if (!function_exists('mulopimfwc_has_price_value')) {
+    /**
+     * Check whether a price value is explicitly set (including numeric zero).
+     *
+     * @param mixed $amount
+     * @return bool
+     */
+    function mulopimfwc_has_price_value($amount)
+    {
+        return mulopimfwc_normalize_price_amount($amount) !== null;
     }
 }
 

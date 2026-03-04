@@ -73,7 +73,7 @@ Fix direction:
 
 ---
 
-### C-03: Valid `0` location prices are treated as empty/missing
+### C-03: Valid `0` location prices are treated as empty/missing *fixed*
 Severity: **High**
 
 Scenario:

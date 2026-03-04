@@ -4939,10 +4939,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $new_location_id, true);
                 $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $new_location_id, true);
                 
-                // Use sale price if available, otherwise regular price, otherwise keep current price
-                if (!empty($location_sale_price)) {
+                // Use sale price if configured (including zero), otherwise regular price.
+                if ($location_sale_price !== '' && $location_sale_price !== null) {
                     $new_price_per_unit = floatval($location_sale_price);
-                } elseif (!empty($location_regular_price)) {
+                } elseif ($location_regular_price !== '' && $location_regular_price !== null) {
                     $new_price_per_unit = floatval($location_regular_price);
                 } else {
                     // No location-specific price, use product's default price
@@ -4951,7 +4951,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                         // Get the actual price (sale price if on sale, otherwise regular price)
                         $sale_price = $product_obj->get_sale_price();
                         $regular_price = $product_obj->get_regular_price();
-                        $new_price_per_unit = !empty($sale_price) ? floatval($sale_price) : floatval($regular_price);
+                        $new_price_per_unit = ($sale_price !== '' && $sale_price !== null)
+                            ? floatval($sale_price)
+                            : floatval($regular_price);
                     } else {
                         // Fallback: calculate from current item price
                         $new_price_per_unit = floatval($old_price) / floatval($quantity);

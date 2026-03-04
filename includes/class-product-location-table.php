@@ -1411,12 +1411,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         $location_regular_price = get_post_meta($variation['id'], '_location_regular_price_' . $location->term_id, true);
                         $location_sale_price = get_post_meta($variation['id'], '_location_sale_price_' . $location->term_id, true);
 
-                        if ($this->has_positive_price($location_sale_price)) {
-                            $effective_regular_price = $this->has_positive_price($location_regular_price)
+                        if ($this->has_configured_price($location_sale_price)) {
+                            $effective_regular_price = $this->has_configured_price($location_regular_price)
                                 ? $location_regular_price
                                 : $default_regular_for_location;
                             $effective_sale_price = $location_sale_price;
-                        } elseif ($this->has_positive_price($location_regular_price)) {
+                        } elseif ($this->has_configured_price($location_regular_price)) {
                             $effective_regular_price = $location_regular_price;
                             $effective_sale_price = '';
                         } else {
@@ -1460,12 +1460,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     $location_regular_price = get_post_meta($item['id'], '_location_regular_price_' . $location->term_id, true);
                     $location_sale_price = get_post_meta($item['id'], '_location_sale_price_' . $location->term_id, true);
 
-                    if ($this->has_positive_price($location_sale_price)) {
-                        $effective_regular_price = $this->has_positive_price($location_regular_price)
+                    if ($this->has_configured_price($location_sale_price)) {
+                        $effective_regular_price = $this->has_configured_price($location_regular_price)
                             ? $location_regular_price
                             : $default_regular_for_location;
                         $effective_sale_price = $location_sale_price;
-                    } elseif ($this->has_positive_price($location_regular_price)) {
+                    } elseif ($this->has_configured_price($location_regular_price)) {
                         $effective_regular_price = $location_regular_price;
                         $effective_sale_price = '';
                     } else {
@@ -1511,14 +1511,27 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     }
 
     /**
-     * Determine whether a price value is a positive number.
+     * Determine whether a price value is explicitly configured.
      *
      * @param mixed $value
      * @return bool
      */
-    private function has_positive_price($value)
+    private function has_configured_price($value)
     {
-        return $this->normalize_location_price_value($value) > 0;
+        if ($value === null || $value === '') {
+            return false;
+        }
+
+        if (is_numeric($value)) {
+            return true;
+        }
+
+        if (function_exists('wc_format_decimal')) {
+            $formatted = wc_format_decimal($value, 6, false);
+            return $formatted !== '' && is_numeric($formatted);
+        }
+
+        return false;
     }
 
     /**
@@ -1566,12 +1579,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         }
 
         $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $term_id, true);
-        if ($this->has_positive_price($location_sale_price)) {
+        if ($this->has_configured_price($location_sale_price)) {
             return $this->normalize_location_price_to_base_currency($location_sale_price, $term_id);
         }
 
         $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $term_id, true);
-        if ($this->has_positive_price($location_regular_price)) {
+        if ($this->has_configured_price($location_regular_price)) {
             return $this->normalize_location_price_to_base_currency($location_regular_price, $term_id);
         }
 
@@ -1772,22 +1785,25 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $regular = $this->normalize_location_price_value($regular_price);
         $sale = $this->normalize_location_price_value($sale_price);
         $fallback = $this->normalize_location_price_value($fallback_price);
+        $has_regular = $this->has_configured_price($regular_price);
+        $has_sale = $this->has_configured_price($sale_price);
+        $has_fallback = $this->has_configured_price($fallback_price);
         $currency_settings = $this->get_currency_settings_for_location($location_term_id);
         $price_args = [
             'currency' => $currency_settings['currency'],
             'price_format' => $this->get_price_format_for_currency_position($currency_settings['position']),
         ];
 
-        if ($sale > 0) {
-            $base = $regular > 0 ? $regular : $fallback;
-            if ($base > 0 && abs($base - $sale) > 0.0001) {
+        if ($has_sale) {
+            $base = $has_regular ? $regular : ($has_fallback ? $fallback : null);
+            if ($base !== null && abs($base - $sale) > 0.0001) {
                 return '<span class="price-value"><del>' . wc_price($base, $price_args) . '</del> <ins>' . wc_price($sale, $price_args) . '</ins></span>';
             }
 
             return '<span class="price-value">' . wc_price($sale, $price_args) . '</span>';
         }
 
-        $display = $regular > 0 ? $regular : $fallback;
+        $display = $has_regular ? $regular : $fallback;
         return '<span class="price-value">' . wc_price($display, $price_args) . '</span>';
     }
 
