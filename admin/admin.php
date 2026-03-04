@@ -929,15 +929,57 @@ JS;
         );
     }
 
+    private function get_raw_option_value(string $option_name): string
+    {
+        global $wpdb;
+
+        if (!isset($wpdb) || !is_object($wpdb) || empty($wpdb->options)) {
+            return '';
+        }
+
+        $raw_value = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+                $option_name
+            )
+        );
+
+        if (!is_string($raw_value)) {
+            return '';
+        }
+
+        $unserialized = maybe_unserialize($raw_value);
+        return is_string($unserialized) ? trim($unserialized) : '';
+    }
+
     private function get_default_currency_code(): string
     {
-        $currency = get_option('woocommerce_currency', 'USD');
-        return is_string($currency) ? strtoupper($currency) : 'USD';
+        // Use raw DB option first so location-wise currency filters do not alter the base store currency.
+        $currency = strtoupper($this->get_raw_option_value('woocommerce_currency'));
+
+        if ($currency === '') {
+            $currency = strtoupper(trim((string) get_option('woocommerce_currency', '')));
+        }
+
+        if ($currency === '' && function_exists('get_woocommerce_currency')) {
+            $currency = strtoupper(trim((string) get_woocommerce_currency()));
+        }
+
+        $currency_options = $this->get_currency_options();
+        if ($currency !== '' && !empty($currency_options) && !isset($currency_options[$currency])) {
+            $currency = '';
+        }
+
+        return $currency !== '' ? $currency : 'USD';
     }
 
     private function get_default_currency_position(): string
     {
-        $default_position = (string) get_option('woocommerce_currency_pos', 'left');
+        $default_position = sanitize_key($this->get_raw_option_value('woocommerce_currency_pos'));
+        if ($default_position === '') {
+            $default_position = sanitize_key((string) get_option('woocommerce_currency_pos', ''));
+        }
+
         $positions = $this->get_currency_position_options();
 
         return isset($positions[$default_position]) ? $default_position : 'left';
