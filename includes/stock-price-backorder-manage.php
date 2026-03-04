@@ -806,8 +806,11 @@ if (!is_admin()) {
         }
 
         $location_price = get_post_meta($product->get_id(), '_location_regular_price_' . $location_id, true);
+        if (!empty($location_price)) {
+            return $location_price;
+        }
 
-        return !empty($location_price) ? $location_price : $price;
+        return mulopimfwc_convert_price_amount_for_location($price, $location_id);
     }, 10, 2);
     // Override sale price for simple products
     add_filter('woocommerce_product_get_sale_price', function ($price, $product) {
@@ -832,8 +835,11 @@ if (!is_admin()) {
         }
 
         $location_price = get_post_meta($product->get_id(), '_location_sale_price_' . $location_id, true);
+        if (!empty($location_price)) {
+            return $location_price;
+        }
 
-        return !empty($location_price) ? $location_price : $price;
+        return mulopimfwc_convert_price_amount_for_location($price, $location_id);
     }, 10, 2);
 }
 
@@ -1371,8 +1377,8 @@ if (!is_admin()) {
             return $location_regular_price;
         }
 
-        // If no location-specific prices, return the original price
-        return $price;
+        // If no location-specific prices, convert fallback/base price when required.
+        return mulopimfwc_convert_price_amount_for_location($price, $location_id);
     }, 10, 2);
 
     // Override the final price for variation products
@@ -1418,8 +1424,8 @@ if (!is_admin()) {
             return $location_regular_price;
         }
 
-        // If no location-specific prices, return the original price
-        return $price;
+        // If no location-specific prices, convert fallback/base price when required.
+        return mulopimfwc_convert_price_amount_for_location($price, $location_id);
     }, 10, 2);
 
     // We also need to ensure variation price sync works correctly
@@ -1452,12 +1458,34 @@ if (!is_admin()) {
                 // Update sale price
                 $location_sale_price = get_post_meta($variation_id, '_location_sale_price_' . $location_id, true);
                 if (!empty($location_sale_price)) {
+                    if (!empty($location_regular_price)) {
+                        $prices['regular_price'][$variation_id] = $location_regular_price;
+                    } else {
+                        $prices['regular_price'][$variation_id] = mulopimfwc_convert_price_amount_for_location(
+                            $prices['regular_price'][$variation_id] ?? '',
+                            $location_id
+                        );
+                    }
                     $prices['sale_price'][$variation_id] = $location_sale_price;
                     // Also update the final price when sale price exists
                     $prices['price'][$variation_id] = $location_sale_price;
                 } elseif (!empty($location_regular_price)) {
                     // If no sale price but has location regular price, update the final price
                     $prices['price'][$variation_id] = $location_regular_price;
+                    $prices['regular_price'][$variation_id] = $location_regular_price;
+                } else {
+                    $prices['regular_price'][$variation_id] = mulopimfwc_convert_price_amount_for_location(
+                        $prices['regular_price'][$variation_id] ?? '',
+                        $location_id
+                    );
+                    $prices['sale_price'][$variation_id] = mulopimfwc_convert_price_amount_for_location(
+                        $prices['sale_price'][$variation_id] ?? '',
+                        $location_id
+                    );
+                    $prices['price'][$variation_id] = mulopimfwc_convert_price_amount_for_location(
+                        $prices['price'][$variation_id] ?? '',
+                        $location_id
+                    );
                 }
             }
         }
@@ -1659,6 +1687,22 @@ function mulopimfwc_display_location_specific_stock_info()
     // Get location-specific prices
     $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $location->term_id, true);
     $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $location->term_id, true);
+    $default_regular_price = get_post_meta($target_id, '_regular_price', true);
+    $default_sale_price = get_post_meta($target_id, '_sale_price', true);
+
+    $display_regular_price = '';
+    $display_sale_price = '';
+    if (!empty($location_sale_price)) {
+        $display_regular_price = !empty($location_regular_price)
+            ? $location_regular_price
+            : mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
+        $display_sale_price = $location_sale_price;
+    } elseif (!empty($location_regular_price)) {
+        $display_regular_price = $location_regular_price;
+    } else {
+        $display_regular_price = mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
+        $display_sale_price = mulopimfwc_convert_price_amount_for_location($default_sale_price, (int) $location->term_id);
+    }
 
     // Get backorder setting
     $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location->term_id, true);
@@ -1688,15 +1732,16 @@ function mulopimfwc_display_location_specific_stock_info()
         }
     }
 
-    // Display location-specific prices if they exist
-    if (!empty($location_regular_price)) {
+    // Display location price (location-specific first, converted fallback when needed).
+    if (($normalized_regular = mulopimfwc_normalize_price_amount($display_regular_price)) !== null && $normalized_regular > 0) {
+        $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
         echo '<p class="location-price">';
         echo '<strong>' . mulopimfwc_get_text_value('text_variation_price_label') . '</strong> ';
 
-        if (!empty($location_sale_price)) {
-            echo '<del>' . wp_kses_post(wc_price($location_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($location_sale_price)) . '</ins>';
+        if ($normalized_sale !== null && $normalized_sale > 0) {
+            echo '<del>' . wp_kses_post(wc_price($display_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($display_sale_price)) . '</ins>';
         } else {
-            echo wp_kses_post(wc_price($location_regular_price));
+            echo wp_kses_post(wc_price($display_regular_price));
         }
         echo '</p>';
     }
@@ -1794,6 +1839,22 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
     // Get location-specific prices
     $location_regular_price = get_post_meta($variation_id, '_location_regular_price_' . $location->term_id, true);
     $location_sale_price = get_post_meta($variation_id, '_location_sale_price_' . $location->term_id, true);
+    $default_regular_price = get_post_meta($variation_id, '_regular_price', true);
+    $default_sale_price = get_post_meta($variation_id, '_sale_price', true);
+
+    $display_regular_price = '';
+    $display_sale_price = '';
+    if (!empty($location_sale_price)) {
+        $display_regular_price = !empty($location_regular_price)
+            ? $location_regular_price
+            : mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
+        $display_sale_price = $location_sale_price;
+    } elseif (!empty($location_regular_price)) {
+        $display_regular_price = $location_regular_price;
+    } else {
+        $display_regular_price = mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
+        $display_sale_price = mulopimfwc_convert_price_amount_for_location($default_sale_price, (int) $location->term_id);
+    }
 
     // Get backorder setting
     $location_backorders = get_post_meta($variation_id, '_location_backorders_' . $location->term_id, true);
@@ -1813,11 +1874,17 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
         : ['show' => true, 'label' => ($location_stock > 0 ? sprintf(esc_html('%d in stock', 'multi-location-product-and-inventory-management'), esc_attr($location_stock)) : __('Out of stock', 'multi-location-product-and-inventory-management')), 'status' => ($location_stock > 0 ? 'instock' : 'outofstock'), 'level' => '', 'class' => ''];
 
     // Add location data to variation data
+    $normalized_display_regular = mulopimfwc_normalize_price_amount($display_regular_price);
+    $normalized_display_sale = mulopimfwc_normalize_price_amount($display_sale_price);
     $variation_data['location_data'] = [
         'location_name' => $location->name,
         'location_stock' => $location_stock,
-        'location_regular_price' => wc_price($location_regular_price),
-        'location_sale_price' => wc_price($location_sale_price),
+        'location_regular_price' => ($normalized_display_regular !== null && $normalized_display_regular > 0)
+            ? wc_price($display_regular_price)
+            : '',
+        'location_sale_price' => ($normalized_display_sale !== null && $normalized_display_sale > 0)
+            ? wc_price($display_sale_price)
+            : '',
         'location_backorders' => mulopimfwc_normalize_backorder_value($location_backorders, 'location'),
         'stock_display' => [
             'show' => !empty($stock_display['show']),
@@ -1868,7 +1935,23 @@ function mulopimfwc_display_location_stock_status_in_loop()
     $location_stock = get_post_meta($product_id, '_location_stock_' . $location->term_id, true);
     $location_regular_price = get_post_meta($product_id, '_location_regular_price_' . $location->term_id, true);
     $location_sale_price = get_post_meta($product_id, '_location_sale_price_' . $location->term_id, true);
+    $default_regular_price = get_post_meta($product_id, '_regular_price', true);
+    $default_sale_price = get_post_meta($product_id, '_sale_price', true);
     $location_backorders = get_post_meta($product_id, '_location_backorders_' . $location->term_id, true);
+
+    $display_regular_price = '';
+    $display_sale_price = '';
+    if (!empty($location_sale_price)) {
+        $display_regular_price = !empty($location_regular_price)
+            ? $location_regular_price
+            : mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
+        $display_sale_price = $location_sale_price;
+    } elseif (!empty($location_regular_price)) {
+        $display_regular_price = $location_regular_price;
+    } else {
+        $display_regular_price = mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
+        $display_sale_price = mulopimfwc_convert_price_amount_for_location($default_sale_price, (int) $location->term_id);
+    }
 
     echo '<div class="location-loop-details">';
 
@@ -1893,15 +1976,16 @@ function mulopimfwc_display_location_stock_status_in_loop()
         }
     }
 
-    // Display location-specific price if available
-    if (!empty($location_regular_price)) {
+    // Display location price (location-specific first, converted fallback when needed).
+    if (($normalized_regular = mulopimfwc_normalize_price_amount($display_regular_price)) !== null && $normalized_regular > 0) {
+        $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
         echo '<div class="location-price-loop">';
         echo '<small>' . sprintf(esc_html('%s price:', 'multi-location-product-and-inventory-management'), esc_attr($location->name)) . '</small> ';
 
-        if (!empty($location_sale_price)) {
-            echo '<del>' . wp_kses_post(wc_price($location_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($location_sale_price)) . '</ins>';
+        if ($normalized_sale !== null && $normalized_sale > 0) {
+            echo '<del>' . wp_kses_post(wc_price($display_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($display_sale_price)) . '</ins>';
         } else {
-            echo wp_kses_post(wc_price($location_regular_price));
+            echo wp_kses_post(wc_price($display_regular_price));
         }
 
         echo '</div>';
@@ -1987,6 +2071,176 @@ if (!function_exists('mulopimfwc_get_currency_settings_for_location')) {
 
         $settings_cache[$cache_key] = $settings;
         return $settings;
+    }
+}
+
+if (!function_exists('mulopimfwc_normalize_price_amount')) {
+    /**
+     * Normalize mixed price input to float when possible.
+     *
+     * @param mixed $amount
+     * @return float|null
+     */
+    function mulopimfwc_normalize_price_amount($amount)
+    {
+        if ($amount === null || $amount === '') {
+            return null;
+        }
+
+        if (is_numeric($amount)) {
+            return (float) $amount;
+        }
+
+        if (function_exists('wc_format_decimal')) {
+            $formatted = wc_format_decimal($amount, 6, false);
+            if ($formatted !== '' && is_numeric($formatted)) {
+                return (float) $formatted;
+            }
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_store_base_currency_code_raw')) {
+    /**
+     * Read the configured WooCommerce base currency directly from DB.
+     *
+     * This bypasses runtime currency filters to keep conversion source stable.
+     *
+     * @return string
+     */
+    function mulopimfwc_get_store_base_currency_code_raw()
+    {
+        static $base_currency = null;
+
+        if ($base_currency !== null) {
+            return $base_currency;
+        }
+
+        $base_currency = 'USD';
+
+        global $wpdb;
+        if (isset($wpdb) && !empty($wpdb->options)) {
+            $raw = $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+                    'woocommerce_currency'
+                )
+            );
+
+            if (is_string($raw) && $raw !== '') {
+                $candidate = strtoupper(trim($raw));
+                if ($candidate !== '') {
+                    $base_currency = $candidate;
+                    return $base_currency;
+                }
+            }
+        }
+
+        $fallback = strtoupper((string) get_option('woocommerce_currency', 'USD'));
+        if ($fallback !== '') {
+            $base_currency = $fallback;
+        }
+
+        return $base_currency;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_location_currency_conversion_context')) {
+    /**
+     * Build conversion context (base/target/rate) for a location.
+     *
+     * @param int $location_term_id
+     * @return array{should_convert: bool, base_currency: string, target_currency: string, rate: float}
+     */
+    function mulopimfwc_get_location_currency_conversion_context($location_term_id)
+    {
+        static $cache = [];
+
+        $term_id = absint($location_term_id);
+        if ($term_id <= 0) {
+            return [
+                'should_convert' => false,
+                'base_currency' => '',
+                'target_currency' => '',
+                'rate' => 1.0,
+            ];
+        }
+
+        if (isset($cache[$term_id])) {
+            return $cache[$term_id];
+        }
+
+        global $mulopimfwc_options;
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        if (!mulopimfwc_is_location_wise_currency_enabled($options)) {
+            $cache[$term_id] = [
+                'should_convert' => false,
+                'base_currency' => '',
+                'target_currency' => '',
+                'rate' => 1.0,
+            ];
+            return $cache[$term_id];
+        }
+
+        $base_currency = mulopimfwc_get_store_base_currency_code_raw();
+        $currency_settings = mulopimfwc_get_currency_settings_for_location($term_id);
+        $target_currency = strtoupper(trim((string) ($currency_settings['currency'] ?? '')));
+
+        $rate = 1.0;
+        $rate_raw = get_term_meta($term_id, 'location_currency_rate', true);
+        if (is_numeric($rate_raw) && (float) $rate_raw > 0) {
+            $rate = (float) $rate_raw;
+        }
+
+        $should_convert = (
+            $base_currency !== '' &&
+            $target_currency !== '' &&
+            $base_currency !== $target_currency &&
+            $rate > 0
+        );
+
+        $cache[$term_id] = [
+            'should_convert' => $should_convert,
+            'base_currency' => $base_currency,
+            'target_currency' => $target_currency,
+            'rate' => $rate,
+        ];
+
+        return $cache[$term_id];
+    }
+}
+
+if (!function_exists('mulopimfwc_convert_price_amount_for_location')) {
+    /**
+     * Convert a base-currency amount into selected location currency when needed.
+     *
+     * @param mixed $amount
+     * @param int   $location_term_id
+     * @return mixed
+     */
+    function mulopimfwc_convert_price_amount_for_location($amount, $location_term_id)
+    {
+        $normalized_amount = mulopimfwc_normalize_price_amount($amount);
+        if ($normalized_amount === null) {
+            return $amount;
+        }
+
+        $context = mulopimfwc_get_location_currency_conversion_context($location_term_id);
+        if (empty($context['should_convert'])) {
+            return $amount;
+        }
+
+        $converted = $normalized_amount * (float) $context['rate'];
+        if (function_exists('wc_format_decimal')) {
+            return wc_format_decimal($converted, 6, false);
+        }
+
+        return round($converted, 6);
     }
 }
 

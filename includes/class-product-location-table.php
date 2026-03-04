@@ -1385,25 +1385,36 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 }
                 if (!empty($location_terms)) {
                     foreach ($location_terms as $location) {
+                        $location_term_id = (int) $location->term_id;
+                        $default_regular_for_location = function_exists('mulopimfwc_convert_price_amount_for_location')
+                            ? mulopimfwc_convert_price_amount_for_location($default_regular_price, $location_term_id)
+                            : $default_regular_price;
+                        $default_sale_for_location = function_exists('mulopimfwc_convert_price_amount_for_location')
+                            ? mulopimfwc_convert_price_amount_for_location($default_sale_price, $location_term_id)
+                            : $default_sale_price;
+                        $default_active_for_location = function_exists('mulopimfwc_convert_price_amount_for_location')
+                            ? mulopimfwc_convert_price_amount_for_location($default_active_price, $location_term_id)
+                            : $default_active_price;
+
                         $location_regular_price = get_post_meta($variation['id'], '_location_regular_price_' . $location->term_id, true);
                         $location_sale_price = get_post_meta($variation['id'], '_location_sale_price_' . $location->term_id, true);
 
                         if ($this->has_positive_price($location_sale_price)) {
                             $effective_regular_price = $this->has_positive_price($location_regular_price)
                                 ? $location_regular_price
-                                : $default_regular_price;
+                                : $default_regular_for_location;
                             $effective_sale_price = $location_sale_price;
                         } elseif ($this->has_positive_price($location_regular_price)) {
                             $effective_regular_price = $location_regular_price;
                             $effective_sale_price = '';
                         } else {
-                            $effective_regular_price = $default_regular_price;
-                            $effective_sale_price = $default_sale_price;
+                            $effective_regular_price = $default_regular_for_location;
+                            $effective_sale_price = $default_sale_for_location;
                         }
 
                         $output .= '<div class="location-price-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                        $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_active_price, (int) $location->term_id);
+                        $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_active_for_location, $location_term_id);
                         $output .= '</div>';
                     }
                 }
@@ -1423,25 +1434,36 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             }
             if (!empty($location_terms)) {
                 foreach ($location_terms as $location) {
+                    $location_term_id = (int) $location->term_id;
+                    $default_regular_for_location = function_exists('mulopimfwc_convert_price_amount_for_location')
+                        ? mulopimfwc_convert_price_amount_for_location($default_regular_price, $location_term_id)
+                        : $default_regular_price;
+                    $default_sale_for_location = function_exists('mulopimfwc_convert_price_amount_for_location')
+                        ? mulopimfwc_convert_price_amount_for_location($default_sale_price, $location_term_id)
+                        : $default_sale_price;
+                    $default_active_for_location = function_exists('mulopimfwc_convert_price_amount_for_location')
+                        ? mulopimfwc_convert_price_amount_for_location($default_price, $location_term_id)
+                        : $default_price;
+
                     $location_regular_price = get_post_meta($item['id'], '_location_regular_price_' . $location->term_id, true);
                     $location_sale_price = get_post_meta($item['id'], '_location_sale_price_' . $location->term_id, true);
 
                     if ($this->has_positive_price($location_sale_price)) {
                         $effective_regular_price = $this->has_positive_price($location_regular_price)
                             ? $location_regular_price
-                            : $default_regular_price;
+                            : $default_regular_for_location;
                         $effective_sale_price = $location_sale_price;
                     } elseif ($this->has_positive_price($location_regular_price)) {
                         $effective_regular_price = $location_regular_price;
                         $effective_sale_price = '';
                     } else {
-                        $effective_regular_price = $default_regular_price;
-                        $effective_sale_price = $default_sale_price;
+                        $effective_regular_price = $default_regular_for_location;
+                        $effective_sale_price = $default_sale_for_location;
                     }
 
                     $output .= '<div class="location-price-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                    $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_price, (int) $location->term_id);
+                    $output .= $this->format_price_by_location_display($effective_regular_price, $effective_sale_price, $default_active_for_location, $location_term_id);
                     $output .= '</div>';
                 }
             }
