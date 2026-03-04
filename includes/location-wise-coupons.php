@@ -13,6 +13,9 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
     public function __construct()
     {
+        // Convert fixed coupon values to the active location currency at runtime.
+        add_filter('woocommerce_coupon_get_amount', [$this, 'filter_coupon_amount_by_location_currency'], 20, 2);
+
         $options = get_option('mulopimfwc_display_options', []);
         if (function_exists('mulopimfwc_is_location_discounts_enabled') && !mulopimfwc_is_location_discounts_enabled($options)) {
             return;
@@ -29,6 +32,38 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
         // Improve error message (optional)
         add_filter('woocommerce_coupon_error', [$this, 'friendly_error_message'], 10, 3);
+    }
+
+    /**
+     * Convert fixed coupon amounts from base currency to selected location currency.
+     *
+     * Percentage coupons are untouched.
+     *
+     * @param mixed     $amount
+     * @param WC_Coupon $coupon
+     * @return mixed
+     */
+    public function filter_coupon_amount_by_location_currency($amount, $coupon)
+    {
+        if (is_admin() && !wp_doing_ajax()) {
+            return $amount;
+        }
+
+        if (!$coupon instanceof WC_Coupon) {
+            return $amount;
+        }
+
+        $discount_type = (string) $coupon->get_discount_type();
+        if (!in_array($discount_type, ['fixed_cart', 'fixed_product'], true)) {
+            return $amount;
+        }
+
+        if (!function_exists('mulopimfwc_convert_base_amount_to_runtime_currency')) {
+            return $amount;
+        }
+
+        $converted_amount = mulopimfwc_convert_base_amount_to_runtime_currency($amount);
+        return is_numeric($converted_amount) ? (float) $converted_amount : $amount;
     }
 
     /** -------------------------

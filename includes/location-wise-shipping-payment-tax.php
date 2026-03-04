@@ -151,6 +151,124 @@ if (!function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
     }
 }
 
+if (!function_exists('mulopimfwc_get_runtime_currency_conversion_context')) {
+    /**
+     * Resolve runtime currency conversion context for the active location.
+     *
+     * @param int|null $preferred_location_term_id Optional explicit location term ID.
+     * @return array{location_id: int, should_convert: bool, rate: float}
+     */
+    function mulopimfwc_get_runtime_currency_conversion_context($preferred_location_term_id = null): array
+    {
+        static $cache = [];
+
+        $term_id = absint($preferred_location_term_id);
+        $cache_key = $term_id > 0 ? 'term_' . $term_id : 'runtime';
+
+        if (isset($cache[$cache_key])) {
+            return $cache[$cache_key];
+        }
+
+        if ($term_id <= 0) {
+            $runtime_slug = function_exists('mulopimfwc_get_effective_runtime_location_slug')
+                ? sanitize_title(rawurldecode((string) mulopimfwc_get_effective_runtime_location_slug()))
+                : '';
+
+            if ($runtime_slug === '' || $runtime_slug === 'all-products') {
+                $cache[$cache_key] = [
+                    'location_id' => 0,
+                    'should_convert' => false,
+                    'rate' => 1.0,
+                ];
+                return $cache[$cache_key];
+            }
+
+            $location_term = function_exists('mulopimfwc_validate_location_slug')
+                ? mulopimfwc_validate_location_slug($runtime_slug, false)
+                : get_term_by('slug', $runtime_slug, 'mulopimfwc_store_location');
+
+            if (!$location_term || is_wp_error($location_term)) {
+                $cache[$cache_key] = [
+                    'location_id' => 0,
+                    'should_convert' => false,
+                    'rate' => 1.0,
+                ];
+                return $cache[$cache_key];
+            }
+
+            $term_id = (int) $location_term->term_id;
+            if ($term_id <= 0) {
+                $cache[$cache_key] = [
+                    'location_id' => 0,
+                    'should_convert' => false,
+                    'rate' => 1.0,
+                ];
+                return $cache[$cache_key];
+            }
+        }
+
+        $context = function_exists('mulopimfwc_get_location_currency_conversion_context')
+            ? (array) mulopimfwc_get_location_currency_conversion_context($term_id)
+            : [
+                'should_convert' => false,
+                'rate' => 1.0,
+            ];
+
+        $rate = (isset($context['rate']) && is_numeric($context['rate']) && (float) $context['rate'] > 0)
+            ? (float) $context['rate']
+            : 1.0;
+
+        $cache[$cache_key] = [
+            'location_id' => $term_id,
+            'should_convert' => !empty($context['should_convert']) && $rate > 0,
+            'rate' => $rate,
+        ];
+
+        return $cache[$cache_key];
+    }
+}
+
+if (!function_exists('mulopimfwc_convert_base_amount_to_runtime_currency')) {
+    /**
+     * Convert a base-currency amount into the active runtime location currency.
+     *
+     * @param mixed    $amount Base-currency amount.
+     * @param int|null $preferred_location_term_id Optional explicit location term ID.
+     * @return mixed
+     */
+    function mulopimfwc_convert_base_amount_to_runtime_currency($amount, $preferred_location_term_id = null)
+    {
+        $normalized_amount = null;
+
+        if (function_exists('mulopimfwc_normalize_price_amount')) {
+            $normalized_amount = mulopimfwc_normalize_price_amount($amount);
+        } elseif (is_numeric($amount)) {
+            $normalized_amount = (float) $amount;
+        } elseif (function_exists('wc_format_decimal')) {
+            $formatted = wc_format_decimal($amount, 6, false);
+            if ($formatted !== '' && is_numeric($formatted)) {
+                $normalized_amount = (float) $formatted;
+            }
+        }
+
+        if ($normalized_amount === null) {
+            return $amount;
+        }
+
+        $context = mulopimfwc_get_runtime_currency_conversion_context($preferred_location_term_id);
+        if (empty($context['should_convert']) || !isset($context['rate']) || (float) $context['rate'] <= 0) {
+            return $normalized_amount;
+        }
+
+        $converted = $normalized_amount * (float) $context['rate'];
+        if (function_exists('wc_format_decimal')) {
+            return (float) wc_format_decimal($converted, 6, false);
+        }
+
+        return round($converted, 6);
+    }
+}
+
 /**
  * Runtime filters to enforce location-scoped shipping, payments & tax class
  */
@@ -159,6 +277,7 @@ class MULOPIMFWC_Runtime_Filters
 
     /** Cache of current location config for this request */
     protected static $loc_cache = null;
+    protected $converted_package_rate_hashes = [];
 
     public function __construct()
     {
@@ -176,6 +295,15 @@ class MULOPIMFWC_Runtime_Filters
         $shipping_enabled = function_exists('mulopimfwc_is_location_shipping_enabled')
             ? mulopimfwc_is_location_shipping_enabled($options)
             : (isset($options['enable_location_shipping']) && $options['enable_location_shipping'] === 'on');
+
+        $currency_enabled = function_exists('mulopimfwc_is_location_wise_currency_enabled')
+            ? mulopimfwc_is_location_wise_currency_enabled($options)
+            : false;
+
+        if ($currency_enabled) {
+            // Convert runtime shipping amounts from base currency into location currency.
+            add_filter('woocommerce_package_rates', [$this, 'convert_package_rate_amounts_for_currency'], 80, 2);
+        }
 
         if ($shipping_enabled && $this->is_per_location_shipping_calculation($options)) {
             // Shipping: remove disallowed shipping method instances
@@ -368,6 +496,89 @@ class MULOPIMFWC_Runtime_Filters
                 }
                 unset($rates[$key]);
             }
+        }
+
+        return $rates;
+    }
+
+    /**
+     * Convert shipping-rate monetary amounts to active location currency.
+     *
+     * @param array $rates
+     * @param array $package
+     * @return array
+     */
+    public function convert_package_rate_amounts_for_currency($rates, $package)
+    {
+        if (empty($rates) || !is_array($rates)) {
+            return $rates;
+        }
+
+        $cfg = $this->get_location_config();
+        $preferred_location_id = isset($cfg['location_id']) ? (int) $cfg['location_id'] : 0;
+        $context = function_exists('mulopimfwc_get_runtime_currency_conversion_context')
+            ? mulopimfwc_get_runtime_currency_conversion_context($preferred_location_id > 0 ? $preferred_location_id : null)
+            : [
+                'should_convert' => false,
+                'rate' => 1.0,
+            ];
+
+        if (empty($context['should_convert']) || !isset($context['rate']) || (float) $context['rate'] <= 0) {
+            return $rates;
+        }
+
+        $location_id = isset($context['location_id']) ? (int) $context['location_id'] : 0;
+
+        foreach ($rates as $rate_key => $rate) {
+            if (!is_object($rate)) {
+                continue;
+            }
+
+            $rate_hash = spl_object_hash($rate);
+            if (isset($this->converted_package_rate_hashes[$rate_hash])) {
+                continue;
+            }
+
+            $raw_cost = is_callable([$rate, 'get_cost'])
+                ? $rate->get_cost()
+                : (isset($rate->cost) ? $rate->cost : null);
+
+            $converted_cost = function_exists('mulopimfwc_convert_base_amount_to_runtime_currency')
+                ? mulopimfwc_convert_base_amount_to_runtime_currency($raw_cost, $location_id > 0 ? $location_id : null)
+                : $raw_cost;
+
+            if (is_numeric($converted_cost)) {
+                if (is_callable([$rate, 'set_cost'])) {
+                    $rate->set_cost((float) $converted_cost);
+                } elseif (isset($rate->cost)) {
+                    $rate->cost = (float) $converted_cost;
+                }
+            }
+
+            $taxes = is_callable([$rate, 'get_taxes'])
+                ? (array) $rate->get_taxes()
+                : ((isset($rate->taxes) && is_array($rate->taxes)) ? $rate->taxes : []);
+
+            if (!empty($taxes)) {
+                foreach ($taxes as $tax_id => $tax_amount) {
+                    $converted_tax = function_exists('mulopimfwc_convert_base_amount_to_runtime_currency')
+                        ? mulopimfwc_convert_base_amount_to_runtime_currency($tax_amount, $location_id > 0 ? $location_id : null)
+                        : $tax_amount;
+
+                    if (is_numeric($converted_tax)) {
+                        $taxes[$tax_id] = (float) $converted_tax;
+                    }
+                }
+
+                if (is_callable([$rate, 'set_taxes'])) {
+                    $rate->set_taxes($taxes);
+                } elseif (isset($rate->taxes)) {
+                    $rate->taxes = $taxes;
+                }
+            }
+
+            $rates[$rate_key] = $rate;
+            $this->converted_package_rate_hashes[$rate_hash] = true;
         }
 
         return $rates;

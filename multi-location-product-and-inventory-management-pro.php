@@ -3806,7 +3806,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $cost_key = $source_slug . '_to_' . $destination_slug;
 
                 if (isset($transfer_costs[$cost_key]) && !empty($transfer_costs[$cost_key])) {
-                    $cost = floatval($transfer_costs[$cost_key]);
+                    $base_cost = floatval($transfer_costs[$cost_key]);
+                    $cost = function_exists('mulopimfwc_convert_base_amount_to_runtime_currency')
+                        ? (float) mulopimfwc_convert_base_amount_to_runtime_currency($base_cost, (int) $destination_term->term_id)
+                        : $base_cost;
 
                     if ($cost > 0) {
                         $transfer_details[] = [
@@ -3894,15 +3897,23 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                 // Check if transfer cost exists for this route
                 if (isset($transfer_costs[$cost_key]) && !empty($transfer_costs[$cost_key])) {
-                    $cost = floatval($transfer_costs[$cost_key]);
+                    $base_cost = floatval($transfer_costs[$cost_key]);
+                    $cost = function_exists('mulopimfwc_convert_base_amount_to_runtime_currency')
+                        ? (float) mulopimfwc_convert_base_amount_to_runtime_currency($base_cost, (int) $destination_term->term_id)
+                        : $base_cost;
 
                     if ($cost > 0) {
                         $total_transfer_cost += $cost;
+
+                        $cost_label = function_exists('wc_price')
+                            ? wp_strip_all_tags(wc_price($cost))
+                            : (string) $cost;
+
                         $transfer_details[] = sprintf(
                             __('%s to %s: %s', 'multi-location-product-and-inventory-management'),
                             $location_data['location_name'],
                             $destination_term->name,
-                            $cost
+                            $cost_label
                         );
                     }
                 }

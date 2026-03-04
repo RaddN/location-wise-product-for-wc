@@ -17,7 +17,7 @@ This audit focuses on logical conflicts introduced (or exposed) by `location_wis
 
 ## Findings
 
-### 1) Currency switch is formatting-level; no conversion engine
+### 1) Currency switch is formatting-level; no conversion engine *fixed*
 **Severity:** Critical
 
 The runtime only overrides currency code/position/format hooks, but does not convert numeric amounts.
@@ -34,7 +34,7 @@ The runtime only overrides currency code/position/format hooks, but does not con
 
 ---
 
-### 2) Product price fallback can relabel base-currency amounts as location currency
+### 2) Product price fallback can relabel base-currency amounts as location currency *fixed*
 **Severity:** Critical
 
 When location-specific prices are missing, logic falls back to default product prices (no conversion).
@@ -50,7 +50,7 @@ When location-specific prices are missing, logic falls back to default product p
 
 ---
 
-### 3) Non-product amounts are not currency-aware (fees/shipping/coupons/tax rates)
+### 3) Non-product amounts are not currency-aware (fees/shipping/coupons/tax rates) *fixed*
 **Severity:** High
 
 Amounts for transfer-fees, shipping method costs, coupon values, and tax rates are not converted per location currency.
