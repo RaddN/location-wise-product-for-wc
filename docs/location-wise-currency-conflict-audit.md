@@ -325,7 +325,7 @@ Fix direction:
 
 ---
 
-### C-14: Dashboard revenue totals aggregate cross-currency orders without normalization
+### C-14: Dashboard revenue totals aggregate cross-currency orders without normalization *fixed*
 Severity: **High**
 
 Scenario:
@@ -347,7 +347,7 @@ Fix direction:
 
 ---
 
-### C-15: Order/split totals formatted with order currency can still be overridden by runtime price args
+### C-15: Order/split totals formatted with order currency can still be overridden by runtime price args *not an issue*
 Severity: **High**
 
 Scenario:
@@ -389,7 +389,7 @@ Fix direction:
 
 ---
 
-### C-17: Two different shipping-rate filters can conflict (different data sources + priorities)
+### C-17: Two different shipping-rate filters can conflict (different data sources + priorities) *not an issue*
 Severity: **Medium**
 
 Scenario:

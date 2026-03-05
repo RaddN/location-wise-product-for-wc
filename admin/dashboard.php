@@ -21,6 +21,49 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Resolve dashboard reporting currency code (store base currency).
+     */
+    private function get_dashboard_reporting_currency_code(): string
+    {
+        $currency_code = function_exists('mulopimfwc_get_store_base_currency_code_raw')
+            ? strtoupper(trim((string) mulopimfwc_get_store_base_currency_code_raw()))
+            : strtoupper(trim((string) get_option('woocommerce_currency', 'USD')));
+
+        if ($currency_code === '') {
+            $currency_code = 'USD';
+        }
+
+        return $currency_code;
+    }
+
+    /**
+     * Resolve dashboard reporting currency symbol.
+     */
+    private function get_dashboard_reporting_currency_symbol(): string
+    {
+        $currency_code = $this->get_dashboard_reporting_currency_code();
+        $symbol = function_exists('get_woocommerce_currency_symbol')
+            ? (string) get_woocommerce_currency_symbol($currency_code)
+            : '';
+
+        if ($symbol === '') {
+            $symbol = $currency_code;
+        }
+
+        return html_entity_decode($symbol, ENT_QUOTES, get_bloginfo('charset'));
+    }
+
+    /**
+     * Format a value as dashboard reporting currency.
+     */
+    private function format_dashboard_reporting_price($amount): string
+    {
+        return wc_price($amount, [
+            'currency' => $this->get_dashboard_reporting_currency_code(),
+        ]);
+    }
+
+    /**
      * Get assigned location slugs for the current location manager.
      *
      * Returns null for non-location-manager users.
@@ -210,7 +253,7 @@ class MULOPIMFWC_Dashboard
         fputcsv($output, array(__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management')));
         fputcsv($output, array(__('Generated on:', 'multi-location-product-and-inventory-management'), gmdate('l, F d, Y - H:i:s')));
         fputcsv($output, array(__('Store:', 'multi-location-product-and-inventory-management'), get_bloginfo('name')));
-        fputcsv($output, array(__('Currency:', 'multi-location-product-and-inventory-management'), ' (' . get_woocommerce_currency() . ')'));
+        fputcsv($output, array(__('Currency:', 'multi-location-product-and-inventory-management'), ' (' . $this->get_dashboard_reporting_currency_code() . ')'));
         fputcsv($output, array('')); // Empty row
 
         // ---------- Summary ----------
@@ -497,7 +540,7 @@ class MULOPIMFWC_Dashboard
                         <div style="font-size: 10pt; color: #ffffff; line-height: 1.5;">
                             <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo gmdate('l, F d, Y - H:i:s'); ?></div>
                             <div><strong><?php echo esc_html__('Store:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html(get_bloginfo('name')); ?></div>
-                            <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html(get_woocommerce_currency()); ?></div>
+                            <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html($this->get_dashboard_reporting_currency_code()); ?></div>
                         </div>
                     </td>
                 </tr>
@@ -531,11 +574,11 @@ class MULOPIMFWC_Dashboard
                 </tr>
                 <tr class="even-row">
                     <td><?php echo esc_html__('Total Revenue', 'multi-location-product-and-inventory-management'); ?></td>
-                    <td><?php echo esc_html(get_woocommerce_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)); ?></td>
+                    <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)); ?></td>
                 </tr>
                 <tr>
                     <td><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management'); ?></td>
-                    <td><?php echo esc_html(get_woocommerce_currency_symbol() . number_format($total_investment, 2)); ?></td>
+                    <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($total_investment, 2)); ?></td>
                 </tr>
                 <tr class="even-row">
                     <td><?php echo esc_html__('Total Stock', 'multi-location-product-and-inventory-management'); ?></td>
@@ -661,7 +704,7 @@ class MULOPIMFWC_Dashboard
                     $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
                     echo '<tr' . $row_class . '>';
                     echo '<td>' . esc_html($location) . '</td>';
-                    echo '<td>' . esc_html(get_woocommerce_currency_symbol() . number_format($revenue, 2)) . '</td>';
+                    echo '<td>' . esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($revenue, 2)) . '</td>';
                     echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
                     echo '</tr>';
                     $row_count++;
@@ -697,10 +740,10 @@ class MULOPIMFWC_Dashboard
                     ?>
                         <tr<?php echo $row_class; ?>>
                             <td><?php echo esc_html($summary['location_name']); ?></td>
-                            <td><?php echo esc_html(get_woocommerce_currency_symbol() . number_format($summary['inventory_value'], 2)); ?></td>
-                            <td><?php echo esc_html(get_woocommerce_currency_symbol() . number_format($summary['margin_value'], 2)); ?></td>
+                            <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['inventory_value'], 2)); ?></td>
+                            <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['margin_value'], 2)); ?></td>
                             <td class="percentage"><?php echo esc_html(number_format($summary['margin_rate'], 2)); ?>%</td>
-                            <td><?php echo esc_html(get_woocommerce_currency_symbol() . number_format($summary['dead_stock_value'], 2)); ?></td>
+                            <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['dead_stock_value'], 2)); ?></td>
                             <td><?php echo esc_html(number_format($summary['dead_stock_units'], 2)); ?></td>
                             <td><?php echo esc_html(number_format($summary['average_age_days'], 1)); ?></td>
                             <td class="percentage"><?php echo esc_html(number_format($summary['shrinkage_rate'], 2)); ?>%</td>
@@ -1079,8 +1122,8 @@ class MULOPIMFWC_Dashboard
             ),
             'profitabilityByLocation' => $payload['profitability_by_location'],
             'deadStockDays' => $payload['dead_stock_days'],
-            'currency' => get_woocommerce_currency_symbol(),
-            'currency_code' => get_woocommerce_currency(),
+            'currency' => $this->get_dashboard_reporting_currency_symbol(),
+            'currency_code' => $this->get_dashboard_reporting_currency_code(),
             'summary' => $payload['summary'],
             'lowStock' => array_slice($payload['low_stock_products'], 0, 8),
             'i18n' => [
@@ -1408,7 +1451,7 @@ class MULOPIMFWC_Dashboard
                             <div>
                                 <span class="lwp-stat-progress" data-metric="investment"></span>
                                 <span class="lwp-stat-label"><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management'); ?></span>
-                                <span class="lwp-stat-value"><?php echo wp_kses_post(wc_price($total_investment)); ?></span>
+                                <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price($total_investment)); ?></span>
 
                             </div>
 
@@ -1423,7 +1466,7 @@ class MULOPIMFWC_Dashboard
                             <div>
                                 <span class="lwp-stat-progress" data-metric="revenue"></span>
                                 <span class="lwp-stat-label"><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management'); ?></span>
-                                <span class="lwp-stat-value"><?php echo wp_kses_post(wc_price(array_sum($orders_data["revenue"]))); ?></span>
+                                <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price(array_sum($orders_data["revenue"]))); ?></span>
 
                             </div>
 
@@ -1645,10 +1688,10 @@ class MULOPIMFWC_Dashboard
                                             <?php foreach ($profitability_by_location as $summary) : ?>
                                                 <tr>
                                                     <td><?php echo esc_html($summary['location_name']); ?></td>
-                                                    <td><?php echo wp_kses_post(wc_price($summary['inventory_value'])); ?></td>
-                                                    <td><?php echo wp_kses_post(wc_price($summary['margin_value'])); ?></td>
+                                                    <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['inventory_value'])); ?></td>
+                                                    <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['margin_value'])); ?></td>
                                                     <td><?php echo esc_html(number_format((float) $summary['margin_rate'], 1)); ?>%</td>
-                                                    <td><?php echo wp_kses_post(wc_price($summary['dead_stock_value'])); ?></td>
+                                                    <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['dead_stock_value'])); ?></td>
                                                     <td><?php echo esc_html(number_format($summary['dead_stock_units'], 0)); ?></td>
                                                     <td><?php echo esc_html(number_format((float) $summary['average_age_days'], 1)); ?></td>
                                                     <td><?php echo esc_html(number_format((float) $summary['shrinkage_rate'], 1)); ?>%</td>
@@ -2058,8 +2101,8 @@ class MULOPIMFWC_Dashboard
             'dateCounts' => $recent_products_data['counts'],
             'low_stock' => $low_stock_products,
             'summary' => $summary,
-            'currency' => get_woocommerce_currency_symbol(),
-            'currency_code' => get_woocommerce_currency(),
+            'currency' => $this->get_dashboard_reporting_currency_symbol(),
+            'currency_code' => $this->get_dashboard_reporting_currency_code(),
         );
 
         if (!empty($investment_data)) {
@@ -2367,7 +2410,9 @@ class MULOPIMFWC_Dashboard
             if (in_array($order_status, $revenue_statuses, true)) {
                 $order_revenue = $calculate_revenue
                     ? (float) $calculate_revenue($order)
-                    : (float) $order->get_total();
+                    : (function_exists('mulopimfwc_convert_order_amount_to_base_currency')
+                        ? (float) mulopimfwc_convert_order_amount_to_base_currency($order->get_total(), $order)
+                        : (float) $order->get_total());
                 $location_revenue[$location_name] += $order_revenue;
             }
         }
@@ -3815,8 +3860,8 @@ class MULOPIMFWC_Dashboard
             'low_stock' => $payload['low_stock_products'],
             'alerts' => $alerts,
             'site_status' => $site_status,
-            'currency' => get_woocommerce_currency_symbol(),
-            'currency_code' => get_woocommerce_currency(),
+            'currency' => $this->get_dashboard_reporting_currency_symbol(),
+            'currency_code' => $this->get_dashboard_reporting_currency_code(),
         ];
 
         // Cache for 30 seconds

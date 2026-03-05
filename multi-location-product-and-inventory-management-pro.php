@@ -12461,6 +12461,116 @@ if (!function_exists('mulopimfwc_get_values')) {
     }
 
     /**
+     * Convert an order amount into store base currency.
+     *
+     * Uses order location currency configuration (target currency + rate) when available.
+     *
+     * @param mixed    $amount
+     * @param WC_Order $order
+     * @return float
+     */
+    function mulopimfwc_convert_order_amount_to_base_currency($amount, $order)
+    {
+        $normalized_amount = null;
+        if (function_exists('mulopimfwc_normalize_price_amount')) {
+            $normalized_amount = mulopimfwc_normalize_price_amount($amount);
+        } elseif (is_numeric($amount)) {
+            $normalized_amount = (float) $amount;
+        } elseif (function_exists('wc_format_decimal')) {
+            $formatted = wc_format_decimal($amount, 6, false);
+            if ($formatted !== '' && is_numeric($formatted)) {
+                $normalized_amount = (float) $formatted;
+            }
+        }
+
+        if ($normalized_amount === null) {
+            return 0.0;
+        }
+
+        if (!$order instanceof WC_Order) {
+            return (float) $normalized_amount;
+        }
+
+        $base_currency = function_exists('mulopimfwc_get_store_base_currency_code_raw')
+            ? strtoupper(trim((string) mulopimfwc_get_store_base_currency_code_raw()))
+            : strtoupper(trim((string) get_option('woocommerce_currency', 'USD')));
+        if ($base_currency === '') {
+            $base_currency = 'USD';
+        }
+
+        $order_currency = strtoupper(trim((string) $order->get_currency()));
+        if ($order_currency === '' || $order_currency === $base_currency) {
+            return (float) $normalized_amount;
+        }
+
+        $location_slug = sanitize_title(rawurldecode((string) $order->get_meta('_store_location')));
+        if ($location_slug === '') {
+            foreach ($order->get_items('line_item') as $item) {
+                if (!$item instanceof WC_Order_Item_Product) {
+                    continue;
+                }
+                $item_location = sanitize_title(rawurldecode((string) $item->get_meta('_mulopimfwc_location')));
+                if ($item_location !== '') {
+                    $location_slug = $item_location;
+                    break;
+                }
+            }
+        }
+
+        if ($location_slug === '') {
+            return (float) $normalized_amount;
+        }
+
+        $location_term = function_exists('mulopimfwc_validate_location_slug')
+            ? mulopimfwc_validate_location_slug($location_slug, false)
+            : get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+
+        if (!$location_term || is_wp_error($location_term)) {
+            return (float) $normalized_amount;
+        }
+
+        $location_term_id = (int) $location_term->term_id;
+        if ($location_term_id <= 0) {
+            return (float) $normalized_amount;
+        }
+
+        $target_currency = '';
+        if (function_exists('mulopimfwc_get_currency_settings_for_location')) {
+            $currency_settings = (array) mulopimfwc_get_currency_settings_for_location($location_term_id);
+            $target_currency = strtoupper(trim((string) ($currency_settings['currency'] ?? '')));
+        }
+        if ($target_currency === '') {
+            $target_currency = strtoupper(trim((string) get_term_meta($location_term_id, 'location_currency', true)));
+        }
+
+        $rate_raw = get_term_meta($location_term_id, 'location_currency_rate', true);
+        $rate = (is_numeric($rate_raw) && (float) $rate_raw > 0) ? (float) $rate_raw : 0.0;
+
+        if ($target_currency === '' || $rate <= 0 || $target_currency !== $order_currency || $target_currency === $base_currency) {
+            return (float) $normalized_amount;
+        }
+
+        $converted_amount = $normalized_amount / $rate;
+        if (function_exists('wc_format_decimal')) {
+            $converted_amount = (float) wc_format_decimal($converted_amount, 6, false);
+        }
+
+        return (float) apply_filters(
+            'mulopimfwc_order_amount_base_currency',
+            $converted_amount,
+            $amount,
+            $order,
+            [
+                'base_currency' => $base_currency,
+                'order_currency' => $order_currency,
+                'target_currency' => $target_currency,
+                'rate' => $rate,
+                'location_slug' => $location_slug,
+            ]
+        );
+    }
+
+    /**
      * Calculate order revenue based on purchase and selling prices.
      *
      * Revenue = sum of (sell price - purchase price) * quantity for each line item.
@@ -12547,11 +12657,14 @@ if (!function_exists('mulopimfwc_get_values')) {
                 continue;
             }
 
-            $line_revenue = $sell_total - ($purchase_price * $quantity);
+            $sell_total_base = function_exists('mulopimfwc_convert_order_amount_to_base_currency')
+                ? (float) mulopimfwc_convert_order_amount_to_base_currency($sell_total, $order)
+                : $sell_total;
+            $line_revenue = $sell_total_base - ($purchase_price * $quantity);
 
             $line_revenue = apply_filters('mulopimfwc_line_revenue', $line_revenue, $item, $order, [
                 'quantity' => $quantity,
-                'sell_total' => $sell_total,
+                'sell_total' => $sell_total_base,
                 'purchase_total' => $purchase_price * $quantity,
                 'purchase_price' => $purchase_price,
             ]);
