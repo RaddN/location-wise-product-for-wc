@@ -310,20 +310,58 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
     }
 }
 
+if (!function_exists('mulopimfwc_get_effective_order_assignment_method')) {
+    /**
+     * Resolve effective order assignment method.
+     *
+     * When location-wise currency is enabled, manual assignment is forced to proximity-based.
+     *
+     * @param array|null $options Optional settings array.
+     * @return string
+     */
+    function mulopimfwc_get_effective_order_assignment_method($options = null): string
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        $assignment_method = isset($options['order_assignment_method'])
+            ? sanitize_key((string) $options['order_assignment_method'])
+            : 'customer_selection';
+        $allowed_methods = ['customer_selection', 'inventory_based', 'proximity_based', 'manual'];
+        if (!in_array($assignment_method, $allowed_methods, true)) {
+            $assignment_method = 'customer_selection';
+        }
+
+        $location_wise_currency_enabled = function_exists('mulopimfwc_is_location_wise_currency_enabled')
+            ? mulopimfwc_is_location_wise_currency_enabled($options)
+            : (
+                isset($options['enable_location_price'], $options['location_wise_currency']) &&
+                $options['enable_location_price'] === 'on' &&
+                $options['location_wise_currency'] === 'on'
+            );
+
+        if ($location_wise_currency_enabled && $assignment_method === 'manual') {
+            return 'proximity_based';
+        }
+
+        return $assignment_method;
+    }
+}
+
 if (!function_exists('mulopimfwc_is_manual_assignment_mode')) {
     /**
-     * Check whether order assignment is set to manual mode.
+     * Check whether effective order assignment is manual.
      *
+     * @param array|null $options Optional settings array.
      * @return bool
      */
-    function mulopimfwc_is_manual_assignment_mode(): bool
+    function mulopimfwc_is_manual_assignment_mode($options = null): bool
     {
-        global $mulopimfwc_options;
-        $options = is_array($mulopimfwc_options ?? null)
-            ? $mulopimfwc_options
-            : get_option('mulopimfwc_display_options', []);
-
-        return isset($options['order_assignment_method']) && $options['order_assignment_method'] === 'manual';
+        return mulopimfwc_get_effective_order_assignment_method($options) === 'manual';
     }
 }
 
@@ -343,9 +381,7 @@ if (!function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')
                 : get_option('mulopimfwc_display_options', []);
         }
 
-        $assignment_method = isset($options['order_assignment_method'])
-            ? $options['order_assignment_method']
-            : 'customer_selection';
+        $assignment_method = mulopimfwc_get_effective_order_assignment_method($options);
 
         if (!in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true)) {
             return false;
@@ -372,9 +408,7 @@ if (!function_exists('mulopimfwc_is_manual_assignment_strict_mode')) {
                 : get_option('mulopimfwc_display_options', []);
         }
 
-        $assignment_method = isset($options['order_assignment_method'])
-            ? $options['order_assignment_method']
-            : 'customer_selection';
+        $assignment_method = mulopimfwc_get_effective_order_assignment_method($options);
 
         if (!in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true)) {
             return false;
@@ -3627,9 +3661,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
-            $assignment_method = isset($options['order_assignment_method'])
-                ? $options['order_assignment_method']
-                : 'customer_selection';
+            $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+                ? mulopimfwc_get_effective_order_assignment_method($options)
+                : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
             if (in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true)) {
                 return $passed;
             }
@@ -4569,9 +4603,9 @@ if (!function_exists('mulopimfwc_get_values')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
-            $assignment_method = isset($options['order_assignment_method'])
-                ? $options['order_assignment_method']
-                : 'customer_selection';
+            $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+                ? mulopimfwc_get_effective_order_assignment_method($options)
+                : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
 
             // Always save location data if available, regardless of mixed cart setting
             // This ensures proper stock management and price tracking
@@ -4640,7 +4674,17 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Get product locations
             $product_locations = get_the_terms($product_id, 'mulopimfwc_store_location');
             global $mulopimfwc_options;
-            $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
+            $is_currency_locked = function_exists('mulopimfwc_is_location_wise_currency_enabled')
+                ? mulopimfwc_is_location_wise_currency_enabled($options)
+                : (
+                    isset($options['enable_location_price'], $options['location_wise_currency']) &&
+                    $options['enable_location_price'] === 'on' &&
+                    $options['location_wise_currency'] === 'on'
+                );
             
             // If product has specific locations, use those; otherwise use all locations if enabled
             if (!empty($product_locations) && !is_wp_error($product_locations)) {
@@ -4707,7 +4751,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             echo '<div class="mulopimfwc-order-item-location-selector" data-item-id="' . esc_attr($item_id) . '" data-order-id="' . esc_attr($order_id_for_attr) . '" data-product-id="' . esc_attr($product_id) . '" data-variation-id="' . esc_attr($variation_id) . '" data-quantity="' . esc_attr($item->get_quantity()) . '">';
             echo '<strong>' . esc_html__('Location:', 'multi-location-product-and-inventory-management') . '</strong> ';
             
-            $show_selector = $can_manage_order && $is_editable && (count($available_locations) > 1 || empty($current_location));
+            $show_selector = !$is_currency_locked && $can_manage_order && $is_editable && (count($available_locations) > 1 || empty($current_location));
             if ($show_selector) {
                 // Show dropdown selector for editable orders with multiple locations
                 $current_quantity = $item->get_quantity();
@@ -4778,6 +4822,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 } else {
                     echo '<span style="color: #999;">' . esc_html__('Not set', 'multi-location-product-and-inventory-management') . '</span>';
                 }
+
+                if ($is_currency_locked) {
+                    echo '<span style="display:block;margin-top:4px;color:#666;font-size:11px;">' . esc_html__('Locked while location-wise currency is enabled.', 'multi-location-product-and-inventory-management') . '</span>';
+                }
             }
             
             echo '</div>';
@@ -4818,6 +4866,17 @@ if (!function_exists('mulopimfwc_get_values')) {
                 MULOPIMFWC_Location_Managers::current_user_is_view_only_order_manager()
             ) {
                 wp_send_json_error(['message' => __('You do not have permission to edit orders', 'multi-location-product-and-inventory-management')]);
+            }
+
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+            if (
+                function_exists('mulopimfwc_is_location_wise_currency_enabled') &&
+                mulopimfwc_is_location_wise_currency_enabled($options)
+            ) {
+                wp_send_json_error(['message' => __('Location updates are locked when location-wise currency is enabled.', 'multi-location-product-and-inventory-management')]);
             }
 
             // Get and validate input
@@ -4878,8 +4937,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $target_id = $variation_id ? $variation_id : $product_id;
 
             // Validate stock availability for new location before allowing change
-            global $mulopimfwc_options;
-            $enable_location_stock = isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] === 'on';
+            $enable_location_stock = isset($options['enable_location_stock']) && $options['enable_location_stock'] === 'on';
             
             if ($enable_location_stock) {
                 $new_location_id = $new_location_term->term_id;
@@ -4935,7 +4993,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Update order item price if location pricing is enabled
-            $enable_location_price = isset($mulopimfwc_options['enable_location_price']) && $mulopimfwc_options['enable_location_price'] === 'on';
+            $enable_location_price = isset($options['enable_location_price']) && $options['enable_location_price'] === 'on';
             $old_price = $item->get_subtotal();
             $new_price = $old_price;
             
@@ -7276,9 +7334,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
             
-            $assignment_method = isset($options['order_assignment_method']) 
-                ? $options['order_assignment_method'] 
-                : 'customer_selection';
+            $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+                ? mulopimfwc_get_effective_order_assignment_method($options)
+                : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
             $shared_single_location = $this->get_shared_single_assigned_location_for_order($order);
             
             // Skip automatic assignment if manual mode is enabled
@@ -8510,9 +8568,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
-            $assignment_method = isset($options['order_assignment_method'])
-                ? $options['order_assignment_method']
-                : 'customer_selection';
+            $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+                ? mulopimfwc_get_effective_order_assignment_method($options)
+                : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
 
             if ($assignment_method !== 'manual') {
                 return $status;
@@ -8602,8 +8660,9 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             $locations = $this->get_all_store_locations();
             $options = get_option('mulopimfwc_display_options', []);
-            $is_manual_mode = isset($options['order_assignment_method']) 
-                && $options['order_assignment_method'] === 'manual';
+            $is_manual_mode = function_exists('mulopimfwc_get_effective_order_assignment_method')
+                ? mulopimfwc_get_effective_order_assignment_method($options) === 'manual'
+                : (isset($options['order_assignment_method']) && $options['order_assignment_method'] === 'manual');
             
             if (empty($locations) && !$is_manual_mode) {
                 return;
@@ -8765,7 +8824,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
-            $assignment_method = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
+            $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+                ? mulopimfwc_get_effective_order_assignment_method($options)
+                : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
             $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
 
             wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.11');

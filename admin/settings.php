@@ -4109,15 +4109,32 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
                 $options = is_array($mulopimfwc_options ?? null)
                     ? $mulopimfwc_options
                     : get_option('mulopimfwc_display_options', ['order_assignment_method' => 'customer_selection']);
-                $value = isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection';
+                $value = isset($options['order_assignment_method']) ? sanitize_key((string) $options['order_assignment_method']) : 'customer_selection';
+                $location_wise_currency_enabled = function_exists('mulopimfwc_is_location_wise_currency_enabled')
+                    ? mulopimfwc_is_location_wise_currency_enabled($options)
+                    : (
+                        isset($options['enable_location_price'], $options['location_wise_currency']) &&
+                        $options['enable_location_price'] === 'on' &&
+                        $options['location_wise_currency'] === 'on'
+                    );
+                if (function_exists('mulopimfwc_get_effective_order_assignment_method')) {
+                    $value = mulopimfwc_get_effective_order_assignment_method($options);
+                }
         ?>
             <select name="mulopimfwc_display_options[order_assignment_method]">
                 <option value="customer_selection" <?php selected($value, 'customer_selection'); ?>><?php echo esc_html_e('Customer Selection (Based on selected location)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="inventory_based" <?php selected($value, 'inventory_based'); ?>><?php echo esc_html_e('Inventory Based (Location with highest stock)', 'multi-location-product-and-inventory-management'); ?></option>
                 <option value="proximity_based" <?php selected($value, 'proximity_based'); ?>><?php echo esc_html_e('Proximity Based (Nearest location to shipping address)', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="manual" <?php selected($value, 'manual'); ?>><?php echo esc_html_e('Manual Assignment (Admin assigns after order)', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="manual" <?php selected($value, 'manual'); ?> <?php disabled($location_wise_currency_enabled, true); ?>><?php echo esc_html_e('Manual Assignment (Admin assigns after order)', 'multi-location-product-and-inventory-management'); ?></option>
             </select>
-            <p class="description"><?php echo esc_html_e('Choose how orders are assigned to fulfillment locations. In Manual Assignment mode, orders placed without a selected location are set to On Hold until a location is assigned.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description">
+                <?php
+                echo esc_html__('Choose how orders are assigned to fulfillment locations. In Manual Assignment mode, orders placed without a selected location are set to On Hold until a location is assigned.', 'multi-location-product-and-inventory-management');
+                if ($location_wise_currency_enabled) {
+                    echo ' ' . esc_html__('Manual Assignment is disabled while Location Wise Currency is enabled. If Manual was previously selected, Proximity Based will be used.', 'multi-location-product-and-inventory-management');
+                }
+                ?>
+            </p>
             <?php
             },
             'lwp-order-fullfill-settings',
@@ -4788,6 +4805,15 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
             $sanitized['strict_filtering'] = sanitize_text_field($input['strict_filtering']);
         }
 
+        // Handle order assignment method.
+        $valid_assignment_methods = ['customer_selection', 'inventory_based', 'proximity_based', 'manual'];
+        $order_assignment_method = isset($input['order_assignment_method'])
+            ? sanitize_key((string) $input['order_assignment_method'])
+            : 'customer_selection';
+        if (!in_array($order_assignment_method, $valid_assignment_methods, true)) {
+            $order_assignment_method = 'customer_selection';
+        }
+
         // Handle manual optional location selection (checkbox)
         if (isset($input['manual_optional_location_selection']) && $input['manual_optional_location_selection'] === 'on') {
             $sanitized['manual_optional_location_selection'] = 'on';
@@ -4848,6 +4874,10 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         if (!$is_location_price_enabled) {
             $sanitized['location_wise_currency'] = 'off';
         }
+        if ($sanitized['location_wise_currency'] === 'on' && $order_assignment_method === 'manual') {
+            $order_assignment_method = 'proximity_based';
+        }
+        $sanitized['order_assignment_method'] = $order_assignment_method;
 
         // Handle allow_mixed_location_cart option (checkbox)
         if (
@@ -7553,17 +7583,19 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     private function is_manual_assignment_mode(): bool
     {
         $options = $this->get_display_options();
-        return isset($options['order_assignment_method'])
-            && in_array($options['order_assignment_method'], ['manual', 'inventory_based', 'proximity_based'], true);
+        $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+            ? mulopimfwc_get_effective_order_assignment_method($options)
+            : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
+        return in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
     }
 
     private function is_manual_optional_location_enabled(): bool
     {
         $options = $this->get_display_options();
-        if (
-            !isset($options['order_assignment_method'])
-            || !in_array($options['order_assignment_method'], ['manual', 'inventory_based', 'proximity_based'], true)
-        ) {
+        $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+            ? mulopimfwc_get_effective_order_assignment_method($options)
+            : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
+        if (!in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true)) {
             return false;
         }
 

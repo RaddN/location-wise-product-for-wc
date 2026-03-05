@@ -5362,6 +5362,8 @@ jQuery(document).ready(function ($) {
     var $locationSwitchingBehaviorDescription = $('.mulopimfwc-location-switching-behavior-description').first();
     var $locationChangeNotificationMeta = $('.mulopimfwc-location-change-notification-meta').first();
     var $locationChangeNotificationDescription = $locationChangeNotification.closest('td').find('p.description').first();
+    var $manualAssignmentOption = $assignmentSelect.find('option[value="manual"]');
+    var $assignmentDescription = $assignmentSelect.closest('td').find('p.description').first();
 
     var defaultLocationSwitchingDescription = $locationSwitchingBehaviorDescription.data('default-message') || 'How to handle cart contents when a customer changes their location.';
     var mixedLocationSwitchingDescription = $locationSwitchingBehaviorDescription.data('mixed-message') || 'Disabled because Allow Mixed-Location Cart is enabled. Mixed-location carts keep items from multiple locations, so this behavior is not applied.';
@@ -5370,6 +5372,8 @@ jQuery(document).ready(function ($) {
     var defaultLocationChangeNotificationDescription = $locationChangeNotificationMeta.data('default-message') || 'Display a notification when a customer changes their location.';
     var mixedLocationChangeNotificationDescription = $locationChangeNotificationMeta.data('mixed-message') || 'Disabled because Allow Mixed-Location Cart is enabled. Customers can keep items from multiple locations, so no location-change notification is shown.';
     var locationChangeNotificationManualNote = $locationChangeNotificationMeta.data('manual-note') || 'Disabled while Manual, Inventory-Based, or Proximity-Based assignment is enabled without optional selection.';
+    var defaultAssignmentDescription = $assignmentDescription.text() || '';
+    var assignmentCurrencyLockNote = 'Manual Assignment is disabled while Location Wise Currency is enabled. If Manual was previously selected, Proximity Based will be used.';
 
     function getFieldValue($field) {
         if ($field.is(':checkbox')) {
@@ -5441,7 +5445,28 @@ jQuery(document).ready(function ($) {
         }
     }
 
+    function enforceCurrencyCompatibleAssignmentMethod() {
+        var locationWiseCurrencyEnabled = $locationWiseCurrency.length && $locationWiseCurrency.is(':checked');
+
+        if ($manualAssignmentOption.length) {
+            $manualAssignmentOption.prop('disabled', locationWiseCurrencyEnabled);
+        }
+
+        if (locationWiseCurrencyEnabled && $assignmentSelect.val() === 'manual') {
+            $assignmentSelect.val('proximity_based');
+        }
+
+        if ($assignmentDescription.length) {
+            var description = defaultAssignmentDescription;
+            if (locationWiseCurrencyEnabled) {
+                description = (description ? description + ' ' : '') + assignmentCurrencyLockNote;
+            }
+            $assignmentDescription.text(description);
+        }
+    }
+
     function getManualAssignmentState() {
+        enforceCurrencyCompatibleAssignmentMethod();
         var assignmentMethod = $assignmentSelect.val();
         var isOptionalAssignment = assignmentMethod === 'manual' || assignmentMethod === 'inventory_based' || assignmentMethod === 'proximity_based';
         var isOptionalEnabled = isOptionalAssignment && $manualOptional.length && $manualOptional.is(':checked');
@@ -5612,6 +5637,7 @@ jQuery(document).ready(function ($) {
         toggleLocationCurrencyDependencies(state);
         toggleMixedLocationCartDependencies(state);
         toggleSplitOrderSettings(state);
+        enforceCurrencyCompatibleAssignmentMethod();
     }
 
     toggleManualModeSettings();

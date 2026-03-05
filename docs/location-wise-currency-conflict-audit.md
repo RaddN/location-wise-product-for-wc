@@ -99,7 +99,7 @@ Fix direction:
 
 ---
 
-### C-04: Admin order item location-change fallback price can use wrong location context
+### C-04: Admin order item location-change fallback price can use wrong location context *fixed*
 Severity: **High**
 
 Scenario:
