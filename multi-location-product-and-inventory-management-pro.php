@@ -389,6 +389,9 @@ if (!function_exists('mulopimfwc_is_location_wise_currency_enabled')) {
     /**
      * Check whether location-wise currency is enabled.
      *
+     * Location-wise currency depends on location-wise pricing so this helper
+     * returns false unless both settings are enabled.
+     *
      * @param array|null $options Optional options array.
      * @return bool
      */
@@ -399,6 +402,10 @@ if (!function_exists('mulopimfwc_is_location_wise_currency_enabled')) {
             $options = is_array($mulopimfwc_options ?? null)
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
+        }
+
+        if (!isset($options['enable_location_price']) || $options['enable_location_price'] !== 'on') {
+            return false;
         }
 
         return isset($options['location_wise_currency']) && $options['location_wise_currency'] === 'on';

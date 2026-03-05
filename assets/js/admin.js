@@ -5352,6 +5352,7 @@ jQuery(document).ready(function ($) {
     ];
 
     var $locationWiseCurrency = $('input[type="checkbox"][name="mulopimfwc_display_options[location_wise_currency]"]');
+    var $enableLocationPrice = $('input[type="checkbox"][name="mulopimfwc_display_options[enable_location_price]"]');
     var $allowMixedLocationCart = $('input[type="checkbox"][name="mulopimfwc_display_options[allow_mixed_location_cart]"]');
     var $allowLocationChangeInCart = $('input[type="checkbox"][name="mulopimfwc_display_options[allow_location_change_in_cart]"]');
     var $splitOrderByLocation = $('input[type="checkbox"][name="mulopimfwc_display_options[split_order_by_location]"]');
@@ -5526,7 +5527,21 @@ jQuery(document).ready(function ($) {
 
     function toggleLocationCurrencyDependencies(state) {
         var manualState = state || getManualAssignmentState();
-        var locationWiseCurrencyEnabled = $locationWiseCurrency.length ? $locationWiseCurrency.is(':checked') : false;
+        var locationPriceEnabled = $enableLocationPrice.length ? $enableLocationPrice.is(':checked') : false;
+        var disableLocationWiseCurrency = manualState.isManualStrict || !locationPriceEnabled;
+
+        if ($locationWiseCurrency.length) {
+            normalizeHiddenField($locationWiseCurrency);
+            if (disableLocationWiseCurrency && $locationWiseCurrency.is(':checked')) {
+                $locationWiseCurrency.prop('checked', false);
+            }
+            setFieldDisabled($locationWiseCurrency, disableLocationWiseCurrency);
+            syncHiddenField($locationWiseCurrency, disableLocationWiseCurrency);
+        }
+
+        var locationWiseCurrencyEnabled = $locationWiseCurrency.length
+            ? ($locationWiseCurrency.is(':checked') && !disableLocationWiseCurrency)
+            : false;
         var disableCrossLocationFields = manualState.isManualStrict || locationWiseCurrencyEnabled;
 
         if ($allowMixedLocationCart.length) {
@@ -5602,6 +5617,7 @@ jQuery(document).ready(function ($) {
     toggleManualModeSettings();
     $assignmentSelect.on('change', toggleManualModeSettings);
     $manualOptional.on('change', toggleManualModeSettings);
+    $enableLocationPrice.on('change', toggleManualModeSettings);
     $locationWiseCurrency.on('change', toggleManualModeSettings);
     $allowMixedLocationCart.on('change', function () {
         toggleMixedLocationCartDependencies();

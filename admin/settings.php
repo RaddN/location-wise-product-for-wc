@@ -220,12 +220,48 @@ General Settings', 'multi-location-product-and-inventory-management'),
             function () {
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $options = $this->get_display_options();
+                $is_location_price_enabled = isset($options['enable_location_price']) && $options['enable_location_price'] === 'on';
+                $disabled = $is_manual_mode || !$is_location_price_enabled;
+
                 if ($is_manual_mode) {
-                    $this->render_manual_hidden_input('location_wise_currency', $options['location_wise_currency'] ?? 'off');
+                    $hidden_currency_value = $is_location_price_enabled
+                        ? ($options['location_wise_currency'] ?? 'off')
+                        : 'off';
+                    $this->render_manual_hidden_input('location_wise_currency', $hidden_currency_value);
                 }
-                $message = __('Enable location-specific currency and currency position based on selected location. When enabled, mixed-location cart and location change in cart are disabled.', 'multi-location-product-and-inventory-management');
+                $message = __('Enable location-specific currency and currency position based on selected location. Requires Enable Location Pricing. This option is automatically turned off when Enable Location Pricing is disabled. When enabled, mixed-location cart and location change in cart are disabled.', 'multi-location-product-and-inventory-management');
                 $message = $this->append_manual_disabled_note($message);
-                $this->render_advance_checkbox("location_wise_currency", $message, $is_manual_mode);
+                $this->render_advance_checkbox("location_wise_currency", $message, $disabled);
+                ?>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        const locationPriceInput = document.querySelector('input[name="mulopimfwc_display_options[enable_location_price]"]');
+                        const locationCurrencyInput = document.querySelector('input[name="mulopimfwc_display_options[location_wise_currency]"]');
+                        if (!locationPriceInput || !locationCurrencyInput) {
+                            return;
+                        }
+
+                        const isManualMode = <?php echo $is_manual_mode ? 'true' : 'false'; ?>;
+                        const currencySwitch = locationCurrencyInput.closest('.mulopimfwc_switch');
+
+                        function syncLocationCurrencyState() {
+                            const shouldDisable = isManualMode || !locationPriceInput.checked;
+                            locationCurrencyInput.disabled = shouldDisable;
+                            if (shouldDisable) {
+                                locationCurrencyInput.checked = false;
+                            }
+                            locationCurrencyInput.classList.toggle('mulopimfwc-setting-disabled', shouldDisable);
+
+                            if (currencySwitch) {
+                                currencySwitch.classList.toggle('mulopimfwc-setting-disabled', shouldDisable);
+                            }
+                        }
+
+                        syncLocationCurrencyState();
+                        locationPriceInput.addEventListener('change', syncLocationCurrencyState);
+                    });
+                </script>
+                <?php
             },
             'lwp-general-settings',
             'location_stock_general_section'
@@ -4801,11 +4837,15 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
         if (isset($input['enable_location_price'])) {
             $sanitized['enable_location_price'] = sanitize_text_field($input['enable_location_price']);
         }
+        $is_location_price_enabled = isset($input['enable_location_price']) && $input['enable_location_price'] === 'on';
 
         // Handle location_wise_currency option (checkbox)
         if (isset($input['location_wise_currency']) && $input['location_wise_currency'] === 'on') {
             $sanitized['location_wise_currency'] = 'on';
         } else {
+            $sanitized['location_wise_currency'] = 'off';
+        }
+        if (!$is_location_price_enabled) {
             $sanitized['location_wise_currency'] = 'off';
         }
 
@@ -8042,11 +8082,21 @@ Out of Stock Product Display', 'multi-location-product-and-inventory-management'
     {
         global $mulopimfwc_allowed_tags, $mulopimfwc_options;
         $disabled_class = ($disabled && !in_array($key, ['pro', '_pro'], true)) ? ' mulopimfwc-setting-disabled' : '';
+        $input_class_attr = ($disabled && !in_array($key, ['pro', '_pro'], true))
+            ? ' class="mulopimfwc-setting-disabled"'
+            : '';
+        $is_checked = isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on";
+        if (
+            $key === 'location_wise_currency'
+            && function_exists('mulopimfwc_is_location_wise_currency_enabled')
+        ) {
+            $is_checked = mulopimfwc_is_location_wise_currency_enabled($mulopimfwc_options);
+        }
     ?>
         <label class="mulopimfwc_switch <?php echo esc_attr($key);
                                         echo $is_free ? '' : ' mulopimfwc_pro_only';
                                         echo $disabled_class; ?>">
-            <input <?php echo $disabled ? 'disabled' : ''; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked(isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on"); ?>>
+            <input <?php echo $disabled ? 'disabled' : ''; ?><?php echo $input_class_attr; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked($is_checked); ?>>
             <span class="mulopimfwc_slider round"></span>
             <span class="mulopimfwc_switch-on">On</span>
             <span class="mulopimfwc_switch-off">Off</span>

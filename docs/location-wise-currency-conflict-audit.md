@@ -165,7 +165,7 @@ Fix direction:
 
 ---
 
-### C-07: Location-wise currency can be enabled while location pricing is disabled
+### C-07: Location-wise currency can be enabled while location pricing is disabled *fixed*
 Severity: **High**
 
 Scenario:

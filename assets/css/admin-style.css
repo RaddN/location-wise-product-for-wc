@@ -6,6 +6,13 @@
   width: unset !important;
 }
 
+.taxonomy-mulopimfwc_store_location #col-left {
+    width: 30%;
+}
+.taxonomy-mulopimfwc_store_location #col-right {
+    width: 70%;
+}
+
 .location_variation_table {
   width: 100%;
   border-collapse: collapse;
