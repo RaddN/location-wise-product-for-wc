@@ -13,6 +13,11 @@ if (!function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
             return [];
         }
 
+        // WooCommerce cart access before wp_loaded triggers wc_doing_it_wrong notices.
+        if (!did_action('wp_loaded') && !doing_action('wp_loaded')) {
+            return [];
+        }
+
         $slugs = [];
 
         if (isset(WC()->cart) && is_object(WC()->cart) && method_exists(WC()->cart, 'get_cart')) {
