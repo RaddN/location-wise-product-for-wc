@@ -303,7 +303,7 @@ Fix direction:
 
 ---
 
-### C-13: Coupon conversion covers fixed discount amount but not spend-threshold normalization
+### C-13: Coupon conversion covers fixed discount amount but not spend-threshold normalization *fixed*
 Severity: **Medium**
 
 Scenario:

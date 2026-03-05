@@ -15,6 +15,9 @@ class MULOPIMFWC_Coupon_Location_Restrictions
     {
         // Convert fixed coupon values to the active location currency at runtime.
         add_filter('woocommerce_coupon_get_amount', [$this, 'filter_coupon_amount_by_location_currency'], 20, 2);
+        // Convert coupon spend thresholds to runtime currency for validation/notices.
+        add_filter('woocommerce_coupon_get_minimum_amount', [$this, 'filter_coupon_threshold_by_location_currency'], 20, 2);
+        add_filter('woocommerce_coupon_get_maximum_amount', [$this, 'filter_coupon_threshold_by_location_currency'], 20, 2);
 
         $options = get_option('mulopimfwc_display_options', []);
         if (function_exists('mulopimfwc_is_location_discounts_enabled') && !mulopimfwc_is_location_discounts_enabled($options)) {
@@ -55,6 +58,31 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
         $discount_type = (string) $coupon->get_discount_type();
         if (!in_array($discount_type, ['fixed_cart', 'fixed_product'], true)) {
+            return $amount;
+        }
+
+        if (!function_exists('mulopimfwc_convert_base_amount_to_runtime_currency')) {
+            return $amount;
+        }
+
+        $converted_amount = mulopimfwc_convert_base_amount_to_runtime_currency($amount);
+        return is_numeric($converted_amount) ? (float) $converted_amount : $amount;
+    }
+
+    /**
+     * Convert coupon min/max spend thresholds from base currency to runtime location currency.
+     *
+     * @param mixed     $amount
+     * @param WC_Coupon $coupon
+     * @return mixed
+     */
+    public function filter_coupon_threshold_by_location_currency($amount, $coupon)
+    {
+        if (is_admin() && !wp_doing_ajax()) {
+            return $amount;
+        }
+
+        if (!$coupon instanceof WC_Coupon) {
             return $amount;
         }
 
