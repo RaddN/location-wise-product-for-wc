@@ -27,13 +27,16 @@ class mulopimfwc_Import_Export
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '1.1.4.10',
+            '1.1.5.0',
             true
         );
 
         wp_localize_script('mulopimfwc-import-export', 'mulopimfwcImportExport', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('mulopimfwc_import_export_nonce'),
+            'full_export_action' => 'mulopimfwc_export_full_products_csv',
+            'full_import_action' => 'mulopimfwc_import_full_products_csv',
+            'restore_snapshot_action' => 'mulopimfwc_restore_import_snapshot',
             'strings' => [
                 'exporting' => __('Exporting settings...', 'multi-location-product-and-inventory-management'),
                 'export_success' => __('Settings exported successfully!', 'multi-location-product-and-inventory-management'),
@@ -42,11 +45,18 @@ class mulopimfwc_Import_Export
                 'import_success' => __('Settings imported successfully! Please refresh the page.', 'multi-location-product-and-inventory-management'),
                 'import_error' => __('Error importing settings. Please ensure you selected a valid JSON file.', 'multi-location-product-and-inventory-management'),
                 'invalid_file' => __('Please select a valid JSON file.', 'multi-location-product-and-inventory-management'),
+                'invalid_csv_file' => __('Please select a valid CSV file.', 'multi-location-product-and-inventory-management'),
                 'confirm_import' => __('This will overwrite your current settings. Are you sure you want to continue?', 'multi-location-product-and-inventory-management'),
+                'confirm_dry_run_apply' => __('Dry run completed. Continue with actual import now?', 'multi-location-product-and-inventory-management'),
                 'clearing_cache' => __('Clearing cache...', 'multi-location-product-and-inventory-management'),
                 'clear_cache_success' => __('Cache cleared successfully.', 'multi-location-product-and-inventory-management'),
                 'clear_cache_error' => __('Error clearing cache. Please try again.', 'multi-location-product-and-inventory-management'),
-                'confirm_clear_cache' => __('Clear cached plugin data now?', 'multi-location-product-and-inventory-management')
+                'confirm_clear_cache' => __('Clear cached plugin data now?', 'multi-location-product-and-inventory-management'),
+                'full_exporting' => __('Preparing full product and location export...', 'multi-location-product-and-inventory-management'),
+                'full_importing_dry_run' => __('Running dry-run validation...', 'multi-location-product-and-inventory-management'),
+                'full_importing_apply' => __('Applying import...', 'multi-location-product-and-inventory-management'),
+                'full_import_success' => __('Import completed successfully.', 'multi-location-product-and-inventory-management'),
+                'full_import_error' => __('Import failed. Please review the report.', 'multi-location-product-and-inventory-management'),
             ]
         ]);
     }
@@ -245,6 +255,36 @@ class mulopimfwc_Import_Export
 
 // Initialize the class
 new mulopimfwc_Import_Export();
+
+require_once plugin_dir_path(__FILE__) . '../includes/class-stock-central-import-export.php';
+
+function mulopimfwc_get_stock_central_import_export_service()
+{
+    static $service = null;
+    if ($service === null) {
+        $service = new MULOPIMFWC_Stock_Central_Import_Export_Service();
+    }
+    return $service;
+}
+
+add_action('wp_ajax_mulopimfwc_export_full_products_csv', 'mulopimfwc_export_full_products_csv_handler');
+add_action('wp_ajax_mulopimfwc_import_full_products_csv', 'mulopimfwc_import_full_products_csv_handler');
+add_action('wp_ajax_mulopimfwc_restore_import_snapshot', 'mulopimfwc_restore_import_snapshot_handler');
+
+function mulopimfwc_export_full_products_csv_handler()
+{
+    mulopimfwc_get_stock_central_import_export_service()->handle_export_ajax();
+}
+
+function mulopimfwc_import_full_products_csv_handler()
+{
+    mulopimfwc_get_stock_central_import_export_service()->handle_import_ajax();
+}
+
+function mulopimfwc_restore_import_snapshot_handler()
+{
+    mulopimfwc_get_stock_central_import_export_service()->handle_restore_snapshot_ajax();
+}
 
 
 

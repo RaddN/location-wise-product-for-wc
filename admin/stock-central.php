@@ -106,16 +106,197 @@ class mulopimfwc_Stock_Central
                     <h1><?php echo esc_html__('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management'); ?></h1>
                     <p><?php echo esc_html__('Manage stock levels and prices for each product by location.', 'multi-location-product-and-inventory-management'); ?></p>
                 </div>
-                <div class="mulopimfwc-view-switch-wrap">
-                    <div class="mulopimfwc-view-switch <?php echo $is_classic_mode ? 'is-classic' : 'is-modern'; ?>" role="group" aria-label="<?php echo esc_attr__('Stock Central View Mode', 'multi-location-product-and-inventory-management'); ?>">
-                        <a href="<?php echo esc_url($modern_url); ?>" class="mulopimfwc-view-switch-option <?php echo $is_classic_mode ? '' : 'is-active'; ?>">
-                            <?php echo esc_html__('Modern', 'multi-location-product-and-inventory-management'); ?>
-                        </a>
-                        <a href="<?php echo esc_url($classic_url); ?>" class="mulopimfwc-view-switch-option <?php echo $is_classic_mode ? 'is-active' : ''; ?>">
-                            <?php echo esc_html__('Classic', 'multi-location-product-and-inventory-management'); ?>
-                        </a>
+                <div class="mulopimfwc-header-actions">
+                    <?php if ($can_manage_products) : ?>
+                        <div class="mulopimfwc-import-export-wrap">
+                            <button type="button" class="button button-secondary mulopimfwc-stock-central-import-export-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="mulopimfwc-import-export-menu">
+                                <span class="mulopimfwc-import-export-toggle-icon" aria-hidden="true">
+                                    <svg width="24" height="24" viewBox="0 0 0.72 0.72" xmlns="http://www.w3.org/2000/svg" fill="#fff"><path fill-rule="evenodd" d="M.594.558.592.561l-.09.09-.003.002-.004.002-.002.001L.49.657.487.658.483.659H.474L.47.658.467.657.464.655.461.653.458.651l-.09-.09a.03.03 0 0 1 .04-.045l.003.002.039.04V.27A.03.03 0 0 1 .476.24H.48a.03.03 0 0 1 .03.03v.288L.549.519a.03.03 0 0 1 .04-.002l.003.002a.03.03 0 0 1 .005.037zM.129.159l.09-.09.003-.003.003-.002.003-.002.003-.001L.234.06h.01l.004.001.002.001.003.001.002.001.002.002.002.002.001.001.09.09.002.003a.03.03 0 0 1 0 .037L.35.202.347.204a.03.03 0 0 1-.037 0L.307.202.27.162V.45a.03.03 0 0 1-.026.03H.236A.03.03 0 0 1 .21.454V.162L.171.201.168.203A.03.03 0 0 1 .126.162z"/></svg>
+                                </span>
+                                <span class="mulopimfwc-import-export-toggle-label"><?php echo esc_html__('Import Export', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="mulopimfwc-import-export-toggle-chevron" aria-hidden="true">
+                                    <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                        <path d="M5.5 7.5 10 12l4.5-4.5 1.2 1.2L10 14.4 4.3 8.7l1.2-1.2Z" fill="currentColor"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                            <div id="mulopimfwc-import-export-menu" class="mulopimfwc-import-export-menu" hidden="hidden">
+                                <div class="mulopimfwc-ie-menu-header">
+                                    <div class="mulopimfwc-ie-menu-title">
+                                        <span class="mulopimfwc-ie-menu-title-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" focusable="false" role="img">
+                                                <path d="M4 4h7a1 1 0 0 1 1 1v5h-2V6H6v12h4v2H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm9 2h6a1 1 0 0 1 1 1v3h-2V8h-4v2h-2V7a1 1 0 0 1 1-1Zm0 6h2v4h3l-4 4-4-4h3v-4Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <strong><?php echo esc_html__('Stock Central Migration', 'multi-location-product-and-inventory-management'); ?></strong>
+                                    </div>
+                                    <span><?php echo esc_html__('Use a canonical CSV for full product and location data migration.', 'multi-location-product-and-inventory-management'); ?></span>
+                                </div>
+
+                                <div class="mulopimfwc-ie-tabs" role="tablist" aria-label="<?php echo esc_attr__('Import Export Tabs', 'multi-location-product-and-inventory-management'); ?>">
+                                    <button
+                                        type="button"
+                                        class="mulopimfwc-ie-tab is-active"
+                                        id="mulopimfwc-ie-tab-export"
+                                        data-ie-tab="export"
+                                        role="tab"
+                                        aria-selected="true"
+                                        aria-controls="mulopimfwc-ie-panel-export">
+                                        <span class="mulopimfwc-ie-tab-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                <path d="M4 3h5a1 1 0 0 1 1 1v3H8V5H5v10h3v2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm7 4h2v4h3l-4 4-4-4h3V7Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <span><?php echo esc_html__('Export', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="mulopimfwc-ie-tab"
+                                        id="mulopimfwc-ie-tab-import"
+                                        data-ie-tab="import"
+                                        role="tab"
+                                        aria-selected="false"
+                                        aria-controls="mulopimfwc-ie-panel-import">
+                                        <span class="mulopimfwc-ie-tab-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                <path d="M9 3h2v4h3l-4 4-4-4h3V3Zm-5 9h2v3h8v-3h2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <span><?php echo esc_html__('Import', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </button>
+                                </div>
+
+                                <div id="mulopimfwc-ie-panel-export" class="mulopimfwc-ie-panel is-active" data-ie-panel="export" role="tabpanel" aria-labelledby="mulopimfwc-ie-tab-export">
+                                    <p class="mulopimfwc-ie-panel-copy">
+                                        <?php echo esc_html__('Export a full, versioned CSV including products, variations, terms, locations, relationships, and location inventory.', 'multi-location-product-and-inventory-management'); ?>
+                                    </p>
+                                    <ul class="mulopimfwc-ie-checklist">
+                                        <li>
+                                            <span class="mulopimfwc-ie-check-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                    <path d="m7.7 13.3-3-3 1.4-1.4 1.6 1.6 4.2-4.2 1.4 1.4-5.6 5.6Z" fill="currentColor"></path>
+                                                </svg>
+                                            </span>
+                                            <span><?php echo esc_html__('Schema versioned canonical format', 'multi-location-product-and-inventory-management'); ?></span>
+                                        </li>
+                                        <li>
+                                            <span class="mulopimfwc-ie-check-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                    <path d="m7.7 13.3-3-3 1.4-1.4 1.6 1.6 4.2-4.2 1.4 1.4-5.6 5.6Z" fill="currentColor"></path>
+                                                </svg>
+                                            </span>
+                                            <span><?php echo esc_html__('Ready for cross-site import with mapping', 'multi-location-product-and-inventory-management'); ?></span>
+                                        </li>
+                                        <li>
+                                            <span class="mulopimfwc-ie-check-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                    <path d="m7.7 13.3-3-3 1.4-1.4 1.6 1.6 4.2-4.2 1.4 1.4-5.6 5.6Z" fill="currentColor"></path>
+                                                </svg>
+                                            </span>
+                                            <span><?php echo esc_html__('Optional custom meta whitelist', 'multi-location-product-and-inventory-management'); ?></span>
+                                        </li>
+                                    </ul>
+                                    <label for="mulopimfwc-stock-central-custom-meta" class="mulopimfwc-ie-field-label">
+                                        <span class="mulopimfwc-ie-field-label-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                <path d="M3 5.8C3 4.3 4.3 3 5.8 3h8.4C15.7 3 17 4.3 17 5.8v8.4c0 1.5-1.3 2.8-2.8 2.8H5.8C4.3 17 3 15.7 3 14.2V5.8Zm3.4 1.8v4.8h2.2V7.6H6.4Zm5 0v4.8h2.2V7.6h-2.2Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <span><?php echo esc_html__('Custom Meta Whitelist (optional)', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </label>
+                                    <input type="text" id="mulopimfwc-stock-central-custom-meta" placeholder="_yoast_wpseo_title,_yoast_wpseo_metadesc" />
+                                    <button type="button" class="button button-primary mulopimfwc-stock-central-export">
+                                        <span class="mulopimfwc-ie-action-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                <path d="M4 3h5a1 1 0 0 1 1 1v3H8V5H5v10h3v2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm7 4h2v4h3l-4 4-4-4h3V7Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <span><?php echo esc_html__('Export Full CSV', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </button>
+                                </div>
+
+                                <div id="mulopimfwc-ie-panel-import" class="mulopimfwc-ie-panel" data-ie-panel="import" role="tabpanel" aria-labelledby="mulopimfwc-ie-tab-import" hidden="hidden">
+                                    <p class="mulopimfwc-ie-panel-copy">
+                                        <?php echo esc_html__('Import runs dry-run validation first, then applies changes after confirmation.', 'multi-location-product-and-inventory-management'); ?>
+                                    </p>
+                                    <div class="mulopimfwc-stock-central-dropzone" role="button" tabindex="0" aria-label="<?php echo esc_attr__('Drag and drop CSV file here or press Enter to browse', 'multi-location-product-and-inventory-management'); ?>">
+                                        <span class="mulopimfwc-stock-central-dropzone-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" focusable="false" role="img">
+                                                <path d="M12 2a5 5 0 0 1 5 5v1.2a4.8 4.8 0 0 1 1.2 9.4H17v-2h1.2a2.8 2.8 0 1 0 0-5.6H16V7a3 3 0 1 0-6 0v3H7.8a2.8 2.8 0 1 0 0 5.6H9v2H7.8a4.8 4.8 0 1 1 1.2-9.4V7a5 5 0 0 1 5-5Zm-1 12V9h2v5h3l-4 4-4-4h3Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <strong><?php echo esc_html__('Drag & drop CSV file here', 'multi-location-product-and-inventory-management'); ?></strong>
+                                        <span><?php echo esc_html__('or click to browse from your computer', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <em class="mulopimfwc-stock-central-dropzone-file" data-empty-label="<?php echo esc_attr__('No file selected', 'multi-location-product-and-inventory-management'); ?>"><?php echo esc_html__('No file selected', 'multi-location-product-and-inventory-management'); ?></em>
+                                    </div>
+                                    <label for="mulopimfwc-stock-central-import-mode" class="mulopimfwc-ie-field-label">
+                                        <span class="mulopimfwc-ie-field-label-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                <path d="M4 4h12v2H4V4Zm0 5h12v2H4V9Zm0 5h8v2H4v-2Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <span><?php echo esc_html__('Import Mode', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </label>
+                                    <select id="mulopimfwc-stock-central-import-mode">
+                                        <option value="create_update"><?php echo esc_html__('Create + Update', 'multi-location-product-and-inventory-management'); ?></option>
+                                        <option value="update_only"><?php echo esc_html__('Update Only', 'multi-location-product-and-inventory-management'); ?></option>
+                                    </select>
+                                    <label class="mulopimfwc-import-export-check">
+                                        <input type="checkbox" id="mulopimfwc-stock-central-auto-create-terms" checked="checked" />
+                                        <span><?php echo esc_html__('Auto-create missing terms/locations', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </label>
+                                    <label class="mulopimfwc-import-export-check">
+                                        <input type="checkbox" id="mulopimfwc-stock-central-sync-location-profile" checked="checked" />
+                                        <span><?php echo esc_html__('Sync full location profile', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </label>
+                                    <label class="mulopimfwc-import-export-check">
+                                        <input type="checkbox" id="mulopimfwc-stock-central-import-media" />
+                                        <span><?php echo esc_html__('Sideload media from URL refs', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </label>
+                                    <button type="button" class="button button-primary mulopimfwc-stock-central-import-btn">
+                                        <span class="mulopimfwc-ie-action-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 20 20" focusable="false" role="img">
+                                                <path d="M9 3h2v4h3l-4 4-4-4h3V3Zm-5 9h2v3h8v-3h2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <span><?php echo esc_html__('Select File & Import', 'multi-location-product-and-inventory-management'); ?></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="file" id="mulopimfwc-stock-central-import-file" accept=".csv" hidden="hidden" />
+                        </div>
+                    <?php endif; ?>
+                    <div class="mulopimfwc-view-switch-wrap">
+                        <div class="mulopimfwc-view-switch <?php echo $is_classic_mode ? 'is-classic' : 'is-modern'; ?>" role="group" aria-label="<?php echo esc_attr__('Stock Central View Mode', 'multi-location-product-and-inventory-management'); ?>">
+                            <a href="<?php echo esc_url($modern_url); ?>" class="mulopimfwc-view-switch-option <?php echo $is_classic_mode ? '' : 'is-active'; ?>">
+                                <?php echo esc_html__('Modern', 'multi-location-product-and-inventory-management'); ?>
+                            </a>
+                            <a href="<?php echo esc_url($classic_url); ?>" class="mulopimfwc-view-switch-option <?php echo $is_classic_mode ? 'is-active' : ''; ?>">
+                                <?php echo esc_html__('Classic', 'multi-location-product-and-inventory-management'); ?>
+                            </a>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div id="mulopimfwc-stock-central-import-export-status" class="mulopimfwc-stock-central-import-export-status" aria-live="polite">
+                <span class="mulopimfwc-stock-central-import-export-status-message"></span>
+                <button type="button" class="button-link mulopimfwc-stock-central-view-log" hidden="hidden">
+                    <?php echo esc_html__('View Log', 'multi-location-product-and-inventory-management'); ?>
+                </button>
+            </div>
+            <div id="mulopimfwc-stock-central-import-export-log-panel" class="mulopimfwc-stock-central-import-export-log-panel" hidden="hidden">
+                <div class="mulopimfwc-stock-central-import-export-log-header">
+                    <strong><?php echo esc_html__('Import Export Log', 'multi-location-product-and-inventory-management'); ?></strong>
+                    <div class="mulopimfwc-stock-central-import-export-log-actions">
+                        <button type="button" class="button-link mulopimfwc-stock-central-log-clear">
+                            <?php echo esc_html__('Clear', 'multi-location-product-and-inventory-management'); ?>
+                        </button>
+                        <button type="button" class="button-link mulopimfwc-stock-central-log-close">
+                            <?php echo esc_html__('Close', 'multi-location-product-and-inventory-management'); ?>
+                        </button>
+                    </div>
+                </div>
+                <div id="mulopimfwc-stock-central-import-export-log-list" class="mulopimfwc-stock-central-import-export-log-list"></div>
             </div>
 
             <form method="get" id="stock-central-form">
@@ -193,8 +374,493 @@ class mulopimfwc_Stock_Central
 
             .mulopimfwc-view-switch-wrap {
                 flex: 0 0 auto;
+                padding-top: 0;
+            }
+
+            .mulopimfwc-header-actions {
+                display: flex;
+                align-items: center;
+                gap: 10px;
                 margin-left: auto;
-                padding-top: 4px;
+            }
+
+            .mulopimfwc-import-export-wrap {
+                position: relative;
+                padding-top: 0;
+            }
+
+            .mulopimfwc-stock-central-import-export-toggle {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                min-height: 40px !important;
+                padding: 0 14px !important;
+                border-radius: 999px !important;
+                border-color: rgba(255, 255, 255, 0.44) !important;
+                color: #fff !important;
+                background: rgb(15 23 42 / 6%) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 1px 2px rgba(15, 23, 42, 0.15);
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                line-height: 1 !important;
+                text-shadow: 0 1px 0 rgba(15, 23, 42, 0.25);
+                transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+            }
+
+            .mulopimfwc-stock-central-import-export-toggle:hover {
+                background: rgba(15, 23, 42, 0.44) !important;
+                border-color: rgba(255, 255, 255, 0.62) !important;
+                transform: translateY(-1px);
+            }
+
+            .mulopimfwc-stock-central-import-export-toggle:focus-visible {
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.42), 0 0 0 4px rgba(37, 99, 235, 0.5);
+            }
+
+            .mulopimfwc-stock-central-import-export-toggle.is-open {
+                background: rgba(15, 23, 42, 0.5) !important;
+                border-color: rgba(255, 255, 255, 0.72) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 3px 8px rgba(15, 23, 42, 0.22);
+            }
+
+            .mulopimfwc-import-export-toggle-label {
+                letter-spacing: 0.01em;
+            }
+
+            .mulopimfwc-import-export-toggle-icon svg,
+            .mulopimfwc-import-export-toggle-chevron svg {
+                width: 14px;
+                height: 14px;
+                display: block;
+            }
+
+            .mulopimfwc-import-export-toggle-chevron {
+                transition: transform 0.16s ease;
+            }
+
+            .mulopimfwc-stock-central-import-export-toggle.is-open .mulopimfwc-import-export-toggle-chevron {
+                transform: rotate(180deg);
+            }
+
+            .mulopimfwc-import-export-menu {
+                position: absolute;
+                right: 0;
+                top: calc(100% + 8px);
+                min-width: 410px;
+                background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+                border: 1px solid #dbe3ee;
+                border-radius: 14px;
+                box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
+                padding: 16px;
+                z-index: 100;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                max-height: 70vh;
+                overflow: auto;
+            }
+
+            .mulopimfwc-import-export-menu[hidden] {
+                display: none !important;
+            }
+
+            .mlsctock-cenral-header .mulopimfwc-import-export-menu p {
+                margin: 0;
+                font-size: 12px;
+                line-height: 1.4;
+                color: #4b5563;
+            }
+
+            .mlsctock-cenral-header .mulopimfwc-import-export-menu .mulopimfwc-ie-panel-copy {
+                color: #4b5563 !important;
+            }
+
+            .mulopimfwc-ie-menu-header {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                border: 1px solid #e5e7eb;
+                background: #f8fafc;
+                border-radius: 10px;
+                padding: 10px 11px;
+            }
+
+            .mulopimfwc-ie-menu-title {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+            }
+
+            .mulopimfwc-ie-menu-title-icon {
+                width: 22px;
+                height: 22px;
+                border-radius: 7px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: #dbeafe;
+                color: #2563eb;
+                flex: 0 0 auto;
+            }
+
+            .mulopimfwc-ie-menu-title-icon svg {
+                width: 14px;
+                height: 14px;
+                display: block;
+            }
+
+            .mulopimfwc-ie-menu-header strong {
+                font-size: 13px;
+                color: #111827;
+            }
+
+            .mulopimfwc-ie-menu-header>span {
+                font-size: 12px;
+                color: #6b7280;
+                line-height: 1.35;
+            }
+
+            .mulopimfwc-ie-tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                background: #f3f4f6;
+                border: 1px solid #e5e7eb;
+                border-radius: 999px;
+                padding: 3px;
+                gap: 4px;
+            }
+
+            .mulopimfwc-ie-tab {
+                border: 0;
+                background: transparent;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 600;
+                color: #4b5563;
+                line-height: 1;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                min-height: 32px;
+                cursor: pointer;
+                transition: all 0.16s ease;
+            }
+
+            .mulopimfwc-ie-tab-icon svg {
+                width: 14px;
+                height: 14px;
+                display: block;
+            }
+
+            .mulopimfwc-ie-tab.is-active {
+                background: #ffffff;
+                color: #111827;
+                box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+            }
+
+            .mulopimfwc-ie-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 9px;
+            }
+
+            .mulopimfwc-ie-panel[hidden] {
+                display: none !important;
+            }
+
+            .mulopimfwc-ie-panel-copy {
+                margin: 0;
+                color: #4b5563;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .mulopimfwc-ie-checklist {
+                margin: 0;
+                padding: 0;
+                color: #374151;
+                font-size: 12px;
+                line-height: 1.5;
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .mulopimfwc-ie-checklist li {
+                display: flex;
+                align-items: flex-start;
+                gap: 7px;
+            }
+
+            .mulopimfwc-ie-check-icon {
+                width: 16px;
+                height: 16px;
+                border-radius: 999px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: #dcfce7;
+                color: #16a34a;
+                margin-top: 1px;
+                flex: 0 0 auto;
+            }
+
+            .mulopimfwc-ie-check-icon svg {
+                width: 11px;
+                height: 11px;
+                display: block;
+            }
+
+            .mulopimfwc-ie-field-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .mulopimfwc-ie-field-label-icon svg {
+                width: 14px;
+                height: 14px;
+                display: block;
+                color: #2563eb;
+            }
+
+            .mulopimfwc-ie-panel .button-primary {
+                width: 100%;
+                justify-content: center;
+                display: inline-flex !important;
+                align-items: center;
+                gap: 7px;
+                border-radius: 8px;
+            }
+
+            .mulopimfwc-stock-central-dropzone {
+                border: 1px dashed #93c5fd;
+                background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+                border-radius: 10px;
+                padding: 14px 12px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 4px;
+                color: #1f2937;
+                cursor: pointer;
+                transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+            }
+
+            .mulopimfwc-stock-central-dropzone:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.22);
+            }
+
+            .mulopimfwc-stock-central-dropzone.is-dragover {
+                border-color: #2563eb;
+                background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+                box-shadow: 0 6px 16px rgba(37, 99, 235, 0.18);
+            }
+
+            .mulopimfwc-stock-central-dropzone-icon svg {
+                width: 24px;
+                height: 24px;
+                display: block;
+                color: #2563eb;
+            }
+
+            .mulopimfwc-stock-central-dropzone strong {
+                font-size: 12px;
+                color: #111827;
+            }
+
+            .mulopimfwc-stock-central-dropzone span {
+                font-size: 11px;
+                color: #6b7280;
+            }
+
+            .mulopimfwc-stock-central-dropzone-file {
+                font-style: normal;
+                font-size: 11px;
+                color: #1d4ed8;
+                margin-top: 4px;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .mulopimfwc-import-export-menu label {
+                font-size: 12px;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .mulopimfwc-import-export-menu input[type="text"],
+            .mulopimfwc-import-export-menu select {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .mulopimfwc-import-export-check {
+                font-weight: 500 !important;
+                font-size: 12px !important;
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                color: #4b5563 !important;
+            }
+
+            .mulopimfwc-import-export-check input[type="checkbox"] {
+                margin: 0 !important;
+            }
+
+            .mulopimfwc-ie-option-icon svg {
+                width: 14px;
+                height: 14px;
+                display: block;
+                color: #2563eb;
+            }
+
+            .mulopimfwc-ie-action-icon svg {
+                width: 14px;
+                height: 14px;
+                display: block;
+            }
+
+            .mulopimfwc-stock-central-import-export-status {
+                margin: 10px 25px 0;
+                padding: 8px 10px;
+                border-radius: 6px;
+                background: #eef2ff;
+                border: 1px solid #c7d2fe;
+                color: #3730a3;
+                display: none;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                font-size: 12px;
+            }
+
+            .mulopimfwc-stock-central-import-export-status-message {
+                min-width: 0;
+                flex: 1 1 auto;
+            }
+
+            .mulopimfwc-stock-central-view-log {
+                flex: 0 0 auto;
+                font-size: 12px;
+                font-weight: 600;
+                color: #1e40af;
+                text-decoration: none;
+            }
+
+            .mulopimfwc-stock-central-view-log[hidden] {
+                display: none !important;
+            }
+
+            .mulopimfwc-stock-central-import-export-status.is-error {
+                background: #fef2f2;
+                border-color: #fecaca;
+                color: #991b1b;
+            }
+
+            .mulopimfwc-stock-central-import-export-status.is-error .mulopimfwc-stock-central-view-log {
+                color: #7f1d1d;
+            }
+
+            .mulopimfwc-stock-central-import-export-status.is-success {
+                background: #ecfdf5;
+                border-color: #bbf7d0;
+                color: #065f46;
+            }
+
+            .mulopimfwc-stock-central-import-export-status.is-success .mulopimfwc-stock-central-view-log {
+                color: #065f46;
+            }
+
+            .mulopimfwc-stock-central-import-export-log-panel {
+                margin: 8px 25px 0;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                background: #ffffff;
+                box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+                overflow: hidden;
+            }
+
+            .mulopimfwc-stock-central-import-export-log-panel[hidden] {
+                display: none !important;
+            }
+
+            .mulopimfwc-stock-central-import-export-log-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 8px 10px;
+                border-bottom: 1px solid #e5e7eb;
+                background: #f8fafc;
+            }
+
+            .mulopimfwc-stock-central-import-export-log-header strong {
+                font-size: 12px;
+                color: #111827;
+            }
+
+            .mulopimfwc-stock-central-import-export-log-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .mulopimfwc-stock-central-import-export-log-actions .button-link {
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .mulopimfwc-stock-central-import-export-log-list {
+                max-height: 220px;
+                overflow: auto;
+                padding: 8px 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                font-size: 12px;
+                color: #374151;
+            }
+
+            .mulopimfwc-stock-central-log-entry {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                line-height: 1.35;
+            }
+
+            .mulopimfwc-stock-central-log-time {
+                color: #6b7280;
+                flex: 0 0 auto;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .mulopimfwc-stock-central-log-text {
+                flex: 1 1 auto;
+                min-width: 0;
+                word-break: break-word;
+            }
+
+            .mulopimfwc-stock-central-log-entry.is-error .mulopimfwc-stock-central-log-text {
+                color: #991b1b;
+            }
+
+            .mulopimfwc-stock-central-log-entry.is-success .mulopimfwc-stock-central-log-text {
+                color: #065f46;
+            }
+
+            .mulopimfwc-stock-central-log-empty {
+                color: #6b7280;
+                font-style: italic;
             }
 
             .mulopimfwc-view-switch {
@@ -360,9 +1026,25 @@ class mulopimfwc_Stock_Central
 
                 .mulopimfwc-view-switch-wrap {
                     width: 100%;
-                    margin-left: 0;
                     display: flex;
                     justify-content: flex-end;
+                }
+
+                .mulopimfwc-header-actions {
+                    width: 100%;
+                    margin-left: 0;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .mulopimfwc-import-export-wrap {
+                    padding-top: 0;
+                }
+
+                .mulopimfwc-import-export-menu {
+                    left: 0;
+                    right: auto;
+                    min-width: min(360px, calc(100vw - 64px));
                 }
 
                 .mulopimfwc-classic-toolbar {

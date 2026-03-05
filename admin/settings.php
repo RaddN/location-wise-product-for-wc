@@ -3684,9 +3684,28 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
         ?>
             <button type="button" id="mulopimfwc_export_products" class="button button-secondary mulopimfwc_export_products" data-format="csv">
                 <span class="dashicons dashicons-media-spreadsheet" style="margin-top: 3px;"></span>
-                <?php echo esc_html_e('Export to CSV', 'multi-location-product-and-inventory-management'); ?>
+                <?php echo esc_html_e('Export Full CSV', 'multi-location-product-and-inventory-management'); ?>
             </button>
-            <p class="description"><?php echo esc_html_e('Export all products with their location-specific data (stock, price, backorder) to a CSV file.', 'multi-location-product-and-inventory-management'); ?></p>
+            <button type="button" id="mulopimfwc_import_products_btn" class="button button-secondary mulopimfwc_import_products_btn" style="margin-left:8px;">
+                <span class="dashicons dashicons-upload" style="margin-top: 3px;"></span>
+                <?php echo esc_html_e('Import Full CSV', 'multi-location-product-and-inventory-management'); ?>
+            </button>
+            <input type="file" id="mulopimfwc_import_products_file" accept=".csv" style="display:none;" />
+            <p class="description"><?php echo esc_html_e('Export/import versioned canonical CSV for full WooCommerce product data plus location-wise data. Import runs dry-run first, then asks for confirmation.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description">
+                <label for="mulopimfwc_import_mode"><?php echo esc_html_e('Import mode:', 'multi-location-product-and-inventory-management'); ?></label>
+                <select id="mulopimfwc_import_mode">
+                    <option value="create_update"><?php echo esc_html_e('Create + Update', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="update_only"><?php echo esc_html_e('Update Only', 'multi-location-product-and-inventory-management'); ?></option>
+                </select>
+                <label style="margin-left:12px;"><input type="checkbox" id="mulopimfwc_import_auto_create_terms" checked="checked" /> <?php echo esc_html_e('Auto-create terms/locations', 'multi-location-product-and-inventory-management'); ?></label>
+                <label style="margin-left:12px;"><input type="checkbox" id="mulopimfwc_import_sync_location_profile" checked="checked" /> <?php echo esc_html_e('Sync location profile', 'multi-location-product-and-inventory-management'); ?></label>
+                <label style="margin-left:12px;"><input type="checkbox" id="mulopimfwc_import_media" /> <?php echo esc_html_e('Sideload media', 'multi-location-product-and-inventory-management'); ?></label>
+            </p>
+            <p class="description">
+                <label for="mulopimfwc_import_meta_whitelist"><?php echo esc_html_e('Custom meta whitelist:', 'multi-location-product-and-inventory-management'); ?></label>
+                <input type="text" id="mulopimfwc_import_meta_whitelist" style="width:360px;" placeholder="_yoast_wpseo_title,_yoast_wpseo_metadesc" />
+            </p>
             <div id="export-progress" style="margin-top: 10px; display: none;">
                 <progress id="export-progress-bar" max="100" value="0" style="width: 100%;"></progress>
                 <p id="export-status-text"></p>
