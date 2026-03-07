@@ -5,7 +5,7 @@
  * Allows customers to pay in cash when picking up their order from the store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.4.16
+ * @since 1.1.4.17
  */
 
 if (!defined('ABSPATH')) {

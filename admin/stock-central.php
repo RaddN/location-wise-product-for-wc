@@ -225,7 +225,7 @@ class mulopimfwc_Stock_Central
                                                 <path d="M12 2a5 5 0 0 1 5 5v1.2a4.8 4.8 0 0 1 1.2 9.4H17v-2h1.2a2.8 2.8 0 1 0 0-5.6H16V7a3 3 0 1 0-6 0v3H7.8a2.8 2.8 0 1 0 0 5.6H9v2H7.8a4.8 4.8 0 1 1 1.2-9.4V7a5 5 0 0 1 5-5Zm-1 12V9h2v5h3l-4 4-4-4h3Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <strong><?php echo esc_html__('Drag & drop CSV file here', 'multi-location-product-and-inventory-management'); ?></strong>
+                                        <strong><?php echo esc_html__('Drag & drop CSV/ZIP file here', 'multi-location-product-and-inventory-management'); ?></strong>
                                         <span><?php echo esc_html__('or click to browse from your computer', 'multi-location-product-and-inventory-management'); ?></span>
                                         <em class="mulopimfwc-stock-central-dropzone-file" data-empty-label="<?php echo esc_attr__('No file selected', 'multi-location-product-and-inventory-management'); ?>"><?php echo esc_html__('No file selected', 'multi-location-product-and-inventory-management'); ?></em>
                                     </div>
