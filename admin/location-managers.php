@@ -675,12 +675,12 @@ class MULOPIMFWC_Location_Managers
                         <div class="mulopimfwc-social-grid">
                             <div class="mulopimfwc-social-field">
                                 <label for="social_slack_webhook"><?php echo esc_html__('Slack / Discord / Teams Webhook', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="url" id="social_slack_webhook" name="social_slack_webhook" placeholder="<?php echo esc_attr__('https://hooks.slack.com/services/...', 'multi-location-product-and-inventory-management'); ?>">
+                                <input type="url" id="social_slack_webhook" name="social_slack_webhook" placeholder="https://hooks.slack.com/services/...">
                                 <p class="description"><?php echo esc_html__('Use any incoming webhook URL to receive alerts for this manager.', 'multi-location-product-and-inventory-management'); ?></p>
                             </div>
                             <div class="mulopimfwc-social-field">
                                 <label for="social_custom_webhook"><?php echo esc_html__('Custom Webhook', 'multi-location-product-and-inventory-management'); ?></label>
-                                <input type="url" id="social_custom_webhook" name="social_custom_webhook" placeholder="<?php echo esc_attr__('https://example.com/webhook', 'multi-location-product-and-inventory-management'); ?>">
+                                <input type="url" id="social_custom_webhook" name="social_custom_webhook" placeholder="https://example.com/webhook">
                                 <p class="description"><?php echo esc_html__('Any other platform that accepts a JSON POST payload.', 'multi-location-product-and-inventory-management'); ?></p>
                             </div>
                             <div class="mulopimfwc-social-field">
