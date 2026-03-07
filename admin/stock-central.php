@@ -263,7 +263,7 @@ class mulopimfwc_Stock_Central
                                     </button>
                                 </div>
                             </div>
-                            <input type="file" id="mulopimfwc-stock-central-import-file" accept=".csv" hidden="hidden" />
+                            <input type="file" id="mulopimfwc-stock-central-import-file" accept=".csv,.zip" hidden="hidden" />
                         </div>
                     <?php endif; ?>
                     <div class="mulopimfwc-view-switch-wrap">
@@ -280,9 +280,21 @@ class mulopimfwc_Stock_Central
             </div>
             <div id="mulopimfwc-stock-central-import-export-status" class="mulopimfwc-stock-central-import-export-status" aria-live="polite">
                 <span class="mulopimfwc-stock-central-import-export-status-message"></span>
-                <button type="button" class="button-link mulopimfwc-stock-central-view-log" hidden="hidden">
-                    <?php echo esc_html__('View Log', 'multi-location-product-and-inventory-management'); ?>
-                </button>
+                <span class="mulopimfwc-stock-central-active-job-meta" hidden="hidden"></span>
+                <div class="mulopimfwc-stock-central-status-actions">
+                    <button type="button" class="button-link mulopimfwc-stock-central-view-log" hidden="hidden">
+                        <?php echo esc_html__('View Log', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
+                    <button type="button" class="button-link mulopimfwc-stock-central-pause-job" hidden="hidden">
+                        <?php echo esc_html__('Pause', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
+                    <button type="button" class="button-link mulopimfwc-stock-central-resume-job" hidden="hidden">
+                        <?php echo esc_html__('Resume', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
+                    <button type="button" class="button-link mulopimfwc-stock-central-cancel-job" hidden="hidden">
+                        <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management'); ?>
+                    </button>
+                </div>
             </div>
             <div id="mulopimfwc-stock-central-import-export-log-panel" class="mulopimfwc-stock-central-import-export-log-panel" hidden="hidden">
                 <div class="mulopimfwc-stock-central-import-export-log-header">
@@ -749,8 +761,27 @@ class mulopimfwc_Stock_Central
                 flex: 1 1 auto;
             }
 
-            .mulopimfwc-stock-central-view-log {
+            .mulopimfwc-stock-central-active-job-meta {
                 flex: 0 0 auto;
+                color: #4338ca;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.01em;
+                white-space: nowrap;
+            }
+
+            .mulopimfwc-stock-central-active-job-meta[hidden] {
+                display: none !important;
+            }
+
+            .mulopimfwc-stock-central-status-actions {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .mulopimfwc-stock-central-view-log {
                 font-size: 12px;
                 font-weight: 600;
                 color: #1e40af;
@@ -759,6 +790,24 @@ class mulopimfwc_Stock_Central
 
             .mulopimfwc-stock-central-view-log[hidden] {
                 display: none !important;
+            }
+
+            .mulopimfwc-stock-central-pause-job,
+            .mulopimfwc-stock-central-resume-job,
+            .mulopimfwc-stock-central-cancel-job {
+                font-size: 12px;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .mulopimfwc-stock-central-pause-job[hidden],
+            .mulopimfwc-stock-central-resume-job[hidden],
+            .mulopimfwc-stock-central-cancel-job[hidden] {
+                display: none !important;
+            }
+
+            .mulopimfwc-stock-central-cancel-job {
+                color: #b91c1c;
             }
 
             .mulopimfwc-stock-central-import-export-status.is-error {
@@ -771,6 +820,13 @@ class mulopimfwc_Stock_Central
                 color: #7f1d1d;
             }
 
+            .mulopimfwc-stock-central-import-export-status.is-error .mulopimfwc-stock-central-active-job-meta,
+            .mulopimfwc-stock-central-import-export-status.is-error .mulopimfwc-stock-central-pause-job,
+            .mulopimfwc-stock-central-import-export-status.is-error .mulopimfwc-stock-central-resume-job,
+            .mulopimfwc-stock-central-import-export-status.is-error .mulopimfwc-stock-central-cancel-job {
+                color: #7f1d1d;
+            }
+
             .mulopimfwc-stock-central-import-export-status.is-success {
                 background: #ecfdf5;
                 border-color: #bbf7d0;
@@ -778,6 +834,13 @@ class mulopimfwc_Stock_Central
             }
 
             .mulopimfwc-stock-central-import-export-status.is-success .mulopimfwc-stock-central-view-log {
+                color: #065f46;
+            }
+
+            .mulopimfwc-stock-central-import-export-status.is-success .mulopimfwc-stock-central-active-job-meta,
+            .mulopimfwc-stock-central-import-export-status.is-success .mulopimfwc-stock-central-pause-job,
+            .mulopimfwc-stock-central-import-export-status.is-success .mulopimfwc-stock-central-resume-job,
+            .mulopimfwc-stock-central-import-export-status.is-success .mulopimfwc-stock-central-cancel-job {
                 color: #065f46;
             }
 
@@ -1045,6 +1108,17 @@ class mulopimfwc_Stock_Central
                     left: 0;
                     right: auto;
                     min-width: min(360px, calc(100vw - 64px));
+                }
+
+                .mulopimfwc-stock-central-import-export-status {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .mulopimfwc-stock-central-status-actions {
+                    width: 100%;
+                    flex-wrap: wrap;
+                    gap: 8px;
                 }
 
                 .mulopimfwc-classic-toolbar {

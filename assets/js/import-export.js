@@ -238,12 +238,23 @@ jQuery(document).ready(function ($) {
     const nonce = cfg.nonce || '';
     const fullExportAction = cfg.full_export_action || 'mulopimfwc_export_full_products_csv';
     const fullImportAction = cfg.full_import_action || 'mulopimfwc_import_full_products_csv';
+    const ieV2Enabled = !!cfg.ie_v2_enabled;
+    const ieActions = cfg.ie_actions || {};
+    const uploadChunkSize = Number(cfg.upload_chunk_size || (8 * 1024 * 1024));
+    const maxUploadBytes = Number(cfg.max_upload_bytes || (2 * 1024 * 1024 * 1024));
     const $stockCentralStatus = $('#mulopimfwc-stock-central-import-export-status');
     const $stockCentralStatusMessage = $stockCentralStatus.find('.mulopimfwc-stock-central-import-export-status-message');
+    const $stockCentralActiveJobMeta = $stockCentralStatus.find('.mulopimfwc-stock-central-active-job-meta');
     const $stockCentralViewLogBtn = $stockCentralStatus.find('.mulopimfwc-stock-central-view-log');
+    const $stockCentralPauseJobBtn = $stockCentralStatus.find('.mulopimfwc-stock-central-pause-job');
+    const $stockCentralResumeJobBtn = $stockCentralStatus.find('.mulopimfwc-stock-central-resume-job');
+    const $stockCentralCancelJobBtn = $stockCentralStatus.find('.mulopimfwc-stock-central-cancel-job');
     const $stockCentralLogPanel = $('#mulopimfwc-stock-central-import-export-log-panel');
     const $stockCentralLogList = $('#mulopimfwc-stock-central-import-export-log-list');
     const maxLogLines = 250;
+    let statusContextJob = null;
+    let activeWatchToken = 0;
+    let activeWatchJobId = '';
 
     function escapeHtml(text) {
         return String(text || '').replace(/[&<>"']/g, function (char) {
@@ -469,6 +480,351 @@ jQuery(document).ready(function ($) {
         };
     }
 
+    function postAjax(data) {
+        return $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: data,
+            dataType: 'json'
+        });
+    }
+
+    function postAjaxForm(formData) {
+        return $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json'
+        });
+    }
+
+    function isFinalJobStatus(status) {
+        return ['completed', 'failed', 'cancelled'].indexOf(String(status || '')) !== -1;
+    }
+
+    function summarizeJobStatus(job) {
+        if (!job || typeof job !== 'object') {
+            return '';
+        }
+        const parts = [];
+        if (job.phase) parts.push('Phase: ' + job.phase);
+        if (typeof job.progress_percent !== 'undefined') parts.push(Number(job.progress_percent).toFixed(2) + '%');
+        if (typeof job.rows_processed !== 'undefined' && typeof job.rows_total !== 'undefined') {
+            parts.push('Rows: ' + job.rows_processed + '/' + job.rows_total);
+        }
+        if (typeof job.rows_failed !== 'undefined' && Number(job.rows_failed) > 0) {
+            parts.push('Failed: ' + job.rows_failed);
+        }
+        if (job.current_pass) {
+            parts.push('Pass: ' + job.current_pass);
+        }
+        if (job.eta_seconds) {
+            parts.push('ETA ~' + job.eta_seconds + 's');
+        }
+        return parts.join(' | ');
+    }
+
+    function updateActiveJobControls(job) {
+        if (!$stockCentralStatus.length) {
+            return;
+        }
+
+        const hasJob = !!(job && job.job_id);
+        const status = String((job && job.status) || '');
+        const type = String((job && job.type) || 'job');
+        const isActive = hasJob && !isFinalJobStatus(status);
+
+        const canPause = isActive && ['queued', 'running', 'uploading'].indexOf(status) !== -1;
+        const canResume = isActive && status === 'paused';
+        const canCancel = isActive;
+
+        $stockCentralPauseJobBtn.prop('hidden', !canPause).prop('disabled', !canPause);
+        $stockCentralResumeJobBtn.prop('hidden', !canResume).prop('disabled', !canResume);
+        $stockCentralCancelJobBtn.prop('hidden', !canCancel).prop('disabled', !canCancel);
+
+        if ($stockCentralActiveJobMeta.length) {
+            if (isActive) {
+                $stockCentralActiveJobMeta
+                    .text('Active ' + type + ' job: ' + job.job_id)
+                    .prop('hidden', false);
+            } else {
+                $stockCentralActiveJobMeta.text('').prop('hidden', true);
+            }
+        }
+    }
+
+    function streamJobEvents(jobId, cursorRef) {
+        return postAjax({
+            action: ieActions.get_job_events || 'mulopimfwc_ie_get_job_events',
+            nonce: nonce,
+            job_id: jobId,
+            cursor: cursorRef.value || 0
+        }).done(function (response) {
+            if (!response || !response.success || !response.data || !Array.isArray(response.data.events)) {
+                return;
+            }
+            response.data.events.forEach(function (evt) {
+                if (!evt || typeof evt !== 'object') {
+                    return;
+                }
+                const level = String(evt.level || 'info').toLowerCase();
+                appendStockCentralLog(evt.message || '', level === 'warning' ? 'info' : normalizeLogType(level));
+            });
+            cursorRef.value = Number(response.data.next_cursor || cursorRef.value || 0);
+        });
+    }
+
+    function waitForJobTerminal(jobId, options) {
+        const opts = options && typeof options === 'object' ? options : {};
+        const cursorRef = { value: Number(opts.cursor || 0) };
+        const terminalStatuses = Array.isArray(opts.terminalStatuses) && opts.terminalStatuses.length
+            ? opts.terminalStatuses.map(function (status) { return String(status || '').toLowerCase(); })
+            : ['completed', 'failed', 'cancelled', 'awaiting_confirmation'];
+        const appendStatusLog = typeof opts.appendStatusLog === 'boolean' ? opts.appendStatusLog : false;
+        const shouldStop = typeof opts.shouldStop === 'function' ? opts.shouldStop : null;
+        const onUpdate = typeof opts.onUpdate === 'function' ? opts.onUpdate : null;
+        return new Promise(function (resolve, reject) {
+            let stopped = false;
+
+            function finish(err, payload) {
+                if (stopped) {
+                    return;
+                }
+                stopped = true;
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(payload);
+                }
+            }
+
+            function isStoppedExternally() {
+                if (!shouldStop) {
+                    return false;
+                }
+                try {
+                    return !!shouldStop();
+                } catch (_err) {
+                    return false;
+                }
+            }
+
+            function poll() {
+                if (stopped) {
+                    return;
+                }
+                if (isStoppedExternally()) {
+                    finish(new Error('__stopped__'));
+                    return;
+                }
+                postAjax({
+                    action: ieActions.get_job_status || 'mulopimfwc_ie_get_job_status',
+                    nonce: nonce,
+                    job_id: jobId
+                }).done(function (response) {
+                    if (!response || !response.success || !response.data) {
+                        finish(new Error((response && response.data && response.data.message) || 'Failed to fetch job status.'));
+                        return;
+                    }
+                    const job = response.data;
+                    applyJobStatusToUi(job, { appendLog: appendStatusLog });
+                    if (onUpdate) {
+                        try {
+                            onUpdate(job);
+                        } catch (_err) {
+                            // Keep polling even if UI callback fails.
+                        }
+                    }
+
+                    streamJobEvents(jobId, cursorRef).always(function () {
+                        if (isStoppedExternally()) {
+                            finish(new Error('__stopped__'));
+                            return;
+                        }
+                        if (terminalStatuses.indexOf(String(job.status || '').toLowerCase()) !== -1) {
+                            finish(null, job);
+                            return;
+                        }
+                        window.setTimeout(poll, 2500);
+                    });
+                }).fail(function (_xhr, _status, error) {
+                    finish(new Error(error || 'Failed to poll job status.'));
+                });
+            }
+
+            poll();
+        });
+    }
+
+    function watchActiveJob(jobOrId, options) {
+        if (!ieV2Enabled) {
+            return;
+        }
+        const opts = options && typeof options === 'object' ? options : {};
+        const initialJob = (jobOrId && typeof jobOrId === 'object') ? jobOrId : null;
+        const jobId = initialJob ? String(initialJob.job_id || '') : String(jobOrId || '');
+        if (jobId === '') {
+            return;
+        }
+
+        if (activeWatchJobId === jobId) {
+            return;
+        }
+
+        const watchToken = ++activeWatchToken;
+        activeWatchJobId = jobId;
+        if (initialJob) {
+            applyJobStatusToUi(initialJob, { appendLog: false });
+        }
+        if (!opts.silent) {
+            appendStockCentralLog('Tracking active job: ' + jobId, 'info');
+        }
+
+        waitForJobTerminal(jobId, {
+            terminalStatuses: ['completed', 'failed', 'cancelled'],
+            appendStatusLog: false,
+            shouldStop: function () {
+                return watchToken !== activeWatchToken;
+            }
+        }).then(function () {
+            if (watchToken !== activeWatchToken) {
+                return;
+            }
+            activeWatchJobId = '';
+        }).catch(function (err) {
+            if (watchToken !== activeWatchToken) {
+                return;
+            }
+            activeWatchJobId = '';
+            if (err && err.message === '__stopped__') {
+                return;
+            }
+            const message = err && err.message ? err.message : 'Failed to monitor active job.';
+            appendStockCentralLog(message, 'error');
+        });
+    }
+
+    function discoverActiveImportJob() {
+        if (!ieV2Enabled || !ajaxUrl) {
+            return;
+        }
+        postAjax({
+            action: ieActions.get_active_jobs || 'mulopimfwc_ie_get_active_jobs',
+            nonce: nonce,
+            type: 'import',
+            limit: 1
+        }).done(function (response) {
+            if (!response || !response.success || !response.data || !Array.isArray(response.data.jobs) || !response.data.jobs.length) {
+                return;
+            }
+            watchActiveJob(response.data.jobs[0], { silent: true });
+        }).fail(function () {
+            // Keep UI usable even if active-job discovery fails.
+        });
+    }
+
+    function performJobControlAction(actionName, startedMessage) {
+        if (!ieV2Enabled || !statusContextJob || !statusContextJob.job_id) {
+            setStockCentralStatus('No active job selected.', 'error');
+            return;
+        }
+        const jobId = statusContextJob.job_id;
+        if (startedMessage) {
+            setStockCentralStatus(startedMessage, 'info');
+        }
+        postAjax({
+            action: actionName,
+            nonce: nonce,
+            job_id: jobId
+        }).done(function (response) {
+            if (!response || !response.success || !response.data) {
+                const errorMessage = (response && response.data && response.data.message) || 'Job action failed.';
+                setStockCentralStatus(errorMessage, 'error');
+                return;
+            }
+            applyJobStatusToUi(response.data, { appendLog: true });
+            if (!isFinalJobStatus(response.data.status)) {
+                watchActiveJob(response.data, { silent: true });
+            }
+        }).fail(function (_xhr, _status, error) {
+            setStockCentralStatus('Job action failed: ' + (error || 'Unknown error'), 'error');
+        });
+    }
+
+    function triggerDownloadFromUrl(url) {
+        if (!url) {
+            return;
+        }
+        const link = document.createElement('a');
+        link.href = url;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+
+    async function sha256HexFromBlob(blob) {
+        if (!window.crypto || !window.crypto.subtle) {
+            return '';
+        }
+        const buffer = await blob.arrayBuffer();
+        const digest = await window.crypto.subtle.digest('SHA-256', buffer);
+        const bytes = new Uint8Array(digest);
+        let hex = '';
+        for (let i = 0; i < bytes.length; i++) {
+            hex += bytes[i].toString(16).padStart(2, '0');
+        }
+        return hex;
+    }
+
+    async function maybeComputeFileHash(file) {
+        const maxHashBytes = 200 * 1024 * 1024;
+        if (!file || file.size > maxHashBytes) {
+            return '';
+        }
+        try {
+            return await sha256HexFromBlob(file);
+        } catch (_err) {
+            return '';
+        }
+    }
+
+    async function uploadFileInChunks(jobId, uploadId, file) {
+        const totalChunks = Math.max(1, Math.ceil((file.size || 0) / uploadChunkSize));
+        let warnedNoChunkHash = false;
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * uploadChunkSize;
+            const end = Math.min(file.size, start + uploadChunkSize);
+            const chunk = file.slice(start, end);
+            const chunkSha = await sha256HexFromBlob(chunk);
+            if (!chunkSha && !warnedNoChunkHash) {
+                warnedNoChunkHash = true;
+                appendStockCentralLog('Browser lacks WebCrypto chunk hashing; continuing with server-side checksum validation.', 'info');
+            }
+            const formData = new FormData();
+            formData.append('action', ieActions.upload_chunk || 'mulopimfwc_ie_upload_chunk');
+            formData.append('nonce', nonce);
+            formData.append('job_id', jobId);
+            formData.append('upload_id', uploadId);
+            formData.append('chunk_index', String(i));
+            formData.append('chunk_count', String(totalChunks));
+            if (chunkSha) {
+                formData.append('chunk_sha256', chunkSha);
+            }
+            formData.append('chunk', chunk, (file.name || 'upload.bin') + '.part');
+
+            const response = await postAjaxForm(formData);
+            if (!response || !response.success) {
+                throw new Error((response && response.data && response.data.message) || 'Chunk upload failed.');
+            }
+            const percent = Math.round(((i + 1) / totalChunks) * 100);
+            setSettingsProgress((cfg.strings.uploading_chunks || 'Uploading file in chunks...') + ' (' + (i + 1) + '/' + totalChunks + ')', percent);
+        }
+        return totalChunks;
+    }
+
     function setSettingsProgress(message, percent) {
         const $container = $('#export-progress');
         const $bar = $('#export-progress-bar');
@@ -489,10 +845,12 @@ jQuery(document).ready(function ($) {
         }
     }
 
-    function setStockCentralStatus(message, type) {
+    function setStockCentralStatus(message, type, options) {
         if (!$stockCentralStatus.length) {
             return;
         }
+        const opts = options && typeof options === 'object' ? options : {};
+        const appendLog = typeof opts.appendLog === 'boolean' ? opts.appendLog : true;
         if (!message) {
             $stockCentralStatus.hide().removeClass('is-error is-success');
             if ($stockCentralStatusMessage.length) {
@@ -500,6 +858,8 @@ jQuery(document).ready(function ($) {
             } else {
                 $stockCentralStatus.text('');
             }
+            statusContextJob = null;
+            updateActiveJobControls(null);
             return;
         }
 
@@ -511,7 +871,29 @@ jQuery(document).ready(function ($) {
         $stockCentralStatus.show();
         $stockCentralStatus.toggleClass('is-error', type === 'error');
         $stockCentralStatus.toggleClass('is-success', type === 'success');
-        appendStockCentralLog(message, type);
+        if (appendLog) {
+            appendStockCentralLog(message, type);
+        }
+    }
+
+    function applyJobStatusToUi(job, options) {
+        if (!job || typeof job !== 'object') {
+            return;
+        }
+        const statusLine = summarizeJobStatus(job) || ('Job status: ' + (job.status || 'unknown'));
+        const statusType = (job.status === 'failed' || job.status === 'cancelled')
+            ? 'error'
+            : (job.status === 'completed' ? 'success' : 'info');
+        const progress = Number(job.progress_percent || 0);
+        setSettingsProgress(statusLine, progress);
+        setStockCentralStatus(statusLine, statusType, options);
+
+        statusContextJob = {
+            job_id: String(job.job_id || ''),
+            type: String(job.type || ''),
+            status: String(job.status || '')
+        };
+        updateActiveJobControls(statusContextJob);
     }
 
     function renderSummary(prefix, summary, errors, warnings) {
@@ -549,6 +931,108 @@ jQuery(document).ready(function ($) {
         appendStockCentralLog('Failed rows report downloaded (mulopimfwc-import-failed-rows.csv).', 'info');
     }
 
+    function runLegacyImportRequest(file, mode, confirmed, onDone) {
+        const formData = new FormData();
+        formData.append('action', fullImportAction);
+        formData.append('nonce', nonce);
+        formData.append('csv_file', file);
+        formData.append('options', JSON.stringify(getImportOptions(mode, confirmed)));
+        const stopProgressHints = startImportProgressHints(mode);
+
+        postAjaxForm(formData).done(function (response) {
+            stopProgressHints();
+            if (!response || !response.success) {
+                const data = response && response.data ? response.data : {};
+                if (typeof onDone === 'function') onDone(false, data);
+                return;
+            }
+            if (typeof onDone === 'function') onDone(true, response.data || {});
+        }).fail(function (_xhr, _status, error) {
+            stopProgressHints();
+            if (typeof onDone === 'function') onDone(false, { message: error || 'Import request failed.' });
+        });
+    }
+
+    async function runV2ImportWorkflow(file, selectedMode) {
+        const startResponse = await postAjax({
+            action: ieActions.start_import || 'mulopimfwc_ie_start_import',
+            nonce: nonce,
+            options: JSON.stringify(getImportOptions('dry_run', false))
+        });
+        if (!startResponse || !startResponse.success || !startResponse.data) {
+            const payload = startResponse && startResponse.data ? startResponse.data : {};
+            if (payload && payload.active_job && payload.active_job.job_id) {
+                watchActiveJob(payload.active_job);
+            } else {
+                discoverActiveImportJob();
+            }
+            throw new Error((payload && payload.message) || 'Failed to start import job.');
+        }
+        const jobId = startResponse.data.job_id;
+        const uploadId = startResponse.data.upload_id;
+        applyJobStatusToUi(startResponse.data, { appendLog: false });
+        appendStockCentralLog('Import job created: ' + jobId, 'info');
+
+        const totalChunks = await uploadFileInChunks(jobId, uploadId, file);
+        const targetSha = await maybeComputeFileHash(file);
+
+        const finishResponse = await postAjax({
+            action: ieActions.finish_upload || 'mulopimfwc_ie_finish_upload',
+            nonce: nonce,
+            job_id: jobId,
+            upload_id: uploadId,
+            chunk_count: totalChunks,
+            filename: file.name || 'upload.bin',
+            target_sha256: targetSha
+        });
+        if (!finishResponse || !finishResponse.success) {
+            throw new Error((finishResponse && finishResponse.data && finishResponse.data.message) || 'Failed to finish upload.');
+        }
+
+        const dryRunResponse = await postAjax({
+            action: ieActions.start_dry_run || 'mulopimfwc_ie_start_dry_run',
+            nonce: nonce,
+            job_id: jobId,
+            options: JSON.stringify(getImportOptions('dry_run', false))
+        });
+        if (!dryRunResponse || !dryRunResponse.success) {
+            throw new Error((dryRunResponse && dryRunResponse.data && dryRunResponse.data.message) || 'Failed to start dry-run.');
+        }
+
+        const dryRunTerminal = await waitForJobTerminal(jobId);
+        if (dryRunTerminal.status === 'failed' || dryRunTerminal.status === 'cancelled') {
+            throw new Error('Dry-run ended with status: ' + dryRunTerminal.status);
+        }
+
+        if (dryRunTerminal.status === 'awaiting_confirmation') {
+            const confirmMsg = (cfg.strings.confirm_dry_run_apply || 'Dry run completed. Continue with import?') +
+                '\n\n' +
+                summarizeJobStatus(dryRunTerminal);
+            if (!window.confirm(confirmMsg)) {
+                appendStockCentralLog('Import cancelled by user after dry-run.', 'info');
+                return dryRunTerminal;
+            }
+
+            const applyResponse = await postAjax({
+                action: ieActions.confirm_apply || 'mulopimfwc_ie_confirm_apply',
+                nonce: nonce,
+                job_id: jobId,
+                options: JSON.stringify(getImportOptions(selectedMode, true))
+            });
+            if (!applyResponse || !applyResponse.success) {
+                throw new Error((applyResponse && applyResponse.data && applyResponse.data.message) || 'Failed to start apply phase.');
+            }
+
+            const applyTerminal = await waitForJobTerminal(jobId);
+            if (applyTerminal.status !== 'completed') {
+                throw new Error('Apply ended with status: ' + applyTerminal.status);
+            }
+            return applyTerminal;
+        }
+
+        return dryRunTerminal;
+    }
+
     function runFullImport(file, mode, confirmed, onDone) {
         if (!ajaxUrl) {
             const msg = 'Import failed: missing admin AJAX URL.';
@@ -558,79 +1042,34 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('action', fullImportAction);
-        formData.append('nonce', nonce);
-        formData.append('csv_file', file);
-        formData.append('options', JSON.stringify(getImportOptions(mode, confirmed)));
-        appendStockCentralLog('Import pipeline request sent to server. Waiting for pass-by-pass result details...', 'info');
-        const stopProgressHints = startImportProgressHints(mode);
+        if (!ieV2Enabled) {
+            runLegacyImportRequest(file, mode, confirmed, onDone);
+            return;
+        }
 
-        $.ajax({
-            url: ajaxUrl,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false
-        }).done(function (response) {
-            stopProgressHints();
-            if (!response || !response.success) {
-                const data = response && response.data ? response.data : {};
-                setSettingsProgress(data.message || cfg.strings.full_import_error || 'Import failed', 100);
-                setStockCentralStatus(data.message || cfg.strings.full_import_error || 'Import failed', 'error');
-                appendServerLogs(data);
-                if (!Array.isArray(data.logs) || !data.logs.length) {
-                    appendValidationLines(data);
-                }
-                if (data.failed_rows_csv_base64) {
-                    downloadFailedRowsIfAny(data.failed_rows_csv_base64);
-                }
-                if (typeof onDone === 'function') onDone(false, data);
-                return;
+        if (mode !== 'dry_run') {
+            if (typeof onDone === 'function') {
+                onDone(true, { message: 'Apply phase is managed by the v2 workflow.' });
             }
+            return;
+        }
 
-            const data = response.data || {};
-            const msg = renderSummary(data.message || cfg.strings.full_import_success || 'Import completed', data.summary, data.errors, data.warnings);
-            const hasErrors = Array.isArray(data.errors) && data.errors.length > 0;
-            setSettingsProgress(msg, 100);
-            setStockCentralStatus(msg, hasErrors ? 'error' : 'success');
-            appendServerLogs(data);
-            if (data.job && data.job.job_id) {
-                appendStockCentralLog('Job ID: ' + data.job.job_id + ' (' + (data.job.status || 'completed') + ')', hasErrors ? 'error' : 'success');
-            }
-            if (!Array.isArray(data.logs) || !data.logs.length) {
-                appendValidationLines(data);
-            }
-            if (data.failed_rows_csv_base64) {
-                downloadFailedRowsIfAny(data.failed_rows_csv_base64);
-            }
-            if (typeof onDone === 'function') onDone(true, data);
-        }).fail(function (_xhr, _status, error) {
-            stopProgressHints();
-            let detail = error || '';
-            if (_xhr && typeof _xhr.responseText === 'string') {
-                const raw = _xhr.responseText.trim();
-                if (raw && raw.charAt(0) === '<') {
-                    detail = 'Server returned HTML instead of JSON.';
-                }
-            }
-            const msg = (cfg.strings.full_import_error || 'Import failed') + ': ' + detail;
-            setSettingsProgress(msg, 100);
-            setStockCentralStatus(msg, 'error');
-            if (_xhr && typeof _xhr.responseText === 'string') {
-                const rawResponse = _xhr.responseText.trim();
-                if (rawResponse !== '') {
-                    const excerpt = rawResponse.length > 500 ? (rawResponse.slice(0, 500) + '...') : rawResponse;
-                    appendStockCentralLog('Server response: ' + excerpt, 'error');
-                }
-            }
-            if (typeof onDone === 'function') onDone(false, { message: msg });
+        const selectedMode = getValue('#mulopimfwc-stock-central-import-mode', '#mulopimfwc_import_mode') || 'create_update';
+        (async function () {
+            const terminal = await runV2ImportWorkflow(file, selectedMode);
+            if (typeof onDone === 'function') onDone(true, terminal || {});
+        })().catch(function (err) {
+            if (typeof onDone === 'function') onDone(false, { message: err && err.message ? err.message : 'Import failed.' });
         });
     }
 
     function handleImportFile(file) {
-        if (!file || !/\.csv$/i.test(file.name || '')) {
-            alert(cfg.strings.invalid_csv_file || 'Please select a valid CSV file.');
+        if (!file || (!/\.csv$/i.test(file.name || '') && !/\.zip$/i.test(file.name || ''))) {
+            alert(cfg.strings.invalid_csv_file || 'Please select a valid CSV/ZIP file.');
+            return;
+        }
+        if (file.size > maxUploadBytes) {
+            alert('File is too large. Maximum supported size is 2GB.');
             return;
         }
 
@@ -639,24 +1078,63 @@ jQuery(document).ready(function ($) {
         setSettingsProgress(cfg.strings.full_importing_dry_run || 'Running dry run...', 20);
         setStockCentralStatus(cfg.strings.full_importing_dry_run || 'Running dry run...');
 
+        if (!ieV2Enabled) {
+            runFullImport(file, 'dry_run', false, function (ok, data) {
+                if (!ok) {
+                    const message = data && data.message ? data.message : (cfg.strings.full_import_error || 'Import failed.');
+                    setSettingsProgress(message, 100);
+                    setStockCentralStatus(message, 'error');
+                    appendServerLogs(data || {});
+                    if (data && data.failed_rows_csv_base64) {
+                        downloadFailedRowsIfAny(data.failed_rows_csv_base64);
+                    }
+                    return;
+                }
+                const confirmMsg = (cfg.strings.confirm_dry_run_apply || 'Dry run completed. Continue with import?') +
+                    '\n\n' +
+                    renderSummary('Dry run summary:', data.summary, data.errors, data.warnings);
+                if (!window.confirm(confirmMsg)) {
+                    appendStockCentralLog('Import cancelled by user after dry-run.', 'info');
+                    return;
+                }
+
+                const selectedMode = getValue('#mulopimfwc-stock-central-import-mode', '#mulopimfwc_import_mode') || 'create_update';
+                setSettingsProgress(cfg.strings.full_importing_apply || 'Applying import...', 55);
+                setStockCentralStatus(cfg.strings.full_importing_apply || 'Applying import...');
+                runFullImport(file, selectedMode, true, function (applyOk, applyData) {
+                    if (!applyOk) {
+                        const applyMessage = applyData && applyData.message ? applyData.message : (cfg.strings.full_import_error || 'Import failed.');
+                        setSettingsProgress(applyMessage, 100);
+                        setStockCentralStatus(applyMessage, 'error');
+                        return;
+                    }
+                    setSettingsProgress(cfg.strings.full_import_success || 'Import completed successfully.', 100);
+                    setStockCentralStatus(cfg.strings.full_import_success || 'Import completed successfully.', 'success');
+                    setTimeout(function () {
+                        setSettingsProgress('', 0);
+                    }, 4500);
+                });
+            });
+            return;
+        }
+
         runFullImport(file, 'dry_run', false, function (ok, data) {
-            if (!ok) return;
-            const confirmMsg = (cfg.strings.confirm_dry_run_apply || 'Dry run completed. Continue with import?') +
-                '\n\n' +
-                renderSummary('Dry run summary:', data.summary, data.errors, data.warnings);
-            if (!window.confirm(confirmMsg)) {
-                appendStockCentralLog('Import cancelled by user after dry-run.', 'info');
+            if (!ok) {
+                if (data && data.active_job && data.active_job.job_id) {
+                    watchActiveJob(data.active_job);
+                }
+                const message = data && data.message ? data.message : (cfg.strings.full_import_error || 'Import failed.');
+                setSettingsProgress(message, 100);
+                setStockCentralStatus(message, 'error');
+                appendStockCentralLog(message, 'error');
                 return;
             }
-
-            const selectedMode = getValue('#mulopimfwc-stock-central-import-mode', '#mulopimfwc_import_mode') || 'create_update';
-            setSettingsProgress(cfg.strings.full_importing_apply || 'Applying import...', 55);
-            setStockCentralStatus(cfg.strings.full_importing_apply || 'Applying import...');
-            runFullImport(file, selectedMode, true, function () {
-                setTimeout(function () {
-                    setSettingsProgress('', 0);
-                }, 4500);
-            });
+            const message = data && data.status ? ('Import job ended with status: ' + data.status) : (cfg.strings.full_import_success || 'Import completed successfully.');
+            setSettingsProgress(message, 100);
+            setStockCentralStatus(message, 'success');
+            setTimeout(function () {
+                setSettingsProgress('', 0);
+            }, 4500);
         });
     }
 
@@ -674,37 +1152,87 @@ jQuery(document).ready(function ($) {
         setSettingsProgress(cfg.strings.full_exporting || 'Preparing export...', 20);
         setStockCentralStatus(cfg.strings.full_exporting || 'Preparing export...');
 
-        $.ajax({
-            url: ajaxUrl,
-            type: 'POST',
-            data: {
+        const fallbackLegacy = function () {
+            postAjax({
                 action: fullExportAction,
                 nonce: nonce,
                 options: JSON.stringify({
                     meta_whitelist: getValue('#mulopimfwc-stock-central-custom-meta', '#mulopimfwc_import_meta_whitelist')
                 })
-            }
+            }).done(function (response) {
+                if (!response || !response.success) {
+                    const message = (response && response.data && response.data.message) || 'Export failed';
+                    setSettingsProgress(message, 100);
+                    setStockCentralStatus(message, 'error');
+                    return;
+                }
+                const data = response.data || {};
+                if (data.download_url) {
+                    triggerDownloadFromUrl(data.download_url);
+                    setSettingsProgress('Export completed.', 100);
+                    setStockCentralStatus('Export completed.', 'success');
+                    return;
+                }
+                const filename = data.filename || ('mulopimfwc-stock-central-full-' + Date.now() + '.csv');
+                const blob = base64ToBlob(data.csv_base64, 'text/csv;charset=utf-8;');
+                triggerDownloadBlob(blob, filename);
+                const msg = renderSummary('Export completed.', data.summary, [], []);
+                setSettingsProgress(msg, 100);
+                setStockCentralStatus(msg, 'success');
+                appendStockCentralLog('Export file downloaded: ' + filename, 'success');
+                setTimeout(function () { setSettingsProgress('', 0); }, 3500);
+            }).fail(function (_xhr, _status, error) {
+                const msg = 'Export failed: ' + error;
+                setSettingsProgress(msg, 100);
+                setStockCentralStatus(msg, 'error');
+            }).always(function () {
+                $btn.prop('disabled', false).html(original);
+            });
+        };
+
+        if (!ieV2Enabled) {
+            fallbackLegacy();
+            return;
+        }
+
+        postAjax({
+            action: ieActions.start_export || 'mulopimfwc_ie_start_export',
+            nonce: nonce,
+            options: JSON.stringify({
+                meta_whitelist: getValue('#mulopimfwc-stock-central-custom-meta', '#mulopimfwc_import_meta_whitelist')
+            })
         }).done(function (response) {
-            if (!response || !response.success) {
-                const message = (response && response.data && response.data.message) || 'Export failed';
+            if (!response || !response.success || !response.data || !response.data.job_id) {
+                const message = (response && response.data && response.data.message) || 'Failed to start export job.';
                 setSettingsProgress(message, 100);
                 setStockCentralStatus(message, 'error');
+                $btn.prop('disabled', false).html(original);
                 return;
             }
-            const data = response.data || {};
-            const filename = data.filename || ('mulopimfwc-stock-central-full-' + Date.now() + '.csv');
-            const blob = base64ToBlob(data.csv_base64, 'text/csv;charset=utf-8;');
-            triggerDownloadBlob(blob, filename);
-            const msg = renderSummary('Export completed.', data.summary, [], []);
-            setSettingsProgress(msg, 100);
-            setStockCentralStatus(msg, 'success');
-            appendStockCentralLog('Export file downloaded: ' + filename, 'success');
-            setTimeout(function () { setSettingsProgress('', 0); }, 3500);
+            const jobId = response.data.job_id;
+            appendStockCentralLog('Export job started: ' + jobId, 'info');
+            waitForJobTerminal(jobId).then(function (terminal) {
+                if (terminal.status !== 'completed') {
+                    throw new Error('Export ended with status: ' + terminal.status);
+                }
+                if (terminal.download_url) {
+                    triggerDownloadFromUrl(terminal.download_url);
+                }
+                setSettingsProgress('Export completed.', 100);
+                setStockCentralStatus('Export completed.', 'success');
+                setTimeout(function () { setSettingsProgress('', 0); }, 3500);
+            }).catch(function (err) {
+                const message = err && err.message ? err.message : 'Export failed.';
+                setSettingsProgress(message, 100);
+                setStockCentralStatus(message, 'error');
+                appendStockCentralLog(message, 'error');
+            }).finally(function () {
+                $btn.prop('disabled', false).html(original);
+            });
         }).fail(function (_xhr, _status, error) {
             const msg = 'Export failed: ' + error;
             setSettingsProgress(msg, 100);
             setStockCentralStatus(msg, 'error');
-        }).always(function () {
             $btn.prop('disabled', false).html(original);
         });
     });
@@ -822,6 +1350,24 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('click', '.mulopimfwc-stock-central-pause-job', function (e) {
+        e.preventDefault();
+        performJobControlAction(ieActions.pause_job || 'mulopimfwc_ie_pause_job', 'Pausing active job...');
+    });
+
+    $(document).on('click', '.mulopimfwc-stock-central-resume-job', function (e) {
+        e.preventDefault();
+        performJobControlAction(ieActions.resume_job || 'mulopimfwc_ie_resume_job', 'Resuming active job...');
+    });
+
+    $(document).on('click', '.mulopimfwc-stock-central-cancel-job', function (e) {
+        e.preventDefault();
+        if (!window.confirm('Cancel this active job?')) {
+            return;
+        }
+        performJobControlAction(ieActions.cancel_job || 'mulopimfwc_ie_cancel_job', 'Cancelling active job...');
+    });
+
     $(document).on('click', '.mulopimfwc-stock-central-log-close', function (e) {
         e.preventDefault();
         $stockCentralLogPanel.prop('hidden', true);
@@ -892,4 +1438,8 @@ jQuery(document).ready(function ($) {
 
     ensureLogEmptyState();
     refreshViewLogState();
+    updateActiveJobControls(null);
+    if (ieV2Enabled) {
+        discoverActiveImportJob();
+    }
 });

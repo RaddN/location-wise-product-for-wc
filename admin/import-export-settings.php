@@ -27,16 +27,38 @@ class mulopimfwc_Import_Export
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '1.1.5.0',
+            '2.0.0',
             true
         );
+
+        $ie_v2_enabled = function_exists('mulopimfwc_get_import_export_v2_service')
+            ? (bool) mulopimfwc_get_import_export_v2_service()->is_v2_enabled()
+            : false;
 
         wp_localize_script('mulopimfwc-import-export', 'mulopimfwcImportExport', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('mulopimfwc_import_export_nonce'),
+            'ie_v2_enabled' => $ie_v2_enabled,
             'full_export_action' => 'mulopimfwc_export_full_products_csv',
             'full_import_action' => 'mulopimfwc_import_full_products_csv',
             'restore_snapshot_action' => 'mulopimfwc_restore_import_snapshot',
+            'ie_actions' => [
+                'start_export' => 'mulopimfwc_ie_start_export',
+                'start_import' => 'mulopimfwc_ie_start_import',
+                'upload_chunk' => 'mulopimfwc_ie_upload_chunk',
+                'finish_upload' => 'mulopimfwc_ie_finish_upload',
+                'start_dry_run' => 'mulopimfwc_ie_start_dry_run',
+                'confirm_apply' => 'mulopimfwc_ie_confirm_apply',
+                'get_job_status' => 'mulopimfwc_ie_get_job_status',
+                'get_job_events' => 'mulopimfwc_ie_get_job_events',
+                'get_active_jobs' => 'mulopimfwc_ie_get_active_jobs',
+                'pause_job' => 'mulopimfwc_ie_pause_job',
+                'resume_job' => 'mulopimfwc_ie_resume_job',
+                'cancel_job' => 'mulopimfwc_ie_cancel_job',
+                'download_artifact' => 'mulopimfwc_ie_download_artifact',
+            ],
+            'upload_chunk_size' => 8 * 1024 * 1024,
+            'max_upload_bytes' => 2 * 1024 * 1024 * 1024,
             'strings' => [
                 'exporting' => __('Exporting settings...', 'multi-location-product-and-inventory-management'),
                 'export_success' => __('Settings exported successfully!', 'multi-location-product-and-inventory-management'),
@@ -57,6 +79,10 @@ class mulopimfwc_Import_Export
                 'full_importing_apply' => __('Applying import...', 'multi-location-product-and-inventory-management'),
                 'full_import_success' => __('Import completed successfully.', 'multi-location-product-and-inventory-management'),
                 'full_import_error' => __('Import failed. Please review the report.', 'multi-location-product-and-inventory-management'),
+                'job_queued' => __('Job queued. Processing in background...', 'multi-location-product-and-inventory-management'),
+                'uploading_chunks' => __('Uploading file in chunks...', 'multi-location-product-and-inventory-management'),
+                'preparing_import' => __('Preparing import package...', 'multi-location-product-and-inventory-management'),
+                'awaiting_confirmation' => __('Dry-run completed. Waiting for apply confirmation.', 'multi-location-product-and-inventory-management'),
             ]
         ]);
     }
@@ -257,6 +283,7 @@ class mulopimfwc_Import_Export
 new mulopimfwc_Import_Export();
 
 require_once plugin_dir_path(__FILE__) . '../includes/class-stock-central-import-export.php';
+require_once plugin_dir_path(__FILE__) . '../includes/class-import-export-v2.php';
 
 function mulopimfwc_get_stock_central_import_export_service()
 {
@@ -267,23 +294,125 @@ function mulopimfwc_get_stock_central_import_export_service()
     return $service;
 }
 
+function mulopimfwc_get_import_export_v2_service()
+{
+    static $service = null;
+    if ($service === null) {
+        $service = new MULOPIMFWC_Import_Export_V2_Service(mulopimfwc_get_stock_central_import_export_service());
+        $service->register_hooks();
+    }
+    return $service;
+}
+
+// Ensure worker hooks and schema checks are registered on every request.
+mulopimfwc_get_import_export_v2_service();
+
 add_action('wp_ajax_mulopimfwc_export_full_products_csv', 'mulopimfwc_export_full_products_csv_handler');
 add_action('wp_ajax_mulopimfwc_import_full_products_csv', 'mulopimfwc_import_full_products_csv_handler');
 add_action('wp_ajax_mulopimfwc_restore_import_snapshot', 'mulopimfwc_restore_import_snapshot_handler');
 
+add_action('wp_ajax_mulopimfwc_ie_start_export', 'mulopimfwc_ie_start_export_handler');
+add_action('wp_ajax_mulopimfwc_ie_start_import', 'mulopimfwc_ie_start_import_handler');
+add_action('wp_ajax_mulopimfwc_ie_upload_chunk', 'mulopimfwc_ie_upload_chunk_handler');
+add_action('wp_ajax_mulopimfwc_ie_finish_upload', 'mulopimfwc_ie_finish_upload_handler');
+add_action('wp_ajax_mulopimfwc_ie_start_dry_run', 'mulopimfwc_ie_start_dry_run_handler');
+add_action('wp_ajax_mulopimfwc_ie_confirm_apply', 'mulopimfwc_ie_confirm_apply_handler');
+add_action('wp_ajax_mulopimfwc_ie_get_job_status', 'mulopimfwc_ie_get_job_status_handler');
+add_action('wp_ajax_mulopimfwc_ie_get_job_events', 'mulopimfwc_ie_get_job_events_handler');
+add_action('wp_ajax_mulopimfwc_ie_get_active_jobs', 'mulopimfwc_ie_get_active_jobs_handler');
+add_action('wp_ajax_mulopimfwc_ie_pause_job', 'mulopimfwc_ie_pause_job_handler');
+add_action('wp_ajax_mulopimfwc_ie_resume_job', 'mulopimfwc_ie_resume_job_handler');
+add_action('wp_ajax_mulopimfwc_ie_cancel_job', 'mulopimfwc_ie_cancel_job_handler');
+add_action('wp_ajax_mulopimfwc_ie_download_artifact', 'mulopimfwc_ie_download_artifact_handler');
+
 function mulopimfwc_export_full_products_csv_handler()
 {
+    $v2 = mulopimfwc_get_import_export_v2_service();
+    if ($v2->is_v2_enabled()) {
+        $v2->handle_legacy_export_proxy_ajax();
+        return;
+    }
     mulopimfwc_get_stock_central_import_export_service()->handle_export_ajax();
 }
 
 function mulopimfwc_import_full_products_csv_handler()
 {
+    $v2 = mulopimfwc_get_import_export_v2_service();
+    if ($v2->is_v2_enabled()) {
+        $v2->handle_legacy_import_proxy_ajax();
+        return;
+    }
     mulopimfwc_get_stock_central_import_export_service()->handle_import_ajax();
 }
 
 function mulopimfwc_restore_import_snapshot_handler()
 {
     mulopimfwc_get_stock_central_import_export_service()->handle_restore_snapshot_ajax();
+}
+
+function mulopimfwc_ie_start_export_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_start_export();
+}
+
+function mulopimfwc_ie_start_import_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_start_import();
+}
+
+function mulopimfwc_ie_upload_chunk_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_upload_chunk();
+}
+
+function mulopimfwc_ie_finish_upload_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_finish_upload();
+}
+
+function mulopimfwc_ie_start_dry_run_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_start_dry_run();
+}
+
+function mulopimfwc_ie_confirm_apply_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_confirm_apply();
+}
+
+function mulopimfwc_ie_get_job_status_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_get_job_status();
+}
+
+function mulopimfwc_ie_get_job_events_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_get_job_events();
+}
+
+function mulopimfwc_ie_get_active_jobs_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_get_active_jobs();
+}
+
+function mulopimfwc_ie_pause_job_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_pause_job();
+}
+
+function mulopimfwc_ie_resume_job_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_resume_job();
+}
+
+function mulopimfwc_ie_cancel_job_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_cancel_job();
+}
+
+function mulopimfwc_ie_download_artifact_handler()
+{
+    mulopimfwc_get_import_export_v2_service()->ajax_download_artifact();
 }
 
 

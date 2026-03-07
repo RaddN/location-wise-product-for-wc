@@ -256,6 +256,232 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         ));
     }
 
+    public function get_schema_version()
+    {
+        return self::SCHEMA_VERSION;
+    }
+
+    public function get_supported_schema_major()
+    {
+        return (int) self::SUPPORTED_SCHEMA_MAJOR;
+    }
+
+    public function get_supported_product_taxonomies_for_v2()
+    {
+        return $this->get_supported_product_taxonomies();
+    }
+
+    public function get_canonical_headers_for_v2()
+    {
+        return $this->get_canonical_headers();
+    }
+
+    public function get_sanitized_term_meta_for_v2($term_id)
+    {
+        return $this->get_sanitized_term_meta($term_id);
+    }
+
+    public function get_term_slug_for_v2($term_id, $taxonomy)
+    {
+        return $this->get_term_slug($term_id, $taxonomy);
+    }
+
+    public function build_product_export_row_for_v2($product, $product_taxonomies, $exported_at, $source_site, $options)
+    {
+        return $this->build_product_export_row($product, $product_taxonomies, $exported_at, $source_site, $options);
+    }
+
+    public function build_variation_export_row_for_v2($variation, $parent_product, $parent_key, $exported_at, $source_site, $options)
+    {
+        return $this->build_variation_export_row($variation, $parent_product, $parent_key, $exported_at, $source_site, $options);
+    }
+
+    public function append_relationship_rows_for_v2(&$rows, $product, $product_key, $exported_at, $source_site, &$counter)
+    {
+        $this->append_relationship_rows($rows, $product, $product_key, $exported_at, $source_site, $counter);
+    }
+
+    public function append_location_inventory_rows_for_v2(&$rows, $item_id, $item_sku, $item_row_key, $location_by_id, &$counter, $exported_at, $source_site)
+    {
+        $this->append_location_inventory_rows($rows, $item_id, $item_sku, $item_row_key, $location_by_id, $counter, $exported_at, $source_site);
+    }
+
+    public function append_media_rows_for_v2(&$rows, $product, $context, $parent_key, &$media_seen, &$counter, $exported_at, $source_site)
+    {
+        $this->append_media_rows($rows, $product, $context, $parent_key, $media_seen, $counter, $exported_at, $source_site);
+    }
+
+    public function parse_csv_file_for_v2($file_path)
+    {
+        return $this->parse_csv_file($file_path);
+    }
+
+    public function validate_schema_for_v2($headers, $rows)
+    {
+        return $this->validate_schema($headers, $rows);
+    }
+
+    public function run_import_pipeline_for_v2($rows, $options)
+    {
+        return $this->run_import_pipeline($rows, $options);
+    }
+
+    public function get_import_pass_order_for_v2()
+    {
+        return array(
+            'terms_locations',
+            'media_refs',
+            'products',
+            'variations',
+            'relationships',
+            'location_inventory',
+        );
+    }
+
+    public function init_incremental_import_pipeline_for_v2($options, $rows_total = 0)
+    {
+        $runtime = $this->sanitize_import_runtime(is_array($options) ? $options : array());
+        $state = array(
+            'summary' => array(
+                'rows_total' => max(0, (int) $rows_total),
+                'rows_processed' => 0,
+                'rows_failed' => 0,
+                'products_created' => 0,
+                'products_updated' => 0,
+                'variations_created' => 0,
+                'variations_updated' => 0,
+                'terms_created' => 0,
+                'terms_updated' => 0,
+                'locations_created' => 0,
+                'locations_updated' => 0,
+                'categories_created' => 0,
+                'tags_created' => 0,
+                'brands_created' => 0,
+                'attributes_created' => 0,
+                'relationships_updated' => 0,
+                'location_inventory_updated' => 0,
+                'media_sideloaded' => 0,
+                'media_mapped' => 0,
+                'dry_run' => $runtime['mode'] === 'dry_run',
+            ),
+            'errors' => array(),
+            'warnings' => array(),
+            'failed_rows' => array(),
+            'row_map' => array(),
+            'sku_map' => array(),
+            'variation_sku_map' => array(),
+            'term_map' => array(),
+            'location_map' => array(),
+            'media_map' => array(),
+            'snapshot' => array(
+                'products' => array(),
+                'terms' => array(),
+            ),
+            'snapshot_limit_reached' => false,
+            'fatal_error' => '',
+            'logs' => array(),
+            'log_truncated' => false,
+            'pending_term_parents' => array(),
+            'pending_location_parents' => array(),
+            'started_at_micro' => microtime(true),
+        );
+
+        $this->push_import_log(
+            $state,
+            sprintf(
+                __('Import pipeline started. Mode: %s', 'multi-location-product-and-inventory-management'),
+                str_replace('_', ' ', (string) $runtime['mode'])
+            )
+        );
+        $this->push_import_log(
+            $state,
+            sprintf(
+                __('Total CSV rows: %d', 'multi-location-product-and-inventory-management'),
+                (int) $state['summary']['rows_total']
+            )
+        );
+
+        return array(
+            'runtime' => $runtime,
+            'state' => $state,
+        );
+    }
+
+    public function process_incremental_import_pass_for_v2($pass, $rows, $runtime, &$state, $is_final_chunk = true)
+    {
+        if (!is_array($rows)) {
+            $rows = array();
+        }
+        $runtime = $this->sanitize_import_runtime(is_array($runtime) ? $runtime : array());
+        $grouped = $this->group_rows_by_type($rows);
+
+        if ($pass === 'terms_locations') {
+            $this->pass_terms_and_locations($grouped, $runtime, $state, (bool) $is_final_chunk);
+            return;
+        }
+        if ($pass === 'media_refs') {
+            $this->pass_media_refs($grouped, $runtime, $state);
+            return;
+        }
+        if ($pass === 'products') {
+            $this->pass_products($grouped, $runtime, $state);
+            return;
+        }
+        if ($pass === 'variations') {
+            $this->pass_variations($grouped, $runtime, $state);
+            return;
+        }
+        if ($pass === 'relationships') {
+            $this->pass_relationships($grouped, $runtime, $state);
+            return;
+        }
+        if ($pass === 'location_inventory') {
+            $this->pass_location_inventory($grouped, $runtime, $state);
+        }
+    }
+
+    public function finalize_incremental_import_pipeline_for_v2($runtime, &$state)
+    {
+        $runtime = $this->sanitize_import_runtime(is_array($runtime) ? $runtime : array());
+        $started_at = isset($state['started_at_micro']) ? (float) $state['started_at_micro'] : microtime(true);
+
+        if ($runtime['mode'] !== 'dry_run') {
+            $this->push_import_log($state, __('Finalizing import and clearing caches...', 'multi-location-product-and-inventory-management'));
+            $this->finalize_import($state);
+            $this->push_import_log($state, __('Finalization complete.', 'multi-location-product-and-inventory-management'), 'success');
+        }
+
+        $state['summary']['duration_seconds'] = round(max(0, microtime(true) - $started_at), 3);
+        $this->push_import_log(
+            $state,
+            sprintf(
+                __('Import pipeline finished in %s seconds. Processed rows: %d, failed rows: %d', 'multi-location-product-and-inventory-management'),
+                number_format((float) $state['summary']['duration_seconds'], 3, '.', ''),
+                (int) $state['summary']['rows_processed'],
+                (int) $state['summary']['rows_failed']
+            ),
+            empty($state['fatal_error']) && empty($state['errors']) ? 'success' : 'warning'
+        );
+
+        $failed_rows_csv = $this->build_failed_rows_csv($state['failed_rows']);
+        $snapshot_key = '';
+        if (($runtime['mode'] !== 'dry_run') && (!empty($state['snapshot']['products']) || !empty($state['snapshot']['terms']))) {
+            $snapshot_key = wp_generate_uuid4();
+            set_transient(self::SNAPSHOT_TRANSIENT_PREFIX . $snapshot_key, $state['snapshot'], DAY_IN_SECONDS * 7);
+        }
+
+        return array(
+            'summary' => $state['summary'],
+            'errors' => $state['errors'],
+            'warnings' => $state['warnings'],
+            'logs' => $state['logs'],
+            'failed_rows_csv' => $failed_rows_csv,
+            'failed_rows_csv_base64' => $failed_rows_csv !== '' ? base64_encode($failed_rows_csv) : '',
+            'snapshot_key' => $snapshot_key,
+            'fatal_error' => isset($state['fatal_error']) ? (string) $state['fatal_error'] : '',
+        );
+    }
+
     private function build_canonical_csv_export($options, &$stats)
     {
         $headers = $this->get_canonical_headers();
@@ -1138,11 +1364,17 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         );
     }
 
-    private function pass_terms_and_locations($grouped, $runtime, &$state)
+    private function pass_terms_and_locations($grouped, $runtime, &$state, $is_final_chunk = true)
     {
         $taxonomy_rows = isset($grouped['taxonomy_term']) ? $grouped['taxonomy_term'] : array();
         $location_rows = isset($grouped['location']) ? $grouped['location'] : array();
-        $pending_term_parents = array();
+        if (!isset($state['pending_term_parents']) || !is_array($state['pending_term_parents'])) {
+            $state['pending_term_parents'] = array();
+        }
+        if (!isset($state['pending_location_parents']) || !is_array($state['pending_location_parents'])) {
+            $state['pending_location_parents'] = array();
+        }
+        $pending_term_parents = &$state['pending_term_parents'];
         $taxonomy_total = count($taxonomy_rows);
         $location_total = count($location_rows);
 
@@ -1238,11 +1470,15 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             }
         }
 
+        $unresolved_term_parents = array();
         foreach ($pending_term_parents as $pending) {
             $taxonomy = $pending['taxonomy'];
             $child_key = $taxonomy . ':' . $pending['slug'];
             $parent_key = $taxonomy . ':' . $pending['parent_slug'];
             if (!isset($state['term_map'][$child_key])) {
+                if (!$is_final_chunk) {
+                    $unresolved_term_parents[] = $pending;
+                }
                 continue;
             }
             $child_id = (int) $state['term_map'][$child_key];
@@ -1260,10 +1496,13 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             }
             if ($parent_id > 0 && $runtime['mode'] !== 'dry_run') {
                 wp_update_term($child_id, $taxonomy, array('parent' => $parent_id));
+            } elseif (!$is_final_chunk) {
+                $unresolved_term_parents[] = $pending;
             }
         }
+        $pending_term_parents = $is_final_chunk ? array() : $unresolved_term_parents;
 
-        $pending_location_parents = array();
+        $pending_location_parents = &$state['pending_location_parents'];
         if ($location_total > 0) {
             $this->push_import_log(
                 $state,
@@ -1352,8 +1591,12 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             }
         }
 
+        $unresolved_location_parents = array();
         foreach ($pending_location_parents as $pending) {
             if (!isset($state['location_map'][$pending['slug']])) {
+                if (!$is_final_chunk) {
+                    $unresolved_location_parents[] = $pending;
+                }
                 continue;
             }
             $child_id = (int) $state['location_map'][$pending['slug']];
@@ -1366,8 +1609,11 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             }
             if ($child_id > 0 && $parent_id > 0 && $runtime['mode'] !== 'dry_run') {
                 wp_update_term($child_id, 'mulopimfwc_store_location', array('parent' => $parent_id));
+            } elseif (!$is_final_chunk) {
+                $unresolved_location_parents[] = $pending;
             }
         }
+        $pending_location_parents = $is_final_chunk ? array() : $unresolved_location_parents;
     }
 
     private function pass_media_refs($grouped, $runtime, &$state)
@@ -1385,6 +1631,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         }
 
         foreach ($media_rows as $index => $row) {
+            $state['summary']['rows_processed']++;
             $url = isset($row['media_url']) ? esc_url_raw((string) $row['media_url']) : '';
             if ($url === '') {
                 continue;
@@ -1397,7 +1644,6 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $state['media_map'][$url] = $attachment_id;
                 $state['summary']['media_mapped']++;
             }
-            $state['summary']['rows_processed']++;
 
             $position = (int) $index + 1;
             if ($media_total > 0 && ($position === $media_total || ($position % 200) === 0)) {

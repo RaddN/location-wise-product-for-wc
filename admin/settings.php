@@ -3690,7 +3690,7 @@ Popup Settings', 'multi-location-product-and-inventory-management'),
                 <span class="dashicons dashicons-upload" style="margin-top: 3px;"></span>
                 <?php echo esc_html_e('Import Full CSV', 'multi-location-product-and-inventory-management'); ?>
             </button>
-            <input type="file" id="mulopimfwc_import_products_file" accept=".csv" style="display:none;" />
+            <input type="file" id="mulopimfwc_import_products_file" accept=".csv,.zip" style="display:none;" />
             <p class="description"><?php echo esc_html_e('Export/import versioned canonical CSV for full WooCommerce product data plus location-wise data. Import runs dry-run first, then asks for confirmation.', 'multi-location-product-and-inventory-management'); ?></p>
             <p class="description">
                 <label for="mulopimfwc_import_mode"><?php echo esc_html_e('Import mode:', 'multi-location-product-and-inventory-management'); ?></label>

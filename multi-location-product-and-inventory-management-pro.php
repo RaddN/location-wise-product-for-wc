@@ -13828,6 +13828,17 @@ function mulopimfwc_add_favicon()
 // FIXED: Combine activation hooks into single function to prevent conflicts
 function mulopimfwc_activation()
 {
+    if (!class_exists('MULOPIMFWC_Import_Export_V2_Service')) {
+        require_once plugin_dir_path(__FILE__) . 'includes/class-import-export-v2.php';
+    }
+    if (class_exists('MULOPIMFWC_Import_Export_V2_Service')) {
+        MULOPIMFWC_Import_Export_V2_Service::install_schema();
+        MULOPIMFWC_Import_Export_V2_Service::ensure_capabilities();
+        if (get_option('mulopimfwc_ie_v2_enabled', null) === null) {
+            add_option('mulopimfwc_ie_v2_enabled', 'yes', '', false);
+        }
+    }
+
     mulopimfwc_register_manifest_endpoint();
     mulopimfwc_register_sw_endpoint();
     flush_rewrite_rules();
