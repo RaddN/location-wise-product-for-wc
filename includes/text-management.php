@@ -1036,6 +1036,26 @@ if (!function_exists('mulopimfwc_get_text_management_defaults')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_text_management_enabled')) {
+    /**
+     * Determine whether Text Management overrides are enabled.
+     *
+     * @param array<string,mixed>|null $options
+     * @return bool
+     */
+    function mulopimfwc_is_text_management_enabled(?array $options = null): bool
+    {
+        if (!is_array($options)) {
+            global $mulopimfwc_options;
+            $options = is_array($mulopimfwc_options ?? null)
+                ? $mulopimfwc_options
+                : get_option('mulopimfwc_display_options', []);
+        }
+
+        return isset($options['enable_text_management']) && $options['enable_text_management'] === 'on';
+    }
+}
+
 if (!function_exists('mulopimfwc_get_text_value')) {
     function mulopimfwc_get_text_value(string $key, $default = null)
     {
@@ -1051,6 +1071,10 @@ if (!function_exists('mulopimfwc_get_text_value')) {
             } else {
                 $default = '';
             }
+        }
+
+        if (!mulopimfwc_is_text_management_enabled(is_array($options) ? $options : [])) {
+            return $default;
         }
 
         if (is_array($options) && array_key_exists($key, $options)) {
@@ -1098,6 +1122,12 @@ if (!function_exists('mulopimfwc_get_text_management_runtime_map')) {
         $options = is_array($mulopimfwc_options ?? null)
             ? $mulopimfwc_options
             : get_option('mulopimfwc_display_options', []);
+
+        if (!mulopimfwc_is_text_management_enabled(is_array($options) ? $options : [])) {
+            $is_building = false;
+            $map_cache = [];
+            return $map_cache;
+        }
 
         $defaults = mulopimfwc_get_text_management_defaults();
         $map = [];

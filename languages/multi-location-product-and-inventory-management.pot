@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Multi Location Product & Inventory Management for "
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-07 08:56+0000\n"
+"POT-Creation-Date: 2026-03-07 10:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -134,7 +134,7 @@ msgstr ""
 msgid "-- Select Sub-area --"
 msgstr ""
 
-#: admin/settings.php:5348
+#: admin/settings.php:5355
 msgid "1"
 msgstr ""
 
@@ -150,7 +150,7 @@ msgstr ""
 msgid "123456:ABCDEF-TOKEN (optional global fallback)"
 msgstr ""
 
-#: admin/settings.php:5355
+#: admin/settings.php:5362
 msgid "2"
 msgstr ""
 
@@ -158,7 +158,7 @@ msgstr ""
 msgid "24 Hours"
 msgstr ""
 
-#: admin/settings.php:5362
+#: admin/settings.php:5369
 msgid "3"
 msgstr ""
 
@@ -170,7 +170,7 @@ msgstr ""
 msgid "@username or chat ID"
 msgstr ""
 
-#: admin/settings.php:6990
+#: admin/settings.php:6997
 msgid ""
 "Access our comprehensive documentation, knowledge base articles, and get "
 "direct support from our expert team"
@@ -303,7 +303,7 @@ msgstr ""
 msgid "Admin Visibility Controls"
 msgstr ""
 
-#: admin/settings.php:5734
+#: admin/settings.php:5741
 msgid "Advanced"
 msgstr ""
 
@@ -357,7 +357,7 @@ msgstr ""
 msgid "AJAX error while saving."
 msgstr ""
 
-#: admin/settings.php:6511
+#: admin/settings.php:6518
 msgid "AJAX Product Filter by Location & Stock"
 msgstr ""
 
@@ -627,7 +627,7 @@ msgstr ""
 msgid "Apartment, suite, etc."
 msgstr ""
 
-#: admin/settings.php:6542
+#: admin/settings.php:6549
 msgid "API & Webhook Integration: Bulk Inventory Sync"
 msgstr ""
 
@@ -647,11 +647,11 @@ msgstr ""
 msgid "API key generated successfully!"
 msgstr ""
 
-#: admin/settings.php:5284
+#: admin/settings.php:5291
 msgid "Append to title (Title - Location)"
 msgstr ""
 
-#: admin/settings.php:8041
+#: admin/settings.php:8086
 msgid "Apply a preset language pack to all text fields."
 msgstr ""
 
@@ -675,11 +675,11 @@ msgstr ""
 msgid "Apply to All Methods in Zone"
 msgstr ""
 
-#: admin/settings.php:8057
+#: admin/settings.php:8102
 msgid "Apply Translation"
 msgstr ""
 
-#: admin/settings.php:8059
+#: admin/settings.php:8104
 msgid ""
 "Applying a language will replace current text values. Save changes to keep "
 "them."
@@ -719,7 +719,7 @@ msgstr ""
 msgid "Are you sure you want to delete this location manager?"
 msgstr ""
 
-#: admin/settings.php:6047
+#: admin/settings.php:6054
 msgid ""
 "Are you sure you want to reset all settings to their default values? This "
 "action cannot be undone!"
@@ -750,7 +750,7 @@ msgstr ""
 msgid "Assign Locations:"
 msgstr ""
 
-#: admin/settings.php:5357
+#: admin/settings.php:5364
 msgid "Assign Products"
 msgstr ""
 
@@ -827,7 +827,7 @@ msgid ""
 "is enabled and Optional Location Selection is disabled."
 msgstr ""
 
-#: admin/settings.php:6119
+#: admin/settings.php:6126
 msgid "Available Parameters"
 msgstr ""
 
@@ -859,11 +859,11 @@ msgstr ""
 msgid "Back to Locations"
 msgstr ""
 
-#: admin/settings.php:8421
+#: admin/settings.php:8534
 msgid "Background color for popup overlay (supports rgba format)."
 msgstr ""
 
-#: admin/settings.php:8399
+#: admin/settings.php:8512
 msgid "Background color for popup/modal panels."
 msgstr ""
 
@@ -896,7 +896,7 @@ msgstr ""
 msgid "Base Font Size"
 msgstr ""
 
-#: admin/settings.php:8477
+#: admin/settings.php:8590
 msgid "Base font size (e.g., 15px, 16px, 1rem)."
 msgstr ""
 
@@ -946,7 +946,7 @@ msgstr ""
 msgid "Border Color"
 msgstr ""
 
-#: admin/settings.php:8455
+#: admin/settings.php:8568
 msgid "Border color for popups, cards, inputs, and other bordered elements."
 msgstr ""
 
@@ -954,7 +954,7 @@ msgstr ""
 msgid "Border Radius"
 msgstr ""
 
-#: admin/settings.php:8532
+#: admin/settings.php:8645
 msgid "Border radius for popups and buttons (e.g., 20px, 10px, 5px)."
 msgstr ""
 
@@ -978,7 +978,7 @@ msgstr ""
 msgid "Box Shadow"
 msgstr ""
 
-#: admin/settings.php:8520
+#: admin/settings.php:8633
 msgid ""
 "Box shadow for popups and cards (e.g., 0 18px 45px rgba(24, 24, 24, 0.18))."
 msgstr ""
@@ -987,7 +987,7 @@ msgstr ""
 msgid "Branding & Styling Settings"
 msgstr ""
 
-#: admin/settings.php:5795
+#: admin/settings.php:5802
 msgid "Branding Preview"
 msgstr ""
 
@@ -1011,7 +1011,7 @@ msgstr ""
 msgid "Bulk Location Assignment"
 msgstr ""
 
-#: admin/settings.php:6574
+#: admin/settings.php:6581
 msgid "Bulk Sync Example"
 msgstr ""
 
@@ -1415,7 +1415,7 @@ msgstr ""
 msgid "Compact"
 msgstr ""
 
-#: admin/settings.php:6420
+#: admin/settings.php:6427
 msgid "Compact view for single location"
 msgstr ""
 
@@ -1423,7 +1423,7 @@ msgstr ""
 msgid "Compatible with your version of WordPress"
 msgstr ""
 
-#: admin/settings.php:6543
+#: admin/settings.php:6550
 msgid ""
 "Complete guide to integrating your WMS, POS, or ERP systems with the plugin "
 "using REST API endpoints and webhooks. Learn how to sync inventory in bulk "
@@ -1474,7 +1474,7 @@ msgstr ""
 msgid "Configure customer analytics and insights based on location data."
 msgstr ""
 
-#: admin/settings.php:6348
+#: admin/settings.php:6355
 msgid ""
 "Configure different prices for products at different locations. Set up "
 "location-specific discounts, sale prices, and promotional offers to optimize "
@@ -1534,11 +1534,11 @@ msgid ""
 "stock."
 msgstr ""
 
-#: admin/settings.php:5274
+#: admin/settings.php:5281
 msgid "Configure how store locations appear with product titles."
 msgstr ""
 
-#: admin/settings.php:7756
+#: admin/settings.php:7763
 msgid ""
 "Configure how strictly products are filtered by location throughout your "
 "store."
@@ -1548,7 +1548,7 @@ msgstr ""
 msgid "Configure how the location selector appears to customers."
 msgstr ""
 
-#: admin/settings.php:6375
+#: admin/settings.php:6382
 msgid ""
 "Configure location manager roles, assign staff to specific locations, manage "
 "permissions, and set up multi-user workflows for decentralized inventory "
@@ -1584,7 +1584,7 @@ msgstr ""
 msgid "Configure shipping options based on product locations."
 msgstr ""
 
-#: admin/settings.php:6534
+#: admin/settings.php:6541
 msgid ""
 "Configure social alerts (orders, stock, digests) using a Microsoft Teams "
 "incoming webhook. Covers creating the webhook in Teams and pasting it into "
@@ -1623,7 +1623,7 @@ msgstr ""
 msgid "Contact Information Heading"
 msgstr ""
 
-#: admin/license-page.php:995 admin/settings.php:7004
+#: admin/license-page.php:995 admin/settings.php:7011
 msgid "Contact Support"
 msgstr ""
 
@@ -1655,11 +1655,11 @@ msgstr ""
 msgid "Conversion Rate"
 msgstr ""
 
-#: admin/settings.php:6104
+#: admin/settings.php:6111
 msgid "Copy Code"
 msgstr ""
 
-#: admin/settings.php:6880
+#: admin/settings.php:6887
 msgid "Copy shortcode"
 msgstr ""
 
@@ -1715,7 +1715,7 @@ msgid ""
 "multiple locations."
 msgstr ""
 
-#: admin/settings.php:5350
+#: admin/settings.php:5357
 msgid "Create Locations"
 msgstr ""
 
@@ -1736,7 +1736,7 @@ msgstr ""
 msgid "created"
 msgstr ""
 
-#: admin/settings.php:6329
+#: admin/settings.php:6336
 msgid "Creating Store Locations"
 msgstr ""
 
@@ -1744,7 +1744,7 @@ msgstr ""
 msgid "Cross-Location Order Management"
 msgstr ""
 
-#: admin/settings.php:7795
+#: admin/settings.php:7802
 msgid "Cross-Sells"
 msgstr ""
 
@@ -1793,7 +1793,7 @@ msgstr ""
 msgid "Current Version:"
 msgstr ""
 
-#: admin/settings.php:6175
+#: admin/settings.php:6182
 msgid "Custom CSS class name"
 msgstr ""
 
@@ -1805,7 +1805,7 @@ msgstr ""
 msgid "Custom Hours"
 msgstr ""
 
-#: admin/settings.php:6503
+#: admin/settings.php:6510
 msgid "Custom label text"
 msgstr ""
 
@@ -1842,13 +1842,13 @@ msgstr ""
 msgid "Customer: %s"
 msgstr ""
 
-#: admin/settings.php:8291
+#: admin/settings.php:8404
 msgid ""
 "Customize the appearance and styling of popups, buttons, and other frontend "
 "elements to match your brand identity."
 msgstr ""
 
-#: admin/settings.php:6484
+#: admin/settings.php:6491
 msgid ""
 "Customize the location selector display on product pages and throughout your "
 "store. Learn to use shortcodes, and enhance customer experience with "
@@ -2021,7 +2021,7 @@ msgstr ""
 msgid "Destination: %s"
 msgstr ""
 
-#: admin/settings.php:7018
+#: admin/settings.php:7025
 msgid "Detailed KB Articles"
 msgstr ""
 
@@ -2063,7 +2063,7 @@ msgstr ""
 msgid "Dimensions"
 msgstr ""
 
-#: admin/settings.php:7770
+#: admin/settings.php:7777
 msgid "Disabled (Show all products regardless of location)"
 msgstr ""
 
@@ -2079,6 +2079,12 @@ msgid ""
 "keep items from multiple locations, so this behavior is not applied."
 msgstr ""
 
+#: admin/settings.php:8309
+msgid ""
+"Disabled because Text Management is turned off. Frontend text will use "
+"defaults."
+msgstr ""
+
 #: admin/settings.php:588 admin/settings.php:667
 msgid ""
 "Disabled while Manual or Inventory-Based assignment is enabled without "
@@ -2089,7 +2095,7 @@ msgstr ""
 msgid "Disabled while Manual or Inventory-Based assignment is enabled."
 msgstr ""
 
-#: admin/settings.php:4604 admin/settings.php:4646 admin/settings.php:7741
+#: admin/settings.php:4604 admin/settings.php:4646 admin/settings.php:7748
 msgid ""
 "Disabled while Manual, Inventory-Based, or Proximity-Based assignment is "
 "enabled without optional selection."
@@ -2099,7 +2105,7 @@ msgstr ""
 msgid "Discord Docs: Webhooks"
 msgstr ""
 
-#: admin/settings.php:5892
+#: admin/settings.php:5899
 msgid "Discounts"
 msgstr ""
 
@@ -2111,7 +2117,7 @@ msgstr ""
 msgid "Display Hours on Location Archive"
 msgstr ""
 
-#: admin/settings.php:6410
+#: admin/settings.php:6417
 msgid "Display layout style"
 msgstr ""
 
@@ -2131,14 +2137,14 @@ msgstr ""
 msgid "Display Order"
 msgstr ""
 
-#: admin/settings.php:6443
+#: admin/settings.php:6450
 msgid ""
 "Display popular products for each location using customer insights and "
 "analytics. Learn to track customer preferences, show location-specific "
 "recommendations, and boost sales with personalized product suggestions."
 msgstr ""
 
-#: admin/settings.php:6466
+#: admin/settings.php:6473
 msgid "Display section title"
 msgstr ""
 
@@ -2166,7 +2172,7 @@ msgstr ""
 msgid "Do not allow"
 msgstr ""
 
-#: admin/settings.php:5287
+#: admin/settings.php:5294
 msgid "Do not display location"
 msgstr ""
 
@@ -2386,11 +2392,11 @@ msgstr ""
 msgid "Enable Location Pricing"
 msgstr ""
 
-#: admin/settings.php:6415
+#: admin/settings.php:6422
 msgid "Enable location search"
 msgstr ""
 
-#: admin/settings.php:5364
+#: admin/settings.php:5371
 msgid "Enable Location Selector"
 msgstr ""
 
@@ -2480,6 +2486,10 @@ msgstr ""
 msgid "Enable store locator with map functionality."
 msgstr ""
 
+#: admin/settings.php:8064
+msgid "Enable Text Management"
+msgstr ""
+
 #: admin/settings.php:3652
 msgid ""
 "Enable the events you want (orders, stock alerts, digest, site monitor), "
@@ -2494,7 +2504,7 @@ msgstr ""
 msgid "Enable/Disable"
 msgstr ""
 
-#: admin/settings.php:7769
+#: admin/settings.php:7776
 msgid "Enabled (Only show products from selected location)"
 msgstr ""
 
@@ -2502,7 +2512,7 @@ msgstr ""
 msgid "End of Report"
 msgstr ""
 
-#: admin/settings.php:6934
+#: admin/settings.php:6941
 msgid "Endpoint:"
 msgstr ""
 
@@ -2662,11 +2672,11 @@ msgstr ""
 msgid "Export in Excel (HTML)"
 msgstr ""
 
-#: admin/settings.php:6636
+#: admin/settings.php:6643
 msgid "Export Inventory CSV Example"
 msgstr ""
 
-#: admin/settings.php:6648
+#: admin/settings.php:6655
 msgid "Export Inventory JSON Example"
 msgstr ""
 
@@ -2893,7 +2903,7 @@ msgstr ""
 msgid "Font Family"
 msgstr ""
 
-#: admin/settings.php:8508
+#: admin/settings.php:8621
 msgid "Font family for popup and frontend elements."
 msgstr ""
 
@@ -2930,7 +2940,7 @@ msgstr ""
 msgid "Gallery Heading"
 msgstr ""
 
-#: admin/settings.php:5724
+#: admin/settings.php:5731
 msgid "General"
 msgstr ""
 
@@ -2956,7 +2966,7 @@ msgstr ""
 msgid "Generate API Key"
 msgstr ""
 
-#: admin/settings.php:6384
+#: admin/settings.php:6391
 msgid ""
 "Generate location-based reports, analyze sales data, track inventory "
 "movements, manage orders by location, and optimize your multi-location "
@@ -2983,15 +2993,15 @@ msgstr ""
 msgid "Get Directions Button"
 msgstr ""
 
-#: admin/settings.php:6699
+#: admin/settings.php:6706
 msgid "Get Locations Example"
 msgstr ""
 
-#: admin/settings.php:6726
+#: admin/settings.php:6733
 msgid "Get Products Example"
 msgstr ""
 
-#: admin/settings.php:5385
+#: admin/settings.php:5392
 msgid "Get Support"
 msgstr ""
 
@@ -3016,7 +3026,7 @@ msgstr ""
 msgid "Grid"
 msgstr ""
 
-#: admin/settings.php:6456
+#: admin/settings.php:6463
 msgid "Grid columns layout"
 msgstr ""
 
@@ -3051,7 +3061,7 @@ msgstr ""
 msgid "Header shown before listing distances in the classic popup."
 msgstr ""
 
-#: admin/settings.php:6939
+#: admin/settings.php:6946
 msgid "Headers:"
 msgstr ""
 
@@ -3226,7 +3236,7 @@ msgstr ""
 msgid "How to format location information in URLs."
 msgstr ""
 
-#: admin/settings.php:6550
+#: admin/settings.php:6557
 msgid "How to Get API Key & Webhook Secret"
 msgstr ""
 
@@ -3381,7 +3391,7 @@ msgstr ""
 msgid "Importing settings..."
 msgstr ""
 
-#: admin/settings.php:5286
+#: admin/settings.php:5293
 msgid "In brackets (Title [Location])"
 msgstr ""
 
@@ -3674,7 +3684,7 @@ msgstr ""
 msgid "Invalid zone ID"
 msgstr ""
 
-#: admin/settings.php:5725
+#: admin/settings.php:5732
 msgid "Inventory"
 msgstr ""
 
@@ -3912,13 +3922,13 @@ msgstr ""
 msgid "Layouts Unavailable Message"
 msgstr ""
 
-#: admin/settings.php:6321
+#: admin/settings.php:6328
 msgid ""
 "Learn how to install the plugin, activate your license, and configure basic "
 "settings. This tutorial covers the initial setup process and activation."
 msgstr ""
 
-#: admin/settings.php:6512
+#: admin/settings.php:6519
 msgid ""
 "Learn how to use the AJAX-powered product filter to allow customers to "
 "filter products by location and stock status without page reload. Includes "
@@ -3949,7 +3959,7 @@ msgstr ""
 msgid "Legacy import proxy only supports CSV or ZIP files."
 msgstr ""
 
-#: admin/settings.php:5365
+#: admin/settings.php:5372
 msgid "Let customers choose their preferred location and see relevant products"
 msgstr ""
 
@@ -3981,7 +3991,7 @@ msgstr ""
 msgid "Lifetime"
 msgstr ""
 
-#: admin/settings.php:6425
+#: admin/settings.php:6432
 msgid "Limit number of locations"
 msgstr ""
 
@@ -4107,7 +4117,7 @@ msgstr ""
 msgid "Link Location to User Account"
 msgstr ""
 
-#: admin/settings.php:5358
+#: admin/settings.php:5365
 msgid "Link products to locations and manage stock, pricing, and availability"
 msgstr ""
 
@@ -4294,7 +4304,7 @@ msgstr ""
 msgid "Location in Meta Title"
 msgstr ""
 
-#: admin/settings.php:5732
+#: admin/settings.php:5739
 msgid "Location Info Management"
 msgstr ""
 
@@ -4306,7 +4316,7 @@ msgstr ""
 msgid "Location Information"
 msgstr ""
 
-#: admin/settings.php:6392
+#: admin/settings.php:6399
 msgid "Location Information Display & Maps"
 msgstr ""
 
@@ -4344,7 +4354,7 @@ msgstr ""
 msgid "Location manager deleted successfully"
 msgstr ""
 
-#: admin/settings.php:6374
+#: admin/settings.php:6381
 msgid "Location Manager Roles & Permissions"
 msgstr ""
 
@@ -4451,11 +4461,11 @@ msgstr ""
 msgid "Location Selection Display"
 msgstr ""
 
-#: admin/settings.php:6365
+#: admin/settings.php:6372
 msgid "Location Selector Anywhere"
 msgstr ""
 
-#: admin/settings.php:6483
+#: admin/settings.php:6490
 msgid "Location Selector for specific Product"
 msgstr ""
 
@@ -4463,7 +4473,7 @@ msgstr ""
 msgid "Location Selector Layout"
 msgstr ""
 
-#: admin/settings.php:6089
+#: admin/settings.php:6096
 msgid "Location Selector Shortcode"
 msgstr ""
 
@@ -4479,7 +4489,7 @@ msgstr ""
 msgid "Location slug is required."
 msgstr ""
 
-#: admin/settings.php:6405
+#: admin/settings.php:6412
 msgid "Location slug(s)"
 msgstr ""
 
@@ -4495,7 +4505,7 @@ msgstr ""
 msgid "Location Specific Stock & Price Settings"
 msgstr ""
 
-#: admin/settings.php:6737
+#: admin/settings.php:6744
 msgid "Location Status Badge Shortcode"
 msgstr ""
 
@@ -4512,11 +4522,11 @@ msgstr ""
 msgid "Location Switching Behavior"
 msgstr ""
 
-#: admin/settings.php:6747
+#: admin/settings.php:6754
 msgid "Location term ID"
 msgstr ""
 
-#: admin/settings.php:6752
+#: admin/settings.php:6759
 msgid "Location term slug"
 msgstr ""
 
@@ -4562,7 +4572,7 @@ msgstr ""
 msgid "Location Wise"
 msgstr ""
 
-#: admin/settings.php:5730
+#: admin/settings.php:5737
 msgid "Location Wise Everything"
 msgstr ""
 
@@ -4598,11 +4608,11 @@ msgstr ""
 msgid "Location-based Email Notifications"
 msgstr ""
 
-#: admin/settings.php:6347
+#: admin/settings.php:6354
 msgid "Location-Based Pricing Setup"
 msgstr ""
 
-#: admin/settings.php:6442
+#: admin/settings.php:6449
 msgid "Location-Based Product Recommendations"
 msgstr ""
 
@@ -4764,7 +4774,7 @@ msgstr ""
 msgid "Main heading shown in all popup layouts."
 msgstr ""
 
-#: admin/settings.php:7791
+#: admin/settings.php:7798
 msgid "Main Shop & Archive Pages"
 msgstr ""
 
@@ -4784,7 +4794,7 @@ msgstr ""
 msgid "Manage Products"
 msgstr ""
 
-#: admin/settings.php:5336
+#: admin/settings.php:5343
 msgid ""
 "Manage products, inventory, and pricing across multiple store locations "
 "effortlessly"
@@ -4842,7 +4852,7 @@ msgstr ""
 msgid "Manager updated: %s"
 msgstr ""
 
-#: admin/settings.php:6338
+#: admin/settings.php:6345
 msgid "Managing Location-Based Inventory"
 msgstr ""
 
@@ -4888,14 +4898,14 @@ msgstr ""
 msgid "Mark as inactive"
 msgstr ""
 
-#: admin/settings.php:6339
+#: admin/settings.php:6346
 msgid ""
 "Master inventory management across multiple locations. Learn to set stock "
 "levels, manage backorders, configure low-stock alerts, and sync inventory "
 "between locations."
 msgstr ""
 
-#: admin/settings.php:6197
+#: admin/settings.php:6204
 msgid "Maximum width in pixels"
 msgstr ""
 
@@ -4941,7 +4951,7 @@ msgstr ""
 msgid "Minimal"
 msgstr ""
 
-#: admin/settings.php:6804
+#: admin/settings.php:6811
 msgid "Minutes"
 msgstr ""
 
@@ -4999,7 +5009,7 @@ msgid ""
 msgstr ""
 
 #. Name of the plugin
-#: admin/settings.php:5335
+#: admin/settings.php:5342
 msgid "Multi Location Product & Inventory Management for WooCommerce Pro"
 msgstr ""
 
@@ -5035,7 +5045,7 @@ msgstr ""
 msgid "Nearest with inter-hub transfer cost"
 msgstr ""
 
-#: admin/settings.php:6989
+#: admin/settings.php:6996
 msgid "Need Additional Help?"
 msgstr ""
 
@@ -5372,7 +5382,7 @@ msgstr ""
 msgid "Notification template"
 msgstr ""
 
-#: admin/admin.php:6349 admin/settings.php:5729
+#: admin/admin.php:6349 admin/settings.php:5736
 msgid "Notifications"
 msgstr ""
 
@@ -5384,7 +5394,7 @@ msgstr ""
 msgid "Number of items per page:"
 msgstr ""
 
-#: admin/settings.php:6451
+#: admin/settings.php:6458
 msgid "Number of products to display"
 msgstr ""
 
@@ -5405,7 +5415,8 @@ msgstr ""
 #: admin/settings.php:3380 admin/settings.php:3858 admin/settings.php:3880
 #: admin/settings.php:3920 admin/settings.php:3942 admin/settings.php:4738
 #: admin/settings.php:4744 admin/settings.php:4825 admin/settings.php:4831
-#: admin/settings.php:4890 admin/settings.php:4896 admin/settings.php:8261
+#: admin/settings.php:4890 admin/settings.php:4896 admin/settings.php:8071
+#: admin/settings.php:8374
 msgid "Off"
 msgstr ""
 
@@ -5426,31 +5437,32 @@ msgstr ""
 #: admin/settings.php:3379 admin/settings.php:3857 admin/settings.php:3879
 #: admin/settings.php:3919 admin/settings.php:3941 admin/settings.php:4737
 #: admin/settings.php:4743 admin/settings.php:4824 admin/settings.php:4830
-#: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8260
+#: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8070
+#: admin/settings.php:8373
 msgid "On"
 msgstr ""
 
-#: admin/settings.php:6135
+#: admin/settings.php:6142
 msgid "on / off - Display title"
 msgstr ""
 
-#: admin/settings.php:6145
+#: admin/settings.php:6152
 msgid "on / off - Enhanced dropdown"
 msgstr ""
 
-#: admin/settings.php:6207
+#: admin/settings.php:6214
 msgid "on / off - Multi-line display"
 msgstr ""
 
-#: admin/settings.php:6165
+#: admin/settings.php:6172
 msgid "on / off - Show item count"
 msgstr ""
 
-#: admin/settings.php:6187
+#: admin/settings.php:6194
 msgid "on / off - User locations"
 msgstr ""
 
-#: admin/settings.php:6155
+#: admin/settings.php:6162
 msgid "on / off / seperately"
 msgstr ""
 
@@ -5590,7 +5602,7 @@ msgstr ""
 msgid "Order %s"
 msgstr ""
 
-#: admin/settings.php:5728
+#: admin/settings.php:5735
 msgid "Order & Cart"
 msgstr ""
 
@@ -5693,7 +5705,7 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
-#: admin/settings.php:5309
+#: admin/settings.php:5316
 msgid "Others pages"
 msgstr ""
 
@@ -5766,7 +5778,7 @@ msgstr ""
 msgid "Paid via parent order."
 msgstr ""
 
-#: admin/settings.php:6896
+#: admin/settings.php:6903
 msgid "Parameters"
 msgstr ""
 
@@ -5911,7 +5923,7 @@ msgstr ""
 msgid "Payment to be collected on pickup."
 msgstr ""
 
-#: admin/settings.php:5885
+#: admin/settings.php:5892
 msgid "Payments"
 msgstr ""
 
@@ -6003,7 +6015,7 @@ msgstr ""
 msgid "Please activate your license to access premium features"
 msgstr ""
 
-#: admin/settings.php:8099
+#: admin/settings.php:8144
 msgid "Please choose a language first."
 msgstr ""
 
@@ -6107,11 +6119,11 @@ msgstr ""
 msgid "Please wait before requesting another update."
 msgstr ""
 
-#: admin/settings.php:6320
+#: admin/settings.php:6327
 msgid "Plugin Installation & Setup"
 msgstr ""
 
-#: admin/settings.php:5735
+#: admin/settings.php:5742
 msgid "Plugin License"
 msgstr ""
 
@@ -6152,7 +6164,7 @@ msgstr ""
 msgid "Popular Locations"
 msgstr ""
 
-#: admin/settings.php:5727
+#: admin/settings.php:5734
 msgid "Popup"
 msgstr ""
 
@@ -6243,7 +6255,7 @@ msgstr ""
 msgid "Premium License Active"
 msgstr ""
 
-#: admin/settings.php:5400
+#: admin/settings.php:5407
 msgid "Premium Support"
 msgstr ""
 
@@ -6255,7 +6267,7 @@ msgstr ""
 msgid "Preparing import package..."
 msgstr ""
 
-#: admin/settings.php:5285
+#: admin/settings.php:5292
 msgid "Prepend to title (Location - Title)"
 msgstr ""
 
@@ -6291,25 +6303,25 @@ msgstr ""
 msgid "Primary Color"
 msgstr ""
 
-#: admin/settings.php:8433
+#: admin/settings.php:8546
 msgid ""
 "Primary color used for buttons, gradients, and main interactive elements. "
 "This replaces the button background color."
 msgstr ""
 
-#: admin/settings.php:7024
+#: admin/settings.php:7031
 msgid "Priority Email Support"
 msgstr ""
 
-#: admin/settings.php:8205
+#: admin/settings.php:8318
 msgid "Pro"
 msgstr ""
 
-#: admin/settings.php:6223
+#: admin/settings.php:6230
 msgid "Pro Tip:"
 msgstr ""
 
-#: admin/settings.php:5339
+#: admin/settings.php:5346
 msgid "Pro Version"
 msgstr ""
 
@@ -6341,7 +6353,7 @@ msgstr ""
 msgid "Product Allocation Settings"
 msgstr ""
 
-#: admin/settings.php:7798
+#: admin/settings.php:7805
 msgid "Product Blocks (Gutenberg)"
 msgstr ""
 
@@ -6405,7 +6417,7 @@ msgstr ""
 msgid "Product Views"
 msgstr ""
 
-#: admin/settings.php:5726
+#: admin/settings.php:5733
 msgid "Product Visibility"
 msgstr ""
 
@@ -6413,7 +6425,7 @@ msgstr ""
 msgid "Product Visibility Rules"
 msgstr ""
 
-#: admin/settings.php:7797
+#: admin/settings.php:7804
 msgid "Product Widgets"
 msgstr ""
 
@@ -6503,7 +6515,7 @@ msgstr ""
 msgid "Quick Select"
 msgstr ""
 
-#: admin/settings.php:5345
+#: admin/settings.php:5352
 msgid "Quick Start Guide:"
 msgstr ""
 
@@ -6511,7 +6523,7 @@ msgstr ""
 msgid "Quick tests"
 msgstr ""
 
-#: admin/settings.php:8040
+#: admin/settings.php:8085
 msgid "Quick Translate"
 msgstr ""
 
@@ -6568,7 +6580,7 @@ msgstr ""
 msgid "Recent Reviews Label"
 msgstr ""
 
-#: admin/settings.php:7794
+#: admin/settings.php:7801
 msgid "Recently Viewed Products"
 msgstr ""
 
@@ -6628,15 +6640,15 @@ msgstr ""
 msgid "Regular price cannot be less than purchase price"
 msgstr ""
 
-#: admin/settings.php:5396 admin/settings.php:7030
+#: admin/settings.php:5403 admin/settings.php:7037
 msgid "Regular Updates"
 msgstr ""
 
-#: admin/settings.php:7793
+#: admin/settings.php:7800
 msgid "Related Products"
 msgstr ""
 
-#: admin/settings.php:6876
+#: admin/settings.php:6883
 msgid "Related Shortcode"
 msgstr ""
 
@@ -6684,7 +6696,7 @@ msgstr ""
 msgid "Removed Items Notice"
 msgstr ""
 
-#: admin/settings.php:6383
+#: admin/settings.php:6390
 msgid "Reports, Analytics & Order Management"
 msgstr ""
 
@@ -6705,7 +6717,7 @@ msgstr ""
 msgid "Requires the bot token configured in Advanced → Social Notifications."
 msgstr ""
 
-#: admin/dashboard.php:1372 admin/settings.php:8313
+#: admin/dashboard.php:1372 admin/settings.php:8426
 msgid "Reset"
 msgstr ""
 
@@ -6713,16 +6725,16 @@ msgstr ""
 msgid "Reset All Changes"
 msgstr ""
 
-#: admin/settings.php:6049
+#: admin/settings.php:6056
 msgid "Reset All Settings"
 msgstr ""
 
-#: admin/settings.php:8076
+#: admin/settings.php:8121
 msgid ""
 "Reset all text fields to their default values? This action cannot be undone."
 msgstr ""
 
-#: admin/settings.php:8079
+#: admin/settings.php:8124
 msgid "Reset only the Text Management fields to their defaults."
 msgstr ""
 
@@ -6730,15 +6742,15 @@ msgstr ""
 msgid "Reset product row changes"
 msgstr ""
 
-#: admin/settings.php:6042
+#: admin/settings.php:6049
 msgid "Reset Settings"
 msgstr ""
 
-#: admin/settings.php:8071
+#: admin/settings.php:8116
 msgid "Reset Text"
 msgstr ""
 
-#: admin/settings.php:8077
+#: admin/settings.php:8122
 msgid "Reset Text to Defaults"
 msgstr ""
 
@@ -6746,11 +6758,11 @@ msgstr ""
 msgid "Resolver service is unavailable."
 msgstr ""
 
-#: admin/settings.php:6966
+#: admin/settings.php:6973
 msgid "Response:"
 msgstr ""
 
-#: admin/settings.php:7799
+#: admin/settings.php:7806
 msgid "REST API & AJAX Responses"
 msgstr ""
 
@@ -6767,7 +6779,7 @@ msgstr ""
 msgid "Restocked: %s"
 msgstr ""
 
-#: admin/settings.php:8072
+#: admin/settings.php:8117
 msgid "Restore the original defaults for all text fields."
 msgstr ""
 
@@ -6805,7 +6817,7 @@ msgstr ""
 msgid "Reviewed from: %s"
 msgstr ""
 
-#: admin/settings.php:5896 includes/text-management.php:685
+#: admin/settings.php:5903 includes/text-management.php:685
 msgid "Reviews"
 msgstr ""
 
@@ -6875,11 +6887,11 @@ msgstr ""
 msgid "Same Location"
 msgstr ""
 
-#: admin/settings.php:5800
+#: admin/settings.php:5807
 msgid "Sample Button"
 msgstr ""
 
-#: admin/settings.php:5798
+#: admin/settings.php:5805
 msgid "Sample Button:"
 msgstr ""
 
@@ -6981,7 +6993,7 @@ msgstr ""
 msgid "Search query must be at least 2 characters."
 msgstr ""
 
-#: admin/settings.php:7792
+#: admin/settings.php:7799
 msgid "Search Results"
 msgstr ""
 
@@ -7001,13 +7013,13 @@ msgstr ""
 msgid "Secondary Color"
 msgstr ""
 
-#: admin/settings.php:8444
+#: admin/settings.php:8557
 msgid ""
 "Secondary color used for button hover states, gradients, and complementary "
 "elements. This replaces the button hover background color."
 msgstr ""
 
-#: admin/settings.php:6461
+#: admin/settings.php:6468
 msgid "Section title (use {location} placeholder)"
 msgstr ""
 
@@ -7087,7 +7099,7 @@ msgstr ""
 msgid "Select File & Import"
 msgstr ""
 
-#: admin/settings.php:8046
+#: admin/settings.php:8091
 msgid "Select language"
 msgstr ""
 
@@ -7174,7 +7186,7 @@ msgstr ""
 msgid "Select which map provider to use for the store locator."
 msgstr ""
 
-#: admin/settings.php:7807
+#: admin/settings.php:7814
 msgid ""
 "Select which parts of your store should have location-based filtering "
 "applied."
@@ -7207,7 +7219,7 @@ msgstr ""
 msgid "Selector Label"
 msgstr ""
 
-#: admin/settings.php:6498
+#: admin/settings.php:6505
 msgid "Selector layout style"
 msgstr ""
 
@@ -7231,7 +7243,7 @@ msgstr ""
 msgid "Send test email to"
 msgstr ""
 
-#: admin/settings.php:5899
+#: admin/settings.php:5906
 msgid "SEO"
 msgstr ""
 
@@ -7253,7 +7265,7 @@ msgid ""
 "and no location is selected."
 msgstr ""
 
-#: admin/settings.php:6125
+#: admin/settings.php:6132
 msgid "Set custom selector title"
 msgstr ""
 
@@ -7271,14 +7283,14 @@ msgid ""
 "round-the-clock."
 msgstr ""
 
-#: admin/settings.php:6357
+#: admin/settings.php:6364
 msgid ""
 "Set up location-based shipping methods, configure pickup locations, and "
 "manage delivery options. Learn to optimize shipping costs and customer "
 "convenience."
 msgstr ""
 
-#: admin/settings.php:5351
+#: admin/settings.php:5358
 msgid "Set up your store locations with names, addresses, and contact details"
 msgstr ""
 
@@ -7303,7 +7315,7 @@ msgid "Set Your Location"
 msgstr ""
 
 #: multi-location-product-and-inventory-management-pro.php:8774
-#: admin/admin.php:4167 admin/admin.php:4168 admin/settings.php:5327
+#: admin/admin.php:4167 admin/admin.php:4168 admin/settings.php:5334
 msgid "Settings"
 msgstr ""
 
@@ -7323,11 +7335,11 @@ msgstr ""
 msgid "Settings imported successfully! Please refresh the page."
 msgstr ""
 
-#: admin/settings.php:5882
+#: admin/settings.php:5889
 msgid "Shipping"
 msgstr ""
 
-#: admin/settings.php:6356
+#: admin/settings.php:6363
 msgid "Shipping & Pickup Configuration"
 msgstr ""
 
@@ -7352,7 +7364,7 @@ msgstr ""
 msgid "Shipping Zones"
 msgstr ""
 
-#: admin/settings.php:5307
+#: admin/settings.php:5314
 msgid "Shop/Archive Pages"
 msgstr ""
 
@@ -7360,7 +7372,7 @@ msgstr ""
 msgid "Short Description"
 msgstr ""
 
-#: admin/settings.php:6098
+#: admin/settings.php:6105
 msgid "Shortcode"
 msgstr ""
 
@@ -7404,7 +7416,7 @@ msgstr ""
 msgid "Show Grayed Out"
 msgstr ""
 
-#: admin/settings.php:6521
+#: admin/settings.php:6528
 msgid "Show location filter dropdown"
 msgstr ""
 
@@ -7424,7 +7436,7 @@ msgstr ""
 msgid "Show Out of Stock Products"
 msgstr ""
 
-#: admin/settings.php:6471
+#: admin/settings.php:6478
 msgid "Show popularity badge"
 msgstr ""
 
@@ -7452,7 +7464,7 @@ msgstr ""
 msgid "Show Stock Levels (High/Medium/Low)"
 msgstr ""
 
-#: admin/settings.php:6526
+#: admin/settings.php:6533
 msgid "Show stock status filter dropdown"
 msgstr ""
 
@@ -7461,7 +7473,7 @@ msgid ""
 "Show store hours on Location Archive pages next to location information."
 msgstr ""
 
-#: admin/settings.php:6738
+#: admin/settings.php:6745
 msgid ""
 "Show the open/closed status badge for a single location anywhere on your "
 "site. Useful for headers, sidebars, or location detail pages."
@@ -7662,7 +7674,7 @@ msgstr ""
 msgid "Single Product Page Position"
 msgstr ""
 
-#: admin/settings.php:5308
+#: admin/settings.php:5315
 msgid "Single Product Pages"
 msgstr ""
 
@@ -7670,7 +7682,7 @@ msgstr ""
 msgid "Single Product Unavailable Behavior"
 msgstr ""
 
-#: admin/settings.php:6609
+#: admin/settings.php:6616
 msgid "Single Product Update Example"
 msgstr ""
 
@@ -7739,7 +7751,7 @@ msgid "Social Notification Channels"
 msgstr ""
 
 #: admin/location-managers.php:674 admin/settings.php:3337
-#: admin/settings.php:3373 admin/settings.php:6533
+#: admin/settings.php:3373 admin/settings.php:6540
 msgid "Social Notifications"
 msgstr ""
 
@@ -7763,23 +7775,23 @@ msgid ""
 "enable location selection."
 msgstr ""
 
-#: admin/settings.php:6430
+#: admin/settings.php:6437
 msgid "Sort locations by"
 msgstr ""
 
-#: admin/settings.php:6435
+#: admin/settings.php:6442
 msgid "Sort order"
 msgstr ""
 
-#: admin/settings.php:6476
+#: admin/settings.php:6483
 msgid "Sort products by"
 msgstr ""
 
-#: admin/settings.php:6400
+#: admin/settings.php:6407
 msgid "Specific location ID(s)"
 msgstr ""
 
-#: admin/settings.php:6493
+#: admin/settings.php:6500
 msgid "Specific product ID (auto-detects if not provided)"
 msgstr ""
 
@@ -7857,18 +7869,18 @@ msgstr ""
 msgid "Status: %s"
 msgstr ""
 
-#: admin/settings.php:6330
+#: admin/settings.php:6337
 msgid ""
 "Step-by-step guide on creating and configuring store locations with "
 "addresses, contact details, business hours, and geographical coordinates for "
 "maps."
 msgstr ""
 
-#: admin/settings.php:6793
+#: admin/settings.php:6800
 msgid "Step-by-step guides to master location-based inventory management"
 msgstr ""
 
-#: admin/settings.php:6945
+#: admin/settings.php:6952
 msgid "Steps / Request Body:"
 msgstr ""
 
@@ -8077,7 +8089,7 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: admin/settings.php:5889
+#: admin/settings.php:5896
 msgid "Tax"
 msgstr ""
 
@@ -8116,7 +8128,7 @@ msgstr ""
 msgid "Template Selection"
 msgstr ""
 
-#: admin/settings.php:8202
+#: admin/settings.php:8315
 #, php-format
 msgid "Template: %s"
 msgstr ""
@@ -8173,19 +8185,19 @@ msgstr ""
 msgid "Testing..."
 msgstr ""
 
-#: admin/settings.php:8466
+#: admin/settings.php:8579
 msgid "Text color for buttons."
 msgstr ""
 
-#: admin/settings.php:8410
+#: admin/settings.php:8523
 msgid "Text color for popup/modal content."
 msgstr ""
 
-#: admin/settings.php:5733 admin/settings.php:8025
+#: admin/settings.php:5740 admin/settings.php:8058
 msgid "Text Management"
 msgstr ""
 
-#: admin/settings.php:7814
+#: admin/settings.php:7821
 msgid "Text management configuration is not available."
 msgstr ""
 
@@ -8195,7 +8207,7 @@ msgid ""
 "again."
 msgstr ""
 
-#: admin/settings.php:8026
+#: admin/settings.php:8059
 msgid "Text Management Overview"
 msgstr ""
 
@@ -8242,7 +8254,7 @@ msgid ""
 "WooCommerce Pro!"
 msgstr ""
 
-#: admin/settings.php:5298
+#: admin/settings.php:5305
 msgid "The character(s) used to separate the title and location."
 msgstr ""
 
@@ -8314,7 +8326,7 @@ msgid ""
 "This will overwrite your current settings. Are you sure you want to continue?"
 msgstr ""
 
-#: admin/settings.php:6045
+#: admin/settings.php:6052
 msgid ""
 "This will reset all plugin settings to their default values. This action "
 "cannot be undone. Please make sure you have exported your settings if you "
@@ -8426,7 +8438,7 @@ msgstr ""
 msgid "Top Selling Product"
 msgstr ""
 
-#: admin/settings.php:6859
+#: admin/settings.php:6866
 msgid "Topics Covered"
 msgstr ""
 
@@ -8540,7 +8552,7 @@ msgid ""
 "number (units)."
 msgstr ""
 
-#: admin/settings.php:7010
+#: admin/settings.php:7017
 msgid "Try Live Demo"
 msgstr ""
 
@@ -8549,7 +8561,7 @@ msgstr ""
 msgid "Tuesday"
 msgstr ""
 
-#: admin/settings.php:6800
+#: admin/settings.php:6807
 msgid "Tutorials"
 msgstr ""
 
@@ -8646,7 +8658,7 @@ msgstr ""
 msgid "Unknown product"
 msgstr ""
 
-#: admin/settings.php:5392
+#: admin/settings.php:5399
 msgid "Unlimited Locations"
 msgstr ""
 
@@ -8672,7 +8684,7 @@ msgstr ""
 msgid "Update Cart (Remove unavailable products)"
 msgstr ""
 
-#: admin/settings.php:8027
+#: admin/settings.php:8060
 msgid ""
 "Update every customer-facing label, prompt, and message from one place. Each "
 "section groups related text so it is clear where the copy appears on the "
@@ -8743,7 +8755,7 @@ msgstr ""
 msgid "Uploading file in chunks..."
 msgstr ""
 
-#: admin/settings.php:7796
+#: admin/settings.php:7803
 msgid "Upsells"
 msgstr ""
 
@@ -8755,7 +8767,7 @@ msgstr ""
 msgid "URL Prefix (e.g., \"store\" for store-name.example.com):"
 msgstr ""
 
-#: admin/settings.php:6917
+#: admin/settings.php:6924
 msgid "Usage Examples"
 msgstr ""
 
@@ -8798,7 +8810,7 @@ msgstr ""
 msgid "Use select2 instead of normal select"
 msgstr ""
 
-#: admin/settings.php:6093
+#: admin/settings.php:6100
 msgid ""
 "Use this shortcode to display the location selector on any page or post. "
 "Copy and paste it into the WordPress editor or use it in your template files."
@@ -8818,7 +8830,7 @@ msgstr ""
 msgid "Used with the stock quantity. Use %s for quantity."
 msgstr ""
 
-#: admin/settings.php:5731
+#: admin/settings.php:5738
 msgid "User Experience"
 msgstr ""
 
@@ -8910,7 +8922,7 @@ msgstr ""
 msgid "Version Information"
 msgstr ""
 
-#: admin/settings.php:6790
+#: admin/settings.php:6797
 msgid "Video Tutorials & Documentation"
 msgstr ""
 
@@ -8923,7 +8935,7 @@ msgstr ""
 msgid "View Dashboard"
 msgstr ""
 
-#: admin/settings.php:5375
+#: admin/settings.php:5382
 msgid "View Demo"
 msgstr ""
 
@@ -8935,7 +8947,7 @@ msgstr ""
 msgid "View Details Button"
 msgstr ""
 
-#: admin/settings.php:5380 admin/settings.php:6998
+#: admin/settings.php:5387 admin/settings.php:7005
 msgid "View Documentation"
 msgstr ""
 
@@ -9008,7 +9020,7 @@ msgstr ""
 msgid "We Open At Note"
 msgstr ""
 
-#: admin/settings.php:6676
+#: admin/settings.php:6683
 msgid "Webhook Example"
 msgstr ""
 
@@ -9050,6 +9062,12 @@ msgid ""
 "update the cart based on configured behavior."
 msgstr ""
 
+#: admin/settings.php:8065
+msgid ""
+"When disabled, custom text overrides are ignored and plugin defaults are "
+"used."
+msgstr ""
+
 #: admin/settings.php:1743
 msgid ""
 "When enabled, order and pickup notifications will be sent to the location "
@@ -9057,7 +9075,7 @@ msgid ""
 "depend on your notification settings."
 msgstr ""
 
-#: admin/settings.php:7772
+#: admin/settings.php:7779
 msgid ""
 "When enabled, users will only see products from their selected location. "
 "When disabled, all products will be visible."
@@ -9122,7 +9140,7 @@ msgstr ""
 msgid "You are viewing orders for: %s"
 msgstr ""
 
-#: admin/settings.php:6223
+#: admin/settings.php:6230
 msgid ""
 "You can modify the parameter values directly in the shortcode to customize "
 "the location selector appearance and behavior."
@@ -9231,7 +9249,7 @@ msgstr ""
 msgid "You must be logged in to delete locations."
 msgstr ""
 
-#: admin/settings.php:5796
+#: admin/settings.php:5803
 msgid ""
 "Your branding settings will be applied to all popups, buttons, and frontend "
 "elements. Changes take effect immediately after saving."

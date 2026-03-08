@@ -5069,6 +5069,13 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             $sanitized['enable_product_filter'] = 'off';
         }
 
+        // Handle text management master toggle.
+        if (isset($input['enable_text_management']) && $input['enable_text_management'] === 'on') {
+            $sanitized['enable_text_management'] = 'on';
+        } else {
+            $sanitized['enable_text_management'] = 'off';
+        }
+
         // Handle social notifications
         if (isset($input['social_notifications']) && is_array($input['social_notifications'])) {
             $social_input = $input['social_notifications'];
@@ -7816,6 +7823,8 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         }
 
         $options = $this->get_display_options();
+        $is_premium = function_exists('mulopimfwc_premium_feature') ? mulopimfwc_premium_feature() : false;
+        $is_text_management_enabled = isset($options['enable_text_management']) && $options['enable_text_management'] === 'on';
         $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
         $is_manual_mode = $this->is_manual_assignment_strict_mode();
         $groups = mulopimfwc_get_text_management_fields();
@@ -7832,6 +7841,8 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 }
             }
         }
+        $text_toggle_disabled_class = !$is_text_management_enabled ? ' mulopimfwc-setting-disabled' : '';
+        $text_management_base_disabled = $is_premium ? '0' : '1';
 
         echo '<style>
             .mulopimfwc-text-management-intro {
@@ -7865,6 +7876,28 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 margin: 0;
                 color: #475569;
                 line-height: 1.6;
+            }
+            .mulopimfwc-text-management-toggle {
+                margin-top: 16px;
+                padding: 14px 16px;
+                border: 1px dashed #cbd5e1;
+                border-radius: 12px;
+                background: #ffffff;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 14px;
+            }
+            .mulopimfwc-text-management-toggle__title {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            .mulopimfwc-text-management-toggle__desc {
+                margin: 2px 0 0;
+                color: #64748b;
+                font-size: 12px;
             }
             .mulopimfwc-text-management-intro__actions {
                 display: grid;
@@ -8026,10 +8059,22 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                     <h2>' . esc_html__('Text Management Overview', 'multi-location-product-and-inventory-management') . '</h2>
                     <p>' . esc_html__('Update every customer-facing label, prompt, and message from one place. Each section groups related text so it is clear where the copy appears on the storefront.', 'multi-location-product-and-inventory-management') . '</p>
                 </div>
+                <div class="mulopimfwc-text-management-toggle">
+                    <div>
+                        <p class="mulopimfwc-text-management-toggle__title">' . esc_html__('Enable Text Management', 'multi-location-product-and-inventory-management') . '</p>
+                        <p class="mulopimfwc-text-management-toggle__desc">' . esc_html__('When disabled, custom text overrides are ignored and plugin defaults are used.', 'multi-location-product-and-inventory-management') . '</p>
+                    </div>
+                    <label class="mulopimfwc_switch ' . (!$is_premium ? 'mulopimfwc_pro_only mulopimfwc-setting-disabled' : '') . '">
+                        <input ' . (!$is_premium ? 'disabled ' : '') . 'type="checkbox" id="mulopimfwc-enable-text-management" name="mulopimfwc_display_options[enable_text_management]" value="on" data-text-base-disabled="' . esc_attr($text_management_base_disabled) . '" ' . checked($is_text_management_enabled, true, false) . '>
+                        <span class="mulopimfwc_slider round"></span>
+                        <span class="mulopimfwc_switch-on">' . esc_html__('On', 'multi-location-product-and-inventory-management') . '</span>
+                        <span class="mulopimfwc_switch-off">' . esc_html__('Off', 'multi-location-product-and-inventory-management') . '</span>
+                    </label>
+                </div>
                 <div class="mulopimfwc-text-management-intro__actions">';
 
         if (!empty($translation_locales)) {
-            echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--translate ' . (!mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : '') . '">
+            echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--translate ' . (!$is_premium ? 'mulopimfwc_pro_only' : '') . '">
                     <div class="mulopimfwc-text-action-card__header">
                         <div class="mulopimfwc-text-action-card__icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -8042,7 +8087,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         </div>
                     </div>
                     <div class="mulopimfwc-text-action-row ">
-                        <select ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' id="mulopimfwc-text-translate-select" class="mulopimfwc-text-translate-select">
+                        <select ' . (!$is_premium || !$is_text_management_enabled ? 'disabled' : '') . ' data-text-base-disabled="' . esc_attr($text_management_base_disabled) . '" id="mulopimfwc-text-translate-select" class="mulopimfwc-text-translate-select mulopimfwc-text-management-toggle-target' . esc_attr($text_toggle_disabled_class) . '">
                             <option value="">' . esc_html__('Select language', 'multi-location-product-and-inventory-management') . '</option>';
             foreach ($translation_locales as $locale_code => $locale_data) {
                 $label = $locale_data['label'] ?? $locale_code;
@@ -8054,13 +8099,13 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 echo '<option value="' . esc_attr($locale_code) . '">' . esc_html($display) . '</option>';
             }
             echo '</select>
-                        <button ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' type="button" id="mulopimfwc-text-translate-apply" class="button button-primary">' . esc_html__('Apply Translation', 'multi-location-product-and-inventory-management') . '</button>
+                        <button ' . (!$is_premium || !$is_text_management_enabled ? 'disabled' : '') . ' data-text-base-disabled="' . esc_attr($text_management_base_disabled) . '" type="button" id="mulopimfwc-text-translate-apply" class="button button-primary mulopimfwc-text-management-toggle-target' . esc_attr($text_toggle_disabled_class) . '">' . esc_html__('Apply Translation', 'multi-location-product-and-inventory-management') . '</button>
                     </div>
                     <p class="mulopimfwc-text-management-intro__note">' . esc_html__('Applying a language will replace current text values. Save changes to keep them.', 'multi-location-product-and-inventory-management') . '</p>
                 </div>';
         }
 
-        echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--reset ' . (!mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : '') . '">
+        echo '<div class="mulopimfwc-text-action-card mulopimfwc-text-action-card--reset ' . (!$is_premium ? 'mulopimfwc_pro_only' : '') . '">
                 <div class="mulopimfwc-text-action-card__header">
                     <div class="mulopimfwc-text-action-card__icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -8073,7 +8118,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                     </div>
                 </div>';
         wp_nonce_field('mulopimfwc_reset_text_management_action', 'mulopimfwc_reset_text_management_nonce');
-        echo '<button ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' type="submit" name="mulopimfwc_reset_text_management" value="1" class="button mulopimfwc-text-reset-button" formaction="' . esc_url(menu_page_url('multi-location-product-and-inventory-management-settings', false)) . '" onclick="return confirm(\'' . esc_js(__('Reset all text fields to their default values? This action cannot be undone.', 'multi-location-product-and-inventory-management')) . '\');">
+        echo '<button ' . (!$is_premium || !$is_text_management_enabled ? 'disabled' : '') . ' data-text-base-disabled="' . esc_attr($text_management_base_disabled) . '" type="submit" name="mulopimfwc_reset_text_management" value="1" class="button mulopimfwc-text-reset-button mulopimfwc-text-management-toggle-target' . esc_attr($text_toggle_disabled_class) . '" formaction="' . esc_url(menu_page_url('multi-location-product-and-inventory-management-settings', false)) . '" onclick="return confirm(\'' . esc_js(__('Reset all text fields to their default values? This action cannot be undone.', 'multi-location-product-and-inventory-management')) . '\');">
                     ' . esc_html__('Reset Text to Defaults', 'multi-location-product-and-inventory-management') . '
                 </button>
                 <p class="mulopimfwc-text-management-intro__note">' . esc_html__('Reset only the Text Management fields to their defaults.', 'multi-location-product-and-inventory-management') . '</p>
@@ -8130,13 +8175,68 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             </script>';
         }
 
+        echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const tab = document.getElementById("text-management-settings");
+                const toggle = document.getElementById("mulopimfwc-enable-text-management");
+                if (!tab || !toggle) {
+                    return;
+                }
+
+                const targets = tab.querySelectorAll(".mulopimfwc-text-management-toggle-target");
+                function syncHiddenMirror(field, shouldMirror) {
+                    const name = field.getAttribute("name");
+                    if (!name) {
+                        return;
+                    }
+
+                    const escapedName = name.replace(/"/g, "\\\"");
+                    const manualHiddenSelector = \'input[type="hidden"][data-manual-hidden="true"][data-manual-for="\' + escapedName + \'"]\';
+                    if (tab.querySelector(manualHiddenSelector)) {
+                        return;
+                    }
+
+                    const hiddenSelector = \'input[type="hidden"][data-text-toggle-hidden="true"][data-text-toggle-for="\' + escapedName + \'"]\';
+                    let hidden = tab.querySelector(hiddenSelector);
+
+                    if (shouldMirror) {
+                        if (!hidden) {
+                            hidden = document.createElement("input");
+                            hidden.type = "hidden";
+                            hidden.name = name;
+                            hidden.setAttribute("data-text-toggle-hidden", "true");
+                            hidden.setAttribute("data-text-toggle-for", name);
+                            field.insertAdjacentElement("afterend", hidden);
+                        }
+                        hidden.value = field.value || "";
+                    } else if (hidden) {
+                        hidden.remove();
+                    }
+                }
+
+                function syncTextManagementState() {
+                    const isEnabled = !!toggle.checked;
+                    targets.forEach(function(field) {
+                        const baseDisabled = field.getAttribute("data-text-base-disabled") === "1";
+                        const shouldDisable = !isEnabled || baseDisabled;
+                        field.disabled = shouldDisable;
+                        field.classList.toggle("mulopimfwc-setting-disabled", !isEnabled);
+                        syncHiddenMirror(field, !isEnabled);
+                    });
+                }
+
+                syncTextManagementState();
+                toggle.addEventListener("change", syncTextManagementState);
+            });
+        </script>';
+
         foreach ($groups as $group) {
             $title = $group['title'] ?? '';
             $description = $group['description'] ?? '';
             $icon = $group['icon'] ?? '';
             $fields = $group['fields'] ?? [];
 
-            echo '<div class="lwp-settings-section ' . (!mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : '') . '"><div class="lwp-settings-box">';
+            echo '<div class="lwp-settings-section ' . (!$is_premium ? 'mulopimfwc_pro_only' : '') . '"><div class="lwp-settings-box">';
             echo '<div class="mulopimfwc-text-group__header">';
             if (!empty($icon)) {
                 echo '<div class="mulopimfwc-text-group__icon">' . $icon . '</div>';
@@ -8154,7 +8254,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                     if (!is_array($field) || empty($field['key'])) {
                         continue;
                     }
-                    $this->render_text_management_field($field, $options, $is_manual_mode, $current_template);
+                    $this->render_text_management_field($field, $options, $is_manual_mode, $current_template, $is_text_management_enabled);
                 }
                 echo '</div>';
             }
@@ -8162,7 +8262,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         }
     }
 
-    private function render_text_management_field(array $field, array $options, bool $is_manual_mode, string $current_template): void
+    private function render_text_management_field(array $field, array $options, bool $is_manual_mode, string $current_template, bool $is_text_management_enabled): void
     {
         $key = $field['key'];
         $label = $field['label'] ?? $key;
@@ -8177,9 +8277,15 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         $template_only = $field['template_only'] ?? '';
         $pro_only = !empty($field['pro_only']);
         $manual_disable = !empty($field['manual_disable']);
-        $pro_locked = $pro_only && function_exists('mulopimfwc_premium_feature') && !mulopimfwc_premium_feature();
+        $is_premium = function_exists('mulopimfwc_premium_feature') ? mulopimfwc_premium_feature() : false;
+        $premium_locked = !$is_premium;
+        $pro_locked = $pro_only && !$is_premium;
         $manual_locked = $manual_disable && $is_manual_mode;
-        $disabled_attr = ($pro_locked || $manual_locked) ? ' disabled' : '';
+        $text_management_locked = !$is_text_management_enabled;
+        $base_disabled = $premium_locked || $pro_locked || $manual_locked;
+        $base_disabled_flag = $base_disabled ? '1' : '0';
+        $toggle_disabled_class = $text_management_locked ? ' mulopimfwc-setting-disabled' : '';
+        $disabled_attr = ($base_disabled || $text_management_locked) ? ' disabled' : '';
 
         $wrapper_class = 'mulopimfwc-text-field';
         $wrapper_style = '';
@@ -8191,10 +8297,17 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         if ($manual_locked) {
             $this->render_manual_hidden_input($key, $value);
         }
+        if ($text_management_locked && !$manual_locked) {
+            echo '<input type="hidden" data-text-toggle-hidden="true" data-text-toggle-for="mulopimfwc_display_options[' . esc_attr($key) . ']" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '">';
+        }
 
         $description = $field['description'] ?? '';
         if ($manual_locked) {
             $description = $description ? $this->append_manual_disabled_note($description) : ltrim($this->append_manual_disabled_note(''));
+        }
+        if ($text_management_locked) {
+            $text_management_note = __('Disabled because Text Management is turned off. Frontend text will use defaults.', 'multi-location-product-and-inventory-management');
+            $description = $description ? $description . ' ' . $text_management_note : $text_management_note;
         }
 
         $tags = [];
@@ -8221,9 +8334,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
         if ($type === 'textarea') {
             $rows = $rows > 0 ? $rows : 2;
-            echo '<textarea ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . $disabled_attr . ' placeholder="' . esc_attr($default) . '">' . esc_textarea($value) . '</textarea>';
+            echo '<textarea class="mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . $disabled_attr . ' placeholder="' . esc_attr($default) . '">' . esc_textarea($value) . '</textarea>';
         } else {
-            echo '<input ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text"' . $disabled_attr . ' placeholder="' . esc_attr($default) . '">';
+            echo '<input type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '"' . $disabled_attr . ' placeholder="' . esc_attr($default) . '">';
         }
 
         if ($pro_locked) {
