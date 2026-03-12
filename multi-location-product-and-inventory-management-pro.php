@@ -10385,6 +10385,56 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function filter_ajax_searched_products($products)
         {
+            // In wp-admin, WooCommerce uses this filter for product pickers/search.
+            // We must NOT apply frontend "selected location" cookie filtering for administrators/shop managers.
+            // Location managers (without all_products) should be restricted by their assigned locations instead.
+            if (function_exists('is_admin') && is_admin() && function_exists('wp_doing_ajax') && wp_doing_ajax() && function_exists('is_user_logged_in') && is_user_logged_in()) {
+                $user = function_exists('wp_get_current_user') ? wp_get_current_user() : null;
+                $roles = ($user && isset($user->roles)) ? (array) $user->roles : [];
+
+                $is_location_manager = in_array('mulopimfwc_location_manager', $roles, true);
+                $is_adminish = in_array('administrator', $roles, true) || in_array('shop_manager', $roles, true);
+
+                if ($is_adminish && !$is_location_manager) {
+                    return $products;
+                }
+
+                if ($is_location_manager && class_exists('MULOPIMFWC_Location_Managers')) {
+                    // If manager has all_products capability, don't restrict.
+                    if (method_exists('MULOPIMFWC_Location_Managers', 'user_has_capability') && MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
+                        return $products;
+                    }
+
+                    $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
+                    $assigned_locations = is_array($assigned_locations) ? array_values(array_filter(array_map(static function ($s) {
+                        return sanitize_title(rawurldecode((string) $s));
+                    }, $assigned_locations))) : [];
+                    $assigned_locations = array_values(array_unique($assigned_locations));
+
+                    if (empty($assigned_locations)) {
+                        return [];
+                    }
+
+                    $product_ids = is_array($products) ? array_keys($products) : [];
+                    if (!empty($product_ids)) {
+                        $this->preload_product_locations($product_ids);
+                    }
+
+                    foreach ($products as $id => $product) {
+                        $terms = $this->get_product_location_slugs((int) $id);
+                        if (empty($terms)) {
+                            unset($products[$id]);
+                            continue;
+                        }
+                        if (empty(array_intersect($assigned_locations, $terms))) {
+                            unset($products[$id]);
+                        }
+                    }
+
+                    return $products;
+                }
+            }
+
             $location = $this->get_current_location();
             global $mulopimfwc_options;
             $enable_all_locations = mulopimfwc_is_all_locations_enabled($mulopimfwc_options) ? 'on' : 'off';
