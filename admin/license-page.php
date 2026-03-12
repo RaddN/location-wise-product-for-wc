@@ -706,17 +706,17 @@ class mulopimfwc_License_Manager
                         <?php wp_nonce_field('mulopimfwc_license_nonce', 'mulopimfwc_license_nonce'); ?>
                         <div>
                             <div style="position: relative;">
-                                <input type="text" style="width: 100%;border: 1px solid #eee;padding: 6px 0 6px 15px;" id="mulopimfwc_license_key" name="mulopimfwc_license_key" value="<?php echo esc_attr($license_key); ?>" class="regular-text" placeholder="Enter your license key" />
+                                <input type="text" style="width: 100%;border: 1px solid #eee;padding: 6px 0 6px 15px;" id="mulopimfwc_license_key" name="mulopimfwc_license_key" value="<?php echo esc_attr($license_key); ?>" class="regular-text" placeholder="<?php echo esc_html__('Enter your license key', 'multi-location-product-and-inventory-management'); ?>" />
                                 <div style="vertical-align: middle;margin-left: 8px;position: absolute;right: -1px;top: 0;background: #dcffdc;height: 100%;display: flex;align-items: center;justify-content: center;padding: 0 20px;border-radius: 0 2px 2px 0;cursor:pointer;gap: 2px;">
                                     <?php if ($is_valid && !$is_expired): ?>
                                         <span class="dashicons dashicons-yes-alt" style="color: green; margin-top: 3px;"></span>
-                                        <span style="color: green; font-weight: bold;">Active</span>
+                                        <span style="color: green; font-weight: bold;"><?php echo esc_html__('Active', 'multi-location-product-and-inventory-management'); ?></span>
                                     <?php elseif ($is_expired): ?>
                                         <span class="dashicons dashicons-no-alt" style="color: #dc3545; margin-top: 3px;"></span>
-                                        <span style="color: #dc3545; font-weight: bold; background: #f8d7da; border-radius: 3px; padding: 2px 8px;">Expired</span>
+                                        <span style="color: #dc3545; font-weight: bold; background: #f8d7da; border-radius: 3px; padding: 2px 8px;"><?php echo esc_html__('Expired', 'multi-location-product-and-inventory-management'); ?></span>
                                     <?php else: ?>
                                         <span class="dashicons dashicons-dismiss" style="color: red; margin-top: 3px;"></span>
-                                        <span style="color: red;">Inactive</span>
+                                        <span style="color: red;"><?php echo esc_html__('Inactive', 'multi-location-product-and-inventory-management'); ?></span>
                                     <?php endif; ?>
                                 </div>
                             </div>

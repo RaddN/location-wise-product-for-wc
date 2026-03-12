@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Multi Location Product & Inventory Management for "
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-12 07:21+0000\n"
+"POT-Creation-Date: 2026-03-12 07:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -114,26 +114,6 @@ msgstr ""
 #: multi-location-product-and-inventory-management-pro.php:5521
 #, php-format
 msgid "%s: %d item(s)"
-msgstr ""
-
-#: admin/settings.php:6142
-msgid "- Display title"
-msgstr ""
-
-#: admin/settings.php:6152
-msgid "- Enhanced dropdown"
-msgstr ""
-
-#: admin/settings.php:6214
-msgid "- Multi-line display"
-msgstr ""
-
-#: admin/settings.php:6172
-msgid "- Show item count"
-msgstr ""
-
-#: admin/settings.php:6194
-msgid "- User locations"
 msgstr ""
 
 #. %s: The name of the location level (e.g., Area, Sub-area)
@@ -5514,6 +5494,30 @@ msgstr ""
 #: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8070
 #: admin/settings.php:8373
 msgid "On"
+msgstr ""
+
+#: admin/settings.php:6142
+msgid "on / off - Display title"
+msgstr ""
+
+#: admin/settings.php:6152
+msgid "on / off - Enhanced dropdown"
+msgstr ""
+
+#: admin/settings.php:6214
+msgid "on / off - Multi-line display"
+msgstr ""
+
+#: admin/settings.php:6172
+msgid "on / off - Show item count"
+msgstr ""
+
+#: admin/settings.php:6194
+msgid "on / off - User locations"
+msgstr ""
+
+#: admin/settings.php:6162
+msgid "on / off / seperately"
 msgstr ""
 
 #: includes/class-product-location-table.php:2683

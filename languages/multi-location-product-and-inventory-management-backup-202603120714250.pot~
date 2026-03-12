@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Multi Location Product & Inventory Management for "
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-12 07:21+0000\n"
+"POT-Creation-Date: 2026-03-12 07:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -116,26 +116,6 @@ msgstr ""
 msgid "%s: %d item(s)"
 msgstr ""
 
-#: admin/settings.php:6142
-msgid "- Display title"
-msgstr ""
-
-#: admin/settings.php:6152
-msgid "- Enhanced dropdown"
-msgstr ""
-
-#: admin/settings.php:6214
-msgid "- Multi-line display"
-msgstr ""
-
-#: admin/settings.php:6172
-msgid "- Show item count"
-msgstr ""
-
-#: admin/settings.php:6194
-msgid "- User locations"
-msgstr ""
-
 #. %s: The name of the location level (e.g., Area, Sub-area)
 #: templates/shortcode-selector.php:601
 #, php-format
@@ -219,8 +199,7 @@ msgid "Activations left"
 msgstr ""
 
 #: admin/admin.php:1656 admin/admin.php:2116 admin/admin.php:3803
-#: admin/admin.php:3933 admin/license-page.php:713
-#: includes/customer-location-insights.php:1085
+#: admin/admin.php:3933 includes/customer-location-insights.php:1085
 msgid "Active"
 msgstr ""
 
@@ -2627,10 +2606,6 @@ msgstr ""
 msgid "Enter Your Address"
 msgstr ""
 
-#: admin/license-page.php:709
-msgid "Enter your license key"
-msgstr ""
-
 #: admin/import-export-settings.php:75
 msgid "Error clearing cache. Please try again."
 msgstr ""
@@ -2685,10 +2660,6 @@ msgstr ""
 
 #: admin/settings.php:3701
 msgid "Example: Custom Webhook setup guide"
-msgstr ""
-
-#: admin/license-page.php:716
-msgid "Expired"
 msgstr ""
 
 #: admin/license-page.php:878
@@ -3510,7 +3481,7 @@ msgid ""
 msgstr ""
 
 #: admin/admin.php:1657 admin/admin.php:2117 admin/admin.php:3803
-#: admin/admin.php:3934 admin/license-page.php:719
+#: admin/admin.php:3934
 msgid "Inactive"
 msgstr ""
 
@@ -5514,6 +5485,30 @@ msgstr ""
 #: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8070
 #: admin/settings.php:8373
 msgid "On"
+msgstr ""
+
+#: admin/settings.php:6142
+msgid "on / off - Display title"
+msgstr ""
+
+#: admin/settings.php:6152
+msgid "on / off - Enhanced dropdown"
+msgstr ""
+
+#: admin/settings.php:6214
+msgid "on / off - Multi-line display"
+msgstr ""
+
+#: admin/settings.php:6172
+msgid "on / off - Show item count"
+msgstr ""
+
+#: admin/settings.php:6194
+msgid "on / off - User locations"
+msgstr ""
+
+#: admin/settings.php:6162
+msgid "on / off / seperately"
 msgstr ""
 
 #: includes/class-product-location-table.php:2683

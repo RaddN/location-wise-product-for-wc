@@ -118,23 +118,23 @@ msgstr "%s: %d আইটেম"
 
 #: admin/settings.php:6142
 msgid "- Display title"
-msgstr "শিরোনাম প্রদর্শন করুন"
+msgstr ""
 
 #: admin/settings.php:6152
 msgid "- Enhanced dropdown"
-msgstr "- উন্নত ড্রপডাউন"
+msgstr ""
 
 #: admin/settings.php:6214
 msgid "- Multi-line display"
-msgstr "- বহু-লাইন প্রদর্শন"
+msgstr ""
 
 #: admin/settings.php:6172
 msgid "- Show item count"
-msgstr "- আইটেমের সংখ্যা দেখান"
+msgstr ""
 
 #: admin/settings.php:6194
 msgid "- User locations"
-msgstr "ব্যবহারকারীর অবস্থান"
+msgstr ""
 
 #. %s: The name of the location level (e.g., Area, Sub-area)
 #: templates/shortcode-selector.php:601

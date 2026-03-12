@@ -1845,10 +1845,10 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $purchase_price = get_post_meta($item['id'], '_purchase_price', true);
             $purchase_quantity = get_post_meta($item['id'], '_purchase_quantity', true);
             $output .= '<div class="purchase-price-item">';
-            $output .= '<span class="purchase-price-value"> Price: ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
+            $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management') . ' ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
             $output .= '</div>';
             $output .= '<div class="purchase-price-item">';
-            $output .= '<span class="purchase-price-value"> Quantity: ' . (!empty($purchase_quantity) ? $purchase_quantity : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
+            $output .= '<span class="purchase-price-value">' . esc_html__('Quantity:', 'multi-location-product-and-inventory-management') . ' ' . (!empty($purchase_quantity) ? esc_html($purchase_quantity) : __('Not set', 'multi-location-product-and-inventory-management')) . '</span>';
             $output .= '</div>';
         }
 

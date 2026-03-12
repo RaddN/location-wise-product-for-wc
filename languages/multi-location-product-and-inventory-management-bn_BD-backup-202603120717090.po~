@@ -4,7 +4,7 @@ msgstr ""
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 04:13+0000\n"
-"PO-Revision-Date: 2026-03-12 07:21+0000\n"
+"PO-Revision-Date: 2026-03-12 07:17+0000\n"
 "Last-Translator: \n"
 "Language-Team: বাংলা\n"
 "Language: bn_BD\n"
@@ -115,26 +115,6 @@ msgstr "%s+ সক্রিয় ইনস্টল"
 #, php-format
 msgid "%s: %d item(s)"
 msgstr "%s: %d আইটেম"
-
-#: admin/settings.php:6142
-msgid "- Display title"
-msgstr "শিরোনাম প্রদর্শন করুন"
-
-#: admin/settings.php:6152
-msgid "- Enhanced dropdown"
-msgstr "- উন্নত ড্রপডাউন"
-
-#: admin/settings.php:6214
-msgid "- Multi-line display"
-msgstr "- বহু-লাইন প্রদর্শন"
-
-#: admin/settings.php:6172
-msgid "- Show item count"
-msgstr "- আইটেমের সংখ্যা দেখান"
-
-#: admin/settings.php:6194
-msgid "- User locations"
-msgstr "ব্যবহারকারীর অবস্থান"
 
 #. %s: The name of the location level (e.g., Area, Sub-area)
 #: templates/shortcode-selector.php:601
@@ -3200,7 +3180,7 @@ msgstr "উদাহরণ: কাস্টম ওয়েবহুক সে�
 
 #: admin/license-page.php:716
 msgid "Expired"
-msgstr "মেয়াদ উত্তীর্ণ"
+msgstr ""
 
 #: admin/license-page.php:878
 msgid "Expired on"
@@ -6392,6 +6372,30 @@ msgstr "বন্ধ"
 #: admin/settings.php:8373
 msgid "On"
 msgstr "চালু"
+
+#: admin/settings.php:6142
+msgid "on / off - Display title"
+msgstr "চালু / বন্ধ - শিরোনাম প্রদর্শন করুন"
+
+#: admin/settings.php:6152
+msgid "on / off - Enhanced dropdown"
+msgstr "চালু / বন্ধ - উন্নত ড্রপডাউন"
+
+#: admin/settings.php:6214
+msgid "on / off - Multi-line display"
+msgstr "চালু / বন্ধ - বহু-লাইন প্রদর্শন"
+
+#: admin/settings.php:6172
+msgid "on / off - Show item count"
+msgstr "চালু / বন্ধ - আইটেমের সংখ্যা দেখান"
+
+#: admin/settings.php:6194
+msgid "on / off - User locations"
+msgstr "চালু / বন্ধ - ব্যবহারকারীর অবস্থান"
+
+#: admin/settings.php:6162
+msgid "on / off / seperately"
+msgstr "চালু / বন্ধ / আলাদাভাবে"
 
 #: includes/class-product-location-table.php:2683
 msgid "On Backorder"

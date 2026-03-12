@@ -4,7 +4,7 @@ msgstr ""
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 04:13+0000\n"
-"PO-Revision-Date: 2026-03-12 07:21+0000\n"
+"PO-Revision-Date: 2026-03-12 07:14+0000\n"
 "Last-Translator: \n"
 "Language-Team: বাংলা\n"
 "Language: bn_BD\n"
@@ -116,26 +116,6 @@ msgstr "%s+ সক্রিয় ইনস্টল"
 msgid "%s: %d item(s)"
 msgstr "%s: %d আইটেম"
 
-#: admin/settings.php:6142
-msgid "- Display title"
-msgstr "শিরোনাম প্রদর্শন করুন"
-
-#: admin/settings.php:6152
-msgid "- Enhanced dropdown"
-msgstr "- উন্নত ড্রপডাউন"
-
-#: admin/settings.php:6214
-msgid "- Multi-line display"
-msgstr "- বহু-লাইন প্রদর্শন"
-
-#: admin/settings.php:6172
-msgid "- Show item count"
-msgstr "- আইটেমের সংখ্যা দেখান"
-
-#: admin/settings.php:6194
-msgid "- User locations"
-msgstr "ব্যবহারকারীর অবস্থান"
-
 #. %s: The name of the location level (e.g., Area, Sub-area)
 #: templates/shortcode-selector.php:601
 #, php-format
@@ -225,8 +205,7 @@ msgid "Activations left"
 msgstr "বাকি অ্যাক্টিভেশন"
 
 #: admin/admin.php:1656 admin/admin.php:2116 admin/admin.php:3803
-#: admin/admin.php:3933 admin/license-page.php:713
-#: includes/customer-location-insights.php:1085
+#: admin/admin.php:3933 includes/customer-location-insights.php:1085
 msgid "Active"
 msgstr "সক্রিয়"
 
@@ -3198,10 +3177,6 @@ msgstr "ইমেইল টেমপ্লেটে উদাহরণস্ব�
 msgid "Example: Custom Webhook setup guide"
 msgstr "উদাহরণ: কাস্টম ওয়েবহুক সেটআপ গাইড"
 
-#: admin/license-page.php:716
-msgid "Expired"
-msgstr "মেয়াদ উত্তীর্ণ"
-
 #: admin/license-page.php:878
 msgid "Expired on"
 msgstr "মেয়াদ উত্তীর্ণ হয়েছে"
@@ -4157,7 +4132,7 @@ msgstr ""
 "Webhook” সার্চ করুন।"
 
 #: admin/admin.php:1657 admin/admin.php:2117 admin/admin.php:3803
-#: admin/admin.php:3934 admin/license-page.php:719
+#: admin/admin.php:3934
 msgid "Inactive"
 msgstr "নিষ্ক্রিয়"
 
@@ -6392,6 +6367,30 @@ msgstr "বন্ধ"
 #: admin/settings.php:8373
 msgid "On"
 msgstr "চালু"
+
+#: admin/settings.php:6142
+msgid "on / off - Display title"
+msgstr "চালু / বন্ধ - শিরোনাম প্রদর্শন করুন"
+
+#: admin/settings.php:6152
+msgid "on / off - Enhanced dropdown"
+msgstr "চালু / বন্ধ - উন্নত ড্রপডাউন"
+
+#: admin/settings.php:6214
+msgid "on / off - Multi-line display"
+msgstr "চালু / বন্ধ - বহু-লাইন প্রদর্শন"
+
+#: admin/settings.php:6172
+msgid "on / off - Show item count"
+msgstr "চালু / বন্ধ - আইটেমের সংখ্যা দেখান"
+
+#: admin/settings.php:6194
+msgid "on / off - User locations"
+msgstr "চালু / বন্ধ - ব্যবহারকারীর অবস্থান"
+
+#: admin/settings.php:6162
+msgid "on / off / seperately"
+msgstr "চালু / বন্ধ / আলাদাভাবে"
 
 #: includes/class-product-location-table.php:2683
 msgid "On Backorder"

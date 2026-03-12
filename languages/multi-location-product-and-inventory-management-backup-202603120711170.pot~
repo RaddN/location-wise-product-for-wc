@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Multi Location Product & Inventory Management for "
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-12 07:21+0000\n"
+"POT-Creation-Date: 2026-03-07 10:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -59,7 +59,7 @@ msgstr[1] ""
 msgid "%s - %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7064
+#: multi-location-product-and-inventory-management-pro.php:7058
 #, php-format
 msgid "%s @ %s is back above low threshold. Stock: %d (threshold %d)"
 msgstr ""
@@ -81,7 +81,7 @@ msgid ""
 "this time."
 msgstr ""
 
-#: admin/dashboard.php:4210
+#: admin/dashboard.php:4061
 #, php-format
 msgid "%s orders %s"
 msgstr ""
@@ -91,7 +91,7 @@ msgstr ""
 msgid "%s profile was updated. Locations: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13774
+#: multi-location-product-and-inventory-management-pro.php:13580
 #, php-format
 msgid "%s received a %s★ review: \"%s\""
 msgstr ""
@@ -114,26 +114,6 @@ msgstr ""
 #: multi-location-product-and-inventory-management-pro.php:5521
 #, php-format
 msgid "%s: %d item(s)"
-msgstr ""
-
-#: admin/settings.php:6142
-msgid "- Display title"
-msgstr ""
-
-#: admin/settings.php:6152
-msgid "- Enhanced dropdown"
-msgstr ""
-
-#: admin/settings.php:6214
-msgid "- Multi-line display"
-msgstr ""
-
-#: admin/settings.php:6172
-msgid "- Show item count"
-msgstr ""
-
-#: admin/settings.php:6194
-msgid "- User locations"
 msgstr ""
 
 #. %s: The name of the location level (e.g., Area, Sub-area)
@@ -201,7 +181,7 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7308
+#: multi-location-product-and-inventory-management-pro.php:7302
 #: includes/customer-location-insights.php:1089
 msgid "Activate"
 msgstr ""
@@ -219,8 +199,7 @@ msgid "Activations left"
 msgstr ""
 
 #: admin/admin.php:1656 admin/admin.php:2116 admin/admin.php:3803
-#: admin/admin.php:3933 admin/license-page.php:713
-#: includes/customer-location-insights.php:1085
+#: admin/admin.php:3933 includes/customer-location-insights.php:1085
 msgid "Active"
 msgstr ""
 
@@ -434,8 +413,8 @@ msgstr ""
 msgid "All items in stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8682
-#: admin/admin.php:6098 admin/dashboard.php:1305
+#: multi-location-product-and-inventory-management-pro.php:8676
+#: admin/admin.php:6098 admin/dashboard.php:1303
 #: admin/location-managers.php:2614
 #: includes/class-product-location-table.php:2642
 #: includes/location-based-shipping.php:176
@@ -481,7 +460,7 @@ msgstr ""
 msgid "All Shipping Methods"
 msgstr ""
 
-#: admin/dashboard.php:1323
+#: admin/dashboard.php:1321
 msgid "All Statuses"
 msgstr ""
 
@@ -571,7 +550,7 @@ msgstr ""
 msgid "An error occurred"
 msgstr ""
 
-#: admin/dashboard.php:853
+#: admin/dashboard.php:851
 msgid "An error occurred while generating the export. Please try again."
 msgstr ""
 
@@ -579,11 +558,11 @@ msgstr ""
 msgid "An error occurred while loading recommendations. Please try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11555
+#: multi-location-product-and-inventory-management-pro.php:11549
 msgid "An error occurred while updating the location"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7312
+#: multi-location-product-and-inventory-management-pro.php:7306
 #: includes/text-management.php:589
 msgid "An error occurred. Please try again."
 msgstr ""
@@ -684,7 +663,7 @@ msgstr ""
 msgid "Apply different tax rates based on the product location."
 msgstr ""
 
-#: admin/dashboard.php:1365
+#: admin/dashboard.php:1363
 msgid "Apply Filters"
 msgstr ""
 
@@ -812,7 +791,7 @@ msgstr ""
 msgid "Auto-create terms/locations"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11999
+#: multi-location-product-and-inventory-management-pro.php:11993
 msgid "Auto-populate addresses is disabled."
 msgstr ""
 
@@ -856,15 +835,15 @@ msgstr ""
 msgid "Available placeholders for email templates:"
 msgstr ""
 
-#: admin/dashboard.php:323 admin/dashboard.php:734
+#: admin/dashboard.php:323 admin/dashboard.php:733
 msgid "Avg Age (days)"
 msgstr ""
 
-#: admin/dashboard.php:1700
+#: admin/dashboard.php:1683
 msgid "Avg. Age (days)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7387
+#: multi-location-product-and-inventory-management-pro.php:7381
 msgid "Awaiting manual location assignment."
 msgstr ""
 
@@ -888,7 +867,7 @@ msgstr ""
 msgid "Background color for popup/modal panels."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12475
+#: multi-location-product-and-inventory-management-pro.php:12288
 msgid "Backorder"
 msgstr ""
 
@@ -1123,7 +1102,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: admin/dashboard.php:1328
+#: admin/dashboard.php:1326
 msgid "Cancelled"
 msgstr ""
 
@@ -1377,14 +1356,6 @@ msgstr ""
 msgid "Clearing cache..."
 msgstr ""
 
-#: admin/settings.php:6565
-msgid "Click \"Generate API Key\" button (if no key exists)"
-msgstr ""
-
-#: admin/settings.php:6567
-msgid "Click \"Generate Webhook Secret\" button (if no secret exists)"
-msgstr ""
-
 #: admin/settings.php:3650
 msgid ""
 "Click Add/Create, name it (e.g., “Store Alerts”), optionally upload an icon, "
@@ -1436,7 +1407,7 @@ msgstr ""
 msgid "Comfy"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8817
+#: multi-location-product-and-inventory-management-pro.php:8811
 msgid "Community support"
 msgstr ""
 
@@ -1463,7 +1434,7 @@ msgid ""
 "integration."
 msgstr ""
 
-#: admin/dashboard.php:1324
+#: admin/dashboard.php:1322
 msgid "Completed"
 msgstr ""
 
@@ -1692,14 +1663,6 @@ msgstr ""
 msgid "Copy shortcode"
 msgstr ""
 
-#: admin/settings.php:6566
-msgid "Copy the generated API key immediately"
-msgstr ""
-
-#: admin/settings.php:6568
-msgid "Copy the generated webhook secret immediately"
-msgstr ""
-
 #: admin/settings.php:3651
 msgid ""
 "Copy the webhook URL, paste it into the Webhook URL field above, and save "
@@ -1814,7 +1777,7 @@ msgstr ""
 msgid "Currency Position"
 msgstr ""
 
-#: admin/dashboard.php:256 admin/dashboard.php:544
+#: admin/dashboard.php:256 admin/dashboard.php:543
 msgid "Currency:"
 msgstr ""
 
@@ -1870,11 +1833,11 @@ msgstr ""
 msgid "Customer Selection (Based on selected location)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12013
+#: multi-location-product-and-inventory-management-pro.php:12007
 msgid "Customer session unavailable."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13228
+#: multi-location-product-and-inventory-management-pro.php:13034
 #, php-format
 msgid "Customer: %s"
 msgstr ""
@@ -1902,16 +1865,16 @@ msgid ""
 "removed."
 msgstr ""
 
-#: admin/dashboard.php:363 admin/dashboard.php:812
+#: admin/dashboard.php:362 admin/dashboard.php:810
 #: includes/class-product-location-table.php:250
 msgid "Date"
 msgstr ""
 
-#: admin/dashboard.php:1287
+#: admin/dashboard.php:1285
 msgid "Date From"
 msgstr ""
 
-#: admin/dashboard.php:1294
+#: admin/dashboard.php:1292
 msgid "Date To"
 msgstr ""
 
@@ -1943,7 +1906,7 @@ msgstr ""
 msgid "Day label for Wednesday."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7309
+#: multi-location-product-and-inventory-management-pro.php:7303
 msgid "Deactivate"
 msgstr ""
 
@@ -1955,7 +1918,7 @@ msgstr ""
 msgid "Deactivated"
 msgstr ""
 
-#: admin/dashboard.php:1684
+#: admin/dashboard.php:1667
 #, php-format
 msgid ""
 "Dead stock in this table represents inventory that has not sold in the last "
@@ -1963,11 +1926,11 @@ msgid ""
 "current stock records."
 msgstr ""
 
-#: admin/dashboard.php:322 admin/dashboard.php:733 admin/dashboard.php:1699
+#: admin/dashboard.php:322 admin/dashboard.php:732 admin/dashboard.php:1682
 msgid "Dead Stock Units"
 msgstr ""
 
-#: admin/dashboard.php:321 admin/dashboard.php:732 admin/dashboard.php:1698
+#: admin/dashboard.php:321 admin/dashboard.php:731 admin/dashboard.php:1681
 msgid "Dead Stock Value"
 msgstr ""
 
@@ -1979,7 +1942,7 @@ msgstr ""
 msgid "Decimal longitude (e.g. 90.2792)"
 msgstr ""
 
-#: admin/dashboard.php:816 admin/dashboard.php:1312 admin/dashboard.php:3446
+#: admin/dashboard.php:814 admin/dashboard.php:1310 admin/dashboard.php:3302
 #: admin/settings.php:486 admin/settings.php:4093
 #: includes/class-product-location-table.php:229
 #: includes/class-product-location-table.php:1184
@@ -1990,10 +1953,10 @@ msgstr ""
 #: includes/class-product-location-table.php:1902
 #: includes/class-product-location-table.php:1934
 #: includes/customer-location-insights.php:1172
-#: includes/stock-price-backorder-manage.php:2469
-#: includes/stock-price-backorder-manage.php:2524
-#: includes/stock-price-backorder-manage.php:2563
-#: includes/stock-price-backorder-manage.php:2590
+#: includes/stock-price-backorder-manage.php:2412
+#: includes/stock-price-backorder-manage.php:2467
+#: includes/stock-price-backorder-manage.php:2506
+#: includes/stock-price-backorder-manage.php:2533
 msgid "Default"
 msgstr ""
 
@@ -2075,7 +2038,7 @@ msgstr ""
 msgid "Detecting your location..."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13690
+#: multi-location-product-and-inventory-management-pro.php:13496
 #, php-format
 msgid "Digest preview - %s"
 msgstr ""
@@ -2084,7 +2047,7 @@ msgstr ""
 msgid "Digest test failed. Check the details and try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13726
+#: multi-location-product-and-inventory-management-pro.php:13532
 msgid "Digest test sent (check your channel)."
 msgstr ""
 
@@ -2185,14 +2148,6 @@ msgstr ""
 msgid "Display section title"
 msgstr ""
 
-#: admin/settings.php:6573
-msgid "Displayed in \"API Key\" field after generation"
-msgstr ""
-
-#: admin/settings.php:6574
-msgid "Displayed in \"Webhook Secret\" field after generation"
-msgstr ""
-
 #: includes/text-management.php:154
 msgid "Distance Header"
 msgstr ""
@@ -2225,18 +2180,18 @@ msgstr ""
 msgid "Do Not Store"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8997
+#: multi-location-product-and-inventory-management-pro.php:8991
 #: includes/product-location-selector-single.php:188
 #: includes/product-location-selector-single.php:1061
 #: includes/text-management.php:603
 msgid "Do you want to change the store location? Your cart will be updated."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8815
+#: multi-location-product-and-inventory-management-pro.php:8809
 msgid "Docs"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8783
+#: multi-location-product-and-inventory-management-pro.php:8777
 msgid "Documentation"
 msgstr ""
 
@@ -2553,7 +2508,7 @@ msgstr ""
 msgid "Enabled (Only show products from selected location)"
 msgstr ""
 
-#: admin/dashboard.php:381
+#: admin/dashboard.php:380
 msgid "End of Report"
 msgstr ""
 
@@ -2627,10 +2582,6 @@ msgstr ""
 msgid "Enter Your Address"
 msgstr ""
 
-#: admin/license-page.php:709
-msgid "Enter your license key"
-msgstr ""
-
 #: admin/import-export-settings.php:75
 msgid "Error clearing cache. Please try again."
 msgstr ""
@@ -2643,7 +2594,7 @@ msgstr ""
 msgid "Error exporting settings. Please try again."
 msgstr ""
 
-#: admin/dashboard.php:3340
+#: admin/dashboard.php:3196
 msgid "Error fetching inventory records. Please try again or contact support."
 msgstr ""
 
@@ -2675,7 +2626,7 @@ msgstr ""
 msgid "Error updating location. Please try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13553
+#: multi-location-product-and-inventory-management-pro.php:13359
 msgid "Every 5 Minutes"
 msgstr ""
 
@@ -2685,10 +2636,6 @@ msgstr ""
 
 #: admin/settings.php:3701
 msgid "Example: Custom Webhook setup guide"
-msgstr ""
-
-#: admin/license-page.php:716
-msgid "Expired"
 msgstr ""
 
 #: admin/license-page.php:878
@@ -2717,11 +2664,11 @@ msgstr ""
 msgid "Export Full CSV"
 msgstr ""
 
-#: admin/dashboard.php:1176
+#: admin/dashboard.php:1174
 msgid "Export in CSV"
 msgstr ""
 
-#: admin/dashboard.php:1180
+#: admin/dashboard.php:1178
 msgid "Export in Excel (HTML)"
 msgstr ""
 
@@ -2749,7 +2696,7 @@ msgstr ""
 msgid "Export queue is full. Please wait for active jobs to complete."
 msgstr ""
 
-#: admin/dashboard.php:1170 admin/location-managers.php:341
+#: admin/dashboard.php:1168 admin/location-managers.php:341
 msgid "Export Report"
 msgstr ""
 
@@ -2771,7 +2718,7 @@ msgstr ""
 msgid "External"
 msgstr ""
 
-#: admin/dashboard.php:1330
+#: admin/dashboard.php:1328
 msgid "Failed"
 msgstr ""
 
@@ -2803,7 +2750,7 @@ msgstr ""
 msgid "Failed to retrieve locations."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11538
+#: multi-location-product-and-inventory-management-pro.php:11532
 msgid "Failed to update location"
 msgstr ""
 
@@ -2864,7 +2811,7 @@ msgstr ""
 msgid "Filter Button"
 msgstr ""
 
-#: admin/dashboard.php:1279
+#: admin/dashboard.php:1277
 msgid "Filter Dashboard"
 msgstr ""
 
@@ -2910,7 +2857,7 @@ msgid ""
 "customers."
 msgstr ""
 
-#: admin/dashboard.php:1160
+#: admin/dashboard.php:1158
 msgid "Filters"
 msgstr ""
 
@@ -3034,7 +2981,7 @@ msgstr ""
 msgid "Generated on:"
 msgstr ""
 
-#: admin/dashboard.php:542
+#: admin/dashboard.php:541
 msgid "Generated:"
 msgstr ""
 
@@ -3073,10 +3020,6 @@ msgstr ""
 
 #: admin/settings.php:4008 admin/settings.php:4015
 msgid "Global Products First"
-msgstr ""
-
-#: admin/settings.php:6563
-msgid "Go to: Multi Location Products → API & Webhooks"
 msgstr ""
 
 #: admin/settings.php:492
@@ -3209,11 +3152,11 @@ msgstr ""
 msgid "Hierarchical Option"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12525
+#: multi-location-product-and-inventory-management-pro.php:12331
 msgid "High stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13245
+#: multi-location-product-and-inventory-management-pro.php:13051
 msgid "High value order"
 msgstr ""
 
@@ -3225,7 +3168,7 @@ msgstr ""
 msgid "High-value order"
 msgstr ""
 
-#: admin/dashboard.php:4228
+#: admin/dashboard.php:4079
 #, php-format
 msgid "High-value order: #%s (%s)"
 msgstr ""
@@ -3324,12 +3267,6 @@ msgid ""
 "If a location logo is not available the site/store default will be used. For "
 "full integration details and more placeholders, see the <a href=\"%s\" "
 "target=\"_blank\">plugin documentation</a>."
-msgstr ""
-
-#: admin/settings.php:6570
-msgid ""
-"If you lose your keys, you must generate new ones. Old keys will no longer "
-"work."
 msgstr ""
 
 #: includes/class-product-location-table.php:226
@@ -3476,14 +3413,13 @@ msgid ""
 "WebHooks” and click Add."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12369
 #: includes/class-product-location-table.php:2681
-#: includes/stock-price-backorder-manage.php:2078
+#: includes/stock-price-backorder-manage.php:2021
 #: includes/text-management.php:547
 msgid "In Stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12479
+#: multi-location-product-and-inventory-management-pro.php:12292
 #: includes/class-product-location-table.php:1193
 #: includes/class-product-location-table.php:1201
 #: includes/class-product-location-table.php:1224
@@ -3494,12 +3430,12 @@ msgstr ""
 #: includes/class-product-location-table.php:1316
 #: includes/class-product-location-table.php:1330
 #: includes/class-product-location-table.php:1341
-#: includes/stock-price-backorder-manage.php:2450
-#: includes/stock-price-backorder-manage.php:2478
-#: includes/stock-price-backorder-manage.php:2505
-#: includes/stock-price-backorder-manage.php:2533
-#: includes/stock-price-backorder-manage.php:2572
-#: includes/stock-price-backorder-manage.php:2599
+#: includes/stock-price-backorder-manage.php:2393
+#: includes/stock-price-backorder-manage.php:2421
+#: includes/stock-price-backorder-manage.php:2448
+#: includes/stock-price-backorder-manage.php:2476
+#: includes/stock-price-backorder-manage.php:2515
+#: includes/stock-price-backorder-manage.php:2542
 msgid "In stock"
 msgstr ""
 
@@ -3510,7 +3446,7 @@ msgid ""
 msgstr ""
 
 #: admin/admin.php:1657 admin/admin.php:2117 admin/admin.php:3803
-#: admin/admin.php:3934 admin/license-page.php:719
+#: admin/admin.php:3934
 msgid "Inactive"
 msgstr ""
 
@@ -3665,11 +3601,11 @@ msgstr ""
 msgid "Invalid location data"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12128
+#: multi-location-product-and-inventory-management-pro.php:12122
 msgid "Invalid location ID"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12134
+#: multi-location-product-and-inventory-management-pro.php:12128
 msgid "Invalid location ID format"
 msgstr ""
 
@@ -3678,8 +3614,8 @@ msgid "Invalid Location Message"
 msgstr ""
 
 #: multi-location-product-and-inventory-management-pro.php:5704
-#: multi-location-product-and-inventory-management-pro.php:11225
-#: multi-location-product-and-inventory-management-pro.php:11898
+#: multi-location-product-and-inventory-management-pro.php:11219
+#: multi-location-product-and-inventory-management-pro.php:11892
 #: admin/admin.php:3817 admin/admin.php:3868
 msgid "Invalid location."
 msgstr ""
@@ -3700,7 +3636,7 @@ msgstr ""
 #: multi-location-product-and-inventory-management-pro.php:5679
 #: multi-location-product-and-inventory-management-pro.php:5747
 #: multi-location-product-and-inventory-management-pro.php:6594
-#: multi-location-product-and-inventory-management-pro.php:7229
+#: multi-location-product-and-inventory-management-pro.php:7223
 msgid "Invalid parameters."
 msgstr ""
 
@@ -3715,7 +3651,7 @@ msgstr ""
 msgid "Invalid request. Please refresh the page and try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11882
+#: multi-location-product-and-inventory-management-pro.php:11876
 msgid "Invalid security token."
 msgstr ""
 
@@ -3772,11 +3708,11 @@ msgstr ""
 msgid "Inventory updated via webhook."
 msgstr ""
 
-#: admin/dashboard.php:318 admin/dashboard.php:729 admin/dashboard.php:1695
+#: admin/dashboard.php:318 admin/dashboard.php:728 admin/dashboard.php:1678
 msgid "Inventory Value"
 msgstr ""
 
-#: admin/dashboard.php:1134 admin/dashboard.php:1530
+#: admin/dashboard.php:1132 admin/dashboard.php:1528
 msgid "Investment"
 msgstr ""
 
@@ -3785,12 +3721,12 @@ msgstr ""
 msgid "Item %d: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13432
-#: multi-location-product-and-inventory-management-pro.php:13710
+#: multi-location-product-and-inventory-management-pro.php:13238
+#: multi-location-product-and-inventory-management-pro.php:13516
 msgid "items"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13231
+#: multi-location-product-and-inventory-management-pro.php:13037
 #, php-format
 msgid "Items: %s"
 msgstr ""
@@ -3841,10 +3777,6 @@ msgstr ""
 msgid ""
 "Keeps unknown-location items in the parent order while location-assigned "
 "items are split into child orders."
-msgstr ""
-
-#: admin/settings.php:6575
-msgid "Keys are displayed only once for security. Copy them immediately."
 msgstr ""
 
 #: includes/text-management.php:176
@@ -3958,19 +3890,19 @@ msgid ""
 "Settings → Inventory."
 msgstr ""
 
-#: admin/dashboard.php:1343
+#: admin/dashboard.php:1341
 msgid "Last 30 Days"
 msgstr ""
 
-#: admin/dashboard.php:1340
+#: admin/dashboard.php:1338
 msgid "Last 7 Days"
 msgstr ""
 
-#: admin/dashboard.php:1346
+#: admin/dashboard.php:1344
 msgid "Last 90 Days"
 msgstr ""
 
-#: admin/dashboard.php:1352
+#: admin/dashboard.php:1350
 msgid "Last Month"
 msgstr ""
 
@@ -4197,7 +4129,7 @@ msgstr ""
 msgid "Loading available locations..."
 msgstr ""
 
-#: admin/dashboard.php:1382
+#: admin/dashboard.php:1380
 msgid "Loading data..."
 msgstr ""
 
@@ -4228,13 +4160,13 @@ msgid ""
 msgstr ""
 
 #: multi-location-product-and-inventory-management-pro.php:4584
-#: multi-location-product-and-inventory-management-pro.php:13706
+#: multi-location-product-and-inventory-management-pro.php:13512
 #: admin/admin.php:834 admin/admin.php:6096 admin/dashboard.php:272
 #: admin/dashboard.php:283 admin/dashboard.php:295 admin/dashboard.php:305
-#: admin/dashboard.php:317 admin/dashboard.php:348 admin/dashboard.php:601
-#: admin/dashboard.php:633 admin/dashboard.php:665 admin/dashboard.php:696
-#: admin/dashboard.php:728 admin/dashboard.php:772 admin/dashboard.php:1302
-#: admin/dashboard.php:1637 admin/dashboard.php:1694 admin/settings.php:3240
+#: admin/dashboard.php:317 admin/dashboard.php:348 admin/dashboard.php:600
+#: admin/dashboard.php:632 admin/dashboard.php:664 admin/dashboard.php:695
+#: admin/dashboard.php:727 admin/dashboard.php:771 admin/dashboard.php:1300
+#: admin/dashboard.php:1614 admin/dashboard.php:1677 admin/settings.php:3240
 #: includes/class-product-location-table.php:962
 #: includes/class-product-location-table.php:1120
 #: includes/customer-location-insights.php:1545
@@ -4323,7 +4255,7 @@ msgstr ""
 msgid "Location Cookie Expiry (Days)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12168
+#: multi-location-product-and-inventory-management-pro.php:12162
 msgid "Location deleted successfully"
 msgstr ""
 
@@ -4457,7 +4389,7 @@ msgid "Location Map Heading"
 msgstr ""
 
 #: multi-location-product-and-inventory-management-pro.php:4930
-#: multi-location-product-and-inventory-management-pro.php:12158
+#: multi-location-product-and-inventory-management-pro.php:12152
 #: admin/admin.php:4957 includes/text-management.php:274
 msgid "Location not found"
 msgstr ""
@@ -4501,7 +4433,7 @@ msgstr ""
 msgid "Location removed from product successfully."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7259
+#: multi-location-product-and-inventory-management-pro.php:7253
 msgid "Location removed successfully."
 msgstr ""
 
@@ -4553,7 +4485,7 @@ msgstr ""
 msgid "Location Settings"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11889
+#: multi-location-product-and-inventory-management-pro.php:11883
 msgid "Location slug is required."
 msgstr ""
 
@@ -4632,7 +4564,7 @@ msgstr ""
 msgid "Location URL Settings"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11902
+#: multi-location-product-and-inventory-management-pro.php:11896
 msgid "Location validated."
 msgstr ""
 
@@ -4644,11 +4576,11 @@ msgstr ""
 msgid "Location Wise Everything"
 msgstr ""
 
-#: admin/dashboard.php:253 admin/dashboard.php:539
+#: admin/dashboard.php:253 admin/dashboard.php:538
 msgid "LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT"
 msgstr ""
 
-#: admin/dashboard.php:1150 admin/dashboard.php:1153
+#: admin/dashboard.php:1148 admin/dashboard.php:1151
 msgid "Location Wise Products Dashboard"
 msgstr ""
 
@@ -4726,20 +4658,20 @@ msgstr ""
 msgid "Location:"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13493
+#: multi-location-product-and-inventory-management-pro.php:13299
 #: includes/order-split-by-location.php:431
 #: includes/order-split-by-location.php:433 includes/text-management.php:657
 #, php-format
 msgid "Location: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14216
+#: multi-location-product-and-inventory-management-pro.php:14022
 #, php-format
 msgid "Location: %s (%s)"
 msgstr ""
 
 #: admin/admin.php:4109 admin/admin.php:4110 admin/admin.php:6095
-#: admin/admin.php:6111 admin/dashboard.php:1416
+#: admin/admin.php:6111 admin/dashboard.php:1414
 #: includes/class-product-location-table.php:930
 #: includes/customer-location-insights.php:1526
 msgid "Locations"
@@ -4791,11 +4723,11 @@ msgstr ""
 msgid "Longitude"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13772
+#: multi-location-product-and-inventory-management-pro.php:13578
 msgid "Low rating review"
 msgstr ""
 
-#: admin/dashboard.php:4327
+#: admin/dashboard.php:4146
 #, php-format
 msgid "Low rating review for %s"
 msgstr ""
@@ -4804,14 +4736,12 @@ msgstr ""
 msgid "Low review rating threshold"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12368
-#: multi-location-product-and-inventory-management-pro.php:13116
-#: admin/dashboard.php:790 admin/dashboard.php:1662 admin/dashboard.php:2465
-#: admin/dashboard.php:2493
+#: multi-location-product-and-inventory-management-pro.php:12922
+#: admin/dashboard.php:788 admin/dashboard.php:1643
 msgid "Low Stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12514
+#: multi-location-product-and-inventory-management-pro.php:12320
 msgid "Low stock"
 msgstr ""
 
@@ -4823,7 +4753,7 @@ msgstr ""
 msgid "Low Stock Notification Recipients"
 msgstr ""
 
-#: admin/dashboard.php:345 admin/dashboard.php:765
+#: admin/dashboard.php:345 admin/dashboard.php:764
 msgid "LOW STOCK PRODUCTS"
 msgstr ""
 
@@ -4831,7 +4761,7 @@ msgstr ""
 msgid "Low Stock Threshold"
 msgstr ""
 
-#: admin/dashboard.php:4160
+#: admin/dashboard.php:4013
 #, php-format
 msgid "Low stock: %s (%s)"
 msgstr ""
@@ -4848,7 +4778,7 @@ msgstr ""
 msgid "Main Shop & Archive Pages"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8781
+#: multi-location-product-and-inventory-management-pro.php:8775
 msgid "Manage Locations"
 msgstr ""
 
@@ -4917,7 +4847,7 @@ msgstr ""
 msgid "Manager updated"
 msgstr ""
 
-#: admin/dashboard.php:4343
+#: admin/dashboard.php:4162
 #, php-format
 msgid "Manager updated: %s"
 msgstr ""
@@ -4952,11 +4882,11 @@ msgstr ""
 msgid "Map Provider"
 msgstr ""
 
-#: admin/dashboard.php:320 admin/dashboard.php:731 admin/dashboard.php:1697
+#: admin/dashboard.php:320 admin/dashboard.php:730 admin/dashboard.php:1680
 msgid "Margin %"
 msgstr ""
 
-#: admin/dashboard.php:319 admin/dashboard.php:730 admin/dashboard.php:1696
+#: admin/dashboard.php:319 admin/dashboard.php:729 admin/dashboard.php:1679
 msgid "Margin Value"
 msgstr ""
 
@@ -4993,7 +4923,7 @@ msgstr ""
 msgid "Media sideload failed for %s: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12521
+#: multi-location-product-and-inventory-management-pro.php:12327
 msgid "Medium stock"
 msgstr ""
 
@@ -5009,7 +4939,7 @@ msgstr ""
 msgid "Messages shown when purchases are restricted by business hours."
 msgstr ""
 
-#: admin/dashboard.php:261 admin/dashboard.php:561
+#: admin/dashboard.php:261 admin/dashboard.php:560
 msgid "Metric"
 msgstr ""
 
@@ -5054,7 +4984,7 @@ msgstr ""
 msgid "Monday"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13541
+#: multi-location-product-and-inventory-management-pro.php:13347
 #, php-format
 msgid "Monitoring shows %s is reachable again."
 msgstr ""
@@ -5099,10 +5029,6 @@ msgstr ""
 msgid "name@example.com"
 msgstr ""
 
-#: admin/settings.php:6562
-msgid "Navigate to WordPress Admin Dashboard"
-msgstr ""
-
 #: includes/text-management.php:204
 msgid "Near you"
 msgstr ""
@@ -5131,12 +5057,12 @@ msgstr ""
 msgid "New Location Name"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13223
+#: multi-location-product-and-inventory-management-pro.php:13029
 #, php-format
 msgid "New order #%s at %s"
 msgstr ""
 
-#: admin/dashboard.php:4134
+#: admin/dashboard.php:3990
 #, php-format
 msgid "New order #%s placed - %s"
 msgstr ""
@@ -5145,19 +5071,19 @@ msgstr ""
 msgid "New order alerts"
 msgstr ""
 
-#: admin/dashboard.php:1133
+#: admin/dashboard.php:1131
 msgid "New Products"
 msgstr ""
 
-#: admin/dashboard.php:1522
+#: admin/dashboard.php:1520
 msgid "New Products (Last 30 Days)"
 msgstr ""
 
-#: admin/dashboard.php:806
+#: admin/dashboard.php:804
 msgid "NEW PRODUCTS (LAST 30 DAYS) - LOCATION-WISE"
 msgstr ""
 
-#: admin/dashboard.php:362
+#: admin/dashboard.php:361
 msgid "NEW PRODUCTS (LAST 30 DAYS) — LOCATION-WISE"
 msgstr ""
 
@@ -5165,7 +5091,7 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12034
+#: multi-location-product-and-inventory-management-pro.php:12028
 msgid "No address data provided."
 msgstr ""
 
@@ -5302,7 +5228,7 @@ msgstr ""
 msgid "No Locations Message"
 msgstr ""
 
-#: admin/dashboard.php:1670
+#: admin/dashboard.php:1653
 msgid "No low stock products found for any location."
 msgstr ""
 
@@ -5310,7 +5236,7 @@ msgstr ""
 msgid "No Matching Locations"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13693
+#: multi-location-product-and-inventory-management-pro.php:13499
 msgid "No orders found for today yet. This is a digest preview test."
 msgstr ""
 
@@ -5327,7 +5253,7 @@ msgid ""
 "No orders were updated. Please review stock availability and order status."
 msgstr ""
 
-#: admin/dashboard.php:1138
+#: admin/dashboard.php:1136
 msgid "No orders yet"
 msgstr ""
 
@@ -5348,7 +5274,7 @@ msgstr ""
 msgid "No products found."
 msgstr ""
 
-#: admin/dashboard.php:1721
+#: admin/dashboard.php:1704
 msgid "No profitability data available yet."
 msgstr ""
 
@@ -5364,7 +5290,7 @@ msgstr ""
 msgid "No saved address yet"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12142
+#: multi-location-product-and-inventory-management-pro.php:12136
 msgid "No saved locations found"
 msgstr ""
 
@@ -5419,7 +5345,7 @@ msgstr ""
 msgid "No valid orders found"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14204
+#: multi-location-product-and-inventory-management-pro.php:14010
 msgid "No valid recipient email could be resolved for this test."
 msgstr ""
 
@@ -5516,17 +5442,41 @@ msgstr ""
 msgid "On"
 msgstr ""
 
+#: admin/settings.php:6142
+msgid "on / off - Display title"
+msgstr ""
+
+#: admin/settings.php:6152
+msgid "on / off - Enhanced dropdown"
+msgstr ""
+
+#: admin/settings.php:6214
+msgid "on / off - Multi-line display"
+msgstr ""
+
+#: admin/settings.php:6172
+msgid "on / off - Show item count"
+msgstr ""
+
+#: admin/settings.php:6194
+msgid "on / off - User locations"
+msgstr ""
+
+#: admin/settings.php:6162
+msgid "on / off / seperately"
+msgstr ""
+
 #: includes/class-product-location-table.php:2683
 msgid "On Backorder"
 msgstr ""
 
-#: admin/dashboard.php:1327
+#: admin/dashboard.php:1325
 msgid "On Hold"
 msgstr ""
 
 #: multi-location-product-and-inventory-management-pro.php:6960
 #: multi-location-product-and-inventory-management-pro.php:6969
-#: multi-location-product-and-inventory-management-pro.php:7144
+#: multi-location-product-and-inventory-management-pro.php:7138
 msgid "One or more submitted variations do not belong to this product."
 msgstr ""
 
@@ -5562,7 +5512,7 @@ msgstr ""
 msgid "Open 24 hours"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:9752
+#: multi-location-product-and-inventory-management-pro.php:9746
 msgid "Open Modal"
 msgstr ""
 
@@ -5636,12 +5586,12 @@ msgstr ""
 msgid "Order"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13490
+#: multi-location-product-and-inventory-management-pro.php:13296
 #, php-format
 msgid "Order #%s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13247
+#: multi-location-product-and-inventory-management-pro.php:13053
 #, php-format
 msgid "Order #%s | Total: %s | Location: %s"
 msgstr ""
@@ -5660,12 +5610,12 @@ msgstr ""
 msgid "Order Assignment Method"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13457
+#: multi-location-product-and-inventory-management-pro.php:13263
 #: admin/settings.php:3392
 msgid "Order cancelled"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13461
+#: multi-location-product-and-inventory-management-pro.php:13267
 #: admin/settings.php:3393
 msgid "Order completed"
 msgstr ""
@@ -5707,12 +5657,12 @@ msgstr ""
 msgid "Order Notification Recipients"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13453
+#: multi-location-product-and-inventory-management-pro.php:13259
 #: admin/settings.php:3391
 msgid "Order refunded"
 msgstr ""
 
-#: admin/dashboard.php:1320
+#: admin/dashboard.php:1318
 msgid "Order Status"
 msgstr ""
 
@@ -5720,21 +5670,21 @@ msgstr ""
 msgid "Order updated successfully"
 msgstr ""
 
-#: admin/dashboard.php:295 admin/dashboard.php:666 admin/dashboard.php:1135
-#: admin/dashboard.php:1431
+#: admin/dashboard.php:295 admin/dashboard.php:665 admin/dashboard.php:1133
+#: admin/dashboard.php:1429
 msgid "Orders"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13430
-#: multi-location-product-and-inventory-management-pro.php:13708
+#: multi-location-product-and-inventory-management-pro.php:13236
+#: multi-location-product-and-inventory-management-pro.php:13514
 msgid "orders"
 msgstr ""
 
-#: admin/dashboard.php:659
+#: admin/dashboard.php:658
 msgid "ORDERS BY LOCATION"
 msgstr ""
 
-#: admin/dashboard.php:294 admin/dashboard.php:1503
+#: admin/dashboard.php:294 admin/dashboard.php:1501
 msgid "Orders by Location"
 msgstr ""
 
@@ -5746,7 +5696,7 @@ msgstr ""
 msgid "orders selected"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13412
+#: multi-location-product-and-inventory-management-pro.php:13218
 #, php-format
 msgid "Orders: %d | Items: %d | Revenue: %s"
 msgstr ""
@@ -5763,25 +5713,24 @@ msgstr ""
 msgid "Our Locations (%d)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8784
+#: multi-location-product-and-inventory-management-pro.php:8778
 #: includes/customer-location-insights.php:1010
 #: includes/customer-location-insights.php:1011
 msgid "Our Plugins"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12366
-#: multi-location-product-and-inventory-management-pro.php:13116
-#: admin/dashboard.php:2464 admin/dashboard.php:2492
+#: multi-location-product-and-inventory-management-pro.php:12922
+#: admin/dashboard.php:788 admin/dashboard.php:1641
 #: includes/class-product-location-table.php:2682
-#: includes/stock-price-backorder-manage.php:2078
+#: includes/stock-price-backorder-manage.php:2021
 #: includes/text-management.php:554 includes/text-management.php:916
 msgid "Out of Stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12484
-#: multi-location-product-and-inventory-management-pro.php:12491
-#: multi-location-product-and-inventory-management-pro.php:12511
-#: multi-location-product-and-inventory-management-pro.php:12544
+#: multi-location-product-and-inventory-management-pro.php:12297
+#: multi-location-product-and-inventory-management-pro.php:12304
+#: multi-location-product-and-inventory-management-pro.php:12317
+#: multi-location-product-and-inventory-management-pro.php:12350
 #: includes/class-product-location-table.php:1193
 #: includes/class-product-location-table.php:1201
 #: includes/class-product-location-table.php:1224
@@ -5792,15 +5741,15 @@ msgstr ""
 #: includes/class-product-location-table.php:1316
 #: includes/class-product-location-table.php:1330
 #: includes/class-product-location-table.php:1341
-#: includes/stock-price-backorder-manage.php:1830
-#: includes/stock-price-backorder-manage.php:1907
-#: includes/stock-price-backorder-manage.php:1984
-#: includes/stock-price-backorder-manage.php:2450
-#: includes/stock-price-backorder-manage.php:2478
-#: includes/stock-price-backorder-manage.php:2505
-#: includes/stock-price-backorder-manage.php:2533
-#: includes/stock-price-backorder-manage.php:2572
-#: includes/stock-price-backorder-manage.php:2599
+#: includes/stock-price-backorder-manage.php:1773
+#: includes/stock-price-backorder-manage.php:1850
+#: includes/stock-price-backorder-manage.php:1927
+#: includes/stock-price-backorder-manage.php:2393
+#: includes/stock-price-backorder-manage.php:2421
+#: includes/stock-price-backorder-manage.php:2448
+#: includes/stock-price-backorder-manage.php:2476
+#: includes/stock-price-backorder-manage.php:2515
+#: includes/stock-price-backorder-manage.php:2542
 msgid "Out of stock"
 msgstr ""
 
@@ -5820,7 +5769,7 @@ msgstr ""
 msgid "Out of Stock Threshold"
 msgstr ""
 
-#: admin/dashboard.php:4187
+#: admin/dashboard.php:4038
 #, php-format
 msgid "Out of stock: %s (%s)"
 msgstr ""
@@ -5952,7 +5901,7 @@ msgid ""
 "management\" target=\"_blank\">Plugincy</a>."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13449
+#: multi-location-product-and-inventory-management-pro.php:13255
 #: admin/settings.php:3390
 msgid "Payment failed"
 msgstr ""
@@ -5978,7 +5927,7 @@ msgstr ""
 msgid "Payments"
 msgstr ""
 
-#: admin/dashboard.php:1326
+#: admin/dashboard.php:1324
 msgid "Pending"
 msgstr ""
 
@@ -5987,8 +5936,8 @@ msgid "Per Location (Each location has its own rates)"
 msgstr ""
 
 #: admin/dashboard.php:272 admin/dashboard.php:283 admin/dashboard.php:295
-#: admin/dashboard.php:305 admin/dashboard.php:603 admin/dashboard.php:635
-#: admin/dashboard.php:667 admin/dashboard.php:698
+#: admin/dashboard.php:305 admin/dashboard.php:602 admin/dashboard.php:634
+#: admin/dashboard.php:666 admin/dashboard.php:697
 msgid "Percentage"
 msgstr ""
 
@@ -5996,11 +5945,11 @@ msgstr ""
 msgid "Performance Score"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13594
-#: multi-location-product-and-inventory-management-pro.php:13648
+#: multi-location-product-and-inventory-management-pro.php:13400
+#: multi-location-product-and-inventory-management-pro.php:13454
 #: admin/admin.php:3764 admin/admin.php:3790 admin/admin.php:3812
 #: admin/admin.php:3863 admin/admin.php:3956 admin/dashboard.php:193
-#: admin/dashboard.php:396 admin/dashboard.php:1982 admin/dashboard.php:3954
+#: admin/dashboard.php:395 admin/dashboard.php:1965 admin/dashboard.php:3810
 #: admin/location-managers.php:1293 admin/location-managers.php:1364
 #: admin/location-managers.php:1523 admin/location-managers.php:1552
 #: includes/customer-location-insights.php:1366
@@ -6078,7 +6027,7 @@ msgstr ""
 msgid "Please edit the order and set locations for each product individually"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14152
+#: multi-location-product-and-inventory-management-pro.php:13958
 msgid "Please enter a valid email address."
 msgstr ""
 
@@ -6117,7 +6066,7 @@ msgstr ""
 msgid "Please select a location to see recommendations."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14139
+#: multi-location-product-and-inventory-management-pro.php:13945
 msgid "Please select a location."
 msgstr ""
 
@@ -6166,7 +6115,7 @@ msgstr ""
 msgid "Please upload a valid CSV or package ZIP file."
 msgstr ""
 
-#: admin/dashboard.php:3964
+#: admin/dashboard.php:3820
 msgid "Please wait before requesting another update."
 msgstr ""
 
@@ -6326,7 +6275,7 @@ msgstr ""
 msgid "Preserve Cart (Keep all products regardless of availability)"
 msgstr ""
 
-#: admin/dashboard.php:1137
+#: admin/dashboard.php:1135
 msgid "Previous period"
 msgstr ""
 
@@ -6338,12 +6287,11 @@ msgstr ""
 msgid "Price by Location"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11517
+#: multi-location-product-and-inventory-management-pro.php:11511
 msgid "Price updated! Reloading..."
 msgstr ""
 
 #: includes/class-product-location-table.php:1837
-#: includes/class-product-location-table.php:1848
 msgid "Price:"
 msgstr ""
 
@@ -6381,7 +6329,7 @@ msgstr ""
 msgid "Processed %d items. %d succeeded, %d failed."
 msgstr ""
 
-#: admin/dashboard.php:1325
+#: admin/dashboard.php:1323
 msgid "Processing"
 msgstr ""
 
@@ -6392,9 +6340,9 @@ msgstr ""
 #: multi-location-product-and-inventory-management-pro.php:4954
 #: multi-location-product-and-inventory-management-pro.php:5278
 #: multi-location-product-and-inventory-management-pro.php:5325
-#: multi-location-product-and-inventory-management-pro.php:13767
-#: admin/dashboard.php:347 admin/dashboard.php:771 admin/dashboard.php:1636
-#: admin/dashboard.php:4327 admin/stock-central.php:2048
+#: multi-location-product-and-inventory-management-pro.php:13573
+#: admin/dashboard.php:347 admin/dashboard.php:770 admin/dashboard.php:1613
+#: admin/dashboard.php:4146 admin/stock-central.php:2048
 #: includes/class-product-location-table.php:227
 #: includes/class-product-location-table.php:238
 #: includes/customer-location-insights.php:1667
@@ -6409,11 +6357,11 @@ msgstr ""
 msgid "Product Blocks (Gutenberg)"
 msgstr ""
 
-#: admin/dashboard.php:272 admin/dashboard.php:602
+#: admin/dashboard.php:272 admin/dashboard.php:601
 msgid "Product Count"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7208
+#: multi-location-product-and-inventory-management-pro.php:7202
 msgid "Product data saved successfully."
 msgstr ""
 
@@ -6485,11 +6433,11 @@ msgstr ""
 msgid "products"
 msgstr ""
 
-#: admin/dashboard.php:271 admin/dashboard.php:595
+#: admin/dashboard.php:271 admin/dashboard.php:594
 msgid "PRODUCTS BY LOCATION"
 msgstr ""
 
-#: admin/dashboard.php:1484
+#: admin/dashboard.php:1482
 msgid "Products by Location"
 msgstr ""
 
@@ -6497,11 +6445,11 @@ msgstr ""
 msgid "Products with Data:"
 msgstr ""
 
-#: admin/dashboard.php:315 admin/dashboard.php:722
+#: admin/dashboard.php:315 admin/dashboard.php:721
 msgid "PROFITABILITY & AGING BY LOCATION"
 msgstr ""
 
-#: admin/dashboard.php:1679
+#: admin/dashboard.php:1662
 msgid "Profitability & Aging by Location"
 msgstr ""
 
@@ -6547,7 +6495,6 @@ msgid "Purchases"
 msgstr ""
 
 #: includes/class-product-location-table.php:1840
-#: includes/class-product-location-table.php:1851
 msgid "Quantity:"
 msgstr ""
 
@@ -6564,7 +6511,7 @@ msgstr ""
 msgid "Quick edit"
 msgstr ""
 
-#: admin/dashboard.php:1337
+#: admin/dashboard.php:1335
 msgid "Quick Select"
 msgstr ""
 
@@ -6637,7 +6584,7 @@ msgstr ""
 msgid "Recently Viewed Products"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14214
+#: multi-location-product-and-inventory-management-pro.php:14020
 #, php-format
 msgid "Recipient type: %s"
 msgstr ""
@@ -6672,7 +6619,7 @@ msgstr ""
 msgid "Recommended"
 msgstr ""
 
-#: admin/dashboard.php:1329
+#: admin/dashboard.php:1327
 msgid "Refunded"
 msgstr ""
 
@@ -6770,7 +6717,7 @@ msgstr ""
 msgid "Requires the bot token configured in Advanced → Social Notifications."
 msgstr ""
 
-#: admin/dashboard.php:1374 admin/settings.php:8426
+#: admin/dashboard.php:1372 admin/settings.php:8426
 msgid "Reset"
 msgstr ""
 
@@ -6807,7 +6754,7 @@ msgstr ""
 msgid "Reset Text to Defaults"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11848
+#: multi-location-product-and-inventory-management-pro.php:11842
 msgid "Resolver service is unavailable."
 msgstr ""
 
@@ -6819,7 +6766,7 @@ msgstr ""
 msgid "REST API & AJAX Responses"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7062
+#: multi-location-product-and-inventory-management-pro.php:7056
 msgid "Restocked"
 msgstr ""
 
@@ -6827,7 +6774,7 @@ msgstr ""
 msgid "Restocked (back above low threshold)"
 msgstr ""
 
-#: admin/dashboard.php:4298
+#: admin/dashboard.php:4117
 #, php-format
 msgid "Restocked: %s"
 msgstr ""
@@ -6852,12 +6799,12 @@ msgstr ""
 msgid "Retry Failed Rows"
 msgstr ""
 
-#: admin/dashboard.php:305 admin/dashboard.php:697 admin/dashboard.php:1136
-#: admin/dashboard.php:1470
+#: admin/dashboard.php:305 admin/dashboard.php:696 admin/dashboard.php:1134
+#: admin/dashboard.php:1468
 msgid "Revenue"
 msgstr ""
 
-#: admin/dashboard.php:304 admin/dashboard.php:690 admin/dashboard.php:1511
+#: admin/dashboard.php:304 admin/dashboard.php:689 admin/dashboard.php:1509
 msgid "Revenue by Location"
 msgstr ""
 
@@ -6961,7 +6908,7 @@ msgstr ""
 msgid "Save Location"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7311
+#: multi-location-product-and-inventory-management-pro.php:7305
 msgid "Save Locations"
 msgstr ""
 
@@ -7000,10 +6947,6 @@ msgstr ""
 #: includes/customer-location-insights.php:1550
 #: includes/customer-location-insights.php:1670
 msgid "Score"
-msgstr ""
-
-#: admin/settings.php:6564
-msgid "Scroll to \"API Authentication\" section"
 msgstr ""
 
 #: admin/admin.php:1323 admin/admin.php:1734 includes/text-management.php:71
@@ -7123,8 +7066,8 @@ msgstr ""
 msgid "Select a location…"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13604
-#: multi-location-product-and-inventory-management-pro.php:13658
+#: multi-location-product-and-inventory-management-pro.php:13410
+#: multi-location-product-and-inventory-management-pro.php:13464
 msgid "Select a platform to test."
 msgstr ""
 
@@ -7181,7 +7124,7 @@ msgstr ""
 msgid "Select Location:"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7310
+#: multi-location-product-and-inventory-management-pro.php:7304
 #: includes/location-based-shipping.php:454
 msgid "Select Locations"
 msgstr ""
@@ -7210,7 +7153,7 @@ msgstr ""
 msgid "Select Store Alert"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:9694
+#: multi-location-product-and-inventory-management-pro.php:9688
 msgid "Select Store Location"
 msgstr ""
 
@@ -7371,7 +7314,7 @@ msgstr ""
 msgid "Set Your Location"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8780
+#: multi-location-product-and-inventory-management-pro.php:8774
 #: admin/admin.php:4167 admin/admin.php:4168 admin/settings.php:5334
 msgid "Settings"
 msgstr ""
@@ -7711,7 +7654,7 @@ msgstr ""
 msgid "Shown while the popup is trying to detect the customer location."
 msgstr ""
 
-#: admin/dashboard.php:324 admin/dashboard.php:735 admin/dashboard.php:1701
+#: admin/dashboard.php:324 admin/dashboard.php:734 admin/dashboard.php:1684
 msgid "Shrinkage %"
 msgstr ""
 
@@ -7743,7 +7686,7 @@ msgstr ""
 msgid "Single Product Update Example"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13540
+#: multi-location-product-and-inventory-management-pro.php:13346
 msgid "Site back online"
 msgstr ""
 
@@ -7751,15 +7694,15 @@ msgstr ""
 msgid "Site down / up monitor"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13532
+#: multi-location-product-and-inventory-management-pro.php:13338
 msgid "Site down alert"
 msgstr ""
 
-#: admin/dashboard.php:4404
+#: admin/dashboard.php:4223
 msgid "Site is reachable again."
 msgstr ""
 
-#: admin/dashboard.php:4405
+#: admin/dashboard.php:4224
 msgid "Site monitoring is stable."
 msgstr ""
 
@@ -7767,7 +7710,7 @@ msgstr ""
 msgid "Site Usage"
 msgstr ""
 
-#: admin/dashboard.php:4403
+#: admin/dashboard.php:4222
 msgid "Site went down. Monitoring could not reach the server."
 msgstr ""
 
@@ -7900,7 +7843,7 @@ msgid "State"
 msgstr ""
 
 #: admin/admin.php:1654 admin/admin.php:2113 admin/admin.php:3931
-#: admin/dashboard.php:350 admin/dashboard.php:774 admin/dashboard.php:1639
+#: admin/dashboard.php:350 admin/dashboard.php:773 admin/dashboard.php:1616
 #: admin/license-page.php:766 admin/license-page.php:936
 msgid "Status"
 msgstr ""
@@ -7921,7 +7864,7 @@ msgstr ""
 msgid "Status text and helper messages shown inside popup layouts."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13491
+#: multi-location-product-and-inventory-management-pro.php:13297
 #, php-format
 msgid "Status: %s"
 msgstr ""
@@ -7941,7 +7884,7 @@ msgstr ""
 msgid "Steps / Request Body:"
 msgstr ""
 
-#: admin/dashboard.php:349 admin/dashboard.php:773 admin/dashboard.php:1638
+#: admin/dashboard.php:349 admin/dashboard.php:772 admin/dashboard.php:1615
 #: includes/class-product-location-table.php:964
 #: includes/class-product-location-table.php:1122
 #: includes/stock-price-backorder-manage.php:388
@@ -7949,11 +7892,11 @@ msgstr ""
 msgid "Stock"
 msgstr ""
 
-#: includes/stock-price-backorder-manage.php:2404
+#: includes/stock-price-backorder-manage.php:2347
 msgid "Stock & Price"
 msgstr ""
 
-#: admin/dashboard.php:1541
+#: admin/dashboard.php:1539
 msgid "Stock Alerts by Location"
 msgstr ""
 
@@ -7977,15 +7920,15 @@ msgstr ""
 msgid "Stock Display Format"
 msgstr ""
 
-#: admin/dashboard.php:283 admin/dashboard.php:634
+#: admin/dashboard.php:283 admin/dashboard.php:633
 msgid "Stock Level"
 msgstr ""
 
-#: admin/dashboard.php:282 admin/dashboard.php:627
+#: admin/dashboard.php:282 admin/dashboard.php:626
 msgid "STOCK LEVELS BY LOCATION"
 msgstr ""
 
-#: admin/dashboard.php:1492
+#: admin/dashboard.php:1490
 msgid "Stock Levels by Location"
 msgstr ""
 
@@ -8012,10 +7955,6 @@ msgstr ""
 
 #: includes/text-management.php:526
 msgid "Stock Status"
-msgstr ""
-
-#: admin/settings.php:6569
-msgid "Store both keys securely (they are shown only once)"
 msgstr ""
 
 #: admin/settings.php:4860
@@ -8048,7 +7987,7 @@ msgstr ""
 msgid "Store selected location as part of the user's account preferences."
 msgstr ""
 
-#: admin/dashboard.php:255 admin/dashboard.php:543
+#: admin/dashboard.php:255 admin/dashboard.php:542
 msgid "Store:"
 msgstr ""
 
@@ -8089,7 +8028,7 @@ msgstr ""
 msgid "Suffix shown after distance values."
 msgstr ""
 
-#: admin/dashboard.php:260 admin/dashboard.php:555
+#: admin/dashboard.php:260 admin/dashboard.php:554
 msgid "SUMMARY STATISTICS"
 msgstr ""
 
@@ -8103,9 +8042,9 @@ msgstr ""
 msgid "Supplemental note that shows opening time. Use %s for time."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8782
-#: multi-location-product-and-inventory-management-pro.php:8816
-#: multi-location-product-and-inventory-management-pro.php:8816
+#: multi-location-product-and-inventory-management-pro.php:8776
+#: multi-location-product-and-inventory-management-pro.php:8810
+#: multi-location-product-and-inventory-management-pro.php:8810
 msgid "Support"
 msgstr ""
 
@@ -8180,8 +8119,8 @@ msgstr ""
 msgid "Telegram Docs: Bots API"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13608
-#: multi-location-product-and-inventory-management-pro.php:13662
+#: multi-location-product-and-inventory-management-pro.php:13414
+#: multi-location-product-and-inventory-management-pro.php:13468
 msgid "Telegram requires a chat ID (and bot token)."
 msgstr ""
 
@@ -8210,11 +8149,11 @@ msgstr ""
 msgid "Test Floating Notification"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13630
+#: multi-location-product-and-inventory-management-pro.php:13436
 msgid "Test notification"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14209
+#: multi-location-product-and-inventory-management-pro.php:14015
 msgid "Test notification email"
 msgstr ""
 
@@ -8230,7 +8169,7 @@ msgstr ""
 msgid "Test PWA Notification"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13637
+#: multi-location-product-and-inventory-management-pro.php:13443
 msgid "Test sent (check your channel)."
 msgstr ""
 
@@ -8309,7 +8248,7 @@ msgid ""
 "messages."
 msgstr ""
 
-#: admin/dashboard.php:382
+#: admin/dashboard.php:381
 msgid ""
 "Thank you for using Multi Location Product & Inventory Management for "
 "WooCommerce Pro!"
@@ -8345,16 +8284,16 @@ msgid ""
 "This file does not appear to be a valid settings export from this plugin."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14212
+#: multi-location-product-and-inventory-management-pro.php:14018
 msgid ""
 "This is a test email sent from Multi Location Product & Inventory Management."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13631
+#: multi-location-product-and-inventory-management-pro.php:13437
 msgid "This is a test from Multi Location Product & Inventory Management."
 msgstr ""
 
-#: admin/dashboard.php:1349
+#: admin/dashboard.php:1347
 msgid "This Month"
 msgstr ""
 
@@ -8363,18 +8302,18 @@ msgstr ""
 msgid "This order is no longer editable"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:10987
+#: multi-location-product-and-inventory-management-pro.php:10981
 #, php-format
 msgid ""
 "This product is not available at %s. Please select a different location to "
 "view this product."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:10984
+#: multi-location-product-and-inventory-management-pro.php:10978
 msgid "This product is not available in your selected location."
 msgstr ""
 
-#: includes/stock-price-backorder-manage.php:1636
+#: includes/stock-price-backorder-manage.php:1579
 msgid "This product isn't available for your current location."
 msgstr ""
 
@@ -8407,7 +8346,7 @@ msgstr ""
 msgid "Time Range Format"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14218
+#: multi-location-product-and-inventory-management-pro.php:14024
 #, php-format
 msgid "Time: %s"
 msgstr ""
@@ -8452,11 +8391,11 @@ msgstr ""
 msgid "Today Label"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13438
+#: multi-location-product-and-inventory-management-pro.php:13244
 msgid "Today's location performance"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13410
+#: multi-location-product-and-inventory-management-pro.php:13216
 #, php-format
 msgid "Today's performance - %s"
 msgstr ""
@@ -8471,7 +8410,7 @@ msgid ""
 "smaller batches."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11854
+#: multi-location-product-and-inventory-management-pro.php:11848
 msgid "Too many location resolve requests. Please try again shortly."
 msgstr ""
 
@@ -8503,7 +8442,7 @@ msgstr ""
 msgid "Topics Covered"
 msgstr ""
 
-#: admin/dashboard.php:363 admin/dashboard.php:817
+#: admin/dashboard.php:362 admin/dashboard.php:815
 msgid "Total Added"
 msgstr ""
 
@@ -8512,7 +8451,7 @@ msgstr ""
 msgid "Total CSV rows: %d"
 msgstr ""
 
-#: admin/dashboard.php:266 admin/dashboard.php:581 admin/dashboard.php:1455
+#: admin/dashboard.php:266 admin/dashboard.php:580 admin/dashboard.php:1453
 msgid "Total Investment"
 msgstr ""
 
@@ -8524,15 +8463,15 @@ msgstr ""
 msgid "Total location stock exceeds variation default stock"
 msgstr ""
 
-#: admin/dashboard.php:263 admin/dashboard.php:569
+#: admin/dashboard.php:263 admin/dashboard.php:568
 msgid "Total Locations"
 msgstr ""
 
-#: admin/dashboard.php:264 admin/dashboard.php:573
+#: admin/dashboard.php:264 admin/dashboard.php:572
 msgid "Total Orders"
 msgstr ""
 
-#: admin/dashboard.php:262 admin/dashboard.php:565 admin/dashboard.php:1403
+#: admin/dashboard.php:262 admin/dashboard.php:564 admin/dashboard.php:1401
 msgid "Total Products"
 msgstr ""
 
@@ -8545,11 +8484,11 @@ msgstr ""
 msgid "Total Quantity Purchase"
 msgstr ""
 
-#: admin/dashboard.php:265 admin/dashboard.php:577
+#: admin/dashboard.php:265 admin/dashboard.php:576
 msgid "Total Revenue"
 msgstr ""
 
-#: admin/dashboard.php:267 admin/dashboard.php:585 admin/dashboard.php:1132
+#: admin/dashboard.php:267 admin/dashboard.php:584 admin/dashboard.php:1130
 msgid "Total Stock"
 msgstr ""
 
@@ -8566,12 +8505,12 @@ msgstr ""
 msgid "Total Views"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13492
+#: multi-location-product-and-inventory-management-pro.php:13298
 #, php-format
 msgid "Total: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13226
+#: multi-location-product-and-inventory-management-pro.php:13032
 #, php-format
 msgid "Total: %s | Status: %s | Items: %d"
 msgstr ""
@@ -8580,7 +8519,7 @@ msgstr ""
 msgid "Totally restrict (default)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13697
+#: multi-location-product-and-inventory-management-pro.php:13503
 #, php-format
 msgid "Totals - Orders: %d | Items: %d | Revenue: %s"
 msgstr ""
@@ -8678,7 +8617,7 @@ msgstr ""
 msgid "Unable to sync rate. Please try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8688
+#: multi-location-product-and-inventory-management-pro.php:8682
 #: admin/admin.php:4423 admin/admin.php:4476 admin/admin.php:4555
 #: admin/admin.php:4559 admin/admin.php:5342 admin/admin.php:5355
 #: admin/admin.php:5830 includes/order-split-by-location.php:376
@@ -8686,9 +8625,9 @@ msgstr ""
 msgid "Unassigned"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13213
-#: multi-location-product-and-inventory-management-pro.php:13354
-#: multi-location-product-and-inventory-management-pro.php:13485
+#: multi-location-product-and-inventory-management-pro.php:13019
+#: multi-location-product-and-inventory-management-pro.php:13160
+#: multi-location-product-and-inventory-management-pro.php:13291
 #: admin/admin.php:4304 admin/admin.php:5944
 msgid "Unassigned location"
 msgstr ""
@@ -8772,7 +8711,7 @@ msgstr ""
 msgid "updated"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11523
+#: multi-location-product-and-inventory-management-pro.php:11517
 msgid "Updated!"
 msgstr ""
 
@@ -8781,8 +8720,8 @@ msgid "Updating Text"
 msgstr ""
 
 #: multi-location-product-and-inventory-management-pro.php:4812
-#: multi-location-product-and-inventory-management-pro.php:11527
-#: multi-location-product-and-inventory-management-pro.php:11545
+#: multi-location-product-and-inventory-management-pro.php:11521
+#: multi-location-product-and-inventory-management-pro.php:11539
 #: includes/text-management.php:620
 msgid "Updating..."
 msgstr ""
@@ -8859,14 +8798,6 @@ msgstr ""
 msgid "Use first assigned location"
 msgstr ""
 
-#: admin/settings.php:6576
-msgid "Use in X-API-Key header for REST API requests"
-msgstr ""
-
-#: admin/settings.php:6577
-msgid "Use in X-Webhook-Secret header for webhook requests"
-msgstr ""
-
 #: includes/text-management.php:78
 msgid "Use my location"
 msgstr ""
@@ -8920,7 +8851,7 @@ msgstr ""
 msgid "Users"
 msgstr ""
 
-#: admin/dashboard.php:261 admin/dashboard.php:562
+#: admin/dashboard.php:261 admin/dashboard.php:561
 msgid "Value"
 msgstr ""
 
@@ -9020,7 +8951,7 @@ msgstr ""
 msgid "View Documentation"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8815
+#: multi-location-product-and-inventory-management-pro.php:8809
 msgid "View documentation"
 msgstr ""
 
@@ -9050,11 +8981,11 @@ msgstr ""
 msgid "Views: %d | Purchases: %d"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8817
+#: multi-location-product-and-inventory-management-pro.php:8811
 msgid "Visit community forums"
 msgstr ""
 
-#: admin/dashboard.php:2202
+#: admin/dashboard.php:2185
 msgid "vs previous %d day"
 msgid_plural "vs previous %d days"
 msgstr[0] ""
@@ -9075,7 +9006,7 @@ msgstr ""
 msgid "We could not detect your location. Please search for a store."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13533
+#: multi-location-product-and-inventory-management-pro.php:13339
 #, php-format
 msgid "We could not reach %s at %s."
 msgstr ""
@@ -9111,8 +9042,8 @@ msgstr ""
 msgid "Webhook URL"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13612
-#: multi-location-product-and-inventory-management-pro.php:13666
+#: multi-location-product-and-inventory-management-pro.php:13418
+#: multi-location-product-and-inventory-management-pro.php:13472
 msgid "Webhook URL is required for this platform."
 msgstr ""
 
@@ -9167,7 +9098,7 @@ msgstr ""
 msgid "Who should receive order notifications."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12004
+#: multi-location-product-and-inventory-management-pro.php:11998
 msgid "WooCommerce is not available."
 msgstr ""
 
@@ -9191,7 +9122,7 @@ msgstr ""
 msgid "Work"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14229
+#: multi-location-product-and-inventory-management-pro.php:14035
 msgid "wp_mail() reported failure. Please check your SMTP/mail configuration."
 msgstr ""
 
@@ -9282,7 +9213,7 @@ msgid "You do not have permission to import settings."
 msgstr ""
 
 #: multi-location-product-and-inventory-management-pro.php:6599
-#: multi-location-product-and-inventory-management-pro.php:7234
+#: multi-location-product-and-inventory-management-pro.php:7228
 msgid "You do not have permission to modify this location."
 msgstr ""
 
@@ -9291,7 +9222,7 @@ msgstr ""
 #: multi-location-product-and-inventory-management-pro.php:6585
 #: multi-location-product-and-inventory-management-pro.php:6647
 #: multi-location-product-and-inventory-management-pro.php:6900
-#: multi-location-product-and-inventory-management-pro.php:7221
+#: multi-location-product-and-inventory-management-pro.php:7215
 #: admin/api-settings.php:132 admin/api-settings.php:148 admin/settings.php:36
 #: admin/settings.php:84
 msgid "You do not have permission to perform this action."
@@ -9314,7 +9245,7 @@ msgid ""
 "You have unsaved Classic row changes. Leaving this page will discard them."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12120
+#: multi-location-product-and-inventory-management-pro.php:12114
 msgid "You must be logged in to delete locations."
 msgstr ""
 

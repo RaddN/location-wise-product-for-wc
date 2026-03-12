@@ -6139,7 +6139,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <div class="param-item">
                                                 <div class="param-content">
                                                     <div class="param-name">show_title</div>
-                                                    <div class="param-value"><?php echo esc_html_e('on / off - Display title', 'multi-location-product-and-inventory-management'); ?></div>
+                                                    <div class="param-value">on / off <?php echo esc_html_e('- Display title', 'multi-location-product-and-inventory-management'); ?></div>
                                                 </div>
                                                 <span class="param-info">
                                                     !
@@ -6149,7 +6149,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <div class="param-item">
                                                 <div class="param-content">
                                                     <div class="param-name">use_select2</div>
-                                                    <div class="param-value"><?php echo esc_html_e('on / off - Enhanced dropdown', 'multi-location-product-and-inventory-management'); ?></div>
+                                                    <div class="param-value">on / off <?php echo esc_html_e('- Enhanced dropdown', 'multi-location-product-and-inventory-management'); ?></div>
                                                 </div>
                                                 <span class="param-info">
                                                     !
@@ -6159,7 +6159,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <div class="param-item">
                                                 <div class="param-content">
                                                     <div class="param-name">herichical</div>
-                                                    <div class="param-value"><?php echo esc_html_e('on / off / seperately', 'multi-location-product-and-inventory-management'); ?></div>
+                                                    <div class="param-value">on / off / seperately</div>
                                                 </div>
                                                 <span class="param-info">
                                                     !
@@ -6169,7 +6169,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <div class="param-item">
                                                 <div class="param-content">
                                                     <div class="param-name">show_count</div>
-                                                    <div class="param-value"><?php echo esc_html_e('on / off - Show item count', 'multi-location-product-and-inventory-management'); ?></div>
+                                                    <div class="param-value">on / off <?php echo esc_html_e('- Show item count', 'multi-location-product-and-inventory-management'); ?></div>
                                                 </div>
                                                 <span class="param-info">
                                                     !
@@ -6191,7 +6191,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                                     <div class="param-name">enable_user_locations
                                                         <?php echo mulopimfwc_get_pro_class(false, '', '<span style="background: #ff5a36;color: #fff;padding: 3px 6px;border-radius: 4px;">Paid</span>'); ?>
                                                     </div>
-                                                    <div class="param-value"><?php echo esc_html_e('on / off - User locations', 'multi-location-product-and-inventory-management'); ?></div>
+                                                    <div class="param-value">on / off <?php echo esc_html_e('- User locations', 'multi-location-product-and-inventory-management'); ?></div>
                                                 </div>
                                                 <span class="param-info">
                                                     !
@@ -6211,7 +6211,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <div class="param-item">
                                                 <div class="param-content">
                                                     <div class="param-name">multi_line</div>
-                                                    <div class="param-value"><?php echo esc_html_e('on / off - Multi-line display', 'multi-location-product-and-inventory-management'); ?></div>
+                                                    <div class="param-value">on / off <?php echo esc_html_e('- Multi-line display', 'multi-location-product-and-inventory-management'); ?></div>
                                                 </div>
                                                 <span class="param-info">
                                                     !
@@ -6559,22 +6559,22 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                     'url' => 'WordPress Admin → Multi Location Products → API & Webhooks',
                                     'headers' => null,
                                     'body' => [
-                                        'step_1' => 'Navigate to WordPress Admin Dashboard',
-                                        'step_2' => 'Go to: Multi Location Products → API & Webhooks',
-                                        'step_3' => 'Scroll to "API Authentication" section',
-                                        'step_4' => 'Click "Generate API Key" button (if no key exists)',
-                                        'step_5' => 'Copy the generated API key immediately',
-                                        'step_6' => 'Click "Generate Webhook Secret" button (if no secret exists)',
-                                        'step_7' => 'Copy the generated webhook secret immediately',
-                                        'step_8' => 'Store both keys securely (they are shown only once)',
-                                        'important_note' => 'If you lose your keys, you must generate new ones. Old keys will no longer work.',
+                                        'step_1' => __('Navigate to WordPress Admin Dashboard', 'multi-location-product-and-inventory-management'),
+                                        'step_2' => __('Go to: Multi Location Products → API & Webhooks', 'multi-location-product-and-inventory-management'),
+                                        'step_3' => __('Scroll to "API Authentication" section', 'multi-location-product-and-inventory-management'),
+                                        'step_4' => __('Click "Generate API Key" button (if no key exists)', 'multi-location-product-and-inventory-management'),
+                                        'step_5' => __('Copy the generated API key immediately', 'multi-location-product-and-inventory-management'),
+                                        'step_6' => __('Click "Generate Webhook Secret" button (if no secret exists)', 'multi-location-product-and-inventory-management'),
+                                        'step_7' => __('Copy the generated webhook secret immediately', 'multi-location-product-and-inventory-management'),
+                                        'step_8' => __('Store both keys securely (they are shown only once)', 'multi-location-product-and-inventory-management'),
+                                        'important_note' => __('If you lose your keys, you must generate new ones. Old keys will no longer work.', 'multi-location-product-and-inventory-management'),
                                     ],
                                     'response' => [
-                                        'api_key_location' => 'Displayed in "API Key" field after generation',
-                                        'webhook_secret_location' => 'Displayed in "Webhook Secret" field after generation',
-                                        'security_warning' => 'Keys are displayed only once for security. Copy them immediately.',
-                                        'usage_api_key' => 'Use in X-API-Key header for REST API requests',
-                                        'usage_webhook_secret' => 'Use in X-Webhook-Secret header for webhook requests',
+                                        'api_key_location' => __('Displayed in "API Key" field after generation', 'multi-location-product-and-inventory-management'),
+                                        'webhook_secret_location' => __('Displayed in "Webhook Secret" field after generation', 'multi-location-product-and-inventory-management'),
+                                        'security_warning' => __('Keys are displayed only once for security. Copy them immediately.', 'multi-location-product-and-inventory-management'),
+                                        'usage_api_key' => __('Use in X-API-Key header for REST API requests', 'multi-location-product-and-inventory-management'),
+                                        'usage_webhook_secret' => __('Use in X-Webhook-Secret header for webhook requests', 'multi-location-product-and-inventory-management'),
                                     ]
                                 ],
                                 'bulk_sync' => [
