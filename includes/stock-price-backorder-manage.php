@@ -606,6 +606,56 @@ function mulopimfwc_is_backorder_allowed($value)
     return in_array($normalized, ['yes', 'notify'], true);
 }
 
+/**
+ * Resolve the effective backorder setting for a product or variation at a location.
+ *
+ * Falls back to the product-level WooCommerce backorder setting when no
+ * location-specific override exists.
+ *
+ * @param int $target_id Product or variation ID.
+ * @param int $location_id Location term ID.
+ * @return string WooCommerce backorder value: no|notify|yes or empty string.
+ */
+function mulopimfwc_get_effective_location_backorders($target_id, $location_id)
+{
+    $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_id, true);
+    $normalized_location_backorders = mulopimfwc_normalize_backorder_value($location_backorders, 'woocommerce');
+
+    if ($normalized_location_backorders !== '') {
+        return $normalized_location_backorders;
+    }
+
+    $product = wc_get_product($target_id);
+    return $product ? (string) $product->get_backorders() : '';
+}
+
+/**
+ * Apply a location stock delta while respecting backorder rules.
+ *
+ * Positive deltas reduce stock. Negative deltas restore stock.
+ *
+ * @param mixed $current_stock Raw stored location stock value.
+ * @param int $quantity_delta Positive to reduce, negative to restore.
+ * @param mixed $backorders Raw or normalized backorder value.
+ * @return int
+ */
+function mulopimfwc_get_adjusted_location_stock_quantity($current_stock, $quantity_delta, $backorders)
+{
+    $current_stock_int = (int) $current_stock;
+    $quantity_delta = (int) $quantity_delta;
+    $new_stock = $current_stock_int - $quantity_delta;
+
+    if ($quantity_delta <= 0) {
+        return $new_stock;
+    }
+
+    if (mulopimfwc_is_backorder_allowed($backorders)) {
+        return $new_stock;
+    }
+
+    return max(0, $new_stock);
+}
+
 if (!function_exists('mulopimfwc_is_product_assigned_to_location_for_info')) {
     /**
      * Check whether a product is currently assigned to a specific location slug.
@@ -1092,7 +1142,8 @@ add_action('woocommerce_reduce_order_stock', function ($order) {
 
         if ($current_stock !== '') {
             $old_stock_int = (int) $current_stock;
-            $new_stock = max(0, $old_stock_int - (int) $quantity);
+            $effective_backorders = mulopimfwc_get_effective_location_backorders($target_id, $location_id);
+            $new_stock = mulopimfwc_get_adjusted_location_stock_quantity($old_stock_int, $quantity, $effective_backorders);
             update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
 
             // Trigger low/out-of-stock alerts when crossing thresholds (order-time stock reduction)

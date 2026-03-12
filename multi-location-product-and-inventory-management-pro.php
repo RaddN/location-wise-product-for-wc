@@ -4942,14 +4942,14 @@ if (!function_exists('mulopimfwc_get_values')) {
             if ($enable_location_stock) {
                 $new_location_id = $new_location_term->term_id;
                 $new_location_stock = get_post_meta($target_id, '_location_stock_' . $new_location_id, true);
-                $new_location_backorders = get_post_meta($target_id, '_location_backorders_' . $new_location_id, true);
+                $new_location_backorders = mulopimfwc_get_effective_location_backorders($target_id, $new_location_id);
                 
                 // Check if new location has enough stock
                 if ($new_location_stock !== '') {
                     $available_stock = (int) $new_location_stock;
                     
                     // If backorders are not allowed and we don't have enough stock
-                    if ($new_location_backorders === 'off' && $available_stock < $quantity) {
+                    if (!mulopimfwc_is_backorder_allowed($new_location_backorders) && $available_stock < $quantity) {
                         $product = wc_get_product($target_id);
                         $product_name = $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management');
                         
@@ -4987,7 +4987,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 
                 if ($new_stock !== '') {
                     $current_stock_int = (int) $new_stock;
-                    $updated_stock = max(0, $current_stock_int - (int) $quantity);
+                    $updated_stock = mulopimfwc_get_adjusted_location_stock_quantity($current_stock_int, $quantity, $new_location_backorders);
                     update_post_meta($target_id, '_location_stock_' . $new_location_id, $updated_stock);
                 }
             }
@@ -5261,7 +5261,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             }
 
             // Get backorder setting
-            $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location_id, true);
+            $location_backorders = mulopimfwc_get_effective_location_backorders($target_id, $location_id);
 
             // Calculate quantity difference
             $quantity_difference = $new_quantity - $old_quantity;
@@ -5271,7 +5271,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $available_stock = (int) $location_stock;
                 
                 // If backorders are not allowed and we don't have enough stock
-                if ($location_backorders === 'off' && $available_stock < $quantity_difference) {
+                if (!mulopimfwc_is_backorder_allowed($location_backorders) && $available_stock < $quantity_difference) {
                     $location_term = get_term($location_id, 'mulopimfwc_store_location');
                     $location_name = $location_term && !is_wp_error($location_term) ? $location_term->name : $location_slug;
                     $product = wc_get_product($target_id);
@@ -5310,7 +5310,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             // Update stock based on quantity difference
             $current_stock_int = (int) $location_stock;
-            $new_stock = max(0, $current_stock_int - $quantity_difference);
+            $new_stock = mulopimfwc_get_adjusted_location_stock_quantity($current_stock_int, $quantity_difference, $location_backorders);
             update_post_meta($target_id, '_location_stock_' . $location_id, $new_stock);
 
             // Get order for logging
