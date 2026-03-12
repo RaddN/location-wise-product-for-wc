@@ -1150,12 +1150,18 @@ add_action('woocommerce_reduce_order_stock', function ($order) {
             if (function_exists('mulopimfwc_send_location_stock_alert')) {
                 $location_term = get_term($location_id, 'mulopimfwc_store_location');
                 if ($location_term && !is_wp_error($location_term)) {
-                    $low_threshold = function_exists('mulopimfwc_get_location_threshold')
-                        ? mulopimfwc_get_location_threshold($location_id, 'low')
-                        : 5;
-                    $out_threshold = function_exists('mulopimfwc_get_location_threshold')
-                        ? mulopimfwc_get_location_threshold($location_id, 'out')
-                        : 0;
+                    $thresholds = function_exists('mulopimfwc_resolve_stock_alert_thresholds')
+                        ? mulopimfwc_resolve_stock_alert_thresholds($target_id, $location_id)
+                        : [
+                            'low_threshold' => function_exists('mulopimfwc_get_location_threshold')
+                                ? mulopimfwc_get_location_threshold($location_id, 'low')
+                                : 5,
+                            'out_threshold' => function_exists('mulopimfwc_get_location_threshold')
+                                ? mulopimfwc_get_location_threshold($location_id, 'out')
+                                : 0,
+                        ];
+                    $low_threshold = (int) ($thresholds['low_threshold'] ?? 0);
+                    $out_threshold = (int) ($thresholds['out_threshold'] ?? 0);
 
                     // Out of stock alert
                     if ($new_stock <= $out_threshold && $old_stock_int > $out_threshold) {

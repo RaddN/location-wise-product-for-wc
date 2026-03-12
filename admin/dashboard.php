@@ -351,6 +351,7 @@ class MULOPIMFWC_Dashboard
             ]);
             foreach ($low_stock_products as $item) {
                 $status = $item['stock'] == 0 ? __('⚠ Out of Stock', 'multi-location-product-and-inventory-management') : __('⚡ Low Stock', 'multi-location-product-and-inventory-management');
+                $status = isset($item['status_label']) ? $item['status_label'] : $status;
                 fputcsv($output, [$item['product_title'], $item['location_name'], $item['stock'], $status]);
             }
             fputcsv($output, ['']);
@@ -776,16 +777,17 @@ class MULOPIMFWC_Dashboard
                     $row_count = 0;
                     foreach ($low_stock_products as $item) :
                         $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                        $is_out_of_stock = isset($item['status']) && $item['status'] === 'out_of_stock';
                     ?>
                         <tr<?php echo $row_class; ?>>
                             <td><?php echo esc_html($item['product_title']); ?></td>
                             <td><?php echo esc_html($item['location_name']); ?></td>
-                            <td class="<?php echo $item['stock'] == 0 ? 'stock-out' : 'stock-low'; ?>">
+                            <td class="<?php echo $is_out_of_stock ? 'stock-out' : 'stock-low'; ?>">
                                 <?php echo esc_html($item['stock']); ?>
                             </td>
                             <td>
-                                <span class="status-badge <?php echo $item['stock'] == 0 ? 'status-out' : 'status-low'; ?>">
-                                    <?php echo $item['stock'] == 0 ? esc_html__('Out of Stock', 'multi-location-product-and-inventory-management') : esc_html__('Low Stock', 'multi-location-product-and-inventory-management'); ?>
+                                <span class="status-badge <?php echo $is_out_of_stock ? 'status-out' : 'status-low'; ?>">
+                                    <?php echo esc_html(isset($item['status_label']) ? $item['status_label'] : __('Low Stock', 'multi-location-product-and-inventory-management')); ?>
                                 </span>
                             </td>
                             </tr>
@@ -1538,73 +1540,94 @@ class MULOPIMFWC_Dashboard
                         <div class="lwp-card">
                             <h2><?php esc_html_e('Stock Alerts by Location', 'multi-location-product-and-inventory-management'); ?></h2>
                             <?php
-                            global $mulopimfwc_options;
                             $low_stock_products   = $this->get_low_stock_products_efficiently();
-                            $low_stock_sample_products = [
+                            $low_stock_sample_products = array_map([$this, 'normalize_stock_alert_item'], [
                                 [
                                     "product_id" => 1,
                                     "product_title" => "Apple Laptop",
                                     "location_name" => "New York",
-                                    "stock" => 0
+                                    "location_id" => 1,
+                                    "stock" => 0,
+                                    "status" => "out_of_stock"
                                 ],
                                 [
                                     "product_id" => 2,
                                     "product_title" => "Samsung Galaxy Phone",
                                     "location_name" => "Los Angeles",
-                                    "stock" => 2
+                                    "location_id" => 2,
+                                    "stock" => 2,
+                                    "status" => "low_stock"
                                 ],
                                 [
                                     "product_id" => 3,
                                     "product_title" => "Dell XPS 15",
                                     "location_name" => "Chicago",
-                                    "stock" => 1
+                                    "location_id" => 3,
+                                    "stock" => 1,
+                                    "status" => "low_stock"
                                 ],
                                 [
                                     "product_id" => 4,
                                     "product_title" => "Sony Headphones",
                                     "location_name" => "Miami",
-                                    "stock" => 0
+                                    "location_id" => 4,
+                                    "stock" => 0,
+                                    "status" => "out_of_stock"
                                 ],
                                 [
                                     "product_id" => 5,
                                     "product_title" => "LG OLED TV",
                                     "location_name" => "Houston",
-                                    "stock" => 3
+                                    "location_id" => 5,
+                                    "stock" => 3,
+                                    "status" => "low_stock"
                                 ],
                                 [
                                     "product_id" => 6,
                                     "product_title" => "Amazon Echo",
                                     "location_name" => "Seattle",
-                                    "stock" => 1
+                                    "location_id" => 6,
+                                    "stock" => 1,
+                                    "status" => "low_stock"
                                 ],
                                 [
                                     "product_id" => 7,
                                     "product_title" => "Microsoft Surface Pro",
                                     "location_name" => "San Francisco",
-                                    "stock" => 2
+                                    "location_id" => 7,
+                                    "stock" => 2,
+                                    "status" => "low_stock"
                                 ],
                                 [
                                     "product_id" => 8,
                                     "product_title" => "Bose SoundLink Speaker",
                                     "location_name" => "Boston",
-                                    "stock" => 0
+                                    "location_id" => 8,
+                                    "stock" => 0,
+                                    "status" => "out_of_stock"
                                 ],
                                 [
                                     "product_id" => 9,
                                     "product_title" => "iPad Pro",
                                     "location_name" => "Atlanta",
-                                    "stock" => 1
+                                    "location_id" => 9,
+                                    "stock" => 1,
+                                    "status" => "low_stock"
                                 ],
                                 [
                                     "product_id" => 10,
                                     "product_title" => "Fitbit Charge 5",
                                     "location_name" => "Denver",
-                                    "stock" => 0
+                                    "location_id" => 10,
+                                    "stock" => 0,
+                                    "status" => "out_of_stock"
                                 ]
-                            ];
+                            ]);
 
                             $low_stock_products = mulopimfwc_get_pro_class(false, $low_stock_products, $low_stock_sample_products);
-                            $out_of_stock_threshold = isset($mulopimfwc_options['out_of_stock_threshold']) ? (int) $mulopimfwc_options['out_of_stock_threshold'] : 0;
+                            if (is_array($low_stock_products)) {
+                                $low_stock_products = array_values(array_map([$this, 'normalize_stock_alert_item'], $low_stock_products));
+                            }
 
                             if (!empty($low_stock_products)) : ?>
                                 <table class="lwp-low-stock-table <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
@@ -1621,7 +1644,7 @@ class MULOPIMFWC_Dashboard
                                             <tr>
                                                 <td>
                                                     <?php if ($can_manage_products) : ?>
-                                                        <a href="<?php echo esc_url(get_edit_post_link($item['product_id'])); ?>">
+                                                        <a href="<?php echo esc_url(get_edit_post_link((int) ($item['edit_post_id'] ?? $item['product_id']))); ?>">
                                                             <?php echo esc_html($item['product_title']); ?>
                                                         </a>
                                                     <?php else : ?>
@@ -1630,19 +1653,13 @@ class MULOPIMFWC_Dashboard
                                                 </td>
                                                 <td><?php echo esc_html($item['location_name']); ?></td>
                                                 <td>
-                                                    <span class="stock-quantity <?php echo (int) $item['stock'] <= $out_of_stock_threshold ? 'out-of-stock' : 'low-stock'; ?>">
+                                                    <span class="stock-quantity <?php echo esc_attr($item['status_class'] ?? 'low-stock'); ?>">
                                                         <?php echo esc_html($item['stock']); ?>
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span class="stock-status <?php echo (int) $item['stock'] <= $out_of_stock_threshold ? 'out-of-stock' : 'low-stock'; ?>">
-                                                        <?php
-                                                        if ((int) $item['stock'] <= $out_of_stock_threshold) {
-                                                            esc_html_e('Out of Stock', 'multi-location-product-and-inventory-management');
-                                                        } else {
-                                                            esc_html_e('Low Stock', 'multi-location-product-and-inventory-management');
-                                                        }
-                                                        ?>
+                                                    <span class="stock-status <?php echo esc_attr($item['status_class'] ?? 'low-stock'); ?>">
+                                                        <?php echo esc_html($item['status_label'] ?? __('Low Stock', 'multi-location-product-and-inventory-management')); ?>
                                                     </span>
                                                 </td>
                                             </tr>
@@ -2425,21 +2442,115 @@ class MULOPIMFWC_Dashboard
 
 
     /**
-     * Get low stock products efficiently with limit
+     * Normalize stock alert rows so every renderer consumes the same shape.
+     */
+    private function normalize_stock_alert_item(array $item): array
+    {
+        $product_id = isset($item['product_id']) ? absint($item['product_id']) : 0;
+        $location_id = isset($item['location_id']) ? absint($item['location_id']) : 0;
+        $status = isset($item['status']) && $item['status'] === 'out_of_stock' ? 'out_of_stock' : 'low_stock';
+
+        $item['product_id'] = $product_id;
+        $item['location_id'] = $location_id;
+        $item['edit_post_id'] = isset($item['edit_post_id']) ? absint($item['edit_post_id']) : $product_id;
+        $item['stock'] = isset($item['stock']) ? (int) $item['stock'] : 0;
+        $item['status'] = $status;
+        $item['status_class'] = isset($item['status_class']) && $item['status_class'] !== ''
+            ? sanitize_html_class($item['status_class'])
+            : ($status === 'out_of_stock' ? 'out-of-stock' : 'low-stock');
+        $item['status_label'] = isset($item['status_label']) && $item['status_label'] !== ''
+            ? (string) $item['status_label']
+            : ($status === 'out_of_stock'
+                ? __('Out of Stock', 'multi-location-product-and-inventory-management')
+                : __('Low Stock', 'multi-location-product-and-inventory-management'));
+        $item['alert_key'] = isset($item['alert_key']) && is_string($item['alert_key']) && $item['alert_key'] !== ''
+            ? $item['alert_key']
+            : sprintf('%d:%d', $product_id, $location_id);
+
+        return $item;
+    }
+
+    /**
+     * Build a normalized stock alert row from a location stock record.
+     */
+    private function build_stock_alert_item($location, $result)
+    {
+        $product_id = isset($result->ID) ? absint($result->ID) : 0;
+        $location_id = isset($location->term_id) ? absint($location->term_id) : 0;
+        if ($product_id <= 0 || $location_id <= 0) {
+            return null;
+        }
+
+        $stock = isset($result->stock) ? (int) $result->stock : 0;
+        $stock_state = function_exists('mulopimfwc_get_stock_alert_state')
+            ? mulopimfwc_get_stock_alert_state($stock, $product_id, $location_id)
+            : [
+                'is_alert' => true,
+                'status' => $stock <= 0 ? 'out_of_stock' : 'low_stock',
+                'status_class' => $stock <= 0 ? 'out-of-stock' : 'low-stock',
+                'status_label' => $stock <= 0
+                    ? __('Out of Stock', 'multi-location-product-and-inventory-management')
+                    : __('Low Stock', 'multi-location-product-and-inventory-management'),
+                'low_threshold' => 0,
+                'out_threshold' => 0,
+                'low_source' => '',
+                'out_source' => '',
+            ];
+
+        if (empty($stock_state['is_alert']) || !in_array($stock_state['status'], ['low_stock', 'out_of_stock'], true)) {
+            return null;
+        }
+
+        $product_title = isset($result->post_title) ? (string) $result->post_title : '';
+        $edit_post_id = $product_id;
+
+        if (function_exists('wc_get_product')) {
+            $product = wc_get_product($product_id);
+            if ($product) {
+                $product_title = wp_strip_all_tags($product->get_formatted_name());
+                if ($product->is_type('variation') && $product->get_parent_id() > 0) {
+                    $edit_post_id = (int) $product->get_parent_id();
+                }
+            }
+        }
+
+        if ($product_title === '') {
+            $product_title = !empty($result->parent_title) ? (string) $result->parent_title : ('#' . $product_id);
+        }
+
+        return $this->normalize_stock_alert_item([
+            'alert_key' => sprintf('%d:%d', $product_id, $location_id),
+            'product_id' => $product_id,
+            'edit_post_id' => $edit_post_id,
+            'product_title' => $product_title,
+            'product_type' => isset($result->post_type) ? (string) $result->post_type : 'product',
+            'location_id' => $location_id,
+            'location_name' => isset($location->name) ? $location->name : '',
+            'stock' => $stock,
+            'status' => $stock_state['status'],
+            'status_class' => $stock_state['status_class'] ?? '',
+            'status_label' => $stock_state['status_label'] ?? '',
+            'low_threshold' => (int) ($stock_state['low_threshold'] ?? 0),
+            'out_threshold' => (int) ($stock_state['out_threshold'] ?? 0),
+            'low_threshold_source' => (string) ($stock_state['low_source'] ?? ''),
+            'out_threshold_source' => (string) ($stock_state['out_source'] ?? ''),
+        ]);
+    }
+
+    /**
+     * Get low stock products efficiently with limit.
      */
     private function get_low_stock_products_efficiently($location_filter = 'all')
     {
-        global $wpdb, $mulopimfwc_locations, $mulopimfwc_options;
+        global $wpdb, $mulopimfwc_locations;
 
         if (empty($mulopimfwc_locations)) {
             return [];
         }
 
         $low_stock_products = [];
-
         $locations_to_check = $mulopimfwc_locations;
 
-        // Filter by specific location if needed
         if ($location_filter !== 'all') {
             $locations_to_check = array_filter($mulopimfwc_locations, function ($loc) use ($location_filter) {
                 return $loc->slug === $location_filter;
@@ -2448,10 +2559,14 @@ class MULOPIMFWC_Dashboard
 
         foreach ($locations_to_check as $location) {
             $meta_key = '_location_stock_' . $location->term_id;
-            $threshold = mulopimfwc_get_location_threshold($location->term_id, 'low');
-            if ($threshold < 0) {
-                $threshold = 0;
-            }
+            $baseline_thresholds = function_exists('mulopimfwc_resolve_stock_alert_thresholds')
+                ? mulopimfwc_resolve_stock_alert_thresholds(0, (int) $location->term_id)
+                : [
+                    'low_threshold' => mulopimfwc_get_location_threshold($location->term_id, 'low'),
+                    'out_threshold' => mulopimfwc_get_location_threshold($location->term_id, 'out'),
+                ];
+            $baseline_low_threshold = max(0, (int) ($baseline_thresholds['low_threshold'] ?? 0));
+            $baseline_out_threshold = max(0, (int) ($baseline_thresholds['out_threshold'] ?? 0));
 
             $term_taxonomy_id = isset($location->term_taxonomy_id) ? (int) $location->term_taxonomy_id : 0;
             if ($term_taxonomy_id <= 0) {
@@ -2467,28 +2582,57 @@ class MULOPIMFWC_Dashboard
             }
 
             $query = $wpdb->prepare("
-            SELECT p.ID, p.post_title, pm.meta_value as stock
-            FROM {$wpdb->posts} p
-            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = %s
-            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id AND tr.term_taxonomy_id = %d
-            WHERE p.post_type = 'product' 
-            AND p.post_status = 'publish'
-            AND CAST(pm.meta_value AS SIGNED) <= %d
-            AND pm.meta_value != ''
-            ORDER BY CAST(pm.meta_value AS SIGNED) ASC
-            LIMIT 20
-        ", $meta_key, $term_taxonomy_id, $threshold);
+                SELECT DISTINCT p.ID, p.post_parent, p.post_type, p.post_title, parent.post_title AS parent_title,
+                       pm.meta_value AS stock,
+                       low_pm.meta_value AS product_low_threshold,
+                       parent_low_pm.meta_value AS parent_low_threshold
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = %s
+                INNER JOIN {$wpdb->term_relationships} tr ON tr.term_taxonomy_id = %d
+                    AND (
+                        tr.object_id = p.ID
+                        OR (p.post_type = 'product_variation' AND p.post_parent > 0 AND tr.object_id = p.post_parent)
+                    )
+                LEFT JOIN {$wpdb->posts} parent ON parent.ID = p.post_parent
+                LEFT JOIN {$wpdb->postmeta} low_pm ON low_pm.post_id = p.ID AND low_pm.meta_key = %s
+                LEFT JOIN {$wpdb->postmeta} parent_low_pm ON parent_low_pm.post_id = p.post_parent AND parent_low_pm.meta_key = %s
+                WHERE p.post_type IN ('product', 'product_variation')
+                    AND p.post_status = 'publish'
+                    AND pm.meta_value IS NOT NULL
+                    AND pm.meta_value != ''
+                ORDER BY CAST(pm.meta_value AS SIGNED) ASC, p.ID ASC
+            ", $meta_key, $term_taxonomy_id, '_low_stock_amount', '_low_stock_amount');
 
             $results = $wpdb->get_results($query);
+            $matches_for_location = 0;
 
             foreach ($results as $result) {
-                $low_stock_products[] = [
-                    'product_id' => $result->ID,
-                    'location_id' => $location->term_id,
-                    'product_title' => $result->post_title,
-                    'location_name' => $location->name,
-                    'stock' => (int) $result->stock
-                ];
+                $stock = (int) $result->stock;
+                $product_low_threshold = null;
+
+                if ($result->product_low_threshold !== '' && $result->product_low_threshold !== null) {
+                    $product_low_threshold = max(0, (int) $result->product_low_threshold);
+                } elseif ($result->post_type === 'product_variation' && $result->parent_low_threshold !== '' && $result->parent_low_threshold !== null) {
+                    $product_low_threshold = max(0, (int) $result->parent_low_threshold);
+                }
+
+                $effective_low_threshold = $product_low_threshold !== null ? $product_low_threshold : $baseline_low_threshold;
+                $effective_alert_threshold = max($effective_low_threshold, $baseline_out_threshold);
+                if ($stock > $effective_alert_threshold) {
+                    continue;
+                }
+
+                $item = $this->build_stock_alert_item($location, $result);
+                if ($item === null) {
+                    continue;
+                }
+
+                $low_stock_products[] = $item;
+                $matches_for_location++;
+
+                if ($matches_for_location >= 20) {
+                    break;
+                }
             }
         }
 
@@ -3999,14 +4143,17 @@ class MULOPIMFWC_Dashboard
             }
         }
 
-        $low_stock_items = array_filter($payload['low_stock_products'], fn($item) => isset($item['stock']));
+        $low_stock_items = array_values(array_filter($payload['low_stock_products'], static function ($item) {
+            return isset($item['stock']) && (($item['status'] ?? '') === 'low_stock');
+        }));
         if (!empty($low_stock_items)) {
             // Create individual alerts for each low stock product
             foreach (array_slice($low_stock_items, 0, 5) as $item) {
                 $product_id = isset($item['product_id']) ? $item['product_id'] : 0;
+                $edit_post_id = isset($item['edit_post_id']) ? (int) $item['edit_post_id'] : $product_id;
                 $product_url = $fallback_product_url;
                 if ($can_manage_products && $product_id) {
-                    $product_url = get_edit_post_link($product_id);
+                    $product_url = get_edit_post_link($edit_post_id) ?: $fallback_product_url;
                 }
                 $alerts[] = $this->format_alert(
                     'low_stock',
@@ -4023,15 +4170,17 @@ class MULOPIMFWC_Dashboard
             }
         }
 
-        $out_threshold = isset($options['out_of_stock_threshold']) ? (int) $options['out_of_stock_threshold'] : 0;
-        $out_of_stock = array_filter($payload['low_stock_products'], fn($item) => isset($item['stock']) && (int) $item['stock'] <= $out_threshold);
+        $out_of_stock = array_values(array_filter($payload['low_stock_products'], static function ($item) {
+            return isset($item['stock']) && (($item['status'] ?? '') === 'out_of_stock');
+        }));
         if (!empty($out_of_stock)) {
             // Create individual alerts for each out of stock product
             foreach (array_slice($out_of_stock, 0, 5) as $item) {
                 $product_id = isset($item['product_id']) ? $item['product_id'] : 0;
+                $edit_post_id = isset($item['edit_post_id']) ? (int) $item['edit_post_id'] : $product_id;
                 $product_url = $fallback_product_url;
                 if ($can_manage_products && $product_id) {
-                    $product_url = get_edit_post_link($product_id);
+                    $product_url = get_edit_post_link($edit_post_id) ?: $fallback_product_url;
                 }
                 $alerts[] = $this->format_alert(
                     'out_of_stock',
@@ -4088,36 +4237,68 @@ class MULOPIMFWC_Dashboard
             );
         }
 
-        $previous_snapshot = get_option('mulopimfwc_live_low_stock_snapshot', []);
-        $current_snapshot = [];
-        foreach ($payload['low_stock_products'] as $item) {
-            if (isset($item['product_id'])) {
-                $current_snapshot[$item['product_id']] = intval($item['stock']);
+        $raw_previous_snapshot = get_option('mulopimfwc_live_low_stock_snapshot', []);
+        $previous_snapshot = [];
+        $has_legacy_snapshot = false;
+        if (is_array($raw_previous_snapshot)) {
+            foreach ($raw_previous_snapshot as $snapshot_key => $snapshot_item) {
+                if (!is_array($snapshot_item) || empty($snapshot_item['product_title']) || empty($snapshot_item['location_name'])) {
+                    $has_legacy_snapshot = true;
+                    continue;
+                }
+
+                $previous_snapshot[(string) $snapshot_key] = $snapshot_item;
             }
         }
+
+        $current_snapshot = [];
+        foreach ($payload['low_stock_products'] as $item) {
+            if (!empty($item['alert_key'])) {
+                $current_snapshot[(string) $item['alert_key']] = [
+                    'product_id' => absint($item['product_id'] ?? 0),
+                    'edit_post_id' => absint($item['edit_post_id'] ?? ($item['product_id'] ?? 0)),
+                    'product_title' => (string) ($item['product_title'] ?? ''),
+                    'location_id' => absint($item['location_id'] ?? 0),
+                    'location_name' => (string) ($item['location_name'] ?? ''),
+                    'stock' => (int) ($item['stock'] ?? 0),
+                    'status' => (string) ($item['status'] ?? ''),
+                ];
+            }
+        }
+
         $restocked = [];
-        foreach ($previous_snapshot as $product_id => $stock) {
-            if (!isset($current_snapshot[$product_id])) {
-                $restocked[] = $product_id;
+        if (!$has_legacy_snapshot) {
+            foreach ($previous_snapshot as $alert_key => $snapshot_item) {
+                if (!isset($current_snapshot[$alert_key])) {
+                    $restocked[$alert_key] = $snapshot_item;
+                }
             }
         }
         update_option('mulopimfwc_live_low_stock_snapshot', $current_snapshot);
         if (!empty($restocked)) {
-            sort($restocked, SORT_NUMERIC);
             $titles = [];
-            foreach ($restocked as $product_id) {
-                $product = wc_get_product($product_id);
-                if ($product) {
-                    $titles[] = $product->get_name();
+            $product_ids = [];
+            foreach ($restocked as $snapshot_item) {
+                $product_id = absint($snapshot_item['product_id'] ?? 0);
+                if ($product_id > 0) {
+                    $product_ids[] = $product_id;
+                }
+
+                $product_title = trim((string) ($snapshot_item['product_title'] ?? ''));
+                $location_name = trim((string) ($snapshot_item['location_name'] ?? ''));
+                if ($product_title !== '') {
+                    $titles[] = $location_name !== '' ? sprintf('%s (%s)', $product_title, $location_name) : $product_title;
                 }
             }
             if (!empty($titles)) {
+                $product_ids = array_values(array_unique($product_ids));
+                sort($product_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     'restocked',
                     sprintf(__('Restocked: %s', 'multi-location-product-and-inventory-management'), implode(', ', array_slice($titles, 0, 3))),
                     'info',
                     [
-                        'product_ids' => $restocked,
+                        'product_ids' => $product_ids,
                         'count' => count($restocked),
                     ]
                 );

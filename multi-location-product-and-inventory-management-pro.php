@@ -7025,8 +7025,14 @@ if (!function_exists('mulopimfwc_get_values')) {
                         // Notify when crossing thresholds
                         $location_term = get_term($location_id, 'mulopimfwc_store_location');
                         if ($location_term && !is_wp_error($location_term)) {
-                            $low_threshold = mulopimfwc_get_location_threshold($location_id, 'low');
-                            $out_threshold = mulopimfwc_get_location_threshold($location_id, 'out');
+                            $thresholds = function_exists('mulopimfwc_resolve_stock_alert_thresholds')
+                                ? mulopimfwc_resolve_stock_alert_thresholds($product_id, $location_id)
+                                : [
+                                    'low_threshold' => mulopimfwc_get_location_threshold($location_id, 'low'),
+                                    'out_threshold' => mulopimfwc_get_location_threshold($location_id, 'out'),
+                                ];
+                            $low_threshold = (int) ($thresholds['low_threshold'] ?? 0);
+                            $out_threshold = (int) ($thresholds['out_threshold'] ?? 0);
 
                             $old_stock_int = ($old_stock === '' || $old_stock === null) ? null : (int) $old_stock;
 
@@ -12187,6 +12193,185 @@ if (!function_exists('mulopimfwc_get_values')) {
     }
 
     /**
+     * Get an explicit location threshold without applying plugin/global fallback.
+     */
+    function mulopimfwc_get_explicit_location_threshold($location_id, $type = 'low')
+    {
+        $location_id = absint($location_id);
+        if ($location_id <= 0) {
+            return null;
+        }
+
+        $meta_key = $type === 'out' ? 'out_of_stock_threshold' : 'low_stock_threshold';
+        $value = get_term_meta($location_id, $meta_key, true);
+
+        if ($value === '' || $value === null) {
+            return null;
+        }
+
+        return max(0, (int) $value);
+    }
+
+    /**
+     * Get an explicit plugin threshold without applying WooCommerce fallback.
+     */
+    function mulopimfwc_get_explicit_plugin_stock_threshold($type = 'low')
+    {
+        global $mulopimfwc_options;
+
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        $option_key = $type === 'out' ? 'out_of_stock_threshold' : 'low_stock_threshold';
+        if (!is_array($options) || !array_key_exists($option_key, $options)) {
+            return null;
+        }
+
+        $value = $options[$option_key];
+        if ($value === '' || $value === null) {
+            return null;
+        }
+
+        return max(0, (int) $value);
+    }
+
+    /**
+     * Get the explicit WooCommerce product low-stock threshold, including variation parent fallback.
+     */
+    function mulopimfwc_get_product_low_stock_threshold($product_or_id = 0)
+    {
+        $product_id = 0;
+        $parent_id = 0;
+
+        if (is_object($product_or_id) && method_exists($product_or_id, 'get_id')) {
+            $product_id = absint($product_or_id->get_id());
+            if (method_exists($product_or_id, 'is_type') && $product_or_id->is_type('variation') && method_exists($product_or_id, 'get_parent_id')) {
+                $parent_id = absint($product_or_id->get_parent_id());
+            }
+        } else {
+            $product_id = absint($product_or_id);
+            if ($product_id > 0) {
+                $product_post = get_post($product_id);
+                if ($product_post && $product_post->post_type === 'product_variation') {
+                    $parent_id = absint($product_post->post_parent);
+                }
+            }
+        }
+
+        if ($product_id <= 0) {
+            return null;
+        }
+
+        $value = get_post_meta($product_id, '_low_stock_amount', true);
+        if ($value !== '' && $value !== null) {
+            return max(0, (int) $value);
+        }
+
+        if ($parent_id > 0) {
+            $parent_value = get_post_meta($parent_id, '_low_stock_amount', true);
+            if ($parent_value !== '' && $parent_value !== null) {
+                return max(0, (int) $parent_value);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get WooCommerce stock thresholds.
+     */
+    function mulopimfwc_get_woocommerce_stock_threshold($type = 'low')
+    {
+        if ($type === 'out') {
+            return max(0, (int) get_option('woocommerce_notify_no_stock_amount', 0));
+        }
+
+        return max(0, (int) get_option('woocommerce_notify_low_stock_amount', 2));
+    }
+
+    /**
+     * Resolve effective thresholds for stock alerts.
+     *
+     * Order: product threshold > location threshold > plugin fallback > WooCommerce global.
+     */
+    function mulopimfwc_resolve_stock_alert_thresholds($product_or_id = 0, $location_id = 0)
+    {
+        $low_threshold = mulopimfwc_get_product_low_stock_threshold($product_or_id);
+        $low_source = $low_threshold !== null ? 'product' : '';
+
+        if ($low_threshold === null) {
+            $low_threshold = mulopimfwc_get_explicit_location_threshold($location_id, 'low');
+            $low_source = $low_threshold !== null ? 'location' : '';
+        }
+
+        if ($low_threshold === null) {
+            $low_threshold = mulopimfwc_get_explicit_plugin_stock_threshold('low');
+            $low_source = $low_threshold !== null ? 'plugin' : '';
+        }
+
+        if ($low_threshold === null) {
+            $low_threshold = mulopimfwc_get_woocommerce_stock_threshold('low');
+            $low_source = 'woocommerce';
+        }
+
+        $out_threshold = mulopimfwc_get_explicit_location_threshold($location_id, 'out');
+        $out_source = $out_threshold !== null ? 'location' : '';
+
+        if ($out_threshold === null) {
+            $out_threshold = mulopimfwc_get_explicit_plugin_stock_threshold('out');
+            $out_source = $out_threshold !== null ? 'plugin' : '';
+        }
+
+        if ($out_threshold === null) {
+            $out_threshold = mulopimfwc_get_woocommerce_stock_threshold('out');
+            $out_source = 'woocommerce';
+        }
+
+        $low_threshold = max(0, (int) $low_threshold);
+        $out_threshold = max(0, (int) $out_threshold);
+
+        return [
+            'low_threshold' => $low_threshold,
+            'low_source' => $low_source,
+            'out_threshold' => $out_threshold,
+            'out_source' => $out_source,
+            'alert_threshold' => max($low_threshold, $out_threshold),
+        ];
+    }
+
+    /**
+     * Resolve status metadata for stock alert rows.
+     */
+    function mulopimfwc_get_stock_alert_state($stock_qty, $product_or_id = 0, $location_id = 0)
+    {
+        $stock_qty = (int) $stock_qty;
+        $thresholds = mulopimfwc_resolve_stock_alert_thresholds($product_or_id, $location_id);
+
+        $status = 'ok';
+        if ($stock_qty <= $thresholds['out_threshold']) {
+            $status = 'out_of_stock';
+        } elseif ($stock_qty <= $thresholds['low_threshold']) {
+            $status = 'low_stock';
+        }
+
+        return array_merge(
+            $thresholds,
+            [
+                'stock_qty' => $stock_qty,
+                'is_alert' => $stock_qty <= $thresholds['alert_threshold'],
+                'status' => $status,
+                'status_class' => $status === 'out_of_stock' ? 'out-of-stock' : ($status === 'low_stock' ? 'low-stock' : 'in-stock'),
+                'status_label' => $status === 'out_of_stock'
+                    ? __('Out of Stock', 'multi-location-product-and-inventory-management')
+                    : ($status === 'low_stock'
+                        ? __('Low Stock', 'multi-location-product-and-inventory-management')
+                        : __('In Stock', 'multi-location-product-and-inventory-management')),
+            ]
+        );
+    }
+
+    /**
      * Get global stock threshold with fallback defaults.
      */
     function mulopimfwc_get_global_stock_threshold($type = 'low')
@@ -12237,6 +12422,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             'backorders' => 'off',
             'format' => null,
             'location_id' => 0,
+            'product' => null,
+            'product_id' => 0,
             'count_format' => 'paren', // paren|phrase|short
             'backorder_label' => 'backorder', // backorder|available
         ];
@@ -12304,13 +12491,20 @@ if (!function_exists('mulopimfwc_get_values')) {
                     : __('Out of stock', 'multi-location-product-and-inventory-management');
             } else {
                 $location_id = (int) $args['location_id'];
-                if ($location_id > 0 && function_exists('mulopimfwc_get_location_threshold')) {
-                    $low_threshold = mulopimfwc_get_location_threshold($location_id, 'low');
-                    $out_threshold = mulopimfwc_get_location_threshold($location_id, 'out');
-                } else {
-                    $low_threshold = mulopimfwc_get_global_stock_threshold('low');
-                    $out_threshold = mulopimfwc_get_global_stock_threshold('out');
+                $product_context = $args['product'];
+                if (!$product_context && !empty($args['product_id'])) {
+                    $product_context = absint($args['product_id']);
                 }
+
+                $thresholds = function_exists('mulopimfwc_resolve_stock_alert_thresholds')
+                    ? mulopimfwc_resolve_stock_alert_thresholds($product_context, $location_id)
+                    : [
+                        'low_threshold' => $location_id > 0 ? mulopimfwc_get_location_threshold($location_id, 'low') : mulopimfwc_get_global_stock_threshold('low'),
+                        'out_threshold' => $location_id > 0 ? mulopimfwc_get_location_threshold($location_id, 'out') : mulopimfwc_get_global_stock_threshold('out'),
+                    ];
+
+                $low_threshold = (int) ($thresholds['low_threshold'] ?? 0);
+                $out_threshold = (int) ($thresholds['out_threshold'] ?? 0);
 
                 if ($stock_qty <= $out_threshold) {
                     $label = mulopimfwc_get_text_value('text_alert_out_of_stock_badge') ? mulopimfwc_get_text_value('text_alert_out_of_stock_badge')

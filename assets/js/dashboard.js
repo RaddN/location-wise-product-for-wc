@@ -312,12 +312,14 @@
         tbody.empty();
 
         products.forEach(function (item) {
-            const stockClass = item.stock == 0 ? 'out-of-stock' : 'low-stock';
-            const statusText = item.stock == 0 ? 'Out of Stock' : 'Low Stock';
+            const isOutOfStock = item.status === 'out_of_stock';
+            const stockClass = item.status_class || (isOutOfStock ? 'out-of-stock' : 'low-stock');
+            const statusText = item.status_label || (isOutOfStock ? 'Out of Stock' : 'Low Stock');
+            const editPostId = item.edit_post_id || item.product_id;
 
             const row = `
                 <tr>
-                    <td><a href="/wp-admin/post.php?post=${item.product_id}&action=edit">${escapeHtml(item.product_title)}</a></td>
+                    <td><a href="/wp-admin/post.php?post=${editPostId}&action=edit">${escapeHtml(item.product_title)}</a></td>
                     <td>${escapeHtml(item.location_name)}</td>
                     <td><span class="stock-quantity ${stockClass}">${item.stock}</span></td>
                     <td><span class="stock-status ${stockClass}">${statusText}</span></td>
