@@ -3040,6 +3040,13 @@ class MULOPIMFWC_Product_Filter
         add_action('pre_get_posts', [$this, 'filter_admin_products_by_location_manager'], 999);
     }
 
+    private function should_skip_admin_product_location_filter($user): bool
+    {
+        $roles = is_object($user) && isset($user->roles) ? (array) $user->roles : [];
+
+        return in_array('administrator', $roles, true) || in_array('shop_manager', $roles, true);
+    }
+
     public function filter_admin_products_by_location_manager($query)
     {
         if (!is_admin() || !is_user_logged_in()) {
@@ -3053,6 +3060,10 @@ class MULOPIMFWC_Product_Filter
         }
 
         $user = wp_get_current_user();
+        if ($this->should_skip_admin_product_location_filter($user)) {
+            return;
+        }
+
         if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
             return;
         }
@@ -3103,6 +3114,13 @@ class MULOPIMFWC_Product_Count_Filter
         add_filter('wp_count_posts', [$this, 'filter_product_count'], 10, 3);
     }
 
+    private function should_skip_admin_product_location_filter($user): bool
+    {
+        $roles = is_object($user) && isset($user->roles) ? (array) $user->roles : [];
+
+        return in_array('administrator', $roles, true) || in_array('shop_manager', $roles, true);
+    }
+
     public function filter_product_count($counts, $type, $perm)
     {
         if ($type !== 'product' || !is_admin()) {
@@ -3114,6 +3132,10 @@ class MULOPIMFWC_Product_Count_Filter
         }
 
         $user = wp_get_current_user();
+        if ($this->should_skip_admin_product_location_filter($user)) {
+            return $counts;
+        }
+
         if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
             return $counts;
         }
@@ -3197,6 +3219,13 @@ class MULOPIMFWC_Product_Term_Count_Filter
         add_filter('get_terms', [$this, 'filter_product_term_counts'], 10, 4);
     }
 
+    private function should_skip_admin_product_location_filter($user): bool
+    {
+        $roles = is_object($user) && isset($user->roles) ? (array) $user->roles : [];
+
+        return in_array('administrator', $roles, true) || in_array('shop_manager', $roles, true);
+    }
+
     public function filter_product_term_counts($terms, $taxonomies, $args, $term_query)
     {
         if (!is_admin() || !is_user_logged_in() || is_wp_error($terms)) {
@@ -3212,6 +3241,10 @@ class MULOPIMFWC_Product_Term_Count_Filter
         }
 
         $user = wp_get_current_user();
+        if ($this->should_skip_admin_product_location_filter($user)) {
+            return $terms;
+        }
+
         if (!in_array('mulopimfwc_location_manager', $user->roles, true)) {
             return $terms;
         }

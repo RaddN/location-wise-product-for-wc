@@ -1614,7 +1614,7 @@ class mulopimfwc_settings
         add_settings_section(
             'mulopimfwc_location_email_section',
             sprintf(
-                '<svg xmlns="http://www.w.org/2000/svg" 
+                '<svg xmlns="http://www.w3.org/2000/svg" 
      viewBox="0 0 24 24"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
@@ -1790,11 +1790,11 @@ class mulopimfwc_settings
             'mulopimfwc_location_hours_section',
             sprintf(
                 '<svg xmlns="http://www.w3.org/2000/svg" 
-     viewBox="0 0 32 32" 
+     viewBox="0 0 24 24" 
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#f3e8ff;padding:10px;border-radius:6px">
-  <path fill="#9333ea" d="M24 16c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m3 9h-3c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1s1 .4 1 1v3h2c.6 0 1 .4 1 1s-.4 1-1 1M22.9 4.6c-.1-.4-.5-.6-.9-.6H4c-.4 0-.8.2-.9.6L.3 11h25.3zM1 19.7V28c0 .6.4 1 1 1h7v-9.3c-1.2.9-2.5 1.3-4 1.3s-2.9-.5-4-1.3m5.3 2.6c.1-.1.2-.2.3-.2.4-.2.8-.1 1.1.4.10.1.1.4.10.2.2.3.1.1.1.120.3.1.4s0 .3-.1.4-.1.2-.2.3-.2.2-.3.2-.3.1-.4.1c-.3 0-.5-.1-.7-.3-.1-.1-.2-.2-.2-.3-.1-.1-.1-.3-.1-.4 0-.3.1-.5.3-.7M24 14c.7 0 1.3.1 2 .2V13H0v1c0 2.8 2.2 5 5 5 1.6 0 3.1-.8 4-2 .9 1.2 2.4 2 4 2 1.2 0 2.2-.4 3.1-1.1 1.8-2.4 4.7-3.9 7.9-3.9M14 24c0-1.1.4.10-2.2.5-3.2-.5.1-1 .2-1.5.2-.7 0-1.4-.1-2-.3V29h4.4c-.9-1.5-1.4-3.2-1.4-5"/>
+  <path fill="#9333ea" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm1-13h-2v6l5 3 1-1.73-4-2.27z"/>
 </svg> %s',
                 __('Location Hours & Availability', 'multi-location-product-and-inventory-management'),
             ),
@@ -2726,7 +2726,7 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management'
         add_settings_section(
             'mulopimfwc_api_webhooks_section',
             sprintf(
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0e7ff;padding:10px;border-radius:6px"><path fill="#6366f1" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/><</svg> %s',__('API & Webhooks', 'multi-location-product-and-inventory-management'),
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0e7ff;padding:10px;border-radius:6px"><path fill="#6366f1" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> %s',__('API & Webhooks', 'multi-location-product-and-inventory-management'),
           ),  function () {
                 echo '<p>' . esc_html__('Configure REST API endpoints and webhooks for syncing inventory data from external systems like WMS or POS.', 'multi-location-product-and-inventory-management') . '</p>';
             },
@@ -8190,14 +8190,22 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         return;
                     }
 
-                    const escapedName = name.replace(/"/g, "\\\"");
-                    const manualHiddenSelector = \'input[type="hidden"][data-manual-hidden="true"][data-manual-for="\' + escapedName + \'"]\';
-                    if (tab.querySelector(manualHiddenSelector)) {
+                    function findHiddenMirror(selector, attributeName, attributeValue) {
+                        const candidates = tab.querySelectorAll(selector);
+                        for (let index = 0; index < candidates.length; index++) {
+                            if (candidates[index].getAttribute(attributeName) === attributeValue) {
+                                return candidates[index];
+                            }
+                        }
+
+                        return null;
+                    }
+
+                    if (findHiddenMirror(\'input[type="hidden"][data-manual-hidden="true"]\', "data-manual-for", name)) {
                         return;
                     }
 
-                    const hiddenSelector = \'input[type="hidden"][data-text-toggle-hidden="true"][data-text-toggle-for="\' + escapedName + \'"]\';
-                    let hidden = tab.querySelector(hiddenSelector);
+                    let hidden = findHiddenMirror(\'input[type="hidden"][data-text-toggle-hidden="true"]\', "data-text-toggle-for", name);
 
                     if (shouldMirror) {
                         if (!hidden) {

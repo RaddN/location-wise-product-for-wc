@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.4.18
+ * Version: 1.1.4.19
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -80,7 +80,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.1.4.18");
+    define("mulopimfwc_VERSION", "1.1.4.19");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -7269,13 +7269,13 @@ if (!function_exists('mulopimfwc_get_values')) {
             //     return;
             // }
 
-            $admin_js_version = '1.1.4.18';
+            $admin_js_version = '1.1.4.19';
             $admin_js_path = plugin_dir_path(__FILE__) . 'assets/js/admin.js';
             if (file_exists($admin_js_path)) {
                 $admin_js_version = (string) filemtime($admin_js_path);
             }
 
-            $admin_css_version = '1.1.4.18';
+            $admin_css_version = '1.1.4.19';
             $admin_css_path = plugin_dir_path(__FILE__) . 'assets/css/admin.css';
             if (file_exists($admin_css_path)) {
                 $admin_css_version = (string) filemtime($admin_css_path);
@@ -8835,7 +8835,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
             $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.18');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.19');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
             // Add custom branding CSS
@@ -8843,7 +8843,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.4.18', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.4.19', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             wp_add_inline_script('mulopimfwc_select2', 'jQuery.fn.select2&&jQuery.fn.select2.defaults&&jQuery.fn.select2.defaults.set("language",{noResults:function(){return"' . esc_js(mulopimfwc_get_text_value('text_popup_msg_no_results')) . '";}});', 'after');
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
@@ -8852,7 +8852,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -8860,7 +8860,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -8868,7 +8868,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
             }
@@ -8897,7 +8897,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
 
@@ -8913,7 +8913,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
 
@@ -9056,6 +9056,123 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             $assigned_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
             return is_array($assigned_locations) ? $assigned_locations : null;
+        }
+
+        private function normalize_location_slugs(array $locations): array
+        {
+            $locations = array_map(function ($location_slug) {
+                return sanitize_title(rawurldecode((string) $location_slug));
+            }, $locations);
+
+            $locations = array_values(array_filter($locations, function ($location_slug) {
+                return is_string($location_slug) && $location_slug !== '';
+            }));
+
+            return array_values(array_unique($locations));
+        }
+
+        private function current_user_has_unrestricted_admin_product_access(): bool
+        {
+            if (!is_user_logged_in()) {
+                return false;
+            }
+
+            $roles = (array) wp_get_current_user()->roles;
+            return in_array('administrator', $roles, true) || in_array('shop_manager', $roles, true);
+        }
+
+        private function get_backend_location_manager_product_scope()
+        {
+            if (!is_user_logged_in() || !class_exists('MULOPIMFWC_Location_Managers')) {
+                return null;
+            }
+
+            if ($this->current_user_has_unrestricted_admin_product_access()) {
+                return null;
+            }
+
+            $user = wp_get_current_user();
+            if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+                return null;
+            }
+
+            if (MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
+                return null;
+            }
+
+            return $this->normalize_location_slugs((array) MULOPIMFWC_Location_Managers::get_user_assigned_locations());
+        }
+
+        private function is_admin_origin_rest_request($request = null): bool
+        {
+            if (!defined('REST_REQUEST') || !REST_REQUEST) {
+                return false;
+            }
+
+            $referer = wp_get_referer();
+            if (!is_string($referer) || $referer === '') {
+                $referer = isset($_SERVER['HTTP_REFERER']) ? (string) wp_unslash($_SERVER['HTTP_REFERER']) : '';
+            }
+
+            if ($referer !== '' && strpos($referer, admin_url()) === 0) {
+                return true;
+            }
+
+            if (
+                $request instanceof WP_REST_Request &&
+                is_user_logged_in() &&
+                current_user_can('edit_products') &&
+                (string) $request->get_param('context') === 'edit'
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+
+        private function is_backend_product_request_context($request = null): bool
+        {
+            if (is_admin()) {
+                return true;
+            }
+
+            return $this->is_admin_origin_rest_request($request);
+        }
+
+        private function product_matches_location_scope($product_id, array $location_scope): bool
+        {
+            $location_scope = $this->normalize_location_slugs($location_scope);
+            if (empty($location_scope)) {
+                return false;
+            }
+
+            $terms = $this->get_product_location_slugs((int) $product_id);
+            if (empty($terms)) {
+                return false;
+            }
+
+            return !empty(array_intersect($location_scope, $terms));
+        }
+
+        private function filter_products_to_location_scope(array $products, array $location_scope): array
+        {
+            $location_scope = $this->normalize_location_slugs($location_scope);
+            if (empty($location_scope)) {
+                return [];
+            }
+
+            $product_ids = array_map('intval', array_keys($products));
+            if (!empty($product_ids)) {
+                $this->preload_product_locations($product_ids);
+            }
+
+            foreach ($products as $id => $product) {
+                if (!$this->product_matches_location_scope((int) $id, $location_scope)) {
+                    unset($products[$id]);
+                }
+            }
+
+            return $products;
         }
 
         private function build_location_tax_query($locations, $enable_all_locations, $strict = false)
@@ -9207,6 +9324,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (is_admin() || 
                 !isset($query->query_vars['post_type']) || 
                 $query->query_vars['post_type'] !== 'product') {
+                return $clauses;
+            }
+
+            if ($this->is_admin_origin_rest_request()) {
                 return $clauses;
             }
 
@@ -9912,7 +10033,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.18');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.19');
             }
             
             // Enqueue modern popup script
@@ -9921,7 +10042,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
             }
@@ -9932,7 +10053,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
             }
@@ -9943,7 +10064,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.18',
+                    '1.1.4.19',
                     true
                 );
             }
@@ -10385,54 +10506,16 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function filter_ajax_searched_products($products)
         {
-            // In wp-admin, WooCommerce uses this filter for product pickers/search.
-            // We must NOT apply frontend "selected location" cookie filtering for administrators/shop managers.
-            // Location managers (without all_products) should be restricted by their assigned locations instead.
-            if (function_exists('is_admin') && is_admin() && function_exists('wp_doing_ajax') && wp_doing_ajax() && function_exists('is_user_logged_in') && is_user_logged_in()) {
-                $user = function_exists('wp_get_current_user') ? wp_get_current_user() : null;
-                $roles = ($user && isset($user->roles)) ? (array) $user->roles : [];
-
-                $is_location_manager = in_array('mulopimfwc_location_manager', $roles, true);
-                $is_adminish = in_array('administrator', $roles, true) || in_array('shop_manager', $roles, true);
-
-                if ($is_adminish && !$is_location_manager) {
+            // Backend product searches must not inherit the frontend selected-location cookie.
+            // Only location managers keep admin-side scoping, and that scope is based on their
+            // assigned locations instead of the selected location cookie.
+            if ($this->is_backend_product_request_context()) {
+                $backend_scope = $this->get_backend_location_manager_product_scope();
+                if (!is_array($backend_scope)) {
                     return $products;
                 }
 
-                if ($is_location_manager && class_exists('MULOPIMFWC_Location_Managers')) {
-                    // If manager has all_products capability, don't restrict.
-                    if (method_exists('MULOPIMFWC_Location_Managers', 'user_has_capability') && MULOPIMFWC_Location_Managers::user_has_capability('all_products')) {
-                        return $products;
-                    }
-
-                    $assigned_locations = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
-                    $assigned_locations = is_array($assigned_locations) ? array_values(array_filter(array_map(static function ($s) {
-                        return sanitize_title(rawurldecode((string) $s));
-                    }, $assigned_locations))) : [];
-                    $assigned_locations = array_values(array_unique($assigned_locations));
-
-                    if (empty($assigned_locations)) {
-                        return [];
-                    }
-
-                    $product_ids = is_array($products) ? array_keys($products) : [];
-                    if (!empty($product_ids)) {
-                        $this->preload_product_locations($product_ids);
-                    }
-
-                    foreach ($products as $id => $product) {
-                        $terms = $this->get_product_location_slugs((int) $id);
-                        if (empty($terms)) {
-                            unset($products[$id]);
-                            continue;
-                        }
-                        if (empty(array_intersect($assigned_locations, $terms))) {
-                            unset($products[$id]);
-                        }
-                    }
-
-                    return $products;
-                }
+                return $this->filter_products_to_location_scope((array) $products, $backend_scope);
             }
 
             $location = $this->get_current_location();
@@ -10474,6 +10557,25 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Check if REST API filtering is enabled
             if ($strict_filtering === 'disabled' || !in_array('rest_api', $filtered_sections, true)) {
+                return $args;
+            }
+
+            if ($this->is_backend_product_request_context($request)) {
+                $backend_scope = $this->get_backend_location_manager_product_scope();
+                if (!is_array($backend_scope)) {
+                    return $args;
+                }
+
+                if (empty($backend_scope)) {
+                    $args['post__in'] = [0];
+                    return $args;
+                }
+
+                if (!isset($args['tax_query']) || !is_array($args['tax_query'])) {
+                    $args['tax_query'] = [];
+                }
+
+                $args['tax_query'][] = $this->build_location_tax_query($backend_scope, 'off', true);
                 return $args;
             }
             
@@ -10542,6 +10644,22 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         public function modify_product_rest_response($response, $product, $request)
         {
+            if ($this->is_backend_product_request_context($request)) {
+                $backend_scope = $this->get_backend_location_manager_product_scope();
+                if (!is_array($backend_scope)) {
+                    return $response;
+                }
+
+                if ($this->product_matches_location_scope($product->get_id(), $backend_scope)) {
+                    return $response;
+                }
+
+                $data = $response->get_data();
+                $data['hidden_by_location'] = true;
+                $response->set_data($data);
+                return $response;
+            }
+
             if (!$this->product_belongs_to_location($product->get_id())) {
                 $data = $response->get_data();
                 $data['hidden_by_location'] = true;
@@ -11476,7 +11594,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.4.18");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.4.19");
         }
 
         /**
@@ -13846,7 +13964,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.4.18",
+                "1.1.4.19",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );
