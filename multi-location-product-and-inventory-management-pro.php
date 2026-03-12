@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.4.19
+ * Version: 1.1.4.20
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management
@@ -80,7 +80,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('mulopimfwc_VERSION')) {
-    define("mulopimfwc_VERSION", "1.1.4.19");
+    define("mulopimfwc_VERSION", "1.1.4.20");
 }
 
 if (!function_exists('mulopimfwc_get_location_cookie_expiry_days')) {
@@ -7269,13 +7269,13 @@ if (!function_exists('mulopimfwc_get_values')) {
             //     return;
             // }
 
-            $admin_js_version = '1.1.4.19';
+            $admin_js_version = '1.1.4.20';
             $admin_js_path = plugin_dir_path(__FILE__) . 'assets/js/admin.js';
             if (file_exists($admin_js_path)) {
                 $admin_js_version = (string) filemtime($admin_js_path);
             }
 
-            $admin_css_version = '1.1.4.19';
+            $admin_css_version = '1.1.4.20';
             $admin_css_path = plugin_dir_path(__FILE__) . 'assets/css/admin.css';
             if (file_exists($admin_css_path)) {
                 $admin_css_version = (string) filemtime($admin_css_path);
@@ -8835,7 +8835,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
             $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.19');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.20');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
             // Add custom branding CSS
@@ -8843,7 +8843,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.4.19', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.4.20', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             wp_add_inline_script('mulopimfwc_select2', 'jQuery.fn.select2&&jQuery.fn.select2.defaults&&jQuery.fn.select2.defaults.set("language",{noResults:function(){return"' . esc_js(mulopimfwc_get_text_value('text_popup_msg_no_results')) . '";}});', 'after');
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
@@ -8852,7 +8852,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -8860,7 +8860,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -8868,7 +8868,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
             }
@@ -8897,7 +8897,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
 
@@ -8913,7 +8913,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
 
@@ -10033,7 +10033,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.19');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.4.20');
             }
             
             // Enqueue modern popup script
@@ -10042,7 +10042,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
             }
@@ -10053,7 +10053,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
             }
@@ -10064,7 +10064,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery'],
-                    '1.1.4.19',
+                    '1.1.4.20',
                     true
                 );
             }
@@ -11594,7 +11594,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.4.19");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.4.20");
         }
 
         /**
@@ -12154,6 +12154,225 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
     }
 
+    if (!function_exists('mulopimfwc_normalize_customer_address_for_woocommerce')) {
+        /**
+         * Normalize free-text customer address country/state into WooCommerce codes.
+         *
+         * @param array $address
+         * @return array
+         */
+        function mulopimfwc_normalize_customer_address_for_woocommerce(array $address)
+        {
+            if (!function_exists('WC') || !WC() || !WC()->countries) {
+                return $address;
+            }
+
+            $countries = WC()->countries->get_countries();
+            $country_input = isset($address['country']) ? (string) $address['country'] : '';
+            if ($country_input !== '') {
+                $country_upper = strtoupper($country_input);
+                if (isset($countries[$country_upper])) {
+                    $address['country'] = $country_upper;
+                } else {
+                    foreach ($countries as $code => $name) {
+                        if (strcasecmp($name, $country_input) === 0) {
+                            $address['country'] = $code;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($address['country']) && !empty($address['state'])) {
+                $states = WC()->countries->get_states($address['country']);
+                if (!empty($states)) {
+                    $state_input = (string) $address['state'];
+                    $state_upper = strtoupper($state_input);
+                    if (isset($states[$state_upper])) {
+                        $address['state'] = $state_upper;
+                    } else {
+                        foreach ($states as $code => $name) {
+                            if (strcasecmp($name, $state_input) === 0) {
+                                $address['state'] = $code;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return $address;
+        }
+    }
+
+    if (!function_exists('mulopimfwc_update_wc_customer_address')) {
+        /**
+         * Apply an address to the current WooCommerce customer session.
+         *
+         * @param array $address
+         * @return string Updated address target: shipping|billing|''
+         */
+        function mulopimfwc_update_wc_customer_address(array $address)
+        {
+            if (!function_exists('WC')) {
+                return '';
+            }
+
+            if (!WC()->customer && function_exists('wc_load_cart')) {
+                wc_load_cart();
+            }
+
+            if (!WC()->customer) {
+                return '';
+            }
+
+            $address = mulopimfwc_normalize_customer_address_for_woocommerce($address);
+
+            $use_shipping = false;
+            if (function_exists('wc_shipping_enabled') && wc_shipping_enabled()) {
+                $use_shipping = true;
+                if (WC()->cart) {
+                    $use_shipping = WC()->cart->needs_shipping_address();
+                }
+            }
+
+            $customer = WC()->customer;
+            if ($use_shipping) {
+                $customer->set_shipping_address_1($address['address_1'] ?? '');
+                $customer->set_shipping_address_2($address['address_2'] ?? '');
+                $customer->set_shipping_city($address['city'] ?? '');
+                $customer->set_shipping_state($address['state'] ?? '');
+                $customer->set_shipping_postcode($address['postcode'] ?? '');
+                $customer->set_shipping_country($address['country'] ?? '');
+            } else {
+                $customer->set_billing_address_1($address['address_1'] ?? '');
+                $customer->set_billing_address_2($address['address_2'] ?? '');
+                $customer->set_billing_city($address['city'] ?? '');
+                $customer->set_billing_state($address['state'] ?? '');
+                $customer->set_billing_postcode($address['postcode'] ?? '');
+                $customer->set_billing_country($address['country'] ?? '');
+            }
+
+            if (WC()->session && is_object(WC()->session)) {
+                WC()->session->set('chosen_shipping_methods', []);
+            }
+
+            $customer->save();
+
+            return $use_shipping ? 'shipping' : 'billing';
+        }
+    }
+
+    if (!function_exists('mulopimfwc_get_store_location_customer_address')) {
+        /**
+         * Build a WooCommerce-ready customer address array from location term meta.
+         *
+         * @param string $location_slug
+         * @return array
+         */
+        function mulopimfwc_get_store_location_customer_address($location_slug)
+        {
+            $location_slug = sanitize_title(rawurldecode((string) $location_slug));
+            if ($location_slug === '' || $location_slug === 'all-products') {
+                return [];
+            }
+
+            $term = function_exists('mulopimfwc_validate_location_slug')
+                ? mulopimfwc_validate_location_slug($location_slug, false)
+                : get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+
+            if (!$term || is_wp_error($term)) {
+                return [];
+            }
+
+            $address = [
+                'address_1' => sanitize_text_field((string) get_term_meta($term->term_id, 'street_address', true)),
+                'address_2' => '',
+                'city' => sanitize_text_field((string) get_term_meta($term->term_id, 'city', true)),
+                'state' => sanitize_text_field((string) get_term_meta($term->term_id, 'state', true)),
+                'postcode' => sanitize_text_field((string) get_term_meta($term->term_id, 'postal_code', true)),
+                'country' => sanitize_text_field((string) get_term_meta($term->term_id, 'country', true)),
+            ];
+
+            foreach ($address as $value) {
+                if ($value !== '') {
+                    return $address;
+                }
+            }
+
+            return [];
+        }
+    }
+
+    if (!function_exists('mulopimfwc_maybe_sync_customer_address_from_selected_location')) {
+        /**
+         * Sync WooCommerce customer address when the selected store location changes.
+         *
+         * This keeps cart/checkout shipping estimates aligned with the active location
+         * before the customer manually edits the checkout form.
+         *
+         * @return void
+         */
+        function mulopimfwc_maybe_sync_customer_address_from_selected_location()
+        {
+            if (is_admin()) {
+                return;
+            }
+
+            $options = get_option('mulopimfwc_display_options', []);
+            if (!isset($options['auto_populate_customer_addresses']) || $options['auto_populate_customer_addresses'] !== 'on') {
+                return;
+            }
+
+            if (!function_exists('WC')) {
+                return;
+            }
+
+            if (!WC()->customer && function_exists('wc_load_cart')) {
+                wc_load_cart();
+            }
+
+            if (!WC()->customer) {
+                return;
+            }
+
+            $location_slug = function_exists('mulopimfwc_get_effective_runtime_location_slug')
+                ? sanitize_title(rawurldecode((string) mulopimfwc_get_effective_runtime_location_slug()))
+                : sanitize_title(rawurldecode((string) mulopimfwc_get_store_location_cookie()));
+
+            if ($location_slug === '' || $location_slug === 'all-products') {
+                return;
+            }
+
+            $last_synced_location = '';
+            if (WC()->session && is_object(WC()->session)) {
+                $last_synced_location = sanitize_title(
+                    rawurldecode((string) WC()->session->get('mulopimfwc_autopopulated_location', ''))
+                );
+            }
+
+            if ($last_synced_location === $location_slug) {
+                return;
+            }
+
+            $address = mulopimfwc_get_store_location_customer_address($location_slug);
+            if (empty($address)) {
+                return;
+            }
+
+            $updated = mulopimfwc_update_wc_customer_address($address);
+            if ($updated === '') {
+                return;
+            }
+
+            if (WC()->session && is_object(WC()->session)) {
+                WC()->session->set('mulopimfwc_autopopulated_location', $location_slug);
+            }
+        }
+    }
+
+    add_action('wp', 'mulopimfwc_maybe_sync_customer_address_from_selected_location', 20);
+
     // AJAX handler for updating customer checkout address
     add_action('wp_ajax_mulopimfwc_update_customer_address', 'mulopimfwc_update_customer_address');
     add_action('wp_ajax_nopriv_mulopimfwc_update_customer_address', 'mulopimfwc_update_customer_address');
@@ -12203,73 +12422,15 @@ if (!function_exists('mulopimfwc_get_values')) {
             return;
         }
 
-        // Normalize country/state to WooCommerce codes when possible.
-        if (WC()->countries) {
-            $countries = WC()->countries->get_countries();
-            $country_input = $address['country'];
-            if (!empty($country_input)) {
-                $country_upper = strtoupper($country_input);
-                if (isset($countries[$country_upper])) {
-                    $address['country'] = $country_upper;
-                } else {
-                    foreach ($countries as $code => $name) {
-                        if (strcasecmp($name, $country_input) === 0) {
-                            $address['country'] = $code;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!empty($address['country'])) {
-                $states = WC()->countries->get_states($address['country']);
-                if (!empty($states) && !empty($address['state'])) {
-                    $state_input = $address['state'];
-                    $state_upper = strtoupper($state_input);
-                    if (isset($states[$state_upper])) {
-                        $address['state'] = $state_upper;
-                    } else {
-                        foreach ($states as $code => $name) {
-                            if (strcasecmp($name, $state_input) === 0) {
-                                $address['state'] = $code;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+        $updated = mulopimfwc_update_wc_customer_address($address);
+        if ($updated === '') {
+            wp_send_json_error(['message' => __('Customer session unavailable.', 'multi-location-product-and-inventory-management')]);
+            return;
         }
-
-        $use_shipping = false;
-        if (function_exists('wc_shipping_enabled') && wc_shipping_enabled()) {
-            $use_shipping = true;
-            if (WC()->cart) {
-                $use_shipping = WC()->cart->needs_shipping_address();
-            }
-        }
-
-        $customer = WC()->customer;
-        if ($use_shipping) {
-            $customer->set_shipping_address_1($address['address_1']);
-            $customer->set_shipping_address_2($address['address_2']);
-            $customer->set_shipping_city($address['city']);
-            $customer->set_shipping_state($address['state']);
-            $customer->set_shipping_postcode($address['postcode']);
-            $customer->set_shipping_country($address['country']);
-        } else {
-            $customer->set_billing_address_1($address['address_1']);
-            $customer->set_billing_address_2($address['address_2']);
-            $customer->set_billing_city($address['city']);
-            $customer->set_billing_state($address['state']);
-            $customer->set_billing_postcode($address['postcode']);
-            $customer->set_billing_country($address['country']);
-        }
-
-        $customer->save();
 
         wp_send_json_success([
-            'address' => $address,
-            'updated' => $use_shipping ? 'shipping' : 'billing',
+            'address' => mulopimfwc_normalize_customer_address_for_woocommerce($address),
+            'updated' => $updated,
         ]);
     }
 
@@ -13964,7 +14125,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $this->analytics = new mulopimfwc_anaylytics(
                 '04',
                 'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.4.19",
+                "1.1.4.20",
                 'Multi Location Product & Inventory Management for WooCommerce',
                 __FILE__ // Pass the main plugin file
             );

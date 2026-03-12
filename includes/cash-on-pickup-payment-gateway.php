@@ -5,7 +5,7 @@
  * Allows customers to pay in cash when picking up their order from the store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.4.19
+ * @since 1.1.4.20
  */
 
 if (!defined('ABSPATH')) {
@@ -251,7 +251,78 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                 
                 return false;
             }
-            
+
+            /**
+             * Get the currently chosen shipping rate IDs from the session.
+             *
+             * @return array
+             */
+            private function get_selected_shipping_rate_ids() {
+                if (!function_exists('WC') || !WC() || !WC()->session) {
+                    return array();
+                }
+
+                $chosen_methods = (array) WC()->session->get('chosen_shipping_methods', array());
+                $chosen_methods = array_values(array_filter(array_map('strval', $chosen_methods)));
+
+                return $chosen_methods;
+            }
+
+            /**
+             * Extract the shipping method ID from a rate ID such as pickup_location:0.
+             *
+             * @param string $rate_id
+             * @return string
+             */
+            private function get_method_id_from_rate_id($rate_id) {
+                $parts = explode(':', (string) $rate_id);
+                return isset($parts[0]) ? (string) $parts[0] : '';
+            }
+
+            /**
+             * Check whether the current checkout is using pickup for all chosen packages.
+             *
+             * @return bool
+             */
+            private function is_pickup_checkout_context() {
+                $selected_rate_ids = $this->get_selected_shipping_rate_ids();
+                if (empty($selected_rate_ids)) {
+                    return false;
+                }
+
+                foreach ($selected_rate_ids as $rate_id) {
+                    if (!in_array($this->get_method_id_from_rate_id($rate_id), array('local_pickup', 'pickup_location'), true)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            /**
+             * Check whether the selected shipping methods satisfy the gateway's method rules.
+             *
+             * @return bool
+             */
+            private function matches_enabled_shipping_methods() {
+                if (empty($this->enable_for_methods) || in_array('all', $this->enable_for_methods, true)) {
+                    return true;
+                }
+
+                $selected_rate_ids = $this->get_selected_shipping_rate_ids();
+                if (empty($selected_rate_ids)) {
+                    return false;
+                }
+
+                foreach ($selected_rate_ids as $rate_id) {
+                    if (!in_array($this->get_method_id_from_rate_id($rate_id), $this->enable_for_methods, true)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+             
 
             /**
              * Initialise Gateway Settings Form Fields.
@@ -331,48 +402,12 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                     return true;
                 }
 
-                // For AJAX/REST API requests (WooCommerce Blocks), be more lenient
-                if ($this->is_blocks_or_ajax_request()) {
-                    // If "all" is selected, always available
-                    if (empty($this->enable_for_methods) || in_array('all', $this->enable_for_methods, true)) {
-                        return true;
-                    }
-                    // For blocks/AJAX, be lenient - allow it (shipping will be calculated later)
-                    return true;
+                // Cash on Pickup should only appear when checkout is actually using pickup.
+                if (!$this->is_pickup_checkout_context()) {
+                    return false;
                 }
 
-                // If "all" is selected or no shipping method restrictions, always available
-                if (empty($this->enable_for_methods) || in_array('all', $this->enable_for_methods, true)) {
-                    return true;
-                }
-
-                // If cart doesn't exist, allow it (will be checked later when shipping is calculated)
-                if (!WC()->cart || WC()->cart->is_empty()) {
-                    return true;
-                }
-
-                // Check if there are any packages with shipping methods
-                $packages = WC()->shipping()->get_packages();
-                if (empty($packages)) {
-                    // No packages yet, allow it (shipping calculation might happen later)
-                    return true;
-                }
-
-                // Check if any package has an allowed shipping method
-                foreach ($packages as $package) {
-                    if (empty($package['rates'])) {
-                        continue;
-                    }
-
-                    foreach ($package['rates'] as $rate) {
-                        if (in_array($rate->method_id, $this->enable_for_methods, true)) {
-                            return true;
-                        }
-                    }
-                }
-
-                // If we have packages but no matching methods, return false
-                return false;
+                return $this->matches_enabled_shipping_methods();
             }
 
             /**
@@ -495,10 +530,12 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                         $all_gateways = $payment_gateways->payment_gateways();
                         $gateway = $all_gateways['cash_on_pickup'] ?? null;
                         
-                        if ($gateway && $gateway->enabled === 'yes' && !isset($gateways['cash_on_pickup'])) {
-                            // For blocks/AJAX, always add if enabled (is_available is lenient for AJAX)
-                            // This ensures it shows up even if location filtering removed it
-                            $gateways['cash_on_pickup'] = $gateway;
+                        if ($gateway && $gateway->enabled === 'yes') {
+                            if ($gateway->is_available()) {
+                                $gateways['cash_on_pickup'] = $gateway;
+                            } else {
+                                unset($gateways['cash_on_pickup']);
+                            }
                         }
                     }
                 }

@@ -86,7 +86,10 @@ class MULOPIMFWC_Location_Wise_Local_Pickup
         }
 
         $allowed = $this->get_pickup_locations_for_store($location_term->term_id);
-        if (empty($allowed)) return $pickup_locations;
+        if (empty($allowed)) {
+            // Location-wise pickup is enabled, but this store has no pickup points assigned.
+            return [];
+        }
 
         $allowed_lookup = array_fill_keys($allowed, true);
         $filtered = [];
