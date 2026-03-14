@@ -9,8 +9,11 @@ class MULOPIMFWC_Location_Wise_Local_Pickup
         global $mulopimfwc_options;
         $mulopimfwc_options = get_option('mulopimfwc_display_options');
 
-        $enable_location_pickup = isset($mulopimfwc_options['enable_location_pickup']) && mulopimfwc_premium_feature() ? $mulopimfwc_options['enable_location_pickup'] : 'off';
-        if ($enable_location_pickup !== 'on') {
+        $location_pickup_enabled = function_exists('mulopimfwc_is_location_pickup_enabled')
+            ? mulopimfwc_is_location_pickup_enabled($mulopimfwc_options)
+            : (isset($mulopimfwc_options['enable_location_pickup']) && mulopimfwc_premium_feature() && $mulopimfwc_options['enable_location_pickup'] === 'on');
+
+        if (!$location_pickup_enabled) {
             return;
         }
         add_filter('option_pickup_location_pickup_locations', array($this, 'filter_pickup_locations_by_store'), 999, 1);

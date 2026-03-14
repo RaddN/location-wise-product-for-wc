@@ -135,7 +135,7 @@ class mulopimfwc_settings
 
     public function register_settings()
     {
-        register_setting('mulopimfwc_settings', 'mulopimfwc_display_options', 'sanitize_settings');
+        register_setting('mulopimfwc_settings', 'mulopimfwc_display_options', [$this, 'sanitize_settings']);
         add_settings_section(
             'mulopimfwc_display_settings_section',
             sprintf(
@@ -4905,9 +4905,63 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         );
     }
 
+    private function sanitize_generic_setting_value($value)
+    {
+        if (is_array($value)) {
+            $sanitized = [];
+            foreach ($value as $key => $item) {
+                $sanitized_key = is_string($key) ? sanitize_key($key) : $key;
+                $sanitized[$sanitized_key] = $this->sanitize_generic_setting_value($item);
+            }
+
+            return $sanitized;
+        }
+
+        if (is_scalar($value)) {
+            return sanitize_textarea_field((string) $value);
+        }
+
+        return '';
+    }
+
+    private function sanitize_on_off_select(array $input, array $existing_options, string $key, string $default = 'off'): string
+    {
+        $fallback = isset($existing_options[$key]) ? (string) $existing_options[$key] : $default;
+        $value = isset($input[$key]) ? sanitize_text_field((string) $input[$key]) : $fallback;
+
+        return $value === 'on' ? 'on' : 'off';
+    }
+
+    private function sanitize_enum_select(array $input, array $existing_options, string $key, array $allowed_values, string $default): string
+    {
+        $fallback = isset($existing_options[$key]) ? (string) $existing_options[$key] : $default;
+        $value = isset($input[$key]) ? sanitize_key((string) $input[$key]) : $fallback;
+
+        if (in_array($value, $allowed_values, true)) {
+            return $value;
+        }
+
+        return in_array($fallback, $allowed_values, true) ? $fallback : $default;
+    }
+
     public function sanitize_settings($input)
     {
-        $sanitized = [];
+        global $mulopimfwc_options;
+        $existing_options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        $sanitized = is_array($existing_options) ? $existing_options : [];
+
+        if (is_array($input)) {
+            foreach ($input as $key => $value) {
+                if (!is_string($key)) {
+                    continue;
+                }
+
+                $sanitized[sanitize_key($key)] = $this->sanitize_generic_setting_value($value);
+            }
+        }
 
         // Handle display options
         if (isset($input['display_format'])) {
@@ -4929,6 +4983,28 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         // Handle strict_filtering option
         if (isset($input['strict_filtering'])) {
             $sanitized['strict_filtering'] = sanitize_text_field($input['strict_filtering']);
+        }
+
+        $sanitized['enable_location_shipping'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_shipping', 'off');
+        $sanitized['enable_location_payment_methods'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_payment_methods', 'off');
+        $sanitized['enable_location_taxes'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_taxes', 'off');
+        $sanitized['enable_location_pickup'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_pickup', 'on');
+        $sanitized['shipping_calculation_method'] = $this->sanitize_enum_select(
+            $input,
+            $existing_options,
+            'shipping_calculation_method',
+            ['per_location', 'nearest_with_transfer'],
+            'per_location'
+        );
+
+        if (isset($input['pickup_preparation_time'])) {
+            $pickup_preparation_time = absint($input['pickup_preparation_time']);
+            if ($pickup_preparation_time < 1) {
+                $pickup_preparation_time = 1;
+            } elseif ($pickup_preparation_time > 168) {
+                $pickup_preparation_time = 168;
+            }
+            $sanitized['pickup_preparation_time'] = (string) $pickup_preparation_time;
         }
 
         // Handle order assignment method.
@@ -5057,11 +5133,6 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         }
 
         // Handle enable_product_filter option (checkbox - when unchecked, it's not in input, so default to 'off')
-        // Merge with existing options to preserve other settings
-        global $mulopimfwc_options;
-        $existing_options = is_array($mulopimfwc_options ?? null)
-            ? $mulopimfwc_options
-            : get_option('mulopimfwc_display_options', []);
         if (isset($input['enable_product_filter']) && $input['enable_product_filter'] === 'on') {
             $sanitized['enable_product_filter'] = 'on';
         } else {
@@ -8185,6 +8256,15 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
                 const targets = tab.querySelectorAll(".mulopimfwc-text-management-toggle-target");
                 function syncHiddenMirror(field, shouldMirror) {
+                    const tagName = field.tagName ? field.tagName.toUpperCase() : "";
+                    const inputType = typeof field.type === "string" ? field.type.toLowerCase() : "";
+                    if (
+                        tagName === "BUTTON" ||
+                        (tagName === "INPUT" && ["submit", "button", "reset", "file"].includes(inputType))
+                    ) {
+                        return;
+                    }
+
                     const name = field.getAttribute("name");
                     if (!name) {
                         return;

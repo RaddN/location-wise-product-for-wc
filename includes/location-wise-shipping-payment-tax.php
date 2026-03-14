@@ -435,18 +435,9 @@ class MULOPIMFWC_Runtime_Filters
      */
     protected function is_location_pickup_enabled($options = null): bool
     {
-        if (!is_array($options)) {
-            global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
-        }
-
-        if (!mulopimfwc_premium_feature()) {
-            return false;
-        }
-
-        return isset($options['enable_location_pickup']) && $options['enable_location_pickup'] === 'on';
+        return function_exists('mulopimfwc_is_location_pickup_enabled')
+            ? mulopimfwc_is_location_pickup_enabled($options)
+            : (is_array($options) && !empty($options['enable_location_pickup']) && $options['enable_location_pickup'] === 'on' && mulopimfwc_premium_feature());
     }
 
     /**
