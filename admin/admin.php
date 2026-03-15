@@ -1319,102 +1319,102 @@ JS;
 ?>
         <!-- Location Map -->
         <div class="form-field mulopimfwc-location-map-wrap">
-            <label><?php _e('Location Map', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label><?php esc_html_e('Location Map', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <div class="mulopimfwc-location-map-controls">
                 <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management-pro'); ?>" />
-                <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management-pro'); ?></button>
+                <button type="button" class="button mulopimfwc-location-search-btn"><?php esc_html_e('Search', 'multi-location-product-and-inventory-management-pro'); ?></button>
             </div>
             <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management-pro'); ?>"></div>
-            <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             <p class="description mulopimfwc-location-map-feedback" style="display:none;"></p>
         </div>
 
         <div class="form-field">
-            <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="street_address"><?php esc_html_e('Street Address', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="street_address" id="street_address" value="" />
-            <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter street address for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="city"><?php _e('City', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="city"><?php esc_html_e('City', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="city" id="city" value="" />
-            <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter city for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="state"><?php _e('State', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="state"><?php esc_html_e('State', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="state" id="state" value="" />
-            <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter state for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="postal_code"><?php esc_html_e('Postal Code', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="postal_code" id="postal_code" value="" />
-            <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter postal code for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="country"><?php esc_html_e('Country', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="country" id="country" value="" />
-            <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter country for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="email"><?php esc_html_e('Email', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="email" name="email" id="email" value="" />
-            <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter email for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="phone"><?php esc_html_e('Phone', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="tel" name="phone" id="phone" value="" />
-            <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter phone for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="low_stock_threshold"><?php esc_html_e('Low Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="number" name="low_stock_threshold" id="low_stock_threshold" value="" min="0" step="1" />
-            <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="out_of_stock_threshold"><?php esc_html_e('Out of Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="number" name="out_of_stock_threshold" id="out_of_stock_threshold" value="" min="0" step="1" />
-            <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Latitude / Longitude -->
         <div class="form-field">
-            <label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="latitude"><?php esc_html_e('Latitude', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="latitude" id="latitude" value="" />
-            <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="longitude"><?php esc_html_e('Longitude', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="longitude" id="longitude" value="" />
-            <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Logo -->
         <div class="form-field mulopimfwc-media-wrap">
-            <label><?php _e('Logo', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label><?php esc_html_e('Logo', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="hidden" name="logo_id" class="mulopimfwc-logo-id" value="">
             <div class="mulopimfwc-logo-preview" style="margin:6px 0;"></div>
             <p>
-                <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="button mulopimfwc-upload-logo"><?php esc_html_e('Upload/Choose Logo', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="button button-link-delete mulopimfwc-remove-logo"><?php esc_html_e('Remove', 'multi-location-product-and-inventory-management-pro'); ?></span>
             </p>
         </div>
 
         <!-- Gallery -->
         <div class="form-field mulopimfwc-media-wrap">
-            <label><?php _e('Gallery', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label><?php esc_html_e('Gallery', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="hidden" name="gallery_ids" class="mulopimfwc-gallery-ids" value="">
             <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;"></div>
             <p>
-                <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="button mulopimfwc-upload-gallery"><?php esc_html_e('Add Images', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="button button-link-delete mulopimfwc-clear-gallery"><?php esc_html_e('Clear', 'multi-location-product-and-inventory-management-pro'); ?></span>
             </p>
         </div>
 
@@ -1433,12 +1433,12 @@ JS;
         ];
         ?>
         <div class="form-field">
-            <label><?php _e('Business Hours', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label><?php esc_html_e('Business Hours', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <div style="border:1px solid #ddd;border-radius:6px;padding:10px;max-width:660px;">
-                <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description" style="margin-top:0;"><?php esc_html_e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management-pro'); ?></p>
 
                 <p>
-                    <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
+                    <strong><?php esc_html_e('Timezone', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
                     <select name="bh[timezone]" style="min-width:280px;">
                         <?php foreach ($tzs as $tz): ?>
                             <option value="<?php echo esc_attr($tz); ?>" <?php selected($tz, $def['timezone']); ?>>
@@ -1460,15 +1460,15 @@ JS;
                                     <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
                                         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                             <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="closed" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'closed'); ?>>
-                                            <span><?php _e('Closed', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                            <span><?php esc_html_e('Closed', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </label>
                                         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                             <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="all_day" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'all_day'); ?>>
-                                            <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                            <span><?php esc_html_e('24 Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </label>
                                         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                             <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="custom" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'custom'); ?>>
-                                            <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                            <span><?php esc_html_e('Custom Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </label>
                                         <span class="mulopimfwc-bh-times" data-day="<?php echo esc_attr($key); ?>" style="margin-left:10px;<?php echo ($default_mode !== 'custom') ? 'display:none;' : ''; ?>">
                                             <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>" style="margin-right:4px;">
@@ -1507,19 +1507,19 @@ JS;
         <!-- Shipping Zones -->
         <?php $zones = $this->get_shipping_zones_options(); ?>
         <div class="form-field">
-            <label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="shipping_zones"><?php esc_html_e('Shipping Zones', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <?php foreach ($zones as $zid => $zname): ?>
                     <option value="<?php echo esc_attr($zid); ?>"><?php echo esc_html($zname); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Shipping Methods (instances) -->
         <?php $zone_methods = $this->get_shipping_methods_grouped_by_zone(); ?>
         <div class="form-field">
-            <label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="shipping_methods"><?php esc_html_e('Shipping Methods', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <?php foreach ($zone_methods as $zid => $methods): ?>
                     <?php if (!empty($methods)): ?>
@@ -1531,32 +1531,32 @@ JS;
                     <?php endif; ?>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Payment Methods -->
         <?php $payments = $this->get_payment_method_options(); ?>
         <div class="form-field">
-            <label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="payment_methods"><?php esc_html_e('Payment Methods', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <?php foreach ($payments as $pid => $ptitle): ?>
                     <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Pickup Locations -->
         <?php $pickup_locations = $this->get_pickup_locations(); ?>
         <?php if (!empty($pickup_locations)): ?>
             <div class="form-field">
-                <label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                <label for="pickup_locations"><?php esc_html_e('Pickup Locations', 'multi-location-product-and-inventory-management-pro'); ?></label>
                 <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($pickup_locations as $pid => $ptitle): ?>
                         <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </div>
         <?php endif; ?>
 
@@ -1571,7 +1571,7 @@ JS;
         $rate_mode_options = $this->get_location_rate_mode_options();
         ?>
         <div class="form-field">
-            <label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="location_currency"><?php esc_html_e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <option value="" selected><?php echo esc_html(sprintf(/* translators: %s: default currency label (e.g. "USD - US Dollar") */ __('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
                 <?php foreach ($currencies as $currency_code => $currency_name): ?>
@@ -1586,22 +1586,22 @@ JS;
                     <option value="<?php echo esc_attr($currency_code); ?>"><?php echo esc_html($currency_label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Select currency for this location. ', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="location_currency_position"><?php esc_html_e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
                 <option value=""><?php echo esc_html(sprintf(/* translators: %s: currency position label */ __('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
                 <?php foreach ($currency_positions as $position_key => $position_label): ?>
                     <option value="<?php echo esc_attr($position_key); ?>"><?php echo esc_html($position_label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="location_currency_rate"><?php esc_html_e('Rate', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <div class="mulopimfwc-currency-rate-wrap" style="display:flex;align-items:center;gap:8px;max-width:430px;">
                 <input
                     type="number"
@@ -1638,28 +1638,28 @@ JS;
         <!-- Tax Class -->
         <?php $tax_classes = $this->get_tax_class_options(); ?>
         <div class="form-field">
-            <label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="tax_class"><?php esc_html_e('Tax Class', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="tax_class" id="tax_class" style="min-width: 220px;">
                 <?php foreach ($tax_classes as $key => $label): ?>
                     <option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Select default tax class for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="display_order"><?php esc_html_e('Display Order', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="number" name="display_order" id="display_order" value="" min="0" step="1" />
-            <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <label for="is_active"><?php esc_html_e('Status', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="is_active" id="is_active">
-                <option value="1" selected><?php _e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
-                <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                <option value="1" selected><?php esc_html_e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                <option value="0"><?php esc_html_e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
             </select>
-            <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description"><?php esc_html_e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
     <?php
     }
@@ -1730,128 +1730,128 @@ JS;
         }
     ?>
         <tr class="form-field mulopimfwc-location-map-wrap">
-            <th scope="row"><label><?php _e('Location Map', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label><?php esc_html_e('Location Map', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <div class="mulopimfwc-location-map-controls">
                     <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management-pro'); ?>" />
-                    <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management-pro'); ?></button>
+                    <button type="button" class="button mulopimfwc-location-search-btn"><?php esc_html_e('Search', 'multi-location-product-and-inventory-management-pro'); ?></button>
                 </div>
                 <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management-pro'); ?>"></div>
-                <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                 <p class="description mulopimfwc-location-map-feedback" style="display:none;"></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="street_address"><?php esc_html_e('Street Address', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="street_address" id="street_address" value="<?php echo esc_attr($street_address); ?>" />
-                <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter street address for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="city"><?php _e('City', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="city"><?php esc_html_e('City', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="city" id="city" value="<?php echo esc_attr($city); ?>" />
-                <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter city for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="state"><?php _e('State', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="state"><?php esc_html_e('State', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="state" id="state" value="<?php echo esc_attr($state); ?>" />
-                <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter state for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="postal_code"><?php esc_html_e('Postal Code', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="postal_code" id="postal_code" value="<?php echo esc_attr($postal_code); ?>" />
-                <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter postal code for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="country"><?php esc_html_e('Country', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" />
-                <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter country for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="email"><?php esc_html_e('Email', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="email" name="email" id="email" value="<?php echo esc_attr($email); ?>" />
-                <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter email for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="phone"><?php esc_html_e('Phone', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="tel" name="phone" id="phone" value="<?php echo esc_attr($phone); ?>" />
-                <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter phone for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="low_stock_threshold"><?php esc_html_e('Low Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="number" name="low_stock_threshold" id="low_stock_threshold" value="<?php echo esc_attr($low_stock_threshold); ?>" min="0" step="1" />
-                <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="out_of_stock_threshold"><?php esc_html_e('Out of Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="number" name="out_of_stock_threshold" id="out_of_stock_threshold" value="<?php echo esc_attr($out_of_stock_threshold); ?>" min="0" step="1" />
-                <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="latitude"><?php esc_html_e('Latitude', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="latitude" id="latitude" value="<?php echo esc_attr($latitude); ?>" />
-                <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="longitude"><?php esc_html_e('Longitude', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="longitude" id="longitude" value="<?php echo esc_attr($longitude); ?>" />
-                <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label><?php _e('Logo', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label><?php esc_html_e('Logo', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td class="mulopimfwc-media-wrap">
                 <input type="hidden" name="logo_id" class="mulopimfwc-logo-id" value="<?php echo esc_attr($logo_id); ?>">
                 <div class="mulopimfwc-logo-preview" style="margin:6px 0;"><?php
                                                                             if ($logo_src) echo '<img src="' . esc_url($logo_src) . '" style="max-width:80px;height:auto;border:1px solid #ddd;border-radius:4px;">';
                                                                             ?></div>
                 <p>
-                    <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                    <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="button mulopimfwc-upload-logo"><?php esc_html_e('Upload/Choose Logo', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="button button-link-delete mulopimfwc-remove-logo"><?php esc_html_e('Remove', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 </p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label><?php _e('Gallery', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label><?php esc_html_e('Gallery', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td class="mulopimfwc-media-wrap">
                 <input type="hidden" name="gallery_ids" class="mulopimfwc-gallery-ids" value="<?php echo esc_attr($gallery_ids_csv); ?>">
                 <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;"><?php echo $gallery_thumbs; ?></div>
                 <p>
-                    <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                    <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="button mulopimfwc-upload-gallery"><?php esc_html_e('Add Images', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="button button-link-delete mulopimfwc-clear-gallery"><?php esc_html_e('Clear', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 </p>
             </td>
         </tr>
@@ -1870,13 +1870,13 @@ JS;
         ];
         ?>
         <tr class="form-field">
-            <th scope="row"><label><?php _e('Business Hours', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label><?php esc_html_e('Business Hours', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <div style="border:1px solid #ddd;border-radius:6px;padding:10px;max-width:660px;">
-                    <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                    <p class="description" style="margin-top:0;"><?php esc_html_e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management-pro'); ?></p>
 
                     <p>
-                        <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
+                        <strong><?php esc_html_e('Timezone', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
                         <select name="bh[timezone]" style="min-width:280px;">
                             <?php foreach ($tzs as $tz): ?>
                                 <option value="<?php echo esc_attr($tz); ?>" <?php selected($tz, $bh['timezone']); ?>>
@@ -1898,15 +1898,15 @@ JS;
                                         <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
                                             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                                 <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="closed" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'closed'); ?>>
-                                                <span><?php _e('Closed', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                                <span><?php esc_html_e('Closed', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                             </label>
                                             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                                 <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="all_day" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'all_day'); ?>>
-                                                <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                                <span><?php esc_html_e('24 Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                             </label>
                                             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                                 <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="custom" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'custom'); ?>>
-                                                <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                                <span><?php esc_html_e('Custom Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                             </label>
                                             <span class="mulopimfwc-bh-times" data-day="<?php echo esc_attr($key); ?>" style="margin-left:10px;<?php echo ($current_mode !== 'custom') ? 'display:none;' : ''; ?>">
                                                 <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>" style="margin-right:4px;">
@@ -1944,7 +1944,7 @@ JS;
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="shipping_zones"><?php esc_html_e('Shipping Zones', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($zones as $zid => $zname): ?>
@@ -1953,12 +1953,12 @@ JS;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="shipping_methods"><?php esc_html_e('Shipping Methods', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($zone_methods as $zid => $methods): if (empty($methods)) continue; ?>
@@ -1973,12 +1973,12 @@ JS;
                         </optgroup>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="payment_methods"><?php esc_html_e('Payment Methods', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($payments as $pid => $ptitle): ?>
@@ -1987,7 +1987,7 @@ JS;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
@@ -1998,7 +1998,7 @@ JS;
         ?>
         <?php if (!empty($pickup_locations)): ?>
             <tr class="form-field">
-                <th scope="row"><label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+                <th scope="row"><label for="pickup_locations"><?php esc_html_e('Pickup Locations', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
                 <td>
                     <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management-pro'); ?>">
                         <?php foreach ($pickup_locations as $pid => $ptitle): ?>
@@ -2007,13 +2007,13 @@ JS;
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                    <p class="description"><?php esc_html_e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                 </td>
             </tr>
         <?php endif; ?>
 
         <tr class="form-field">
-            <th scope="row"><label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="location_currency"><?php esc_html_e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <option value="" <?php selected((string) $location_currency, ''); ?>><?php echo esc_html(sprintf(/* translators: %s: default currency label (e.g. "USD - US Dollar") */ __('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
@@ -2031,12 +2031,12 @@ JS;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Select currency for this location. ', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="location_currency_position"><?php esc_html_e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
                     <option value=""><?php echo esc_html(sprintf(/* translators: %s: currency position label */ __('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
@@ -2046,12 +2046,12 @@ JS;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="location_currency_rate"><?php esc_html_e('Rate', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <div class="mulopimfwc-currency-rate-wrap" style="display:flex;align-items:center;gap:8px;max-width:430px;">
                     <input
@@ -2088,7 +2088,7 @@ JS;
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="tax_class"><?php esc_html_e('Tax Class', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="tax_class" id="tax_class" style="min-width: 220px;">
                     <?php foreach ($tax_classes as $key => $label): ?>
@@ -2097,15 +2097,15 @@ JS;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Select default tax class for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="display_order"><?php esc_html_e('Display Order', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="number" name="display_order" id="display_order" value="<?php echo esc_attr($display_order); ?>" min="0" step="1" />
-                <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
@@ -2114,13 +2114,13 @@ JS;
         $is_active = ($is_active === '' || $is_active === '1' || $is_active === true) ? '1' : '0';
         ?>
         <tr class="form-field">
-            <th scope="row"><label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
+            <th scope="row"><label for="is_active"><?php esc_html_e('Status', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="is_active" id="is_active">
-                    <option value="1" <?php selected($is_active, '1'); ?>><?php _e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
-                    <option value="0" <?php selected($is_active, '0'); ?>><?php _e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                    <option value="1" <?php selected($is_active, '1'); ?>><?php esc_html_e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                    <option value="0" <?php selected($is_active, '0'); ?>><?php esc_html_e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 </select>
-                <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                <p class="description"><?php esc_html_e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
     <?php
@@ -3934,16 +3934,16 @@ JS;
         <fieldset class="inline-edit-col-right">
             <div class="inline-edit-col">
                 <label>
-                    <span class="title"><?php _e('Status', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="title"><?php esc_html_e('Status', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     <select name="is_active" id="inline-edit-is-active">
-                        <option value="1"><?php _e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
-                        <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                        <option value="1"><?php esc_html_e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                        <option value="0"><?php esc_html_e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     </select>
                 </label>
             </div>
             <div class="inline-edit-col">
                 <label>
-                    <span class="title"><?php _e('Order', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="title"><?php esc_html_e('Order', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     <input type="number" name="display_order" id="inline-edit-display-order" value="" min="0" step="1" />
                 </label>
             </div>
