@@ -519,12 +519,12 @@ class Location_Wise_Products_Filter
 
         if ($total <= $posts_per_page) {
             $result_count_text = sprintf(
-                _n('Showing the single result', 'Showing all %d results', $total, 'woocommerce'),
+                _n('Showing the single result', 'Showing all %d results', $total, 'multi-location-product-and-inventory-management-pro' ),
                 $total
             );
         } else {
             $result_count_text = sprintf(
-                _nx('Showing the single result', 'Showing %1$d&ndash;%2$d of %3$d results', $total, '%1$d = first, %2$d = last, %3$d = total', 'woocommerce'),
+                _nx('Showing the single result', 'Showing %1$d&ndash;%2$d of %3$d results', $total, '%1$d = first, %2$d = last, %3$d = total', 'multi-location-product-and-inventory-management-pro' ),
                 $first,
                 $last,
                 $total

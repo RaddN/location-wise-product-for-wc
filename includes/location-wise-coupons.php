@@ -138,14 +138,14 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         woocommerce_wp_select([
             'id'                => self::META_INCLUDE,
             'name'              => self::META_INCLUDE . '[]',
-            'label'             => __('Product locations', 'woocommerce'),
-            'description'       => __('Coupon applies only to products that have at least one of the selected locations. Leave empty for no location-based inclusion.', 'woocommerce'),
+            'label'             => __('Product locations', 'multi-location-product-and-inventory-management-pro'),
+            'description'       => __('Coupon applies only to products that have at least one of the selected locations. Leave empty for no location-based inclusion.', 'multi-location-product-and-inventory-management-pro'),
             'desc_tip'          => true,
             'value'             => $include_selected,
             'options'           => $options,
             'custom_attributes' => [
                 'multiple' => 'multiple',
-                'data-placeholder' => __('Select locations…', 'woocommerce'),
+                'data-placeholder' => __('Select locations…', 'multi-location-product-and-inventory-management-pro'),
             ],
             'class'             => 'wc-enhanced-select',
             'style'             => 'width:50%;',
@@ -155,14 +155,14 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         woocommerce_wp_select([
             'id'                => self::META_EXCLUDE,
             'name'              => self::META_EXCLUDE . '[]',
-            'label'             => __('Exclude locations', 'woocommerce'),
-            'description'       => __('Products with these locations will NOT qualify for this coupon.', 'woocommerce'),
+            'label'             => __('Exclude locations', 'multi-location-product-and-inventory-management-pro'),
+            'description'       => __('Products with these locations will NOT qualify for this coupon.', 'multi-location-product-and-inventory-management-pro'),
             'desc_tip'          => true,
             'value'             => $exclude_selected,
             'options'           => $options,
             'custom_attributes' => [
                 'multiple' => 'multiple',
-                'data-placeholder' => __('Select locations to exclude…', 'woocommerce'),
+                'data-placeholder' => __('Select locations to exclude…', 'multi-location-product-and-inventory-management-pro'),
             ],
             'class'             => 'wc-enhanced-select',
             'style'             => 'width:50%;',
@@ -415,7 +415,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         if ($behavior === 'restrict' && ! empty($exclude)) {
             $selected_location_ids = $this->get_selected_location_term_ids();
             if (! empty($selected_location_ids) && array_intersect($exclude, $selected_location_ids)) {
-                wc_add_notice(__('This coupon is not valid for your selected store location.', 'woocommerce'), 'error');
+                wc_add_notice(__('This coupon is not valid for your selected store location.', 'multi-location-product-and-inventory-management-pro'), 'error');
                 return false;
             }
         }
@@ -443,7 +443,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
         if (! $has_qualifying_line) {
             // Prevent usage if no cart item qualifies
-            wc_add_notice(__('This coupon does not apply to the selected product locations in your cart.', 'woocommerce'), 'error');
+            wc_add_notice(__('This coupon does not apply to the selected product locations in your cart.', 'multi-location-product-and-inventory-management-pro'), 'error');
             return false;
         }
 

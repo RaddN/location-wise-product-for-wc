@@ -5988,7 +5988,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                     echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
                                         '<a href="%s" class="remove remove_from_cart_button" aria-label="%s" data-product_id="%s" data-cart_item_key="%s" data-product_sku="%s">&times;</a>',
                                         esc_url(wc_get_cart_remove_url($cart_item_key)),
-                                        esc_html__('Remove this item', 'woocommerce'),
+                                        esc_html__('Remove this item', 'multi-location-product-and-inventory-management-pro'),
                                         $product_id,
                                         $cart_item_key,
                                         $product->get_sku()
@@ -6120,8 +6120,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                             <table class="shop_table woocommerce-checkout-review-order-table" cellspacing="0">
                                 <thead>
                                     <tr>
-                                        <th class="product-name"><?php esc_html_e('Product', 'woocommerce'); ?></th>
-                                        <th class="product-total"><?php esc_html_e('Subtotal', 'woocommerce'); ?></th>
+                                        <th class="product-name"><?php esc_html_e('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                        <th class="product-total"><?php esc_html_e('Subtotal', 'multi-location-product-and-inventory-management-pro'); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -6213,10 +6213,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                                         <tr>
                                             <th class="product-remove">&nbsp;</th>
                                             <th class="product-thumbnail">&nbsp;</th>
-                                            <th class="product-name"><?php esc_html_e('Product', 'woocommerce'); ?></th>
-                                            <th class="product-price"><?php esc_html_e('Price', 'woocommerce'); ?></th>
-                                            <th class="product-quantity"><?php esc_html_e('Quantity', 'woocommerce'); ?></th>
-                                            <th class="product-subtotal"><?php esc_html_e('Subtotal', 'woocommerce'); ?></th>
+                                            <th class="product-name"><?php esc_html_e('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th class="product-price"><?php esc_html_e('Price', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th class="product-quantity"><?php esc_html_e('Quantity', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th class="product-subtotal"><?php esc_html_e('Subtotal', 'multi-location-product-and-inventory-management-pro'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -6237,7 +6237,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                     echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
                                                         '<a href="%s" class="remove" aria-label="%s" data-product_id="%s" data-product_sku="%s">&times;</a>',
                                                         esc_url(wc_get_cart_remove_url($cart_item_key)),
-                                                        esc_html__('Remove this item', 'woocommerce'),
+                                                        esc_html__('Remove this item', 'multi-location-product-and-inventory-management-pro'),
                                                         $product_id,
                                                         $product->get_sku()
                                                     ), $cart_item_key);
@@ -6253,7 +6253,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                     }
                                                     ?>
                                                 </td>
-                                                <td class="product-name" data-title="<?php esc_attr_e('Product', 'woocommerce'); ?>">
+                                                <td class="product-name" data-title="<?php esc_attr_e('Product', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <?php
                                                     if (!$product->is_visible()) {
                                                         echo wp_kses_post(apply_filters('woocommerce_cart_item_name', $product->get_name(), $cart_item, $cart_item_key) . '&nbsp;');
@@ -6272,12 +6272,12 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                     }
                                                     ?>
                                                 </td>
-                                                <td class="product-price" data-title="<?php esc_attr_e('Price', 'woocommerce'); ?>">
+                                                <td class="product-price" data-title="<?php esc_attr_e('Price', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <?php
                                                     echo apply_filters('woocommerce_cart_item_price', WC()->cart->get_product_price($product), $cart_item, $cart_item_key);
                                                     ?>
                                                 </td>
-                                                <td class="product-quantity" data-title="<?php esc_attr_e('Quantity', 'woocommerce'); ?>">
+                                                <td class="product-quantity" data-title="<?php esc_attr_e('Quantity', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <?php
                                                     if ($product->is_sold_individually()) {
                                                         $product_quantity = sprintf('1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key);
@@ -6298,7 +6298,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                     echo apply_filters('woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item);
                                                     ?>
                                                 </td>
-                                                <td class="product-subtotal" data-title="<?php esc_attr_e('Subtotal', 'woocommerce'); ?>">
+                                                <td class="product-subtotal" data-title="<?php esc_attr_e('Subtotal', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <?php
                                                     echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key);
                                                     ?>
@@ -6313,7 +6313,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 </div>
 
                 <div class="actions">
-                    <button type="submit" class="button" name="update_cart" value="<?php esc_attr_e('Update cart', 'woocommerce'); ?>"><?php esc_html_e('Update cart', 'woocommerce'); ?></button>
+                    <button type="submit" class="button" name="update_cart" value="<?php esc_attr_e('Update cart', 'multi-location-product-and-inventory-management-pro'); ?>"><?php esc_html_e('Update cart', 'multi-location-product-and-inventory-management-pro'); ?></button>
                     <?php do_action('woocommerce_cart_actions'); ?>
                 </div>
         <?php
@@ -6366,7 +6366,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                         echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
                                             '<a href="%s" class="remove" aria-label="%s" data-product_id="%s" data-product_sku="%s">&times;</a>',
                                             esc_url(wc_get_cart_remove_url($cart_item_key)),
-                                            esc_html__('Remove this item', 'woocommerce'),
+                                            esc_html__('Remove this item', 'multi-location-product-and-inventory-management-pro'),
                                             $product_id,
                                             $product->get_sku()
                                         ), $cart_item_key);

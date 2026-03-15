@@ -131,7 +131,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 													<?php echo esc_html( $date ); ?>
 												</time>
 												<?php if ( $rating > 0 ) : ?>
-													<span class="mulopimfwc-neighbour-reviews__rating" aria-label="<?php echo esc_attr( sprintf( _n( '%d star', '%d stars', $rating, 'woocommerce' ), $rating ) ); ?>">
+													<span class="mulopimfwc-neighbour-reviews__rating" aria-label="<?php echo esc_attr( sprintf( _n( '%d star', '%d stars', $rating, 'multi-location-product-and-inventory-management-pro'  ), $rating ) ); ?>">
 														<?php
 														// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 														echo str_repeat( '★', $rating ) . str_repeat( '☆', max( 0, 5 - $rating ) );
