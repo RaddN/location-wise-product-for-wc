@@ -148,8 +148,8 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                 $this->id                 = 'cash_on_pickup';
                 $this->icon               = MULTI_LOCATION_PLUGIN_URL . 'assets/images/plugincy-cash.svg';
                 $this->has_fields         = false;
-                $this->method_title       = __('Cash on Pickup', 'multi-location-product-and-inventory-management');
-                $this->method_description = __('Have your customers pay with cash when they pick up their order from your store location. Powered by Plugincy - Multi Location Product & Inventory Management.', 'multi-location-product-and-inventory-management');
+                $this->method_title       = __('Cash on Pickup', 'multi-location-product-and-inventory-management-pro');
+                $this->method_description = __('Have your customers pay with cash when they pick up their order from your store location. Powered by Plugincy - Multi Location Product & Inventory Management.', 'multi-location-product-and-inventory-management-pro');
                 
                 // Support for WooCommerce Blocks checkout
                 $this->supports = array(
@@ -333,7 +333,7 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
              */
             public function init_form_fields() {
                 $shipping_methods = array(
-                    'all' => __('All Shipping Methods', 'multi-location-product-and-inventory-management'),
+                    'all' => __('All Shipping Methods', 'multi-location-product-and-inventory-management-pro'),
                 );
 
                 if (is_admin()) {
@@ -344,43 +344,43 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
 
                 $this->form_fields = array(
                     'enabled' => array(
-                        'title'   => __('Enable/Disable', 'multi-location-product-and-inventory-management'),
+                        'title'   => __('Enable/Disable', 'multi-location-product-and-inventory-management-pro'),
                         'type'    => 'checkbox',
-                        'label'   => __('Enable Cash on Pickup', 'multi-location-product-and-inventory-management'),
+                        'label'   => __('Enable Cash on Pickup', 'multi-location-product-and-inventory-management-pro'),
                         'default' => 'no',
                     ),
                     'title' => array(
-                        'title'       => __('Title', 'multi-location-product-and-inventory-management'),
+                        'title'       => __('Title', 'multi-location-product-and-inventory-management-pro'),
                         'type'        => 'text',
-                        'description' => __('Payment method description that the customer will see on your checkout.', 'multi-location-product-and-inventory-management'),
-                        'default'     => __('Cash on Pickup', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Payment method description that the customer will see on your checkout.', 'multi-location-product-and-inventory-management-pro'),
+                        'default'     => __('Cash on Pickup', 'multi-location-product-and-inventory-management-pro'),
                         'desc_tip'    => true,
                     ),
                     'description' => array(
-                        'title'       => __('Description', 'multi-location-product-and-inventory-management'),
+                        'title'       => __('Description', 'multi-location-product-and-inventory-management-pro'),
                         'type'        => 'textarea',
-                        'description' => __('Payment method description that the customer will see on your checkout.', 'multi-location-product-and-inventory-management'),
-                        'default'     => __('Pay with cash when you pick up your order from the store location. Powered by <a href="https://plugincy.com/multi-location-product-and-inventory-management" target="_blank">Plugincy</a>.', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Payment method description that the customer will see on your checkout.', 'multi-location-product-and-inventory-management-pro'),
+                        'default'     => __('Pay with cash when you pick up your order from the store location. Powered by <a href="https://plugincy.com/multi-location-product-and-inventory-management" target="_blank">Plugincy</a>.', 'multi-location-product-and-inventory-management-pro'),
                         'desc_tip'    => true,
                     ),
                     'instructions' => array(
-                        'title'       => __('Instructions', 'multi-location-product-and-inventory-management'),
+                        'title'       => __('Instructions', 'multi-location-product-and-inventory-management-pro'),
                         'type'        => 'textarea',
-                        'description' => __('Instructions that will be added to the thank you page and emails.', 'multi-location-product-and-inventory-management'),
-                        'default'     => __('Please have exact cash ready when you pick up your order from the store location. Powered by Plugincy - Multi Location Product & Inventory Management.', 'multi-location-product-and-inventory-management'),
+                        'description' => __('Instructions that will be added to the thank you page and emails.', 'multi-location-product-and-inventory-management-pro'),
+                        'default'     => __('Please have exact cash ready when you pick up your order from the store location. Powered by Plugincy - Multi Location Product & Inventory Management.', 'multi-location-product-and-inventory-management-pro'),
                         'desc_tip'    => true,
                     ),
                     'enable_for_methods' => array(
-                        'title'             => __('Enable for shipping methods', 'multi-location-product-and-inventory-management'),
+                        'title'             => __('Enable for shipping methods', 'multi-location-product-and-inventory-management-pro'),
                         'type'              => 'multiselect',
                         'class'             => 'wc-enhanced-select',
                         'css'               => 'width: 400px;',
                         'default'           => array('all'),
-                        'description'       => __('Select "All Shipping Methods" to enable Cash on Pickup for all shipping methods, or select specific shipping methods.', 'multi-location-product-and-inventory-management'),
+                        'description'       => __('Select "All Shipping Methods" to enable Cash on Pickup for all shipping methods, or select specific shipping methods.', 'multi-location-product-and-inventory-management-pro'),
                         'options'           => $shipping_methods,
                         'desc_tip'          => true,
                         'custom_attributes' => array(
-                            'data-placeholder' => __('Select shipping methods', 'multi-location-product-and-inventory-management'),
+                            'data-placeholder' => __('Select shipping methods', 'multi-location-product-and-inventory-management-pro'),
                         ),
                     ),
                 );
@@ -423,7 +423,7 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
             public function process_payment($order_id) {
                 if (function_exists('mulopimfwc_is_gateway_allowed_for_active_location') && !mulopimfwc_is_gateway_allowed_for_active_location($this->id)) {
                     wc_add_notice(
-                        __('Cash on Pickup is not available for the selected location.', 'multi-location-product-and-inventory-management'),
+                        __('Cash on Pickup is not available for the selected location.', 'multi-location-product-and-inventory-management-pro'),
                         'error'
                     );
                     return array(
@@ -435,7 +435,7 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
 
                 if ($order->get_total() > 0) {
                     // Mark as processing (payment will be taken when customer picks up).
-                    $order->update_status(apply_filters('woocommerce_cash_on_pickup_process_payment_order_status', 'on-hold', $order), __('Payment to be collected on pickup.', 'multi-location-product-and-inventory-management'));
+                    $order->update_status(apply_filters('woocommerce_cash_on_pickup_process_payment_order_status', 'on-hold', $order), __('Payment to be collected on pickup.', 'multi-location-product-and-inventory-management-pro'));
                 } else {
                     $order->payment_complete();
                 }
@@ -460,7 +460,7 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                     echo wp_kses_post(wpautop(wptexturize($this->instructions)));
                 }
                 // Add plugincy branding
-                echo '<p style="margin-top: 15px; font-size: 12px; color: #666;"><em>' . esc_html__('Payment method powered by Plugincy', 'multi-location-product-and-inventory-management') . '</em></p>';
+                echo '<p style="margin-top: 15px; font-size: 12px; color: #666;"><em>' . esc_html__('Payment method powered by Plugincy', 'multi-location-product-and-inventory-management-pro') . '</em></p>';
             }
 
             /**
@@ -717,10 +717,10 @@ if (!function_exists('mulopimfwc_render_cop_badge')) {
 
         $badge_html = sprintf(
             '<span class="components-truncate components-text woocommerce-pill woocommerce-official-extension-badge mulopimfwc-cop-badge"><span class="woocommerce-official-extension-badge__container" tabindex="0" role="img" aria-label="%1$s" data-tooltip="%4$s"><img src="%2$s" alt="%1$s" /><span>%3$s</span></span></span>',
-            esc_attr__('Plugincy add-on', 'multi-location-product-and-inventory-management'),
+            esc_attr__('Plugincy add-on', 'multi-location-product-and-inventory-management-pro'),
             esc_url($badge_logo),
-            esc_html__('Plugincy', 'multi-location-product-and-inventory-management'),
-            esc_attr__('Plugincy cash on pickup add-on', 'multi-location-product-and-inventory-management')
+            esc_html__('Plugincy', 'multi-location-product-and-inventory-management-pro'),
+            esc_attr__('Plugincy cash on pickup add-on', 'multi-location-product-and-inventory-management-pro')
         );
 
         ?>

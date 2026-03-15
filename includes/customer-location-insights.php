@@ -930,7 +930,7 @@ class Mulopimfwc_Customer_Location_Insights
 
                                 <?php if ($popularity_data && $popularity_data['purchase_count'] > 0): ?>
                                     <div class="mulopimfwc-recommendation-stats">
-                                        <?php echo esc_html(sprintf(_n('%d purchase', '%d purchases', $popularity_data['purchase_count'], 'multi-location-product-and-inventory-management'), $popularity_data['purchase_count'])); ?>
+                                        <?php echo esc_html(sprintf(_n('%d purchase', '%d purchases', $popularity_data['purchase_count'], 'multi-location-product-and-inventory-management-pro'), $popularity_data['purchase_count'])); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -958,7 +958,7 @@ class Mulopimfwc_Customer_Location_Insights
         check_ajax_referer('mulopimfwc_recommendations', 'nonce');
 
         if ($this->is_disabled()) {
-            wp_send_json_error(['message' => __('Recommendations are disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Recommendations are disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         global $mulopimfwc_options;
@@ -969,14 +969,14 @@ class Mulopimfwc_Customer_Location_Insights
             $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
 
         if (!$recommendations_enabled) {
-            wp_send_json_error(['message' => __('Location recommendations are disabled.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Location recommendations are disabled.', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $location_slug = isset($_POST['location']) ? sanitize_text_field(wp_unslash(rawurldecode($_POST['location']))) : '';
         $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 8;
 
         if (empty($location_slug)) {
-            wp_send_json_error(['message' => __('Location not specified', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Location not specified', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $products = $this->get_popular_products($location_slug, $limit);
@@ -997,18 +997,18 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Location Analytics', 'multi-location-product-and-inventory-management'),
-            __('Analytics', 'multi-location-product-and-inventory-management'),
+            'multi-location-product-and-inventory-management-pro',
+            __('Location Analytics', 'multi-location-product-and-inventory-management-pro'),
+            __('Analytics', 'multi-location-product-and-inventory-management-pro'),
             'manage_woocommerce',
             'mulopimfwc-analytics',
             [$this, 'render_analytics_page']
         );
 
         add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Our Plugins', 'multi-location-product-and-inventory-management'),
-            __('Our Plugins', 'multi-location-product-and-inventory-management'),
+            'multi-location-product-and-inventory-management-pro',
+            __('Our Plugins', 'multi-location-product-and-inventory-management-pro'),
+            __('Our Plugins', 'multi-location-product-and-inventory-management-pro'),
             'install_plugins',
             'plugincy-plugins',
             array($this, 'render_plugincy_plugins_page')
@@ -1019,7 +1019,7 @@ class Mulopimfwc_Customer_Location_Insights
     public function render_plugincy_plugins_page()
     {
         if (!current_user_can('install_plugins')) {
-            wp_die(esc_html__('You do not have sufficient permissions to install plugins on this site.', 'multi-location-product-and-inventory-management'));
+            wp_die(esc_html__('You do not have sufficient permissions to install plugins on this site.', 'multi-location-product-and-inventory-management-pro'));
         }
 
         require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
@@ -1043,7 +1043,7 @@ class Mulopimfwc_Customer_Location_Insights
         ));
 
         echo '<div class="wrap plugin-install-php">';
-        echo '<h1>' . esc_html__('Plugincy Plugins', 'multi-location-product-and-inventory-management') . '</h1>';
+        echo '<h1>' . esc_html__('Plugincy Plugins', 'multi-location-product-and-inventory-management-pro') . '</h1>';
 
         if (is_wp_error($api)) {
             echo '<div class="notice notice-error"><p>' . esc_html($api->get_error_message()) . '</p></div></div>';
@@ -1053,7 +1053,7 @@ class Mulopimfwc_Customer_Location_Insights
         $plugins = !empty($api->plugins) ? $api->plugins : array();
 
         if (empty($plugins)) {
-            echo '<p>' . esc_html__('No plugins found for this author.', 'multi-location-product-and-inventory-management') . '</p></div>';
+            echo '<p>' . esc_html__('No plugins found for this author.', 'multi-location-product-and-inventory-management-pro') . '</p></div>';
             return;
         }
 
@@ -1071,26 +1071,26 @@ class Mulopimfwc_Customer_Location_Insights
             switch ($status['status']) {
                 case 'install':
                     $action_class = 'install-now button button-primary';
-                    $action_text = esc_html__('Install Now', 'multi-location-product-and-inventory-management');
+                    $action_text = esc_html__('Install Now', 'multi-location-product-and-inventory-management-pro');
                     $action_url = $status['url'];
                     break;
                 case 'update_available':
                     $action_class = 'update-now button';
-                    $action_text = esc_html__('Update Now', 'multi-location-product-and-inventory-management');
+                    $action_text = esc_html__('Update Now', 'multi-location-product-and-inventory-management-pro');
                     $action_url = $status['url'];
                     break;
                 default:
                     if (!empty($status['file']) && is_plugin_active($status['file'])) {
                         $action_class = 'button disabled';
-                        $action_text = esc_html__('Active', 'multi-location-product-and-inventory-management');
+                        $action_text = esc_html__('Active', 'multi-location-product-and-inventory-management-pro');
                         $action_disabled = true;
                     } elseif (!empty($status['file']) && current_user_can('activate_plugin', $status['file'])) {
                         $action_class = 'activate-now button button-primary';
-                        $action_text = esc_html__('Activate', 'multi-location-product-and-inventory-management');
+                        $action_text = esc_html__('Activate', 'multi-location-product-and-inventory-management-pro');
                         $action_url = wp_nonce_url(self_admin_url('plugins.php?action=activate&plugin=' . $status['file']), 'activate-plugin_' . $status['file']);
                     } else {
                         $action_class = 'button disabled';
-                        $action_text = esc_html__('Installed', 'multi-location-product-and-inventory-management');
+                        $action_text = esc_html__('Installed', 'multi-location-product-and-inventory-management-pro');
                         $action_disabled = true;
                     }
             }
@@ -1128,12 +1128,12 @@ class Mulopimfwc_Customer_Location_Insights
                 echo '<img class="plugin-icon" src="' . $icon . '" alt="" />';
             }
             if ($details_url) {
-                echo '<h3><a class="thickbox open-plugin-details-modal" href="' . esc_url($details_url) . '" aria-label="' . esc_attr(sprintf(__('More details about %s', 'multi-location-product-and-inventory-management'), $name)) . '">' . esc_html($name) . '</a></h3>';
+                echo '<h3><a class="thickbox open-plugin-details-modal" href="' . esc_url($details_url) . '" aria-label="' . esc_attr(sprintf(__('More details about %s', 'multi-location-product-and-inventory-management-pro'), $name)) . '">' . esc_html($name) . '</a></h3>';
             } else {
                 echo '<h3>' . esc_html($name) . '</h3>';
             }
             if (!empty($author)) {
-                echo '<p class="author">' . sprintf(esc_html__('By %s', 'multi-location-product-and-inventory-management'), wp_kses_post($author)) . '</p>';
+                echo '<p class="author">' . sprintf(esc_html__('By %s', 'multi-location-product-and-inventory-management-pro'), wp_kses_post($author)) . '</p>';
             }
             echo '</div>';
             echo '<div class="action-links"><ul class="plugin-action-buttons"><li>' . $action_html . '</li></ul></div>';
@@ -1142,13 +1142,13 @@ class Mulopimfwc_Customer_Location_Insights
 
             echo '<div class="plugin-card-bottom">';
             echo '<div class="vers column-rating">';
-            echo '<span>' . sprintf(esc_html__('Version %s', 'multi-location-product-and-inventory-management'), esc_html($version)) . '</span>';
+            echo '<span>' . sprintf(esc_html__('Version %s', 'multi-location-product-and-inventory-management-pro'), esc_html($version)) . '</span>';
             if ($active_installs !== null) {
                 $installs = number_format_i18n((int) $active_installs);
-                echo '<span style="margin-left:10px;">' . sprintf(esc_html__('%s+ active installs', 'multi-location-product-and-inventory-management'), esc_html($installs)) . '</span>';
+                echo '<span style="margin-left:10px;">' . sprintf(esc_html__('%s+ active installs', 'multi-location-product-and-inventory-management-pro'), esc_html($installs)) . '</span>';
             }
             echo '</div>';
-            echo '<div class="column-compatibility"><span class="compatibility-compatible">' . esc_html__('Compatible with your version of WordPress', 'multi-location-product-and-inventory-management') . '</span></div>';
+            echo '<div class="column-compatibility"><span class="compatibility-compatible">' . esc_html__('Compatible with your version of WordPress', 'multi-location-product-and-inventory-management-pro') . '</span></div>';
             echo '</div>';
             echo '</div>';
         }
@@ -1169,7 +1169,7 @@ class Mulopimfwc_Customer_Location_Insights
         // Always include a default bucket for orders without a stored location.
         $locations[] = (object) [
             'slug' => 'default',
-            'name' => __('Default', 'multi-location-product-and-inventory-management'),
+            'name' => __('Default', 'multi-location-product-and-inventory-management-pro'),
             'term_id' => 0,
         ];
 
@@ -1216,7 +1216,7 @@ class Mulopimfwc_Customer_Location_Insights
                 $product = wc_get_product($product_id);
                 $top_products[] = [
                     'id' => $product_id,
-                    'name' => $product ? $product->get_name() : __('Unknown Product', 'multi-location-product-and-inventory-management'),
+                    'name' => $product ? $product->get_name() : __('Unknown Product', 'multi-location-product-and-inventory-management-pro'),
                     'view_count' => isset($product_data['view_count']) ? (int) $product_data['view_count'] : 0,
                     'purchase_count' => isset($product_data['purchase_count']) ? (int) $product_data['purchase_count'] : 0,
                     'popularity_score' => isset($product_data['popularity_score']) ? (int) $product_data['popularity_score'] : 0
@@ -1281,7 +1281,7 @@ class Mulopimfwc_Customer_Location_Insights
             $top_product = wc_get_product($top_product_id);
             $top_product_payload = [
                 'id' => $top_product_id,
-                'name' => $top_product ? $top_product->get_name() : __('Unknown Product', 'multi-location-product-and-inventory-management'),
+                'name' => $top_product ? $top_product->get_name() : __('Unknown Product', 'multi-location-product-and-inventory-management-pro'),
                 'views' => $all_products[$top_product_id]['views'],
                 'purchases' => $all_products[$top_product_id]['purchases'],
                 'locations' => $all_products[$top_product_id]['locations'],
@@ -1359,11 +1359,11 @@ class Mulopimfwc_Customer_Location_Insights
         check_ajax_referer('mulopimfwc_analytics_live', 'nonce');
 
         if ($this->is_disabled()) {
-            wp_send_json_error(['message' => __('Analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         if (!mulopimfwc_user_can_run_reports()) {
-            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $analytics = $this->get_analytics_snapshot();
@@ -1380,7 +1380,7 @@ class Mulopimfwc_Customer_Location_Insights
     public function render_analytics_page()
     {
         if ($this->is_disabled()) {
-            wp_die(__('Location analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'));
+            wp_die(__('Location analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro'));
         }
 
         if (!mulopimfwc_user_can_run_reports()) {
@@ -1402,18 +1402,18 @@ class Mulopimfwc_Customer_Location_Insights
 
     ?>
         <div class="wrap mulopimfwc-analytics-wrap <?php echo mulopimfwc_premium_feature() ? '' : ' mulopimfwc_pro_only_blur mulopimfwc_pro_only'; ?>">
-        <h1 style="display: none !important;"><?php echo esc_html__('Location Analytics Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
+        <h1 style="display: none !important;"><?php echo esc_html__('Location Analytics Dashboard', 'multi-location-product-and-inventory-management-pro'); ?></h1>
         <h1>
                 <span class="dashicons dashicons-chart-area"></span>
-                <?php esc_html_e('Location Analytics Dashboard', 'multi-location-product-and-inventory-management'); ?>
-                <span id="mulopimfwc-processing-bubble" class="awaiting-mod update-plugins count-<?php echo esc_attr($processing_count); ?>" title="<?php esc_attr_e('Processing orders', 'multi-location-product-and-inventory-management'); ?>">
+                <?php esc_html_e('Location Analytics Dashboard', 'multi-location-product-and-inventory-management-pro'); ?>
+                <span id="mulopimfwc-processing-bubble" class="awaiting-mod update-plugins count-<?php echo esc_attr($processing_count); ?>" title="<?php esc_attr_e('Processing orders', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <span class="processing-count"><?php echo esc_html($processing_count); ?></span>
                 </span>
             </h1>
 
             <!-- Global Overview Section -->
             <div class="mulopimfwc-global-overview">
-                <h2><?php esc_html_e('Global Overview', 'multi-location-product-and-inventory-management'); ?></h2>
+                <h2><?php esc_html_e('Global Overview', 'multi-location-product-and-inventory-management-pro'); ?></h2>
 
                 <div class="mulopimfwc-overview-grid">
                     <div class="overview-card primary">
@@ -1421,7 +1421,7 @@ class Mulopimfwc_Customer_Location_Insights
                             <span class="dashicons dashicons-visibility"></span>
                         </div>
                         <div class="card-content">
-                            <span class="card-label"><?php esc_html_e('Total Views', 'multi-location-product-and-inventory-management'); ?></span>
+                            <span class="card-label"><?php esc_html_e('Total Views', 'multi-location-product-and-inventory-management-pro'); ?></span>
                             <span class="card-value" data-analytics-metric="total_views"><?php echo esc_html(number_format($global_stats['total_views'])); ?></span>
                         </div>
                     </div>
@@ -1431,7 +1431,7 @@ class Mulopimfwc_Customer_Location_Insights
                             <span class="dashicons dashicons-cart"></span>
                         </div>
                         <div class="card-content">
-                            <span class="card-label"><?php esc_html_e('Total Purchases', 'multi-location-product-and-inventory-management'); ?></span>
+                            <span class="card-label"><?php esc_html_e('Total Purchases', 'multi-location-product-and-inventory-management-pro'); ?></span>
                             <span class="card-value" data-analytics-metric="total_purchases"><?php echo esc_html(number_format($global_stats['total_purchases'])); ?></span>
                         </div>
                     </div>
@@ -1441,7 +1441,7 @@ class Mulopimfwc_Customer_Location_Insights
                             <span class="dashicons dashicons-groups"></span>
                         </div>
                         <div class="card-content">
-                            <span class="card-label"><?php esc_html_e('Total Users', 'multi-location-product-and-inventory-management'); ?></span>
+                            <span class="card-label"><?php esc_html_e('Total Users', 'multi-location-product-and-inventory-management-pro'); ?></span>
                             <span class="card-value" data-analytics-metric="total_users"><?php echo esc_html(number_format($global_stats['total_users'])); ?></span>
                         </div>
                     </div>
@@ -1451,7 +1451,7 @@ class Mulopimfwc_Customer_Location_Insights
                             <span class="dashicons dashicons-chart-line"></span>
                         </div>
                         <div class="card-content">
-                            <span class="card-label"><?php esc_html_e('Conversion Rate', 'multi-location-product-and-inventory-management'); ?></span>
+                            <span class="card-label"><?php esc_html_e('Conversion Rate', 'multi-location-product-and-inventory-management-pro'); ?></span>
                             <span class="card-value" data-analytics-metric="conversion_rate"><?php echo esc_html(number_format($conversion_rate, 2)); ?>%</span>
                         </div>
                     </div>
@@ -1463,7 +1463,7 @@ class Mulopimfwc_Customer_Location_Insights
                 <div class="top-performer-card">
                     <div class="performer-header">
                         <span class="dashicons dashicons-location-alt"></span>
-                        <h3><?php esc_html_e('Top Performing Location', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <h3><?php esc_html_e('Top Performing Location', 'multi-location-product-and-inventory-management-pro'); ?></h3>
                     </div>
                     <?php
                     $top_location_stats = !empty($top_location_data) ? $top_location_data['stats'] : [
@@ -1473,21 +1473,21 @@ class Mulopimfwc_Customer_Location_Insights
                     ];
                     $top_location_name = !empty($top_location_data['name'])
                         ? $top_location_data['name']
-                        : __('No data available yet', 'multi-location-product-and-inventory-management');
+                        : __('No data available yet', 'multi-location-product-and-inventory-management-pro');
                     ?>
                     <div class="performer-content">
                         <div class="performer-name" id="mulopimfwc-top-location-name"><?php echo esc_html($top_location_name); ?></div>
                         <div class="performer-stats">
                             <div class="performer-stat">
-                                <span class="stat-label"><?php esc_html_e('Views', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="stat-label"><?php esc_html_e('Views', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="stat-value" data-top-location="views"><?php echo esc_html(number_format($top_location_stats['total_views'])); ?></span>
                             </div>
                             <div class="performer-stat">
-                                <span class="stat-label"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="stat-label"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="stat-value" data-top-location="purchases"><?php echo esc_html(number_format($top_location_stats['total_purchases'])); ?></span>
                             </div>
                             <div class="performer-stat">
-                                <span class="stat-label"><?php esc_html_e('Users', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="stat-label"><?php esc_html_e('Users', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="stat-value" data-top-location="users"><?php echo esc_html(number_format($top_location_stats['unique_users'])); ?></span>
                             </div>
                         </div>
@@ -1497,11 +1497,11 @@ class Mulopimfwc_Customer_Location_Insights
                 <div class="top-performer-card">
                     <div class="performer-header">
                         <span class="dashicons dashicons-products"></span>
-                        <h3><?php esc_html_e('Top Selling Product', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <h3><?php esc_html_e('Top Selling Product', 'multi-location-product-and-inventory-management-pro'); ?></h3>
                     </div>
                     <?php
                     $top_product_id = !empty($top_product_data['id']) ? $top_product_data['id'] : 0;
-                    $top_product_name = !empty($top_product_data['name']) ? $top_product_data['name'] : __('No data available yet', 'multi-location-product-and-inventory-management');
+                    $top_product_name = !empty($top_product_data['name']) ? $top_product_data['name'] : __('No data available yet', 'multi-location-product-and-inventory-management-pro');
                     $top_product_views = !empty($top_product_data['views']) ? $top_product_data['views'] : 0;
                     $top_product_purchases = !empty($top_product_data['purchases']) ? $top_product_data['purchases'] : 0;
                     $top_product_locations = !empty($top_product_data['locations']) ? $top_product_data['locations'] : [];
@@ -1515,15 +1515,15 @@ class Mulopimfwc_Customer_Location_Insights
                         </div>
                         <div class="performer-stats">
                             <div class="performer-stat">
-                                <span class="stat-label"><?php esc_html_e('Total Views', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="stat-label"><?php esc_html_e('Total Views', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="stat-value" data-top-product="views"><?php echo esc_html(number_format($top_product_views)); ?></span>
                             </div>
                             <div class="performer-stat">
-                                <span class="stat-label"><?php esc_html_e('Total Purchases', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="stat-label"><?php esc_html_e('Total Purchases', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="stat-value" data-top-product="purchases"><?php echo esc_html(number_format($top_product_purchases)); ?></span>
                             </div>
                             <div class="performer-stat">
-                                <span class="stat-label"><?php esc_html_e('Locations', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="stat-label"><?php esc_html_e('Locations', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="stat-value" data-top-product="locations-count"><?php echo esc_html(number_format($top_product_locations_count)); ?></span>
                             </div>
                         </div>
@@ -1536,18 +1536,18 @@ class Mulopimfwc_Customer_Location_Insights
 
             <!-- Location Performance Rankings -->
             <div class="mulopimfwc-location-rankings">
-                <h2><?php esc_html_e('Location Performance Rankings', 'multi-location-product-and-inventory-management'); ?></h2>
+                <h2><?php esc_html_e('Location Performance Rankings', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                 <div class="rankings-table-wrapper">
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
                             <tr>
-                                <th class="rank-column"><?php esc_html_e('Rank', 'multi-location-product-and-inventory-management'); ?></th>
-                                <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                                <th class="num-column"><?php esc_html_e('Views', 'multi-location-product-and-inventory-management'); ?></th>
-                                <th class="num-column"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management'); ?></th>
-                                <th class="num-column"><?php esc_html_e('Users', 'multi-location-product-and-inventory-management'); ?></th>
-                                <th class="num-column"><?php esc_html_e('Conversion', 'multi-location-product-and-inventory-management'); ?></th>
-                                <th class="num-column"><?php esc_html_e('Score', 'multi-location-product-and-inventory-management'); ?></th>
+                                <th class="rank-column"><?php esc_html_e('Rank', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                <th class="num-column"><?php esc_html_e('Views', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                <th class="num-column"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                <th class="num-column"><?php esc_html_e('Users', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                <th class="num-column"><?php esc_html_e('Conversion', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                <th class="num-column"><?php esc_html_e('Score', 'multi-location-product-and-inventory-management-pro'); ?></th>
                             </tr>
                         </thead>
                         <tbody id="mulopimfwc-rankings-body">
@@ -1586,7 +1586,7 @@ class Mulopimfwc_Customer_Location_Insights
 
             <!-- Individual Location Details -->
             <div class="mulopimfwc-location-details">
-                <h2><?php esc_html_e('Location Details', 'multi-location-product-and-inventory-management'); ?></h2>
+                <h2><?php esc_html_e('Location Details', 'multi-location-product-and-inventory-management-pro'); ?></h2>
 
                 <div class="mulopimfwc-analytics-dashboard">
                     <?php foreach ($locations as $location): ?>
@@ -1603,7 +1603,7 @@ class Mulopimfwc_Customer_Location_Insights
                                 <?php if (mulopimfwc_user_can_export_reports()) : ?>
                                     <button type="button" class="button button-secondary export-location-btn" data-location="<?php echo esc_attr($location['slug']); ?>">
                                         <span class="dashicons dashicons-download"></span>
-                                        <?php esc_html_e('Export', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php esc_html_e('Export', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                 <?php endif; ?>
                             </div>
@@ -1612,7 +1612,7 @@ class Mulopimfwc_Customer_Location_Insights
                                 <div class="stat-box">
                                     <div class="stat-icon"><span class="dashicons dashicons-groups"></span></div>
                                     <div class="stat-info">
-                                        <span class="stat-label"><?php esc_html_e('Unique Users', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span class="stat-label"><?php esc_html_e('Unique Users', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         <span class="stat-value" data-loc-metric="unique_users"><?php echo esc_html(number_format($stats['unique_users'])); ?></span>
                                     </div>
                                 </div>
@@ -1620,7 +1620,7 @@ class Mulopimfwc_Customer_Location_Insights
                                 <div class="stat-box">
                                     <div class="stat-icon"><span class="dashicons dashicons-admin-page"></span></div>
                                     <div class="stat-info">
-                                        <span class="stat-label"><?php esc_html_e('Sessions', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span class="stat-label"><?php esc_html_e('Sessions', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         <span class="stat-value" data-loc-metric="unique_sessions"><?php echo esc_html(number_format($stats['unique_sessions'])); ?></span>
                                     </div>
                                 </div>
@@ -1628,7 +1628,7 @@ class Mulopimfwc_Customer_Location_Insights
                                 <div class="stat-box">
                                     <div class="stat-icon"><span class="dashicons dashicons-visibility"></span></div>
                                     <div class="stat-info">
-                                        <span class="stat-label"><?php esc_html_e('Product Views', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span class="stat-label"><?php esc_html_e('Product Views', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         <span class="stat-value" data-loc-metric="total_views"><?php echo esc_html(number_format($stats['total_views'])); ?></span>
                                     </div>
                                 </div>
@@ -1636,7 +1636,7 @@ class Mulopimfwc_Customer_Location_Insights
                                 <div class="stat-box">
                                     <div class="stat-icon"><span class="dashicons dashicons-cart"></span></div>
                                     <div class="stat-info">
-                                        <span class="stat-label"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span class="stat-label"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         <span class="stat-value" data-loc-metric="total_purchases"><?php echo esc_html(number_format($stats['total_purchases'])); ?></span>
                                     </div>
                                 </div>
@@ -1644,7 +1644,7 @@ class Mulopimfwc_Customer_Location_Insights
                                 <div class="stat-box highlight">
                                     <div class="stat-icon"><span class="dashicons dashicons-chart-line"></span></div>
                                     <div class="stat-info">
-                                        <span class="stat-label"><?php esc_html_e('Conversion Rate', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span class="stat-label"><?php esc_html_e('Conversion Rate', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         <span class="stat-value" data-loc-metric="conversion"><?php echo esc_html(number_format($location_conversion, 2)); ?>%</span>
                                     </div>
                                 </div>
@@ -1652,22 +1652,22 @@ class Mulopimfwc_Customer_Location_Insights
                                 <div class="stat-box highlight">
                                     <div class="stat-icon"><span class="dashicons dashicons-star-filled"></span></div>
                                     <div class="stat-info">
-                                        <span class="stat-label"><?php esc_html_e('Performance Score', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span class="stat-label"><?php esc_html_e('Performance Score', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         <span class="stat-value" data-loc-metric="score"><?php echo esc_html(number_format($performance_score)); ?></span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mulopimfwc-top-products">
-                                <h4><?php esc_html_e('Top 5 Products', 'multi-location-product-and-inventory-management'); ?></h4>
+                                <h4><?php esc_html_e('Top 5 Products', 'multi-location-product-and-inventory-management-pro'); ?></h4>
                                 <table class="widefat">
                                     <thead>
                                         <tr>
                                             <th class="rank-col">#</th>
-                                            <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th class="num-col"><?php esc_html_e('Views', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th class="num-col"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th class="num-col"><?php esc_html_e('Score', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th class="num-col"><?php esc_html_e('Views', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th class="num-col"><?php esc_html_e('Purchases', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th class="num-col"><?php esc_html_e('Score', 'multi-location-product-and-inventory-management-pro'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody data-loc-top-products="<?php echo esc_attr($location['slug']); ?>">
@@ -1676,7 +1676,7 @@ class Mulopimfwc_Customer_Location_Insights
                                             $product_rank = 1;
                                             foreach ($top_products as $product_data):
                                                 $product_id = $product_data['id'];
-                                                $product_name = isset($product_data['name']) && !empty($product_data['name']) ? $product_data['name'] : __('Unknown Product', 'multi-location-product-and-inventory-management');
+                                                $product_name = isset($product_data['name']) && !empty($product_data['name']) ? $product_data['name'] : __('Unknown Product', 'multi-location-product-and-inventory-management-pro');
                                         ?>
                                                 <tr>
                                                     <td class="rank-col"><?php echo esc_html($product_rank); ?></td>
@@ -1696,7 +1696,7 @@ class Mulopimfwc_Customer_Location_Insights
                                         } else {
                                             ?>
                                                 <tr>
-                                                    <td colspan="5" style="text-align:center;"><?php esc_html_e('No product data available yet for this location.', 'multi-location-product-and-inventory-management'); ?></td>
+                                                    <td colspan="5" style="text-align:center;"><?php esc_html_e('No product data available yet for this location.', 'multi-location-product-and-inventory-management-pro'); ?></td>
                                                 </tr>
                                             <?php
                                         }
@@ -2260,7 +2260,7 @@ class Mulopimfwc_Customer_Location_Insights
                         const nameEl = document.getElementById('mulopimfwc-top-location-name');
                         if (!data || !data.stats) {
                             if (nameEl) {
-                                nameEl.textContent = '<?php echo esc_js(__('No data available yet', 'multi-location-product-and-inventory-management')); ?>';
+                                nameEl.textContent = '<?php echo esc_js(__('No data available yet', 'multi-location-product-and-inventory-management-pro')); ?>';
                             }
                             return;
                         }
@@ -2283,7 +2283,7 @@ class Mulopimfwc_Customer_Location_Insights
                         const linkEl = document.getElementById('mulopimfwc-top-product-link');
                         const locationsEl = document.getElementById('mulopimfwc-top-product-locations');
                         if (!data) {
-                            if (nameEl) nameEl.textContent = '<?php echo esc_js(__('No data available yet', 'multi-location-product-and-inventory-management')); ?>';
+                            if (nameEl) nameEl.textContent = '<?php echo esc_js(__('No data available yet', 'multi-location-product-and-inventory-management-pro')); ?>';
                             return;
                         }
                         if (nameEl) nameEl.textContent = data.name || '';
@@ -2332,7 +2332,7 @@ class Mulopimfwc_Customer_Location_Insights
 
                     function buildTopProductsRows(products) {
                         if (!Array.isArray(products) || products.length === 0) {
-                            return '<tr><td colspan="5"><?php echo esc_js(__('No product data available yet for this location.', 'multi-location-product-and-inventory-management')); ?></td></tr>';
+                            return '<tr><td colspan="5"><?php echo esc_js(__('No product data available yet for this location.', 'multi-location-product-and-inventory-management-pro')); ?></td></tr>';
                         }
                         let html = '';
                         products.forEach((product, idx) => {
@@ -2522,7 +2522,7 @@ function mulopimfwc_ajax_track_location_selection()
     check_ajax_referer('mulopimfwc_tracking', 'nonce');
 
     if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
-        wp_send_json_error(['message' => __('Location tracking is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Location tracking is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
 
@@ -2533,7 +2533,7 @@ function mulopimfwc_ajax_track_location_selection()
     $rate_limit_window = 60; // 1 minute
     
     if ($rate_limit_count !== false && $rate_limit_count >= $rate_limit_max) {
-        wp_send_json_error(['message' => __('Rate limit exceeded. Please try again later.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Rate limit exceeded. Please try again later.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
@@ -2548,14 +2548,14 @@ function mulopimfwc_ajax_track_location_selection()
     $location_name = isset($_POST['location_name']) ? sanitize_text_field(wp_unslash($_POST['location_name'])) : '';
 
     if (empty($location_slug) || empty($location_name)) {
-        wp_send_json_error(['message' => __('Invalid location data', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Invalid location data', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
 
     // FIXED: Validate location exists before tracking
     $location_term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
     if (!$location_term || is_wp_error($location_term)) {
-        wp_send_json_error(['message' => __('Invalid location. Location does not exist.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Invalid location. Location does not exist.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
@@ -2570,7 +2570,7 @@ function mulopimfwc_ajax_track_location_selection()
         'name' => $location_name
     ]);
 
-    wp_send_json_success(['message' => __('Location tracked', 'multi-location-product-and-inventory-management')]);
+    wp_send_json_success(['message' => __('Location tracked', 'multi-location-product-and-inventory-management-pro')]);
 }
 
 function mulopimfwc_user_can_run_reports()
@@ -2603,7 +2603,7 @@ function mulopimfwc_ajax_export_analytics()
     check_ajax_referer('mulopimfwc_analytics_export', 'nonce');
 
     if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
-        wp_die(__('Analytics export is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management'));
+        wp_die(__('Analytics export is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro'));
     }
 
     if (!mulopimfwc_user_can_export_reports()) {
@@ -2685,24 +2685,24 @@ function mulopimfwc_display_data_size_info()
     $info = $instance->get_data_size_info();
     ?>
     <div class="mulopimfwc-data-info" style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-left: 4px solid var(--lwp-primary, #667eea); border-radius: 4px;">
-        <h3 style="margin-top: 0;"><?php esc_html_e('Analytics Data Summary', 'multi-location-product-and-inventory-management'); ?></h3>
+        <h3 style="margin-top: 0;"><?php esc_html_e('Analytics Data Summary', 'multi-location-product-and-inventory-management-pro'); ?></h3>
         <ul style="margin: 0; list-style: none; padding: 0;">
-            <li><strong><?php esc_html_e('Tracking Entries:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html($info['tracking_entries']); ?> / <?php echo esc_html(Mulopimfwc_Customer_Location_Insights::MAX_TRACKING_ENTRIES); ?></li>
-            <li><strong><?php esc_html_e('Locations Tracked:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html($info['total_locations']); ?></li>
-            <li><strong><?php esc_html_e('Products with Data:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html($info['total_products']); ?></li>
+            <li><strong><?php esc_html_e('Tracking Entries:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($info['tracking_entries']); ?> / <?php echo esc_html(Mulopimfwc_Customer_Location_Insights::MAX_TRACKING_ENTRIES); ?></li>
+            <li><strong><?php esc_html_e('Locations Tracked:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($info['total_locations']); ?></li>
+            <li><strong><?php esc_html_e('Products with Data:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($info['total_products']); ?></li>
             <li style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
-                <em><?php esc_html_e('Data is automatically cleaned every 24 hours. Old entries (90+ days) are removed.', 'multi-location-product-and-inventory-management'); ?></em>
+                <em><?php esc_html_e('Data is automatically cleaned every 24 hours. Old entries (90+ days) are removed.', 'multi-location-product-and-inventory-management-pro'); ?></em>
             </li>
         </ul>
 
         <button type="button" class="button button-secondary" id="mulopimfwc-clear-analytics" style="margin-top: 15px;">
-            <?php esc_html_e('Clear All Analytics Data', 'multi-location-product-and-inventory-management'); ?>
+            <?php esc_html_e('Clear All Analytics Data', 'multi-location-product-and-inventory-management-pro'); ?>
         </button>
 
         <script type="text/javascript">
             jQuery(document).ready(function($) {
                 $('#mulopimfwc-clear-analytics').on('click', function() {
-                    if (confirm('<?php echo esc_js(__('Are you sure you want to clear all analytics data? This action cannot be undone.', 'multi-location-product-and-inventory-management')); ?>')) {
+                    if (confirm('<?php echo esc_js(__('Are you sure you want to clear all analytics data? This action cannot be undone.', 'multi-location-product-and-inventory-management-pro')); ?>')) {
                         $.ajax({
                             url: ajaxurl,
                             type: 'POST',
@@ -2712,10 +2712,10 @@ function mulopimfwc_display_data_size_info()
                             },
                             success: function(response) {
                                 if (response.success) {
-                                    alert('<?php echo esc_js(__('Analytics data cleared successfully.', 'multi-location-product-and-inventory-management')); ?>');
+                                    alert('<?php echo esc_js(__('Analytics data cleared successfully.', 'multi-location-product-and-inventory-management-pro')); ?>');
                                     location.reload();
                                 } else {
-                                    alert('<?php echo esc_js(__('Failed to clear analytics data.', 'multi-location-product-and-inventory-management')); ?>');
+                                    alert('<?php echo esc_js(__('Failed to clear analytics data.', 'multi-location-product-and-inventory-management-pro')); ?>');
                                 }
                             }
                         });
@@ -2735,11 +2735,11 @@ function mulopimfwc_ajax_clear_analytics_data()
     check_ajax_referer('mulopimfwc_clear_analytics', 'nonce');
 
     if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
-        wp_send_json_error(['message' => __('Analytics data cannot be cleared while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Analytics data cannot be cleared while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro')]);
     }
 
     if (!mulopimfwc_user_can_run_reports()) {
-        wp_send_json_error(['message' => __('You do not have permission to clear analytics data.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('You do not have permission to clear analytics data.', 'multi-location-product-and-inventory-management-pro')]);
     }
 
     // Clear all analytics options
@@ -2747,7 +2747,7 @@ function mulopimfwc_ajax_clear_analytics_data()
     delete_option(Mulopimfwc_Customer_Location_Insights::POPULARITY_OPTION);
     delete_option(Mulopimfwc_Customer_Location_Insights::STATS_OPTION);
 
-    wp_send_json_success(['message' => __('Analytics data cleared successfully.', 'multi-location-product-and-inventory-management')]);
+    wp_send_json_success(['message' => __('Analytics data cleared successfully.', 'multi-location-product-and-inventory-management-pro')]);
 }
 
 // Initialize the class

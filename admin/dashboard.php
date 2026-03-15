@@ -190,7 +190,7 @@ class MULOPIMFWC_Dashboard
 
         // Check user permissions
         if (!MULOPIMFWC_Location_Managers::user_has_capability('export_report')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
         }
 
         global $mulopimfwc_locations, $wpdb;
@@ -250,26 +250,26 @@ class MULOPIMFWC_Dashboard
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
         // ---------- Report header ----------
-        fputcsv($output, array(__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Generated on:', 'multi-location-product-and-inventory-management'), gmdate('l, F d, Y - H:i:s')));
-        fputcsv($output, array(__('Store:', 'multi-location-product-and-inventory-management'), get_bloginfo('name')));
-        fputcsv($output, array(__('Currency:', 'multi-location-product-and-inventory-management'), ' (' . $this->get_dashboard_reporting_currency_code() . ')'));
+        fputcsv($output, array(__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management-pro')));
+        fputcsv($output, array(__('Generated on:', 'multi-location-product-and-inventory-management-pro'), gmdate('l, F d, Y - H:i:s')));
+        fputcsv($output, array(__('Store:', 'multi-location-product-and-inventory-management-pro'), get_bloginfo('name')));
+        fputcsv($output, array(__('Currency:', 'multi-location-product-and-inventory-management-pro'), ' (' . $this->get_dashboard_reporting_currency_code() . ')'));
         fputcsv($output, array('')); // Empty row
 
         // ---------- Summary ----------
-        fputcsv($output, [__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management')]);
-        fputcsv($output, [__('Metric', 'multi-location-product-and-inventory-management'), __('Value', 'multi-location-product-and-inventory-management')]);
-        fputcsv($output, [__('Total Products', 'multi-location-product-and-inventory-management'), $this->get_total_products_count()]);
-        fputcsv($output, [__('Total Locations', 'multi-location-product-and-inventory-management'), count($mulopimfwc_locations)]);
-        fputcsv($output, [__('Total Orders', 'multi-location-product-and-inventory-management'), array_sum($orders_data['orders'])]);
-        fputcsv($output, [__('Total Revenue', 'multi-location-product-and-inventory-management'), number_format(array_sum($orders_data['revenue']), 2)]);
-        fputcsv($output, [__('Total Investment', 'multi-location-product-and-inventory-management'), number_format($total_investment, 2)]);
-        fputcsv($output, [__('Total Stock', 'multi-location-product-and-inventory-management'), array_sum($stock_levels)]);
+        fputcsv($output, [__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management-pro')]);
+        fputcsv($output, [__('Metric', 'multi-location-product-and-inventory-management-pro'), __('Value', 'multi-location-product-and-inventory-management-pro')]);
+        fputcsv($output, [__('Total Products', 'multi-location-product-and-inventory-management-pro'), $this->get_total_products_count()]);
+        fputcsv($output, [__('Total Locations', 'multi-location-product-and-inventory-management-pro'), count($mulopimfwc_locations)]);
+        fputcsv($output, [__('Total Orders', 'multi-location-product-and-inventory-management-pro'), array_sum($orders_data['orders'])]);
+        fputcsv($output, [__('Total Revenue', 'multi-location-product-and-inventory-management-pro'), number_format(array_sum($orders_data['revenue']), 2)]);
+        fputcsv($output, [__('Total Investment', 'multi-location-product-and-inventory-management-pro'), number_format($total_investment, 2)]);
+        fputcsv($output, [__('Total Stock', 'multi-location-product-and-inventory-management-pro'), array_sum($stock_levels)]);
         fputcsv($output, ['']);
 
         // ---------- Products by Location (incl. Default) ----------
-        fputcsv($output, [__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management')]);
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Product Count', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, [__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management-pro')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management-pro'), __('Product Count', 'multi-location-product-and-inventory-management-pro'), __('Percentage', 'multi-location-product-and-inventory-management-pro')));
         $total_products = array_sum($product_counts);
         foreach ($locations_with_default as $loc_name) {
             $count = isset($product_counts[$loc_name]) ? $product_counts[$loc_name] : 0;
@@ -279,8 +279,8 @@ class MULOPIMFWC_Dashboard
         fputcsv($output, ['']);
 
         // ---------- Stock Levels by Location (incl. Default) ----------
-        fputcsv($output, [__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management')]);
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Stock Level', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, [__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management-pro')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management-pro'), __('Stock Level', 'multi-location-product-and-inventory-management-pro'), __('Percentage', 'multi-location-product-and-inventory-management-pro')));
 
         $total_stocks = array_sum($stock_levels);
         foreach ($locations_with_default as $loc_name) {
@@ -291,8 +291,8 @@ class MULOPIMFWC_Dashboard
         fputcsv($output, ['']);
 
         // ---------- Orders by Location ----------
-        fputcsv($output, [__('Orders by Location', 'multi-location-product-and-inventory-management')]);
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Orders', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, [__('Orders by Location', 'multi-location-product-and-inventory-management-pro')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management-pro'), __('Orders', 'multi-location-product-and-inventory-management-pro'), __('Percentage', 'multi-location-product-and-inventory-management-pro')));
         $total_orders = array_sum($orders_data['orders']);
         foreach ($orders_data['orders'] as $location => $orders) {
             $percentage = $total_orders > 0 ? round(($orders / $total_orders) * 100, 2) : 0;
@@ -301,8 +301,8 @@ class MULOPIMFWC_Dashboard
         fputcsv($output, ['']);
 
         // ---------- Revenue by Location ----------
-        fputcsv($output, [__('Revenue by Location', 'multi-location-product-and-inventory-management')]);
-        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management'), __('Revenue', 'multi-location-product-and-inventory-management'), __('Percentage', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, [__('Revenue by Location', 'multi-location-product-and-inventory-management-pro')]);
+        fputcsv($output, array(__('Location', 'multi-location-product-and-inventory-management-pro'), __('Revenue', 'multi-location-product-and-inventory-management-pro'), __('Percentage', 'multi-location-product-and-inventory-management-pro')));
         $total_revenue = array_sum($orders_data['revenue']);
         foreach ($orders_data['revenue'] as $location => $revenue) {
             $percentage = $total_revenue > 0 ? round(($revenue / $total_revenue) * 100, 2) : 0;
@@ -312,16 +312,16 @@ class MULOPIMFWC_Dashboard
 
         $profitability_data = $this->get_location_profitability_data();
         if (!empty($profitability_data)) {
-            fputcsv($output, [__('PROFITABILITY & AGING BY LOCATION', 'multi-location-product-and-inventory-management')]);
+            fputcsv($output, [__('PROFITABILITY & AGING BY LOCATION', 'multi-location-product-and-inventory-management-pro')]);
             fputcsv($output, [
-                __('Location', 'multi-location-product-and-inventory-management'),
-                __('Inventory Value', 'multi-location-product-and-inventory-management'),
-                __('Margin Value', 'multi-location-product-and-inventory-management'),
-                __('Margin %', 'multi-location-product-and-inventory-management'),
-                __('Dead Stock Value', 'multi-location-product-and-inventory-management'),
-                __('Dead Stock Units', 'multi-location-product-and-inventory-management'),
-                __('Avg Age (days)', 'multi-location-product-and-inventory-management'),
-                __('Shrinkage %', 'multi-location-product-and-inventory-management')
+                __('Location', 'multi-location-product-and-inventory-management-pro'),
+                __('Inventory Value', 'multi-location-product-and-inventory-management-pro'),
+                __('Margin Value', 'multi-location-product-and-inventory-management-pro'),
+                __('Margin %', 'multi-location-product-and-inventory-management-pro'),
+                __('Dead Stock Value', 'multi-location-product-and-inventory-management-pro'),
+                __('Dead Stock Units', 'multi-location-product-and-inventory-management-pro'),
+                __('Avg Age (days)', 'multi-location-product-and-inventory-management-pro'),
+                __('Shrinkage %', 'multi-location-product-and-inventory-management-pro')
             ]);
 
             foreach ($profitability_data as $summary) {
@@ -342,15 +342,15 @@ class MULOPIMFWC_Dashboard
 
         // ---------- Low Stock ----------
         if (!empty($low_stock_products)) {
-            fputcsv($output, [__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management')]);
+            fputcsv($output, [__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management-pro')]);
             fputcsv($output, [
-                __('Product', 'multi-location-product-and-inventory-management'),
-                __('Location', 'multi-location-product-and-inventory-management'),
-                __('Stock', 'multi-location-product-and-inventory-management'),
-                __('Status', 'multi-location-product-and-inventory-management')
+                __('Product', 'multi-location-product-and-inventory-management-pro'),
+                __('Location', 'multi-location-product-and-inventory-management-pro'),
+                __('Stock', 'multi-location-product-and-inventory-management-pro'),
+                __('Status', 'multi-location-product-and-inventory-management-pro')
             ]);
             foreach ($low_stock_products as $item) {
-                $status = $item['stock'] == 0 ? __('⚠ Out of Stock', 'multi-location-product-and-inventory-management') : __('⚡ Low Stock', 'multi-location-product-and-inventory-management');
+                $status = $item['stock'] == 0 ? __('⚠ Out of Stock', 'multi-location-product-and-inventory-management-pro') : __('⚡ Low Stock', 'multi-location-product-and-inventory-management-pro');
                 $status = isset($item['status_label']) ? $item['status_label'] : $status;
                 fputcsv($output, [$item['product_title'], $item['location_name'], $item['stock'], $status]);
             }
@@ -359,8 +359,8 @@ class MULOPIMFWC_Dashboard
 
         // ---------- New Products (Last 30 Days) — location-wise ----------
         // Header row: Date | <each location> | Default | Total Added
-        fputcsv($output, [__('NEW PRODUCTS (LAST 30 DAYS) — LOCATION-WISE', 'multi-location-product-and-inventory-management')]);
-        $header = array_merge([__('Date', 'multi-location-product-and-inventory-management')], $locations, ['Default', __('Total Added', 'multi-location-product-and-inventory-management')]);
+        fputcsv($output, [__('NEW PRODUCTS (LAST 30 DAYS) — LOCATION-WISE', 'multi-location-product-and-inventory-management-pro')]);
+        $header = array_merge([__('Date', 'multi-location-product-and-inventory-management-pro')], $locations, ['Default', __('Total Added', 'multi-location-product-and-inventory-management-pro')]);
         fputcsv($output, $header);
 
         foreach ($recent_matrix['labels'] as $i => $label) {
@@ -378,8 +378,8 @@ class MULOPIMFWC_Dashboard
 
         // Report Footer
         fputcsv($output, array('═══════════════════════════════════════════════════════════════'));
-        fputcsv($output, array(__('End of Report', 'multi-location-product-and-inventory-management')));
-        fputcsv($output, array(__('Thank you for using Multi Location Product & Inventory Management for WooCommerce Pro!', 'multi-location-product-and-inventory-management')));
+        fputcsv($output, array(__('End of Report', 'multi-location-product-and-inventory-management-pro')));
+        fputcsv($output, array(__('Thank you for using Multi Location Product & Inventory Management for WooCommerce Pro!', 'multi-location-product-and-inventory-management-pro')));
         fputcsv($output, array('═══════════════════════════════════════════════════════════════'));
 
         fclose($output);
@@ -393,7 +393,7 @@ class MULOPIMFWC_Dashboard
 
         // Check user permissions
         if (!MULOPIMFWC_Location_Managers::user_has_capability('export_report')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
         }
 
         global $mulopimfwc_locations, $wpdb;
@@ -536,12 +536,12 @@ class MULOPIMFWC_Dashboard
                 <tr>
                     <td style="background-color: #5b21b6; color: #ffffff; padding: 20px; text-align: center;" colspan="10">
                         <h1 style="margin: 0 0 10px 0; font-size: 18pt; font-weight: bold; color: #ffffff;">
-                            <?php echo esc_html__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management-pro'); ?>
                         </h1>
                         <div style="font-size: 10pt; color: #ffffff; line-height: 1.5;">
-                            <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo gmdate('l, F d, Y - H:i:s'); ?></div>
-                            <div><strong><?php echo esc_html__('Store:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html(get_bloginfo('name')); ?></div>
-                            <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html($this->get_dashboard_reporting_currency_code()); ?></div>
+                            <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo gmdate('l, F d, Y - H:i:s'); ?></div>
+                            <div><strong><?php echo esc_html__('Store:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html(get_bloginfo('name')); ?></div>
+                            <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($this->get_dashboard_reporting_currency_code()); ?></div>
                         </div>
                     </td>
                 </tr>
@@ -552,37 +552,37 @@ class MULOPIMFWC_Dashboard
                 <tr></tr>
                 <tr>
                     <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management-pro'); ?>
                     </td>
                 </tr>
             </table>
             <table class="summary-table">
                 <tr>
-                    <th><?php echo esc_html__('Metric', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Value', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Metric', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
                 </tr>
                 <tr>
-                    <td><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></td>
                     <td><?php echo esc_html(number_format($this->get_total_products_count())); ?></td>
                 </tr>
                 <tr class="even-row">
-                    <td><?php echo esc_html__('Total Locations', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html__('Total Locations', 'multi-location-product-and-inventory-management-pro'); ?></td>
                     <td><?php echo esc_html(count($mulopimfwc_locations)); ?></td>
                 </tr>
                 <tr>
-                    <td><?php echo esc_html__('Total Orders', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html__('Total Orders', 'multi-location-product-and-inventory-management-pro'); ?></td>
                     <td><?php echo esc_html(number_format(array_sum($orders_data['orders']))); ?></td>
                 </tr>
                 <tr class="even-row">
-                    <td><?php echo esc_html__('Total Revenue', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html__('Total Revenue', 'multi-location-product-and-inventory-management-pro'); ?></td>
                     <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)); ?></td>
                 </tr>
                 <tr>
-                    <td><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management-pro'); ?></td>
                     <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($total_investment, 2)); ?></td>
                 </tr>
                 <tr class="even-row">
-                    <td><?php echo esc_html__('Total Stock', 'multi-location-product-and-inventory-management'); ?></td>
+                    <td><?php echo esc_html__('Total Stock', 'multi-location-product-and-inventory-management-pro'); ?></td>
                     <td><?php echo esc_html(number_format(array_sum($stock_levels))); ?></td>
                 </tr>
             </table>
@@ -592,15 +592,15 @@ class MULOPIMFWC_Dashboard
                 <tr></tr>
                 <tr>
                     <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
                     </td>
                 </tr>
             </table>
             <table>
                 <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Product Count', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Product Count', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
                 </tr>
                 <?php
                 $total_products = array_sum($product_counts);
@@ -624,15 +624,15 @@ class MULOPIMFWC_Dashboard
                 <tr></tr>
                 <tr>
                     <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
                     </td>
                 </tr>
             </table>
             <table>
                 <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Stock Level', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Stock Level', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
                 </tr>
                 <?php
                 $total_stocks = array_sum($stock_levels);
@@ -656,15 +656,15 @@ class MULOPIMFWC_Dashboard
                 <tr></tr>
                 <tr>
                     <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('ORDERS BY LOCATION', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('ORDERS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
                     </td>
                 </tr>
             </table>
             <table>
                 <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
                 </tr>
                 <?php
                 $total_orders = array_sum($orders_data['orders']);
@@ -687,15 +687,15 @@ class MULOPIMFWC_Dashboard
                 <tr></tr>
                 <tr>
                     <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management-pro'); ?>
                     </td>
                 </tr>
             </table>
             <table>
                 <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
                 </tr>
                 <?php
                 $total_revenue = array_sum($orders_data['revenue']);
@@ -719,20 +719,20 @@ class MULOPIMFWC_Dashboard
                     <tr></tr>
                     <tr>
                         <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                            <?php echo esc_html__('PROFITABILITY & AGING BY LOCATION', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('PROFITABILITY & AGING BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
                         </td>
                     </tr>
                 </table>
                 <table>
                     <tr>
-                        <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Inventory Value', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Margin Value', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Margin %', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Dead Stock Value', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Dead Stock Units', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Avg Age (days)', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Shrinkage %', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Inventory Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Margin Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Margin %', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Dead Stock Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Dead Stock Units', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Avg Age (days)', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Shrinkage %', 'multi-location-product-and-inventory-management-pro'); ?></th>
                     </tr>
                     <?php
                     $row_count = 0;
@@ -762,16 +762,16 @@ class MULOPIMFWC_Dashboard
                     <tr></tr>
                     <tr>
                         <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                            <?php echo esc_html__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management-pro'); ?>
                         </td>
                     </tr>
                 </table>
                 <table>
                     <tr>
-                        <th><?php echo esc_html__('Product', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Stock', 'multi-location-product-and-inventory-management'); ?></th>
-                        <th><?php echo esc_html__('Status', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th><?php echo esc_html__('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Stock', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Status', 'multi-location-product-and-inventory-management-pro'); ?></th>
                     </tr>
                     <?php
                     $row_count = 0;
@@ -787,7 +787,7 @@ class MULOPIMFWC_Dashboard
                             </td>
                             <td>
                                 <span class="status-badge <?php echo $is_out_of_stock ? 'status-out' : 'status-low'; ?>">
-                                    <?php echo esc_html(isset($item['status_label']) ? $item['status_label'] : __('Low Stock', 'multi-location-product-and-inventory-management')); ?>
+                                    <?php echo esc_html(isset($item['status_label']) ? $item['status_label'] : __('Low Stock', 'multi-location-product-and-inventory-management-pro')); ?>
                                 </span>
                             </td>
                             </tr>
@@ -803,18 +803,18 @@ class MULOPIMFWC_Dashboard
                 <tr></tr>
                 <tr>
                     <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('NEW PRODUCTS (LAST 30 DAYS) - LOCATION-WISE', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('NEW PRODUCTS (LAST 30 DAYS) - LOCATION-WISE', 'multi-location-product-and-inventory-management-pro'); ?>
                     </td>
                 </tr>
             </table>
             <table>
                 <tr>
-                    <th><?php echo esc_html__('Date', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Date', 'multi-location-product-and-inventory-management-pro'); ?></th>
                     <?php foreach ($locations as $loc_name) : ?>
                         <th><?php echo esc_html($loc_name); ?></th>
                     <?php endforeach; ?>
-                    <th><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management'); ?></th>
-                    <th><?php echo esc_html__('Total Added', 'multi-location-product-and-inventory-management'); ?></th>
+                    <th><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    <th><?php echo esc_html__('Total Added', 'multi-location-product-and-inventory-management-pro'); ?></th>
                 </tr>
                 <?php
                 $row_count = 0;
@@ -850,7 +850,7 @@ class MULOPIMFWC_Dashboard
         // FIXED: Added catch block for error handling
         error_log('Mulopimfwc: Error in export_dashboard_report_html - ' . $e->getMessage());
         wp_send_json_error(array(
-            'message' => __('An error occurred while generating the export. Please try again.', 'multi-location-product-and-inventory-management'),
+            'message' => __('An error occurred while generating the export. Please try again.', 'multi-location-product-and-inventory-management-pro'),
             'error' => defined('WP_DEBUG') && WP_DEBUG ? $e->getMessage() : ''
         ));
     }
@@ -1129,13 +1129,13 @@ class MULOPIMFWC_Dashboard
             'summary' => $payload['summary'],
             'lowStock' => array_slice($payload['low_stock_products'], 0, 8),
             'i18n' => [
-                'totalStock' => __('Total Stock', 'multi-location-product-and-inventory-management'),
-                'newProducts' => __('New Products', 'multi-location-product-and-inventory-management'),
-                'investment' => __('Investment', 'multi-location-product-and-inventory-management'),
-                'orders' => __('Orders', 'multi-location-product-and-inventory-management'),
-                'revenue' => __('Revenue', 'multi-location-product-and-inventory-management'),
-                'previousPeriod' => __('Previous period', 'multi-location-product-and-inventory-management'),
-                'noOrders' => __('No orders yet', 'multi-location-product-and-inventory-management')
+                'totalStock' => __('Total Stock', 'multi-location-product-and-inventory-management-pro'),
+                'newProducts' => __('New Products', 'multi-location-product-and-inventory-management-pro'),
+                'investment' => __('Investment', 'multi-location-product-and-inventory-management-pro'),
+                'orders' => __('Orders', 'multi-location-product-and-inventory-management-pro'),
+                'revenue' => __('Revenue', 'multi-location-product-and-inventory-management-pro'),
+                'previousPeriod' => __('Previous period', 'multi-location-product-and-inventory-management-pro'),
+                'noOrders' => __('No orders yet', 'multi-location-product-and-inventory-management-pro')
             ]
         ]);
 
@@ -1147,17 +1147,17 @@ class MULOPIMFWC_Dashboard
 
     ?>
         <div class="wrap lwp-dashboard">
-            <h1 style="display: none !important;"><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
+            <h1 style="display: none !important;"><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management-pro'); ?></h1>
             <div class="lwp-dashboard-overview">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management'); ?></h1>
+                    <h1><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management-pro'); ?></h1>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <!-- Filter Toggle Button -->
                         <button class="mulopimfwc-btn-secondary filter_toggle_btn" style="padding: 10px 20px !important;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
-                            <?php echo esc_html__('Filters', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('Filters', 'multi-location-product-and-inventory-management-pro'); ?>
                         </button>
 
                         <!-- Export Dropdown -->
@@ -1167,17 +1167,17 @@ class MULOPIMFWC_Dashboard
                                 <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M.226.046a.02.02 0 0 1 .028 0l.08.08a.02.02 0 0 1-.028.028L.26.108V.32a.02.02 0 1 1-.04 0V.108L.174.154A.02.02 0 0 1 .146.126zM.1.34a.02.02 0 0 1 .02.02V.4h.24V.36a.02.02 0 1 1 .04 0V.4a.04.04 0 0 1-.04.04H.12A.04.04 0 0 1 .08.4V.36A.02.02 0 0 1 .1.34" />
                                 </svg>
-                                <?php echo esc_html__('Export Report', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Export Report', 'multi-location-product-and-inventory-management-pro'); ?>
                                 <span class="dropdown_icon">▾</span>
                             </button>
 
                             <div class="dropdown_menu">
                                 <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_csv" data-format="csv">
-                                    <?php echo esc_html__('Export in CSV', 'multi-location-product-and-inventory-management'); ?>
+                                    <?php echo esc_html__('Export in CSV', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </button>
 
                                 <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_html" data-format="html">
-                                    <?php echo esc_html__('Export in Excel (HTML)', 'multi-location-product-and-inventory-management'); ?>
+                                    <?php echo esc_html__('Export in Excel (HTML)', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </button>
                             </div>
                         </div>
@@ -1276,7 +1276,7 @@ class MULOPIMFWC_Dashboard
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
-                            <?php echo esc_html__('Filter Dashboard', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('Filter Dashboard', 'multi-location-product-and-inventory-management-pro'); ?>
                         </h3>
 
                         <div class="lwp-filters-wrapper">
@@ -1284,14 +1284,14 @@ class MULOPIMFWC_Dashboard
                                 <!-- Date Range Filter -->
                                 <div class="lwp-filter-group">
                                     <label for="filter-date-from">
-                                        <?php echo esc_html__('Date From', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Date From', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </label>
                                     <input type="date" id="filter-date-from" class="lwp-filter-input" />
                                 </div>
 
                                 <div class="lwp-filter-group">
                                     <label for="filter-date-to">
-                                        <?php echo esc_html__('Date To', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Date To', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </label>
                                     <input type="date" id="filter-date-to" class="lwp-filter-input" />
                                 </div>
@@ -1299,17 +1299,17 @@ class MULOPIMFWC_Dashboard
                                 <!-- Location Filter -->
                                 <div class="lwp-filter-group">
                                     <label for="filter-location">
-                                        <?php echo esc_html__('Location', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </label>
                                     <select id="filter-location" class="lwp-filter-input">
-                                        <option value="all"><?php echo esc_html__('All Locations', 'multi-location-product-and-inventory-management'); ?></option>
+                                        <option value="all"><?php echo esc_html__('All Locations', 'multi-location-product-and-inventory-management-pro'); ?></option>
                                         <?php foreach ($mulopimfwc_locations as $location): ?>
                                             <option value="<?php echo esc_attr(rawurldecode($location->slug)); ?>">
                                                 <?php echo esc_html($location->name); ?>
                                             </option>
                                         <?php endforeach; ?>
                                         <?php if (!$is_location_manager): ?>
-                                            <option value="default"><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management'); ?></option>
+                                            <option value="default"><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management-pro'); ?></option>
                                         <?php endif; ?>
                                     </select>
                                 </div>
@@ -1317,39 +1317,39 @@ class MULOPIMFWC_Dashboard
                                 <!-- Order Status Filter -->
                                 <div class="lwp-filter-group">
                                     <label for="filter-status">
-                                        <?php echo esc_html__('Order Status', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Order Status', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </label>
                                     <select id="filter-status" class="lwp-filter-input">
-                                        <option value="all"><?php echo esc_html__('All Statuses', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="completed"><?php echo esc_html__('Completed', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="processing"><?php echo esc_html__('Processing', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="pending"><?php echo esc_html__('Pending', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="on-hold"><?php echo esc_html__('On Hold', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="cancelled"><?php echo esc_html__('Cancelled', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="refunded"><?php echo esc_html__('Refunded', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="failed"><?php echo esc_html__('Failed', 'multi-location-product-and-inventory-management'); ?></option>
+                                        <option value="all"><?php echo esc_html__('All Statuses', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="completed"><?php echo esc_html__('Completed', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="processing"><?php echo esc_html__('Processing', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="pending"><?php echo esc_html__('Pending', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="on-hold"><?php echo esc_html__('On Hold', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="cancelled"><?php echo esc_html__('Cancelled', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="refunded"><?php echo esc_html__('Refunded', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="failed"><?php echo esc_html__('Failed', 'multi-location-product-and-inventory-management-pro'); ?></option>
                                     </select>
                                 </div>
                             </div>
 
                             <!-- Quick Date Range Buttons -->
                             <div class="lwp-filter-group lwp-quick-filters">
-                                <label><?php echo esc_html__('Quick Select', 'multi-location-product-and-inventory-management'); ?></label>
+                                <label><?php echo esc_html__('Quick Select', 'multi-location-product-and-inventory-management-pro'); ?></label>
                                 <div class="lwp-quick-buttons">
                                     <button type="button" class="lwp-quick-btn" data-days="7">
-                                        <?php echo esc_html__('Last 7 Days', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Last 7 Days', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                     <button type="button" class="lwp-quick-btn" data-days="30">
-                                        <?php echo esc_html__('Last 30 Days', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Last 30 Days', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                     <button type="button" class="lwp-quick-btn" data-days="90">
-                                        <?php echo esc_html__('Last 90 Days', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Last 90 Days', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                     <button type="button" class="lwp-quick-btn" data-period="this-month">
-                                        <?php echo esc_html__('This Month', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('This Month', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                     <button type="button" class="lwp-quick-btn" data-period="last-month">
-                                        <?php echo esc_html__('Last Month', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Last Month', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                 </div>
                             </div>
@@ -1362,7 +1362,7 @@ class MULOPIMFWC_Dashboard
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                <?php echo esc_html__('Apply Filters', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Apply Filters', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                             <button type="button" id="reset-filters" class="lwp-btn-secondary">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1371,7 +1371,7 @@ class MULOPIMFWC_Dashboard
                                     <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
                                     <path d="M3 21v-5h5"></path>
                                 </svg>
-                                <?php echo esc_html__('Reset', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Reset', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                         </div>
                     </div>
@@ -1379,7 +1379,7 @@ class MULOPIMFWC_Dashboard
 
                 <div id="lwp-loading-overlay" style="display: none;">
                     <div class="lwp-spinner"></div>
-                    <p><?php echo esc_html__('Loading data...', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p><?php echo esc_html__('Loading data...', 'multi-location-product-and-inventory-management-pro'); ?></p>
                 </div>
                 <div class="lwp-card-stats">
                     <div class="lwp-stats-grid">
@@ -1400,7 +1400,7 @@ class MULOPIMFWC_Dashboard
                             </div>
                             <div>
                                 <span class="lwp-stat-progress" data-metric="products"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="lwp-stat-value"><?php echo esc_html($this->get_total_products_count()); ?></span>
                             </div>
                         </<?php echo $products_tag; ?>>
@@ -1413,7 +1413,7 @@ class MULOPIMFWC_Dashboard
                             </div>
                             <div>
                                 <span class="lwp-stat-progress" data-metric="locations"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Locations', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="lwp-stat-label"><?php echo esc_html__('Locations', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="lwp-stat-value"><?php echo count($mulopimfwc_locations); ?></span>
 
                             </div>
@@ -1428,7 +1428,7 @@ class MULOPIMFWC_Dashboard
                             </div>
                             <div>
                                 <span class="lwp-stat-progress" data-metric="orders"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="lwp-stat-label"><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="lwp-stat-value"><?php echo esc_html(mulopimfwc_get_pro_class(false, array_sum($orders_data["orders"]), rand(1, 100))); ?></span>
 
                             </div>
@@ -1452,7 +1452,7 @@ class MULOPIMFWC_Dashboard
                             </div>
                             <div>
                                 <span class="lwp-stat-progress" data-metric="investment"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="lwp-stat-label"><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price($total_investment)); ?></span>
 
                             </div>
@@ -1467,7 +1467,7 @@ class MULOPIMFWC_Dashboard
                             </div>
                             <div>
                                 <span class="lwp-stat-progress" data-metric="revenue"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="lwp-stat-label"><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price(array_sum($orders_data["revenue"]))); ?></span>
 
                             </div>
@@ -1481,7 +1481,7 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php echo esc_html__('Products by Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php echo esc_html__('Products by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="locationProductsChart"></canvas>
                             </div>
@@ -1489,7 +1489,7 @@ class MULOPIMFWC_Dashboard
                     </div>
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php echo esc_html__('Stock Levels by Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php echo esc_html__('Stock Levels by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <div class="lwp-chart-container">
                                 <canvas id="locationStockChart"></canvas>
                             </div>
@@ -1500,7 +1500,7 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php echo esc_html__('Orders by Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php echo esc_html__('Orders by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="ordersByLocationChart"></canvas>
                             </div>
@@ -1508,7 +1508,7 @@ class MULOPIMFWC_Dashboard
                     </div>
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="revenueByLocationChart"></canvas>
                             </div>
@@ -1519,7 +1519,7 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php echo esc_html__('New Products (Last 30 Days)', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php echo esc_html__('New Products (Last 30 Days)', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="newProductsChart"></canvas>
                             </div>
@@ -1527,7 +1527,7 @@ class MULOPIMFWC_Dashboard
                     </div>
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php echo esc_html__('Investment', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php echo esc_html__('Investment', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                 <canvas id="investment-30day"></canvas>
                             </div>
@@ -1538,7 +1538,7 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Stock Alerts by Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php esc_html_e('Stock Alerts by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <?php
                             $low_stock_products   = $this->get_low_stock_products_efficiently();
                             $low_stock_sample_products = array_map([$this, 'normalize_stock_alert_item'], [
@@ -1633,10 +1633,10 @@ class MULOPIMFWC_Dashboard
                                 <table class="lwp-low-stock-table <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
                                     <thead>
                                         <tr>
-                                            <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th><?php esc_html_e('Stock', 'multi-location-product-and-inventory-management'); ?></th>
-                                            <th><?php esc_html_e('Status', 'multi-location-product-and-inventory-management'); ?></th>
+                                            <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th><?php esc_html_e('Stock', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                            <th><?php esc_html_e('Status', 'multi-location-product-and-inventory-management-pro'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1659,7 +1659,7 @@ class MULOPIMFWC_Dashboard
                                                 </td>
                                                 <td>
                                                     <span class="stock-status <?php echo esc_attr($item['status_class'] ?? 'low-stock'); ?>">
-                                                        <?php echo esc_html($item['status_label'] ?? __('Low Stock', 'multi-location-product-and-inventory-management')); ?>
+                                                        <?php echo esc_html($item['status_label'] ?? __('Low Stock', 'multi-location-product-and-inventory-management-pro')); ?>
                                                     </span>
                                                 </td>
                                             </tr>
@@ -1667,7 +1667,7 @@ class MULOPIMFWC_Dashboard
                                     </tbody>
                                 </table>
                             <?php else: ?>
-                                <p><?php esc_html_e('No low stock products found for any location.', 'multi-location-product-and-inventory-management'); ?></p>
+                                <p><?php esc_html_e('No low stock products found for any location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -1676,12 +1676,12 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Profitability & Aging by Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                            <h2><?php esc_html_e('Profitability & Aging by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <p class="lwp-profitability-description">
                                 <?php
                                 $dead_stock_days = 90;
                                 printf(
-                                    esc_html__('Dead stock in this table represents inventory that has not sold in the last %s days. Shrinkage reflects any sold quantity that could not be matched to current stock records.', 'multi-location-product-and-inventory-management'),
+                                    esc_html__('Dead stock in this table represents inventory that has not sold in the last %s days. Shrinkage reflects any sold quantity that could not be matched to current stock records.', 'multi-location-product-and-inventory-management-pro'),
                                     esc_html($dead_stock_days)
                                 );
                                 ?>
@@ -1691,14 +1691,14 @@ class MULOPIMFWC_Dashboard
                                     <table class="lwp-profitability-table">
                                         <thead>
                                             <tr>
-                                                <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management'); ?></th>
-                                                <th><?php esc_html_e('Inventory Value', 'multi-location-product-and-inventory-management'); ?></th>
-                                                <th><?php esc_html_e('Margin Value', 'multi-location-product-and-inventory-management'); ?></th>
-                                                <th><?php esc_html_e('Margin %', 'multi-location-product-and-inventory-management'); ?></th>
-                                                <th><?php esc_html_e('Dead Stock Value', 'multi-location-product-and-inventory-management'); ?></th>
-                                                <th><?php esc_html_e('Dead Stock Units', 'multi-location-product-and-inventory-management'); ?></th>
-                                                <th><?php esc_html_e('Avg. Age (days)', 'multi-location-product-and-inventory-management'); ?></th>
-                                                <th><?php esc_html_e('Shrinkage %', 'multi-location-product-and-inventory-management'); ?></th>
+                                                <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                                <th><?php esc_html_e('Inventory Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                                <th><?php esc_html_e('Margin Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                                <th><?php esc_html_e('Margin %', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                                <th><?php esc_html_e('Dead Stock Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                                <th><?php esc_html_e('Dead Stock Units', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                                <th><?php esc_html_e('Avg. Age (days)', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                                <th><?php esc_html_e('Shrinkage %', 'multi-location-product-and-inventory-management-pro'); ?></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1718,7 +1718,7 @@ class MULOPIMFWC_Dashboard
                                     </table>
                                 </div>
                             <?php else : ?>
-                                <p><?php esc_html_e('No profitability data available yet.', 'multi-location-product-and-inventory-management'); ?></p>
+                                <p><?php esc_html_e('No profitability data available yet.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -1979,7 +1979,7 @@ class MULOPIMFWC_Dashboard
         check_ajax_referer('mulopimfwc_dashboard_nonce', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
         }
 
         global $mulopimfwc_locations;
@@ -2199,7 +2199,7 @@ class MULOPIMFWC_Dashboard
         $previous_end = $end_date->sub($interval);
 
         $label = sprintf(
-            _n('vs previous %d day', 'vs previous %d days', $days, 'multi-location-product-and-inventory-management'),
+            _n('vs previous %d day', 'vs previous %d days', $days, 'multi-location-product-and-inventory-management-pro'),
             $days
         );
 
@@ -2461,8 +2461,8 @@ class MULOPIMFWC_Dashboard
         $item['status_label'] = isset($item['status_label']) && $item['status_label'] !== ''
             ? (string) $item['status_label']
             : ($status === 'out_of_stock'
-                ? __('Out of Stock', 'multi-location-product-and-inventory-management')
-                : __('Low Stock', 'multi-location-product-and-inventory-management'));
+                ? __('Out of Stock', 'multi-location-product-and-inventory-management-pro')
+                : __('Low Stock', 'multi-location-product-and-inventory-management-pro'));
         $item['alert_key'] = isset($item['alert_key']) && is_string($item['alert_key']) && $item['alert_key'] !== ''
             ? $item['alert_key']
             : sprintf('%d:%d', $product_id, $location_id);
@@ -2489,8 +2489,8 @@ class MULOPIMFWC_Dashboard
                 'status' => $stock <= 0 ? 'out_of_stock' : 'low_stock',
                 'status_class' => $stock <= 0 ? 'out-of-stock' : 'low-stock',
                 'status_label' => $stock <= 0
-                    ? __('Out of Stock', 'multi-location-product-and-inventory-management')
-                    : __('Low Stock', 'multi-location-product-and-inventory-management'),
+                    ? __('Out of Stock', 'multi-location-product-and-inventory-management-pro')
+                    : __('Low Stock', 'multi-location-product-and-inventory-management-pro'),
                 'low_threshold' => 0,
                 'out_threshold' => 0,
                 'low_source' => '',
@@ -3337,7 +3337,7 @@ class MULOPIMFWC_Dashboard
             // This allows calling code to handle errors appropriately
             return array(
                 'error' => true,
-                'message' => __('Error fetching inventory records. Please try again or contact support.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Error fetching inventory records. Please try again or contact support.', 'multi-location-product-and-inventory-management-pro'),
                 'data' => array()
             );
         }
@@ -3443,7 +3443,7 @@ class MULOPIMFWC_Dashboard
 
         if (!is_array($manager_location_slugs)) {
             $locations[] = [
-                'name' => __('Default', 'multi-location-product-and-inventory-management'),
+                'name' => __('Default', 'multi-location-product-and-inventory-management-pro'),
                 'slug' => 'default',
                 'term_id' => null
             ];
@@ -3951,7 +3951,7 @@ class MULOPIMFWC_Dashboard
 
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error([
-                'message' => __('Permission denied', 'multi-location-product-and-inventory-management'),
+                'message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro'),
             ]);
             return;
         }
@@ -3961,7 +3961,7 @@ class MULOPIMFWC_Dashboard
         $last_request = get_transient($rate_limit_key);
         if ($last_request !== false && (time() - $last_request) < 5) {
             wp_send_json_error([
-                'message' => __('Please wait before requesting another update.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Please wait before requesting another update.', 'multi-location-product-and-inventory-management-pro'),
             ]);
             return;
         }
@@ -4131,7 +4131,7 @@ class MULOPIMFWC_Dashboard
                 
                 $alerts[] = $this->format_alert(
                     'new_order',
-                    sprintf(__('New order #%s placed - %s', 'multi-location-product-and-inventory-management'), $order_number, $formatted_price),
+                    sprintf(__('New order #%s placed - %s', 'multi-location-product-and-inventory-management-pro'), $order_number, $formatted_price),
                     'info',
                     [
                         'order_id' => $order_id,
@@ -4157,7 +4157,7 @@ class MULOPIMFWC_Dashboard
                 }
                 $alerts[] = $this->format_alert(
                     'low_stock',
-                    sprintf(__('Low stock: %s (%s)', 'multi-location-product-and-inventory-management'), $item['product_title'], $item['location_name']),
+                    sprintf(__('Low stock: %s (%s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
                     'warning',
                     [
                         'product_id' => $product_id,
@@ -4184,7 +4184,7 @@ class MULOPIMFWC_Dashboard
                 }
                 $alerts[] = $this->format_alert(
                     'out_of_stock',
-                    sprintf(__('Out of stock: %s (%s)', 'multi-location-product-and-inventory-management'), $item['product_title'], $item['location_name']),
+                    sprintf(__('Out of stock: %s (%s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
                     'critical',
                     [
                         'product_id' => $product_id,
@@ -4207,7 +4207,7 @@ class MULOPIMFWC_Dashboard
                 sort($order_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     "order_{$key}",
-                    sprintf(__('%s orders %s', 'multi-location-product-and-inventory-management'), ucwords(str_replace('_', ' ', $key)), $count),
+                    sprintf(__('%s orders %s', 'multi-location-product-and-inventory-management-pro'), ucwords(str_replace('_', ' ', $key)), $count),
                     'info',
                     [
                         'order_ids' => $order_ids,
@@ -4225,7 +4225,7 @@ class MULOPIMFWC_Dashboard
             
             $alerts[] = $this->format_alert(
                 'high_value_order',
-                sprintf(__('High-value order: #%s (%s)', 'multi-location-product-and-inventory-management'), $order->get_order_number(), $formatted_price),
+                sprintf(__('High-value order: #%s (%s)', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number(), $formatted_price),
                 'info',
                 [
                     'order_id' => $order->get_id(),
@@ -4295,7 +4295,7 @@ class MULOPIMFWC_Dashboard
                 sort($product_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     'restocked',
-                    sprintf(__('Restocked: %s', 'multi-location-product-and-inventory-management'), implode(', ', array_slice($titles, 0, 3))),
+                    sprintf(__('Restocked: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', array_slice($titles, 0, 3))),
                     'info',
                     [
                         'product_ids' => $product_ids,
@@ -4324,7 +4324,7 @@ class MULOPIMFWC_Dashboard
             $product = wc_get_product($review->comment_post_ID);
             $alerts[] = $this->format_alert(
                 'low_review_alert',
-                sprintf(__('Low rating review for %s', 'multi-location-product-and-inventory-management'), $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management')),
+                sprintf(__('Low rating review for %s', 'multi-location-product-and-inventory-management-pro'), $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management-pro')),
                 'info',
                 [
                     'review_id' => $review->comment_ID,
@@ -4340,7 +4340,7 @@ class MULOPIMFWC_Dashboard
             if ($user) {
                 $alerts[] = $this->format_alert(
                     'manager_change',
-                    sprintf(__('Manager updated: %s', 'multi-location-product-and-inventory-management'), $user->display_name),
+                    sprintf(__('Manager updated: %s', 'multi-location-product-and-inventory-management-pro'), $user->display_name),
                     'info',
                     [
                         'user_id' => $user->ID,
@@ -4400,9 +4400,9 @@ class MULOPIMFWC_Dashboard
             'changed_at' => $changed ? $changed_at : null,
             'message' => $changed
                 ? ($state === 'down'
-                    ? __('Site went down. Monitoring could not reach the server.', 'multi-location-product-and-inventory-management')
-                    : __('Site is reachable again.', 'multi-location-product-and-inventory-management'))
-                : __('Site monitoring is stable.', 'multi-location-product-and-inventory-management'),
+                    ? __('Site went down. Monitoring could not reach the server.', 'multi-location-product-and-inventory-management-pro')
+                    : __('Site is reachable again.', 'multi-location-product-and-inventory-management-pro'))
+                : __('Site monitoring is stable.', 'multi-location-product-and-inventory-management-pro'),
         ];
     }
 

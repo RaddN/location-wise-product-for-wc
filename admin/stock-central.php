@@ -14,7 +14,7 @@ class mulopimfwc_Stock_Central
         $this->get_product_table($this->get_current_view_mode());
 
         add_screen_option('per_page', [
-            'label' => __('Number of items per page:', 'multi-location-product-and-inventory-management'),
+            'label' => __('Number of items per page:', 'multi-location-product-and-inventory-management-pro'),
             'default' => 20,
             'option' => 'mulopimfwc_stock_central_per_page',
         ]);
@@ -100,11 +100,11 @@ class mulopimfwc_Stock_Central
 
 ?>
         <div class="wrap mlsctock-cenral-main view-mode-<?php echo esc_attr($view_mode); ?>">
-            <h1 style="display: none !important;"><?php echo esc_html__('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management'); ?></h1>
+            <h1 style="display: none !important;"><?php echo esc_html__('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management-pro'); ?></h1>
             <div class="mlsctock-cenral-header">
                 <div class="mlsctock-cenral-header-copy">
-                    <h1><?php echo esc_html__('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management'); ?></h1>
-                    <p><?php echo esc_html__('Manage stock levels and prices for each product by location.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <h1><?php echo esc_html__('Location Wise Products Stock Management', 'multi-location-product-and-inventory-management-pro'); ?></h1>
+                    <p><?php echo esc_html__('Manage stock levels and prices for each product by location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                 </div>
                 <div class="mulopimfwc-header-actions">
                     <?php if ($can_manage_products) : ?>
@@ -113,7 +113,7 @@ class mulopimfwc_Stock_Central
                                 <span class="mulopimfwc-import-export-toggle-icon" aria-hidden="true">
                                     <svg width="24" height="24" viewBox="0 0 0.72 0.72" xmlns="http://www.w3.org/2000/svg" fill="#fff"><path fill-rule="evenodd" d="M.594.558.592.561l-.09.09-.003.002-.004.002-.002.001L.49.657.487.658.483.659H.474L.47.658.467.657.464.655.461.653.458.651l-.09-.09a.03.03 0 0 1 .04-.045l.003.002.039.04V.27A.03.03 0 0 1 .476.24H.48a.03.03 0 0 1 .03.03v.288L.549.519a.03.03 0 0 1 .04-.002l.003.002a.03.03 0 0 1 .005.037zM.129.159l.09-.09.003-.003.003-.002.003-.002.003-.001L.234.06h.01l.004.001.002.001.003.001.002.001.002.002.002.002.001.001.09.09.002.003a.03.03 0 0 1 0 .037L.35.202.347.204a.03.03 0 0 1-.037 0L.307.202.27.162V.45a.03.03 0 0 1-.026.03H.236A.03.03 0 0 1 .21.454V.162L.171.201.168.203A.03.03 0 0 1 .126.162z"/></svg>
                                 </span>
-                                <span class="mulopimfwc-import-export-toggle-label"><?php echo esc_html__('Import Export', 'multi-location-product-and-inventory-management'); ?></span>
+                                <span class="mulopimfwc-import-export-toggle-label"><?php echo esc_html__('Import Export', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 <span class="mulopimfwc-import-export-toggle-chevron" aria-hidden="true">
                                     <svg viewBox="0 0 20 20" focusable="false" role="img">
                                         <path d="M5.5 7.5 10 12l4.5-4.5 1.2 1.2L10 14.4 4.3 8.7l1.2-1.2Z" fill="currentColor"></path>
@@ -128,12 +128,12 @@ class mulopimfwc_Stock_Central
                                                 <path d="M4 4h7a1 1 0 0 1 1 1v5h-2V6H6v12h4v2H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm9 2h6a1 1 0 0 1 1 1v3h-2V8h-4v2h-2V7a1 1 0 0 1 1-1Zm0 6h2v4h3l-4 4-4-4h3v-4Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <strong><?php echo esc_html__('Stock Central Migration', 'multi-location-product-and-inventory-management'); ?></strong>
+                                        <strong><?php echo esc_html__('Stock Central Migration', 'multi-location-product-and-inventory-management-pro'); ?></strong>
                                     </div>
-                                    <span><?php echo esc_html__('Use a canonical CSV for full product and location data migration.', 'multi-location-product-and-inventory-management'); ?></span>
+                                    <span><?php echo esc_html__('Use a canonical CSV for full product and location data migration.', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                 </div>
 
-                                <div class="mulopimfwc-ie-tabs" role="tablist" aria-label="<?php echo esc_attr__('Import Export Tabs', 'multi-location-product-and-inventory-management'); ?>">
+                                <div class="mulopimfwc-ie-tabs" role="tablist" aria-label="<?php echo esc_attr__('Import Export Tabs', 'multi-location-product-and-inventory-management-pro'); ?>">
                                     <button
                                         type="button"
                                         class="mulopimfwc-ie-tab is-active"
@@ -147,7 +147,7 @@ class mulopimfwc_Stock_Central
                                                 <path d="M4 3h5a1 1 0 0 1 1 1v3H8V5H5v10h3v2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm7 4h2v4h3l-4 4-4-4h3V7Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <span><?php echo esc_html__('Export', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Export', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </button>
                                     <button
                                         type="button"
@@ -162,13 +162,13 @@ class mulopimfwc_Stock_Central
                                                 <path d="M9 3h2v4h3l-4 4-4-4h3V3Zm-5 9h2v3h8v-3h2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <span><?php echo esc_html__('Import', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Import', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </button>
                                 </div>
 
                                 <div id="mulopimfwc-ie-panel-export" class="mulopimfwc-ie-panel is-active" data-ie-panel="export" role="tabpanel" aria-labelledby="mulopimfwc-ie-tab-export">
                                     <p class="mulopimfwc-ie-panel-copy">
-                                        <?php echo esc_html__('Export a full, versioned CSV including products, variations, terms, locations, relationships, and location inventory.', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Export a full, versioned CSV including products, variations, terms, locations, relationships, and location inventory.', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </p>
                                     <ul class="mulopimfwc-ie-checklist">
                                         <li>
@@ -177,7 +177,7 @@ class mulopimfwc_Stock_Central
                                                     <path d="m7.7 13.3-3-3 1.4-1.4 1.6 1.6 4.2-4.2 1.4 1.4-5.6 5.6Z" fill="currentColor"></path>
                                                 </svg>
                                             </span>
-                                            <span><?php echo esc_html__('Schema versioned canonical format', 'multi-location-product-and-inventory-management'); ?></span>
+                                            <span><?php echo esc_html__('Schema versioned canonical format', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </li>
                                         <li>
                                             <span class="mulopimfwc-ie-check-icon" aria-hidden="true">
@@ -185,7 +185,7 @@ class mulopimfwc_Stock_Central
                                                     <path d="m7.7 13.3-3-3 1.4-1.4 1.6 1.6 4.2-4.2 1.4 1.4-5.6 5.6Z" fill="currentColor"></path>
                                                 </svg>
                                             </span>
-                                            <span><?php echo esc_html__('Ready for cross-site import with mapping', 'multi-location-product-and-inventory-management'); ?></span>
+                                            <span><?php echo esc_html__('Ready for cross-site import with mapping', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </li>
                                         <li>
                                             <span class="mulopimfwc-ie-check-icon" aria-hidden="true">
@@ -193,7 +193,7 @@ class mulopimfwc_Stock_Central
                                                     <path d="m7.7 13.3-3-3 1.4-1.4 1.6 1.6 4.2-4.2 1.4 1.4-5.6 5.6Z" fill="currentColor"></path>
                                                 </svg>
                                             </span>
-                                            <span><?php echo esc_html__('Optional custom meta whitelist', 'multi-location-product-and-inventory-management'); ?></span>
+                                            <span><?php echo esc_html__('Optional custom meta whitelist', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </li>
                                     </ul>
                                     <label for="mulopimfwc-stock-central-custom-meta" class="mulopimfwc-ie-field-label">
@@ -202,7 +202,7 @@ class mulopimfwc_Stock_Central
                                                 <path d="M3 5.8C3 4.3 4.3 3 5.8 3h8.4C15.7 3 17 4.3 17 5.8v8.4c0 1.5-1.3 2.8-2.8 2.8H5.8C4.3 17 3 15.7 3 14.2V5.8Zm3.4 1.8v4.8h2.2V7.6H6.4Zm5 0v4.8h2.2V7.6h-2.2Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <span><?php echo esc_html__('Custom Meta Whitelist (optional)', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Custom Meta Whitelist (optional)', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </label>
                                     <input type="text" id="mulopimfwc-stock-central-custom-meta" placeholder="_yoast_wpseo_title,_yoast_wpseo_metadesc" />
                                     <button type="button" class="button button-primary mulopimfwc-stock-central-export">
@@ -211,23 +211,23 @@ class mulopimfwc_Stock_Central
                                                 <path d="M4 3h5a1 1 0 0 1 1 1v3H8V5H5v10h3v2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm7 4h2v4h3l-4 4-4-4h3V7Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <span><?php echo esc_html__('Export Full CSV', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Export Full CSV', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </button>
                                 </div>
 
                                 <div id="mulopimfwc-ie-panel-import" class="mulopimfwc-ie-panel" data-ie-panel="import" role="tabpanel" aria-labelledby="mulopimfwc-ie-tab-import" hidden="hidden">
                                     <p class="mulopimfwc-ie-panel-copy">
-                                        <?php echo esc_html__('Import runs dry-run validation first, then applies changes after confirmation.', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Import runs dry-run validation first, then applies changes after confirmation.', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </p>
-                                    <div class="mulopimfwc-stock-central-dropzone" role="button" tabindex="0" aria-label="<?php echo esc_attr__('Drag and drop CSV file here or press Enter to browse', 'multi-location-product-and-inventory-management'); ?>">
+                                    <div class="mulopimfwc-stock-central-dropzone" role="button" tabindex="0" aria-label="<?php echo esc_attr__('Drag and drop CSV file here or press Enter to browse', 'multi-location-product-and-inventory-management-pro'); ?>">
                                         <span class="mulopimfwc-stock-central-dropzone-icon" aria-hidden="true">
                                             <svg viewBox="0 0 24 24" focusable="false" role="img">
                                                 <path d="M12 2a5 5 0 0 1 5 5v1.2a4.8 4.8 0 0 1 1.2 9.4H17v-2h1.2a2.8 2.8 0 1 0 0-5.6H16V7a3 3 0 1 0-6 0v3H7.8a2.8 2.8 0 1 0 0 5.6H9v2H7.8a4.8 4.8 0 1 1 1.2-9.4V7a5 5 0 0 1 5-5Zm-1 12V9h2v5h3l-4 4-4-4h3Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <strong><?php echo esc_html__('Drag & drop CSV/ZIP file here', 'multi-location-product-and-inventory-management'); ?></strong>
-                                        <span><?php echo esc_html__('or click to browse from your computer', 'multi-location-product-and-inventory-management'); ?></span>
-                                        <em class="mulopimfwc-stock-central-dropzone-file" data-empty-label="<?php echo esc_attr__('No file selected', 'multi-location-product-and-inventory-management'); ?>"><?php echo esc_html__('No file selected', 'multi-location-product-and-inventory-management'); ?></em>
+                                        <strong><?php echo esc_html__('Drag & drop CSV/ZIP file here', 'multi-location-product-and-inventory-management-pro'); ?></strong>
+                                        <span><?php echo esc_html__('or click to browse from your computer', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                        <em class="mulopimfwc-stock-central-dropzone-file" data-empty-label="<?php echo esc_attr__('No file selected', 'multi-location-product-and-inventory-management-pro'); ?>"><?php echo esc_html__('No file selected', 'multi-location-product-and-inventory-management-pro'); ?></em>
                                     </div>
                                     <label for="mulopimfwc-stock-central-import-mode" class="mulopimfwc-ie-field-label">
                                         <span class="mulopimfwc-ie-field-label-icon" aria-hidden="true">
@@ -235,23 +235,23 @@ class mulopimfwc_Stock_Central
                                                 <path d="M4 4h12v2H4V4Zm0 5h12v2H4V9Zm0 5h8v2H4v-2Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <span><?php echo esc_html__('Import Mode', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Import Mode', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </label>
                                     <select id="mulopimfwc-stock-central-import-mode">
-                                        <option value="create_update"><?php echo esc_html__('Create + Update', 'multi-location-product-and-inventory-management'); ?></option>
-                                        <option value="update_only"><?php echo esc_html__('Update Only', 'multi-location-product-and-inventory-management'); ?></option>
+                                        <option value="create_update"><?php echo esc_html__('Create + Update', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                        <option value="update_only"><?php echo esc_html__('Update Only', 'multi-location-product-and-inventory-management-pro'); ?></option>
                                     </select>
                                     <label class="mulopimfwc-import-export-check">
                                         <input type="checkbox" id="mulopimfwc-stock-central-auto-create-terms" checked="checked" />
-                                        <span><?php echo esc_html__('Auto-create missing terms/locations', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Auto-create missing terms/locations', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </label>
                                     <label class="mulopimfwc-import-export-check">
                                         <input type="checkbox" id="mulopimfwc-stock-central-sync-location-profile" checked="checked" />
-                                        <span><?php echo esc_html__('Sync full location profile', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Sync full location profile', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </label>
                                     <label class="mulopimfwc-import-export-check">
                                         <input type="checkbox" id="mulopimfwc-stock-central-import-media" />
-                                        <span><?php echo esc_html__('Sideload media from URL refs', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Sideload media from URL refs', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </label>
                                     <button type="button" class="button button-primary mulopimfwc-stock-central-import-btn">
                                         <span class="mulopimfwc-ie-action-icon" aria-hidden="true">
@@ -259,7 +259,7 @@ class mulopimfwc_Stock_Central
                                                 <path d="M9 3h2v4h3l-4 4-4-4h3V3Zm-5 9h2v3h8v-3h2v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Z" fill="currentColor"></path>
                                             </svg>
                                         </span>
-                                        <span><?php echo esc_html__('Select File & Import', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span><?php echo esc_html__('Select File & Import', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     </button>
                                 </div>
                             </div>
@@ -267,12 +267,12 @@ class mulopimfwc_Stock_Central
                         </div>
                     <?php endif; ?>
                     <div class="mulopimfwc-view-switch-wrap">
-                        <div class="mulopimfwc-view-switch <?php echo $is_classic_mode ? 'is-classic' : 'is-modern'; ?>" role="group" aria-label="<?php echo esc_attr__('Stock Central View Mode', 'multi-location-product-and-inventory-management'); ?>">
+                        <div class="mulopimfwc-view-switch <?php echo $is_classic_mode ? 'is-classic' : 'is-modern'; ?>" role="group" aria-label="<?php echo esc_attr__('Stock Central View Mode', 'multi-location-product-and-inventory-management-pro'); ?>">
                             <a href="<?php echo esc_url($modern_url); ?>" class="mulopimfwc-view-switch-option <?php echo $is_classic_mode ? '' : 'is-active'; ?>">
-                                <?php echo esc_html__('Modern', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Modern', 'multi-location-product-and-inventory-management-pro'); ?>
                             </a>
                             <a href="<?php echo esc_url($classic_url); ?>" class="mulopimfwc-view-switch-option <?php echo $is_classic_mode ? 'is-active' : ''; ?>">
-                                <?php echo esc_html__('Classic', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Classic', 'multi-location-product-and-inventory-management-pro'); ?>
                             </a>
                         </div>
                     </div>
@@ -283,28 +283,28 @@ class mulopimfwc_Stock_Central
                 <span class="mulopimfwc-stock-central-active-job-meta" hidden="hidden"></span>
                 <div class="mulopimfwc-stock-central-status-actions">
                     <button type="button" class="button-link mulopimfwc-stock-central-view-log" hidden="hidden">
-                        <?php echo esc_html__('View Log', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('View Log', 'multi-location-product-and-inventory-management-pro'); ?>
                     </button>
                     <button type="button" class="button-link mulopimfwc-stock-central-pause-job" hidden="hidden">
-                        <?php echo esc_html__('Pause', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Pause', 'multi-location-product-and-inventory-management-pro'); ?>
                     </button>
                     <button type="button" class="button-link mulopimfwc-stock-central-resume-job" hidden="hidden">
-                        <?php echo esc_html__('Resume', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Resume', 'multi-location-product-and-inventory-management-pro'); ?>
                     </button>
                     <button type="button" class="button-link mulopimfwc-stock-central-cancel-job" hidden="hidden">
-                        <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management-pro'); ?>
                     </button>
                 </div>
             </div>
             <div id="mulopimfwc-stock-central-import-export-log-panel" class="mulopimfwc-stock-central-import-export-log-panel" hidden="hidden">
                 <div class="mulopimfwc-stock-central-import-export-log-header">
-                    <strong><?php echo esc_html__('Import Export Log', 'multi-location-product-and-inventory-management'); ?></strong>
+                    <strong><?php echo esc_html__('Import Export Log', 'multi-location-product-and-inventory-management-pro'); ?></strong>
                     <div class="mulopimfwc-stock-central-import-export-log-actions">
                         <button type="button" class="button-link mulopimfwc-stock-central-log-clear">
-                            <?php echo esc_html__('Clear', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('Clear', 'multi-location-product-and-inventory-management-pro'); ?>
                         </button>
                         <button type="button" class="button-link mulopimfwc-stock-central-log-close">
-                            <?php echo esc_html__('Close', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('Close', 'multi-location-product-and-inventory-management-pro'); ?>
                         </button>
                     </div>
                 </div>
@@ -317,29 +317,29 @@ class mulopimfwc_Stock_Central
                 <?php if ($is_classic_mode && $can_manage_products) : ?>
                     <div class="mulopimfwc-classic-toolbar">
                         <div class="mulopimfwc-classic-toolbar-left">
-                            <strong class="mulopimfwc-classic-toolbar-title"><?php echo esc_html__('Classic Row Editor', 'multi-location-product-and-inventory-management'); ?></strong>
-                            <span class="mulopimfwc-classic-toolbar-hint"><?php echo esc_html__('Edit product rows inline, then save or reset all changes.', 'multi-location-product-and-inventory-management'); ?></span>
+                            <strong class="mulopimfwc-classic-toolbar-title"><?php echo esc_html__('Classic Row Editor', 'multi-location-product-and-inventory-management-pro'); ?></strong>
+                            <span class="mulopimfwc-classic-toolbar-hint"><?php echo esc_html__('Edit product rows inline, then save or reset all changes.', 'multi-location-product-and-inventory-management-pro'); ?></span>
                         </div>
                         <div class="mulopimfwc-classic-toolbar-right">
                             <button type="button" class="button button-primary" id="mulopimfwc-classic-save-all">
-                                <?php echo esc_html__('Save All Product Changes', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Save All Product Changes', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                             <button type="button" class="button button-secondary" id="mulopimfwc-classic-reset-all" disabled="disabled">
-                                <?php echo esc_html__('Reset All Changes', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Reset All Changes', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                             <button type="button" class="button button-secondary" id="mulopimfwc-classic-retry-failed" style="display:none;" disabled="disabled">
-                                <?php echo esc_html__('Retry Failed Rows', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Retry Failed Rows', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                             <span id="mulopimfwc-classic-save-progress" class="description" aria-live="polite"></span>
                             <span class="spinner" id="mulopimfwc-classic-save-spinner" aria-hidden="true"></span>
                             <span id="mulopimfwc-classic-dirty-count" class="description">
-                                <?php echo esc_html__('No unsaved product rows.', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('No unsaved product rows.', 'multi-location-product-and-inventory-management-pro'); ?>
                             </span>
                         </div>
                     </div>
                     <div id="mulopimfwc-classic-save-failures" class="mulopimfwc-classic-save-failures" aria-live="polite" hidden="hidden"></div>
                 <?php endif; ?>
-                <?php $product_table->search_box(__('Search Products', 'multi-location-product-and-inventory-management'), 'search_products'); ?>
+                <?php $product_table->search_box(__('Search Products', 'multi-location-product-and-inventory-management-pro'), 'search_products'); ?>
                 <?php $product_table->display(); ?>
             </form>
         </div>
@@ -1826,7 +1826,7 @@ class mulopimfwc_Stock_Central
                         if (currentAction === 'bulk_assign_location' || currentAction === 'bulk_remove_location') {
                             if (!$('#bulk-location-id').val()) {
                                 e.preventDefault();
-                                alert('<?php echo esc_js(__('Please select a location first', 'multi-location-product-and-inventory-management')); ?>');
+                                alert('<?php echo esc_js(__('Please select a location first', 'multi-location-product-and-inventory-management-pro')); ?>');
                                 return false;
                             }
                         }
@@ -1891,8 +1891,8 @@ class mulopimfwc_Stock_Central
                     var $saveFailures = $('#mulopimfwc-classic-save-failures');
                     var saveAllInProgress = false;
                     var failedSaveAllRows = [];
-                    var saveAllButtonDefaultText = '<?php echo esc_js(__('Save All Product Changes', 'multi-location-product-and-inventory-management')); ?>';
-                    var saveAllSavingText = '<?php echo esc_js(__('Saving...', 'multi-location-product-and-inventory-management')); ?>';
+                    var saveAllButtonDefaultText = '<?php echo esc_js(__('Save All Product Changes', 'multi-location-product-and-inventory-management-pro')); ?>';
+                    var saveAllSavingText = '<?php echo esc_js(__('Saving...', 'multi-location-product-and-inventory-management-pro')); ?>';
 
                     function escapeHtml(text) {
                         return $('<div>').text(text || '').html();
@@ -2045,7 +2045,7 @@ class mulopimfwc_Stock_Central
 
                         var productLabel = $.trim($row.find('.column-title strong').first().text());
                         if (!productLabel) {
-                            productLabel = '<?php echo esc_js(__('Product', 'multi-location-product-and-inventory-management')); ?> #' + productId;
+                            productLabel = '<?php echo esc_js(__('Product', 'multi-location-product-and-inventory-management-pro')); ?> #' + productId;
                         }
 
                         return {
@@ -2055,7 +2055,7 @@ class mulopimfwc_Stock_Central
                     }
 
                     function normalizeSaveErrorMessage(errorData) {
-                        var fallbackMessage = '<?php echo esc_js(__('Unable to save this product row.', 'multi-location-product-and-inventory-management')); ?>';
+                        var fallbackMessage = '<?php echo esc_js(__('Unable to save this product row.', 'multi-location-product-and-inventory-management-pro')); ?>';
                         if (!errorData) {
                             return fallbackMessage;
                         }
@@ -2091,13 +2091,13 @@ class mulopimfwc_Stock_Central
                         }
 
                         var failureTitle = failedSaveAllRows.length === 1
-                            ? '<?php echo esc_js(__('1 row failed to save.', 'multi-location-product-and-inventory-management')); ?>'
-                            : failedSaveAllRows.length + ' <?php echo esc_js(__('rows failed to save.', 'multi-location-product-and-inventory-management')); ?>';
+                            ? '<?php echo esc_js(__('1 row failed to save.', 'multi-location-product-and-inventory-management-pro')); ?>'
+                            : failedSaveAllRows.length + ' <?php echo esc_js(__('rows failed to save.', 'multi-location-product-and-inventory-management-pro')); ?>';
 
                         var html = '<strong>' + escapeHtml(failureTitle) + '</strong>';
                         html += '<ul class=\"mulopimfwc-classic-save-failure-list\">';
                         failedSaveAllRows.forEach(function(item) {
-                            var label = item && item.productLabel ? item.productLabel : '<?php echo esc_js(__('Unknown product', 'multi-location-product-and-inventory-management')); ?>';
+                            var label = item && item.productLabel ? item.productLabel : '<?php echo esc_js(__('Unknown product', 'multi-location-product-and-inventory-management-pro')); ?>';
                             var message = item && item.message ? item.message : '';
                             html += '<li><span class=\"mulopimfwc-classic-save-failure-product\">' + escapeHtml(label) + '</span>';
                             if (message) {
@@ -2163,7 +2163,7 @@ class mulopimfwc_Stock_Central
                         });
 
                         if (!queue.length) {
-                            showNotice('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                            showNotice('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management-pro')); ?>', 'info');
                             setSaveAllProgressText('');
                             return;
                         }
@@ -2182,20 +2182,20 @@ class mulopimfwc_Stock_Central
                             if (!queue.length) {
                                 setSaveAllRunning(false);
                                 if (failedSaveAllRows.length > 0) {
-                                    setSaveAllProgressText('<?php echo esc_js(__('Completed with failures:', 'multi-location-product-and-inventory-management')); ?> ' + successCount + '/' + totalRows);
+                                    setSaveAllProgressText('<?php echo esc_js(__('Completed with failures:', 'multi-location-product-and-inventory-management-pro')); ?> ' + successCount + '/' + totalRows);
                                     renderSaveAllFailures();
-                                    showNotice(successCount + ' <?php echo esc_js(__('rows saved,', 'multi-location-product-and-inventory-management')); ?> ' + failedSaveAllRows.length + ' <?php echo esc_js(__('rows failed.', 'multi-location-product-and-inventory-management')); ?>', 'warning');
+                                    showNotice(successCount + ' <?php echo esc_js(__('rows saved,', 'multi-location-product-and-inventory-management-pro')); ?> ' + failedSaveAllRows.length + ' <?php echo esc_js(__('rows failed.', 'multi-location-product-and-inventory-management-pro')); ?>', 'warning');
                                 } else {
                                     clearSaveAllFailures();
-                                    setSaveAllProgressText('<?php echo esc_js(__('Completed:', 'multi-location-product-and-inventory-management')); ?> ' + successCount + '/' + totalRows);
-                                    showNotice('<?php echo esc_js(__('All changed product rows saved successfully.', 'multi-location-product-and-inventory-management')); ?>', 'success');
+                                    setSaveAllProgressText('<?php echo esc_js(__('Completed:', 'multi-location-product-and-inventory-management-pro')); ?> ' + successCount + '/' + totalRows);
+                                    showNotice('<?php echo esc_js(__('All changed product rows saved successfully.', 'multi-location-product-and-inventory-management-pro')); ?>', 'success');
                                 }
                                 return;
                             }
 
                             var $row = queue.shift();
                             var rowMeta = getRowProductMeta($row);
-                            setSaveAllProgressText('<?php echo esc_js(__('Saving row', 'multi-location-product-and-inventory-management')); ?> ' + (completedRows + 1) + '/' + totalRows + ': ' + rowMeta.label);
+                            setSaveAllProgressText('<?php echo esc_js(__('Saving row', 'multi-location-product-and-inventory-management-pro')); ?> ' + (completedRows + 1) + '/' + totalRows + ': ' + rowMeta.label);
 
                             saveRow($row).done(function() {
                                 successCount++;
@@ -2227,11 +2227,11 @@ class mulopimfwc_Stock_Central
                             return;
                         }
                         if (count === 0) {
-                            $count.text('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management')); ?>');
+                            $count.text('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management-pro')); ?>');
                         } else if (count === 1) {
-                            $count.text('<?php echo esc_js(__('1 product row has unsaved changes.', 'multi-location-product-and-inventory-management')); ?>');
+                            $count.text('<?php echo esc_js(__('1 product row has unsaved changes.', 'multi-location-product-and-inventory-management-pro')); ?>');
                         } else {
-                            $count.text(count + ' <?php echo esc_js(__('product rows have unsaved changes.', 'multi-location-product-and-inventory-management')); ?>');
+                            $count.text(count + ' <?php echo esc_js(__('product rows have unsaved changes.', 'multi-location-product-and-inventory-management-pro')); ?>');
                         }
                     }
 
@@ -2244,7 +2244,7 @@ class mulopimfwc_Stock_Central
                             return;
                         }
 
-                        var warningMessage = '<?php echo esc_js(__('You have unsaved Classic row changes. Leaving this page will discard them.', 'multi-location-product-and-inventory-management')); ?>';
+                        var warningMessage = '<?php echo esc_js(__('You have unsaved Classic row changes. Leaving this page will discard them.', 'multi-location-product-and-inventory-management-pro')); ?>';
                         event.preventDefault();
                         event.returnValue = warningMessage;
                         return warningMessage;
@@ -2557,17 +2557,17 @@ class mulopimfwc_Stock_Central
                         clearRowValidationErrors($row);
 
                         var messages = {
-                            regularVsPurchase: '<?php echo esc_js(__('Regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
-                            saleVsRegular: '<?php echo esc_js(__('Sale price must be less than regular price', 'multi-location-product-and-inventory-management')); ?>',
-                            saleVsPurchase: '<?php echo esc_js(__('Sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
-                            locationRegularVsPurchase: '<?php echo esc_js(__('Location regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
-                            locationSaleVsPurchase: '<?php echo esc_js(__('Location sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management')); ?>',
-                            locationSaleVsLocationRegular: '<?php echo esc_js(__('Location sale price must be less than location regular price', 'multi-location-product-and-inventory-management')); ?>',
-                            stockVsPurchaseQty: '<?php echo esc_js(__('Stock quantity cannot be greater than purchase quantity', 'multi-location-product-and-inventory-management')); ?>',
-                            purchaseQtyVsStock: '<?php echo esc_js(__('Purchase quantity cannot be less than stock quantity', 'multi-location-product-and-inventory-management')); ?>',
-                            totalLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds default stock', 'multi-location-product-and-inventory-management')); ?>',
-                            totalVariationLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds variation default stock', 'multi-location-product-and-inventory-management')); ?>',
-                            generic: '<?php echo esc_js(__('Please fix the validation errors before saving.', 'multi-location-product-and-inventory-management')); ?>'
+                            regularVsPurchase: '<?php echo esc_js(__('Regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            saleVsRegular: '<?php echo esc_js(__('Sale price must be less than regular price', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            saleVsPurchase: '<?php echo esc_js(__('Sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            locationRegularVsPurchase: '<?php echo esc_js(__('Location regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            locationSaleVsPurchase: '<?php echo esc_js(__('Location sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            locationSaleVsLocationRegular: '<?php echo esc_js(__('Location sale price must be less than location regular price', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            stockVsPurchaseQty: '<?php echo esc_js(__('Stock quantity cannot be greater than purchase quantity', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            purchaseQtyVsStock: '<?php echo esc_js(__('Purchase quantity cannot be less than stock quantity', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            totalLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds default stock', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            totalVariationLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds variation default stock', 'multi-location-product-and-inventory-management-pro')); ?>',
+                            generic: '<?php echo esc_js(__('Please fix the validation errors before saving.', 'multi-location-product-and-inventory-management-pro')); ?>'
                         };
 
                         var errors = [];
@@ -2845,7 +2845,7 @@ class mulopimfwc_Stock_Central
                         if (hasRows) {
                             $tbody.find('.mulopimfwc-classic-no-locations-row').remove();
                         } else if (!$tbody.find('.mulopimfwc-classic-no-locations-row').length) {
-                            $tbody.append('<tr class=\"mulopimfwc-classic-no-locations-row\"><td colspan=\"' + colspan + '\"><?php echo esc_js(__('No locations assigned yet.', 'multi-location-product-and-inventory-management')); ?></td></tr>');
+                            $tbody.append('<tr class=\"mulopimfwc-classic-no-locations-row\"><td colspan=\"' + colspan + '\"><?php echo esc_js(__('No locations assigned yet.', 'multi-location-product-and-inventory-management-pro')); ?></td></tr>');
                         }
                     }
 
@@ -2921,7 +2921,7 @@ class mulopimfwc_Stock_Central
                         var hasAllOption = $select.find('option[value=\"__all__\"]').length > 0;
 
                         if (hasRealOptions && !hasAllOption) {
-                            var $allOption = $('<option value=\"__all__\"><?php echo esc_js(__('All locations', 'multi-location-product-and-inventory-management')); ?></option>');
+                            var $allOption = $('<option value=\"__all__\"><?php echo esc_js(__('All locations', 'multi-location-product-and-inventory-management-pro')); ?></option>');
                             var $placeholder = $select.find('option[value=\"\"]').first();
                             if ($placeholder.length) {
                                 $allOption.insertAfter($placeholder);
@@ -2949,7 +2949,7 @@ class mulopimfwc_Stock_Central
                             return '' +
                                 '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\" data-currency-rate=\"' + escapedCurrencyRate + '\" data-currency-should-convert=\"' + escapedShouldConvert + '\">' +
                                 '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
-                                '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management')); ?>\">&#10005;</button></td>' +
+                                '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management-pro')); ?>\">&#10005;</button></td>' +
                                 '</tr>';
                         } else if (rowMode === 'price_only') {
                             return '' +
@@ -2957,7 +2957,7 @@ class mulopimfwc_Stock_Central
                                 '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
                                 '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
                                 '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
-                                '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management')); ?>\">&#10005;</button></td>' +
+                                '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management-pro')); ?>\">&#10005;</button></td>' +
                                 '</tr>';
                         }
 
@@ -2968,11 +2968,11 @@ class mulopimfwc_Stock_Central
                             '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
                             '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
                             '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\"' + disabled + '>' +
-                            '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
-                            '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management')); ?></option>' +
-                            '<option value=\"yes\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management')); ?></option>' +
+                            '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management-pro')); ?></option>' +
+                            '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management-pro')); ?></option>' +
+                            '<option value=\"yes\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management-pro')); ?></option>' +
                             '</select></td>' +
-                            '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management')); ?>\">&#10005;</button></td>' +
+                            '<td><button type=\"button\" class=\"button-link-delete mulopimfwc-classic-remove-location\" title=\"<?php echo esc_js(__('Remove location', 'multi-location-product-and-inventory-management-pro')); ?>\">&#10005;</button></td>' +
                             '</tr>';
                     }
 
@@ -2990,9 +2990,9 @@ class mulopimfwc_Stock_Central
                             '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
                             '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
                             (includeStockFields ? '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\">' +
-                            '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management')); ?></option>' +
-                            '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management')); ?></option>' +
-                            '<option value=\"yes\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management')); ?></option>' +
+                            '<option value=\"no\"><?php echo esc_js(__('Do not allow', 'multi-location-product-and-inventory-management-pro')); ?></option>' +
+                            '<option value=\"notify\"><?php echo esc_js(__('Allow, but notify', 'multi-location-product-and-inventory-management-pro')); ?></option>' +
+                            '<option value=\"yes\"><?php echo esc_js(__('Allow', 'multi-location-product-and-inventory-management-pro')); ?></option>' +
                             '</select></td>' : '') +
                             '</tr>';
                     }
@@ -3096,7 +3096,7 @@ class mulopimfwc_Stock_Central
                         var $saveButton = $row.find('.mulopimfwc-classic-save-row');
                         var $resetButton = $row.find('.mulopimfwc-classic-reset-row');
 
-                        setRowStatus($row, '<?php echo esc_js(__('Saving...', 'multi-location-product-and-inventory-management')); ?>');
+                        setRowStatus($row, '<?php echo esc_js(__('Saving...', 'multi-location-product-and-inventory-management-pro')); ?>');
                         $saveButton.prop('disabled', true).text('...');
                         $resetButton.prop('disabled', true);
 
@@ -3107,10 +3107,10 @@ class mulopimfwc_Stock_Central
                         }).done(function(response) {
                             if (response && response.success) {
                                 refreshRowAsSaved($row);
-                                setRowStatus($row, '<?php echo esc_js(__('Saved', 'multi-location-product-and-inventory-management')); ?>', 'success');
+                                setRowStatus($row, '<?php echo esc_js(__('Saved', 'multi-location-product-and-inventory-management-pro')); ?>', 'success');
                                 deferred.resolve(response);
                             } else {
-                                var message = response && response.data && response.data.message ? response.data.message : '<?php echo esc_js(__('Unable to save this product row.', 'multi-location-product-and-inventory-management')); ?>';
+                                var message = response && response.data && response.data.message ? response.data.message : '<?php echo esc_js(__('Unable to save this product row.', 'multi-location-product-and-inventory-management-pro')); ?>';
                                 setRowStatus($row, message, 'error');
                                 setRowDirty($row, true);
                                 deferred.reject({
@@ -3118,7 +3118,7 @@ class mulopimfwc_Stock_Central
                                 });
                             }
                         }).fail(function() {
-                            var ajaxErrorMessage = '<?php echo esc_js(__('AJAX error while saving.', 'multi-location-product-and-inventory-management')); ?>';
+                            var ajaxErrorMessage = '<?php echo esc_js(__('AJAX error while saving.', 'multi-location-product-and-inventory-management-pro')); ?>';
                             setRowStatus($row, ajaxErrorMessage, 'error');
                             setRowDirty($row, true);
                             deferred.reject({
@@ -3328,7 +3328,7 @@ class mulopimfwc_Stock_Central
                         }
 
                         if (!failedSaveAllRows.length) {
-                            showNotice('<?php echo esc_js(__('No failed product rows to retry.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                            showNotice('<?php echo esc_js(__('No failed product rows to retry.', 'multi-location-product-and-inventory-management-pro')); ?>', 'info');
                             return;
                         }
 
@@ -3347,7 +3347,7 @@ class mulopimfwc_Stock_Central
                         if (!retryRows.length) {
                             clearSaveAllFailures();
                             setSaveAllProgressText('');
-                            showNotice('<?php echo esc_js(__('No failed product rows are currently pending changes.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                            showNotice('<?php echo esc_js(__('No failed product rows are currently pending changes.', 'multi-location-product-and-inventory-management-pro')); ?>', 'info');
                             return;
                         }
 
@@ -3361,7 +3361,7 @@ class mulopimfwc_Stock_Central
 
                         var dirtyRows = $('.mulopimfwc-classic-product-row.is-dirty').toArray();
                         if (!dirtyRows.length) {
-                            showNotice('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management')); ?>', 'info');
+                            showNotice('<?php echo esc_js(__('No unsaved product rows.', 'multi-location-product-and-inventory-management-pro')); ?>', 'info');
                             return;
                         }
 
@@ -3371,7 +3371,7 @@ class mulopimfwc_Stock_Central
 
                         clearSaveAllFailures();
                         setSaveAllProgressText('');
-                        showNotice('<?php echo esc_js(__('All unsaved product row changes were reset.', 'multi-location-product-and-inventory-management')); ?>', 'success');
+                        showNotice('<?php echo esc_js(__('All unsaved product row changes were reset.', 'multi-location-product-and-inventory-management-pro')); ?>', 'success');
                     });
                 });
             })(jQuery);

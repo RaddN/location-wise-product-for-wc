@@ -185,7 +185,7 @@ class MULOPIMFWC_Product_Location_Selector
             'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
             'location_notification_text' => function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
                 ? mulopimfwc_get_text_value('location_notification_text')
-                : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management'),
+                : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management-pro'),
         ];
 
         wp_add_inline_script(
@@ -1041,11 +1041,11 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             : (isset($options['allow_mixed_location_cart']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature());
         
         // Inline merge to avoid overwriting existing frontend config.
-        // Note: Using 'multi-location-product-and-inventory-management' nonce to match ajax_switch_location handler
+        // Note: Using 'multi-location-product-and-inventory-management-pro' nonce to match ajax_switch_location handler
         $selector_config = [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('multi-location-product-and-inventory-management'),
+            'nonce' => wp_create_nonce('multi-location-product-and-inventory-management-pro'),
             'cookieExpiryDays' => mulopimfwc_get_location_cookie_expiry_days(),
             'cookie_expiry' => mulopimfwc_get_location_cookie_expiry_days(),
             'cookieName' => mulopimfwc_get_location_cookie_name(),
@@ -1058,7 +1058,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
             'location_notification_text' => function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
                 ? mulopimfwc_get_text_value('location_notification_text')
-                : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management'),
+                : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management-pro'),
         ];
 
         wp_add_inline_script(
@@ -1074,7 +1074,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                 'targets'  => [],
                 'cookieExpiryDays' => mulopimfwc_get_location_cookie_expiry_days(),
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('multi-location-product-and-inventory-management'),
+                'nonce' => wp_create_nonce('multi-location-product-and-inventory-management-pro'),
             ]) . ';',
             'before'
         );
@@ -1532,7 +1532,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                 <?php echo esc_html($label); ?>
             </div>
             <select class="mulopimfwc-location-dropdown" data-current-location="<?php echo esc_attr($current_location); ?>">
-                <option value=""><?php esc_html_e('Choose a location...', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value=""><?php esc_html_e('Choose a location...', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <?php foreach ($locations as $location): ?>
                     <option
                         value="<?php echo esc_attr(rawurldecode($location->slug)); ?>"

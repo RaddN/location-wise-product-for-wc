@@ -60,29 +60,29 @@ class mulopimfwc_Import_Export
             'upload_chunk_size' => 8 * 1024 * 1024,
             'max_upload_bytes' => 2 * 1024 * 1024 * 1024,
             'strings' => [
-                'exporting' => __('Exporting settings...', 'multi-location-product-and-inventory-management'),
-                'export_success' => __('Settings exported successfully!', 'multi-location-product-and-inventory-management'),
-                'export_error' => __('Error exporting settings. Please try again.', 'multi-location-product-and-inventory-management'),
-                'importing' => __('Importing settings...', 'multi-location-product-and-inventory-management'),
-                'import_success' => __('Settings imported successfully! Please refresh the page.', 'multi-location-product-and-inventory-management'),
-                'import_error' => __('Error importing settings. Please ensure you selected a valid JSON file.', 'multi-location-product-and-inventory-management'),
-                'invalid_file' => __('Please select a valid JSON file.', 'multi-location-product-and-inventory-management'),
-                'invalid_csv_file' => __('Please select a valid CSV file.', 'multi-location-product-and-inventory-management'),
-                'confirm_import' => __('This will overwrite your current settings. Are you sure you want to continue?', 'multi-location-product-and-inventory-management'),
-                'confirm_dry_run_apply' => __('Dry run completed. Continue with actual import now?', 'multi-location-product-and-inventory-management'),
-                'clearing_cache' => __('Clearing cache...', 'multi-location-product-and-inventory-management'),
-                'clear_cache_success' => __('Cache cleared successfully.', 'multi-location-product-and-inventory-management'),
-                'clear_cache_error' => __('Error clearing cache. Please try again.', 'multi-location-product-and-inventory-management'),
-                'confirm_clear_cache' => __('Clear cached plugin data now?', 'multi-location-product-and-inventory-management'),
-                'full_exporting' => __('Preparing full product and location export...', 'multi-location-product-and-inventory-management'),
-                'full_importing_dry_run' => __('Running dry-run validation...', 'multi-location-product-and-inventory-management'),
-                'full_importing_apply' => __('Applying import...', 'multi-location-product-and-inventory-management'),
-                'full_import_success' => __('Import completed successfully.', 'multi-location-product-and-inventory-management'),
-                'full_import_error' => __('Import failed. Please review the report.', 'multi-location-product-and-inventory-management'),
-                'job_queued' => __('Job queued. Processing in background...', 'multi-location-product-and-inventory-management'),
-                'uploading_chunks' => __('Uploading file in chunks...', 'multi-location-product-and-inventory-management'),
-                'preparing_import' => __('Preparing import package...', 'multi-location-product-and-inventory-management'),
-                'awaiting_confirmation' => __('Dry-run completed. Waiting for apply confirmation.', 'multi-location-product-and-inventory-management'),
+                'exporting' => __('Exporting settings...', 'multi-location-product-and-inventory-management-pro'),
+                'export_success' => __('Settings exported successfully!', 'multi-location-product-and-inventory-management-pro'),
+                'export_error' => __('Error exporting settings. Please try again.', 'multi-location-product-and-inventory-management-pro'),
+                'importing' => __('Importing settings...', 'multi-location-product-and-inventory-management-pro'),
+                'import_success' => __('Settings imported successfully! Please refresh the page.', 'multi-location-product-and-inventory-management-pro'),
+                'import_error' => __('Error importing settings. Please ensure you selected a valid JSON file.', 'multi-location-product-and-inventory-management-pro'),
+                'invalid_file' => __('Please select a valid JSON file.', 'multi-location-product-and-inventory-management-pro'),
+                'invalid_csv_file' => __('Please select a valid CSV file.', 'multi-location-product-and-inventory-management-pro'),
+                'confirm_import' => __('This will overwrite your current settings. Are you sure you want to continue?', 'multi-location-product-and-inventory-management-pro'),
+                'confirm_dry_run_apply' => __('Dry run completed. Continue with actual import now?', 'multi-location-product-and-inventory-management-pro'),
+                'clearing_cache' => __('Clearing cache...', 'multi-location-product-and-inventory-management-pro'),
+                'clear_cache_success' => __('Cache cleared successfully.', 'multi-location-product-and-inventory-management-pro'),
+                'clear_cache_error' => __('Error clearing cache. Please try again.', 'multi-location-product-and-inventory-management-pro'),
+                'confirm_clear_cache' => __('Clear cached plugin data now?', 'multi-location-product-and-inventory-management-pro'),
+                'full_exporting' => __('Preparing full product and location export...', 'multi-location-product-and-inventory-management-pro'),
+                'full_importing_dry_run' => __('Running dry-run validation...', 'multi-location-product-and-inventory-management-pro'),
+                'full_importing_apply' => __('Applying import...', 'multi-location-product-and-inventory-management-pro'),
+                'full_import_success' => __('Import completed successfully.', 'multi-location-product-and-inventory-management-pro'),
+                'full_import_error' => __('Import failed. Please review the report.', 'multi-location-product-and-inventory-management-pro'),
+                'job_queued' => __('Job queued. Processing in background...', 'multi-location-product-and-inventory-management-pro'),
+                'uploading_chunks' => __('Uploading file in chunks...', 'multi-location-product-and-inventory-management-pro'),
+                'preparing_import' => __('Preparing import package...', 'multi-location-product-and-inventory-management-pro'),
+                'awaiting_confirmation' => __('Dry-run completed. Waiting for apply confirmation.', 'multi-location-product-and-inventory-management-pro'),
             ]
         ]);
     }
@@ -98,7 +98,7 @@ class mulopimfwc_Import_Export
         // Check user capabilities
         if (!current_user_can('manage_options')) {
             wp_send_json_error([
-                'message' => __('You do not have permission to export settings.', 'multi-location-product-and-inventory-management')
+                'message' => __('You do not have permission to export settings.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
 
@@ -132,7 +132,7 @@ class mulopimfwc_Import_Export
         // Check user capabilities
         if (!current_user_can('manage_options')) {
             wp_send_json_error([
-                'message' => __('You do not have permission to import settings.', 'multi-location-product-and-inventory-management')
+                'message' => __('You do not have permission to import settings.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
 
@@ -141,7 +141,7 @@ class mulopimfwc_Import_Export
 
         if (empty($json_data)) {
             wp_send_json_error([
-                'message' => __('No data received.', 'multi-location-product-and-inventory-management')
+                'message' => __('No data received.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
 
@@ -151,7 +151,7 @@ class mulopimfwc_Import_Export
         // Validate JSON
         if (json_last_error() !== JSON_ERROR_NONE) {
             wp_send_json_error([
-                'message' => __('Invalid JSON file. Error: ', 'multi-location-product-and-inventory-management') . json_last_error_msg()
+                'message' => __('Invalid JSON file. Error: ', 'multi-location-product-and-inventory-management-pro') . json_last_error_msg()
             ]);
         }
 
@@ -161,20 +161,20 @@ class mulopimfwc_Import_Export
             $import_data['plugin'] !== 'Multi Location Product & Inventory Management for WooCommerce'
         ) {
             wp_send_json_error([
-                'message' => __('This file does not appear to be a valid settings export from this plugin.', 'multi-location-product-and-inventory-management')
+                'message' => __('This file does not appear to be a valid settings export from this plugin.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
 
         if (!isset($import_data['settings']) || !is_array($import_data['settings'])) {
             wp_send_json_error([
-                'message' => __('Invalid settings file format. Settings data not found.', 'multi-location-product-and-inventory-management')
+                'message' => __('Invalid settings file format. Settings data not found.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
 
         // Check if settings array is empty
         if (empty($import_data['settings'])) {
             wp_send_json_error([
-                'message' => __('The settings file contains no data to import.', 'multi-location-product-and-inventory-management')
+                'message' => __('The settings file contains no data to import.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
 
@@ -192,12 +192,12 @@ class mulopimfwc_Import_Export
 
         if ($updated || $sanitized_settings === $current_settings) {
             wp_send_json_success([
-                'message' => __('Settings imported successfully!', 'multi-location-product-and-inventory-management'),
+                'message' => __('Settings imported successfully!', 'multi-location-product-and-inventory-management-pro'),
                 'imported_count' => count($sanitized_settings)
             ]);
         } else {
             wp_send_json_error([
-                'message' => __('Failed to update settings. Please try again.', 'multi-location-product-and-inventory-management')
+                'message' => __('Failed to update settings. Please try again.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
     }
@@ -211,7 +211,7 @@ class mulopimfwc_Import_Export
 
         if (!current_user_can('manage_options')) {
             wp_send_json_error([
-                'message' => __('You do not have permission to clear cache.', 'multi-location-product-and-inventory-management')
+                'message' => __('You do not have permission to clear cache.', 'multi-location-product-and-inventory-management-pro')
             ]);
         }
 
@@ -238,7 +238,7 @@ class mulopimfwc_Import_Export
         }
 
         $message = sprintf(
-            __('Cache cleared. Removed %d cached entries.', 'multi-location-product-and-inventory-management'),
+            __('Cache cleared. Removed %d cached entries.', 'multi-location-product-and-inventory-management-pro'),
             $deleted
         );
 
@@ -426,7 +426,7 @@ function mulopimfwc_export_products_csv_handler() {
     
     // Check user permissions
     if (!current_user_can('manage_woocommerce')) {
-        wp_send_json_error(['message' => __('You do not have permission to export products.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('You do not have permission to export products.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
@@ -639,13 +639,13 @@ function mulopimfwc_import_inventory_csv_handler() {
     
     // Check user permissions
     if (!current_user_can('manage_woocommerce')) {
-        wp_send_json_error(['message' => __('You do not have permission to import inventory.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('You do not have permission to import inventory.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
     // Check if file was uploaded
     if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
-        wp_send_json_error(['message' => __('Please select a valid CSV file.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Please select a valid CSV file.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
@@ -656,7 +656,7 @@ function mulopimfwc_import_inventory_csv_handler() {
     if ($file['size'] > $max_file_size) {
         wp_send_json_error([
             'message' => sprintf(
-                __('File size exceeds maximum allowed size of %s. Please split your file into smaller chunks.', 'multi-location-product-and-inventory-management'),
+                __('File size exceeds maximum allowed size of %s. Please split your file into smaller chunks.', 'multi-location-product-and-inventory-management-pro'),
                 size_format($max_file_size)
             )
         ]);
@@ -666,7 +666,7 @@ function mulopimfwc_import_inventory_csv_handler() {
     // Additional validation: check if file is actually a CSV
     $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if ($file_ext !== 'csv') {
-        wp_send_json_error(['message' => __('Invalid file type. Please upload a CSV file.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Invalid file type. Please upload a CSV file.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     $file_path = $file['tmp_name'];
@@ -674,14 +674,14 @@ function mulopimfwc_import_inventory_csv_handler() {
     // Validate file type
     $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if ($file_ext !== 'csv') {
-        wp_send_json_error(['message' => __('Invalid file type. Please upload a CSV file.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Invalid file type. Please upload a CSV file.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
     // Parse CSV
     $handle = fopen($file_path, 'r');
     if ($handle === false) {
-        wp_send_json_error(['message' => __('Failed to read CSV file.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Failed to read CSV file.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
@@ -689,7 +689,7 @@ function mulopimfwc_import_inventory_csv_handler() {
     $headers = fgetcsv($handle);
     if ($headers === false) {
         fclose($handle);
-        wp_send_json_error(['message' => __('Invalid CSV format.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('Invalid CSV format.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
@@ -705,7 +705,7 @@ function mulopimfwc_import_inventory_csv_handler() {
     $missing_columns = array_diff(['product_id', 'sku', 'location_id', 'location_slug'], $headers);
     if (count($missing_columns) === 4) {
         fclose($handle);
-        wp_send_json_error(['message' => __('CSV must contain at least one of: product_id, sku, location_id, or location_slug.', 'multi-location-product-and-inventory-management')]);
+        wp_send_json_error(['message' => __('CSV must contain at least one of: product_id, sku, location_id, or location_slug.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
     
@@ -727,13 +727,13 @@ function mulopimfwc_import_inventory_csv_handler() {
         // FIXED: Limit number of rows to prevent memory exhaustion
         $max_rows = apply_filters('mulopimfwc_max_csv_import_rows', 10000);
         if ($line_number > $max_rows) {
-            $results['errors'][] = sprintf(__('Import stopped at row %d. Maximum %d rows allowed per import.', 'multi-location-product-and-inventory-management'), $line_number, $max_rows);
+            $results['errors'][] = sprintf(__('Import stopped at row %d. Maximum %d rows allowed per import.', 'multi-location-product-and-inventory-management-pro'), $line_number, $max_rows);
             break;
         }
         
         if (count($row) !== count($headers)) {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Column count mismatch.', 'multi-location-product-and-inventory-management'), $line_number);
+            $results['errors'][] = sprintf(__('Line %d: Column count mismatch.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -749,7 +749,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $term = get_term($location_id, 'mulopimfwc_store_location');
             if (!$term || is_wp_error($term)) {
                 $results['failed']++;
-                $results['errors'][] = sprintf(__('Line %d: Invalid location ID %d.', 'multi-location-product-and-inventory-management'), $line_number, $location_id);
+                $results['errors'][] = sprintf(__('Line %d: Invalid location ID %d.', 'multi-location-product-and-inventory-management-pro'), $line_number, $location_id);
                 continue;
             }
         } elseif (!empty($data['location_slug'])) {
@@ -759,7 +759,7 @@ function mulopimfwc_import_inventory_csv_handler() {
                 if (!$term || is_wp_error($term)) {
                     $validated_locations[$location_slug] = false;
                     $results['failed']++;
-                    $results['errors'][] = sprintf(__('Line %d: Invalid location slug "%s".', 'multi-location-product-and-inventory-management'), $line_number, $location_slug);
+                    $results['errors'][] = sprintf(__('Line %d: Invalid location slug "%s".', 'multi-location-product-and-inventory-management-pro'), $line_number, $location_slug);
                     continue;
                 }
                 $validated_locations[$location_slug] = $term->term_id;
@@ -770,7 +770,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $location_id = $validated_locations[$location_slug];
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Missing location_id or location_slug.', 'multi-location-product-and-inventory-management'), $line_number);
+            $results['errors'][] = sprintf(__('Line %d: Missing location_id or location_slug.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -784,7 +784,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $item['sku'] = sanitize_text_field($data['sku']);
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Product ID or SKU is required.', 'multi-location-product-and-inventory-management'), $line_number);
+            $results['errors'][] = sprintf(__('Line %d: Product ID or SKU is required.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -795,7 +795,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $item['location_slug'] = sanitize_text_field($data['location_slug']);
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Location ID or slug is required.', 'multi-location-product-and-inventory-management'), $line_number);
+            $results['errors'][] = sprintf(__('Line %d: Location ID or slug is required.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -831,14 +831,14 @@ function mulopimfwc_import_inventory_csv_handler() {
             $results['success']++;
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: %s', 'multi-location-product-and-inventory-management'), $line_number, $result['error']);
+            $results['errors'][] = sprintf(__('Line %d: %s', 'multi-location-product-and-inventory-management-pro'), $line_number, $result['error']);
         }
     }
     
     fclose($handle);
     
     wp_send_json_success(array(
-        'message' => sprintf(__('Import completed. %d succeeded, %d failed.', 'multi-location-product-and-inventory-management'), $results['success'], $results['failed']),
+        'message' => sprintf(__('Import completed. %d succeeded, %d failed.', 'multi-location-product-and-inventory-management-pro'), $results['success'], $results['failed']),
         'results' => $results,
     ));
 }

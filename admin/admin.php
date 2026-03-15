@@ -536,8 +536,8 @@ class MULOPIMFWC_Admin
             'nonce' => wp_create_nonce('mulopimfwc_sync_currency_rate'),
             'defaultCurrency' => $this->get_default_currency_code(),
             'messages' => array(
-                'syncing' => __('Syncing rate...', 'multi-location-product-and-inventory-management'),
-                'syncFailed' => __('Unable to sync rate. Please try again.', 'multi-location-product-and-inventory-management'),
+                'syncing' => __('Syncing rate...', 'multi-location-product-and-inventory-management-pro'),
+                'syncFailed' => __('Unable to sync rate. Please try again.', 'multi-location-product-and-inventory-management-pro'),
             ),
         );
 
@@ -831,7 +831,7 @@ JS;
                 'ID' => 'mulopimfwc_store_location-' . $term->term_id,
                 'title' => $term->name,
                 'permalink' => $link,
-                'info' => __('Location', 'multi-location-product-and-inventory-management'),
+                'info' => __('Location', 'multi-location-product-and-inventory-management-pro'),
             ];
         }
 
@@ -903,7 +903,7 @@ JS;
     {
         // WC_Tax::get_tax_classes() returns array of class names (no "Standard")
         $classes = \WC_Tax::get_tax_classes();
-        $out = array('' => __('Standard rate', 'multi-location-product-and-inventory-management'));
+        $out = array('' => __('Standard rate', 'multi-location-product-and-inventory-management-pro'));
         foreach ($classes as $class) {
             $out[sanitize_title($class)] = $class;
         }
@@ -922,10 +922,10 @@ JS;
     private function get_currency_position_options()
     {
         return array(
-            'left' => __('Left', 'multi-location-product-and-inventory-management'),
-            'right' => __('Right', 'multi-location-product-and-inventory-management'),
-            'left_space' => __('Left With Space', 'multi-location-product-and-inventory-management'),
-            'right_space' => __('Right With Space', 'multi-location-product-and-inventory-management'),
+            'left' => __('Left', 'multi-location-product-and-inventory-management-pro'),
+            'right' => __('Right', 'multi-location-product-and-inventory-management-pro'),
+            'left_space' => __('Left With Space', 'multi-location-product-and-inventory-management-pro'),
+            'right_space' => __('Right With Space', 'multi-location-product-and-inventory-management-pro'),
         );
     }
 
@@ -988,8 +988,8 @@ JS;
     private function get_location_rate_mode_options(): array
     {
         return array(
-            'auto' => __('Auto', 'multi-location-product-and-inventory-management'),
-            'fixed' => __('Fixed', 'multi-location-product-and-inventory-management'),
+            'auto' => __('Auto', 'multi-location-product-and-inventory-management-pro'),
+            'fixed' => __('Fixed', 'multi-location-product-and-inventory-management-pro'),
         );
     }
 
@@ -1196,14 +1196,14 @@ JS;
     {
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error(array(
-                'message' => __('You do not have permission to sync exchange rates.', 'multi-location-product-and-inventory-management'),
+                'message' => __('You do not have permission to sync exchange rates.', 'multi-location-product-and-inventory-management-pro'),
             ), 403);
         }
 
         $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
         if (!wp_verify_nonce($nonce, 'mulopimfwc_sync_currency_rate')) {
             wp_send_json_error(array(
-                'message' => __('Invalid request. Please refresh the page and try again.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Invalid request. Please refresh the page and try again.', 'multi-location-product-and-inventory-management-pro'),
             ), 403);
         }
 
@@ -1219,7 +1219,7 @@ JS;
 
         if ($to_currency === '' || !isset($currencies[$to_currency])) {
             wp_send_json_error(array(
-                'message' => __('Please select a valid target currency first.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Please select a valid target currency first.', 'multi-location-product-and-inventory-management-pro'),
             ), 400);
         }
 
@@ -1229,7 +1229,7 @@ JS;
                 'from_currency' => $from_currency,
                 'to_currency' => $to_currency,
                 'message' => sprintf(
-                    __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management'),
+                    __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management-pro'),
                     $from_currency,
                     $to_currency
                 ),
@@ -1239,7 +1239,7 @@ JS;
         $rate = $this->fetch_currency_rate_from_remote($from_currency, $to_currency);
         if (!is_numeric($rate) || (float) $rate <= 0) {
             wp_send_json_error(array(
-                'message' => __('Unable to fetch the latest exchange rate right now. Please try again.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Unable to fetch the latest exchange rate right now. Please try again.', 'multi-location-product-and-inventory-management-pro'),
             ), 500);
         }
 
@@ -1248,7 +1248,7 @@ JS;
             'from_currency' => $from_currency,
             'to_currency' => $to_currency,
             'message' => sprintf(
-                __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management'),
+                __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management-pro'),
                 $from_currency,
                 $to_currency
             ),
@@ -1317,102 +1317,102 @@ JS;
 ?>
         <!-- Location Map -->
         <div class="form-field mulopimfwc-location-map-wrap">
-            <label><?php _e('Location Map', 'multi-location-product-and-inventory-management'); ?></label>
+            <label><?php _e('Location Map', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <div class="mulopimfwc-location-map-controls">
-                <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management'); ?>" />
-                <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management'); ?></button>
+                <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management-pro'); ?>" />
+                <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management-pro'); ?></button>
             </div>
-            <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management'); ?>"></div>
-            <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management'); ?></p>
+            <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management-pro'); ?>"></div>
+            <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             <p class="description mulopimfwc-location-map-feedback" style="display:none;"></p>
         </div>
 
         <div class="form-field">
-            <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="street_address" id="street_address" value="" />
-            <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="city"><?php _e('City', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="city"><?php _e('City', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="city" id="city" value="" />
-            <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="state"><?php _e('State', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="state"><?php _e('State', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="state" id="state" value="" />
-            <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="postal_code" id="postal_code" value="" />
-            <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="country" id="country" value="" />
-            <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="email" name="email" id="email" value="" />
-            <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="tel" name="phone" id="phone" value="" />
-            <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="number" name="low_stock_threshold" id="low_stock_threshold" value="" min="0" step="1" />
-            <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="number" name="out_of_stock_threshold" id="out_of_stock_threshold" value="" min="0" step="1" />
-            <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Latitude / Longitude -->
         <div class="form-field">
-            <label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="latitude" id="latitude" value="" />
-            <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="text" name="longitude" id="longitude" value="" />
-            <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Logo -->
         <div class="form-field mulopimfwc-media-wrap">
-            <label><?php _e('Logo', 'multi-location-product-and-inventory-management'); ?></label>
+            <label><?php _e('Logo', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="hidden" name="logo_id" class="mulopimfwc-logo-id" value="">
             <div class="mulopimfwc-logo-preview" style="margin:6px 0;"></div>
             <p>
-                <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management'); ?></span>
-                <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management'); ?></span>
+                <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management-pro'); ?></span>
             </p>
         </div>
 
         <!-- Gallery -->
         <div class="form-field mulopimfwc-media-wrap">
-            <label><?php _e('Gallery', 'multi-location-product-and-inventory-management'); ?></label>
+            <label><?php _e('Gallery', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="hidden" name="gallery_ids" class="mulopimfwc-gallery-ids" value="">
             <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;"></div>
             <p>
-                <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management'); ?></span>
-                <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management'); ?></span>
+                <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management-pro'); ?></span>
             </p>
         </div>
 
@@ -1421,22 +1421,22 @@ JS;
         $def = $this->get_default_business_hours();
         $tzs = timezone_identifiers_list(); // basic list
         $days_labels = [
-            'mon' => __('Monday', 'multi-location-product-and-inventory-management'),
-            'tue' => __('Tuesday', 'multi-location-product-and-inventory-management'),
-            'wed' => __('Wednesday', 'multi-location-product-and-inventory-management'),
-            'thu' => __('Thursday', 'multi-location-product-and-inventory-management'),
-            'fri' => __('Friday', 'multi-location-product-and-inventory-management'),
-            'sat' => __('Saturday', 'multi-location-product-and-inventory-management'),
-            'sun' => __('Sunday', 'multi-location-product-and-inventory-management'),
+            'mon' => __('Monday', 'multi-location-product-and-inventory-management-pro'),
+            'tue' => __('Tuesday', 'multi-location-product-and-inventory-management-pro'),
+            'wed' => __('Wednesday', 'multi-location-product-and-inventory-management-pro'),
+            'thu' => __('Thursday', 'multi-location-product-and-inventory-management-pro'),
+            'fri' => __('Friday', 'multi-location-product-and-inventory-management-pro'),
+            'sat' => __('Saturday', 'multi-location-product-and-inventory-management-pro'),
+            'sun' => __('Sunday', 'multi-location-product-and-inventory-management-pro'),
         ];
         ?>
         <div class="form-field">
-            <label><?php _e('Business Hours', 'multi-location-product-and-inventory-management'); ?></label>
+            <label><?php _e('Business Hours', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <div style="border:1px solid #ddd;border-radius:6px;padding:10px;max-width:660px;">
-                <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management-pro'); ?></p>
 
                 <p>
-                    <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management'); ?>:</strong>
+                    <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
                     <select name="bh[timezone]" style="min-width:280px;">
                         <?php foreach ($tzs as $tz): ?>
                             <option value="<?php echo esc_attr($tz); ?>" <?php selected($tz, $def['timezone']); ?>>
@@ -1458,15 +1458,15 @@ JS;
                                     <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
                                         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                             <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="closed" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'closed'); ?>>
-                                            <span><?php _e('Closed', 'multi-location-product-and-inventory-management'); ?></span>
+                                            <span><?php _e('Closed', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </label>
                                         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                             <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="all_day" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'all_day'); ?>>
-                                            <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                            <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </label>
                                         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                             <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="custom" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($default_mode, 'custom'); ?>>
-                                            <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                            <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </label>
                                         <span class="mulopimfwc-bh-times" data-day="<?php echo esc_attr($key); ?>" style="margin-left:10px;<?php echo ($default_mode !== 'custom') ? 'display:none;' : ''; ?>">
                                             <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>" style="margin-right:4px;">
@@ -1505,23 +1505,23 @@ JS;
         <!-- Shipping Zones -->
         <?php $zones = $this->get_shipping_zones_options(); ?>
         <div class="form-field">
-            <label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management'); ?></label>
-            <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management'); ?>">
+            <label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <?php foreach ($zones as $zid => $zname): ?>
                     <option value="<?php echo esc_attr($zid); ?>"><?php echo esc_html($zname); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Shipping Methods (instances) -->
         <?php $zone_methods = $this->get_shipping_methods_grouped_by_zone(); ?>
         <div class="form-field">
-            <label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management'); ?></label>
-            <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management'); ?>">
+            <label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <?php foreach ($zone_methods as $zid => $methods): ?>
                     <?php if (!empty($methods)): ?>
-                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management'), $zones[$zid] ?? $zid)); ?>">
+                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management-pro'), $zones[$zid] ?? $zid)); ?>">
                             <?php foreach ($methods as $instance_id => $label): ?>
                                 <option value="<?php echo esc_attr($zid . ':' . $instance_id); ?>"><?php echo esc_html($label); ?></option>
                             <?php endforeach; ?>
@@ -1529,32 +1529,32 @@ JS;
                     <?php endif; ?>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Payment Methods -->
         <?php $payments = $this->get_payment_method_options(); ?>
         <div class="form-field">
-            <label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management'); ?></label>
-            <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management'); ?>">
+            <label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <?php foreach ($payments as $pid => $ptitle): ?>
                     <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <!-- Pickup Locations -->
         <?php $pickup_locations = $this->get_pickup_locations(); ?>
         <?php if (!empty($pickup_locations)): ?>
             <div class="form-field">
-                <label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management'); ?></label>
-                <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management'); ?>">
+                <label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($pickup_locations as $pid => $ptitle): ?>
                         <option value="<?php echo esc_attr($pid); ?>"><?php echo esc_html($ptitle); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </div>
         <?php endif; ?>
 
@@ -1569,9 +1569,9 @@ JS;
         $rate_mode_options = $this->get_location_rate_mode_options();
         ?>
         <div class="form-field">
-            <label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management'); ?></label>
-            <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management'); ?>">
-                <option value="" selected><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management'), $default_currency_label)); ?></option>
+            <label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label>
+            <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management-pro'); ?>">
+                <option value="" selected><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
                 <?php foreach ($currencies as $currency_code => $currency_name): ?>
                     <?php
                     $currency_code = strtoupper((string) $currency_code);
@@ -1584,22 +1584,22 @@ JS;
                     <option value="<?php echo esc_attr($currency_code); ?>"><?php echo esc_html($currency_label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
-                <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $currency_positions[$default_currency_position])); ?></option>
+                <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
                 <?php foreach ($currency_positions as $position_key => $position_label): ?>
                     <option value="<?php echo esc_attr($position_key); ?>"><?php echo esc_html($position_label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <div class="mulopimfwc-currency-rate-wrap" style="display:flex;align-items:center;gap:8px;max-width:430px;">
                 <input
                     type="number"
@@ -1615,7 +1615,7 @@ JS;
                         <option value="<?php echo esc_attr($mode_key); ?>" <?php selected($mode_key, 'auto'); ?>><?php echo esc_html($mode_label); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <button type="button" class="button mulopimfwc-sync-rate" title="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" aria-label="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" style="min-width:36px;padding:0 8px;">
+                <button type="button" class="button mulopimfwc-sync-rate" title="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management-pro'); ?>" aria-label="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management-pro'); ?>" style="min-width:36px;padding:0 8px;">
                     <span class="dashicons dashicons-update" style="margin-top:3px;"></span>
                 </button>
             </div>
@@ -1623,7 +1623,7 @@ JS;
                 <?php
                 echo esc_html(
                     sprintf(
-                        __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management'),
+                        __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management-pro'),
                         $default_currency_code
                     )
                 );
@@ -1635,28 +1635,28 @@ JS;
         <!-- Tax Class -->
         <?php $tax_classes = $this->get_tax_class_options(); ?>
         <div class="form-field">
-            <label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="tax_class" id="tax_class" style="min-width: 220px;">
                 <?php foreach ($tax_classes as $key => $label): ?>
                     <option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <input type="number" name="display_order" id="display_order" value="" min="0" step="1" />
-            <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
 
         <div class="form-field">
-            <label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management'); ?></label>
+            <label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="is_active" id="is_active">
-                <option value="1" selected><?php _e('Active', 'multi-location-product-and-inventory-management'); ?></option>
-                <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management'); ?></option>
+                <option value="1" selected><?php _e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
             </select>
-            <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management'); ?></p>
+            <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management-pro'); ?></p>
         </div>
     <?php
     }
@@ -1727,128 +1727,128 @@ JS;
         }
     ?>
         <tr class="form-field mulopimfwc-location-map-wrap">
-            <th scope="row"><label><?php _e('Location Map', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label><?php _e('Location Map', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <div class="mulopimfwc-location-map-controls">
-                    <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management'); ?>" />
-                    <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management'); ?></button>
+                    <input type="text" class="mulopimfwc-location-search" placeholder="<?php esc_attr_e('Search address...', 'multi-location-product-and-inventory-management-pro'); ?>" />
+                    <button type="button" class="button mulopimfwc-location-search-btn"><?php _e('Search', 'multi-location-product-and-inventory-management-pro'); ?></button>
                 </div>
-                <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management'); ?>"></div>
-                <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management'); ?></p>
+                <div class="mulopimfwc-location-map" aria-label="<?php esc_attr_e('Location map', 'multi-location-product-and-inventory-management-pro'); ?>"></div>
+                <p class="description"><?php _e('Click on the map or drag the pin to set the warehouse location. Address fields update automatically.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                 <p class="description mulopimfwc-location-map-feedback" style="display:none;"></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="street_address"><?php _e('Street Address', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="street_address" id="street_address" value="<?php echo esc_attr($street_address); ?>" />
-                <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter street address for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="city"><?php _e('City', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="city"><?php _e('City', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="city" id="city" value="<?php echo esc_attr($city); ?>" />
-                <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter city for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="state"><?php _e('State', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="state"><?php _e('State', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="state" id="state" value="<?php echo esc_attr($state); ?>" />
-                <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter state for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="postal_code"><?php _e('Postal Code', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="postal_code" id="postal_code" value="<?php echo esc_attr($postal_code); ?>" />
-                <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter postal code for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="country"><?php _e('Country', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="country" id="country" value="<?php echo esc_attr($country); ?>" />
-                <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter country for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="email"><?php _e('Email', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="email" name="email" id="email" value="<?php echo esc_attr($email); ?>" />
-                <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter email for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="phone"><?php _e('Phone', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="tel" name="phone" id="phone" value="<?php echo esc_attr($phone); ?>" />
-                <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter phone for this location', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="low_stock_threshold"><?php _e('Low Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="number" name="low_stock_threshold" id="low_stock_threshold" value="<?php echo esc_attr($low_stock_threshold); ?>" min="0" step="1" />
-                <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Alert threshold for low stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="out_of_stock_threshold"><?php _e('Out of Stock Threshold', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="number" name="out_of_stock_threshold" id="out_of_stock_threshold" value="<?php echo esc_attr($out_of_stock_threshold); ?>" min="0" step="1" />
-                <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Alert threshold for out-of-stock at this location (overrides global default).', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="latitude"><?php _e('Latitude', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="latitude" id="latitude" value="<?php echo esc_attr($latitude); ?>" />
-                <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Decimal latitude (e.g. 23.7808)', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="longitude"><?php _e('Longitude', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="text" name="longitude" id="longitude" value="<?php echo esc_attr($longitude); ?>" />
-                <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Decimal longitude (e.g. 90.2792)', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label><?php _e('Logo', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label><?php _e('Logo', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td class="mulopimfwc-media-wrap">
                 <input type="hidden" name="logo_id" class="mulopimfwc-logo-id" value="<?php echo esc_attr($logo_id); ?>">
                 <div class="mulopimfwc-logo-preview" style="margin:6px 0;"><?php
                                                                             if ($logo_src) echo '<img src="' . esc_url($logo_src) . '" style="max-width:80px;height:auto;border:1px solid #ddd;border-radius:4px;">';
                                                                             ?></div>
                 <p>
-                    <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management'); ?></span>
-                    <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management'); ?></span>
+                    <span class="button mulopimfwc-upload-logo"><?php _e('Upload/Choose Logo', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="button button-link-delete mulopimfwc-remove-logo"><?php _e('Remove', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 </p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label><?php _e('Gallery', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label><?php _e('Gallery', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td class="mulopimfwc-media-wrap">
                 <input type="hidden" name="gallery_ids" class="mulopimfwc-gallery-ids" value="<?php echo esc_attr($gallery_ids_csv); ?>">
                 <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;"><?php echo $gallery_thumbs; ?></div>
                 <p>
-                    <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management'); ?></span>
-                    <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management'); ?></span>
+                    <span class="button mulopimfwc-upload-gallery"><?php _e('Add Images', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="button button-link-delete mulopimfwc-clear-gallery"><?php _e('Clear', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 </p>
             </td>
         </tr>
@@ -1857,23 +1857,23 @@ JS;
         $bh = $this->get_business_hours($term->term_id);
         $tzs = timezone_identifiers_list();
         $days_labels = [
-            'mon' => __('Monday', 'multi-location-product-and-inventory-management'),
-            'tue' => __('Tuesday', 'multi-location-product-and-inventory-management'),
-            'wed' => __('Wednesday', 'multi-location-product-and-inventory-management'),
-            'thu' => __('Thursday', 'multi-location-product-and-inventory-management'),
-            'fri' => __('Friday', 'multi-location-product-and-inventory-management'),
-            'sat' => __('Saturday', 'multi-location-product-and-inventory-management'),
-            'sun' => __('Sunday', 'multi-location-product-and-inventory-management'),
+            'mon' => __('Monday', 'multi-location-product-and-inventory-management-pro'),
+            'tue' => __('Tuesday', 'multi-location-product-and-inventory-management-pro'),
+            'wed' => __('Wednesday', 'multi-location-product-and-inventory-management-pro'),
+            'thu' => __('Thursday', 'multi-location-product-and-inventory-management-pro'),
+            'fri' => __('Friday', 'multi-location-product-and-inventory-management-pro'),
+            'sat' => __('Saturday', 'multi-location-product-and-inventory-management-pro'),
+            'sun' => __('Sunday', 'multi-location-product-and-inventory-management-pro'),
         ];
         ?>
         <tr class="form-field">
-            <th scope="row"><label><?php _e('Business Hours', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label><?php _e('Business Hours', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <div style="border:1px solid #ddd;border-radius:6px;padding:10px;max-width:660px;">
-                    <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p class="description" style="margin-top:0;"><?php _e('Set opening hours for each day. Use “Closed” for off days or “24 hours” for round-the-clock.', 'multi-location-product-and-inventory-management-pro'); ?></p>
 
                     <p>
-                        <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management'); ?>:</strong>
+                        <strong><?php _e('Timezone', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
                         <select name="bh[timezone]" style="min-width:280px;">
                             <?php foreach ($tzs as $tz): ?>
                                 <option value="<?php echo esc_attr($tz); ?>" <?php selected($tz, $bh['timezone']); ?>>
@@ -1895,15 +1895,15 @@ JS;
                                         <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
                                             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                                 <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="closed" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'closed'); ?>>
-                                                <span><?php _e('Closed', 'multi-location-product-and-inventory-management'); ?></span>
+                                                <span><?php _e('Closed', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                             </label>
                                             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                                 <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="all_day" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'all_day'); ?>>
-                                                <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                                <span><?php _e('24 Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                             </label>
                                             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                                                 <input type="radio" name="bh[days][<?php echo esc_attr($key); ?>][mode]" value="custom" class="mulopimfwc-bh-mode" data-day="<?php echo esc_attr($key); ?>" <?php checked($current_mode, 'custom'); ?>>
-                                                <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management'); ?></span>
+                                                <span><?php _e('Custom Hours', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                             </label>
                                             <span class="mulopimfwc-bh-times" data-day="<?php echo esc_attr($key); ?>" style="margin-left:10px;<?php echo ($current_mode !== 'custom') ? 'display:none;' : ''; ?>">
                                                 <input type="time" name="bh[days][<?php echo esc_attr($key); ?>][open]" value="<?php echo esc_attr($vals['open']); ?>" style="margin-right:4px;">
@@ -1941,25 +1941,25 @@ JS;
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="shipping_zones"><?php _e('Shipping Zones', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
-                <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management'); ?>">
+                <select name="shipping_zones[]" id="shipping_zones" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select shipping zones...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($zones as $zid => $zname): ?>
                         <option value="<?php echo esc_attr($zid); ?>" <?php selected(in_array((string)$zid, array_map('strval', (array)$sel_zones), true)); ?>>
                             <?php echo esc_html($zname); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Choose the shipping zones served by this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="shipping_methods"><?php _e('Shipping Methods', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
-                <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management'); ?>">
+                <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($zone_methods as $zid => $methods): if (empty($methods)) continue; ?>
-                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management'), $zones[$zid] ?? $zid)); ?>">
+                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management-pro'), $zones[$zid] ?? $zid)); ?>">
                             <?php foreach ($methods as $instance_id => $label):
                                 $val = $zid . ':' . $instance_id;
                             ?>
@@ -1970,21 +1970,21 @@ JS;
                         </optgroup>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Select enabled shipping method instances (grouped by zone).', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="payment_methods"><?php _e('Payment Methods', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
-                <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management'); ?>">
+                <select name="payment_methods[]" id="payment_methods" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select payment methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($payments as $pid => $ptitle): ?>
                         <option value="<?php echo esc_attr($pid); ?>" <?php selected(in_array($pid, (array)$sel_payments, true)); ?>>
                             <?php echo esc_html($ptitle); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Choose allowed payment gateways for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
@@ -1995,25 +1995,25 @@ JS;
         ?>
         <?php if (!empty($pickup_locations)): ?>
             <tr class="form-field">
-                <th scope="row"><label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management'); ?></label></th>
+                <th scope="row"><label for="pickup_locations"><?php _e('Pickup Locations', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
                 <td>
-                    <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management'); ?>">
+                    <select name="pickup_locations[]" id="pickup_locations" class="mulopimfwc-select2" multiple style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Select pickup locations...', 'multi-location-product-and-inventory-management-pro'); ?>">
                         <?php foreach ($pickup_locations as $pid => $ptitle): ?>
                             <option value="<?php echo esc_attr($pid); ?>" <?php selected(in_array($pid, (array)$sel_pickup, true)); ?>>
                                 <?php echo esc_html($ptitle); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management'); ?></p>
+                    <p class="description"><?php _e('Choose allowed pickup locations for this store location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                 </td>
             </tr>
         <?php endif; ?>
 
         <tr class="form-field">
-            <th scope="row"><label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
-                <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management'); ?>">
-                    <option value="" <?php selected((string) $location_currency, ''); ?>><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management'), $default_currency_label)); ?></option>
+                <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management-pro'); ?>">
+                    <option value="" <?php selected((string) $location_currency, ''); ?>><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
                     <?php foreach ($currencies as $currency_code => $currency_name): ?>
                         <?php
                         $currency_code = strtoupper((string) $currency_code);
@@ -2028,27 +2028,27 @@ JS;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Select currency for this location. ', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
-                    <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $currency_positions[$default_currency_position])); ?></option>
+                    <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
                     <?php foreach ($currency_positions as $position_key => $position_label): ?>
                         <option value="<?php echo esc_attr($position_key); ?>" <?php selected($location_currency_position, $position_key); ?>>
                             <?php echo esc_html($position_label); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Set where currency symbol appears for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="location_currency_rate"><?php _e('Rate', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <div class="mulopimfwc-currency-rate-wrap" style="display:flex;align-items:center;gap:8px;max-width:430px;">
                     <input
@@ -2065,7 +2065,7 @@ JS;
                             <option value="<?php echo esc_attr($mode_key); ?>" <?php selected($location_currency_rate_mode, $mode_key); ?>><?php echo esc_html($mode_label); ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <button type="button" class="button mulopimfwc-sync-rate" title="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" aria-label="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management'); ?>" style="min-width:36px;padding:0 8px;">
+                    <button type="button" class="button mulopimfwc-sync-rate" title="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management-pro'); ?>" aria-label="<?php esc_attr_e('Sync latest rate', 'multi-location-product-and-inventory-management-pro'); ?>" style="min-width:36px;padding:0 8px;">
                         <span class="dashicons dashicons-update" style="margin-top:3px;"></span>
                     </button>
                 </div>
@@ -2073,7 +2073,7 @@ JS;
                     <?php
                     echo esc_html(
                         sprintf(
-                            __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management'),
+                            __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management-pro'),
                             $default_currency_code
                         )
                     );
@@ -2084,7 +2084,7 @@ JS;
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="tax_class"><?php _e('Tax Class', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="tax_class" id="tax_class" style="min-width: 220px;">
                     <?php foreach ($tax_classes as $key => $label): ?>
@@ -2093,15 +2093,15 @@ JS;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Select default tax class for this location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
         <tr class="form-field">
-            <th scope="row"><label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="display_order"><?php _e('Display Order', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <input type="number" name="display_order" id="display_order" value="<?php echo esc_attr($display_order); ?>" min="0" step="1" />
-                <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Enter a number to control the order of this location (smaller numbers appear first)', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
 
@@ -2110,13 +2110,13 @@ JS;
         $is_active = ($is_active === '' || $is_active === '1' || $is_active === true) ? '1' : '0';
         ?>
         <tr class="form-field">
-            <th scope="row"><label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management'); ?></label></th>
+            <th scope="row"><label for="is_active"><?php _e('Status', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="is_active" id="is_active">
-                    <option value="1" <?php selected($is_active, '1'); ?>><?php _e('Active', 'multi-location-product-and-inventory-management'); ?></option>
-                    <option value="0" <?php selected($is_active, '0'); ?>><?php _e('Inactive', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="1" <?php selected($is_active, '1'); ?>><?php _e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                    <option value="0" <?php selected($is_active, '0'); ?>><?php _e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 </select>
-                <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management'); ?></p>
+                <p class="description"><?php _e('Set whether this location is active or inactive', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </td>
         </tr>
     <?php
@@ -2458,7 +2458,7 @@ JS;
         }
 
         // Add actions column (drag + visibility + sync)
-        $new_columns['drag_handle'] = __('Actions', 'multi-location-product-and-inventory-management');
+        $new_columns['drag_handle'] = __('Actions', 'multi-location-product-and-inventory-management-pro');
 
         // Add other columns
         foreach ($columns as $key => $value) {
@@ -2468,9 +2468,9 @@ JS;
             if ($key === 'name') {
                 $new_columns[$key] = $value;
             } elseif ($key === 'slug') {
-                $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management');
-                $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management');
-                $new_columns['rate'] = __('Rate', 'multi-location-product-and-inventory-management');
+                $new_columns['display_order'] = __('Order', 'multi-location-product-and-inventory-management-pro');
+                $new_columns['city'] = __('City', 'multi-location-product-and-inventory-management-pro');
+                $new_columns['rate'] = __('Rate', 'multi-location-product-and-inventory-management-pro');
                 $new_columns[$key] = $value;
             } else {
                 $new_columns[$key] = $value;
@@ -2492,15 +2492,15 @@ JS;
                 $toggle_class = $is_active === '1' ? 'is-active' : 'is-inactive';
                 $toggle_icon = $is_active === '1' ? 'dashicons-visibility' : 'dashicons-hidden';
                 $toggle_label = $is_active === '1'
-                    ? __('Mark as inactive', 'multi-location-product-and-inventory-management')
-                    : __('Mark as active', 'multi-location-product-and-inventory-management');
+                    ? __('Mark as inactive', 'multi-location-product-and-inventory-management-pro')
+                    : __('Mark as active', 'multi-location-product-and-inventory-management-pro');
                 $open_state = $this->is_location_open_now($term_id);
                 $open_key = !empty($open_state['open']) ? 'open' : 'closed';
 
                 echo '<div class="mulopimfwc-actions-cell" data-open-state="' . esc_attr($open_key) . '">';
-                echo '<span class="mulopimfwc-drag-handle dashicons dashicons-menu-alt" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management') . '"></span>';
+                echo '<span class="mulopimfwc-drag-handle dashicons dashicons-menu-alt" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Drag to reorder', 'multi-location-product-and-inventory-management-pro') . '"></span>';
                 echo '<button type="button" class="button mulopimfwc-action-btn mulopimfwc-visibility-toggle ' . esc_attr($toggle_class) . '" data-term-id="' . esc_attr($term_id) . '" data-status="' . esc_attr($is_active) . '" title="' . esc_attr($toggle_label) . '" aria-label="' . esc_attr($toggle_label) . '" aria-pressed="' . ($is_active === '1' ? 'true' : 'false') . '"><span class="dashicons ' . esc_attr($toggle_icon) . '" aria-hidden="true"></span></button>';
-                echo '<button type="button" class="button mulopimfwc-action-btn mulopimfwc-rate-row-sync" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '" aria-label="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management') . '"><span class="dashicons dashicons-update"></span></button>';
+                echo '<button type="button" class="button mulopimfwc-action-btn mulopimfwc-rate-row-sync" data-term-id="' . esc_attr($term_id) . '" title="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management-pro') . '" aria-label="' . esc_attr__('Sync latest rate', 'multi-location-product-and-inventory-management-pro') . '"><span class="dashicons dashicons-update"></span></button>';
                 echo '</div>';
                 break;
             case 'display_order':
@@ -2521,7 +2521,7 @@ JS;
                 $selected_currency = isset($row_data['currency_selected']) ? (string) $row_data['currency_selected'] : '';
                 echo '<div class="mulopimfwc-rate-cell" data-term-id="' . esc_attr((string) $row_data['term_id']) . '" data-currency="' . esc_attr((string) $row_data['currency']) . '" data-position="' . esc_attr((string) $row_data['position']) . '">';
                 echo '<div class="mulopimfwc-rate-controls">';
-                echo '<button type="button" class="button mulopimfwc-rate-currency-trigger" aria-label="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management') . '" title="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management') . '">';
+                echo '<button type="button" class="button mulopimfwc-rate-currency-trigger" aria-label="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management-pro') . '" title="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management-pro') . '">';
                 echo '<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix">' . esc_html((string) $row_data['symbol_prefix']) . '</span>';
                 echo '<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>';
                 echo '</button>';
@@ -2533,9 +2533,9 @@ JS;
                 echo '</select>';
                 echo '</div>';
                 echo '<div class="mulopimfwc-rate-currency-popover" aria-hidden="true">';
-                echo '<select class="mulopimfwc-rate-currency" aria-label="' . esc_attr__('Currency', 'multi-location-product-and-inventory-management') . '" data-placeholder="' . esc_attr__('Search currency...', 'multi-location-product-and-inventory-management') . '">';
+                echo '<select class="mulopimfwc-rate-currency" aria-label="' . esc_attr__('Currency', 'multi-location-product-and-inventory-management-pro') . '" data-placeholder="' . esc_attr__('Search currency...', 'multi-location-product-and-inventory-management-pro') . '">';
                 $default_currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($default_currency) : '';
-                $default_currency_label = sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management'), $default_currency);
+                $default_currency_label = sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $default_currency);
                 if ($default_currency_symbol !== '') {
                     $default_currency_label .= ' (' . $default_currency_symbol . ')';
                 }
@@ -2584,7 +2584,7 @@ JS;
 
         // Add quick edit link if not already present
         if (!isset($actions['inline hide-if-no-js'])) {
-            $actions['inline hide-if-no-js'] = '<a href="#" class="editinline" aria-label="' . esc_attr__('Quick edit', 'multi-location-product-and-inventory-management') . '">' . __('Quick&nbsp;Edit', 'multi-location-product-and-inventory-management') . '</a>';
+            $actions['inline hide-if-no-js'] = '<a href="#" class="editinline" aria-label="' . esc_attr__('Quick edit', 'multi-location-product-and-inventory-management-pro') . '">' . __('Quick&nbsp;Edit', 'multi-location-product-and-inventory-management-pro') . '</a>';
         }
 
         return $actions;
@@ -2768,10 +2768,10 @@ JS;
         (function($) {
             $(document).ready(function() {
                 var $tbody = $("#the-list");
-                var openLabel = "' . esc_js(__('Open', 'multi-location-product-and-inventory-management')) . '";
-                var closedLabel = "' . esc_js(__('Closed', 'multi-location-product-and-inventory-management')) . '";
-                var markActiveLabel = "' . esc_js(__('Mark as active', 'multi-location-product-and-inventory-management')) . '";
-                var markInactiveLabel = "' . esc_js(__('Mark as inactive', 'multi-location-product-and-inventory-management')) . '";
+                var openLabel = "' . esc_js(__('Open', 'multi-location-product-and-inventory-management-pro')) . '";
+                var closedLabel = "' . esc_js(__('Closed', 'multi-location-product-and-inventory-management-pro')) . '";
+                var markActiveLabel = "' . esc_js(__('Mark as active', 'multi-location-product-and-inventory-management-pro')) . '";
+                var markInactiveLabel = "' . esc_js(__('Mark as inactive', 'multi-location-product-and-inventory-management-pro')) . '";
 
                 function normalizeStatus(value) {
                     var normalized = String(value === undefined || value === null ? "" : value);
@@ -3258,17 +3258,17 @@ CSS;
         $rate_js_config = array(
             'nonce' => $ajax_nonce,
             'messages' => array(
-                'saving' => __('Saving rate...', 'multi-location-product-and-inventory-management'),
-                'saved' => __('Saved', 'multi-location-product-and-inventory-management'),
-                'syncing' => __('Syncing rate...', 'multi-location-product-and-inventory-management'),
-                'synced' => __('Rate synced', 'multi-location-product-and-inventory-management'),
-                'saveFailed' => __('Unable to save rate.', 'multi-location-product-and-inventory-management'),
-                'syncFailed' => __('Unable to sync rate.', 'multi-location-product-and-inventory-management'),
-                'autoOnly' => __('Sync works only in Auto mode.', 'multi-location-product-and-inventory-management'),
-                'syncAll' => __('Sync All', 'multi-location-product-and-inventory-management'),
-                'noAutoRows' => __('No Auto rows found to sync.', 'multi-location-product-and-inventory-management'),
-                'syncAllDone' => __('All Auto rates synced successfully.', 'multi-location-product-and-inventory-management'),
-                'syncAllPartial' => __('Some rates could not be synced. Please check row messages.', 'multi-location-product-and-inventory-management'),
+                'saving' => __('Saving rate...', 'multi-location-product-and-inventory-management-pro'),
+                'saved' => __('Saved', 'multi-location-product-and-inventory-management-pro'),
+                'syncing' => __('Syncing rate...', 'multi-location-product-and-inventory-management-pro'),
+                'synced' => __('Rate synced', 'multi-location-product-and-inventory-management-pro'),
+                'saveFailed' => __('Unable to save rate.', 'multi-location-product-and-inventory-management-pro'),
+                'syncFailed' => __('Unable to sync rate.', 'multi-location-product-and-inventory-management-pro'),
+                'autoOnly' => __('Sync works only in Auto mode.', 'multi-location-product-and-inventory-management-pro'),
+                'syncAll' => __('Sync All', 'multi-location-product-and-inventory-management-pro'),
+                'noAutoRows' => __('No Auto rows found to sync.', 'multi-location-product-and-inventory-management-pro'),
+                'syncAllDone' => __('All Auto rates synced successfully.', 'multi-location-product-and-inventory-management-pro'),
+                'syncAllPartial' => __('Some rates could not be synced. Please check row messages.', 'multi-location-product-and-inventory-management-pro'),
             ),
         );
 
@@ -3761,11 +3761,11 @@ JS;
         check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (!isset($_POST['term_ids']) || !is_array($_POST['term_ids'])) {
-            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $term_ids = array_map('absint', $_POST['term_ids']);
@@ -3776,7 +3776,7 @@ JS;
             update_term_meta($term_id, 'display_order', $order);
         }
 
-        wp_send_json_success(array('message' => __('Order updated successfully', 'multi-location-product-and-inventory-management')));
+        wp_send_json_success(array('message' => __('Order updated successfully', 'multi-location-product-and-inventory-management-pro')));
     }
 
     /**
@@ -3787,11 +3787,11 @@ JS;
         check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (!isset($_POST['term_id']) || !isset($_POST['status'])) {
-            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $term_id = absint($_POST['term_id']);
@@ -3800,8 +3800,8 @@ JS;
 
         update_term_meta($term_id, 'is_active', $status);
 
-        $status_text = $status === '1' ? __('Active', 'multi-location-product-and-inventory-management') : __('Inactive', 'multi-location-product-and-inventory-management');
-        wp_send_json_success(array('message' => sprintf(__('Location status updated to %s', 'multi-location-product-and-inventory-management'), $status_text)));
+        $status_text = $status === '1' ? __('Active', 'multi-location-product-and-inventory-management-pro') : __('Inactive', 'multi-location-product-and-inventory-management-pro');
+        wp_send_json_success(array('message' => sprintf(__('Location status updated to %s', 'multi-location-product-and-inventory-management-pro'), $status_text)));
     }
 
     public function ajax_update_location_rate()
@@ -3809,17 +3809,17 @@ JS;
         check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')), 403);
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')), 403);
         }
 
         $term_id = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
         if ($term_id <= 0) {
-            wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management')), 400);
+            wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management-pro')), 400);
         }
 
         $term = get_term($term_id, 'mulopimfwc_store_location');
         if (!$term || is_wp_error($term)) {
-            wp_send_json_error(array('message' => __('Location not found.', 'multi-location-product-and-inventory-management')), 404);
+            wp_send_json_error(array('message' => __('Location not found.', 'multi-location-product-and-inventory-management-pro')), 404);
         }
 
         $mode = isset($_POST['mode'])
@@ -3842,7 +3842,7 @@ JS;
             $parsed_rate = $this->parse_location_currency_rate(wp_unslash($_POST['rate']));
             if ($parsed_rate === null) {
                 wp_send_json_error(array(
-                    'message' => __('Please enter a valid rate greater than 0.', 'multi-location-product-and-inventory-management'),
+                    'message' => __('Please enter a valid rate greater than 0.', 'multi-location-product-and-inventory-management-pro'),
                     'row' => $this->get_location_rate_table_payload($term_id),
                 ), 400);
             }
@@ -3850,7 +3850,7 @@ JS;
         }
 
         wp_send_json_success(array(
-            'message' => __('Rate updated successfully.', 'multi-location-product-and-inventory-management'),
+            'message' => __('Rate updated successfully.', 'multi-location-product-and-inventory-management-pro'),
             'row' => $this->get_location_rate_table_payload($term_id),
         ));
     }
@@ -3860,23 +3860,23 @@ JS;
         check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')), 403);
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')), 403);
         }
 
         $term_id = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
         if ($term_id <= 0) {
-            wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management')), 400);
+            wp_send_json_error(array('message' => __('Invalid location.', 'multi-location-product-and-inventory-management-pro')), 400);
         }
 
         $term = get_term($term_id, 'mulopimfwc_store_location');
         if (!$term || is_wp_error($term)) {
-            wp_send_json_error(array('message' => __('Location not found.', 'multi-location-product-and-inventory-management')), 404);
+            wp_send_json_error(array('message' => __('Location not found.', 'multi-location-product-and-inventory-management-pro')), 404);
         }
 
         $mode = $this->normalize_location_rate_mode(get_term_meta($term_id, 'location_currency_rate_mode', true));
         if ($mode !== 'auto') {
             wp_send_json_error(array(
-                'message' => __('Sync is available only when mode is Auto.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Sync is available only when mode is Auto.', 'multi-location-product-and-inventory-management-pro'),
                 'row' => $this->get_location_rate_table_payload($term_id),
             ), 400);
         }
@@ -3888,7 +3888,7 @@ JS;
         $rate = $this->fetch_currency_rate_from_remote($default_currency, $target_currency);
         if (!is_numeric($rate) || (float) $rate <= 0) {
             wp_send_json_error(array(
-                'message' => __('Unable to fetch the latest exchange rate right now. Please try again.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Unable to fetch the latest exchange rate right now. Please try again.', 'multi-location-product-and-inventory-management-pro'),
                 'row' => $this->get_location_rate_table_payload($term_id),
             ), 500);
         }
@@ -3901,7 +3901,7 @@ JS;
 
         wp_send_json_success(array(
             'message' => sprintf(
-                __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management'),
+                __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management-pro'),
                 $default_currency,
                 $target_currency
             ),
@@ -3928,16 +3928,16 @@ JS;
         <fieldset class="inline-edit-col-right">
             <div class="inline-edit-col">
                 <label>
-                    <span class="title"><?php _e('Status', 'multi-location-product-and-inventory-management'); ?></span>
+                    <span class="title"><?php _e('Status', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     <select name="is_active" id="inline-edit-is-active">
-                        <option value="1"><?php _e('Active', 'multi-location-product-and-inventory-management'); ?></option>
-                        <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management'); ?></option>
+                        <option value="1"><?php _e('Active', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                        <option value="0"><?php _e('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     </select>
                 </label>
             </div>
             <div class="inline-edit-col">
                 <label>
-                    <span class="title"><?php _e('Order', 'multi-location-product-and-inventory-management'); ?></span>
+                    <span class="title"><?php _e('Order', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     <input type="number" name="display_order" id="inline-edit-display-order" value="" min="0" step="1" />
                 </label>
             </div>
@@ -3953,11 +3953,11 @@ JS;
         check_ajax_referer('mulopimfwc_location_ajax', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (!isset($_POST['term_id'])) {
-            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Invalid data', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $term_id = absint($_POST['term_id']);
@@ -3973,7 +3973,7 @@ JS;
             update_term_meta($term_id, 'display_order', $display_order);
         }
 
-        wp_send_json_success(array('message' => __('Location updated successfully', 'multi-location-product-and-inventory-management')));
+        wp_send_json_success(array('message' => __('Location updated successfully', 'multi-location-product-and-inventory-management-pro')));
     }
 
     /**
@@ -4084,10 +4084,10 @@ JS;
     {
         // Add main menu page
         add_menu_page(
-            __('Location Manage', 'multi-location-product-and-inventory-management'),
-            __('Location Manage', 'multi-location-product-and-inventory-management'),
+            __('Location Manage', 'multi-location-product-and-inventory-management-pro'),
+            __('Location Manage', 'multi-location-product-and-inventory-management-pro'),
             'manage_options',
-            'multi-location-product-and-inventory-management',
+            'multi-location-product-and-inventory-management-pro',
             [new MULOPIMFWC_Dashboard(), 'dashboard_page_content'],
             'dashicons-location-alt',
             56
@@ -4095,19 +4095,19 @@ JS;
 
         // Add Dashboard submenu (just label, points to same page, no callback)
         add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Dashboard', 'multi-location-product-and-inventory-management'),
-            __('Dashboard', 'multi-location-product-and-inventory-management'),
+            'multi-location-product-and-inventory-management-pro',
+            __('Dashboard', 'multi-location-product-and-inventory-management-pro'),
+            __('Dashboard', 'multi-location-product-and-inventory-management-pro'),
             'manage_options',
-            'multi-location-product-and-inventory-management'
+            'multi-location-product-and-inventory-management-pro'
             // No callback here, so it won't render twice
         );
 
         // Add Locations submenu
         add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Locations', 'multi-location-product-and-inventory-management'),
-            __('Locations', 'multi-location-product-and-inventory-management'),
+            'multi-location-product-and-inventory-management-pro',
+            __('Locations', 'multi-location-product-and-inventory-management-pro'),
+            __('Locations', 'multi-location-product-and-inventory-management-pro'),
             'manage_options',
             'edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc',
             null,
@@ -4119,7 +4119,7 @@ JS;
             global $pagenow, $taxonomy;
 
             if ($pagenow === 'edit-tags.php' && $taxonomy === 'mulopimfwc_store_location') {
-                $parent_file = 'multi-location-product-and-inventory-management';
+                $parent_file = 'multi-location-product-and-inventory-management-pro';
             }
 
             return $parent_file;
@@ -4139,9 +4139,9 @@ JS;
 
         // add Stock Central submenu
         $stock_central_hook = add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Stock Central', 'multi-location-product-and-inventory-management'),
-            __('Stock Central', 'multi-location-product-and-inventory-management'),
+            'multi-location-product-and-inventory-management-pro',
+            __('Stock Central', 'multi-location-product-and-inventory-management-pro'),
+            __('Stock Central', 'multi-location-product-and-inventory-management-pro'),
             'manage_options',
             'location-stock-management',
             [$this->stock_central, 'location_stock_page_content']
@@ -4153,9 +4153,9 @@ JS;
         global $MULOPIMFWC_Location_Managers;
 
         add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Location Managers', 'multi-location-product-and-inventory-management'),
-            __('Location Managers', 'multi-location-product-and-inventory-management'),
+            'multi-location-product-and-inventory-management-pro',
+            __('Location Managers', 'multi-location-product-and-inventory-management-pro'),
+            __('Location Managers', 'multi-location-product-and-inventory-management-pro'),
             'manage_options',
             'location-managers',
             array($MULOPIMFWC_Location_Managers, 'admin_page')
@@ -4163,9 +4163,9 @@ JS;
 
         // Add Settings submenu
         add_submenu_page(
-            'multi-location-product-and-inventory-management',
-            __('Settings', 'multi-location-product-and-inventory-management'),
-            __('Settings', 'multi-location-product-and-inventory-management'),
+            'multi-location-product-and-inventory-management-pro',
+            __('Settings', 'multi-location-product-and-inventory-management-pro'),
+            __('Settings', 'multi-location-product-and-inventory-management-pro'),
             'manage_options',
             'multi-location-product-and-inventory-management-settings',
             class_exists('mulopimfwc_settings') ? [new mulopimfwc_settings(), 'settings_page_content'] : '__return_null'
@@ -4190,13 +4190,13 @@ JS;
             $new_columns[$column_name] = $column_info;
 
             if (!$inserted && in_array($column_name, array('order_status', 'status'), true)) {
-                $new_columns['mulopimfwc_store_location'] = __('Store Location', 'multi-location-product-and-inventory-management');
+                $new_columns['mulopimfwc_store_location'] = __('Store Location', 'multi-location-product-and-inventory-management-pro');
                 $inserted = true;
             }
         }
 
         if (!$inserted) {
-            $new_columns['mulopimfwc_store_location'] = __('Store Location', 'multi-location-product-and-inventory-management');
+            $new_columns['mulopimfwc_store_location'] = __('Store Location', 'multi-location-product-and-inventory-management-pro');
         }
 
         return $new_columns;
@@ -4297,11 +4297,11 @@ JS;
         }
 
         if ($location_slug === 'all-products') {
-            return __('All Products', 'multi-location-product-and-inventory-management');
+            return __('All Products', 'multi-location-product-and-inventory-management-pro');
         }
 
         if ($location_slug === 'unassigned') {
-            return __('Unassigned location', 'multi-location-product-and-inventory-management');
+            return __('Unassigned location', 'multi-location-product-and-inventory-management-pro');
         }
 
         $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
@@ -4401,7 +4401,7 @@ JS;
     private function render_split_parent_location_cell($order): string
     {
         if (!$order instanceof WC_Order) {
-            return esc_html__('Split Parent', 'multi-location-product-and-inventory-management');
+            return esc_html__('Split Parent', 'multi-location-product-and-inventory-management-pro');
         }
 
         $allowed_slugs = $this->get_current_user_allowed_location_slugs();
@@ -4420,7 +4420,7 @@ JS;
             }
             $location_label = $this->get_location_label($location_slug);
             if ($location_label === '') {
-                $location_label = __('Unassigned', 'multi-location-product-and-inventory-management');
+                $location_label = __('Unassigned', 'multi-location-product-and-inventory-management-pro');
             }
 
             $edit_url = $this->get_order_edit_url_by_id($child_id);
@@ -4433,14 +4433,14 @@ JS;
         }
 
         $output = '<div class="mulopimfwc-order-split-cell">';
-        $output .= '<span class="mulopimfwc-order-split-badge mulopimfwc-order-split-badge-parent">' . esc_html__('Split Parent', 'multi-location-product-and-inventory-management') . '</span>';
+        $output .= '<span class="mulopimfwc-order-split-badge mulopimfwc-order-split-badge-parent">' . esc_html__('Split Parent', 'multi-location-product-and-inventory-management-pro') . '</span>';
 
         if (!empty($child_links)) {
             $output .= '<div class="mulopimfwc-order-split-children">' . implode('', $child_links) . '</div>';
         } else {
             $empty_message = is_array($allowed_slugs)
-                ? __('No child orders for your locations.', 'multi-location-product-and-inventory-management')
-                : __('No child orders yet.', 'multi-location-product-and-inventory-management');
+                ? __('No child orders for your locations.', 'multi-location-product-and-inventory-management-pro')
+                : __('No child orders yet.', 'multi-location-product-and-inventory-management-pro');
             $output .= '<div class="mulopimfwc-order-split-muted">' . esc_html($empty_message) . '</div>';
         }
 
@@ -4452,7 +4452,7 @@ JS;
     private function render_split_child_location_cell($order, $is_manual_mode, $show_parent = true): string
     {
         if (!$order instanceof WC_Order) {
-            return esc_html__('Split Child', 'multi-location-product-and-inventory-management');
+            return esc_html__('Split Child', 'multi-location-product-and-inventory-management-pro');
         }
 
         $parent_id = (int) $order->get_meta('_mulopimfwc_split_parent_id');
@@ -4473,22 +4473,22 @@ JS;
         } else {
             $location_label = $this->get_location_label($location_slug);
             if ($location_label === '') {
-                $location_label = __('Unassigned', 'multi-location-product-and-inventory-management');
+                $location_label = __('Unassigned', 'multi-location-product-and-inventory-management-pro');
             }
             $location_line = sprintf(
                 '<div class="mulopimfwc-order-split-location-line"><span class="mulopimfwc-order-split-location-label">%s</span><span class="mulopimfwc-order-split-location-value">%s</span></div>',
-                esc_html__('Location:', 'multi-location-product-and-inventory-management'),
+                esc_html__('Location:', 'multi-location-product-and-inventory-management-pro'),
                 esc_html($location_label)
             );
         }
 
         $output = '<div class="mulopimfwc-order-split-cell">';
-        $output .= '<span class="mulopimfwc-order-split-badge mulopimfwc-order-split-badge-child">' . esc_html__('Split Child', 'multi-location-product-and-inventory-management') . '</span>';
+        $output .= '<span class="mulopimfwc-order-split-badge mulopimfwc-order-split-badge-child">' . esc_html__('Split Child', 'multi-location-product-and-inventory-management-pro') . '</span>';
 
         if ($show_parent && $parent_link !== '') {
             $output .= sprintf(
                 '<div class="mulopimfwc-order-split-parent-line">%s %s</div>',
-                esc_html__('Parent:', 'multi-location-product-and-inventory-management'),
+                esc_html__('Parent:', 'multi-location-product-and-inventory-management-pro'),
                 $parent_link
             );
         }
@@ -4552,11 +4552,11 @@ JS;
     private function render_quick_assignment_dropdown($order)
     {
         if (!$order || !current_user_can('edit_shop_order', $order->get_id()) || !$this->current_user_can_manage_order_operations()) {
-            return '<span class="mulopimfwc-unassigned-badge">⚠️ ' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management') . '</span>';
+            return '<span class="mulopimfwc-unassigned-badge">⚠️ ' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management-pro') . '</span>';
         }
 
         if (!$order->is_editable()) {
-            return '<span class="mulopimfwc-unassigned-badge">' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management') . '</span>';
+            return '<span class="mulopimfwc-unassigned-badge">' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management-pro') . '</span>';
         }
 
         $order_id = $order->get_id();
@@ -4566,7 +4566,7 @@ JS;
         ob_start();
     ?>
         <div class="mulopimfwc-quick-assignment-wrapper">
-            <span class="mulopimfwc-unassigned-badge">🔴 <?php echo esc_html__('Needs Assignment', 'multi-location-product-and-inventory-management'); ?></span>
+            <span class="mulopimfwc-unassigned-badge">🔴 <?php echo esc_html__('Needs Assignment', 'multi-location-product-and-inventory-management-pro'); ?></span>
             <?php if (empty($locations)): ?>
                 <?php
                 // Get order edit URL
@@ -4582,15 +4582,15 @@ JS;
                 }
                 ?>
                 <div class="mulopimfwc-no-locations-message" style="margin-top: 5px; padding: 8px; background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; font-size: 12px;">
-                    <strong><?php echo esc_html__('No locations available', 'multi-location-product-and-inventory-management'); ?></strong><br>
-                    <?php echo esc_html__('Insufficient stock for all products at any location.', 'multi-location-product-and-inventory-management'); ?>
+                    <strong><?php echo esc_html__('No locations available', 'multi-location-product-and-inventory-management-pro'); ?></strong><br>
+                    <?php echo esc_html__('Insufficient stock for all products at any location.', 'multi-location-product-and-inventory-management-pro'); ?>
                     <span style="font-style: italic;">
-                        <?php echo esc_html__('Please edit the order and set locations for each product individually', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Please edit the order and set locations for each product individually', 'multi-location-product-and-inventory-management-pro'); ?>
                     </span>
                 </div>
             <?php else: ?>
                 <select class="mulopimfwc-quick-assignment-select" data-order-id="<?php echo esc_attr($order_id); ?>" data-nonce="<?php echo esc_attr(wp_create_nonce('mulopimfwc_quick_assign_' . $order_id)); ?>">
-                    <option value=""><?php echo esc_html__('Select Location...', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value=""><?php echo esc_html__('Select Location...', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <?php foreach ($locations as $location): ?>
                         <option value="<?php echo esc_attr($location->slug); ?>"><?php echo esc_html($location->name); ?></option>
                     <?php endforeach; ?>
@@ -4692,7 +4692,7 @@ JS;
     {
         $snapshot = [
             'status' => 'unknown',
-            'summary' => __('Stock not tracked', 'multi-location-product-and-inventory-management'),
+            'summary' => __('Stock not tracked', 'multi-location-product-and-inventory-management-pro'),
             'items' => [],
         ];
 
@@ -4712,7 +4712,7 @@ JS;
 
         $items = $order->get_items();
         if (empty($items)) {
-            $snapshot['summary'] = __('No items in order', 'multi-location-product-and-inventory-management');
+            $snapshot['summary'] = __('No items in order', 'multi-location-product-and-inventory-management-pro');
             return $snapshot;
         }
 
@@ -4776,21 +4776,21 @@ JS;
         if ($insufficient > 0) {
             $snapshot['status'] = 'insufficient';
             $snapshot['summary'] = sprintf(
-                __('Insufficient stock for %d item(s)', 'multi-location-product-and-inventory-management'),
+                __('Insufficient stock for %d item(s)', 'multi-location-product-and-inventory-management-pro'),
                 $insufficient
             );
         } elseif ($backorder > 0) {
             $snapshot['status'] = 'backorder';
             $snapshot['summary'] = sprintf(
-                __('Backorder required for %d item(s)', 'multi-location-product-and-inventory-management'),
+                __('Backorder required for %d item(s)', 'multi-location-product-and-inventory-management-pro'),
                 $backorder
             );
         } elseif ($unknown > 0) {
             $snapshot['status'] = 'unknown';
-            $snapshot['summary'] = __('Stock not tracked for some items', 'multi-location-product-and-inventory-management');
+            $snapshot['summary'] = __('Stock not tracked for some items', 'multi-location-product-and-inventory-management-pro');
         } else {
             $snapshot['status'] = 'ok';
-            $snapshot['summary'] = __('All items in stock', 'multi-location-product-and-inventory-management');
+            $snapshot['summary'] = __('All items in stock', 'multi-location-product-and-inventory-management-pro');
         }
 
         return $snapshot;
@@ -4937,7 +4937,7 @@ JS;
         if (!$order) {
             return [
                 'success' => false,
-                'message' => __('Order not found', 'multi-location-product-and-inventory-management')
+                'message' => __('Order not found', 'multi-location-product-and-inventory-management-pro')
             ];
         }
 
@@ -4945,7 +4945,7 @@ JS;
         if (!$order->is_editable()) {
             return [
                 'success' => false,
-                'message' => __('This order is no longer editable', 'multi-location-product-and-inventory-management')
+                'message' => __('This order is no longer editable', 'multi-location-product-and-inventory-management-pro')
             ];
         }
 
@@ -4954,7 +4954,7 @@ JS;
         if (!$new_location_term || is_wp_error($new_location_term)) {
             return [
                 'success' => false,
-                'message' => __('Location not found', 'multi-location-product-and-inventory-management')
+                'message' => __('Location not found', 'multi-location-product-and-inventory-management-pro')
             ];
         }
 
@@ -4994,7 +4994,7 @@ JS;
                 return [
                     'success' => false,
                     'message' => sprintf(
-                        __('Location "%1$s" is not assigned to product "%2$s"', 'multi-location-product-and-inventory-management'),
+                        __('Location "%1$s" is not assigned to product "%2$s"', 'multi-location-product-and-inventory-management-pro'),
                         $new_location_term->name,
                         $item->get_name()
                     )
@@ -5087,12 +5087,12 @@ JS;
 
             // Add order note
             $note_message = sprintf(
-                __('All order items assigned to location: %s', 'multi-location-product-and-inventory-management'),
+                __('All order items assigned to location: %s', 'multi-location-product-and-inventory-management-pro'),
                 $new_location_term->name
             );
 
             if ($price_changed) {
-                $note_message .= ' ' . __('| Prices updated based on location pricing', 'multi-location-product-and-inventory-management');
+                $note_message .= ' ' . __('| Prices updated based on location pricing', 'multi-location-product-and-inventory-management-pro');
             }
 
             $order->add_order_note($note_message);
@@ -5103,7 +5103,7 @@ JS;
             'price_changed' => $price_changed,
             'items_updated' => $items_updated,
             'message' => sprintf(
-                __('%d item(s) updated successfully', 'multi-location-product-and-inventory-management'),
+                __('%d item(s) updated successfully', 'multi-location-product-and-inventory-management-pro'),
                 $items_updated
             )
         ];
@@ -5339,7 +5339,7 @@ JS;
                     '<a href="%s" class="%s">%s%s</a>',
                     esc_url($url),
                     esc_attr($class),
-                    esc_html__('Unassigned', 'multi-location-product-and-inventory-management'),
+                    esc_html__('Unassigned', 'multi-location-product-and-inventory-management-pro'),
                     $count_html
                 );
                 $inserted = true;
@@ -5352,7 +5352,7 @@ JS;
                 '<a href="%s" class="%s">%s%s</a>',
                 esc_url($url),
                 esc_attr($class),
-                esc_html__('Unassigned', 'multi-location-product-and-inventory-management'),
+                esc_html__('Unassigned', 'multi-location-product-and-inventory-management-pro'),
                 $count_html
             );
         }
@@ -5368,23 +5368,23 @@ JS;
         check_ajax_referer('mulopimfwc_quick_assign_' . (isset($_POST['order_id']) ? intval($_POST['order_id']) : 0), 'nonce');
 
         if (!current_user_can('edit_shop_orders') || !$this->current_user_can_manage_order_operations()) {
-            wp_send_json_error(array('message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
         $location_slug = isset($_POST['location_slug']) ? sanitize_text_field($_POST['location_slug']) : '';
 
         if (!$order_id) {
-            wp_send_json_error(array('message' => __('Invalid order ID', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Invalid order ID', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $order = wc_get_order($order_id);
         if (!$order) {
-            wp_send_json_error(array('message' => __('Order not found', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Order not found', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (empty($location_slug)) {
-            wp_send_json_error(array('message' => __('Please select a location', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Please select a location', 'multi-location-product-and-inventory-management-pro')));
         }
 
         // Update all order items for the selected location using reusable function
@@ -5422,7 +5422,7 @@ JS;
             return $actions;
         }
 
-        $actions['mulopimfwc_assign_location'] = __('Assign Location', 'multi-location-product-and-inventory-management');
+        $actions['mulopimfwc_assign_location'] = __('Assign Location', 'multi-location-product-and-inventory-management-pro');
 
         return $actions;
     }
@@ -5446,34 +5446,34 @@ JS;
     ?>
         <div id="mulopimfwc-bulk-assign-modal" class="mulopimfwc-modal" aria-hidden="true">
             <div class="mulopimfwc-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="mulopimfwc-bulk-assign-title">
-                <button type="button" class="mulopimfwc-modal__close" aria-label="<?php echo esc_attr__('Close', 'multi-location-product-and-inventory-management'); ?>">&times;</button>
+                <button type="button" class="mulopimfwc-modal__close" aria-label="<?php echo esc_attr__('Close', 'multi-location-product-and-inventory-management-pro'); ?>">&times;</button>
                 <div class="mulopimfwc-modal__header">
-                    <h2 id="mulopimfwc-bulk-assign-title"><?php echo esc_html__('Assign Location', 'multi-location-product-and-inventory-management'); ?></h2>
+                    <h2 id="mulopimfwc-bulk-assign-title"><?php echo esc_html__('Assign Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                     <p class="mulopimfwc-modal__subtitle">
-                        <?php echo esc_html__('Assign a fulfillment location to all selected orders.', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Assign a fulfillment location to all selected orders.', 'multi-location-product-and-inventory-management-pro'); ?>
                     </p>
                 </div>
 
                 <div class="mulopimfwc-modal__body">
                     <div class="mulopimfwc-bulk-assign-summary">
                         <span class="mulopimfwc-bulk-assign-count">0</span>
-                        <span class="mulopimfwc-bulk-assign-label"><?php echo esc_html__('orders selected', 'multi-location-product-and-inventory-management'); ?></span>
+                        <span class="mulopimfwc-bulk-assign-label"><?php echo esc_html__('orders selected', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     </div>
 
                     <div class="mulopimfwc-bulk-assign-orders">
                         <div class="mulopimfwc-bulk-assign-orders__header">
-                            <span><?php echo esc_html__('Orders Preview', 'multi-location-product-and-inventory-management'); ?></span>
+                            <span><?php echo esc_html__('Orders Preview', 'multi-location-product-and-inventory-management-pro'); ?></span>
                         </div>
                         <div class="mulopimfwc-bulk-assign-orders__list"></div>
                     </div>
 
                     <div class="mulopimfwc-bulk-assign-location">
-                        <label for="mulopimfwc-bulk-location-select"><?php echo esc_html__('Available Locations', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label for="mulopimfwc-bulk-location-select"><?php echo esc_html__('Available Locations', 'multi-location-product-and-inventory-management-pro'); ?></label>
                         <select id="mulopimfwc-bulk-location-select">
-                            <option value=""><?php echo esc_html__('Select a location', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value=""><?php echo esc_html__('Select a location', 'multi-location-product-and-inventory-management-pro'); ?></option>
                         </select>
                         <p class="description">
-                            <?php echo esc_html__('Only locations with sufficient stock for all items in the selected orders are shown.', 'multi-location-product-and-inventory-management'); ?>
+                            <?php echo esc_html__('Only locations with sufficient stock for all items in the selected orders are shown.', 'multi-location-product-and-inventory-management-pro'); ?>
                         </p>
                     </div>
 
@@ -5482,10 +5482,10 @@ JS;
 
                 <div class="mulopimfwc-modal__footer">
                     <button type="button" class="button button-secondary mulopimfwc-modal-cancel">
-                        <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Cancel', 'multi-location-product-and-inventory-management-pro'); ?>
                     </button>
                     <button type="button" class="button button-primary mulopimfwc-bulk-assign-confirm" disabled>
-                        <?php echo esc_html__('Assign Location', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Assign Location', 'multi-location-product-and-inventory-management-pro'); ?>
                     </button>
                 </div>
             </div>
@@ -5498,20 +5498,20 @@ JS;
         check_ajax_referer('mulopimfwc_bulk_assign_location', 'nonce');
 
         if (!current_user_can('edit_shop_orders') || !$this->current_user_can_manage_order_operations()) {
-            wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $options = get_option('mulopimfwc_display_options', []);
         $is_manual_mode = $this->is_manual_order_assignment_enabled($options);
         if (!$is_manual_mode) {
-            wp_send_json_error(['message' => __('Manual assignment is not enabled.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Manual assignment is not enabled.', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $order_ids = isset($_POST['order_ids']) ? array_map('absint', (array) $_POST['order_ids']) : [];
         $order_ids = array_values(array_filter($order_ids));
 
         if (empty($order_ids)) {
-            wp_send_json_error(['message' => __('No orders selected', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('No orders selected', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $orders = [];
@@ -5523,7 +5523,7 @@ JS;
         }
 
         if (empty($orders)) {
-            wp_send_json_error(['message' => __('No valid orders found', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('No valid orders found', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $order_available_slugs = [];
@@ -5605,7 +5605,7 @@ JS;
                 'status' => $status,
                 'status_label' => wc_get_order_status_name('wc-' . $status),
                 'total' => wp_strip_all_tags($order->get_formatted_order_total()),
-                'customer' => $customer_name !== '' ? $customer_name : __('Guest', 'multi-location-product-and-inventory-management'),
+                'customer' => $customer_name !== '' ? $customer_name : __('Guest', 'multi-location-product-and-inventory-management-pro'),
                 'location' => $this->get_location_label((string) $order->get_meta('_store_location')),
                 'editable' => $is_editable,
                 'has_locations' => $has_locations,
@@ -5626,13 +5626,13 @@ JS;
         check_ajax_referer('mulopimfwc_bulk_assign_location', 'nonce');
 
         if (!current_user_can('edit_shop_orders') || !$this->current_user_can_manage_order_operations()) {
-            wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Insufficient permissions', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $options = get_option('mulopimfwc_display_options', []);
         $is_manual_mode = $this->is_manual_order_assignment_enabled($options);
         if (!$is_manual_mode) {
-            wp_send_json_error(['message' => __('Manual assignment is not enabled.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Manual assignment is not enabled.', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $order_ids = isset($_POST['order_ids']) ? array_map('absint', (array) $_POST['order_ids']) : [];
@@ -5640,7 +5640,7 @@ JS;
         $location_slug = isset($_POST['location_slug']) ? sanitize_text_field(wp_unslash($_POST['location_slug'])) : '';
 
         if (empty($order_ids) || empty($location_slug)) {
-            wp_send_json_error(['message' => __('Order IDs and location are required', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('Order IDs and location are required', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $orders = [];
@@ -5667,7 +5667,7 @@ JS;
                     '%d selected order is not editable. Remove it to continue.',
                     '%d selected orders are not editable. Remove them to continue.',
                     count($non_editable),
-                    'multi-location-product-and-inventory-management'
+                    'multi-location-product-and-inventory-management-pro'
                 ),
                 count($non_editable)
             );
@@ -5678,7 +5678,7 @@ JS;
         }
 
         if (empty($orders)) {
-            wp_send_json_error(['message' => __('No valid orders found', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('No valid orders found', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $price_changed = false;
@@ -5709,17 +5709,17 @@ JS;
         }
 
         if ($updated_count === 0) {
-            wp_send_json_error(['message' => __('No orders were updated. Please review stock availability and order status.', 'multi-location-product-and-inventory-management')]);
+            wp_send_json_error(['message' => __('No orders were updated. Please review stock availability and order status.', 'multi-location-product-and-inventory-management-pro')]);
         }
 
         $message = sprintf(
-            __('Assigned location to %d order(s).', 'multi-location-product-and-inventory-management'),
+            __('Assigned location to %d order(s).', 'multi-location-product-and-inventory-management-pro'),
             $updated_count
         );
 
         if (!empty($failed)) {
             $message .= ' ' . sprintf(
-                __('%d order(s) could not be updated.', 'multi-location-product-and-inventory-management'),
+                __('%d order(s) could not be updated.', 'multi-location-product-and-inventory-management-pro'),
                 count($failed)
             );
         }
@@ -5740,7 +5740,7 @@ JS;
 
         add_meta_box(
             'wc_store_location_metabox',
-            __('Store Location', 'multi-location-product-and-inventory-management'),
+            __('Store Location', 'multi-location-product-and-inventory-management-pro'),
             array($this, 'render_location_metabox'),
             $screen,
             'side',
@@ -5815,26 +5815,26 @@ JS;
         $data = [
             'nonce' => wp_create_nonce('mulopimfwc_bulk_assign_location'),
             'i18n' => [
-                'title' => __('Assign Location', 'multi-location-product-and-inventory-management'),
-                'loading' => __('Loading available locations...', 'multi-location-product-and-inventory-management'),
-                'selectLocation' => __('Select a location', 'multi-location-product-and-inventory-management'),
-                'assignLocation' => __('Assign Location', 'multi-location-product-and-inventory-management'),
-                'confirmAssign' => __('Confirm & Assign', 'multi-location-product-and-inventory-management'),
-                'cancel' => __('Cancel', 'multi-location-product-and-inventory-management'),
-                'noOrders' => __('Please select at least one order.', 'multi-location-product-and-inventory-management'),
-                'noOrdersSelected' => __('No orders selected.', 'multi-location-product-and-inventory-management'),
-                'noLocations' => __('No locations have sufficient stock for all selected orders. Remove the highlighted orders to continue.', 'multi-location-product-and-inventory-management'),
-                'confirmMessage' => __('This will update the location for the selected orders. Continue?', 'multi-location-product-and-inventory-management'),
-                'assigning' => __('Assigning...', 'multi-location-product-and-inventory-management'),
-                'failed' => __('Bulk assignment failed. Please try again.', 'multi-location-product-and-inventory-management'),
-                'unassigned' => __('Unassigned', 'multi-location-product-and-inventory-management'),
-                'loadingOrders' => __('Loading orders...', 'multi-location-product-and-inventory-management'),
-                'notEditable' => __('Some selected orders are not editable. Remove the highlighted orders to enable location selection.', 'multi-location-product-and-inventory-management'),
-                'notEditableTag' => __('Not editable', 'multi-location-product-and-inventory-management'),
-                'noLocationsTag' => __('No available locations', 'multi-location-product-and-inventory-management'),
-                'noCommonLocationTag' => __('No common location', 'multi-location-product-and-inventory-management'),
-                'removeOrder' => __('Remove', 'multi-location-product-and-inventory-management'),
-                'removeOrderLabel' => __('Remove order #', 'multi-location-product-and-inventory-management'),
+                'title' => __('Assign Location', 'multi-location-product-and-inventory-management-pro'),
+                'loading' => __('Loading available locations...', 'multi-location-product-and-inventory-management-pro'),
+                'selectLocation' => __('Select a location', 'multi-location-product-and-inventory-management-pro'),
+                'assignLocation' => __('Assign Location', 'multi-location-product-and-inventory-management-pro'),
+                'confirmAssign' => __('Confirm & Assign', 'multi-location-product-and-inventory-management-pro'),
+                'cancel' => __('Cancel', 'multi-location-product-and-inventory-management-pro'),
+                'noOrders' => __('Please select at least one order.', 'multi-location-product-and-inventory-management-pro'),
+                'noOrdersSelected' => __('No orders selected.', 'multi-location-product-and-inventory-management-pro'),
+                'noLocations' => __('No locations have sufficient stock for all selected orders. Remove the highlighted orders to continue.', 'multi-location-product-and-inventory-management-pro'),
+                'confirmMessage' => __('This will update the location for the selected orders. Continue?', 'multi-location-product-and-inventory-management-pro'),
+                'assigning' => __('Assigning...', 'multi-location-product-and-inventory-management-pro'),
+                'failed' => __('Bulk assignment failed. Please try again.', 'multi-location-product-and-inventory-management-pro'),
+                'unassigned' => __('Unassigned', 'multi-location-product-and-inventory-management-pro'),
+                'loadingOrders' => __('Loading orders...', 'multi-location-product-and-inventory-management-pro'),
+                'notEditable' => __('Some selected orders are not editable. Remove the highlighted orders to enable location selection.', 'multi-location-product-and-inventory-management-pro'),
+                'notEditableTag' => __('Not editable', 'multi-location-product-and-inventory-management-pro'),
+                'noLocationsTag' => __('No available locations', 'multi-location-product-and-inventory-management-pro'),
+                'noCommonLocationTag' => __('No common location', 'multi-location-product-and-inventory-management-pro'),
+                'removeOrder' => __('Remove', 'multi-location-product-and-inventory-management-pro'),
+                'removeOrderLabel' => __('Remove order #', 'multi-location-product-and-inventory-management-pro'),
             ],
         ];
 
@@ -5890,7 +5890,7 @@ JS;
             if ($is_split_parent) {
                 $child_ids = (array) $order->get_meta('_mulopimfwc_split_children');
                 $child_ids = array_values(array_filter(array_map('absint', $child_ids)));
-                echo '<strong>' . esc_html__('Split Parent', 'multi-location-product-and-inventory-management') . '</strong>';
+                echo '<strong>' . esc_html__('Split Parent', 'multi-location-product-and-inventory-management-pro') . '</strong>';
                 $links = [];
                 foreach ($child_ids as $child_id) {
                     $child_order = wc_get_order($child_id);
@@ -5905,11 +5905,11 @@ JS;
                     $links[] = '<a href="' . esc_url($url) . '">#' . esc_html($child_id) . '</a>';
                 }
                 if (!empty($links)) {
-                    echo '<div style="margin-top:6px;">' . esc_html__('Children:', 'multi-location-product-and-inventory-management') . ' ' . implode(', ', $links) . '</div>';
+                    echo '<div style="margin-top:6px;">' . esc_html__('Children:', 'multi-location-product-and-inventory-management-pro') . ' ' . implode(', ', $links) . '</div>';
                 } else {
                     $empty_message = is_array($allowed_slugs)
-                        ? __('No child orders for your locations.', 'multi-location-product-and-inventory-management')
-                        : __('No child orders yet.', 'multi-location-product-and-inventory-management');
+                        ? __('No child orders for your locations.', 'multi-location-product-and-inventory-management-pro')
+                        : __('No child orders yet.', 'multi-location-product-and-inventory-management-pro');
                     echo '<div style="margin-top:6px;">' . esc_html($empty_message) . '</div>';
                 }
             }
@@ -5917,10 +5917,10 @@ JS;
             if ($is_split_child) {
                 $parent_id = (int) $order->get_meta('_mulopimfwc_split_parent_id');
                 if ($parent_id > 0) {
-                    echo '<div style="margin-top:6px;"><strong>' . esc_html__('Split Child', 'multi-location-product-and-inventory-management') . '</strong>';
+                    echo '<div style="margin-top:6px;"><strong>' . esc_html__('Split Child', 'multi-location-product-and-inventory-management-pro') . '</strong>';
                     if (!$is_location_manager) {
                         $url = $this->get_order_edit_url_by_id($parent_id);
-                        echo ' ' . esc_html__('Parent:', 'multi-location-product-and-inventory-management') . ' <a href="' . esc_url($url) . '">#' . esc_html($parent_id) . '</a>';
+                        echo ' ' . esc_html__('Parent:', 'multi-location-product-and-inventory-management-pro') . ' <a href="' . esc_url($url) . '">#' . esc_html($parent_id) . '</a>';
                     }
                     echo '</div>';
                 }
@@ -5931,17 +5931,17 @@ JS;
 
         if ($is_unassigned && $is_manual_mode) {
             echo '<div class="notice notice-warning inline mulopimfwc-location-alert">';
-            echo '<p><strong>' . esc_html__('⚠️ This order needs location assignment', 'multi-location-product-and-inventory-management') . '</strong></p>';
-            echo '<p>' . esc_html__('Please select a fulfillment location to continue processing this order.', 'multi-location-product-and-inventory-management') . '</p>';
+            echo '<p><strong>' . esc_html__('⚠️ This order needs location assignment', 'multi-location-product-and-inventory-management-pro') . '</strong></p>';
+            echo '<p>' . esc_html__('Please select a fulfillment location to continue processing this order.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             echo '</div>';
         }
 
         if (!is_wp_error($locations) && !empty($locations)) {
             echo '<p>';
-            echo '<label for="mulopimfwc_store_location" class="screen-reader-text">' . esc_html__('Store Location', 'multi-location-product-and-inventory-management') . '</label>';
+            echo '<label for="mulopimfwc_store_location" class="screen-reader-text">' . esc_html__('Store Location', 'multi-location-product-and-inventory-management-pro') . '</label>';
             $select_classes = 'mulopimfwc-location-select' . ($is_unassigned ? ' is-unassigned' : '');
             echo '<select name="mulopimfwc_store_location" id="mulopimfwc_store_location" class="' . esc_attr($select_classes) . '" data-current-location="' . esc_attr($location_slug) . '"' . disabled(!$can_edit, true, false) . '>';
-            echo '<option value="" data-stock-status="" data-stock-summary="" data-stock-items="[]">' . esc_html__('Unassigned location', 'multi-location-product-and-inventory-management') . '</option>';
+            echo '<option value="" data-stock-status="" data-stock-summary="" data-stock-items="[]">' . esc_html__('Unassigned location', 'multi-location-product-and-inventory-management-pro') . '</option>';
 
             $has_current = false;
             foreach ($locations as $location_term) {
@@ -5958,7 +5958,7 @@ JS;
             foreach ($locations as $location_term) {
                 $summary = $location_stock_summaries[$location_term->slug] ?? [
                     'status' => 'unknown',
-                    'summary' => __('Stock not tracked', 'multi-location-product-and-inventory-management'),
+                    'summary' => __('Stock not tracked', 'multi-location-product-and-inventory-management-pro'),
                     'items' => [],
                 ];
                 $summary_text = $summary['summary'] ?? '';
@@ -5984,19 +5984,19 @@ JS;
 
             echo '</select>';
             echo '</p>';
-            echo '<div class="mulopimfwc-location-stock-panel" data-empty-message="' . esc_attr__('Select a location to view stock availability.', 'multi-location-product-and-inventory-management') . '" style="display:none;">';
+            echo '<div class="mulopimfwc-location-stock-panel" data-empty-message="' . esc_attr__('Select a location to view stock availability.', 'multi-location-product-and-inventory-management-pro') . '" style="display:none;">';
             echo '<div class="mulopimfwc-location-stock-summary"></div>';
             echo '<div class="mulopimfwc-location-stock-list"></div>';
             echo '<div class="mulopimfwc-location-stock-message" style="display:none;"></div>';
             echo '</div>';
-            echo '<p class="description">' . esc_html__('Update user selected store location for this order.', 'multi-location-product-and-inventory-management') . '</p>';
+            echo '<p class="description">' . esc_html__('Update user selected store location for this order.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             // Display a styled info note with svg icon, improved UI
             echo '<div class="mulopimfwc-info-note" style="display: flex; align-items: flex-start; gap: 8px; background: #f1f5fb; border-left: 4px solid #63b3ed; padding: 10px 12px; margin: 10px 0 0 0; border-radius: 4px;">'
                 . '<span style="display: flex; align-items: center; margin-top:2px;">'
                 . (function_exists('mulopimfwc_svg_icon') ? mulopimfwc_svg_icon('info') : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="fill: #3498db;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3498db"/><rect x="11" y="10" width="2" height="7" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>')
                 . '</span>'
                 . '<span style="font-size:13px; line-height:1.5;color:#223;">'
-                . esc_html__('You can only change the store location if the order is editable (pending or on-hold).', 'multi-location-product-and-inventory-management')
+                . esc_html__('You can only change the store location if the order is editable (pending or on-hold).', 'multi-location-product-and-inventory-management-pro')
                 . '</span>'
                 . '</div>';
         } else {
@@ -6004,14 +6004,14 @@ JS;
             if ($location_label !== '') {
                 echo '<p>' . esc_html($location_label) . '</p>';
             }
-            echo '<p class="description">' . esc_html__('No locations found. Add a location to enable changes.', 'multi-location-product-and-inventory-management') . '</p>';
+            echo '<p class="description">' . esc_html__('No locations found. Add a location to enable changes.', 'multi-location-product-and-inventory-management-pro') . '</p>';
         }
 
         if (!$can_edit) {
             if ($is_currency_locked) {
-                echo '<p class="description">' . esc_html__('Order location changes are disabled while Location Wise Currency is enabled.', 'multi-location-product-and-inventory-management') . '</p>';
+                echo '<p class="description">' . esc_html__('Order location changes are disabled while Location Wise Currency is enabled.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             } else {
-                echo '<p class="description">' . esc_html__('You do not have permission to change the location.', 'multi-location-product-and-inventory-management') . '</p>';
+                echo '<p class="description">' . esc_html__('You do not have permission to change the location.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             }
         }
 
@@ -6068,7 +6068,7 @@ JS;
             $update_result = $this->update_all_order_items_location($order, $new_location);
             if (!$update_result['success']) {
                 $order->add_order_note(sprintf(
-                    __('Location assignment failed: %s', 'multi-location-product-and-inventory-management'),
+                    __('Location assignment failed: %s', 'multi-location-product-and-inventory-management-pro'),
                     $update_result['message']
                 ));
                 return;
@@ -6092,27 +6092,27 @@ JS;
         // Configure taxonomy settings based on URL format
         $taxonomy_args = [
             'labels' => [
-                'name' => __('Locations', 'multi-location-product-and-inventory-management'),
-                'singular_name' => __('Location', 'multi-location-product-and-inventory-management'),
-                'search_items' => __('Search Location', 'multi-location-product-and-inventory-management'),
-                'all_items' => __('All Locations', 'multi-location-product-and-inventory-management'),
-                'parent_item' => __('Parent Location', 'multi-location-product-and-inventory-management'),
-                'parent_item_colon' => __('Parent Location:', 'multi-location-product-and-inventory-management'),
-                'edit_item' => __('Edit Location', 'multi-location-product-and-inventory-management'),
-                'view_item' => __('View Location', 'multi-location-product-and-inventory-management'),
-                'update_item' => __('Update Location', 'multi-location-product-and-inventory-management'),
-                'add_new_item' => __('Add New Location', 'multi-location-product-and-inventory-management'),
-                'new_item_name' => __('New Location Name', 'multi-location-product-and-inventory-management'),
-                'separate_items_with_commas' => __('Separate locations with commas', 'multi-location-product-and-inventory-management'),
-                'add_or_remove_items' => __('Add or remove locations', 'multi-location-product-and-inventory-management'),
-                'choose_from_most_used' => __('Choose from most used locations', 'multi-location-product-and-inventory-management'),
-                'not_found' => __('No locations found', 'multi-location-product-and-inventory-management'),
-                'no_terms' => __('No locations', 'multi-location-product-and-inventory-management'),
-                'menu_name' => __('Locations', 'multi-location-product-and-inventory-management'),
-                'popular_items' => __('Popular Locations', 'multi-location-product-and-inventory-management'),
-                'back_to_items' => __('Back to Locations', 'multi-location-product-and-inventory-management'),
+                'name' => __('Locations', 'multi-location-product-and-inventory-management-pro'),
+                'singular_name' => __('Location', 'multi-location-product-and-inventory-management-pro'),
+                'search_items' => __('Search Location', 'multi-location-product-and-inventory-management-pro'),
+                'all_items' => __('All Locations', 'multi-location-product-and-inventory-management-pro'),
+                'parent_item' => __('Parent Location', 'multi-location-product-and-inventory-management-pro'),
+                'parent_item_colon' => __('Parent Location:', 'multi-location-product-and-inventory-management-pro'),
+                'edit_item' => __('Edit Location', 'multi-location-product-and-inventory-management-pro'),
+                'view_item' => __('View Location', 'multi-location-product-and-inventory-management-pro'),
+                'update_item' => __('Update Location', 'multi-location-product-and-inventory-management-pro'),
+                'add_new_item' => __('Add New Location', 'multi-location-product-and-inventory-management-pro'),
+                'new_item_name' => __('New Location Name', 'multi-location-product-and-inventory-management-pro'),
+                'separate_items_with_commas' => __('Separate locations with commas', 'multi-location-product-and-inventory-management-pro'),
+                'add_or_remove_items' => __('Add or remove locations', 'multi-location-product-and-inventory-management-pro'),
+                'choose_from_most_used' => __('Choose from most used locations', 'multi-location-product-and-inventory-management-pro'),
+                'not_found' => __('No locations found', 'multi-location-product-and-inventory-management-pro'),
+                'no_terms' => __('No locations', 'multi-location-product-and-inventory-management-pro'),
+                'menu_name' => __('Locations', 'multi-location-product-and-inventory-management-pro'),
+                'popular_items' => __('Popular Locations', 'multi-location-product-and-inventory-management-pro'),
+                'back_to_items' => __('Back to Locations', 'multi-location-product-and-inventory-management-pro'),
             ],
-            'description' => __('Manage locations for products and inventory tracking', 'multi-location-product-and-inventory-management'),
+            'description' => __('Manage locations for products and inventory tracking', 'multi-location-product-and-inventory-management-pro'),
             'public' => true,
             'publicly_queryable' => $enable_location_urls === 'on' ? true : false,
             'hierarchical' => true,
@@ -6274,8 +6274,8 @@ JS;
     private function render_status_badge($term_id)
     {
         $st = $this->is_location_open_now($term_id);
-        $label = $st['open'] ? __('Open', 'multi-location-product-and-inventory-management')
-            : __('Closed', 'multi-location-product-and-inventory-management');
+        $label = $st['open'] ? __('Open', 'multi-location-product-and-inventory-management-pro')
+            : __('Closed', 'multi-location-product-and-inventory-management-pro');
         $color = $st['open'] ? '#16a34a' : '#dc2626';
         return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;color:#fff;background:' . $color . ';font-size:12px;line-height:1.6;">'
             . esc_html($label) . '</span>';
@@ -6346,7 +6346,7 @@ JS;
             'title' => '<span class="ab-icon dashicons-bell" aria-hidden="true"></span><span class="ab-label mulopimfwc-notification-count" data-count="0">0</span>',
             'meta' => array(
                 'class' => 'mulopimfwc-admin-bar-notification',
-                'title' => __('Notifications', 'multi-location-product-and-inventory-management'),
+                'title' => __('Notifications', 'multi-location-product-and-inventory-management-pro'),
             ),
         ));
 
@@ -6354,7 +6354,7 @@ JS;
         $wp_admin_bar->add_node(array(
             'parent' => 'mulopimfwc-notifications',
             'id' => 'mulopimfwc-notifications-dropdown',
-            'title' => '<div id="mulopimfwc-notifications-list" class="mulopimfwc-notifications-dropdown-content"><div class="mulopimfwc-notifications-loading">' . __('Loading notifications...', 'multi-location-product-and-inventory-management') . '</div></div>',
+            'title' => '<div id="mulopimfwc-notifications-list" class="mulopimfwc-notifications-dropdown-content"><div class="mulopimfwc-notifications-loading">' . __('Loading notifications...', 'multi-location-product-and-inventory-management-pro') . '</div></div>',
             'meta' => array(
                 'class' => 'mulopimfwc-notifications-dropdown',
             ),

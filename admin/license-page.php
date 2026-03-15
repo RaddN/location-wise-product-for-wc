@@ -691,32 +691,32 @@ class mulopimfwc_License_Manager
                     <svg width="16" height="16" style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg">
                         <path fill="#2563eb" d="M.276.293.195.374H.142v.053H.089V.48H0V.391L.187.204A.2.2 0 0 1 .178.151a.151.151 0 1 1 .097.141zM.427.107A.053.053 0 1 0 .374.16.053.053 0 0 0 .427.107" />
                     </svg>
-                    <?php echo esc_html__('License Settings', 'multi-location-product-and-inventory-management'); ?>
+                    <?php echo esc_html__('License Settings', 'multi-location-product-and-inventory-management-pro'); ?>
                 </h2>
-                <p><?php echo esc_html__('Manage your license key, check status, and update to the latest version', 'multi-location-product-and-inventory-management'); ?></p>
+                <p><?php echo esc_html__('Manage your license key, check status, and update to the latest version', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </div>
             <div style="gap: 20px; display:flex;">
                 <div class="col-md-6 <?php echo !$is_valid ? '' : ' mulopimfwc-card'; ?>" style="<?php echo !$is_valid ? 'flex: 0 0 100%; max-width: 99%;' : ''; ?>">
 
                     <div style="gap: 5px;align-items: center;display:flex; margin-bottom: 10px;">
                         <div style=" background: #ffedd5; padding: 5px; border-radius: 5px; "><span class="dashicons dashicons-lock" style="color: #ea580c;"></span></div>
-                        <h3 for="mulopimfwc_license_key" style="font-size: 16px;margin: 0;"><?php echo esc_html__('License Key', 'multi-location-product-and-inventory-management'); ?></h3>
+                        <h3 for="mulopimfwc_license_key" style="font-size: 16px;margin: 0;"><?php echo esc_html__('License Key', 'multi-location-product-and-inventory-management-pro'); ?></h3>
                     </div>
                     <form method="post" action="">
                         <?php wp_nonce_field('mulopimfwc_license_nonce', 'mulopimfwc_license_nonce'); ?>
                         <div>
                             <div style="position: relative;">
-                                <input type="text" style="width: 100%;border: 1px solid #eee;padding: 6px 0 6px 15px;" id="mulopimfwc_license_key" name="mulopimfwc_license_key" value="<?php echo esc_attr($license_key); ?>" class="regular-text" placeholder="<?php echo esc_html__('Enter your license key', 'multi-location-product-and-inventory-management'); ?>" />
+                                <input type="text" style="width: 100%;border: 1px solid #eee;padding: 6px 0 6px 15px;" id="mulopimfwc_license_key" name="mulopimfwc_license_key" value="<?php echo esc_attr($license_key); ?>" class="regular-text" placeholder="<?php echo esc_html__('Enter your license key', 'multi-location-product-and-inventory-management-pro'); ?>" />
                                 <div style="vertical-align: middle;margin-left: 8px;position: absolute;right: -1px;top: 0;background: #dcffdc;height: 100%;display: flex;align-items: center;justify-content: center;padding: 0 20px;border-radius: 0 2px 2px 0;cursor:pointer;gap: 2px;">
                                     <?php if ($is_valid && !$is_expired): ?>
                                         <span class="dashicons dashicons-yes-alt" style="color: green; margin-top: 3px;"></span>
-                                        <span style="color: green; font-weight: bold;"><?php echo esc_html__('Active', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span style="color: green; font-weight: bold;"><?php echo esc_html__('Active', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     <?php elseif ($is_expired): ?>
                                         <span class="dashicons dashicons-no-alt" style="color: #dc3545; margin-top: 3px;"></span>
-                                        <span style="color: #dc3545; font-weight: bold; background: #f8d7da; border-radius: 3px; padding: 2px 8px;"><?php echo esc_html__('Expired', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span style="color: #dc3545; font-weight: bold; background: #f8d7da; border-radius: 3px; padding: 2px 8px;"><?php echo esc_html__('Expired', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     <?php else: ?>
                                         <span class="dashicons dashicons-dismiss" style="color: red; margin-top: 3px;"></span>
-                                        <span style="color: red;"><?php echo esc_html__('Inactive', 'multi-location-product-and-inventory-management'); ?></span>
+                                        <span style="color: red;"><?php echo esc_html__('Inactive', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -731,7 +731,7 @@ class mulopimfwc_License_Manager
                                         <div style="background: #dce6ff;padding: 5px;border-radius: 5px;">
                                             <span class="dashicons dashicons-info" style="color: #2560e8; font-size: 18px;"></span>
                                         </div>
-                                        <?php echo esc_html__('Version Information', 'multi-location-product-and-inventory-management'); ?>
+                                        <?php echo esc_html__('Version Information', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </strong>
                                     <div style="margin-top: 8px;">
                                         <span style="display: flex;align-items: center;gap: 6px;justify-content: space-between;">
@@ -739,7 +739,7 @@ class mulopimfwc_License_Manager
                                                 <div style="background: #6c757d0a;padding: 5px;border-radius: 5px;">
                                                     <span class="dashicons dashicons-admin-plugins" style="color: #6c757d; font-size: 16px;"></span>
                                                 </div>
-                                                <?php echo esc_html__('Current Version:', 'multi-location-product-and-inventory-management'); ?>
+                                                <?php echo esc_html__('Current Version:', 'multi-location-product-and-inventory-management-pro'); ?>
                                             </div><?php echo esc_html($current_version); ?>
                                         </span><br>
                                         <span style="display: flex;align-items: center;gap: 6px;justify-content: space-between;">
@@ -747,14 +747,14 @@ class mulopimfwc_License_Manager
                                                 <div style="background: #fff2eaff;padding: 5px;border-radius: 5px;">
                                                     <span class="dashicons dashicons-update" style="color: #e75404; font-size: 16px;"></span>
                                                 </div>
-                                                <?php echo esc_html__('Latest Version:', 'multi-location-product-and-inventory-management'); ?>
+                                                <?php echo esc_html__('Latest Version:', 'multi-location-product-and-inventory-management-pro'); ?>
                                             </div> <?php echo esc_html($version_info->new_version); ?>
                                         </span>
                                         <?php if (version_compare($current_version, $version_info->new_version, '<')): ?>
                                             <br>
                                             <span style="color: #d63384; font-weight: bold; display: flex; align-items: center; gap: 6px; justify-content: space-between;">
                                                 <div><span class="dashicons dashicons-warning" style="color: #d63384; font-size: 16px;"></span>
-                                                    <?php echo esc_html__('Update Available!', 'multi-location-product-and-inventory-management'); ?></div> <a href="<?php echo admin_url('plugins.php'); ?>" class="button button-primary"><?php echo esc_html__('Update Now', 'multi-location-product-and-inventory-management'); ?></a>
+                                                    <?php echo esc_html__('Update Available!', 'multi-location-product-and-inventory-management-pro'); ?></div> <a href="<?php echo admin_url('plugins.php'); ?>" class="button button-primary"><?php echo esc_html__('Update Now', 'multi-location-product-and-inventory-management-pro'); ?></a>
                                             </span>
                                         <?php else: ?>
                                             <br>
@@ -763,11 +763,11 @@ class mulopimfwc_License_Manager
                                                     <div style="background: #e8fff4;padding: 5px;border-radius: 5px;">
                                                         <span class="dashicons dashicons-yes" style="color: #198754; font-size: 16px;"></span>
                                                     </div>
-                                                    <?php echo esc_html__('Status', 'multi-location-product-and-inventory-management'); ?>
+                                                    <?php echo esc_html__('Status', 'multi-location-product-and-inventory-management-pro'); ?>
                                                 </div>
                                                 <div style="font-size: 14px;">
                                                     <span class="dashicons dashicons-yes-alt" style="color: green;margin-top: 3px;font-size: 14px;"></span>
-                                                    <?php echo esc_html__('Up to date', 'multi-location-product-and-inventory-management'); ?>
+                                                    <?php echo esc_html__('Up to date', 'multi-location-product-and-inventory-management-pro'); ?>
                                                 </div>
                                             </span>
                                         <?php endif; ?>
@@ -777,17 +777,17 @@ class mulopimfwc_License_Manager
                             <input type="hidden" name="mulopimfwc_license_action" value="deactivate" />
                             <?php if ($is_expired): echo '<a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank" class="button button-primary">Renew License</a>';
                             endif; ?>
-                            <button type="submit" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to deactivate your license?', 'multi-location-product-and-inventory-management')); ?>')" class="button button-primary" style="background: #eef1f6;color:#24262a;display: inline-flex;align-items: center;gap: 8px;margin-top: 15px;padding: 6px 20px;border: 1px solid #e3e3e3;">
+                            <button type="submit" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to deactivate your license?', 'multi-location-product-and-inventory-management-pro')); ?>')" class="button button-primary" style="background: #eef1f6;color:#24262a;display: inline-flex;align-items: center;gap: 8px;margin-top: 15px;padding: 6px 20px;border: 1px solid #e3e3e3;">
                                 <svg width="20" height="20" viewBox="0 0 0.8 0.8" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M.564.135a.031.031 0 0 0-.03.055.281.281 0 1 1-.27.001L.265.19A.031.031 0 0 0 .25.131a.02.02 0 0 0-.015.004.344.344 0 1 0 .331.001zM.399.382A.03.03 0 0 0 .43.351V.05a.031.031 0 0 0-.063 0v.301c0 .017.014.031.031.031" />
                                 </svg>
-                                <?php echo esc_html__('Deactivate License', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Deactivate License', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                             <button type="submit" onclick="checkForUpdates()" id="check-updates-btn" class="button button-primary" style="background: #2560e8; display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; padding: 6px 20px;">
                                 <svg fill="#fff" height="20" width="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12.8 12.8" xml:space="preserve">
                                     <path d="M8.145 0A4.656 4.656 0 0 0 3.49 4.655c0 .838.225 1.62.61 2.3l-4.1 4.1.583 1.163 1.162.582 4.1-4.1c.678.388 1.463.61 2.3.61a4.656 4.656 0 0 0 0-9.31m0 7.855a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4" />
                                 </svg>
-                                <?php echo esc_html__('Check for Updates', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Check for Updates', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                         <?php else: ?>
                             <input type="hidden" name="mulopimfwc_license_action" value="activate" />
@@ -795,7 +795,7 @@ class mulopimfwc_License_Manager
                                 <svg width="18" height="18" viewBox="0 0 0.54 0.54" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M.27.045a.02.02 0 0 1 .022.022v.238L.344.254a.022.022 0 0 1 .032.032l-.09.09a.022.022 0 0 1-.032 0l-.09-.09A.022.022 0 1 1 .196.254l.051.052V.068A.022.022 0 0 1 .27.045M.113.383a.02.02 0 0 1 .022.022V.45h.27V.405a.022.022 0 1 1 .045 0V.45a.045.045 0 0 1-.045.045h-.27A.045.045 0 0 1 .09.45V.405A.022.022 0 0 1 .113.383" fill="#fff"></path>
                                 </svg>
-                                <?php echo esc_html__('Activate License & Install Pro', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Activate License & Install Pro', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
                         <?php endif; ?>
                     </form>
@@ -807,24 +807,24 @@ class mulopimfwc_License_Manager
                                 <div style="background: #f2fcf4;padding: 5px;border-radius: 5px;">
                                     <span class="dashicons dashicons-info-outline" style="color: #238b4e;"></span>
                                 </div>
-                                <p><?php echo esc_html__('License Status', 'multi-location-product-and-inventory-management'); ?></p>
+                                <p><?php echo esc_html__('License Status', 'multi-location-product-and-inventory-management-pro'); ?></p>
                             </div>
                             <div>
                                 <div style="font-size: 14px;background: #e2fbec;color: green;padding: 5px 10px 2px;border-radius: 10px;border: 1px solid #ccfbdf;">
                                     <span class="dashicons dashicons-yes-alt" style="color: green;margin-top: 3px;font-size: 14px;"></span>
-                                    <?php echo esc_html__('Licensed', 'multi-location-product-and-inventory-management'); ?>
+                                    <?php echo esc_html__('Licensed', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </div>
                             </div>
                         </div>
                         <?php if ($is_valid): ?>
                             <?php if ($is_expired): ?>
                                 <span class="license-status license-status-invalid">
-                                    <strong><?php echo esc_html__('✗ License Expired', 'multi-location-product-and-inventory-management'); ?></strong> - <?php echo esc_html__('Please renew your license to continue using premium features', 'multi-location-product-and-inventory-management'); ?>
+                                    <strong><?php echo esc_html__('✗ License Expired', 'multi-location-product-and-inventory-management-pro'); ?></strong> - <?php echo esc_html__('Please renew your license to continue using premium features', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </span>
                             <?php else: ?>
                                 <span class="license-status license-status-valid" style="display: flex;font-size: 14px;background: #e2fbec;color: green;border-radius: 10px;border: 1px solid #ccfbdf;padding: 20px;align-items: center;gap: 10px;">
                                     <span class="dashicons dashicons-yes-alt" style="color: green;margin-top: 3px;font-size: 14px;"></span>
-                                    <div style="display: flex; flex-direction: column;"><strong><?php echo esc_html__('Premium License Active', 'multi-location-product-and-inventory-management'); ?></strong> <?php echo esc_html__('All premium features are available and active on your site', 'multi-location-product-and-inventory-management'); ?></div>
+                                    <div style="display: flex; flex-direction: column;"><strong><?php echo esc_html__('Premium License Active', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html__('All premium features are available and active on your site', 'multi-location-product-and-inventory-management-pro'); ?></div>
                                 </span>
                             <?php endif; ?>
                             <?php $license_details = $this->get_license_details(); ?>
@@ -835,7 +835,7 @@ class mulopimfwc_License_Manager
                                             <div style="background: #e6edff;padding: 5px;border-radius: 5px;">
                                                 <span class="dashicons dashicons-id" style="color: #2560e8; font-size: 18px;"></span>
                                             </div>
-                                            <?php echo esc_html__('License Details', 'multi-location-product-and-inventory-management'); ?>:
+                                            <?php echo esc_html__('License Details', 'multi-location-product-and-inventory-management-pro'); ?>:
                                         </div>
                                     </strong>
                                     <div style=" display: flex; flex-direction: column; gap: 10px; padding-top: 10px; ">
@@ -845,7 +845,7 @@ class mulopimfwc_License_Manager
                                                     <div style="background: #ffece1ff;padding: 5px;border-radius: 5px;">
                                                         <span class="dashicons dashicons-admin-users" style="color: #e75404; font-size: 16px;"></span>
                                                     </div>
-                                                    <strong><?php echo esc_html__('License Holder', 'multi-location-product-and-inventory-management'); ?>:</strong>
+                                                    <strong><?php echo esc_html__('License Holder', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
                                                 </div>
                                             </span>
                                             <span style="color: #495057;"><?php echo esc_html($license_details->customer_name); ?></span>
@@ -856,13 +856,13 @@ class mulopimfwc_License_Manager
                                                     <div style="background: #e0fff1;padding: 5px;border-radius: 5px;">
                                                         <span class="dashicons dashicons-calendar-alt" style="color: #198754; font-size: 16px;"></span>
                                                     </div>
-                                                    <strong><?php echo esc_html__('Expires', 'multi-location-product-and-inventory-management'); ?>:</strong>
+                                                    <strong><?php echo esc_html__('Expires', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
                                                 </div>
                                             </span>
                                             <?php if (strtolower($license_details->expires) === 'lifetime'): ?>
                                                 <span style="color: #198754; font-weight: bold;">
                                                     <span class="dashicons dashicons-infinity" style="font-size: 16px; vertical-align: middle;"></span>
-                                                    <?php echo esc_html__('Lifetime', 'multi-location-product-and-inventory-management'); ?>
+                                                    <?php echo esc_html__('Lifetime', 'multi-location-product-and-inventory-management-pro'); ?>
                                                 </span>
                                                 <?php else:
                                                 $expires_date = new DateTime($license_details->expires);
@@ -875,7 +875,7 @@ class mulopimfwc_License_Manager
                                                             <div style="background: #e0fff1;padding: 5px;border-radius: 5px;">
                                                                 <span class="dashicons dashicons-no-alt" style="font-size: 16px; vertical-align: middle;"></span>
                                                             </div>
-                                                            <?php echo esc_html__('Expired on', 'multi-location-product-and-inventory-management'); ?> <?php echo esc_html($expires_date->format('M j, Y')); ?>
+                                                            <?php echo esc_html__('Expired on', 'multi-location-product-and-inventory-management-pro'); ?> <?php echo esc_html($expires_date->format('M j, Y')); ?>
                                                         </div>
                                                     </span>
                                                 <?php elseif ($days_until_expiry <= 30): ?>
@@ -899,7 +899,7 @@ class mulopimfwc_License_Manager
                                                     <div style="background: #e4f9ffff;padding: 5px;border-radius: 5px;">
                                                         <span class="dashicons dashicons-networking" style="color: #1b85a5; font-size: 16px;"></span>
                                                     </div>
-                                                    <strong><?php echo esc_html__('Site Usage', 'multi-location-product-and-inventory-management'); ?>:</strong>
+                                                    <strong><?php echo esc_html__('Site Usage', 'multi-location-product-and-inventory-management-pro'); ?>:</strong>
                                                 </div>
                                             </span>
                                             <div>
@@ -914,12 +914,12 @@ class mulopimfwc_License_Manager
                                                 <?php elseif ($license_details->site_count >= $license_details->license_limit): ?>
                                                     <small style="color: #dc3545;">
                                                         <span class="dashicons dashicons-no" style="font-size: 14px; vertical-align: middle;"></span>
-                                                        (<?php echo esc_html__('Limit reached', 'multi-location-product-and-inventory-management'); ?>)
+                                                        (<?php echo esc_html__('Limit reached', 'multi-location-product-and-inventory-management-pro'); ?>)
                                                     </small>
                                                 <?php else: ?>
                                                     <small style="color: #198754;">
                                                         <span class="dashicons dashicons-plus" style="font-size: 14px; vertical-align: middle;"></span>
-                                                        (<?php echo esc_html__('Activations left', 'multi-location-product-and-inventory-management'); ?>: <?php echo esc_html($license_details->activations_left); ?>)
+                                                        (<?php echo esc_html__('Activations left', 'multi-location-product-and-inventory-management-pro'); ?>: <?php echo esc_html($license_details->activations_left); ?>)
                                                     </small>
                                                 <?php endif; ?>
                                             </div>
@@ -929,16 +929,16 @@ class mulopimfwc_License_Manager
                             <?php endif; ?>
                         <?php else: ?>
                             <span class="license-status license-status-invalid">
-                                <strong><?php echo esc_html__('✗ Unlicensed', 'multi-location-product-and-inventory-management'); ?></strong> - <?php echo esc_html__('Please activate your license to access premium features', 'multi-location-product-and-inventory-management'); ?>
+                                <strong><?php echo esc_html__('✗ Unlicensed', 'multi-location-product-and-inventory-management-pro'); ?></strong> - <?php echo esc_html__('Please activate your license to access premium features', 'multi-location-product-and-inventory-management-pro'); ?>
                             </span>
                             <?php if (!empty($license_status) && $license_status !== 'valid'): ?>
                                 <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
-                                    <strong><?php echo esc_html__('Status', 'multi-location-product-and-inventory-management'); ?>:</strong> <?php echo esc_html(ucfirst(str_replace('_', ' ', $license_status))); ?>
+                                    <strong><?php echo esc_html__('Status', 'multi-location-product-and-inventory-management-pro'); ?>:</strong> <?php echo esc_html(ucfirst(str_replace('_', ' ', $license_status))); ?>
                                 </div>
                             <?php endif; ?>
                             <?php if ($license_status === 'site_inactive'): ?>
                                 <button type="button" class="button button-secondary" id="mulopimfwc-remove-license-btn" style="margin-left:10px;">
-                                    <?php echo esc_html__('Remove License', 'multi-location-product-and-inventory-management'); ?>
+                                    <?php echo esc_html__('Remove License', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </button>
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function() {
@@ -992,13 +992,13 @@ class mulopimfwc_License_Manager
                 <span style="margin-right: 16px;">
                     <a href="https://plugincy.com/support" target="_blank" style="display: inline-flex; align-items: center; gap: 6px;">
                         <span class="dashicons dashicons-sos" style="font-size: 16px; vertical-align: middle; margin-bottom: -6px;"></span>
-                        <?php echo esc_html__('Contact Support', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Contact Support', 'multi-location-product-and-inventory-management-pro'); ?>
                     </a>
                 </span>
                 <span>
                     <a href="https://plugincy.com/my-account" target="_blank" style="display: inline-flex; align-items: center; gap: 6px;">
                         <span class="dashicons dashicons-admin-network" style="font-size: 16px; vertical-align: middle; margin-bottom: -6px;"></span>
-                        <?php echo esc_html__('Manage Your Licenses', 'multi-location-product-and-inventory-management'); ?>
+                        <?php echo esc_html__('Manage Your Licenses', 'multi-location-product-and-inventory-management-pro'); ?>
                     </a>
                 </span>
             </p>
@@ -1025,8 +1025,8 @@ class mulopimfwc_License_Manager
             </style>
 
             <script>
-                var checkUpdatesCheckingLabel = <?php echo wp_json_encode(__('Checking...', 'multi-location-product-and-inventory-management')); ?>;
-                var checkUpdatesLatestLabel = <?php echo wp_json_encode(__('You have the latest version installed.', 'multi-location-product-and-inventory-management')); ?>;
+                var checkUpdatesCheckingLabel = <?php echo wp_json_encode(__('Checking...', 'multi-location-product-and-inventory-management-pro')); ?>;
+                var checkUpdatesLatestLabel = <?php echo wp_json_encode(__('You have the latest version installed.', 'multi-location-product-and-inventory-management-pro')); ?>;
                 function checkForUpdates() {
                     var btn = document.getElementById('check-updates-btn');
                     var originalText = btn.textContent;

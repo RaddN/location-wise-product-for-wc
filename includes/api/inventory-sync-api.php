@@ -89,7 +89,7 @@ class MULOPIMFWC_Inventory_Sync_API {
             return true;
         }
         
-        return new WP_Error('rest_forbidden', __('You do not have permission to access this endpoint.', 'multi-location-product-and-inventory-management'), array('status' => 403));
+        return new WP_Error('rest_forbidden', __('You do not have permission to access this endpoint.', 'multi-location-product-and-inventory-management-pro'), array('status' => 403));
     }
     
     /**
@@ -108,7 +108,7 @@ class MULOPIMFWC_Inventory_Sync_API {
             return true;
         }
         
-        return new WP_Error('rest_forbidden', __('Invalid webhook secret or API key.', 'multi-location-product-and-inventory-management'), array('status' => 403));
+        return new WP_Error('rest_forbidden', __('Invalid webhook secret or API key.', 'multi-location-product-and-inventory-management-pro'), array('status' => 403));
     }
     
     /**
@@ -134,7 +134,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         $data = $request->get_json_params();
         
         if (empty($data) || !isset($data['items'])) {
-            return new WP_Error('invalid_data', __('Invalid data format. Expected "items" array.', 'multi-location-product-and-inventory-management'), array('status' => 400));
+            return new WP_Error('invalid_data', __('Invalid data format. Expected "items" array.', 'multi-location-product-and-inventory-management-pro'), array('status' => 400));
         }
         
         $items = $data['items'];
@@ -142,7 +142,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         // FIXED: Add input size limit to prevent DoS attacks and memory exhaustion
         $max_items = apply_filters('mulopimfwc_max_bulk_sync_items', 1000);
         if (count($items) > $max_items) {
-            return new WP_Error('too_many_items', sprintf(__('Too many items. Maximum %d items per request. Please split your request into smaller batches.', 'multi-location-product-and-inventory-management'), $max_items), array('status' => 400));
+            return new WP_Error('too_many_items', sprintf(__('Too many items. Maximum %d items per request. Please split your request into smaller batches.', 'multi-location-product-and-inventory-management-pro'), $max_items), array('status' => 400));
         }
         
         // FIXED: Use database transaction for data integrity
@@ -163,7 +163,7 @@ class MULOPIMFWC_Inventory_Sync_API {
                 $results['success']++;
             } else {
                 $results['failed']++;
-                $results['errors'][] = sprintf(__('Item %d: %s', 'multi-location-product-and-inventory-management'), $index + 1, $result['error']);
+                $results['errors'][] = sprintf(__('Item %d: %s', 'multi-location-product-and-inventory-management-pro'), $index + 1, $result['error']);
                 
                 // If too many failures, rollback transaction
                 if ($results['failed'] > ($max_items * 0.5)) { // More than 50% failures
@@ -175,14 +175,14 @@ class MULOPIMFWC_Inventory_Sync_API {
         
         if ($transaction_failed) {
             $wpdb->query('ROLLBACK');
-            return new WP_Error('bulk_sync_failed', __('Bulk sync failed due to too many errors. All changes have been rolled back.', 'multi-location-product-and-inventory-management'), array('status' => 500));
+            return new WP_Error('bulk_sync_failed', __('Bulk sync failed due to too many errors. All changes have been rolled back.', 'multi-location-product-and-inventory-management-pro'), array('status' => 500));
         } else {
             $wpdb->query('COMMIT');
         }
         
         return rest_ensure_response(array(
             'success' => true,
-            'message' => sprintf(__('Processed %d items. %d succeeded, %d failed.', 'multi-location-product-and-inventory-management'), count($items), $results['success'], $results['failed']),
+            'message' => sprintf(__('Processed %d items. %d succeeded, %d failed.', 'multi-location-product-and-inventory-management-pro'), count($items), $results['success'], $results['failed']),
             'results' => $results,
         ));
     }
@@ -198,7 +198,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         if ($result['success']) {
             return rest_ensure_response(array(
                 'success' => true,
-                'message' => __('Inventory updated successfully.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Inventory updated successfully.', 'multi-location-product-and-inventory-management-pro'),
                 'data' => $result['data'],
             ));
         } else {
@@ -212,11 +212,11 @@ class MULOPIMFWC_Inventory_Sync_API {
     public function process_inventory_item($item) {
         // Validate required fields
         if (empty($item['product_id']) && empty($item['sku'])) {
-            return array('success' => false, 'error' => __('Product ID or SKU is required.', 'multi-location-product-and-inventory-management'));
+            return array('success' => false, 'error' => __('Product ID or SKU is required.', 'multi-location-product-and-inventory-management-pro'));
         }
         
         if (empty($item['location_id']) && empty($item['location_slug'])) {
-            return array('success' => false, 'error' => __('Location ID or slug is required.', 'multi-location-product-and-inventory-management'));
+            return array('success' => false, 'error' => __('Location ID or slug is required.', 'multi-location-product-and-inventory-management-pro'));
         }
         
         // Get product
@@ -231,7 +231,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         }
         
         if (!$product) {
-            return array('success' => false, 'error' => __('Product not found.', 'multi-location-product-and-inventory-management'));
+            return array('success' => false, 'error' => __('Product not found.', 'multi-location-product-and-inventory-management-pro'));
         }
         
         // Get location
@@ -240,12 +240,12 @@ class MULOPIMFWC_Inventory_Sync_API {
             $location_id = intval($item['location_id']);
             $term = get_term($location_id, 'mulopimfwc_store_location');
             if (!$term || is_wp_error($term)) {
-                return array('success' => false, 'error' => __('Location not found.', 'multi-location-product-and-inventory-management'));
+                return array('success' => false, 'error' => __('Location not found.', 'multi-location-product-and-inventory-management-pro'));
             }
         } elseif (!empty($item['location_slug'])) {
             $term = get_term_by('slug', sanitize_text_field($item['location_slug']), 'mulopimfwc_store_location');
             if (!$term || is_wp_error($term)) {
-                return array('success' => false, 'error' => __('Location not found.', 'multi-location-product-and-inventory-management'));
+                return array('success' => false, 'error' => __('Location not found.', 'multi-location-product-and-inventory-management-pro'));
             }
             $location_id = $term->term_id;
         }
@@ -450,7 +450,7 @@ class MULOPIMFWC_Inventory_Sync_API {
      */
     private function send_csv_response($data, $is_first_page = true, $total_items = 0, $total_pages = 1, $current_page = 1) {
         if (empty($data) && $is_first_page) {
-            return new WP_Error('no_data', __('No data to export.', 'multi-location-product-and-inventory-management'), array('status' => 404));
+            return new WP_Error('no_data', __('No data to export.', 'multi-location-product-and-inventory-management-pro'), array('status' => 404));
         }
         
         // For CSV, we'll stream all data in batches
@@ -472,7 +472,7 @@ class MULOPIMFWC_Inventory_Sync_API {
             // Return JSON with pagination info instead
             return rest_ensure_response(array(
                 'success' => true,
-                'message' => __('CSV export requires all data. Please use JSON format for paginated exports, or increase per_page parameter.', 'multi-location-product-and-inventory-management'),
+                'message' => __('CSV export requires all data. Please use JSON format for paginated exports, or increase per_page parameter.', 'multi-location-product-and-inventory-management-pro'),
                 'count' => count($data),
                 'total' => $total_items,
                 'total_pages' => $total_pages,
@@ -522,7 +522,7 @@ class MULOPIMFWC_Inventory_Sync_API {
                 
                 return rest_ensure_response(array(
                     'success' => true,
-                    'message' => __('Inventory updated via webhook.', 'multi-location-product-and-inventory-management'),
+                    'message' => __('Inventory updated via webhook.', 'multi-location-product-and-inventory-management-pro'),
                     'data' => $result['data'],
                 ));
             } else {
@@ -530,7 +530,7 @@ class MULOPIMFWC_Inventory_Sync_API {
             }
         }
         
-        return new WP_Error('invalid_data', __('Invalid webhook data format.', 'multi-location-product-and-inventory-management'), array('status' => 400));
+        return new WP_Error('invalid_data', __('Invalid webhook data format.', 'multi-location-product-and-inventory-management-pro'), array('status' => 400));
     }
     
     /**
@@ -543,7 +543,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         ));
         
         if (is_wp_error($locations)) {
-            return new WP_Error('locations_error', __('Failed to retrieve locations.', 'multi-location-product-and-inventory-management'), array('status' => 500));
+            return new WP_Error('locations_error', __('Failed to retrieve locations.', 'multi-location-product-and-inventory-management-pro'), array('status' => 500));
         }
         
         $data = array();

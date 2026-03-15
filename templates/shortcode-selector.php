@@ -77,7 +77,7 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
 
 
                         if ($selected_location_id === 'all-products') {
-                            $current_location = __('All Products', 'multi-location-product-and-inventory-management');
+                            $current_location = __('All Products', 'multi-location-product-and-inventory-management-pro');
                             $location_set = true;
                         } elseif (!empty($user_locations) && is_array($user_locations) && $selected_location_id) {
                             foreach ($user_locations as $location) {
@@ -92,7 +92,7 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                         // For non-logged in users, check if location is set in cookie
                         $location_set = true;
                         $selected_location_id = isset($_COOKIE['mulopimfwc_user_location']) ? $_COOKIE['mulopimfwc_user_location'] : ($store_cookie_value ?: '');
-                        $current_location = !empty($selected_location_id) ? $selected_location_id : __('Current Location', 'multi-location-product-and-inventory-management');
+                        $current_location = !empty($selected_location_id) ? $selected_location_id : __('Current Location', 'multi-location-product-and-inventory-management-pro');
                     }
 
                     $store_location = $store_cookie_value;
@@ -111,7 +111,7 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                     <input type="text" id="address-search-input" placeholder="<?php echo esc_attr($shortcode_texts['enter_address']); ?>" aria-label="<?php echo esc_attr($shortcode_texts['enter_address']); ?>" value="" readonly>
                     <label><?php echo esc_html($shortcode_texts['enter_address']); ?></label>
                     <div>
-                        <button type="button" aria-label="<?php esc_attr_e('Clear your address', 'multi-location-product-and-inventory-management'); ?>" data-testid="input-clear-icon" id="clear-address-btn">&times;</button>
+                        <button type="button" aria-label="<?php esc_attr_e('Clear your address', 'multi-location-product-and-inventory-management-pro'); ?>" data-testid="input-clear-icon" id="clear-address-btn">&times;</button>
                     </div>
                 </div>
                 <?php if ($is_user_logged_in): ?>
@@ -126,8 +126,8 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                                 <div
                                     class="saved-location-item <?php echo esc_attr($all_selected); ?>"
                                     data-location-id="all-products"
-                                    data-label="<?php echo esc_attr__('All Products', 'multi-location-product-and-inventory-management'); ?>"
-                                    data-label-display="<?php echo esc_attr__('All Products', 'multi-location-product-and-inventory-management'); ?>"
+                                    data-label="<?php echo esc_attr__('All Products', 'multi-location-product-and-inventory-management-pro'); ?>"
+                                    data-label-display="<?php echo esc_attr__('All Products', 'multi-location-product-and-inventory-management-pro'); ?>"
                                     data-address="all-products"
                                     data-street="all-products"
                                     data-city="all-products"
@@ -139,8 +139,8 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                                     </svg>
                                     <div class="location-info">
                                         <span class="location-label">
-                                            <?php _e('All Products', 'multi-location-product-and-inventory-management'); ?>
-                                            <span class="location-badge admin-only-badge"><?php _e('Admin Only', 'multi-location-product-and-inventory-management'); ?></span>
+                                            <?php _e('All Products', 'multi-location-product-and-inventory-management-pro'); ?>
+                                            <span class="location-badge admin-only-badge"><?php _e('Admin Only', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </span>
                                     </div>
                                 </div>
@@ -191,15 +191,15 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                                             <span class="location-address"><?php echo esc_html($location['address']); ?></span>
                                         </div>
                                         <div class="location-actions">
-                                            <button type="button" class="edit-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Edit location', 'multi-location-product-and-inventory-management'); ?>"><?php echo mulopimfwc_svg_icon('pencil'); ?></button>
-                                            <button type="button" class="delete-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Delete location', 'multi-location-product-and-inventory-management'); ?>"><?php echo mulopimfwc_svg_icon('trash'); ?></button>
+                                            <button type="button" class="edit-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Edit location', 'multi-location-product-and-inventory-management-pro'); ?>"><?php echo mulopimfwc_svg_icon('pencil'); ?></button>
+                                            <button type="button" class="delete-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Delete location', 'multi-location-product-and-inventory-management-pro'); ?>"><?php echo mulopimfwc_svg_icon('trash'); ?></button>
                                         </div>
                                     </div>
                                 <?php
                                 }
                             } else {
                                 ?>
-                                <p class="no-saved-locations"><?php _e('No saved address yet', 'multi-location-product-and-inventory-management'); ?></p>
+                                <p class="no-saved-locations"><?php _e('No saved address yet', 'multi-location-product-and-inventory-management-pro'); ?></p>
                             <?php
                             }
                             ?>
@@ -598,14 +598,14 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
             for ($level = 0; $level <= $max_depth; $level++):
                 $select_id = "lwp-shortcode-selector-level-{$level}";
                 // translators: %s: The name of the location level (e.g., Area, Sub-area)
-                $placeholder = $level == 0 ? $atts['placeholder'] : sprintf(__('-- Select %s --', 'multi-location-product-and-inventory-management'), ($level == 1 ? 'Area' : 'Sub-area'));
+                $placeholder = $level == 0 ? $atts['placeholder'] : sprintf(__('-- Select %s --', 'multi-location-product-and-inventory-management-pro'), ($level == 1 ? 'Area' : 'Sub-area'));
             ?>
                 <div class="lwp-select-container level-<?php echo esc_html($level); ?>" <?php echo $level > 0 ? 'style="display:none;"' : ''; ?>>
                     <select id="<?php echo esc_html($select_id); ?>" class="lwp-shortcode-selector-dropdown" data-level="<?php echo esc_html($level); ?>" style="display: <?php echo $atts['enable_user_locations'] === 'on' ? 'none' : 'block'; ?>;">
                         <option value=""><?php echo esc_html($placeholder); ?></option>
                         <?php if ($level == 0 && $is_admin_or_manager && $show_all_products_admin === 'on'): ?>
                             <option value="all-products" <?php echo ($selected_location === 'all-products') ? 'selected' : ''; ?>>
-                                <?php echo esc_html_e('All Products', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html_e('All Products', 'multi-location-product-and-inventory-management-pro'); ?>
                             </option>
                         <?php endif; ?>
                         <?php if ($level == 0 && !empty($location_hierarchy[0])): ?>
@@ -635,7 +635,7 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                 <option value=""><?php echo esc_html($atts['placeholder'] ?? mulopimfwc_get_text_value('mulopimfwc_popup_placeholder')); ?></option>
                 <?php if ($is_admin_or_manager && $show_all_products_admin === 'on'): ?>
                     <?php $selected = ($selected_location === 'all-products') ? 'selected' : ''; ?>
-                    <option value="all-products" <?php echo esc_attr($selected); ?>><?php echo esc_html_e('All Products', 'multi-location-product-and-inventory-management'); ?></option>
+                    <option value="all-products" <?php echo esc_attr($selected); ?>><?php echo esc_html_e('All Products', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <?php endif; ?>
                 <?php if (!empty($locations) && !is_wp_error($locations)): ?>
                     <?php
@@ -817,7 +817,7 @@ jQuery(document).ready(function($) {
 JS;
     // Pass translation string for '-- Select --'
     wp_localize_script('mulopimfwc_script', 'mulopimfwc_selector_i18n', array(
-        'select' => esc_html__('-- Select --', 'multi-location-product-and-inventory-management'),
+        'select' => esc_html__('-- Select --', 'multi-location-product-and-inventory-management-pro'),
     ));
     // Output inline script
     wp_add_inline_script('mulopimfwc_script', $inline_js);
@@ -867,7 +867,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
             const userLocationCookieExpiryDays = <?php echo esc_js(mulopimfwc_get_location_cookie_expiry_days()); ?>;
             const userLocationCookieExpiryMs = userLocationCookieExpiryDays * 24 * 60 * 60 * 1000;
-            const deleteLocationConfirmMessage = <?php echo wp_json_encode(__('Are you sure you want to delete this location?', 'multi-location-product-and-inventory-management')); ?>;
+            const deleteLocationConfirmMessage = <?php echo wp_json_encode(__('Are you sure you want to delete this location?', 'multi-location-product-and-inventory-management-pro')); ?>;
 
             const LocationFeatures = {
                 map: null,

@@ -14,7 +14,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
 "X-Loco-Version: 2.8.2; wp-6.9.1; php-8.2.27\n"
-"X-Domain: multi-location-product-and-inventory-management"
+"X-Domain: multi-location-product-and-inventory-management-pro"
 
 #: multi-location-product-and-inventory-management-pro.php:5134
 #, php-format

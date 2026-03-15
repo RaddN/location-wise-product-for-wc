@@ -26,7 +26,7 @@ This is a WordPress plugin that extends WooCommerce to manage products and inven
 
 ## Conventions
 - **Security**: Always use `check_ajax_referer()` for AJAX, `wp_verify_nonce()` for forms.
-- **Internationalization**: Use `__()` and `_e()` with text domain `'multi-location-product-and-inventory-management'`.
+- **Internationalization**: Use `__()` and `_e()` with text domain `'multi-location-product-and-inventory-management-pro'`.
 - **Options**: Store settings in `mulopimfwc_display_options` option array.
 - **User Meta**: Manager locations in `mulopimfwc_assigned_locations`, capabilities in `mulopimfwc_manager_capabilities`.
 - **Product Meta**: Location stock in `_mulopimfwc_stock_{location_slug}`, pricing in location-specific meta.

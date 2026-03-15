@@ -68,10 +68,10 @@ class MULOPIMFWC_API_Settings {
                             var container = button.closest('td');
                             container.html(
                                 '<code style=\"font-size: 12px; padding: 8px 12px; background: #f0f0f0; display: inline-block; word-break: break-all; max-width: 600px;\">' + response.data.key + '</code>' +
-                                '<p class=\"description\">" . esc_js(__('Include this in the X-API-Key header for API requests.', 'multi-location-product-and-inventory-management')) . "</p>'
+                                '<p class=\"description\">" . esc_js(__('Include this in the X-API-Key header for API requests.', 'multi-location-product-and-inventory-management-pro')) . "</p>'
                             );
                             // Show success notice
-                            $('<div class=\"notice notice-success is-dismissible\" style=\"margin: 10px 0;\"><p>" . esc_js(__('API key generated successfully!', 'multi-location-product-and-inventory-management')) . "</p></div>').insertBefore(container.closest('.card')).delay(5000).fadeOut();
+                            $('<div class=\"notice notice-success is-dismissible\" style=\"margin: 10px 0;\"><p>" . esc_js(__('API key generated successfully!', 'multi-location-product-and-inventory-management-pro')) . "</p></div>').insertBefore(container.closest('.card')).delay(5000).fadeOut();
                         } else {
                             alert(response.data.message || 'Error generating API key');
                             button.prop('disabled', false).text(originalText);
@@ -103,10 +103,10 @@ class MULOPIMFWC_API_Settings {
                             var container = button.closest('td');
                             container.html(
                                 '<code style=\"font-size: 12px; padding: 8px 12px; background: #f0f0f0; display: inline-block; word-break: break-all; max-width: 600px;\">' + response.data.secret + '</code>' +
-                                '<p class=\"description\">" . esc_js(__('Include this in the X-Webhook-Secret header for webhook requests.', 'multi-location-product-and-inventory-management')) . "</p>'
+                                '<p class=\"description\">" . esc_js(__('Include this in the X-Webhook-Secret header for webhook requests.', 'multi-location-product-and-inventory-management-pro')) . "</p>'
                             );
                             // Show success notice
-                            $('<div class=\"notice notice-success is-dismissible\" style=\"margin: 10px 0;\"><p>" . esc_js(__('Webhook secret generated successfully!', 'multi-location-product-and-inventory-management')) . "</p></div>').insertBefore(container.closest('.card')).delay(5000).fadeOut();
+                            $('<div class=\"notice notice-success is-dismissible\" style=\"margin: 10px 0;\"><p>" . esc_js(__('Webhook secret generated successfully!', 'multi-location-product-and-inventory-management-pro')) . "</p></div>').insertBefore(container.closest('.card')).delay(5000).fadeOut();
                         } else {
                             alert(response.data.message || 'Error generating webhook secret');
                             button.prop('disabled', false).text(originalText);
@@ -129,7 +129,7 @@ class MULOPIMFWC_API_Settings {
         check_ajax_referer('mulopimfwc_generate_api_key', 'nonce');
         
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro')));
         }
         
         $api_key = $this->generate_api_key();
@@ -145,7 +145,7 @@ class MULOPIMFWC_API_Settings {
         check_ajax_referer('mulopimfwc_generate_webhook_secret', 'nonce');
         
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro')));
         }
         
         $webhook_secret = $this->generate_api_key();
@@ -171,41 +171,41 @@ class MULOPIMFWC_API_Settings {
             <div style="margin-bottom: 20px;" class="<?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
                 <table class="form-table">
                     <tr>
-                        <th style="width: 200px;"><?php echo esc_html__('API Key', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th style="width: 200px;"><?php echo esc_html__('API Key', 'multi-location-product-and-inventory-management-pro'); ?></th>
                         <td>
                             <div id="mulopimfwc-api-key-container">
                                 <?php if ($api_key): ?>
                                     <code style="font-size: 12px; padding: 8px 12px; background: #f0f0f0; display: inline-block; word-break: break-all; max-width: 600px;"><?php echo esc_html($api_key); ?></code>
-                                    <p class="description"><?php echo esc_html__('Include this in the X-API-Key header for API requests.', 'multi-location-product-and-inventory-management'); ?></p>
+                                    <p class="description"><?php echo esc_html__('Include this in the X-API-Key header for API requests.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                                 <?php else: ?>
-                                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-secondary mulopimfwc-generate-api-key"><?php echo esc_html__('Generate API Key', 'multi-location-product-and-inventory-management'); ?></button>
-                                    <p class="description"><?php echo esc_html__('Generate an API key to authenticate REST API requests.', 'multi-location-product-and-inventory-management'); ?></p>
+                                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-secondary mulopimfwc-generate-api-key"><?php echo esc_html__('Generate API Key', 'multi-location-product-and-inventory-management-pro'); ?></button>
+                                    <p class="description"><?php echo esc_html__('Generate an API key to authenticate REST API requests.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                                 <?php endif; ?>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <th><?php echo esc_html__('Webhook Secret', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th><?php echo esc_html__('Webhook Secret', 'multi-location-product-and-inventory-management-pro'); ?></th>
                         <td>
                             <div id="mulopimfwc-webhook-secret-container">
                                 <?php if ($webhook_secret): ?>
                                     <code style="font-size: 12px; padding: 8px 12px; background: #f0f0f0; display: inline-block; word-break: break-all; max-width: 600px;"><?php echo esc_html($webhook_secret); ?></code>
-                                    <p class="description"><?php echo esc_html__('Include this in the X-Webhook-Secret header for webhook requests.', 'multi-location-product-and-inventory-management'); ?></p>
+                                    <p class="description"><?php echo esc_html__('Include this in the X-Webhook-Secret header for webhook requests.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                                 <?php else: ?>
-                                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-secondary mulopimfwc-generate-webhook-secret"><?php echo esc_html__('Generate Webhook Secret', 'multi-location-product-and-inventory-management'); ?></button>
-                                    <p class="description"><?php echo esc_html__('Generate a webhook secret to authenticate webhook requests from external systems.', 'multi-location-product-and-inventory-management'); ?></p>
+                                    <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-secondary mulopimfwc-generate-webhook-secret"><?php echo esc_html__('Generate Webhook Secret', 'multi-location-product-and-inventory-management-pro'); ?></button>
+                                    <p class="description"><?php echo esc_html__('Generate a webhook secret to authenticate webhook requests from external systems.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                                 <?php endif; ?>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <th><?php echo esc_html__('Log Webhooks', 'multi-location-product-and-inventory-management'); ?></th>
+                        <th><?php echo esc_html__('Log Webhooks', 'multi-location-product-and-inventory-management-pro'); ?></th>
                         <td>
                             <label>
                                 <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[log_webhooks]" value="yes" <?php checked($log_webhooks, 'yes'); ?>>
-                                <?php echo esc_html__('Log webhook requests to files', 'multi-location-product-and-inventory-management'); ?>
+                                <?php echo esc_html__('Log webhook requests to files', 'multi-location-product-and-inventory-management-pro'); ?>
                             </label>
-                            <p class="description"><?php echo esc_html__('Webhook logs are saved to wp-content/uploads/mulopimfwc-webhook-log-YYYY-MM-DD.log', 'multi-location-product-and-inventory-management'); ?></p>
+                            <p class="description"><?php echo esc_html__('Webhook logs are saved to wp-content/uploads/mulopimfwc-webhook-log-YYYY-MM-DD.log', 'multi-location-product-and-inventory-management-pro'); ?></p>
                         </td>
                     </tr>
                 </table>

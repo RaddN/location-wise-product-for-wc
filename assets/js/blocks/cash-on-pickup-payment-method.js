@@ -16,7 +16,7 @@
      };
 
      var methodData = getPaymentMethodData('cash_on_pickup', {});
-     var title = methodData.title || __('Cash on Pickup', 'multi-location-product-and-inventory-management');
+     var title = methodData.title || __('Cash on Pickup', 'multi-location-product-and-inventory-management-pro');
      var description = methodData.description || '';
      var sanitizedDescription = sanitizeHTML(description);
      var isLocationAllowed = methodData.locationAllowed !== false;

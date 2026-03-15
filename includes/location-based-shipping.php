@@ -158,13 +158,13 @@ class MULOPIMFWC_Location_Based_Shipping
         ?>
         <tr valign="top" class="mulopimfwc-shipping-locations-row">
             <th scope="row" class="titledesc">
-                <?php esc_html_e('Available Locations', 'multi-location-product-and-inventory-management'); ?>
-                <span class="woocommerce-help-tip" data-tip="<?php esc_attr_e('Select which store locations can use this shipping method. Leave empty to allow all locations.', 'multi-location-product-and-inventory-management'); ?>"></span>
+                <?php esc_html_e('Available Locations', 'multi-location-product-and-inventory-management-pro'); ?>
+                <span class="woocommerce-help-tip" data-tip="<?php esc_attr_e('Select which store locations can use this shipping method. Leave empty to allow all locations.', 'multi-location-product-and-inventory-management-pro'); ?>"></span>
             </th>
             <td class="forminp">
                 <fieldset>
                     <legend class="screen-reader-text">
-                        <span><?php esc_html_e('Store Locations', 'multi-location-product-and-inventory-management'); ?></span>
+                        <span><?php esc_html_e('Store Locations', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     </legend>
                     
                     <label>
@@ -173,7 +173,7 @@ class MULOPIMFWC_Location_Based_Shipping
                                id="mulopimfwc_shipping_locations_all_<?php echo esc_attr($instance_id); ?>"
                                value="1"
                                <?php checked(empty($selected_locations)); ?>>
-                        <strong><?php esc_html_e('All Locations', 'multi-location-product-and-inventory-management'); ?></strong>
+                        <strong><?php esc_html_e('All Locations', 'multi-location-product-and-inventory-management-pro'); ?></strong>
                     </label>
                     <br><br>
                     
@@ -231,7 +231,7 @@ class MULOPIMFWC_Location_Based_Shipping
                        value="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
                        <?php checked($checked); ?>>
                 <?php echo esc_html($location->name); ?>
-                <span class="description">(<?php echo esc_html($location->count); ?> <?php esc_html_e('products', 'multi-location-product-and-inventory-management'); ?>)</span>
+                <span class="description">(<?php echo esc_html($location->count); ?> <?php esc_html_e('products', 'multi-location-product-and-inventory-management-pro'); ?>)</span>
             </label>
             <?php
             
@@ -382,7 +382,7 @@ class MULOPIMFWC_Location_Based_Shipping
         $locations = $this->get_method_locations($instance_id);
 
         if (empty($locations)) {
-            $location_html = '<span class="mulopimfwc-shipping-all-locations" style="color: #2ea2cc; font-size: 11px;">(' . esc_html__('All locations', 'multi-location-product-and-inventory-management') . ')</span>';
+            $location_html = '<span class="mulopimfwc-shipping-all-locations" style="color: #2ea2cc; font-size: 11px;">(' . esc_html__('All locations', 'multi-location-product-and-inventory-management-pro') . ')</span>';
         } else {
             $location_names = array();
             foreach ($locations as $location_slug) {
@@ -396,7 +396,7 @@ class MULOPIMFWC_Location_Based_Shipping
             $location_count = count($location_names);
             if ($location_count > 3) {
                 $display_names = array_slice($location_names, 0, 3);
-                $location_text = implode(', ', $display_names) . ' ' . sprintf(esc_html__('and %d more', 'multi-location-product-and-inventory-management'), $location_count - 3);
+                $location_text = implode(', ', $display_names) . ' ' . sprintf(esc_html__('and %d more', 'multi-location-product-and-inventory-management-pro'), $location_count - 3);
             } else {
                 $location_text = implode(', ', $location_names);
             }
@@ -451,11 +451,11 @@ class MULOPIMFWC_Location_Based_Shipping
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('mulopimfwc_shipping_nonce'),
             'i18n' => array(
-                'selectLocations' => __('Select Locations', 'multi-location-product-and-inventory-management'),
-                'allLocations' => __('All Locations', 'multi-location-product-and-inventory-management'),
-                'noLocations' => __('No locations assigned', 'multi-location-product-and-inventory-management'),
-                'saveSuccess' => __('Locations saved successfully', 'multi-location-product-and-inventory-management'),
-                'saveError' => __('Error saving locations', 'multi-location-product-and-inventory-management'),
+                'selectLocations' => __('Select Locations', 'multi-location-product-and-inventory-management-pro'),
+                'allLocations' => __('All Locations', 'multi-location-product-and-inventory-management-pro'),
+                'noLocations' => __('No locations assigned', 'multi-location-product-and-inventory-management-pro'),
+                'saveSuccess' => __('Locations saved successfully', 'multi-location-product-and-inventory-management-pro'),
+                'saveError' => __('Error saving locations', 'multi-location-product-and-inventory-management-pro'),
             )
         ));
     }
@@ -468,20 +468,20 @@ class MULOPIMFWC_Location_Based_Shipping
         check_ajax_referer('mulopimfwc_shipping_nonce', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $instance_id = isset($_POST['instance_id']) ? intval($_POST['instance_id']) : 0;
         $locations = isset($_POST['locations']) ? array_map('sanitize_text_field', wp_unslash($_POST['locations'])) : array();
 
         if (!$instance_id) {
-            wp_send_json_error(array('message' => __('Invalid instance ID', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Invalid instance ID', 'multi-location-product-and-inventory-management-pro')));
         }
 
         update_option('mulopimfwc_shipping_method_locations_' . $instance_id, $locations);
 
         wp_send_json_success(array(
-            'message' => __('Locations saved successfully', 'multi-location-product-and-inventory-management'),
+            'message' => __('Locations saved successfully', 'multi-location-product-and-inventory-management-pro'),
             'locations' => $locations
         ));
     }
@@ -505,7 +505,7 @@ class MULOPIMFWC_Location_Based_Shipping
                 
                 // Show notice
                 var notice = '<div class="woocommerce-message">' +
-                    '<?php esc_html_e('Shipping methods updated based on your location selection.', 'multi-location-product-and-inventory-management'); ?>' +
+                    '<?php esc_html_e('Shipping methods updated based on your location selection.', 'multi-location-product-and-inventory-management-pro'); ?>' +
                     '</div>';
                 
                 $('.woocommerce-notices-wrapper').first().html(notice);
@@ -533,19 +533,19 @@ class MULOPIMFWC_Location_Based_Shipping
 
         ?>
         <div class="mulopimfwc-bulk-shipping-locations" style="margin-top: 20px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd;">
-            <h3><?php esc_html_e('Bulk Location Assignment', 'multi-location-product-and-inventory-management'); ?></h3>
+            <h3><?php esc_html_e('Bulk Location Assignment', 'multi-location-product-and-inventory-management-pro'); ?></h3>
             <p class="description">
-                <?php esc_html_e('Quickly assign locations to all shipping methods in a zone.', 'multi-location-product-and-inventory-management'); ?>
+                <?php esc_html_e('Quickly assign locations to all shipping methods in a zone.', 'multi-location-product-and-inventory-management-pro'); ?>
             </p>
             
             <table class="form-table">
                 <tr>
                     <th scope="row">
-                        <label><?php esc_html_e('Select Zone', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label><?php esc_html_e('Select Zone', 'multi-location-product-and-inventory-management-pro'); ?></label>
                     </th>
                     <td>
                         <select id="mulopimfwc_bulk_zone_select" style="min-width: 200px;">
-                            <option value=""><?php esc_html_e('Select a zone...', 'multi-location-product-and-inventory-management'); ?></option>
+                            <option value=""><?php esc_html_e('Select a zone...', 'multi-location-product-and-inventory-management-pro'); ?></option>
                             <?php
                             $zones = WC_Shipping_Zones::get_zones();
                             foreach ($zones as $zone_data) {
@@ -558,7 +558,7 @@ class MULOPIMFWC_Location_Based_Shipping
                 </tr>
                 <tr id="mulopimfwc_bulk_locations_row" style="display: none;">
                     <th scope="row">
-                        <label><?php esc_html_e('Assign Locations', 'multi-location-product-and-inventory-management'); ?></label>
+                        <label><?php esc_html_e('Assign Locations', 'multi-location-product-and-inventory-management-pro'); ?></label>
                     </th>
                     <td>
                         <fieldset>
@@ -572,7 +572,7 @@ class MULOPIMFWC_Location_Based_Shipping
                             <?php endforeach; ?>
                         </fieldset>
                         <p class="description">
-                            <?php esc_html_e('Selected locations will be assigned to all shipping methods in the zone.', 'multi-location-product-and-inventory-management'); ?>
+                            <?php esc_html_e('Selected locations will be assigned to all shipping methods in the zone.', 'multi-location-product-and-inventory-management-pro'); ?>
                         </p>
                     </td>
                 </tr>
@@ -582,7 +582,7 @@ class MULOPIMFWC_Location_Based_Shipping
                         <button type="button" 
                                 id="mulopimfwc_bulk_apply_btn" 
                                 class="button button-primary">
-                            <?php esc_html_e('Apply to All Methods in Zone', 'multi-location-product-and-inventory-management'); ?>
+                            <?php esc_html_e('Apply to All Methods in Zone', 'multi-location-product-and-inventory-management-pro'); ?>
                         </button>
                         <span class="spinner" style="float: none; margin: 0 10px;"></span>
                     </td>
@@ -611,7 +611,7 @@ class MULOPIMFWC_Location_Based_Shipping
                 });
 
                 if (!zoneId) {
-                    alert('<?php esc_html_e('Please select a zone', 'multi-location-product-and-inventory-management'); ?>');
+                    alert('<?php esc_html_e('Please select a zone', 'multi-location-product-and-inventory-management-pro'); ?>');
                     return;
                 }
 
@@ -636,7 +636,7 @@ class MULOPIMFWC_Location_Based_Shipping
                         }
                     },
                     error: function() {
-                        alert('<?php esc_html_e('An error occurred', 'multi-location-product-and-inventory-management'); ?>');
+                        alert('<?php esc_html_e('An error occurred', 'multi-location-product-and-inventory-management-pro'); ?>');
                     },
                     complete: function() {
                         $btn.prop('disabled', false);
@@ -664,14 +664,14 @@ function mulopimfwc_bulk_assign_locations()
     check_ajax_referer('mulopimfwc_shipping_nonce', 'nonce');
 
     if (!current_user_can('manage_woocommerce')) {
-        wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+        wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
     }
 
     $zone_id = isset($_POST['zone_id']) ? intval($_POST['zone_id']) : 0;
     $locations = isset($_POST['locations']) ? array_map('sanitize_text_field', wp_unslash($_POST['locations'])) : array();
 
     if (!$zone_id) {
-        wp_send_json_error(array('message' => __('Invalid zone ID', 'multi-location-product-and-inventory-management')));
+        wp_send_json_error(array('message' => __('Invalid zone ID', 'multi-location-product-and-inventory-management-pro')));
     }
 
     $zone = new WC_Shipping_Zone($zone_id);
@@ -686,7 +686,7 @@ function mulopimfwc_bulk_assign_locations()
 
     wp_send_json_success(array(
         'message' => sprintf(
-            __('Locations assigned to %d shipping method(s) successfully', 'multi-location-product-and-inventory-management'),
+            __('Locations assigned to %d shipping method(s) successfully', 'multi-location-product-and-inventory-management-pro'),
             $count
         )
     ));
@@ -699,13 +699,13 @@ function mulopimfwc_get_method_locations()
     check_ajax_referer('mulopimfwc_shipping_nonce', 'nonce');
 
     if (!current_user_can('manage_woocommerce')) {
-        wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management')));
+        wp_send_json_error(array('message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')));
     }
 
     $instance_id = isset($_POST['instance_id']) ? intval($_POST['instance_id']) : 0;
 
     if (!$instance_id) {
-        wp_send_json_error(array('message' => __('Invalid instance ID', 'multi-location-product-and-inventory-management')));
+        wp_send_json_error(array('message' => __('Invalid instance ID', 'multi-location-product-and-inventory-management-pro')));
     }
 
     // Get all locations

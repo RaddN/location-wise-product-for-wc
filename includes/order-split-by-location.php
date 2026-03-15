@@ -373,7 +373,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
         {
             $location_slug = sanitize_title($location_slug);
             if ($location_slug === '') {
-                return __('Unassigned', 'multi-location-product-and-inventory-management');
+                return __('Unassigned', 'multi-location-product-and-inventory-management-pro');
             }
 
             $term = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
@@ -402,9 +402,9 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             $notice_template = function_exists('mulopimfwc_get_text_value')
                 ? mulopimfwc_get_text_value(
                     'text_cart_split_order_notice',
-                    __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management')
+                    __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management-pro')
                 )
-                : __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management');
+                : __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management-pro');
 
             echo '<div class="woocommerce-info mulopimfwc-split-parent-notice">';
             echo '<p style="margin:0;">' . esc_html(sprintf($notice_template, implode(', ', $child_numbers))) . '</p>';
@@ -428,15 +428,15 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                 $location_row_template = function_exists('mulopimfwc_get_text_value')
                     ? mulopimfwc_get_text_value(
                         'text_cart_split_order_location_label',
-                        __('Location: %s', 'multi-location-product-and-inventory-management')
+                        __('Location: %s', 'multi-location-product-and-inventory-management-pro')
                     )
-                    : __('Location: %s', 'multi-location-product-and-inventory-management');
+                    : __('Location: %s', 'multi-location-product-and-inventory-management-pro');
                 $child_order_template = function_exists('mulopimfwc_get_text_value')
                     ? mulopimfwc_get_text_value(
                         'text_cart_split_order_child_label',
-                        __('Order %s', 'multi-location-product-and-inventory-management')
+                        __('Order %s', 'multi-location-product-and-inventory-management-pro')
                     )
-                    : __('Order %s', 'multi-location-product-and-inventory-management');
+                    : __('Order %s', 'multi-location-product-and-inventory-management-pro');
 
                 echo '<tr class="mulopimfwc-split-order-group">';
                 echo '<td colspan="2"><strong>' . esc_html(sprintf($location_row_template, $location_label)) . '</strong> ';
@@ -562,7 +562,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
 
             if (function_exists('wc_add_notice')) {
                 wc_add_notice(
-                    __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management'),
+                    __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'),
                     'error'
                 );
             }
@@ -586,12 +586,12 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             if (class_exists('\Automattic\WooCommerce\StoreApi\Exceptions\RouteException')) {
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'mulopimfwc_location_missing',
-                    __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management'),
+                    __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'),
                     400
                 );
             }
 
-            throw new Exception(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management'));
+            throw new Exception(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'));
         }
 
         public function maybe_split_order($maybe_order, $posted_data = null, $maybe_order_obj = null)
@@ -662,17 +662,17 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             if (!empty($unknown_items) && $unknown_policy === 'block_checkout') {
                 if (function_exists('wc_add_notice')) {
                     wc_add_notice(
-                        __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management'),
+                        __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'),
                         'error'
                     );
                 }
-                throw new Exception(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management'));
+                throw new Exception(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'));
             }
 
             if (!empty($unknown_items) && $unknown_policy === 'unassigned_child') {
                 $groups['__unassigned'] = [
                     'location_slug' => '',
-                    'location_name' => __('Unassigned', 'multi-location-product-and-inventory-management'),
+                    'location_name' => __('Unassigned', 'multi-location-product-and-inventory-management-pro'),
                     'items' => $unknown_items,
                 ];
                 $unknown_items = [];
@@ -718,7 +718,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                     $children_ids[] = $child->get_id();
 
                     $child_note = sprintf(
-                        __('Split from parent order: #%s', 'multi-location-product-and-inventory-management'),
+                        __('Split from parent order: #%s', 'multi-location-product-and-inventory-management-pro'),
                         $order->get_order_number()
                     );
                     $child->add_order_note($child_note);
@@ -755,7 +755,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                         }
                     }
                     $note = sprintf(
-                        __('Split into child orders: %s', 'multi-location-product-and-inventory-management'),
+                        __('Split into child orders: %s', 'multi-location-product-and-inventory-management-pro'),
                         implode(', ', $child_numbers)
                     );
                     $order->add_order_note($note);
@@ -927,7 +927,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                 $this->sync_child_from_parent_target_state(
                     $order,
                     $child,
-                    __('Paid via parent order.', 'multi-location-product-and-inventory-management')
+                    __('Paid via parent order.', 'multi-location-product-and-inventory-management-pro')
                 );
                 $child->save();
             }
@@ -967,7 +967,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                     $this->sync_child_from_parent_target_state(
                         $order,
                         $child,
-                        sprintf(__('Parent order status changed to %s.', 'multi-location-product-and-inventory-management'), $new_status)
+                        sprintf(__('Parent order status changed to %s.', 'multi-location-product-and-inventory-management-pro'), $new_status)
                     );
                     $child->save();
                 }
@@ -1014,7 +1014,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             try {
                 $parent->set_status(
                     $new_status,
-                    sprintf(__('All child orders are now %s.', 'multi-location-product-and-inventory-management'), $new_status),
+                    sprintf(__('All child orders are now %s.', 'multi-location-product-and-inventory-management-pro'), $new_status),
                     true
                 );
 

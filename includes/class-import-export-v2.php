@@ -271,7 +271,7 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         if (!$this->can_start_new_job(self::TYPE_EXPORT, self::EXPORT_ACTIVE_LIMIT)) {
             $payload = array(
-                'message' => __('Export queue is full. Maximum two active export jobs are allowed.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Export queue is full. Maximum two active export jobs are allowed.', 'multi-location-product-and-inventory-management-pro'),
             );
             $active_jobs = $this->get_active_jobs(self::TYPE_EXPORT, 2);
             if (!empty($active_jobs)) {
@@ -342,7 +342,7 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         if (!$this->can_start_new_job(self::TYPE_IMPORT, self::IMPORT_ACTIVE_LIMIT)) {
             $payload = array(
-                'message' => __('An import job is already active. Pause/cancel it before starting a new one.', 'multi-location-product-and-inventory-management'),
+                'message' => __('An import job is already active. Pause/cancel it before starting a new one.', 'multi-location-product-and-inventory-management-pro'),
             );
             $active_job = $this->get_latest_active_job(self::TYPE_IMPORT);
             if ($active_job && $this->can_access_job($active_job)) {
@@ -401,48 +401,48 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         if ($job_id === '' || $upload_id === '' || $chunk_index < 0 || $chunk_count <= 0) {
             wp_send_json_error(array(
-                'message' => __('Invalid upload chunk payload.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Invalid upload chunk payload.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
 
         if ($chunk_count > 1000000) {
             wp_send_json_error(array(
-                'message' => __('Chunk count is invalid.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Chunk count is invalid.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
 
         $job = $this->get_job($job_id);
         if (!$job || $job['type'] !== self::TYPE_IMPORT) {
-            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management-pro')));
         }
         if (!$this->can_access_job($job)) {
-            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $upload = $this->get_upload($upload_id, $job_id);
         if (!$upload) {
-            wp_send_json_error(array('message' => __('Upload session not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Upload session not found.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (!isset($_FILES['chunk']) || !isset($_FILES['chunk']['tmp_name']) || $_FILES['chunk']['error'] !== UPLOAD_ERR_OK) {
-            wp_send_json_error(array('message' => __('Missing chunk file upload.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Missing chunk file upload.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $chunk_tmp = (string) $_FILES['chunk']['tmp_name'];
         $chunk_size = filesize($chunk_tmp);
         if ($chunk_size === false || $chunk_size < 0) {
-            wp_send_json_error(array('message' => __('Unable to read uploaded chunk size.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Unable to read uploaded chunk size.', 'multi-location-product-and-inventory-management-pro')));
         }
         if ((int) $chunk_size > (self::UPLOAD_CHUNK_BYTES + 65536)) {
             wp_send_json_error(array(
-                'message' => __('Chunk size exceeds the 8MB limit.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Chunk size exceeds the 8MB limit.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
 
         $computed_sha = hash_file('sha256', $chunk_tmp);
         if ($chunk_sha !== '' && !hash_equals(strtolower($chunk_sha), strtolower($computed_sha))) {
             wp_send_json_error(array(
-                'message' => __('Chunk checksum mismatch.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Chunk checksum mismatch.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
 
@@ -451,7 +451,7 @@ class MULOPIMFWC_Import_Export_V2_Service
         $chunk_path = $upload_dir . DIRECTORY_SEPARATOR . sprintf('chunk-%06d.part', $chunk_index);
         if (!@move_uploaded_file($chunk_tmp, $chunk_path)) {
             if (!@copy($chunk_tmp, $chunk_path)) {
-                wp_send_json_error(array('message' => __('Failed to persist uploaded chunk.', 'multi-location-product-and-inventory-management')));
+                wp_send_json_error(array('message' => __('Failed to persist uploaded chunk.', 'multi-location-product-and-inventory-management-pro')));
             }
         }
 
@@ -499,20 +499,20 @@ class MULOPIMFWC_Import_Export_V2_Service
         $original_filename = isset($_POST['filename']) ? sanitize_file_name(wp_unslash($_POST['filename'])) : 'upload.bin';
 
         if ($job_id === '' || $upload_id === '' || $chunk_count <= 0) {
-            wp_send_json_error(array('message' => __('Invalid finish upload payload.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Invalid finish upload payload.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $job = $this->get_job($job_id);
         if (!$job || $job['type'] !== self::TYPE_IMPORT) {
-            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management-pro')));
         }
         if (!$this->can_access_job($job)) {
-            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $upload = $this->get_upload($upload_id, $job_id);
         if (!$upload) {
-            wp_send_json_error(array('message' => __('Upload session not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Upload session not found.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $received = $this->decode_json($upload['received_chunks_json'], array());
@@ -523,7 +523,7 @@ class MULOPIMFWC_Import_Export_V2_Service
             if (!isset($received[(string) $i])) {
                 wp_send_json_error(array(
                     'message' => sprintf(
-                        __('Upload is incomplete. Missing chunk index: %d', 'multi-location-product-and-inventory-management'),
+                        __('Upload is incomplete. Missing chunk index: %d', 'multi-location-product-and-inventory-management-pro'),
                         $i
                     ),
                 ));
@@ -538,7 +538,7 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         $output = fopen($assembled_path, 'wb');
         if (!$output) {
-            wp_send_json_error(array('message' => __('Unable to create assembled upload file.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Unable to create assembled upload file.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $bytes_written = 0;
@@ -546,24 +546,24 @@ class MULOPIMFWC_Import_Export_V2_Service
             $chunk_path = $upload_dir . DIRECTORY_SEPARATOR . sprintf('chunk-%06d.part', $i);
             if (!file_exists($chunk_path)) {
                 fclose($output);
-                wp_send_json_error(array('message' => __('Missing chunk file during assembly.', 'multi-location-product-and-inventory-management')));
+                wp_send_json_error(array('message' => __('Missing chunk file during assembly.', 'multi-location-product-and-inventory-management-pro')));
             }
             $input = fopen($chunk_path, 'rb');
             if (!$input) {
                 fclose($output);
-                wp_send_json_error(array('message' => __('Failed to open chunk for assembly.', 'multi-location-product-and-inventory-management')));
+                wp_send_json_error(array('message' => __('Failed to open chunk for assembly.', 'multi-location-product-and-inventory-management-pro')));
             }
             $copied = stream_copy_to_stream($input, $output);
             fclose($input);
             if ($copied === false) {
                 fclose($output);
-                wp_send_json_error(array('message' => __('Failed while assembling upload.', 'multi-location-product-and-inventory-management')));
+                wp_send_json_error(array('message' => __('Failed while assembling upload.', 'multi-location-product-and-inventory-management-pro')));
             }
             $bytes_written += (int) $copied;
             if ($bytes_written > self::MAX_UPLOAD_BYTES) {
                 fclose($output);
                 wp_send_json_error(array(
-                    'message' => __('Upload exceeds maximum supported size of 2GB.', 'multi-location-product-and-inventory-management'),
+                    'message' => __('Upload exceeds maximum supported size of 2GB.', 'multi-location-product-and-inventory-management-pro'),
                 ));
             }
         }
@@ -571,7 +571,7 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         $assembled_sha = hash_file('sha256', $assembled_path);
         if ($target_sha256 !== '' && !hash_equals(strtolower($target_sha256), strtolower($assembled_sha))) {
-            wp_send_json_error(array('message' => __('Final upload checksum mismatch.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Final upload checksum mismatch.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $ext = strtolower((string) pathinfo($original_filename, PATHINFO_EXTENSION));
@@ -580,7 +580,7 @@ class MULOPIMFWC_Import_Export_V2_Service
             $package_path = $this->build_package_from_single_csv($job_id, $assembled_path, $original_filename);
         } elseif ($ext !== 'zip') {
             wp_send_json_error(array(
-                'message' => __('Unsupported import file format. Upload a v2 package ZIP or canonical CSV.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Unsupported import file format. Upload a v2 package ZIP or canonical CSV.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
 
@@ -629,18 +629,18 @@ class MULOPIMFWC_Import_Export_V2_Service
         $this->assert_ajax_permission('mulopimfwc_import_products');
         $job_id = isset($_POST['job_id']) ? sanitize_text_field(wp_unslash($_POST['job_id'])) : '';
         if ($job_id === '') {
-            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $job = $this->get_job($job_id);
         if (!$job || $job['type'] !== self::TYPE_IMPORT) {
-            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management-pro')));
         }
         if (!$this->can_access_job($job)) {
-            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management-pro')));
         }
         if (empty($job['input_path']) || !file_exists($job['input_path'])) {
-            wp_send_json_error(array('message' => __('Upload is not complete. Finish upload first.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Upload is not complete. Finish upload first.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $options = $this->get_request_options();
@@ -695,18 +695,18 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         $job_id = isset($_POST['job_id']) ? sanitize_text_field(wp_unslash($_POST['job_id'])) : '';
         if ($job_id === '') {
-            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $job = $this->get_job($job_id);
         if (!$job || $job['type'] !== self::TYPE_IMPORT) {
-            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Import job not found.', 'multi-location-product-and-inventory-management-pro')));
         }
         if (!$this->can_access_job($job)) {
-            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management-pro')));
         }
         if ($job['status'] !== self::STATUS_AWAITING_CONFIRMATION || $job['phase'] !== self::PHASE_AWAITING_CONFIRMATION) {
-            wp_send_json_error(array('message' => __('Job is not awaiting apply confirmation.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job is not awaiting apply confirmation.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $options = $this->get_request_options();
@@ -757,14 +757,14 @@ class MULOPIMFWC_Import_Export_V2_Service
         $this->assert_ajax_permission('manage_woocommerce');
         $job_id = isset($_REQUEST['job_id']) ? sanitize_text_field(wp_unslash($_REQUEST['job_id'])) : '';
         if ($job_id === '') {
-            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management-pro')));
         }
         $job = $this->get_job($job_id);
         if (!$job) {
-            wp_send_json_error(array('message' => __('Job not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job not found.', 'multi-location-product-and-inventory-management-pro')));
         }
         if (!$this->can_access_job($job)) {
-            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management-pro')));
         }
         wp_send_json_success($this->format_job_status($job));
     }
@@ -775,14 +775,14 @@ class MULOPIMFWC_Import_Export_V2_Service
         $job_id = isset($_REQUEST['job_id']) ? sanitize_text_field(wp_unslash($_REQUEST['job_id'])) : '';
         $cursor = isset($_REQUEST['cursor']) ? (int) $_REQUEST['cursor'] : 0;
         if ($job_id === '') {
-            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management-pro')));
         }
         $job = $this->get_job($job_id);
         if (!$job) {
-            wp_send_json_error(array('message' => __('Job not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job not found.', 'multi-location-product-and-inventory-management-pro')));
         }
         if (!$this->can_access_job($job)) {
-            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $rows = $this->wpdb->get_results(
@@ -828,7 +828,7 @@ class MULOPIMFWC_Import_Export_V2_Service
         $type = isset($_REQUEST['type']) ? sanitize_key(wp_unslash($_REQUEST['type'])) : '';
         if ($type !== '' && !in_array($type, array(self::TYPE_IMPORT, self::TYPE_EXPORT), true)) {
             wp_send_json_error(array(
-                'message' => __('Invalid job type filter.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Invalid job type filter.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
 
@@ -858,7 +858,7 @@ class MULOPIMFWC_Import_Export_V2_Service
             return;
         }
         if (!in_array($job['status'], array(self::STATUS_QUEUED, self::STATUS_RUNNING, self::STATUS_UPLOADING), true)) {
-            wp_send_json_error(array('message' => __('Job cannot be paused in its current state.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job cannot be paused in its current state.', 'multi-location-product-and-inventory-management-pro')));
         }
         $this->update_job($job['job_id'], array('status' => self::STATUS_PAUSED));
         $this->append_event($job['job_id'], 'warning', 'job_paused', 'Job paused by user.');
@@ -873,7 +873,7 @@ class MULOPIMFWC_Import_Export_V2_Service
             return;
         }
         if ($job['status'] !== self::STATUS_PAUSED) {
-            wp_send_json_error(array('message' => __('Only paused jobs can be resumed.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Only paused jobs can be resumed.', 'multi-location-product-and-inventory-management-pro')));
         }
         $this->update_job($job['job_id'], array('status' => self::STATUS_QUEUED));
         $this->append_event($job['job_id'], 'info', 'job_resumed', 'Job resumed by user.');
@@ -889,7 +889,7 @@ class MULOPIMFWC_Import_Export_V2_Service
             return;
         }
         if (in_array($job['status'], array(self::STATUS_COMPLETED, self::STATUS_FAILED, self::STATUS_CANCELLED), true)) {
-            wp_send_json_error(array('message' => __('Job is already finalized.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job is already finalized.', 'multi-location-product-and-inventory-management-pro')));
         }
         $this->update_job($job['job_id'], array(
             'status' => self::STATUS_CANCELLED,
@@ -908,22 +908,22 @@ class MULOPIMFWC_Import_Export_V2_Service
         $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
 
         if ($job_id === '' || $artifact_id <= 0 || $expires <= 0 || $token === '') {
-            wp_die(esc_html__('Invalid artifact download request.', 'multi-location-product-and-inventory-management'), 400);
+            wp_die(esc_html__('Invalid artifact download request.', 'multi-location-product-and-inventory-management-pro'), 400);
         }
         if (time() > $expires) {
-            wp_die(esc_html__('Download link expired.', 'multi-location-product-and-inventory-management'), 403);
+            wp_die(esc_html__('Download link expired.', 'multi-location-product-and-inventory-management-pro'), 403);
         }
 
         $job = $this->get_job($job_id);
         if (!$job) {
-            wp_die(esc_html__('Job not found.', 'multi-location-product-and-inventory-management'), 404);
+            wp_die(esc_html__('Job not found.', 'multi-location-product-and-inventory-management-pro'), 404);
         }
         if (!$this->can_access_job($job)) {
-            wp_die(esc_html__('Unauthorized.', 'multi-location-product-and-inventory-management'), 403);
+            wp_die(esc_html__('Unauthorized.', 'multi-location-product-and-inventory-management-pro'), 403);
         }
         $expected = $this->build_download_token($job_id, $artifact_id, get_current_user_id(), $expires);
         if (!hash_equals($expected, $token)) {
-            wp_die(esc_html__('Invalid download token.', 'multi-location-product-and-inventory-management'), 403);
+            wp_die(esc_html__('Invalid download token.', 'multi-location-product-and-inventory-management-pro'), 403);
         }
 
         $artifact = $this->wpdb->get_row(
@@ -935,11 +935,11 @@ class MULOPIMFWC_Import_Export_V2_Service
             ARRAY_A
         );
         if (!$artifact) {
-            wp_die(esc_html__('Artifact not found.', 'multi-location-product-and-inventory-management'), 404);
+            wp_die(esc_html__('Artifact not found.', 'multi-location-product-and-inventory-management-pro'), 404);
         }
         $path = isset($artifact['path']) ? (string) $artifact['path'] : '';
         if ($path === '' || !file_exists($path) || !is_file($path)) {
-            wp_die(esc_html__('Artifact file is unavailable.', 'multi-location-product-and-inventory-management'), 404);
+            wp_die(esc_html__('Artifact file is unavailable.', 'multi-location-product-and-inventory-management-pro'), 404);
         }
 
         $this->stream_file_with_range($path, basename($path));
@@ -956,7 +956,7 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         if (!$this->can_start_new_job(self::TYPE_EXPORT, self::EXPORT_ACTIVE_LIMIT)) {
             $payload = array(
-                'message' => __('Export queue is full. Please wait for active jobs to complete.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Export queue is full. Please wait for active jobs to complete.', 'multi-location-product-and-inventory-management-pro'),
             );
             $active_jobs = $this->get_active_jobs(self::TYPE_EXPORT, 2);
             if (!empty($active_jobs)) {
@@ -1033,12 +1033,12 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         if (!isset($_FILES['csv_file']) || !isset($_FILES['csv_file']['tmp_name']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
             wp_send_json_error(array(
-                'message' => __('Please upload a valid CSV or package ZIP file.', 'multi-location-product-and-inventory-management'),
+                'message' => __('Please upload a valid CSV or package ZIP file.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
         if (!$this->can_start_new_job(self::TYPE_IMPORT, self::IMPORT_ACTIVE_LIMIT)) {
             $payload = array(
-                'message' => __('An import job is already active.', 'multi-location-product-and-inventory-management'),
+                'message' => __('An import job is already active.', 'multi-location-product-and-inventory-management-pro'),
             );
             $active_job = $this->get_latest_active_job(self::TYPE_IMPORT);
             if ($active_job && $this->can_access_job($active_job)) {
@@ -1060,21 +1060,21 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         if (!@move_uploaded_file((string) $file['tmp_name'], $raw_path)) {
             if (!@copy((string) $file['tmp_name'], $raw_path)) {
-                wp_send_json_error(array('message' => __('Failed to persist upload for import job.', 'multi-location-product-and-inventory-management')));
+                wp_send_json_error(array('message' => __('Failed to persist upload for import job.', 'multi-location-product-and-inventory-management-pro')));
             }
         }
         if (!file_exists($raw_path)) {
-            wp_send_json_error(array('message' => __('Upload file is unavailable after move.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Upload file is unavailable after move.', 'multi-location-product-and-inventory-management-pro')));
         }
         if ((int) filesize($raw_path) > self::MAX_UPLOAD_BYTES) {
-            wp_send_json_error(array('message' => __('File exceeds 2GB upload limit.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('File exceeds 2GB upload limit.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $package_path = $raw_path;
         if ($ext === 'csv') {
             $package_path = $this->build_package_from_single_csv($job['job_id'], $raw_path, $filename);
         } elseif ($ext !== 'zip') {
-            wp_send_json_error(array('message' => __('Legacy import proxy only supports CSV or ZIP files.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Legacy import proxy only supports CSV or ZIP files.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $file_sha = hash_file('sha256', $package_path);
@@ -2791,16 +2791,16 @@ class MULOPIMFWC_Import_Export_V2_Service
     {
         $job_id = isset($_POST['job_id']) ? sanitize_text_field(wp_unslash($_POST['job_id'])) : '';
         if ($job_id === '') {
-            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job ID is required.', 'multi-location-product-and-inventory-management-pro')));
             return null;
         }
         $job = $this->get_job($job_id);
         if (!$job) {
-            wp_send_json_error(array('message' => __('Job not found.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('Job not found.', 'multi-location-product-and-inventory-management-pro')));
             return null;
         }
         if (!$this->can_access_job($job)) {
-            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management')));
+            wp_send_json_error(array('message' => __('You do not have permission to access this job.', 'multi-location-product-and-inventory-management-pro')));
             return null;
         }
         return $job;
@@ -2921,7 +2921,7 @@ class MULOPIMFWC_Import_Export_V2_Service
         $capability = sanitize_key((string) $capability);
         if (!$this->current_user_can($capability)) {
             wp_send_json_error(array(
-                'message' => __('You do not have permission for this action.', 'multi-location-product-and-inventory-management'),
+                'message' => __('You do not have permission for this action.', 'multi-location-product-and-inventory-management-pro'),
             ));
         }
     }
@@ -3083,7 +3083,7 @@ class MULOPIMFWC_Import_Export_V2_Service
 
         $fp = fopen($path, 'rb');
         if (!$fp) {
-            wp_die(esc_html__('Unable to open artifact file.', 'multi-location-product-and-inventory-management'), 500);
+            wp_die(esc_html__('Unable to open artifact file.', 'multi-location-product-and-inventory-management-pro'), 500);
         }
         fseek($fp, $start);
         $remaining = $length;
