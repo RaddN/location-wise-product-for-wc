@@ -1721,11 +1721,13 @@ JS;
 
         $logo_src = $logo_id ? wp_get_attachment_image_url($logo_id, 'thumbnail') : '';
         $gallery_ids_csv = is_array($gallery_ids) ? implode(',', $gallery_ids) : (string) $gallery_ids;
-        $gallery_thumbs = '';
+        $gallery_thumb_urls = array();
         if ($gallery_ids_csv) {
             foreach (array_filter(array_map('absint', explode(',', $gallery_ids_csv))) as $gid) {
                 $src = wp_get_attachment_image_url($gid, 'thumbnail');
-                if ($src) $gallery_thumbs .= '<img src="' . esc_url($src) . '" style="width:60px;height:auto;margin:2px;border:1px solid #ddd;border-radius:3px;">';
+                if ($src) {
+                    $gallery_thumb_urls[] = $src;
+                }
             }
         }
     ?>
@@ -1848,7 +1850,11 @@ JS;
             <th scope="row"><label><?php esc_html_e('Gallery', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td class="mulopimfwc-media-wrap">
                 <input type="hidden" name="gallery_ids" class="mulopimfwc-gallery-ids" value="<?php echo esc_attr($gallery_ids_csv); ?>">
-                <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;"><?php echo $gallery_thumbs; ?></div>
+                <div class="mulopimfwc-gallery-preview" style="margin:6px 0;display:flex;flex-wrap:wrap;gap:4px;">
+                    <?php foreach ($gallery_thumb_urls as $gallery_thumb_url) : ?>
+                        <img src="<?php echo esc_url($gallery_thumb_url); ?>" alt="" style="width:60px;height:auto;margin:2px;border:1px solid #ddd;border-radius:3px;">
+                    <?php endforeach; ?>
+                </div>
                 <p>
                     <span class="button mulopimfwc-upload-gallery"><?php esc_html_e('Add Images', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     <span class="button button-link-delete mulopimfwc-clear-gallery"><?php esc_html_e('Clear', 'multi-location-product-and-inventory-management-pro'); ?></span>
