@@ -1785,7 +1785,7 @@ add_action('plugins_loaded', function() {
             echo '<div class="error"><p>';
             echo esc_html__('Location Wise Products requires WooCommerce version 4.0 or higher. ', 'multi-location-product-and-inventory-management-pro');
             if ($wc_version !== 'unknown') {
-                echo esc_html(sprintf(__('Detected WooCommerce version: %s', 'multi-location-product-and-inventory-management-pro'), $wc_version));
+                echo esc_html(sprintf(/* translators: %s: WooCommerce version number */ __('Detected WooCommerce version: %s', 'multi-location-product-and-inventory-management-pro'), $wc_version));
             }
             echo '</p></div>';
         }, 10);
@@ -3773,7 +3773,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                 <?php if (!empty($destination)): ?>
                     <p style="margin: 5px 0; color: #64748b; font-size: 13px;">
-                        <?php echo sprintf(esc_html__('Destination: %s', 'multi-location-product-and-inventory-management-pro'), '<strong>' . esc_html($destination) . '</strong>'); ?>
+                        <?php echo sprintf(/* translators: %s: destination location name */ esc_html__('Destination: %s', 'multi-location-product-and-inventory-management-pro'), '<strong>' . esc_html($destination) . '</strong>'); ?>
                     </p>
                 <?php endif; ?>
 
@@ -3979,7 +3979,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                             : (string) $cost;
 
                         $transfer_details[] = sprintf(
-                            __('%s to %s: %s', 'multi-location-product-and-inventory-management-pro'),
+                            /* translators: 1: source location name, 2: destination location name, 3: cost label */
+                            __('%1$s to %2$s: %3$s', 'multi-location-product-and-inventory-management-pro'),
                             $location_data['location_name'],
                             $destination_term->name,
                             $cost_label
@@ -4076,6 +4077,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'location_slug' => $location_slug,
                     'location_name' => $location_name,
                     'package_name' => sprintf(
+                        /* translators: %s: location name */
                         __('Shipping from %s', 'multi-location-product-and-inventory-management-pro'),
                         $location_name
                     )
@@ -4171,6 +4173,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                         <p style="margin: 5px 0 0 0; font-size: 13px;">
                             <?php
                             echo sprintf(
+                                /* translators: %s: destination location name (may be wrapped in HTML) */
                                 esc_html__('Your order includes products from multiple locations. Transfer costs to %s have been added to your total.', 'multi-location-product-and-inventory-management-pro'),
                                 '<strong>' . esc_html($destination_term->name) . '</strong>'
                             );
@@ -4983,7 +4986,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                         
                         wp_send_json_error([
                             'message' => sprintf(
-                                __('Cannot change location. Insufficient stock at %s location. Available: %d, Required: %d', 'multi-location-product-and-inventory-management-pro'),
+                                /* translators: 1: location name, 2: available stock, 3: required quantity */
+                                __('Cannot change location. Insufficient stock at %1$s location. Available: %2$d, Required: %3$d', 'multi-location-product-and-inventory-management-pro'),
                                 $new_location_term->name,
                                 $available_stock,
                                 $quantity
@@ -5113,7 +5117,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             $old_location_name = $old_location_slug ? (get_term_by('slug', $old_location_slug, 'mulopimfwc_store_location') ? get_term_by('slug', $old_location_slug, 'mulopimfwc_store_location')->name : $old_location_slug) : __('Not set', 'multi-location-product-and-inventory-management-pro');
             
             $note_message = sprintf(
-                __('Order item location changed from %s to %s', 'multi-location-product-and-inventory-management-pro'),
+                /* translators: 1: old location name, 2: new location name */
+                __('Order item location changed from %1$s to %2$s', 'multi-location-product-and-inventory-management-pro'),
                 $old_location_name,
                 $new_location_term->name
             );
@@ -5121,7 +5126,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             // Add price change to note if price changed
             if ($enable_location_price && $old_price != $new_price) {
                 $note_message .= sprintf(
-                    __(' | Price updated from %s to %s', 'multi-location-product-and-inventory-management-pro'),
+                    /* translators: 1: old price, 2: new price */
+                    __(' | Price updated from %1$s to %2$s', 'multi-location-product-and-inventory-management-pro'),
                     wc_price($old_price),
                     wc_price($new_price)
                 );
@@ -5131,6 +5137,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $order_location_term = get_term_by('slug', $order_location_slug, 'mulopimfwc_store_location');
                 $order_location_name = ($order_location_term && !is_wp_error($order_location_term)) ? $order_location_term->name : $order_location_slug;
                 $note_message .= sprintf(
+                    /* translators: %s: order location name */
                     __(' | Order location set to %s', 'multi-location-product-and-inventory-management-pro'),
                     $order_location_name
                 );
@@ -5315,7 +5322,8 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                     // Add error notice via order note and admin notice
                     $error_message = sprintf(
-                        __('Cannot increase quantity for %s. Insufficient stock at %s location. Available: %d, Required: %d', 'multi-location-product-and-inventory-management-pro'),
+                        /* translators: 1: product name, 2: location name, 3: available stock, 4: required quantity */
+                        __('Cannot increase quantity for %1$s. Insufficient stock at %2$s location. Available: %3$d, Required: %4$d', 'multi-location-product-and-inventory-management-pro'),
                         $product_name,
                         $location_name,
                         $available_stock,
@@ -5353,7 +5361,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $product_name = $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management-pro');
 
                     $order->add_order_note(sprintf(
-                        __('Order item quantity changed for %s at %s location: %d → %d (Stock: %d → %d)', 'multi-location-product-and-inventory-management-pro'),
+                        /* translators: 1: product name, 2: location name, 3: old quantity, 4: new quantity, 5: old stock, 6: new stock */
+                        __('Order item quantity changed for %1$s at %2$s location: %3$d → %4$d (Stock: %5$d → %6$d)', 'multi-location-product-and-inventory-management-pro'),
                         $product_name,
                         $location_name,
                         $old_quantity,
@@ -5397,8 +5406,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                         $product = wc_get_product($product_id);
                         wc_add_notice(
                             sprintf(
+                                /* translators: 1: product name, 2: location name */
                                 __(
-                                    '"%s" is no longer available at %s location and has been removed from your cart.',
+                                    '"%1$s" is no longer available at %2$s location and has been removed from your cart.',
                                     'multi-location-product-and-inventory-management-pro'
                                 ),
                                 $product->get_name(),
@@ -5546,7 +5556,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                 foreach ($items_by_location as $location => $data) {
                     $item_count = count($data['items']);
                     echo sprintf(
-                        esc_html__('%s: %d item(s)', 'multi-location-product-and-inventory-management-pro'),
+                        /* translators: 1: location name (may include HTML), 2: item count */
+                        esc_html__('%1$s: %2$d item(s)', 'multi-location-product-and-inventory-management-pro'),
                         '<strong>' . esc_html($data['location_name']) . '</strong>',
                         $item_count
                     ) . '<br>';
@@ -7089,7 +7100,8 @@ if (!function_exists('mulopimfwc_get_values')) {
                                     mulopimfwc_send_social_message(
                                         __('Restocked', 'multi-location-product-and-inventory-management-pro'),
                                         sprintf(
-                                            __('%s @ %s is back above low threshold. Stock: %d (threshold %d)', 'multi-location-product-and-inventory-management-pro'),
+                                            /* translators: 1: product name, 2: location name, 3: current stock, 4: low-stock threshold */
+                                            __('%1$s @ %2$s is back above low threshold. Stock: %3$d (threshold %4$d)', 'multi-location-product-and-inventory-management-pro'),
                                             $product->get_name(),
                                             $location_term->name,
                                             (int) $new_stock,
@@ -7334,75 +7346,75 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'currencySymbol' => $default_currency_symbol,
                 'currencyCode' => $default_currency_code,
                 'i18n' => [
-                    'activate' => __('Activate', $text_domain),
-                    'deactivate' => __('Deactivate', $text_domain),
-                    'selectLocations' => __('Select Locations', $text_domain),
-                    'saveLocations' => __('Save Locations', $text_domain),
-                    'ajaxError' => __('An error occurred. Please try again.', $text_domain),
+                    'activate' => __('Activate', 'multi-location-product-and-inventory-management-pro'),
+                    'deactivate' => __('Deactivate', 'multi-location-product-and-inventory-management-pro'),
+                    'selectLocations' => __('Select Locations', 'multi-location-product-and-inventory-management-pro'),
+                    'saveLocations' => __('Save Locations', 'multi-location-product-and-inventory-management-pro'),
+                    'ajaxError' => __('An error occurred. Please try again.', 'multi-location-product-and-inventory-management-pro'),
                     // Manage product modal
-                    'manageLocationsTitle' => __('Manage Locations:', $text_domain),
-                    'manageTitle' => __('Manage:', $text_domain),
-                    'cancel' => __('Cancel', $text_domain),
-                    'saveChanges' => __('Save Changes', $text_domain),
-                    'saving' => __('Saving...', $text_domain),
-                    'groupedDescription' => __('Select the locations where this grouped product should be available. Individual child products are managed separately.', $text_domain),
-                    'noLocationsAvailable' => __('No locations available. Please create locations first.', $text_domain),
-                    'locationsSavedSuccess' => __('Locations saved successfully', $text_domain),
-                    'errorSavingLocations' => __('Error saving locations', $text_domain),
-                    'variationNumber' => __('Variation #', $text_domain),
-                    'noVariationsFound' => __('No variations found for this product.', $text_domain),
-                    'fixValidationErrors' => __('Please fix the validation errors before saving.', $text_domain),
-                    'removeLocationConfirm' => __('Remove "%s" from this product? Changes will apply after saving.', $text_domain),
-                    'removeLocationFromVariationsConfirm' => __('Remove this location from all variations? Changes will apply after saving.', $text_domain),
-                    'errorRemovingLocation' => __('Error removing location', $text_domain),
-                    'errorSavingProductData' => __('Error saving product data', $text_domain),
-                    'productDataSavedSuccess' => __('Product data saved successfully', $text_domain),
-                    'defaultTab' => __('Default', $text_domain),
-                    'removeLocationTitle' => __('Remove location', $text_domain),
-                    'addNewLocationTitle' => __('Add new location', $text_domain),
-                    'addLocation' => __('Add location', $text_domain),
-                    'addLocationButton' => __('+ Add Location', $text_domain),
-                    'selectLocationForVariation' => __('Select Location for Variation', $text_domain),
-                    'addSelectedLocations' => __('Add Selected Locations', $text_domain),
-                    'pleaseSelectOneLocation' => __('Please select at least one location.', $text_domain),
-                    'locationsAddedClickSave' => __('Location(s) added. Click "Save Changes" to apply.', $text_domain),
-                    'locationsAddedAllVariations' => __('Location(s) added to all variations. Click "Save Changes" to apply.', $text_domain),
-                    'allLocationsAssigned' => __('All available locations are already assigned to this product.', $text_domain),
-                    'locationMarkedForRemoval' => __('Location marked for removal. Save changes to apply.', $text_domain),
-                    'validationIssueTitle' => __('Validation issue', $text_domain),
-                    'locationsQueuedClickSave' => __('Locations queued. Click "Save Changes" to apply.', $text_domain),
-                    'pleaseSelectOneLocationShort' => __('Please select at least one location', $text_domain),
-                    'unableToQueueLocations' => __('Unable to queue locations right now. Please reopen Manage Product.', $text_domain),
-                    'locationRemovedSuccess' => __('Location removed successfully', $text_domain),
-                    'defaultSettings' => __('Default Settings', $text_domain),
-                    'manageStock' => __('Manage Stock:', $text_domain),
-                    'enable' => __('Enable', $text_domain),
-                    'stockQuantity' => __('Stock Quantity:', $text_domain),
-                    'regularPrice' => __('Regular Price:', $text_domain),
-                    'salePrice' => __('Sale Price:', $text_domain),
-                    'backorders' => __('Backorders:', $text_domain),
-                    'doNotAllow' => __('Do not allow', $text_domain),
-                    'allow' => __('Allow', $text_domain),
-                    'allowNotifyCustomer' => __('Allow, but notify customer', $text_domain),
-                    'purchasePrice' => __('Purchase Price:', $text_domain),
-                    'purchaseQuantity' => __('Purchase Quantity:', $text_domain),
-                    'addNewLocation' => __('Add New Location', $text_domain),
-                    'locationWiseSettings' => __('Location-Wise Settings', $text_domain),
-                    'groupedNoPriceStock' => __('Grouped products do not have price or stock management. Individual child products are managed separately.', $text_domain),
-                    'loading' => __('Loading...', $text_domain),
-                    'errorParsingLocationData' => __('Error parsing location data.', $text_domain),
-                    'totalLocationStockExceedsDefault' => __('Total location stock exceeds default stock', $text_domain),
-                    'regularPriceCannotBeLessThanPurchase' => __('Regular price cannot be less than purchase price', $text_domain),
-                    'salePriceMustBeLessThanRegular' => __('Sale price must be less than regular price', $text_domain),
-                    'salePriceCannotBeLessThanPurchase' => __('Sale price cannot be less than purchase price', $text_domain),
-                    'stockQuantityCannotExceedPurchase' => __('Stock quantity cannot be greater than purchase quantity', $text_domain),
-                    'purchaseQuantityCannotBeLessThanStock' => __('Purchase quantity cannot be less than stock quantity', $text_domain),
-                    'locationRegularPriceCannotBeLessThanPurchase' => __('Location regular price cannot be less than purchase price', $text_domain),
-                    'locationSalePriceCannotBeLessThanPurchase' => __('Location sale price cannot be less than purchase price', $text_domain),
-                    'totalLocationStockExceedsVariationDefault' => __('Total location stock exceeds variation default stock', $text_domain),
-                    'totalLocationStockExceedsMessage' => __('Total location stock (%s) cannot be greater than default stock quantity (%s)', $text_domain),
-                    'variationTotalLocationStockExceedsMessage' => __('Variation: Total location stock (%s) cannot be greater than default stock quantity (%s)', $text_domain),
-                    'settingsSuffix' => __('Settings', $text_domain),
+                    'manageLocationsTitle' => __('Manage Locations:', 'multi-location-product-and-inventory-management-pro'),
+                    'manageTitle' => __('Manage:', 'multi-location-product-and-inventory-management-pro'),
+                    'cancel' => __('Cancel', 'multi-location-product-and-inventory-management-pro'),
+                    'saveChanges' => __('Save Changes', 'multi-location-product-and-inventory-management-pro'),
+                    'saving' => __('Saving...', 'multi-location-product-and-inventory-management-pro'),
+                    'groupedDescription' => __('Select the locations where this grouped product should be available. Individual child products are managed separately.', 'multi-location-product-and-inventory-management-pro'),
+                    'noLocationsAvailable' => __('No locations available. Please create locations first.', 'multi-location-product-and-inventory-management-pro'),
+                    'locationsSavedSuccess' => __('Locations saved successfully', 'multi-location-product-and-inventory-management-pro'),
+                    'errorSavingLocations' => __('Error saving locations', 'multi-location-product-and-inventory-management-pro'),
+                    'variationNumber' => __('Variation #', 'multi-location-product-and-inventory-management-pro'),
+                    'noVariationsFound' => __('No variations found for this product.', 'multi-location-product-and-inventory-management-pro'),
+                    'fixValidationErrors' => __('Please fix the validation errors before saving.', 'multi-location-product-and-inventory-management-pro'),
+                    'removeLocationConfirm' => /* translators: %s: location name */ __('Remove "%s" from this product? Changes will apply after saving.', 'multi-location-product-and-inventory-management-pro'),
+                    'removeLocationFromVariationsConfirm' => __('Remove this location from all variations? Changes will apply after saving.', 'multi-location-product-and-inventory-management-pro'),
+                    'errorRemovingLocation' => __('Error removing location', 'multi-location-product-and-inventory-management-pro'),
+                    'errorSavingProductData' => __('Error saving product data', 'multi-location-product-and-inventory-management-pro'),
+                    'productDataSavedSuccess' => __('Product data saved successfully', 'multi-location-product-and-inventory-management-pro'),
+                    'defaultTab' => __('Default', 'multi-location-product-and-inventory-management-pro'),
+                    'removeLocationTitle' => __('Remove location', 'multi-location-product-and-inventory-management-pro'),
+                    'addNewLocationTitle' => __('Add new location', 'multi-location-product-and-inventory-management-pro'),
+                    'addLocation' => __('Add location', 'multi-location-product-and-inventory-management-pro'),
+                    'addLocationButton' => __('+ Add Location', 'multi-location-product-and-inventory-management-pro'),
+                    'selectLocationForVariation' => __('Select Location for Variation', 'multi-location-product-and-inventory-management-pro'),
+                    'addSelectedLocations' => __('Add Selected Locations', 'multi-location-product-and-inventory-management-pro'),
+                    'pleaseSelectOneLocation' => __('Please select at least one location.', 'multi-location-product-and-inventory-management-pro'),
+                    'locationsAddedClickSave' => __('Location(s) added. Click "Save Changes" to apply.', 'multi-location-product-and-inventory-management-pro'),
+                    'locationsAddedAllVariations' => __('Location(s) added to all variations. Click "Save Changes" to apply.', 'multi-location-product-and-inventory-management-pro'),
+                    'allLocationsAssigned' => __('All available locations are already assigned to this product.', 'multi-location-product-and-inventory-management-pro'),
+                    'locationMarkedForRemoval' => __('Location marked for removal. Save changes to apply.', 'multi-location-product-and-inventory-management-pro'),
+                    'validationIssueTitle' => __('Validation issue', 'multi-location-product-and-inventory-management-pro'),
+                    'locationsQueuedClickSave' => __('Locations queued. Click "Save Changes" to apply.', 'multi-location-product-and-inventory-management-pro'),
+                    'pleaseSelectOneLocationShort' => __('Please select at least one location', 'multi-location-product-and-inventory-management-pro'),
+                    'unableToQueueLocations' => __('Unable to queue locations right now. Please reopen Manage Product.', 'multi-location-product-and-inventory-management-pro'),
+                    'locationRemovedSuccess' => __('Location removed successfully', 'multi-location-product-and-inventory-management-pro'),
+                    'defaultSettings' => __('Default Settings', 'multi-location-product-and-inventory-management-pro'),
+                    'manageStock' => __('Manage Stock:', 'multi-location-product-and-inventory-management-pro'),
+                    'enable' => __('Enable', 'multi-location-product-and-inventory-management-pro'),
+                    'stockQuantity' => __('Stock Quantity:', 'multi-location-product-and-inventory-management-pro'),
+                    'regularPrice' => __('Regular Price:', 'multi-location-product-and-inventory-management-pro'),
+                    'salePrice' => __('Sale Price:', 'multi-location-product-and-inventory-management-pro'),
+                    'backorders' => __('Backorders:', 'multi-location-product-and-inventory-management-pro'),
+                    'doNotAllow' => __('Do not allow', 'multi-location-product-and-inventory-management-pro'),
+                    'allow' => __('Allow', 'multi-location-product-and-inventory-management-pro'),
+                    'allowNotifyCustomer' => __('Allow, but notify customer', 'multi-location-product-and-inventory-management-pro'),
+                    'purchasePrice' => __('Purchase Price:', 'multi-location-product-and-inventory-management-pro'),
+                    'purchaseQuantity' => __('Purchase Quantity:', 'multi-location-product-and-inventory-management-pro'),
+                    'addNewLocation' => __('Add New Location', 'multi-location-product-and-inventory-management-pro'),
+                    'locationWiseSettings' => __('Location-Wise Settings', 'multi-location-product-and-inventory-management-pro'),
+                    'groupedNoPriceStock' => __('Grouped products do not have price or stock management. Individual child products are managed separately.', 'multi-location-product-and-inventory-management-pro'),
+                    'loading' => __('Loading...', 'multi-location-product-and-inventory-management-pro'),
+                    'errorParsingLocationData' => __('Error parsing location data.', 'multi-location-product-and-inventory-management-pro'),
+                    'totalLocationStockExceedsDefault' => __('Total location stock exceeds default stock', 'multi-location-product-and-inventory-management-pro'),
+                    'regularPriceCannotBeLessThanPurchase' => __('Regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro'),
+                    'salePriceMustBeLessThanRegular' => __('Sale price must be less than regular price', 'multi-location-product-and-inventory-management-pro'),
+                    'salePriceCannotBeLessThanPurchase' => __('Sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro'),
+                    'stockQuantityCannotExceedPurchase' => __('Stock quantity cannot be greater than purchase quantity', 'multi-location-product-and-inventory-management-pro'),
+                    'purchaseQuantityCannotBeLessThanStock' => __('Purchase quantity cannot be less than stock quantity', 'multi-location-product-and-inventory-management-pro'),
+                    'locationRegularPriceCannotBeLessThanPurchase' => __('Location regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro'),
+                    'locationSalePriceCannotBeLessThanPurchase' => __('Location sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro'),
+                    'totalLocationStockExceedsVariationDefault' => __('Total location stock exceeds variation default stock', 'multi-location-product-and-inventory-management-pro'),
+                    'totalLocationStockExceedsMessage' => /* translators: 1: total location stock, 2: default stock quantity */ __('Total location stock (%1$s) cannot be greater than default stock quantity (%2$s)', 'multi-location-product-and-inventory-management-pro'),
+                    'variationTotalLocationStockExceedsMessage' => /* translators: 1: total location stock, 2: default stock quantity */ __('Variation: Total location stock (%1$s) cannot be greater than default stock quantity (%2$s)', 'multi-location-product-and-inventory-management-pro'),
+                    'settingsSuffix' => __('Settings', 'multi-location-product-and-inventory-management-pro'),
                 ],
             ]);
 
@@ -11245,6 +11257,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             $message = __('This product is not available in your selected location.', 'multi-location-product-and-inventory-management-pro');
             if (!empty($location_name)) {
                 $message = sprintf(
+                    /* translators: %s: location name */
                     __('This product is not available at %s. Please select a different location to view this product.', 'multi-location-product-and-inventory-management-pro'),
                     esc_html($location_name)
                 );
@@ -13071,6 +13084,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         } else {
             if ($status === 'instock') {
                 if ($args['count_format'] === 'phrase') {
+                    // phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralSingle, WordPress.WP.I18n.NonSingularStringLiteralPlural -- Customizable via Text Management.
                     $label = sprintf(_n(mulopimfwc_get_text_value('text_variation_in_stock'), mulopimfwc_get_text_value('text_variation_in_stock'), $stock_qty, 'multi-location-product-and-inventory-management-pro'), $stock_qty);
                 } elseif ($args['count_format'] === 'short') {
                     $label = sprintf(mulopimfwc_get_text_value('text_variation_in_stock'), $stock_qty);
@@ -13760,15 +13774,15 @@ if (!function_exists('mulopimfwc_get_values')) {
         $order_total = wp_strip_all_tags($order->get_formatted_order_total());
         $status_label = wc_get_order_status_name($order->get_status());
         $customer_name = trim($order->get_formatted_billing_full_name());
-        $title = sprintf(__('New order #%s at %s', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number(), $location_name);
+        $title = sprintf(/* translators: 1: order number, 2: location name */ __('New order #%1$s at %2$s', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number(), $location_name);
 
         $lines = [];
-        $lines[] = sprintf(__('Total: %s | Status: %s | Items: %d', 'multi-location-product-and-inventory-management-pro'), $order_total, $status_label, $order->get_item_count());
+        $lines[] = sprintf(/* translators: 1: order total, 2: status label, 3: item count */ __('Total: %1$s | Status: %2$s | Items: %3$d', 'multi-location-product-and-inventory-management-pro'), $order_total, $status_label, $order->get_item_count());
         if (!empty($customer_name)) {
-            $lines[] = sprintf(__('Customer: %s', 'multi-location-product-and-inventory-management-pro'), $customer_name);
+            $lines[] = sprintf(/* translators: %s: customer name */ __('Customer: %s', 'multi-location-product-and-inventory-management-pro'), $customer_name);
         }
         if (!empty($items)) {
-            $lines[] = sprintf(__('Items: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', array_slice($items, 0, 3)));
+            $lines[] = sprintf(/* translators: %s: comma-separated item names */ __('Items: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', array_slice($items, 0, 3)));
         }
 
         $channels = mulopimfwc_collect_social_channels($location_slug, $settings, true);
@@ -13784,7 +13798,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             mulopimfwc_send_social_message(
                 __('High value order', 'multi-location-product-and-inventory-management-pro'),
                 sprintf(
-                    __('Order #%s | Total: %s | Location: %s', 'multi-location-product-and-inventory-management-pro'),
+                    /* translators: 1: order number, 2: order total, 3: location name */
+                    __('Order #%1$s | Total: %2$s | Location: %3$s', 'multi-location-product-and-inventory-management-pro'),
                     $order->get_order_number(),
                     $order_total,
                     $location_name
@@ -13947,9 +13962,10 @@ if (!function_exists('mulopimfwc_get_values')) {
                 continue;
             }
 
-            $title = sprintf(__("Today's performance - %s", 'multi-location-product-and-inventory-management-pro'), $data['name']);
+            $title = sprintf(/* translators: %s: location name */ __("Today's performance - %s", 'multi-location-product-and-inventory-management-pro'), $data['name']);
             $message = sprintf(
-                __('Orders: %d | Items: %d | Revenue: %s', 'multi-location-product-and-inventory-management-pro'),
+                /* translators: 1: order count, 2: item count, 3: formatted revenue */
+                __('Orders: %1$d | Items: %2$d | Revenue: %3$s', 'multi-location-product-and-inventory-management-pro'),
                 $data['orders'],
                 $data['items'],
                 wp_strip_all_tags(wc_price($data['revenue']))
@@ -14027,10 +14043,10 @@ if (!function_exists('mulopimfwc_get_values')) {
         $status_label = wc_get_order_status_name($order->get_status());
 
         $lines = [
-            sprintf(__('Order #%s', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number()),
-            sprintf(__('Status: %s', 'multi-location-product-and-inventory-management-pro'), $status_label),
-            sprintf(__('Total: %s', 'multi-location-product-and-inventory-management-pro'), $order_total),
-            sprintf(__('Location: %s', 'multi-location-product-and-inventory-management-pro'), $location_name),
+            sprintf(/* translators: %s: order number */ __('Order #%s', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number()),
+            sprintf(/* translators: %s: order status label */ __('Status: %s', 'multi-location-product-and-inventory-management-pro'), $status_label),
+            sprintf(/* translators: %s: order total */ __('Total: %s', 'multi-location-product-and-inventory-management-pro'), $order_total),
+            sprintf(/* translators: %s: location name */ __('Location: %s', 'multi-location-product-and-inventory-management-pro'), $location_name),
         ];
 
         $channels = mulopimfwc_collect_social_channels($location_slug, $settings);
@@ -14070,7 +14086,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         if ($current_state === 'down') {
             mulopimfwc_send_social_message(
                 __('Site down alert', 'multi-location-product-and-inventory-management-pro'),
-                sprintf(__('We could not reach %s at %s.', 'multi-location-product-and-inventory-management-pro'), $site_name, home_url()),
+                sprintf(/* translators: 1: site name, 2: site URL */ __('We could not reach %1$s at %2$s.', 'multi-location-product-and-inventory-management-pro'), $site_name, home_url()),
                 $channels,
                 $settings,
                 home_url()
@@ -14078,7 +14094,7 @@ if (!function_exists('mulopimfwc_get_values')) {
         } else {
             mulopimfwc_send_social_message(
                 __('Site back online', 'multi-location-product-and-inventory-management-pro'),
-                sprintf(__('Monitoring shows %s is reachable again.', 'multi-location-product-and-inventory-management-pro'), $site_name),
+                sprintf(/* translators: %s: site name */ __('Monitoring shows %s is reachable again.', 'multi-location-product-and-inventory-management-pro'), $site_name),
                 $channels,
                 $settings,
                 home_url()
@@ -14227,14 +14243,15 @@ if (!function_exists('mulopimfwc_get_values')) {
             $date_format = 'Y-m-d';
         }
         $date_label = wp_date($date_format, current_time('timestamp'));
-        $title = sprintf(__('Digest preview - %s', 'multi-location-product-and-inventory-management-pro'), $date_label);
+        $title = sprintf(/* translators: %s: date label */ __('Digest preview - %s', 'multi-location-product-and-inventory-management-pro'), $date_label);
 
         if (empty($stats)) {
             $message = __('No orders found for today yet. This is a digest preview test.', 'multi-location-product-and-inventory-management-pro');
         } else {
             $lines = [];
             $lines[] = sprintf(
-                __('Totals - Orders: %d | Items: %d | Revenue: %s', 'multi-location-product-and-inventory-management-pro'),
+                /* translators: 1: order count, 2: item count, 3: formatted revenue */
+                __('Totals - Orders: %1$d | Items: %2$d | Revenue: %3$s', 'multi-location-product-and-inventory-management-pro'),
                 intval($totals['orders']),
                 intval($totals['items']),
                 wp_strip_all_tags(wc_price((float) $totals['revenue']))
@@ -14311,7 +14328,8 @@ if (!function_exists('mulopimfwc_get_values')) {
             mulopimfwc_send_social_message(
                 __('Low rating review', 'multi-location-product-and-inventory-management-pro'),
                 sprintf(
-                    __('%s received a %s★ review: "%s"', 'multi-location-product-and-inventory-management-pro'),
+                    /* translators: 1: product name, 2: rating number, 3: review excerpt */
+                    __('%1$s received a %2$s★ review: "%3$s"', 'multi-location-product-and-inventory-management-pro'),
                     $product_name,
                     $rating,
                     wp_trim_words(wp_strip_all_tags($comment->comment_content), 20, '...')
@@ -14751,11 +14769,11 @@ function mulopimfwc_send_test_notification_email_ajax()
     $lines = [];
     $lines[] = __('This is a test email sent from Multi Location Product & Inventory Management.', 'multi-location-product-and-inventory-management-pro');
     $lines[] = '';
-    $lines[] = sprintf(__('Recipient type: %s', 'multi-location-product-and-inventory-management-pro'), $type);
+    $lines[] = sprintf(/* translators: %s: recipient type */ __('Recipient type: %s', 'multi-location-product-and-inventory-management-pro'), $type);
     if (!empty($location_slug)) {
-        $lines[] = sprintf(__('Location: %s (%s)', 'multi-location-product-and-inventory-management-pro'), $location_name ? $location_name : $location_slug, $location_slug);
+        $lines[] = sprintf(/* translators: 1: location name or slug, 2: location slug */ __('Location: %1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $location_name ? $location_name : $location_slug, $location_slug);
     }
-    $lines[] = sprintf(__('Time: %s', 'multi-location-product-and-inventory-management-pro'), wp_date('Y-m-d H:i:s'));
+    $lines[] = sprintf(/* translators: %s: date/time string */ __('Time: %s', 'multi-location-product-and-inventory-management-pro'), wp_date('Y-m-d H:i:s'));
 
     $sent_any = false;
     foreach ($recipients as $to) {

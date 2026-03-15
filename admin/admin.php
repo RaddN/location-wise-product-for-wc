@@ -1229,6 +1229,7 @@ JS;
                 'from_currency' => $from_currency,
                 'to_currency' => $to_currency,
                 'message' => sprintf(
+                    /* translators: 1: source currency code, 2: target currency code */
                     __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management-pro'),
                     $from_currency,
                     $to_currency
@@ -1248,6 +1249,7 @@ JS;
             'from_currency' => $from_currency,
             'to_currency' => $to_currency,
             'message' => sprintf(
+                /* translators: 1: source currency code, 2: target currency code */
                 __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management-pro'),
                 $from_currency,
                 $to_currency
@@ -1521,7 +1523,7 @@ JS;
             <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                 <?php foreach ($zone_methods as $zid => $methods): ?>
                     <?php if (!empty($methods)): ?>
-                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management-pro'), $zones[$zid] ?? $zid)); ?>">
+                        <optgroup label="<?php echo esc_attr(sprintf(/* translators: %s: shipping zone name or ID */ __('Zone: %s', 'multi-location-product-and-inventory-management-pro'), $zones[$zid] ?? $zid)); ?>">
                             <?php foreach ($methods as $instance_id => $label): ?>
                                 <option value="<?php echo esc_attr($zid . ':' . $instance_id); ?>"><?php echo esc_html($label); ?></option>
                             <?php endforeach; ?>
@@ -1571,7 +1573,7 @@ JS;
         <div class="form-field">
             <label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management-pro'); ?>">
-                <option value="" selected><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
+                <option value="" selected><?php echo esc_html(sprintf(/* translators: %s: default currency label (e.g. "USD - US Dollar") */ __('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
                 <?php foreach ($currencies as $currency_code => $currency_name): ?>
                     <?php
                     $currency_code = strtoupper((string) $currency_code);
@@ -1590,7 +1592,7 @@ JS;
         <div class="form-field">
             <label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label>
             <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
-                <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
+                <option value=""><?php echo esc_html(sprintf(/* translators: %s: currency position label */ __('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
                 <?php foreach ($currency_positions as $position_key => $position_label): ?>
                     <option value="<?php echo esc_attr($position_key); ?>"><?php echo esc_html($position_label); ?></option>
                 <?php endforeach; ?>
@@ -1623,6 +1625,7 @@ JS;
                 <?php
                 echo esc_html(
                     sprintf(
+                        /* translators: %s: WooCommerce default currency code */
                         __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management-pro'),
                         $default_currency_code
                     )
@@ -1959,7 +1962,7 @@ JS;
             <td>
                 <select name="shipping_methods[]" id="shipping_methods" class="mulopimfwc-select2" multiple style="min-width: 420px;" data-placeholder="<?php esc_attr_e('Select shipping methods...', 'multi-location-product-and-inventory-management-pro'); ?>">
                     <?php foreach ($zone_methods as $zid => $methods): if (empty($methods)) continue; ?>
-                        <optgroup label="<?php echo esc_attr(sprintf(__('Zone: %s', 'multi-location-product-and-inventory-management-pro'), $zones[$zid] ?? $zid)); ?>">
+                        <optgroup label="<?php echo esc_attr(sprintf(/* translators: %s: shipping zone name or ID */ __('Zone: %s', 'multi-location-product-and-inventory-management-pro'), $zones[$zid] ?? $zid)); ?>">
                             <?php foreach ($methods as $instance_id => $label):
                                 $val = $zid . ':' . $instance_id;
                             ?>
@@ -2013,7 +2016,7 @@ JS;
             <th scope="row"><label for="location_currency"><?php _e('Currency', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="location_currency" id="location_currency" class="mulopimfwc-select2" style="min-width: 320px;" data-placeholder="<?php esc_attr_e('Search currency...', 'multi-location-product-and-inventory-management-pro'); ?>">
-                    <option value="" <?php selected((string) $location_currency, ''); ?>><?php echo esc_html(sprintf(__('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
+                    <option value="" <?php selected((string) $location_currency, ''); ?>><?php echo esc_html(sprintf(/* translators: %s: default currency label (e.g. "USD - US Dollar") */ __('Default Value (%s) - No Changes', 'multi-location-product-and-inventory-management-pro'), $default_currency_label)); ?></option>
                     <?php foreach ($currencies as $currency_code => $currency_name): ?>
                         <?php
                         $currency_code = strtoupper((string) $currency_code);
@@ -2036,7 +2039,7 @@ JS;
             <th scope="row"><label for="location_currency_position"><?php _e('Currency Position', 'multi-location-product-and-inventory-management-pro'); ?></label></th>
             <td>
                 <select name="location_currency_position" id="location_currency_position" style="min-width: 220px;">
-                    <option value=""><?php echo esc_html(sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
+                    <option value=""><?php echo esc_html(sprintf(/* translators: %s: currency position label */ __('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $currency_positions[$default_currency_position])); ?></option>
                     <?php foreach ($currency_positions as $position_key => $position_label): ?>
                         <option value="<?php echo esc_attr($position_key); ?>" <?php selected($location_currency_position, $position_key); ?>>
                             <?php echo esc_html($position_label); ?>
@@ -2073,6 +2076,7 @@ JS;
                     <?php
                     echo esc_html(
                         sprintf(
+                            /* translators: %s: WooCommerce default currency code */
                             __('Rate from WooCommerce currency (%s) to selected currency. Use Sync when Auto is selected.', 'multi-location-product-and-inventory-management-pro'),
                             $default_currency_code
                         )
@@ -2535,7 +2539,7 @@ JS;
                 echo '<div class="mulopimfwc-rate-currency-popover" aria-hidden="true">';
                 echo '<select class="mulopimfwc-rate-currency" aria-label="' . esc_attr__('Currency', 'multi-location-product-and-inventory-management-pro') . '" data-placeholder="' . esc_attr__('Search currency...', 'multi-location-product-and-inventory-management-pro') . '">';
                 $default_currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($default_currency) : '';
-                $default_currency_label = sprintf(__('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $default_currency);
+                $default_currency_label = sprintf(/* translators: %s: default currency code */ __('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $default_currency);
                 if ($default_currency_symbol !== '') {
                     $default_currency_label .= ' (' . $default_currency_symbol . ')';
                 }
@@ -3801,6 +3805,7 @@ JS;
         update_term_meta($term_id, 'is_active', $status);
 
         $status_text = $status === '1' ? __('Active', 'multi-location-product-and-inventory-management-pro') : __('Inactive', 'multi-location-product-and-inventory-management-pro');
+        /* translators: %s: location status (Active or Inactive) */
         wp_send_json_success(array('message' => sprintf(__('Location status updated to %s', 'multi-location-product-and-inventory-management-pro'), $status_text)));
     }
 
@@ -3901,6 +3906,7 @@ JS;
 
         wp_send_json_success(array(
             'message' => sprintf(
+                /* translators: 1: source currency code, 2: target currency code */
                 __('Rate synced for %1$s -> %2$s.', 'multi-location-product-and-inventory-management-pro'),
                 $default_currency,
                 $target_currency
@@ -4776,12 +4782,14 @@ JS;
         if ($insufficient > 0) {
             $snapshot['status'] = 'insufficient';
             $snapshot['summary'] = sprintf(
+                /* translators: %d: number of items with insufficient stock */
                 __('Insufficient stock for %d item(s)', 'multi-location-product-and-inventory-management-pro'),
                 $insufficient
             );
         } elseif ($backorder > 0) {
             $snapshot['status'] = 'backorder';
             $snapshot['summary'] = sprintf(
+                /* translators: %d: number of items requiring backorder */
                 __('Backorder required for %d item(s)', 'multi-location-product-and-inventory-management-pro'),
                 $backorder
             );
@@ -4994,6 +5002,7 @@ JS;
                 return [
                     'success' => false,
                     'message' => sprintf(
+                        /* translators: 1: location name, 2: product name */
                         __('Location "%1$s" is not assigned to product "%2$s"', 'multi-location-product-and-inventory-management-pro'),
                         $new_location_term->name,
                         $item->get_name()
@@ -5087,6 +5096,7 @@ JS;
 
             // Add order note
             $note_message = sprintf(
+                /* translators: %s: location name */
                 __('All order items assigned to location: %s', 'multi-location-product-and-inventory-management-pro'),
                 $new_location_term->name
             );
@@ -5103,6 +5113,7 @@ JS;
             'price_changed' => $price_changed,
             'items_updated' => $items_updated,
             'message' => sprintf(
+                /* translators: %d: number of order items updated */
                 __('%d item(s) updated successfully', 'multi-location-product-and-inventory-management-pro'),
                 $items_updated
             )
@@ -5663,6 +5674,7 @@ JS;
 
         if (!empty($non_editable)) {
             $message = sprintf(
+                /* translators: %d: number of non-editable orders */
                 _n(
                     '%d selected order is not editable. Remove it to continue.',
                     '%d selected orders are not editable. Remove them to continue.',
@@ -5713,12 +5725,14 @@ JS;
         }
 
         $message = sprintf(
+            /* translators: %d: number of orders updated */
             __('Assigned location to %d order(s).', 'multi-location-product-and-inventory-management-pro'),
             $updated_count
         );
 
         if (!empty($failed)) {
             $message .= ' ' . sprintf(
+                /* translators: %d: number of orders that could not be updated */
                 __('%d order(s) could not be updated.', 'multi-location-product-and-inventory-management-pro'),
                 count($failed)
             );
@@ -6068,6 +6082,7 @@ JS;
             $update_result = $this->update_all_order_items_location($order, $new_location);
             if (!$update_result['success']) {
                 $order->add_order_note(sprintf(
+                    /* translators: %s: error message explaining why assignment failed */
                     __('Location assignment failed: %s', 'multi-location-product-and-inventory-management-pro'),
                     $update_result['message']
                 ));

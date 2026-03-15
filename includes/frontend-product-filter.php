@@ -519,12 +519,14 @@ class Location_Wise_Products_Filter
 
         if ($total <= $posts_per_page) {
             $result_count_text = sprintf(
-                _n('Showing the single result', 'Showing all %d results', $total, 'multi-location-product-and-inventory-management-pro' ),
+                /* translators: %d: number of results */
+                _n('Showing the single result (%d)', 'Showing all %d results', $total, 'multi-location-product-and-inventory-management-pro'),
                 $total
             );
         } else {
             $result_count_text = sprintf(
-                _nx('Showing the single result', 'Showing %1$d&ndash;%2$d of %3$d results', $total, '%1$d = first, %2$d = last, %3$d = total', 'multi-location-product-and-inventory-management-pro' ),
+                /* translators: 1: first result number, 2: last result number, 3: total results */
+                _nx('Showing %1$d&ndash;%2$d of %3$d results', 'Showing %1$d&ndash;%2$d of %3$d results', $total, 'result range', 'multi-location-product-and-inventory-management-pro'),
                 $first,
                 $last,
                 $total

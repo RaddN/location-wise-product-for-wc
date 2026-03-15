@@ -483,7 +483,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     {
         $variation_id = isset($variation['id']) ? (int) $variation['id'] : 0;
         if (empty($variation['attributes']) || !is_array($variation['attributes'])) {
-            return sprintf(__('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
+            return sprintf(/* translators: %d: variation ID */ __('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
         }
 
         $parts = [];
@@ -498,7 +498,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         return !empty($parts)
             ? implode(', ', $parts)
-            : sprintf(__('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
+            : sprintf(/* translators: %d: variation ID */ __('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
     }
 
     private function classic_number_input($field, $value, $step = '1', $min = '0', $disabled = false, $extra_class = '')
@@ -2111,6 +2111,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     add_action('admin_notices', function() use ($count) {
                         echo '<div class="notice notice-success is-dismissible"><p>';
                         printf(
+                            /* translators: %d: number of products */
                             esc_html__('Successfully assigned %d products to location.', 'multi-location-product-and-inventory-management-pro'),
                             $count
                         );
@@ -2132,6 +2133,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     add_action('admin_notices', function() use ($count) {
                         echo '<div class="notice notice-success is-dismissible"><p>';
                         printf(
+                            /* translators: %d: number of products */
                             esc_html__('Successfully removed %d products from location.', 'multi-location-product-and-inventory-management-pro'),
                             $count
                         );
@@ -2154,6 +2156,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     add_action('admin_notices', function() use ($count) {
                         echo '<div class="notice notice-success is-dismissible"><p>';
                         printf(
+                            /* translators: %d: number of products */
                             esc_html__('Successfully moved %d product(s) to trash.', 'multi-location-product-and-inventory-management-pro'),
                             $count
                         );

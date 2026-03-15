@@ -930,7 +930,7 @@ class Mulopimfwc_Customer_Location_Insights
 
                                 <?php if ($popularity_data && $popularity_data['purchase_count'] > 0): ?>
                                     <div class="mulopimfwc-recommendation-stats">
-                                        <?php echo esc_html(sprintf(_n('%d purchase', '%d purchases', $popularity_data['purchase_count'], 'multi-location-product-and-inventory-management-pro'), $popularity_data['purchase_count'])); ?>
+                                        <?php echo esc_html(sprintf(/* translators: %d: number of purchases */ _n('%d purchase', '%d purchases', $popularity_data['purchase_count'], 'multi-location-product-and-inventory-management-pro'), $popularity_data['purchase_count'])); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -1128,12 +1128,12 @@ class Mulopimfwc_Customer_Location_Insights
                 echo '<img class="plugin-icon" src="' . $icon . '" alt="" />';
             }
             if ($details_url) {
-                echo '<h3><a class="thickbox open-plugin-details-modal" href="' . esc_url($details_url) . '" aria-label="' . esc_attr(sprintf(__('More details about %s', 'multi-location-product-and-inventory-management-pro'), $name)) . '">' . esc_html($name) . '</a></h3>';
+                echo '<h3><a class="thickbox open-plugin-details-modal" href="' . esc_url($details_url) . '" aria-label="' . esc_attr(sprintf(/* translators: %s: plugin name */ __('More details about %s', 'multi-location-product-and-inventory-management-pro'), $name)) . '">' . esc_html($name) . '</a></h3>';
             } else {
                 echo '<h3>' . esc_html($name) . '</h3>';
             }
             if (!empty($author)) {
-                echo '<p class="author">' . sprintf(esc_html__('By %s', 'multi-location-product-and-inventory-management-pro'), wp_kses_post($author)) . '</p>';
+                echo '<p class="author">' . sprintf(/* translators: %s: author name */ esc_html__('By %s', 'multi-location-product-and-inventory-management-pro'), wp_kses_post($author)) . '</p>';
             }
             echo '</div>';
             echo '<div class="action-links"><ul class="plugin-action-buttons"><li>' . $action_html . '</li></ul></div>';
@@ -1142,10 +1142,10 @@ class Mulopimfwc_Customer_Location_Insights
 
             echo '<div class="plugin-card-bottom">';
             echo '<div class="vers column-rating">';
-            echo '<span>' . sprintf(esc_html__('Version %s', 'multi-location-product-and-inventory-management-pro'), esc_html($version)) . '</span>';
+            echo '<span>' . sprintf(/* translators: %s: version number */ esc_html__('Version %s', 'multi-location-product-and-inventory-management-pro'), esc_html($version)) . '</span>';
             if ($active_installs !== null) {
                 $installs = number_format_i18n((int) $active_installs);
-                echo '<span style="margin-left:10px;">' . sprintf(esc_html__('%s+ active installs', 'multi-location-product-and-inventory-management-pro'), esc_html($installs)) . '</span>';
+                echo '<span style="margin-left:10px;">' . sprintf(/* translators: %s: number of active installs */ esc_html__('%s+ active installs', 'multi-location-product-and-inventory-management-pro'), esc_html($installs)) . '</span>';
             }
             echo '</div>';
             echo '<div class="column-compatibility"><span class="compatibility-compatible">' . esc_html__('Compatible with your version of WordPress', 'multi-location-product-and-inventory-management-pro') . '</span></div>';
@@ -1384,7 +1384,7 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         if (!mulopimfwc_user_can_run_reports()) {
-            wp_die(__('You do not have sufficient permissions to access this page.'));
+            wp_die(__('You do not have sufficient permissions to access this page.', 'multi-location-product-and-inventory-management-pro'));
         }
 
         $analytics = $this->get_analytics_snapshot();
@@ -2607,7 +2607,7 @@ function mulopimfwc_ajax_export_analytics()
     }
 
     if (!mulopimfwc_user_can_export_reports()) {
-        wp_die(__('You do not have permission to export analytics.'));
+        wp_die(__('You do not have permission to export analytics.', 'multi-location-product-and-inventory-management-pro'));
     }
 
     $location_slug = isset($_POST['location']) ? sanitize_text_field(wp_unslash(rawurldecode($_POST['location']))) : null;

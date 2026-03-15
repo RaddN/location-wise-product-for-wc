@@ -142,7 +142,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         // FIXED: Add input size limit to prevent DoS attacks and memory exhaustion
         $max_items = apply_filters('mulopimfwc_max_bulk_sync_items', 1000);
         if (count($items) > $max_items) {
-            return new WP_Error('too_many_items', sprintf(__('Too many items. Maximum %d items per request. Please split your request into smaller batches.', 'multi-location-product-and-inventory-management-pro'), $max_items), array('status' => 400));
+            return new WP_Error('too_many_items', sprintf(/* translators: %d: maximum number of items allowed per request */ __('Too many items. Maximum %d items per request. Please split your request into smaller batches.', 'multi-location-product-and-inventory-management-pro'), $max_items), array('status' => 400));
         }
         
         // FIXED: Use database transaction for data integrity
@@ -163,7 +163,7 @@ class MULOPIMFWC_Inventory_Sync_API {
                 $results['success']++;
             } else {
                 $results['failed']++;
-                $results['errors'][] = sprintf(__('Item %d: %s', 'multi-location-product-and-inventory-management-pro'), $index + 1, $result['error']);
+                $results['errors'][] = sprintf(/* translators: 1: item index, 2: error message */ __('Item %1$d: %2$s', 'multi-location-product-and-inventory-management-pro'), $index + 1, $result['error']);
                 
                 // If too many failures, rollback transaction
                 if ($results['failed'] > ($max_items * 0.5)) { // More than 50% failures
@@ -182,7 +182,7 @@ class MULOPIMFWC_Inventory_Sync_API {
         
         return rest_ensure_response(array(
             'success' => true,
-            'message' => sprintf(__('Processed %d items. %d succeeded, %d failed.', 'multi-location-product-and-inventory-management-pro'), count($items), $results['success'], $results['failed']),
+            'message' => sprintf(/* translators: 1: total items, 2: succeeded count, 3: failed count */ __('Processed %1$d items. %2$d succeeded, %3$d failed.', 'multi-location-product-and-inventory-management-pro'), count($items), $results['success'], $results['failed']),
             'results' => $results,
         ));
     }

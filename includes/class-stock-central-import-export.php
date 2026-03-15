@@ -137,6 +137,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         if ((int) $file['size'] > $max_file_size) {
             wp_send_json_error(array(
                 'message' => sprintf(
+                    /* translators: %s: formatted maximum file size */
                     __('CSV file is too large. Maximum allowed size is %s.', 'multi-location-product-and-inventory-management-pro'),
                     size_format($max_file_size)
                 ),
@@ -389,6 +390,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         $this->push_import_log(
             $state,
             sprintf(
+                /* translators: %s: import mode (e.g. dry run) */
                 __('Import pipeline started. Mode: %s', 'multi-location-product-and-inventory-management-pro'),
                 str_replace('_', ' ', (string) $runtime['mode'])
             )
@@ -396,6 +398,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         $this->push_import_log(
             $state,
             sprintf(
+                /* translators: %d: total number of CSV rows */
                 __('Total CSV rows: %d', 'multi-location-product-and-inventory-management-pro'),
                 (int) $state['summary']['rows_total']
             )
@@ -455,7 +458,8 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         $this->push_import_log(
             $state,
             sprintf(
-                __('Import pipeline finished in %s seconds. Processed rows: %d, failed rows: %d', 'multi-location-product-and-inventory-management-pro'),
+                /* translators: 1: duration in seconds, 2: processed row count, 3: failed row count */
+                __('Import pipeline finished in %1$s seconds. Processed rows: %2$d, failed rows: %3$d', 'multi-location-product-and-inventory-management-pro'),
                 number_format((float) $state['summary']['duration_seconds'], 3, '.', ''),
                 (int) $state['summary']['rows_processed'],
                 (int) $state['summary']['rows_failed']
@@ -1064,7 +1068,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             if ($line > $max_rows + 1) {
                 fclose($handle);
                 return array(
-                    'error' => sprintf(__('CSV row limit exceeded. Maximum rows allowed: %d.', 'multi-location-product-and-inventory-management-pro'), $max_rows),
+                    'error' => sprintf(/* translators: %d: maximum rows allowed */ __('CSV row limit exceeded. Maximum rows allowed: %d.', 'multi-location-product-and-inventory-management-pro'), $max_rows),
                     'headers' => $headers,
                     'rows' => array(),
                 );
@@ -1098,7 +1102,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         $required = array('schema_version', 'row_type', 'row_key');
         foreach ($required as $column) {
             if (!in_array($column, $headers, true)) {
-                return sprintf(__('Invalid canonical CSV format. Missing required column: %s', 'multi-location-product-and-inventory-management-pro'), $column);
+                return sprintf(/* translators: %s: column name */ __('Invalid canonical CSV format. Missing required column: %s', 'multi-location-product-and-inventory-management-pro'), $column);
             }
         }
 
@@ -1115,7 +1119,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         }
         $major = (int) explode('.', $version)[0];
         if ($major !== (int) self::SUPPORTED_SCHEMA_MAJOR) {
-            return sprintf(__('Unsupported schema version %s. Supported major version is %d.', 'multi-location-product-and-inventory-management-pro'), $version, self::SUPPORTED_SCHEMA_MAJOR);
+            return sprintf(/* translators: 1: schema version string, 2: supported major version number */ __('Unsupported schema version %1$s. Supported major version is %2$d.', 'multi-location-product-and-inventory-management-pro'), $version, self::SUPPORTED_SCHEMA_MAJOR);
         }
         return '';
     }
@@ -1177,6 +1181,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         $this->push_import_log(
             $state,
             sprintf(
+                /* translators: %s: import mode (e.g. dry run) */
                 __('Import pipeline started. Mode: %s', 'multi-location-product-and-inventory-management-pro'),
                 str_replace('_', ' ', (string) $runtime['mode'])
             )
@@ -1184,6 +1189,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         $this->push_import_log(
             $state,
             sprintf(
+                /* translators: %d: total number of CSV rows */
                 __('Total CSV rows: %d', 'multi-location-product-and-inventory-management-pro'),
                 (int) $state['summary']['rows_total']
             )
@@ -1196,6 +1202,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %s: comma-separated row type counts */
                     __('Row type distribution: %s', 'multi-location-product-and-inventory-management-pro'),
                     implode(', ', $parts)
                 )
@@ -1212,6 +1219,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: 1-7: counts for rows, terms new/updated, locations new/updated, errors, warnings */
                     __('Pass 1/6 complete. Rows +%1$d | Terms +%2$d new, +%3$d updated | Locations +%4$d new, +%5$d updated | Errors +%6$d | Warnings +%7$d', 'multi-location-product-and-inventory-management-pro'),
                     (int) $state['summary']['rows_processed'] - (int) $before['rows_processed'],
                     (int) $state['summary']['terms_created'] - (int) $before['terms_created'],
@@ -1233,6 +1241,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: 1-5: counts for rows, media mapped, media sideloaded, errors, warnings */
                     __('Pass 2/6 complete. Rows +%1$d | Media mapped +%2$d | Media sideloaded +%3$d | Errors +%4$d | Warnings +%5$d', 'multi-location-product-and-inventory-management-pro'),
                     (int) $state['summary']['rows_processed'] - (int) $before['rows_processed'],
                     (int) $state['summary']['media_mapped'] - (int) $before['media_mapped'],
@@ -1252,6 +1261,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: 1-5: counts for rows, products created/updated, errors, warnings */
                     __('Pass 3/6 complete. Rows +%1$d | Products +%2$d created, +%3$d updated | Errors +%4$d | Warnings +%5$d', 'multi-location-product-and-inventory-management-pro'),
                     (int) $state['summary']['rows_processed'] - (int) $before['rows_processed'],
                     (int) $state['summary']['products_created'] - (int) $before['products_created'],
@@ -1271,6 +1281,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: 1-5: counts for rows, variations created/updated, errors, warnings */
                     __('Pass 4/6 complete. Rows +%1$d | Variations +%2$d created, +%3$d updated | Errors +%4$d | Warnings +%5$d', 'multi-location-product-and-inventory-management-pro'),
                     (int) $state['summary']['rows_processed'] - (int) $before['rows_processed'],
                     (int) $state['summary']['variations_created'] - (int) $before['variations_created'],
@@ -1290,6 +1301,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: 1-4: counts for rows, relationships updated, errors, warnings */
                     __('Pass 5/6 complete. Rows +%1$d | Relationships updated +%2$d | Errors +%3$d | Warnings +%4$d', 'multi-location-product-and-inventory-management-pro'),
                     (int) $state['summary']['rows_processed'] - (int) $before['rows_processed'],
                     (int) $state['summary']['relationships_updated'] - (int) $before['relationships_updated'],
@@ -1308,6 +1320,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: 1-4: counts for rows, location inventory updated, errors, warnings */
                     __('Pass 6/6 complete. Rows +%1$d | Location inventory updated +%2$d | Errors +%3$d | Warnings +%4$d', 'multi-location-product-and-inventory-management-pro'),
                     (int) $state['summary']['rows_processed'] - (int) $before['rows_processed'],
                     (int) $state['summary']['location_inventory_updated'] - (int) $before['location_inventory_updated'],
@@ -1327,6 +1340,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %s: error message */
                     __('Fatal import error: %s', 'multi-location-product-and-inventory-management-pro'),
                     $state['fatal_error']
                 ),
@@ -1338,7 +1352,8 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         $this->push_import_log(
             $state,
             sprintf(
-                __('Import pipeline finished in %s seconds. Processed rows: %d, failed rows: %d', 'multi-location-product-and-inventory-management-pro'),
+                /* translators: 1: duration in seconds, 2: processed row count, 3: failed row count */
+                __('Import pipeline finished in %1$s seconds. Processed rows: %2$d, failed rows: %3$d', 'multi-location-product-and-inventory-management-pro'),
                 number_format((float) $state['summary']['duration_seconds'], 3, '.', ''),
                 (int) $state['summary']['rows_processed'],
                 (int) $state['summary']['rows_failed']
@@ -1382,6 +1397,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %d: number of taxonomy rows */
                     __('Taxonomy rows queued: %d', 'multi-location-product-and-inventory-management-pro'),
                     $taxonomy_total
                 )
@@ -1397,11 +1413,11 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $description = (string) $row['term_description'];
 
             if ($taxonomy === '' || $slug === '') {
-                $this->row_error($state, $row, sprintf(__('Line %d: taxonomy and term_slug are required for taxonomy_term rows.', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: taxonomy and term_slug are required for taxonomy_term rows.', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
             if (!$this->ensure_import_taxonomy_exists($taxonomy, $runtime, $state)) {
-                $this->row_error($state, $row, sprintf(__('Line %d: taxonomy %s does not exist on target site.', 'multi-location-product-and-inventory-management-pro'), $line, $taxonomy));
+                $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: taxonomy name */ __('Line %1$d: taxonomy %2$s does not exist on target site.', 'multi-location-product-and-inventory-management-pro'), $line, $taxonomy));
                 continue;
             }
 
@@ -1412,7 +1428,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $state['summary']['terms_updated']++;
             } else {
                 if ($runtime['mode'] === 'update_only') {
-                    $this->row_error($state, $row, sprintf(__('Line %d: term %s in %s not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line, $slug, $taxonomy));
+                    $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: term slug, 3: taxonomy name */ __('Line %1$d: term %2$s in %3$s not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line, $slug, $taxonomy));
                     continue;
                 }
 
@@ -1422,7 +1438,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                         'description' => $description,
                     ));
                     if (is_wp_error($created)) {
-                        $this->row_error($state, $row, sprintf(__('Line %d: failed to create term %s (%s).', 'multi-location-product-and-inventory-management-pro'), $line, $slug, $created->get_error_message()));
+                        $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: term slug, 3: error message */ __('Line %1$d: failed to create term %2$s (%3$s).', 'multi-location-product-and-inventory-management-pro'), $line, $slug, $created->get_error_message()));
                         continue;
                     }
                     $term_id = (int) $created['term_id'];
@@ -1462,6 +1478,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->push_import_log(
                     $state,
                     sprintf(
+                        /* translators: 1: current position, 2: total count */
                         __('Taxonomy progress: %1$d/%2$d', 'multi-location-product-and-inventory-management-pro'),
                         $position,
                         $taxonomy_total
@@ -1507,6 +1524,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %d: number of location rows */
                     __('Location rows queued: %d', 'multi-location-product-and-inventory-management-pro'),
                     $location_total
                 )
@@ -1527,7 +1545,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $parent_slug = sanitize_title((string) $row['location_parent_slug']);
 
             if ($slug === '') {
-                $this->row_error($state, $row, sprintf(__('Line %d: location_slug is required for location rows.', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: location_slug is required for location rows.', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
 
@@ -1538,7 +1556,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $state['summary']['locations_updated']++;
             } else {
                 if ($runtime['mode'] === 'update_only') {
-                    $this->row_error($state, $row, sprintf(__('Line %d: location %s not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line, $slug));
+                    $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: location slug */ __('Line %1$d: location %2$s not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line, $slug));
                     continue;
                 }
                 if ($runtime['mode'] !== 'dry_run') {
@@ -1547,7 +1565,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                         'description' => $description,
                     ));
                     if (is_wp_error($created)) {
-                        $this->row_error($state, $row, sprintf(__('Line %d: failed to create location %s (%s).', 'multi-location-product-and-inventory-management-pro'), $line, $slug, $created->get_error_message()));
+                        $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: location slug, 3: error message */ __('Line %1$d: failed to create location %2$s (%3$s).', 'multi-location-product-and-inventory-management-pro'), $line, $slug, $created->get_error_message()));
                         continue;
                     }
                     $location_id = (int) $created['term_id'];
@@ -1583,6 +1601,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->push_import_log(
                     $state,
                     sprintf(
+                        /* translators: 1: current position, 2: total count */
                         __('Location progress: %1$d/%2$d', 'multi-location-product-and-inventory-management-pro'),
                         $position,
                         $location_total
@@ -1624,6 +1643,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %d: number of media reference rows */
                     __('Media reference rows queued: %d', 'multi-location-product-and-inventory-management-pro'),
                     $media_total
                 )
@@ -1650,6 +1670,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->push_import_log(
                     $state,
                     sprintf(
+                        /* translators: 1: current position, 2: total count */
                         __('Media mapping progress: %1$d/%2$d', 'multi-location-product-and-inventory-management-pro'),
                         $position,
                         $media_total
@@ -1667,6 +1688,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %d: number of product rows */
                     __('Product rows queued: %d', 'multi-location-product-and-inventory-management-pro'),
                     $product_total
                 )
@@ -1684,21 +1706,21 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
 
             $match = $this->match_product_by_identity($sku, $slug, 'product');
             if (!empty($match['error'])) {
-                $this->row_error($state, $row, sprintf(__('Line %d: %s', 'multi-location-product-and-inventory-management-pro'), $line, $match['error']));
+                $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: error message */ __('Line %1$d: %2$s', 'multi-location-product-and-inventory-management-pro'), $line, $match['error']));
                 continue;
             }
 
             $product_id = isset($match['id']) ? (int) $match['id'] : 0;
             $is_create = $product_id <= 0;
             if ($is_create && $runtime['mode'] === 'update_only') {
-                $this->row_error($state, $row, sprintf(__('Line %d: product not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: product not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
 
             if ($runtime['mode'] !== 'dry_run') {
                 $product = $is_create ? $this->create_wc_product_by_type($type) : wc_get_product($product_id);
                 if (!$product) {
-                    $this->row_error($state, $row, sprintf(__('Line %d: unable to instantiate product object.', 'multi-location-product-and-inventory-management-pro'), $line));
+                    $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: unable to instantiate product object.', 'multi-location-product-and-inventory-management-pro'), $line));
                     continue;
                 }
                 if (!$is_create) {
@@ -1708,7 +1730,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->apply_common_product_fields($product, $row, $runtime);
                 $saved_id = (int) $product->save();
                 if ($saved_id <= 0) {
-                    $this->row_error($state, $row, sprintf(__('Line %d: failed to save product.', 'multi-location-product-and-inventory-management-pro'), $line));
+                    $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: failed to save product.', 'multi-location-product-and-inventory-management-pro'), $line));
                     continue;
                 }
                 $product_id = $saved_id;
@@ -1748,6 +1770,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->push_import_log(
                     $state,
                     sprintf(
+                        /* translators: 1: current position, 2: total count */
                         __('Product import progress: %1$d/%2$d', 'multi-location-product-and-inventory-management-pro'),
                         $position,
                         $product_total
@@ -1765,6 +1788,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %d: number of variation rows */
                     __('Variation rows queued: %d', 'multi-location-product-and-inventory-management-pro'),
                     $variation_total
                 )
@@ -1777,21 +1801,21 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $parent_key = (string) $row['parent_key'];
             $parent_id = $this->resolve_parent_product_id($parent_key, $state);
             if ($parent_id === 0) {
-                $this->row_error($state, $row, sprintf(__('Line %d: parent product for variation could not be resolved.', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: parent product for variation could not be resolved.', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
 
             $attrs = $this->decode_json_field($row['attributes_json']);
             $match = $this->match_variation_by_identity($sku, $parent_id, $attrs);
             if (!empty($match['error'])) {
-                $this->row_error($state, $row, sprintf(__('Line %d: %s', 'multi-location-product-and-inventory-management-pro'), $line, $match['error']));
+                $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: error message */ __('Line %1$d: %2$s', 'multi-location-product-and-inventory-management-pro'), $line, $match['error']));
                 continue;
             }
 
             $variation_id = isset($match['id']) ? (int) $match['id'] : 0;
             $is_create = $variation_id <= 0;
             if ($is_create && $runtime['mode'] === 'update_only') {
-                $this->row_error($state, $row, sprintf(__('Line %d: variation not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: variation not found (update-only mode).', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
 
@@ -1807,7 +1831,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 }
 
                 if (!$variation) {
-                    $this->row_error($state, $row, sprintf(__('Line %d: unable to instantiate variation object.', 'multi-location-product-and-inventory-management-pro'), $line));
+                    $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: unable to instantiate variation object.', 'multi-location-product-and-inventory-management-pro'), $line));
                     continue;
                 }
 
@@ -1822,7 +1846,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 }
                 $saved_id = (int) $variation->save();
                 if ($saved_id <= 0) {
-                    $this->row_error($state, $row, sprintf(__('Line %d: failed to save variation.', 'multi-location-product-and-inventory-management-pro'), $line));
+                    $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: failed to save variation.', 'multi-location-product-and-inventory-management-pro'), $line));
                     continue;
                 }
                 $variation_id = $saved_id;
@@ -1857,6 +1881,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->push_import_log(
                     $state,
                     sprintf(
+                        /* translators: 1: current position, 2: total count */
                         __('Variation import progress: %1$d/%2$d', 'multi-location-product-and-inventory-management-pro'),
                         $position,
                         $variation_total
@@ -1874,6 +1899,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %d: number of relationship rows */
                     __('Relationship rows queued: %d', 'multi-location-product-and-inventory-management-pro'),
                     $relationship_total
                 )
@@ -1884,7 +1910,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $line = isset($row['__line']) ? (int) $row['__line'] : 0;
             $source_id = $this->resolve_product_id_from_row($row, $state);
             if ($source_id === 0) {
-                $this->row_error($state, $row, sprintf(__('Line %d: relationship source product not found.', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: relationship source product not found.', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
 
@@ -1902,7 +1928,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             if ($runtime['mode'] !== 'dry_run') {
                 $product = wc_get_product($source_id);
                 if (!$product) {
-                    $this->row_error($state, $row, sprintf(__('Line %d: could not load source product.', 'multi-location-product-and-inventory-management-pro'), $line));
+                    $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: could not load source product.', 'multi-location-product-and-inventory-management-pro'), $line));
                     continue;
                 }
                 $this->capture_product_snapshot_once($source_id, $state);
@@ -1924,6 +1950,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->push_import_log(
                     $state,
                     sprintf(
+                        /* translators: 1: current position, 2: total count */
                         __('Relationship progress: %1$d/%2$d', 'multi-location-product-and-inventory-management-pro'),
                         $position,
                         $relationship_total
@@ -1941,6 +1968,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->push_import_log(
                 $state,
                 sprintf(
+                    /* translators: %d: number of location inventory rows */
                     __('Location inventory rows queued: %d', 'multi-location-product-and-inventory-management-pro'),
                     $location_inventory_total
                 )
@@ -1951,19 +1979,19 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $line = isset($row['__line']) ? (int) $row['__line'] : 0;
             $location_slug = sanitize_title((string) $row['location_slug']);
             if ($location_slug === '') {
-                $this->row_error($state, $row, sprintf(__('Line %d: location_slug is required for location_inventory rows.', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: location_slug is required for location_inventory rows.', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
 
             $location_id = $this->resolve_location_id($location_slug, $runtime, $state);
             if ($location_id === 0) {
-                $this->row_error($state, $row, sprintf(__('Line %d: location %s could not be resolved.', 'multi-location-product-and-inventory-management-pro'), $line, $location_slug));
+                $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: location slug */ __('Line %1$d: location %2$s could not be resolved.', 'multi-location-product-and-inventory-management-pro'), $line, $location_slug));
                 continue;
             }
 
             $item_id = $this->resolve_product_id_from_row($row, $state, true);
             if ($item_id === 0) {
-                $this->row_error($state, $row, sprintf(__('Line %d: target product/variation for location inventory was not found.', 'multi-location-product-and-inventory-management-pro'), $line));
+                $this->row_error($state, $row, sprintf(/* translators: %d: line number */ __('Line %d: target product/variation for location inventory was not found.', 'multi-location-product-and-inventory-management-pro'), $line));
                 continue;
             }
 
@@ -2013,6 +2041,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $this->push_import_log(
                     $state,
                     sprintf(
+                        /* translators: 1: current position, 2: total count */
                         __('Location inventory progress: %1$d/%2$d', 'multi-location-product-and-inventory-management-pro'),
                         $position,
                         $location_inventory_total
@@ -2065,7 +2094,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
 
         $attachment_id = media_sideload_image($url, 0, null, 'id');
         if (is_wp_error($attachment_id)) {
-            $warning_message = sprintf(__('Media sideload failed for %s: %s', 'multi-location-product-and-inventory-management-pro'), $url, $attachment_id->get_error_message());
+            $warning_message = sprintf(/* translators: 1: media URL, 2: error message */ __('Media sideload failed for %1$s: %2$s', 'multi-location-product-and-inventory-management-pro'), $url, $attachment_id->get_error_message());
             $state['warnings'][] = $warning_message;
             $this->push_import_log($state, $warning_message, 'warning');
             return 0;
@@ -2370,7 +2399,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         if ($sku !== '') {
             $sku_matches = $this->find_product_ids_by_sku($sku, $target_type);
             if (count($sku_matches) > 1) {
-                return array('id' => 0, 'error' => sprintf(__('Duplicate SKU detected for %s. Manual resolution required.', 'multi-location-product-and-inventory-management-pro'), $sku));
+                return array('id' => 0, 'error' => sprintf(/* translators: %s: duplicate SKU */ __('Duplicate SKU detected for %s. Manual resolution required.', 'multi-location-product-and-inventory-management-pro'), $sku));
             }
             if (count($sku_matches) === 1) {
                 return array('id' => (int) $sku_matches[0], 'error' => '');
@@ -2392,7 +2421,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         if ($sku !== '') {
             $sku_matches = $this->find_product_ids_by_sku($sku, 'variation');
             if (count($sku_matches) > 1) {
-                return array('id' => 0, 'error' => sprintf(__('Duplicate variation SKU detected for %s. Manual resolution required.', 'multi-location-product-and-inventory-management-pro'), $sku));
+                return array('id' => 0, 'error' => sprintf(/* translators: %s: duplicate variation SKU */ __('Duplicate variation SKU detected for %s. Manual resolution required.', 'multi-location-product-and-inventory-management-pro'), $sku));
             }
             if (count($sku_matches) === 1) {
                 return array('id' => (int) $sku_matches[0], 'error' => '');

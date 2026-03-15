@@ -238,6 +238,7 @@ class mulopimfwc_Import_Export
         }
 
         $message = sprintf(
+            /* translators: %d: number of cached entries removed */
             __('Cache cleared. Removed %d cached entries.', 'multi-location-product-and-inventory-management-pro'),
             $deleted
         );
@@ -656,6 +657,7 @@ function mulopimfwc_import_inventory_csv_handler() {
     if ($file['size'] > $max_file_size) {
         wp_send_json_error([
             'message' => sprintf(
+                /* translators: %s: formatted maximum file size (e.g. 10 MB) */
                 __('File size exceeds maximum allowed size of %s. Please split your file into smaller chunks.', 'multi-location-product-and-inventory-management-pro'),
                 size_format($max_file_size)
             )
@@ -727,13 +729,13 @@ function mulopimfwc_import_inventory_csv_handler() {
         // FIXED: Limit number of rows to prevent memory exhaustion
         $max_rows = apply_filters('mulopimfwc_max_csv_import_rows', 10000);
         if ($line_number > $max_rows) {
-            $results['errors'][] = sprintf(__('Import stopped at row %d. Maximum %d rows allowed per import.', 'multi-location-product-and-inventory-management-pro'), $line_number, $max_rows);
+            $results['errors'][] = sprintf(/* translators: 1: current row number, 2: maximum rows allowed */ __('Import stopped at row %1$d. Maximum %2$d rows allowed per import.', 'multi-location-product-and-inventory-management-pro'), $line_number, $max_rows);
             break;
         }
         
         if (count($row) !== count($headers)) {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Column count mismatch.', 'multi-location-product-and-inventory-management-pro'), $line_number);
+            $results['errors'][] = sprintf(/* translators: %d: line number in CSV */ __('Line %d: Column count mismatch.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -749,7 +751,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $term = get_term($location_id, 'mulopimfwc_store_location');
             if (!$term || is_wp_error($term)) {
                 $results['failed']++;
-                $results['errors'][] = sprintf(__('Line %d: Invalid location ID %d.', 'multi-location-product-and-inventory-management-pro'), $line_number, $location_id);
+                $results['errors'][] = sprintf(/* translators: 1: line number, 2: invalid location ID */ __('Line %1$d: Invalid location ID %2$d.', 'multi-location-product-and-inventory-management-pro'), $line_number, $location_id);
                 continue;
             }
         } elseif (!empty($data['location_slug'])) {
@@ -759,7 +761,7 @@ function mulopimfwc_import_inventory_csv_handler() {
                 if (!$term || is_wp_error($term)) {
                     $validated_locations[$location_slug] = false;
                     $results['failed']++;
-                    $results['errors'][] = sprintf(__('Line %d: Invalid location slug "%s".', 'multi-location-product-and-inventory-management-pro'), $line_number, $location_slug);
+                    $results['errors'][] = sprintf(/* translators: 1: line number, 2: invalid location slug */ __('Line %1$d: Invalid location slug "%2$s".', 'multi-location-product-and-inventory-management-pro'), $line_number, $location_slug);
                     continue;
                 }
                 $validated_locations[$location_slug] = $term->term_id;
@@ -770,7 +772,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $location_id = $validated_locations[$location_slug];
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Missing location_id or location_slug.', 'multi-location-product-and-inventory-management-pro'), $line_number);
+            $results['errors'][] = sprintf(/* translators: %d: line number in CSV */ __('Line %d: Missing location_id or location_slug.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -784,7 +786,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $item['sku'] = sanitize_text_field($data['sku']);
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Product ID or SKU is required.', 'multi-location-product-and-inventory-management-pro'), $line_number);
+            $results['errors'][] = sprintf(/* translators: %d: line number in CSV */ __('Line %d: Product ID or SKU is required.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -795,7 +797,7 @@ function mulopimfwc_import_inventory_csv_handler() {
             $item['location_slug'] = sanitize_text_field($data['location_slug']);
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: Location ID or slug is required.', 'multi-location-product-and-inventory-management-pro'), $line_number);
+            $results['errors'][] = sprintf(/* translators: %d: line number in CSV */ __('Line %d: Location ID or slug is required.', 'multi-location-product-and-inventory-management-pro'), $line_number);
             continue;
         }
         
@@ -831,14 +833,14 @@ function mulopimfwc_import_inventory_csv_handler() {
             $results['success']++;
         } else {
             $results['failed']++;
-            $results['errors'][] = sprintf(__('Line %d: %s', 'multi-location-product-and-inventory-management-pro'), $line_number, $result['error']);
+            $results['errors'][] = sprintf(/* translators: 1: line number in CSV, 2: error message */ __('Line %1$d: %2$s', 'multi-location-product-and-inventory-management-pro'), $line_number, $result['error']);
         }
     }
     
     fclose($handle);
     
     wp_send_json_success(array(
-        'message' => sprintf(__('Import completed. %d succeeded, %d failed.', 'multi-location-product-and-inventory-management-pro'), $results['success'], $results['failed']),
+        'message' => sprintf(/* translators: 1: number of succeeded rows, 2: number of failed rows */ __('Import completed. %1$d succeeded, %2$d failed.', 'multi-location-product-and-inventory-management-pro'), $results['success'], $results['failed']),
         'results' => $results,
     ));
 }

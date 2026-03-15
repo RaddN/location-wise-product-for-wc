@@ -972,7 +972,7 @@ class mulopimfwc_settings
                                                             step="0.01"
                                                             placeholder="0.00"
                                                             style="width: 100%; padding: 6px 8px 6px 24px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;"
-                                                            title="<?php echo esc_attr(sprintf(__('Cost from %s to %s', 'multi-location-product-and-inventory-management-pro'), $from_location->name, $to_location->name)); ?>">
+                                                            title="<?php echo esc_attr(sprintf(/* translators: 1: source location name, 2: destination location name */ __('Cost from %1$s to %2$s', 'multi-location-product-and-inventory-management-pro'), $from_location->name, $to_location->name)); ?>">
                                                     </div>
                                                 <?php endif; ?>
                                             </td>
@@ -1217,6 +1217,7 @@ class mulopimfwc_settings
                             <div>
                                 <p style="margin: 0; color: #856404;">
                                     ' . sprintf(
+                        /* translators: %s: URL to WooCommerce general settings */
                         __('WooCommerce taxes are currently disabled. To use location-based taxes, please <a href="%s" target="_blank" style="color: #856404; text-decoration: underline;">enable taxes</a> in WooCommerce settings first.', 'multi-location-product-and-inventory-management-pro'),
                         admin_url('admin.php?page=wc-settings&tab=general#:~:text=Shop%20country/region-,Enable%20taxes,-Enable%20taxes')
                     ) . '
@@ -1762,9 +1763,9 @@ class mulopimfwc_settings
 
                     <p style="margin:8px 0 0 0;color:#475569;line-height:1.4;">
                         <?php
-                        /* translators: %s: documentation url */
                         printf(
                             wp_kses(
+                                /* translators: %s: documentation URL */
                                 __('If a location logo is not available the site/store default will be used. For full integration details and more placeholders, see the <a href="%s" target="_blank">plugin documentation</a>.', 'multi-location-product-and-inventory-management-pro'),
                                 array(
                                     'a' => array(
@@ -1967,15 +1968,16 @@ class mulopimfwc_settings
                 if (mulopimfwc_premium_feature()) {
             ?>
                 <select name="mulopimfwc_display_options[url_location_format]">
-                    <option value="query_param" <?php selected($value, 'query_param'); ?>><?php printf( esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) );                                                                                            ?>
+                    <option value="query_param" <?php selected($value, 'query_param'); ?>><?php printf( /* translators: %s: URL parameter or path prefix name */ esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) );                                                                                            ?>
                     </option>
-                    <option value="path_prefix" <?php selected($value, 'path_prefix'); ?>><?php printf( esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) ); ?></option>
+                    <option value="path_prefix" <?php selected($value, 'path_prefix'); ?>><?php printf( /* translators: %s: URL path prefix */ esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) ); ?></option>
                 </select>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
                     <select disabled name="_pro[url_location_format]">
                         <option value="query_param" <?php selected($value, 'query_param'); ?>><?php
                                                                                                 printf(
+                                                                                                    /* translators: %s: URL parameter name */
                                                                                                     esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'),
                                                                                                     esc_html($location_url_prefix)
                                                                                                 );
@@ -1983,6 +1985,7 @@ class mulopimfwc_settings
                         </option>
                         <option value="path_prefix" <?php selected($value, 'path_prefix'); ?>><?php
                                                                                                 printf(
+                                                                                                    /* translators: %s: URL path prefix */
                                                                                                     esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'),
                                                                                                     esc_html($location_url_prefix)
                                                                                                 );
@@ -8401,7 +8404,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
         $tags = [];
         if (!empty($template_only)) {
-            $tags[] = sprintf(__('Template: %s', 'multi-location-product-and-inventory-management-pro'), ucfirst(str_replace('-', ' ', $template_only)));
+            $tags[] = sprintf(/* translators: %s: template name */ __('Template: %s', 'multi-location-product-and-inventory-management-pro'), ucfirst(str_replace('-', ' ', $template_only)));
         }
         if ($pro_only) {
             $tags[] = __('Pro', 'multi-location-product-and-inventory-management-pro');

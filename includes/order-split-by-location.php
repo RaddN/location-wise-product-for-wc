@@ -402,9 +402,10 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             $notice_template = function_exists('mulopimfwc_get_text_value')
                 ? mulopimfwc_get_text_value(
                     'text_cart_split_order_notice',
+                    /* translators: %s: comma-separated list of child order numbers */
                     __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management-pro')
                 )
-                : __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management-pro');
+                : /* translators: %s: comma-separated list of child order numbers */ __('Your order was split by location into child orders: %s. Products are listed below by child order.', 'multi-location-product-and-inventory-management-pro');
 
             echo '<div class="woocommerce-info mulopimfwc-split-parent-notice">';
             echo '<p style="margin:0;">' . esc_html(sprintf($notice_template, implode(', ', $child_numbers))) . '</p>';
@@ -428,15 +429,17 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                 $location_row_template = function_exists('mulopimfwc_get_text_value')
                     ? mulopimfwc_get_text_value(
                         'text_cart_split_order_location_label',
+                        /* translators: %s: location name */
                         __('Location: %s', 'multi-location-product-and-inventory-management-pro')
                     )
-                    : __('Location: %s', 'multi-location-product-and-inventory-management-pro');
+                    : /* translators: %s: location name */ __('Location: %s', 'multi-location-product-and-inventory-management-pro');
                 $child_order_template = function_exists('mulopimfwc_get_text_value')
                     ? mulopimfwc_get_text_value(
                         'text_cart_split_order_child_label',
+                        /* translators: %s: order number */
                         __('Order %s', 'multi-location-product-and-inventory-management-pro')
                     )
-                    : __('Order %s', 'multi-location-product-and-inventory-management-pro');
+                    : /* translators: %s: order number */ __('Order %s', 'multi-location-product-and-inventory-management-pro');
 
                 echo '<tr class="mulopimfwc-split-order-group">';
                 echo '<td colspan="2"><strong>' . esc_html(sprintf($location_row_template, $location_label)) . '</strong> ';
@@ -718,6 +721,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                     $children_ids[] = $child->get_id();
 
                     $child_note = sprintf(
+                        /* translators: %s: parent order number */
                         __('Split from parent order: #%s', 'multi-location-product-and-inventory-management-pro'),
                         $order->get_order_number()
                     );
@@ -755,6 +759,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                         }
                     }
                     $note = sprintf(
+                        /* translators: %s: comma-separated list of child order numbers */
                         __('Split into child orders: %s', 'multi-location-product-and-inventory-management-pro'),
                         implode(', ', $child_numbers)
                     );
@@ -967,7 +972,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                     $this->sync_child_from_parent_target_state(
                         $order,
                         $child,
-                        sprintf(__('Parent order status changed to %s.', 'multi-location-product-and-inventory-management-pro'), $new_status)
+                        sprintf(/* translators: %s: order status */ __('Parent order status changed to %s.', 'multi-location-product-and-inventory-management-pro'), $new_status)
                     );
                     $child->save();
                 }
@@ -1014,7 +1019,7 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             try {
                 $parent->set_status(
                     $new_status,
-                    sprintf(__('All child orders are now %s.', 'multi-location-product-and-inventory-management-pro'), $new_status),
+                    sprintf(/* translators: %s: order status */ __('All child orders are now %s.', 'multi-location-product-and-inventory-management-pro'), $new_status),
                     true
                 );
 

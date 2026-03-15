@@ -1681,6 +1681,7 @@ class MULOPIMFWC_Dashboard
                                 <?php
                                 $dead_stock_days = 90;
                                 printf(
+                                    /* translators: %s: number of days */
                                     esc_html__('Dead stock in this table represents inventory that has not sold in the last %s days. Shrinkage reflects any sold quantity that could not be matched to current stock records.', 'multi-location-product-and-inventory-management-pro'),
                                     esc_html($dead_stock_days)
                                 );
@@ -2199,6 +2200,7 @@ class MULOPIMFWC_Dashboard
         $previous_end = $end_date->sub($interval);
 
         $label = sprintf(
+            /* translators: %d: number of days */
             _n('vs previous %d day', 'vs previous %d days', $days, 'multi-location-product-and-inventory-management-pro'),
             $days
         );
@@ -4131,7 +4133,7 @@ class MULOPIMFWC_Dashboard
                 
                 $alerts[] = $this->format_alert(
                     'new_order',
-                    sprintf(__('New order #%s placed - %s', 'multi-location-product-and-inventory-management-pro'), $order_number, $formatted_price),
+                    sprintf(/* translators: 1: order number, 2: formatted order total */ __('New order #%1$s placed - %2$s', 'multi-location-product-and-inventory-management-pro'), $order_number, $formatted_price),
                     'info',
                     [
                         'order_id' => $order_id,
@@ -4157,7 +4159,7 @@ class MULOPIMFWC_Dashboard
                 }
                 $alerts[] = $this->format_alert(
                     'low_stock',
-                    sprintf(__('Low stock: %s (%s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
+                    sprintf(/* translators: 1: product title, 2: location name */ __('Low stock: %1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
                     'warning',
                     [
                         'product_id' => $product_id,
@@ -4184,7 +4186,7 @@ class MULOPIMFWC_Dashboard
                 }
                 $alerts[] = $this->format_alert(
                     'out_of_stock',
-                    sprintf(__('Out of stock: %s (%s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
+                    sprintf(/* translators: 1: product title, 2: location name */ __('Out of stock: %1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
                     'critical',
                     [
                         'product_id' => $product_id,
@@ -4207,7 +4209,7 @@ class MULOPIMFWC_Dashboard
                 sort($order_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     "order_{$key}",
-                    sprintf(__('%s orders %s', 'multi-location-product-and-inventory-management-pro'), ucwords(str_replace('_', ' ', $key)), $count),
+                    sprintf(/* translators: 1: order status label (e.g. Completed), 2: count */ __('%1$s orders %2$s', 'multi-location-product-and-inventory-management-pro'), ucwords(str_replace('_', ' ', $key)), $count),
                     'info',
                     [
                         'order_ids' => $order_ids,
@@ -4225,7 +4227,7 @@ class MULOPIMFWC_Dashboard
             
             $alerts[] = $this->format_alert(
                 'high_value_order',
-                sprintf(__('High-value order: #%s (%s)', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number(), $formatted_price),
+                sprintf(/* translators: 1: order number, 2: formatted order total */ __('High-value order: #%1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number(), $formatted_price),
                 'info',
                 [
                     'order_id' => $order->get_id(),
@@ -4295,7 +4297,7 @@ class MULOPIMFWC_Dashboard
                 sort($product_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     'restocked',
-                    sprintf(__('Restocked: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', array_slice($titles, 0, 3))),
+                    sprintf(/* translators: %s: comma-separated list of product/location titles */ __('Restocked: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', array_slice($titles, 0, 3))),
                     'info',
                     [
                         'product_ids' => $product_ids,
@@ -4324,7 +4326,7 @@ class MULOPIMFWC_Dashboard
             $product = wc_get_product($review->comment_post_ID);
             $alerts[] = $this->format_alert(
                 'low_review_alert',
-                sprintf(__('Low rating review for %s', 'multi-location-product-and-inventory-management-pro'), $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management-pro')),
+                sprintf(/* translators: %s: product name */ __('Low rating review for %s', 'multi-location-product-and-inventory-management-pro'), $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management-pro')),
                 'info',
                 [
                     'review_id' => $review->comment_ID,
@@ -4340,7 +4342,7 @@ class MULOPIMFWC_Dashboard
             if ($user) {
                 $alerts[] = $this->format_alert(
                     'manager_change',
-                    sprintf(__('Manager updated: %s', 'multi-location-product-and-inventory-management-pro'), $user->display_name),
+                    sprintf(/* translators: %s: manager display name */ __('Manager updated: %s', 'multi-location-product-and-inventory-management-pro'), $user->display_name),
                     'info',
                     [
                         'user_id' => $user->ID,

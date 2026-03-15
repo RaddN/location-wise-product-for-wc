@@ -523,6 +523,7 @@ class MULOPIMFWC_Import_Export_V2_Service
             if (!isset($received[(string) $i])) {
                 wp_send_json_error(array(
                     'message' => sprintf(
+                        /* translators: %d: chunk index number */
                         __('Upload is incomplete. Missing chunk index: %d', 'multi-location-product-and-inventory-management-pro'),
                         $i
                     ),

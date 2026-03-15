@@ -1419,9 +1419,10 @@ class MULOPIMFWC_Location_Managers
                     // Send welcome email with password info
                     wp_mail(
                         $email,
-                        sprintf(__('Your Location Manager account on %s', 'multi-location-product-and-inventory-management-pro'), get_bloginfo('name')),
+                        sprintf(/* translators: %s: site name */ __('Your Location Manager account on %s', 'multi-location-product-and-inventory-management-pro'), get_bloginfo('name')),
                         sprintf(
-                            __("Hello %s,\n\nAn account has been created for you.\nUsername: %s\nPassword: %s\nLogin: %s\n\nPlease change your password after logging in.", 'multi-location-product-and-inventory-management-pro'),
+                            /* translators: 1: user display name, 2: username, 3: password, 4: login URL */
+                            __("Hello %1\$s,\n\nAn account has been created for you.\nUsername: %2\$s\nPassword: %3\$s\nLogin: %4\$s\n\nPlease change your password after logging in.", 'multi-location-product-and-inventory-management-pro'),
                             trim($first_name . ' ' . $last_name),
                             $username,
                             $password,
@@ -1466,7 +1467,7 @@ class MULOPIMFWC_Location_Managers
 
             if (!empty($notify_email)) {
                 $site_name = get_bloginfo('name');
-                $subject = sprintf(__('Location Manager update on %s', 'multi-location-product-and-inventory-management-pro'), $site_name);
+                $subject = sprintf(/* translators: %s: site name */ __('Location Manager update on %s', 'multi-location-product-and-inventory-management-pro'), $site_name);
                 $body_lines = [];
                 if ($action_type === 'create') {
                     $body_lines[] = __('Your Location Manager account has been created or updated.', 'multi-location-product-and-inventory-management-pro');
@@ -1474,12 +1475,12 @@ class MULOPIMFWC_Location_Managers
                     $body_lines[] = __('Your Location Manager permissions or assigned locations have been updated.', 'multi-location-product-and-inventory-management-pro');
                 }
                 if (!empty($assigned_locations)) {
-                    $body_lines[] = sprintf(__('Assigned Locations: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', $assigned_locations));
+                    $body_lines[] = sprintf(/* translators: %s: comma-separated list of location names */ __('Assigned Locations: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', $assigned_locations));
                 }
             if (!empty($manager_capabilities)) {
-                $body_lines[] = sprintf(__('Capabilities: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', $manager_capabilities));
+                $body_lines[] = sprintf(/* translators: %s: comma-separated list of capability names */ __('Capabilities: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', $manager_capabilities));
             }
-            $body_lines[] = sprintf(__('Login: %s', 'multi-location-product-and-inventory-management-pro'), wp_login_url());
+            $body_lines[] = sprintf(/* translators: %s: login URL */ __('Login: %s', 'multi-location-product-and-inventory-management-pro'), wp_login_url());
             wp_mail($notify_email, $subject, implode("\n", $body_lines));
         }
 
@@ -1493,7 +1494,8 @@ class MULOPIMFWC_Location_Managers
                     mulopimfwc_send_social_message(
                         __('Manager updated', 'multi-location-product-and-inventory-management-pro'),
                         sprintf(
-                            __('%s was %s. Locations: %s', 'multi-location-product-and-inventory-management-pro'),
+                            /* translators: 1: manager display name, 2: action (created/updated), 3: comma-separated locations or "none" */
+                            __('%1$s was %2$s. Locations: %3$s', 'multi-location-product-and-inventory-management-pro'),
                             $user_obj ? $user_obj->display_name : __('Manager', 'multi-location-product-and-inventory-management-pro'),
                             $action_type === 'create' ? __('created', 'multi-location-product-and-inventory-management-pro') : __('updated', 'multi-location-product-and-inventory-management-pro'),
                             !empty($assigned_locations) ? implode(', ', $assigned_locations) : __('none', 'multi-location-product-and-inventory-management-pro')
@@ -2335,7 +2337,8 @@ class MULOPIMFWC_Location_Managers
                     mulopimfwc_send_social_message(
                         __('Manager updated', 'multi-location-product-and-inventory-management-pro'),
                         sprintf(
-                            __('%s profile was updated. Locations: %s', 'multi-location-product-and-inventory-management-pro'),
+                            /* translators: 1: manager display name, 2: comma-separated locations or "none" */
+                            __('%1$s profile was updated. Locations: %2$s', 'multi-location-product-and-inventory-management-pro'),
                             $user_obj ? $user_obj->display_name : __('Manager', 'multi-location-product-and-inventory-management-pro'),
                             !empty($assigned_locations) ? implode(', ', $assigned_locations) : __('none', 'multi-location-product-and-inventory-management-pro')
                         ),

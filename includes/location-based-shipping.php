@@ -396,7 +396,7 @@ class MULOPIMFWC_Location_Based_Shipping
             $location_count = count($location_names);
             if ($location_count > 3) {
                 $display_names = array_slice($location_names, 0, 3);
-                $location_text = implode(', ', $display_names) . ' ' . sprintf(esc_html__('and %d more', 'multi-location-product-and-inventory-management-pro'), $location_count - 3);
+                $location_text = implode(', ', $display_names) . ' ' . sprintf(/* translators: %d: number of additional locations */ esc_html__('and %d more', 'multi-location-product-and-inventory-management-pro'), $location_count - 3);
             } else {
                 $location_text = implode(', ', $location_names);
             }
@@ -686,6 +686,7 @@ function mulopimfwc_bulk_assign_locations()
 
     wp_send_json_success(array(
         'message' => sprintf(
+            /* translators: %d: number of shipping methods */
             __('Locations assigned to %d shipping method(s) successfully', 'multi-location-product-and-inventory-management-pro'),
             $count
         )
