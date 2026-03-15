@@ -28,12 +28,12 @@ class mulopimfwc_settings
             !isset($_POST['mulopimfwc_reset_settings_nonce']) ||
             !wp_verify_nonce($_POST['mulopimfwc_reset_settings_nonce'], 'mulopimfwc_reset_settings_action')
         ) {
-            wp_die(__('Security check failed. Please go back and try again.', 'multi-location-product-and-inventory-management-pro'));
+            wp_die(esc_html(__('Security check failed. Please go back and try again.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         // Check user capabilities
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro'));
+            wp_die(esc_html(__('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         // Delete the settings option
@@ -44,14 +44,14 @@ class mulopimfwc_settings
             add_settings_error(
                 'mulopimfwc_messages',
                 'mulopimfwc_reset_success',
-                __('Settings have been reset to default values successfully.', 'multi-location-product-and-inventory-management-pro'),
+                esc_html(__('Settings have been reset to default values successfully.', 'multi-location-product-and-inventory-management-pro')),
                 'success'
             );
         } else {
             add_settings_error(
                 'mulopimfwc_messages',
                 'mulopimfwc_reset_error',
-                __('No settings were found to reset or reset failed. Settings may already be at default values.', 'multi-location-product-and-inventory-management-pro'),
+                esc_html(__('No settings were found to reset or reset failed. Settings may already be at default values.', 'multi-location-product-and-inventory-management-pro')),
                 'warning'
             );
         }
@@ -77,11 +77,11 @@ class mulopimfwc_settings
             !isset($_POST['mulopimfwc_reset_text_management_nonce']) ||
             !wp_verify_nonce($_POST['mulopimfwc_reset_text_management_nonce'], 'mulopimfwc_reset_text_management_action')
         ) {
-            wp_die(__('Security check failed. Please go back and try again.', 'multi-location-product-and-inventory-management-pro'));
+            wp_die(esc_html(__('Security check failed. Please go back and try again.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro'));
+            wp_die(esc_html(__('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (!function_exists('mulopimfwc_get_text_management_defaults')) {
@@ -1216,10 +1216,19 @@ class mulopimfwc_settings
                             </svg>
                             <div>
                                 <p style="margin: 0; color: #856404;">
-                                    ' . sprintf(
-                        /* translators: %s: URL to WooCommerce general settings */
-                        __('WooCommerce taxes are currently disabled. To use location-based taxes, please <a href="%s" target="_blank" style="color: #856404; text-decoration: underline;">enable taxes</a> in WooCommerce settings first.', 'multi-location-product-and-inventory-management-pro'),
-                        admin_url('admin.php?page=wc-settings&tab=general#:~:text=Shop%20country/region-,Enable%20taxes,-Enable%20taxes')
+                                    ' . wp_kses(
+                        sprintf(
+                            /* translators: %s: URL to WooCommerce general settings */
+                            __('WooCommerce taxes are currently disabled. To use location-based taxes, please <a href="%s" target="_blank" style="color: #856404; text-decoration: underline;">enable taxes</a> in WooCommerce settings first.', 'multi-location-product-and-inventory-management-pro'),
+                            esc_url(admin_url('admin.php?page=wc-settings&tab=general#:~:text=Shop%20country/region-,Enable%20taxes,-Enable%20taxes'))
+                        ),
+                        array(
+                            'a' => array(
+                                'href'   => true,
+                                'target' => true,
+                                'style'  => true,
+                            ),
+                        )
                     ) . '
                                 </p>
                             </div>
@@ -3203,7 +3212,7 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
             __('Test PWA Notification', 'multi-location-product-and-inventory-management-pro'),
             function () {
                 // In your settings page
-                echo '<button ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' type="button" id="test-push-notification" class="button">'.__( 'Test Push Notification', 'multi-location-product-and-inventory-management-pro' ).'</button>';
+                echo '<button ' . (!mulopimfwc_premium_feature() ? 'disabled' : '') . ' type="button" id="test-push-notification" class="button">' . esc_html(__('Test Push Notification', 'multi-location-product-and-inventory-management-pro')) . '</button>';
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'

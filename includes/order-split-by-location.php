@@ -589,12 +589,12 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             if (class_exists('\Automattic\WooCommerce\StoreApi\Exceptions\RouteException')) {
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'mulopimfwc_location_missing',
-                    __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'),
+                    esc_html(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro')),
                     400
                 );
             }
 
-            throw new Exception(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'));
+            throw new Exception(esc_html(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         public function maybe_split_order($maybe_order, $posted_data = null, $maybe_order_obj = null)
@@ -665,11 +665,11 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             if (!empty($unknown_items) && $unknown_policy === 'block_checkout') {
                 if (function_exists('wc_add_notice')) {
                     wc_add_notice(
-                        __('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'),
+                        esc_html(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro')),
                         'error'
                     );
                 }
-                throw new Exception(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro'));
+                throw new Exception(esc_html(__('Some items in your cart do not have a valid store location. Please select a valid location before checkout.', 'multi-location-product-and-inventory-management-pro')));
             }
 
             if (!empty($unknown_items) && $unknown_policy === 'unassigned_child') {

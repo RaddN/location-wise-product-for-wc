@@ -139,8 +139,8 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                                     </svg>
                                     <div class="location-info">
                                         <span class="location-label">
-                                            <?php _e('All Products', 'multi-location-product-and-inventory-management-pro'); ?>
-                                            <span class="location-badge admin-only-badge"><?php _e('Admin Only', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                            <?php esc_html_e('All Products', 'multi-location-product-and-inventory-management-pro'); ?>
+                                            <span class="location-badge admin-only-badge"><?php esc_html_e('Admin Only', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                         </span>
                                     </div>
                                 </div>
@@ -199,7 +199,7 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
                                 }
                             } else {
                                 ?>
-                                <p class="no-saved-locations"><?php _e('No saved address yet', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                                <p class="no-saved-locations"><?php esc_html_e('No saved address yet', 'multi-location-product-and-inventory-management-pro'); ?></p>
                             <?php
                             }
                             ?>

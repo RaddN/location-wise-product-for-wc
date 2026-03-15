@@ -2086,7 +2086,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         // Verify nonce
         if (!isset($_REQUEST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'bulk-' . $this->_args['plural'])) {
-            wp_die(__('Security check failed', 'multi-location-product-and-inventory-management-pro'));
+            wp_die(esc_html(__('Security check failed', 'multi-location-product-and-inventory-management-pro')));
         }
 
         // Check if products are selected
@@ -2113,7 +2113,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         printf(
                             /* translators: %d: number of products */
                             esc_html__('Successfully assigned %d products to location.', 'multi-location-product-and-inventory-management-pro'),
-                            $count
+                            (int) $count
                         );
                         echo '</p></div>';
                     });
@@ -2135,7 +2135,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         printf(
                             /* translators: %d: number of products */
                             esc_html__('Successfully removed %d products from location.', 'multi-location-product-and-inventory-management-pro'),
-                            $count
+                            (int) $count
                         );
                         echo '</p></div>';
                     });
@@ -2158,7 +2158,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         printf(
                             /* translators: %d: number of products */
                             esc_html__('Successfully moved %d product(s) to trash.', 'multi-location-product-and-inventory-management-pro'),
-                            $count
+                            (int) $count
                         );
                         echo '</p></div>';
                     });

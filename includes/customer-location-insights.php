@@ -1380,11 +1380,11 @@ class Mulopimfwc_Customer_Location_Insights
     public function render_analytics_page()
     {
         if ($this->is_disabled()) {
-            wp_die(__('Location analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro'));
+            wp_die(esc_html(__('Location analytics is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         if (!mulopimfwc_user_can_run_reports()) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'multi-location-product-and-inventory-management-pro'));
+            wp_die(esc_html(__('You do not have sufficient permissions to access this page.', 'multi-location-product-and-inventory-management-pro')));
         }
 
         $analytics = $this->get_analytics_snapshot();
@@ -2603,11 +2603,11 @@ function mulopimfwc_ajax_export_analytics()
     check_ajax_referer('mulopimfwc_analytics_export', 'nonce');
 
     if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
-        wp_die(__('Analytics export is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro'));
+        wp_die(esc_html(__('Analytics export is disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro')));
     }
 
     if (!mulopimfwc_user_can_export_reports()) {
-        wp_die(__('You do not have permission to export analytics.', 'multi-location-product-and-inventory-management-pro'));
+        wp_die(esc_html(__('You do not have permission to export analytics.', 'multi-location-product-and-inventory-management-pro')));
     }
 
     $location_slug = isset($_POST['location']) ? sanitize_text_field(wp_unslash(rawurldecode($_POST['location']))) : null;
