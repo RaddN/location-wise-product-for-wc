@@ -4,7 +4,7 @@ msgstr ""
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 04:13+0000\n"
-"PO-Revision-Date: 2026-03-12 07:21+0000\n"
+"PO-Revision-Date: 2026-03-15 06:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: বাংলা\n"
 "Language: bn_BD\n"
@@ -16,17 +16,17 @@ msgstr ""
 "X-Loco-Version: 2.8.2; wp-6.9.1; php-8.2.27\n"
 "X-Domain: multi-location-product-and-inventory-management"
 
-#: multi-location-product-and-inventory-management-pro.php:5106
+#: multi-location-product-and-inventory-management-pro.php:5134
 #, php-format
 msgid " | Order location set to %s"
 msgstr " | অর্ডারের লোকেশন %s এ সেট করা হয়েছে"
 
-#: multi-location-product-and-inventory-management-pro.php:5096
+#: multi-location-product-and-inventory-management-pro.php:5124
 #, php-format
 msgid " | Price updated from %s to %s"
 msgstr " | মূল্য %s থেকে %s এ আপডেট করা হয়েছে"
 
-#: multi-location-product-and-inventory-management-pro.php:5372
+#: multi-location-product-and-inventory-management-pro.php:5400
 #, php-format
 msgid ""
 "\"%s\" is no longer available at %s location and has been removed from your "
@@ -59,7 +59,7 @@ msgstr[1] "%d নির্বাচিত অর্ডারসমূহ সম�
 msgid "%s - %s"
 msgstr "%s - %s"
 
-#: multi-location-product-and-inventory-management-pro.php:7064
+#: multi-location-product-and-inventory-management-pro.php:7092
 #, php-format
 msgid "%s @ %s is back above low threshold. Stock: %d (threshold %d)"
 msgstr "%s @ %s আবার নিম্ন সীমার উপরে ফিরে এসেছে। স্টক: %d (সীমা %d)"
@@ -91,12 +91,12 @@ msgstr "%s অর্ডার %s"
 msgid "%s profile was updated. Locations: %s"
 msgstr "%s প্রোফাইল আপডেট হয়েছে। লোকেশনসমূহ: %s"
 
-#: multi-location-product-and-inventory-management-pro.php:13774
+#: multi-location-product-and-inventory-management-pro.php:14314
 #, php-format
 msgid "%s received a %s★ review: \"%s\""
 msgstr "%s একটি %s★ রিভিউ পেয়েছে: \"%s\""
 
-#: multi-location-product-and-inventory-management-pro.php:3954
+#: multi-location-product-and-inventory-management-pro.php:3982
 #, php-format
 msgid "%s to %s: %s"
 msgstr "%s থেকে %s: %s"
@@ -111,28 +111,31 @@ msgstr "%s ছিল %s। লোকেশনসমূহ: %s"
 msgid "%s+ active installs"
 msgstr "%s+ সক্রিয় ইনস্টল"
 
-#: multi-location-product-and-inventory-management-pro.php:5521
+#: multi-location-product-and-inventory-management-pro.php:5549
 #, php-format
 msgid "%s: %d item(s)"
 msgstr "%s: %d আইটেম"
 
-#: admin/settings.php:6142
+msgid "+ Add Location"
+msgstr "+ অবস্থান যোগ করুন"
+
+#: admin/settings.php:6213
 msgid "- Display title"
 msgstr "শিরোনাম প্রদর্শন করুন"
 
-#: admin/settings.php:6152
+#: admin/settings.php:6223
 msgid "- Enhanced dropdown"
 msgstr "- উন্নত ড্রপডাউন"
 
-#: admin/settings.php:6214
+#: admin/settings.php:6285
 msgid "- Multi-line display"
 msgstr "- বহু-লাইন প্রদর্শন"
 
-#: admin/settings.php:6172
+#: admin/settings.php:6243
 msgid "- Show item count"
 msgstr "- আইটেমের সংখ্যা দেখান"
 
-#: admin/settings.php:6194
+#: admin/settings.php:6265
 msgid "- User locations"
 msgstr "ব্যবহারকারীর অবস্থান"
 
@@ -154,7 +157,7 @@ msgstr "--একটি দোকান নির্বাচন করুন--"
 msgid "-- Select Sub-area --"
 msgstr "--উপ-অঞ্চল নির্বাচন করুন--"
 
-#: admin/settings.php:5355
+#: admin/settings.php:5426
 msgid "1"
 msgstr "১"
 
@@ -170,7 +173,7 @@ msgstr "১টি সারি সংরক্ষণে ব্যর্থ হ�
 msgid "123456:ABCDEF-TOKEN (optional global fallback)"
 msgstr "123456:ABCDEF-TOKEN (ঐচ্ছিক গ্লোবাল ফallback)"
 
-#: admin/settings.php:5362
+#: admin/settings.php:5433
 msgid "2"
 msgstr "২"
 
@@ -178,7 +181,7 @@ msgstr "২"
 msgid "24 Hours"
 msgstr "২৪ ঘণ্টা"
 
-#: admin/settings.php:5369
+#: admin/settings.php:5440
 msgid "3"
 msgstr "৩"
 
@@ -190,7 +193,7 @@ msgstr "@ইউজারনেম অথবা 123456789"
 msgid "@username or chat ID"
 msgstr "@ইউজারনেম অথবা চ্যাট আইডি"
 
-#: admin/settings.php:6997
+#: admin/settings.php:7068
 #| msgid ""
 #| "Access our comprehensive documentation, knowledge base articles, and get "
 #| "direct support from our expert team\n"
@@ -207,7 +210,6 @@ msgstr ""
 msgid "Actions"
 msgstr "অ্যাকশনসমূহ"
 
-#: multi-location-product-and-inventory-management-pro.php:7308
 #: includes/customer-location-insights.php:1089
 msgid "Activate"
 msgstr "সক্রিয় করুন"
@@ -237,6 +239,9 @@ msgstr "যোগ করুন"
 #: admin/admin.php:1414 admin/admin.php:1850
 msgid "Add Images"
 msgstr "ছবি যোগ করুন"
+
+msgid "Add location"
+msgstr "অবস্থান যোগ করুন"
 
 #: admin/settings.php:1607
 msgid "Add location information to product structured data for SEO."
@@ -272,6 +277,9 @@ msgstr ""
 #: admin/admin.php:6107
 msgid "Add or remove locations"
 msgstr "লোকেশন যোগ বা অপসারণ করুন"
+
+msgid "Add Selected Locations"
+msgstr "নির্বাচিত অবস্থান যোগ করুন"
 
 #: admin/settings.php:3429
 msgid "Add Social Media"
@@ -338,7 +346,7 @@ msgstr "শুধুমাত্র অ্যাডমিন"
 msgid "Admin Visibility Controls"
 msgstr "অ্যাডমিন দৃশ্যমানতা নিয়ন্ত্রণ"
 
-#: admin/settings.php:5741
+#: admin/settings.php:5812
 msgid "Advanced"
 msgstr "উন্নত"
 
@@ -397,7 +405,7 @@ msgstr "সম্পর্কিত পণ্যের পরে"
 msgid "AJAX error while saving."
 msgstr "সংরক্ষণের সময় AJAX ত্রুটি।"
 
-#: admin/settings.php:6518
+#: admin/settings.php:6589
 #| msgid ""
 #| "AJAX Product Filter by Location & Stock\n"
 msgid "AJAX Product Filter by Location & Stock"
@@ -464,7 +472,7 @@ msgstr "সব চাইল্ড অর্ডার এখন %s."
 msgid "All items in stock"
 msgstr "সব আইটেম স্টকে রয়েছে"
 
-#: multi-location-product-and-inventory-management-pro.php:8682
+#: multi-location-product-and-inventory-management-pro.php:8775
 #: admin/admin.php:6098 admin/dashboard.php:1305
 #: admin/location-managers.php:2614
 #: includes/class-product-location-table.php:2642
@@ -507,7 +515,7 @@ msgstr "সব প্রোডাক্ট"
 msgid "All Products Label"
 msgstr "সব প্রোডাক্টের লেবেল"
 
-#: includes/cash-on-pickup-payment-gateway.php:261
+#: includes/cash-on-pickup-payment-gateway.php:336
 msgid "All Shipping Methods"
 msgstr "সব শিপিং পদ্ধতি "
 
@@ -622,11 +630,10 @@ msgid "An error occurred while loading recommendations. Please try again."
 msgstr ""
 "প্রস্তাবনা লোড করার সময় একটি ত্রুটি হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:11555
+#: multi-location-product-and-inventory-management-pro.php:11816
 msgid "An error occurred while updating the location"
 msgstr "লোকেশন আপডেট করার সময় একটি ত্রুটি ঘটেছে"
 
-#: multi-location-product-and-inventory-management-pro.php:7312
 #: includes/text-management.php:589
 msgid "An error occurred. Please try again."
 msgstr "একটু ত্রুটি ঘটেছে । আবার চেষ্টা করুন । "
@@ -702,7 +709,7 @@ msgstr "এপার্টমেন্ট, সুইট, ইত্যাদি "
 msgid "Apartment, suite, etc."
 msgstr "এপার্টমেন্ট, সুইট, ইত্যাদি "
 
-#: admin/settings.php:6549
+#: admin/settings.php:6620
 #| msgid ""
 #| "API & Webhook Integration: Bulk Inventory Sync\n"
 msgid "API & Webhook Integration: Bulk Inventory Sync"
@@ -724,11 +731,11 @@ msgstr "API চাবি "
 msgid "API key generated successfully!"
 msgstr "API কী সফলভাবে তৈরি হয়েছে!"
 
-#: admin/settings.php:5291
+#: admin/settings.php:5362
 msgid "Append to title (Title - Location)"
 msgstr "শিরোনামে যোগ করুন (শিরোনাম - লোকেশন)"
 
-#: admin/settings.php:8086
+#: admin/settings.php:8157
 #| msgid ""
 #| "Apply a preset language pack to all text fields.\n"
 #| "\n"
@@ -755,11 +762,11 @@ msgstr "সম্পূর্ণ কার্টে প্রয়োগ কর
 msgid "Apply to All Methods in Zone"
 msgstr "অঞ্চলের সব পদ্ধতিতে প্রয়োগ করুন"
 
-#: admin/settings.php:8102
+#: admin/settings.php:8173
 msgid "Apply Translation"
 msgstr "অনুবাদ প্রয়োগ করুন"
 
-#: admin/settings.php:8104
+#: admin/settings.php:8175
 #| msgid ""
 #| "Applying a language will replace current text values. Save changes to "
 #| "keep them.\n"
@@ -803,11 +810,17 @@ msgstr ""
 msgid "Are you sure you want to clear all transfer costs?"
 msgstr "আপনি কি নিশ্চিত যে সমস্ত ট্রান্সফার খরচ মুছে ফেলতে চান?"
 
+msgid "Are you sure you want to deactivate your license?"
+msgstr "আপনি কি নিশ্চিত যে আপনি আপনার লাইসেন্স নিষ্ক্রিয় করতে চান?"
+
 #: admin/location-managers.php:1074
 msgid "Are you sure you want to delete this location manager?"
 msgstr "আপনি কি নিশ্চিত যে এই লোকেশন ম্যানেজারকে মুছে ফেলতে চান?"
 
-#: admin/settings.php:6054
+msgid "Are you sure you want to delete this location?"
+msgstr "আপনি কি নিশ্চিত যে আপনি এই অবস্থানটি মুছে ফেলতে চান?"
+
+#: admin/settings.php:6125
 msgid ""
 "Are you sure you want to reset all settings to their default values? This "
 "action cannot be undone!"
@@ -840,7 +853,7 @@ msgstr "লোকেশন নির্ধারণ করুন"
 msgid "Assign Locations:"
 msgstr "লোকেশন নির্ধারণ করুন:"
 
-#: admin/settings.php:5364
+#: admin/settings.php:5435
 #| msgid ""
 #| "Assign Products\n"
 msgid "Assign Products"
@@ -883,7 +896,7 @@ msgstr "অনুপস্থিত টার্ম/লোকেশন স্ব
 msgid "Auto-create terms/locations"
 msgstr "টার্ম/লোকেশন স্বয়ংক্রিয়ভাবে তৈরি করুন"
 
-#: multi-location-product-and-inventory-management-pro.php:11999
+#: multi-location-product-and-inventory-management-pro.php:12592
 msgid "Auto-populate addresses is disabled."
 msgstr "স্বয়ংক্রিয়ভাবে ঠিকানা পূরণ নিষ্ক্রিয় করা হয়েছে।"
 
@@ -924,7 +937,7 @@ msgstr ""
 "ভিত্তিক অ্যাসাইনমেন্ট সক্রিয় থাকে এবং ঐচ্ছিক লোকেশন নির্বাচন নিষ্ক্রিয় "
 "থাকে।"
 
-#: admin/settings.php:6126
+#: admin/settings.php:6197
 msgid "Available Parameters"
 msgstr "উপলব্ধ প্যারামিটারসমূহ"
 
@@ -940,7 +953,7 @@ msgstr "গড় বয়স (দিন)"
 msgid "Avg. Age (days)"
 msgstr "গড় বয়স (দিন)"
 
-#: multi-location-product-and-inventory-management-pro.php:7387
+#: multi-location-product-and-inventory-management-pro.php:7480
 msgid "Awaiting manual location assignment."
 msgstr "ম্যানুয়াল লোকেশন বরাদ্দের জন্য অপেক্ষা করছে।"
 
@@ -956,15 +969,15 @@ msgstr "পিছনে"
 msgid "Back to Locations"
 msgstr "লোকেশনে ফিরে যান"
 
-#: admin/settings.php:8534
+#: admin/settings.php:8622
 msgid "Background color for popup overlay (supports rgba format)."
 msgstr "পপআপ ওভারলে-এর জন্য ব্যাকগ্রাউন্ড রঙ (rgba ফরম্যাট সমর্থন করে)।"
 
-#: admin/settings.php:8512
+#: admin/settings.php:8600
 msgid "Background color for popup/modal panels."
 msgstr "পপআপ/মডাল প্যানেলের জন্য ব্যাকগ্রাউন্ড রঙ।"
 
-#: multi-location-product-and-inventory-management-pro.php:12475
+#: multi-location-product-and-inventory-management-pro.php:13015
 msgid "Backorder"
 msgstr "ব্যাকঅর্ডার"
 
@@ -981,6 +994,9 @@ msgstr "%d আইটেমের জন্য ব্যাকঅর্ডার 
 msgid "Backorders"
 msgstr "ব্যাকঅর্ডারস "
 
+msgid "Backorders:"
+msgstr "ব্যাকঅর্ডার:"
+
 #: includes/text-management.php:875
 msgid "Badge label shown on recommended products."
 msgstr "প্রস্তাবিত পণ্যে প্রদর্শিত ব্যাজ লেবেল"
@@ -993,7 +1009,7 @@ msgstr "স্টক শেষ হওয়া পণ্যের জন্য �
 msgid "Base Font Size"
 msgstr "বেস ফন্ট সাইজ"
 
-#: admin/settings.php:8590
+#: admin/settings.php:8678
 msgid "Base font size (e.g., 15px, 16px, 1rem)."
 msgstr "বেস ফন্ট সাইজ (যেমন, 15px, 16px, 1rem)।"
 
@@ -1055,7 +1071,7 @@ msgstr ""
 msgid "Border Color"
 msgstr "বর্ডার রঙ"
 
-#: admin/settings.php:8568
+#: admin/settings.php:8656
 msgid "Border color for popups, cards, inputs, and other bordered elements."
 msgstr "পপআপ, কার্ড, ইনপুট এবং অন্যান্য বর্ডারযুক্ত উপাদানের জন্য বর্ডার রঙ।"
 
@@ -1063,7 +1079,7 @@ msgstr "পপআপ, কার্ড, ইনপুট এবং অন্যা
 msgid "Border Radius"
 msgstr "বর্ডার রেডিয়াস"
 
-#: admin/settings.php:8645
+#: admin/settings.php:8733
 msgid "Border radius for popups and buttons (e.g., 20px, 10px, 5px)."
 msgstr "পপআপ এবং বোতামের জন্য বর্ডার রেডিয়াস (যেমন, 20px, 10px, 5px)।"
 
@@ -1092,7 +1108,7 @@ msgstr "নিচের ডান"
 msgid "Box Shadow"
 msgstr "বক্স শ্যাডো"
 
-#: admin/settings.php:8633
+#: admin/settings.php:8721
 msgid ""
 "Box shadow for popups and cards (e.g., 0 18px 45px rgba(24, 24, 24, 0.18))."
 msgstr ""
@@ -1103,7 +1119,7 @@ msgid "Branding & Styling Settings"
 msgstr ""
 "ব্র্যান্ডিং ও স্টাইলিং সেটিংস\n"
 
-#: admin/settings.php:5802
+#: admin/settings.php:5873
 #| msgid ""
 #| "Branding Preview\n"
 msgid "Branding Preview"
@@ -1130,7 +1146,7 @@ msgstr "বাল্ক বরাদ্দ ব্যর্থ হয়েছে
 msgid "Bulk Location Assignment"
 msgstr "বাল্ক লোকেশন এসাইনমেন্ট "
 
-#: admin/settings.php:6581
+#: admin/settings.php:6652
 msgid "Bulk Sync Example"
 msgstr "বাল্ক সিঙ্ক উদাহরণ"
 
@@ -1236,7 +1252,7 @@ msgstr "কার্টে যোগ করা যাচ্ছে না বা�
 msgid "Cannot add to cart. %s is currently closed."
 msgstr "কার্টে যোগ করা যাচ্ছে না। %s বর্তমানে বন্ধ রয়েছে।"
 
-#: multi-location-product-and-inventory-management-pro.php:4958
+#: multi-location-product-and-inventory-management-pro.php:4986
 #, php-format
 msgid ""
 "Cannot change location. Insufficient stock at %s location. Available: %d, "
@@ -1245,7 +1261,7 @@ msgstr ""
 "লোকেশন পরিবর্তন করা যাচ্ছে না। %s লোকেশনে পর্যাপ্ত স্টক নেই। উপলব্ধ: %d, "
 "প্রয়োজন: %d"
 
-#: multi-location-product-and-inventory-management-pro.php:5290
+#: multi-location-product-and-inventory-management-pro.php:5318
 #, php-format
 msgid ""
 "Cannot increase quantity for %s. Insufficient stock at %s location. "
@@ -1263,13 +1279,13 @@ msgstr "সক্ষমতা: %s"
 msgid "Cart & Checkout"
 msgstr "কার্ট ও চেকআউট"
 
-#: multi-location-product-and-inventory-management-pro.php:5698
-#: multi-location-product-and-inventory-management-pro.php:5766
+#: multi-location-product-and-inventory-management-pro.php:5726
+#: multi-location-product-and-inventory-management-pro.php:5794
 msgid "Cart item not found."
 msgstr "কার্ট আইটেম পাওয়া যায়নি।"
 
-#: multi-location-product-and-inventory-management-pro.php:5683
-#: multi-location-product-and-inventory-management-pro.php:5751
+#: multi-location-product-and-inventory-management-pro.php:5711
+#: multi-location-product-and-inventory-management-pro.php:5779
 msgid "Cart not available."
 msgstr "কার্ট উপলব্ধ নয়।"
 
@@ -1284,12 +1300,12 @@ msgstr ""
 msgid "Cart Update Error"
 msgstr "কার্ট আপডেট ত্রুটি"
 
-#: includes/cash-on-pickup-payment-gateway.php:147
-#: includes/cash-on-pickup-payment-gateway.php:281
+#: includes/cash-on-pickup-payment-gateway.php:151
+#: includes/cash-on-pickup-payment-gateway.php:356
 msgid "Cash on Pickup"
 msgstr "পিকআপের সময় নগদ অর্থ প্রদান"
 
-#: includes/cash-on-pickup-payment-gateway.php:387
+#: includes/cash-on-pickup-payment-gateway.php:426
 msgid "Cash on Pickup is not available for the selected location."
 msgstr "নির্বাচিত লোকেশনের জন্য পিকআপের সময় নগদ অর্থ প্রদান উপলব্ধ নয়।"
 
@@ -1318,7 +1334,7 @@ msgstr "মুদ্রা পরিবর্তন করুন"
 msgid "Change Location Label"
 msgstr "লোকেশন পরিবর্তনের লেবেল"
 
-#: multi-location-product-and-inventory-management-pro.php:5652
+#: multi-location-product-and-inventory-management-pro.php:5680
 #: includes/text-management.php:613
 msgid "Change Location:"
 msgstr "লোকেশন পরিবর্তন করুন:"
@@ -1326,6 +1342,10 @@ msgstr "লোকেশন পরিবর্তন করুন:"
 #: admin/license-page.php:790
 msgid "Check for Updates"
 msgstr "আপডেট পরীক্ষা করুন"
+
+#| msgid "checking..."
+msgid "Checking..."
+msgstr "যাচাই করা হচ্ছে…"
 
 #: admin/settings.php:4443
 #| msgid ""
@@ -1519,11 +1539,11 @@ msgstr "আপনার ঠিকানা পরিষ্কার করুন
 msgid "Clearing cache..."
 msgstr "ক্যাশ পরিষ্কার করা হচ্ছে..."
 
-#: admin/settings.php:6565
+#: admin/settings.php:6636
 msgid "Click \"Generate API Key\" button (if no key exists)"
 msgstr "\"API কী তৈরি করুন\" বোতামে ক্লিক করুন (যদি কোনো কী না থাকে)"
 
-#: admin/settings.php:6567
+#: admin/settings.php:6638
 msgid "Click \"Generate Webhook Secret\" button (if no secret exists)"
 msgstr ""
 "\"ওয়েবহুক সিক্রেট তৈরি করুন\" বোতামে ক্লিক করুন (যদি কোনো সিক্রেট না থাকে)"
@@ -1587,7 +1607,7 @@ msgstr "%s-এ বন্ধ হবে"
 msgid "Comfy"
 msgstr "আরামদায়ক"
 
-#: multi-location-product-and-inventory-management-pro.php:8817
+#: multi-location-product-and-inventory-management-pro.php:8910
 msgid "Community support"
 msgstr "কমিউনিটি সহায়তা"
 
@@ -1595,7 +1615,7 @@ msgstr "কমিউনিটি সহায়তা"
 msgid "Compact"
 msgstr "কমপ্যাক্ট"
 
-#: admin/settings.php:6427
+#: admin/settings.php:6498
 #| msgid ""
 #| "Compact view for single location\n"
 msgid "Compact view for single location"
@@ -1605,7 +1625,7 @@ msgstr "একক অবস্থানের জন্য সংক্ষিপ
 msgid "Compatible with your version of WordPress"
 msgstr "আপনার ওয়ার্ডপ্রেস সংস্করণের সাথে সামঞ্জস্যপূর্ণ"
 
-#: admin/settings.php:6550
+#: admin/settings.php:6621
 #| msgid ""
 #| "Complete guide to integrating your WMS, POS, or ERP systems with the "
 #| "plugin using REST API endpoints and webhooks. Learn how to sync inventory "
@@ -1708,7 +1728,7 @@ msgstr ""
 "লোকেশন ডেটার উপর ভিত্তি করে গ্রাহক অ্যানালিটিক্স এবং ইনসাইট কনফিগার করুন।\n"
 "\n"
 
-#: admin/settings.php:6355
+#: admin/settings.php:6426
 #| msgid ""
 #| "Configure different prices for products at different locations. Set up "
 #| "location-specific discounts, sale prices, and promotional offers to "
@@ -1831,12 +1851,12 @@ msgstr ""
 "কনফিগার করুন।\n"
 "\n"
 
-#: admin/settings.php:5281
+#: admin/settings.php:5352
 msgid "Configure how store locations appear with product titles."
 msgstr ""
 "পণ্যের শিরোনামের সাথে দোকানের অবস্থান কীভাবে প্রদর্শিত হবে তা কনফিগার করুন।"
 
-#: admin/settings.php:7763
+#: admin/settings.php:7834
 #| msgid ""
 #| "Configure how strictly products are filtered by location throughout your "
 #| "store.\n"
@@ -1856,7 +1876,7 @@ msgstr ""
 "গ্রাহকদের কাছে লোকেশন সিলেক্টর কীভাবে প্রদর্শিত হবে তা কনফিগার করুন।\n"
 "\n"
 
-#: admin/settings.php:6382
+#: admin/settings.php:6453
 #| msgid ""
 #| "Configure location manager roles, assign staff to specific locations, "
 #| "manage permissions, and set up multi-user workflows for decentralized "
@@ -1927,7 +1947,7 @@ msgstr ""
 "পণ্যের লোকেশন অনুযায়ী শিপিং বিকল্প কনফিগার করুন।\n"
 "\n"
 
-#: admin/settings.php:6541
+#: admin/settings.php:6612
 #| msgid ""
 #| "Configure social alerts (orders, stock, digests) using a Microsoft Teams "
 #| "incoming webhook. Covers creating the webhook in Teams and pasting it "
@@ -1996,7 +2016,7 @@ msgstr "যোগাযোগের তথ্য"
 msgid "Contact Information Heading"
 msgstr "যোগাযোগের তথ্য শিরোনাম"
 
-#: admin/license-page.php:995 admin/settings.php:7011
+#: admin/license-page.php:995 admin/settings.php:7082
 msgid "Contact Support"
 msgstr "সহায়তার সাথে যোগাযোগ করুন"
 
@@ -2034,19 +2054,22 @@ msgid "Conversion Rate"
 msgstr ""
 "কনভার্সন রেট\n"
 
-#: admin/settings.php:6111
+msgid "Copied!"
+msgstr "কপি সম্পন্ন হয়েছে!"
+
+#: admin/settings.php:6182
 msgid "Copy Code"
 msgstr "কোড কপি করুন"
 
-#: admin/settings.php:6887
+#: admin/settings.php:6958
 msgid "Copy shortcode"
 msgstr "শর্টকোড কপি করুন"
 
-#: admin/settings.php:6566
+#: admin/settings.php:6637
 msgid "Copy the generated API key immediately"
 msgstr "জেনারেট করা এপিআই কী অবিলম্বে কপি করুন"
 
-#: admin/settings.php:6568
+#: admin/settings.php:6639
 msgid "Copy the generated webhook secret immediately"
 msgstr "তৈরি হওয়া ওয়েবহুক সিক্রেটটি অবিলম্বে কপি করুন"
 
@@ -2064,7 +2087,7 @@ msgid ""
 msgstr ""
 "ওয়েবহুক URL কপি করুন, উপরের Webhook URL ফিল্ডে পেস্ট করুন এবং সংরক্ষণ করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:3757
+#: multi-location-product-and-inventory-management-pro.php:3785
 #| msgid "POST"
 msgid "Cost"
 msgstr "POST"
@@ -2113,7 +2136,7 @@ msgstr ""
 "কার্টে একাধিক লোকেশনের আইটেম থাকলে প্রতিটি লোকেশনের জন্য আলাদা অর্ডার তৈরি "
 "করুন।"
 
-#: admin/settings.php:5357
+#: admin/settings.php:5428
 #| msgid ""
 #| "Create Locations\n"
 msgid "Create Locations"
@@ -2137,7 +2160,7 @@ msgstr "আপনার প্রথম লোকেশন তৈরি কর�
 msgid "created"
 msgstr "তৈরি হয়েছে"
 
-#: admin/settings.php:6336
+#: admin/settings.php:6407
 #| msgid ""
 #| "Creating Store Locations\n"
 msgid "Creating Store Locations"
@@ -2151,7 +2174,7 @@ msgid "Cross-Location Order Management"
 msgstr ""
 "ক্রস-লোকেশন অর্ডার ব্যবস্থাপনা\n"
 
-#: admin/settings.php:7802
+#: admin/settings.php:7873
 msgid "Cross-Sells"
 msgstr "ক্রস-সেলস"
 
@@ -2210,7 +2233,7 @@ msgstr ""
 msgid "Current Version:"
 msgstr "বর্তমান সংস্করণ:"
 
-#: admin/settings.php:6182
+#: admin/settings.php:6253
 msgid "Custom CSS class name"
 msgstr "কাস্টম সিএসএস ক্লাসের নাম"
 
@@ -2222,7 +2245,7 @@ msgstr "কাস্টম ইমেইল ঠিকানা"
 msgid "Custom Hours"
 msgstr "কাস্টম সময়সূচি"
 
-#: admin/settings.php:6510
+#: admin/settings.php:6581
 #| msgid ""
 #| "Custom label text\n"
 msgid "Custom label text"
@@ -2254,16 +2277,17 @@ msgstr "গ্রাহকের লোকেশন সেটিংস"
 msgid "Customer Selection (Based on selected location)"
 msgstr "গ্রাহক নির্বাচন (নির্বাচিত লোকেশনের ভিত্তিতে)"
 
-#: multi-location-product-and-inventory-management-pro.php:12013
+#: multi-location-product-and-inventory-management-pro.php:12606
+#: multi-location-product-and-inventory-management-pro.php:12633
 msgid "Customer session unavailable."
 msgstr "গ্রাহকের সেশন অনুপলব্ধ।"
 
-#: multi-location-product-and-inventory-management-pro.php:13228
+#: multi-location-product-and-inventory-management-pro.php:13768
 #, php-format
 msgid "Customer: %s"
 msgstr "গ্রাহক: %s"
 
-#: admin/settings.php:8404
+#: admin/settings.php:8492
 #| msgid ""
 #| "Customize the appearance and styling of popups, buttons, and other "
 #| "frontend elements to match your brand identity.\n"
@@ -2276,7 +2300,7 @@ msgstr ""
 "উপাদানের চেহারা ও স্টাইল কাস্টমাইজ করুন।\n"
 "\n"
 
-#: admin/settings.php:6491
+#: admin/settings.php:6562
 #| msgid ""
 #| "Customize the location selector display on product pages and throughout "
 #| "your store. Learn to use shortcodes, and enhance customer experience with "
@@ -2344,10 +2368,6 @@ msgstr "মঙ্গলবারের দিনের লেবেল"
 #: includes/text-management.php:791
 msgid "Day label for Wednesday."
 msgstr "বুধবারের দিনের লেবেল"
-
-#: multi-location-product-and-inventory-management-pro.php:7309
-msgid "Deactivate"
-msgstr "নিষ্ক্রিয় করুন"
 
 #: admin/license-page.php:784
 msgid "Deactivate License"
@@ -2434,6 +2454,9 @@ msgid "Default preparation time in hours before an order is ready for pickup."
 msgstr ""
 "অর্ডার পিকআপের জন্য প্রস্তুত হওয়ার আগে ডিফল্ট প্রস্তুতির সময় (ঘণ্টায়)।"
 
+msgid "Default Settings"
+msgstr "ডিফল্ট সেটিংস"
+
 #: admin/settings.php:3811
 msgid "Default Store Location"
 msgstr "ডিফল্ট স্টোর লোকেশন"
@@ -2467,24 +2490,24 @@ msgstr "মুছে ফেলুন"
 msgid "Delete location"
 msgstr "লোকেশন মুছে ফেলুন"
 
-#: includes/cash-on-pickup-payment-gateway.php:285
+#: includes/cash-on-pickup-payment-gateway.php:360
 #: includes/class-product-location-table.php:247
 msgid "Description"
 msgstr "বিবরণ"
 
-#: multi-location-product-and-inventory-management-pro.php:3748
+#: multi-location-product-and-inventory-management-pro.php:3776
 #, php-format
 msgid "Destination: %s"
 msgstr "গন্তব্য: %s"
 
-#: admin/settings.php:7025
+#: admin/settings.php:7096
 #| msgid ""
 #| "Detailed KB Articles\n"
 msgid "Detailed KB Articles"
 msgstr ""
 "বিস্তারিত KB নিবন্ধসমূহ\n"
 
-#: multi-location-product-and-inventory-management-pro.php:1760
+#: multi-location-product-and-inventory-management-pro.php:1788
 #, php-format
 msgid "Detected WooCommerce version: %s"
 msgstr "সনাক্তকৃত WooCommerce সংস্করণ: %s"
@@ -2497,7 +2520,7 @@ msgstr "লোকেশন শনাক্ত করা হচ্ছে"
 msgid "Detecting your location..."
 msgstr "আপনার লোকেশন শনাক্ত করা হচ্ছে..."
 
-#: multi-location-product-and-inventory-management-pro.php:13690
+#: multi-location-product-and-inventory-management-pro.php:14230
 #, php-format
 msgid "Digest preview - %s"
 msgstr "ডাইজেস্ট প্রিভিউ - %s"
@@ -2507,7 +2530,7 @@ msgid "Digest test failed. Check the details and try again."
 msgstr ""
 "ডাইজেস্ট টেস্ট ব্যর্থ হয়েছে। বিস্তারিত পরীক্ষা করুন এবং আবার চেষ্টা করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:13726
+#: multi-location-product-and-inventory-management-pro.php:14266
 msgid "Digest test sent (check your channel)."
 msgstr "ডাইজেস্ট টেস্ট পাঠানো হয়েছে (আপনার চ্যানেল পরীক্ষা করুন)।"
 
@@ -2524,7 +2547,7 @@ msgstr "ডাইজেস্ট সময় বর্তমান সময়
 msgid "Dimensions"
 msgstr "মাত্রা"
 
-#: admin/settings.php:7777
+#: admin/settings.php:7848
 msgid "Disabled (Show all products regardless of location)"
 msgstr "নিষ্ক্রিয় (লোকেশন নির্বিশেষে সব পণ্য দেখান)"
 
@@ -2545,7 +2568,7 @@ msgstr ""
 "Allow Mixed-Location Cart সক্রিয় থাকার কারণে এটি নিষ্ক্রিয়। মিশ্র-লোকেশন "
 "কার্টে একাধিক লোকেশন থেকে পণ্য রাখা যায়, তাই এই আচরণ প্রযোজ্য নয়।"
 
-#: admin/settings.php:8309
+#: admin/settings.php:8397
 msgid ""
 "Disabled because Text Management is turned off. Frontend text will use "
 "defaults."
@@ -2567,7 +2590,7 @@ msgstr ""
 "ম্যানুয়াল বা ইনভেন্টরি-ভিত্তিক অ্যাসাইনমেন্ট সক্রিয় থাকলে এটি নিষ্ক্রিয় "
 "থাকে।"
 
-#: admin/settings.php:4604 admin/settings.php:4646 admin/settings.php:7748
+#: admin/settings.php:4604 admin/settings.php:4646 admin/settings.php:7819
 msgid ""
 "Disabled while Manual, Inventory-Based, or Proximity-Based assignment is "
 "enabled without optional selection."
@@ -2579,7 +2602,7 @@ msgstr ""
 msgid "Discord Docs: Webhooks"
 msgstr "ডিসকর্ড ডকস: ওয়েবহুকস"
 
-#: admin/settings.php:5899
+#: admin/settings.php:5970
 msgid "Discounts"
 msgstr "ডিসকাউন্টসমূহ"
 
@@ -2591,7 +2614,7 @@ msgstr "গ্রাহক তাদের লোকেশন পরিবর্
 msgid "Display Hours on Location Archive"
 msgstr "লোকেশন আর্কাইভে সময়সূচি প্রদর্শন করুন"
 
-#: admin/settings.php:6417
+#: admin/settings.php:6488
 #| msgid ""
 #| "Display layout style\n"
 msgid "Display layout style"
@@ -2614,7 +2637,7 @@ msgstr "একক পণ্যে লোকেশন প্রদর্শন �
 msgid "Display Order"
 msgstr "অর্ডার প্রদর্শন করুন"
 
-#: admin/settings.php:6450
+#: admin/settings.php:6521
 #| msgid ""
 #| "Display popular products for each location using customer insights and "
 #| "analytics. Learn to track customer preferences, show location-specific "
@@ -2630,18 +2653,18 @@ msgstr ""
 "দেখান এবং ব্যক্তিগতকৃত পণ্যের প্রস্তাবনার মাধ্যমে বিক্রয় বৃদ্ধি করুন।\n"
 "\n"
 
-#: admin/settings.php:6473
+#: admin/settings.php:6544
 #| msgid ""
 #| "Display section title\n"
 msgid "Display section title"
 msgstr ""
 "সেকশন শিরোনাম প্রদর্শন করুন\n"
 
-#: admin/settings.php:6573
+#: admin/settings.php:6644
 msgid "Displayed in \"API Key\" field after generation"
 msgstr "জেনারেট করার পরে \"API কী\" ফিল্ডে প্রদর্শিত"
 
-#: admin/settings.php:6574
+#: admin/settings.php:6645
 msgid "Displayed in \"Webhook Secret\" field after generation"
 msgstr "জেনারেট করার পরে \"ওয়েবহুক সিক্রেট\" ফিল্ডে প্রদর্শিত"
 
@@ -2669,7 +2692,7 @@ msgstr "আপনার লোকেশন থেকে দূরত্বসম
 msgid "Do not allow"
 msgstr "অনুমতি দেবেন না"
 
-#: admin/settings.php:5294
+#: admin/settings.php:5365
 msgid "Do not display location"
 msgstr "লোকেশন প্রদর্শন করবেন না"
 
@@ -2677,18 +2700,18 @@ msgstr "লোকেশন প্রদর্শন করবেন না"
 msgid "Do Not Store"
 msgstr "সংরক্ষণ করবেন না"
 
-#: multi-location-product-and-inventory-management-pro.php:8997
+#: multi-location-product-and-inventory-management-pro.php:9090
 #: includes/product-location-selector-single.php:188
 #: includes/product-location-selector-single.php:1061
 #: includes/text-management.php:603
 msgid "Do you want to change the store location? Your cart will be updated."
 msgstr "আপনি কি স্টোর লোকেশন পরিবর্তন করতে চান? আপনার কার্ট আপডেট হবে।"
 
-#: multi-location-product-and-inventory-management-pro.php:8815
+#: multi-location-product-and-inventory-management-pro.php:8908
 msgid "Docs"
 msgstr "ডকস"
 
-#: multi-location-product-and-inventory-management-pro.php:8783
+#: multi-location-product-and-inventory-management-pro.php:8876
 msgid "Documentation"
 msgstr "ডকুমেন্টেশন"
 
@@ -2858,7 +2881,7 @@ msgstr "বাল্ক লোকেশন অ্যাসাইনমেন্�
 msgid "Enable Business Hours"
 msgstr "ব্যবসার সময়সূচি সক্রিয় করুন"
 
-#: includes/cash-on-pickup-payment-gateway.php:274
+#: includes/cash-on-pickup-payment-gateway.php:349
 msgid "Enable Cash on Pickup"
 msgstr "পিকআপের সময় নগদ অর্থ প্রদান সক্রিয় করুন"
 
@@ -2878,7 +2901,7 @@ msgstr "পণ্যের লোকেশন অনুযায়ী বিভ
 msgid "Enable events and click Test."
 msgstr "ইভেন্ট সক্রিয় করুন এবং টেস্টে ক্লিক করুন।"
 
-#: includes/cash-on-pickup-payment-gateway.php:299
+#: includes/cash-on-pickup-payment-gateway.php:374
 msgid "Enable for shipping methods"
 msgstr "শিপিং পদ্ধতির জন্য সক্রিয় করুন"
 
@@ -2914,14 +2937,14 @@ msgstr "লোকেশন পিকআপ সক্রিয় করুন"
 msgid "Enable Location Pricing"
 msgstr "লোকেশন মূল্য নির্ধারণ সক্রিয় করুন"
 
-#: admin/settings.php:6422
+#: admin/settings.php:6493
 #| msgid ""
 #| "Enable location search\n"
 msgid "Enable location search"
 msgstr ""
 "লোকেশন অনুসন্ধান সক্রিয় করুন\n"
 
-#: admin/settings.php:5371
+#: admin/settings.php:5442
 #| msgid ""
 #| "Enable Location Selector\n"
 msgid "Enable Location Selector"
@@ -3022,7 +3045,7 @@ msgstr "স্টোর লোকেটর সক্রিয় করুন"
 msgid "Enable store locator with map functionality."
 msgstr "মানচিত্র ফাংশনালিটি সহ স্টোর লোকেটর সক্রিয় করুন।"
 
-#: admin/settings.php:8064
+#: admin/settings.php:8135
 msgid "Enable Text Management"
 msgstr "টেক্সট ম্যানেজমেন্ট সক্ষম করুন"
 
@@ -3040,11 +3063,11 @@ msgstr ""
 "স্টক পরিমাণ এবং ব্যাকঅর্ডার সম্পাদনা করতে WooCommerce Manage stock সক্রিয় "
 "করুন।"
 
-#: includes/cash-on-pickup-payment-gateway.php:272
+#: includes/cash-on-pickup-payment-gateway.php:347
 msgid "Enable/Disable"
 msgstr "সক্রিয়/নিষ্ক্রিয় করুন"
 
-#: admin/settings.php:7776
+#: admin/settings.php:7847
 msgid "Enabled (Only show products from selected location)"
 msgstr "সক্রিয় (শুধুমাত্র নির্বাচিত লোকেশনের পণ্য দেখান)"
 
@@ -3052,7 +3075,7 @@ msgstr "সক্রিয় (শুধুমাত্র নির্বাচ
 msgid "End of Report"
 msgstr "রিপোর্টের সমাপ্তি"
 
-#: admin/settings.php:6941
+#: admin/settings.php:7012
 #| msgid ""
 #| "Endpoint:\n"
 msgid "Endpoint:"
@@ -3162,6 +3185,12 @@ msgstr ""
 "সেটিংস ইমপোর্ট করতে ত্রুটি হয়েছে। অনুগ্রহ করে নিশ্চিত করুন যে আপনি একটি বৈধ "
 "JSON ফাইল নির্বাচন করেছেন।"
 
+msgid "Error parsing location data."
+msgstr "অবস্থান ডেটা পার্স করতে ত্রুটি।"
+
+msgid "Error removing location"
+msgstr "অবস্থান অপসারণে ত্রুটি"
+
 #: includes/location-based-shipping.php:458
 msgid "Error saving locations"
 msgstr "লোকেশন সংরক্ষণে ত্রুটি হয়েছে"
@@ -3169,6 +3198,9 @@ msgstr "লোকেশন সংরক্ষণে ত্রুটি হয়
 #: admin/location-managers.php:1251
 msgid "Error saving manager"
 msgstr "ম্যানেজার সংরক্ষণে ত্রুটি হয়েছে"
+
+msgid "Error saving product data"
+msgstr "পণ্য ডেটা সংরক্ষণ করতে ত্রুটি"
 
 #: includes/text-management.php:275
 msgid "Error shown when a location slug does not exist."
@@ -3186,7 +3218,10 @@ msgstr "সিলেক্টরের নিরাপত্তা যাচা�
 msgid "Error updating location. Please try again."
 msgstr "লোকেশন আপডেট করতে ত্রুটি হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:13553
+msgid "Error, duplicate 1: Enable"
+msgstr "ত্রুটি, সদৃশ ১: সক্ষম করুন"
+
+#: multi-location-product-and-inventory-management-pro.php:14093
 msgid "Every 5 Minutes"
 msgstr "প্রতি ৫ মিনিটে"
 
@@ -3241,11 +3276,11 @@ msgstr "CSV-তে এক্সপোর্ট করুন"
 msgid "Export in Excel (HTML)"
 msgstr "এক্সেল (HTML)-এ এক্সপোর্ট করুন"
 
-#: admin/settings.php:6643
+#: admin/settings.php:6714
 msgid "Export Inventory CSV Example"
 msgstr "ইনভেন্টরি CSV উদাহরণ এক্সপোর্ট করুন"
 
-#: admin/settings.php:6655
+#: admin/settings.php:6726
 msgid "Export Inventory JSON Example"
 msgstr "ইনভেন্টরি JSON উদাহরণ এক্সপোর্ট করুন"
 
@@ -3324,7 +3359,7 @@ msgstr "CSV ফাইল পড়তে ব্যর্থ হয়েছে�
 msgid "Failed to retrieve locations."
 msgstr "লোকেশন পুনরুদ্ধার করতে ব্যর্থ হয়েছে।"
 
-#: multi-location-product-and-inventory-management-pro.php:11538
+#: multi-location-product-and-inventory-management-pro.php:11799
 msgid "Failed to update location"
 msgstr "লোকেশন আপডেট করতে ব্যর্থ হয়েছে"
 
@@ -3493,7 +3528,7 @@ msgstr ""
 msgid "Font Family"
 msgstr "ফন্ট পরিবার"
 
-#: admin/settings.php:8621
+#: admin/settings.php:8709
 msgid "Font family for popup and frontend elements."
 msgstr "পপআপ এবং ফ্রন্টএন্ড উপাদানের জন্য ফন্ট পরিবার।"
 
@@ -3517,7 +3552,7 @@ msgstr "খোলা ও বন্ধ হওয়ার সময়ের ফ�
 msgid "Friday"
 msgstr "শুক্রবার"
 
-#: multi-location-product-and-inventory-management-pro.php:3755
+#: multi-location-product-and-inventory-management-pro.php:3783
 msgid "From Location"
 msgstr "লোকেশন থেকে"
 
@@ -3535,7 +3570,7 @@ msgstr ""
 "গ্যালারি শিরোনাম\n"
 "\n"
 
-#: admin/settings.php:5731
+#: admin/settings.php:5802
 msgid "General"
 msgstr "সাধারণ"
 
@@ -3573,7 +3608,7 @@ msgstr ""
 "API কী তৈরি করুন\n"
 "\n"
 
-#: admin/settings.php:6391
+#: admin/settings.php:6462
 #| msgid ""
 #| "Generate location-based reports, analyze sales data, track inventory "
 #| "movements, manage orders by location, and optimize your multi-location "
@@ -3613,23 +3648,23 @@ msgstr ""
 msgid "Get Directions Button"
 msgstr "দিকনির্দেশ পাওয়ার বোতাম"
 
-#: admin/settings.php:6706
+#: admin/settings.php:6777
 msgid "Get Locations Example"
 msgstr "লোকেশন উদাহরণ পান"
 
-#: admin/settings.php:6733
+#: admin/settings.php:6804
 #| msgid ""
 #| "Get Products Example\n"
 msgid "Get Products Example"
 msgstr ""
 "পণ্য উদাহরণ পান\n"
 
-#: admin/settings.php:5392
+#: admin/settings.php:5463
 msgid "Get Support"
 msgstr "সহায়তা পান"
 
-#: multi-location-product-and-inventory-management-pro.php:5425
-#: multi-location-product-and-inventory-management-pro.php:5483
+#: multi-location-product-and-inventory-management-pro.php:5453
+#: multi-location-product-and-inventory-management-pro.php:5511
 msgid "Global"
 msgstr "গ্লোবাল"
 
@@ -3648,7 +3683,7 @@ msgstr ""
 msgid "Global Products First"
 msgstr "গ্লোবাল পণ্য প্রথমে"
 
-#: admin/settings.php:6563
+#: admin/settings.php:6634
 msgid "Go to: Multi Location Products → API & Webhooks"
 msgstr "যান: একাধিক অবস্থান পণ্য → এপিআই এবং ওয়েবহুক"
 
@@ -3656,7 +3691,7 @@ msgstr "যান: একাধিক অবস্থান পণ্য → এ
 msgid "Grid"
 msgstr "গ্রিড"
 
-#: admin/settings.php:6463
+#: admin/settings.php:6534
 #| msgid ""
 #| "Grid columns layout\n"
 msgid "Grid columns layout"
@@ -3685,7 +3720,7 @@ msgstr "গ্রুপ করা হয়েছে"
 msgid "Guest"
 msgstr "অতিথি"
 
-#: includes/cash-on-pickup-payment-gateway.php:148
+#: includes/cash-on-pickup-payment-gateway.php:152
 msgid ""
 "Have your customers pay with cash when they pick up their order from your "
 "store location. Powered by Plugincy - Multi Location Product & Inventory "
@@ -3699,7 +3734,7 @@ msgstr ""
 msgid "Header shown before listing distances in the classic popup."
 msgstr "ক্লাসিক পপআপে দূরত্ব তালিকাভুক্ত করার আগে প্রদর্শিত হেডার।"
 
-#: admin/settings.php:6946
+#: admin/settings.php:7017
 #| msgid ""
 #| "Headers:\n"
 msgid "Headers:"
@@ -3816,11 +3851,11 @@ msgstr "স্টক তথ্য লুকান"
 msgid "Hierarchical Option"
 msgstr "ধারাবাহিক বিকল্প"
 
-#: multi-location-product-and-inventory-management-pro.php:12525
+#: multi-location-product-and-inventory-management-pro.php:13065
 msgid "High stock"
 msgstr "উচ্চ স্টক"
 
-#: multi-location-product-and-inventory-management-pro.php:13245
+#: multi-location-product-and-inventory-management-pro.php:13785
 msgid "High value order"
 msgstr "উচ্চ মূল্য অর্ডার"
 
@@ -3905,7 +3940,7 @@ msgstr "লোকেশন-নির্দিষ্ট পণ্যের জন
 msgid "How to format location information in URLs."
 msgstr "URL-এ লোকেশন তথ্য কীভাবে ফরম্যাট করবেন।"
 
-#: admin/settings.php:6557
+#: admin/settings.php:6628
 msgid "How to Get API Key & Webhook Secret"
 msgstr "API কী এবং ওয়েবহুক সিক্রেট কীভাবে পাবেন"
 
@@ -3951,7 +3986,7 @@ msgstr ""
 "সম্পূর্ণ ইন্টিগ্রেশন বিবরণ এবং আরও প্লেসহোল্ডারের জন্য প্লাগইন <a "
 "href=\"%s\" target=\"_blank\">ডকুমেন্টেশন দেখুন</a>।"
 
-#: admin/settings.php:6570
+#: admin/settings.php:6641
 msgid ""
 "If you lose your keys, you must generate new ones. Old keys will no longer "
 "work."
@@ -4093,7 +4128,7 @@ msgstr ""
 msgid "Importing settings..."
 msgstr "সেটিংস ইমপোর্ট করা হচ্ছে..."
 
-#: admin/settings.php:5293
+#: admin/settings.php:5364
 msgid "In brackets (Title [Location])"
 msgstr "ব্র্যাকেটে (শিরোনাম [লোকেশন])"
 
@@ -4117,7 +4152,7 @@ msgstr ""
 "Slack-এ, সেটিংস ও অ্যাডমিনিস্ট্রেশন → ম্যানেজ অ্যাপস → “Incoming WebHooks” "
 "সার্চ করুন এবং Add-এ ক্লিক করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:12369
+#: multi-location-product-and-inventory-management-pro.php:12909
 #: includes/class-product-location-table.php:2681
 #: includes/stock-price-backorder-manage.php:2078
 #: includes/text-management.php:547
@@ -4126,7 +4161,7 @@ msgstr ""
 "স্টকে আছে\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:12479
+#: multi-location-product-and-inventory-management-pro.php:13019
 #: includes/class-product-location-table.php:1193
 #: includes/class-product-location-table.php:1201
 #: includes/class-product-location-table.php:1224
@@ -4223,15 +4258,15 @@ msgstr "এখনই ইনস্টল করুন"
 msgid "Installed"
 msgstr "ইনস্টল করা হয়েছে"
 
-#: includes/cash-on-pickup-payment-gateway.php:292
+#: includes/cash-on-pickup-payment-gateway.php:367
 msgid "Instructions"
 msgstr "নির্দেশাবলী"
 
-#: includes/cash-on-pickup-payment-gateway.php:294
+#: includes/cash-on-pickup-payment-gateway.php:369
 msgid "Instructions that will be added to the thank you page and emails."
 msgstr "ধন্যবাদ পেজ ও ইমেইলে যোগ করা হবে এমন নির্দেশাবলী।"
 
-#: multi-location-product-and-inventory-management-pro.php:4794
+#: multi-location-product-and-inventory-management-pro.php:4822
 msgid "Insufficient"
 msgstr "অপর্যাপ্ত"
 
@@ -4247,11 +4282,11 @@ msgstr "%d আইটেমের জন্য অপর্যাপ্ত স্
 msgid "Insufficient stock for all products at any location."
 msgstr "যেকোনো লোকেশনে সব পণ্যের জন্য অপর্যাপ্ত স্টক।"
 
-#: multi-location-product-and-inventory-management-pro.php:3965
+#: multi-location-product-and-inventory-management-pro.php:3993
 msgid "Inter-location Transfer"
 msgstr "লোকেশন-অন্তর্বর্তী স্থানান্তর"
 
-#: multi-location-product-and-inventory-management-pro.php:3743
+#: multi-location-product-and-inventory-management-pro.php:3771
 #: admin/settings.php:906
 #| msgid ""
 #| "Inter-Location Transfer Costs\n"
@@ -4302,7 +4337,7 @@ msgstr "ফিনিশ আপলোড পে-লোড অবৈধ।"
 msgid "Invalid instance ID"
 msgstr "অবৈধ ইনস্ট্যান্স আইডি"
 
-#: multi-location-product-and-inventory-management-pro.php:4887
+#: multi-location-product-and-inventory-management-pro.php:4915
 msgid "Invalid item ID or location"
 msgstr "অবৈধ আইটেম আইডি বা লোকেশন"
 
@@ -4322,11 +4357,11 @@ msgstr "অবৈধ লোকেশন"
 msgid "Invalid location data"
 msgstr "অবৈধ লোকেশন তথ্য"
 
-#: multi-location-product-and-inventory-management-pro.php:12128
+#: multi-location-product-and-inventory-management-pro.php:12668
 msgid "Invalid location ID"
 msgstr "অবৈধ লোকেশন আইডি"
 
-#: multi-location-product-and-inventory-management-pro.php:12134
+#: multi-location-product-and-inventory-management-pro.php:12674
 msgid "Invalid location ID format"
 msgstr "অবৈধ লোকেশন আইডি ফরম্যাট"
 
@@ -4334,9 +4369,9 @@ msgstr "অবৈধ লোকেশন আইডি ফরম্যাট"
 msgid "Invalid Location Message"
 msgstr "অবৈধ লোকেশন বার্তা"
 
-#: multi-location-product-and-inventory-management-pro.php:5704
-#: multi-location-product-and-inventory-management-pro.php:11225
-#: multi-location-product-and-inventory-management-pro.php:11898
+#: multi-location-product-and-inventory-management-pro.php:5732
+#: multi-location-product-and-inventory-management-pro.php:11486
+#: multi-location-product-and-inventory-management-pro.php:12159
 #: admin/admin.php:3817 admin/admin.php:3868
 msgid "Invalid location."
 msgstr "অবৈধ লোকেশন।"
@@ -4354,17 +4389,17 @@ msgstr "অবৈধ ম্যানেজার আইডি"
 msgid "Invalid order ID"
 msgstr "অবৈধ অর্ডার আইডি"
 
-#: multi-location-product-and-inventory-management-pro.php:5679
-#: multi-location-product-and-inventory-management-pro.php:5747
-#: multi-location-product-and-inventory-management-pro.php:6594
-#: multi-location-product-and-inventory-management-pro.php:7229
+#: multi-location-product-and-inventory-management-pro.php:5707
+#: multi-location-product-and-inventory-management-pro.php:5775
+#: multi-location-product-and-inventory-management-pro.php:6622
+#: multi-location-product-and-inventory-management-pro.php:7257
 msgid "Invalid parameters."
 msgstr "অবৈধ প্যারামিটার।"
 
-#: multi-location-product-and-inventory-management-pro.php:6514
-#: multi-location-product-and-inventory-management-pro.php:6555
-#: multi-location-product-and-inventory-management-pro.php:6653
-#: multi-location-product-and-inventory-management-pro.php:6906
+#: multi-location-product-and-inventory-management-pro.php:6542
+#: multi-location-product-and-inventory-management-pro.php:6583
+#: multi-location-product-and-inventory-management-pro.php:6681
+#: multi-location-product-and-inventory-management-pro.php:6934
 msgid "Invalid product ID."
 msgstr "অবৈধ পণ্যের আইডি।"
 
@@ -4372,7 +4407,7 @@ msgstr "অবৈধ পণ্যের আইডি।"
 msgid "Invalid request. Please refresh the page and try again."
 msgstr "অবৈধ অনুরোধ। অনুগ্রহ করে পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:11882
+#: multi-location-product-and-inventory-management-pro.php:12143
 msgid "Invalid security token."
 msgstr "অবৈধ সিকিউরিটি টোকেন।"
 
@@ -4388,8 +4423,8 @@ msgstr "অবৈধ স্ন্যাপশট পে-লোড।"
 msgid "Invalid upload chunk payload."
 msgstr "অবৈধ আপলোড চাঙ্ক পে-লোড।"
 
-#: multi-location-product-and-inventory-management-pro.php:6942
-#: multi-location-product-and-inventory-management-pro.php:6955
+#: multi-location-product-and-inventory-management-pro.php:6970
+#: multi-location-product-and-inventory-management-pro.php:6983
 msgid "Invalid variation payload."
 msgstr "অবৈধ ভ্যারিয়েশন পেলোড।"
 
@@ -4405,7 +4440,7 @@ msgstr "অবৈধ ওয়েবহুক সিক্রেট বা API �
 msgid "Invalid zone ID"
 msgstr "ভুল জোন আইডি"
 
-#: admin/settings.php:5732
+#: admin/settings.php:5803
 msgid "Inventory"
 msgstr "ইনভেন্টরি"
 
@@ -4447,12 +4482,12 @@ msgstr "বিনিয়োগ"
 msgid "Item %d: %s"
 msgstr "আইটেম %d: %s"
 
-#: multi-location-product-and-inventory-management-pro.php:13432
-#: multi-location-product-and-inventory-management-pro.php:13710
+#: multi-location-product-and-inventory-management-pro.php:13972
+#: multi-location-product-and-inventory-management-pro.php:14250
 msgid "items"
 msgstr "আইটেমসমূহ"
 
-#: multi-location-product-and-inventory-management-pro.php:13231
+#: multi-location-product-and-inventory-management-pro.php:13771
 #, php-format
 msgid "Items: %s"
 msgstr "আইটেমসমূহ: %s"
@@ -4514,7 +4549,7 @@ msgstr ""
 "অজানা লোকেশন আইটেমগুলোকে মূল অর্ডারে রাখে, আর লোকেশন-নির্ধারিত আইটেমগুলোকে "
 "শিশু অর্ডারে বিভক্ত করে।"
 
-#: admin/settings.php:6575
+#: admin/settings.php:6646
 msgid "Keys are displayed only once for security. Copy them immediately."
 msgstr ""
 "নিরাপত্তার জন্য কীগুলি শুধুমাত্র একবার দেখানো হয়। অবিলম্বে সেগুলি কপি করুন।"
@@ -4675,7 +4710,7 @@ msgstr ""
 msgid "Layouts Unavailable Message"
 msgstr "লেআউট অনুপলব্ধ বার্তা"
 
-#: admin/settings.php:6328
+#: admin/settings.php:6399
 #| msgid ""
 #| "Learn how to install the plugin, activate your license, and configure "
 #| "basic settings. This tutorial covers the initial setup process and "
@@ -4690,7 +4725,7 @@ msgstr ""
 "অ্যাক্টিভেশন অন্তর্ভুক্ত রয়েছে।\n"
 "\n"
 
-#: admin/settings.php:6519
+#: admin/settings.php:6590
 #| msgid ""
 #| "Learn how to use the AJAX-powered product filter to allow customers to "
 #| "filter products by location and stock status without page reload. "
@@ -4735,7 +4770,7 @@ msgstr "বাম পাশে ফাঁকা সহ"
 msgid "Legacy import proxy only supports CSV or ZIP files."
 msgstr "Legacy import proxy শুধুমাত্র CSV অথবা ZIP ফাইল সমর্থন করে।"
 
-#: admin/settings.php:5372
+#: admin/settings.php:5443
 #| msgid ""
 #| "Let customers choose their preferred location and see relevant products\n"
 #| "\n"
@@ -4772,7 +4807,7 @@ msgstr "লাইসেন্সপ্রাপ্ত"
 msgid "Lifetime"
 msgstr "আজীবন"
 
-#: admin/settings.php:6432
+#: admin/settings.php:6503
 #| msgid ""
 #| "Limit number of locations\n"
 msgid "Limit number of locations"
@@ -4903,7 +4938,7 @@ msgstr "লাইন %d: ভ্যারিয়েশন পাওয়া যা�
 msgid "Link Location to User Account"
 msgstr "লোকেশনকে ব্যবহারকারীর অ্যাকাউন্টের সাথে সংযুক্ত করুন"
 
-#: admin/settings.php:5365
+#: admin/settings.php:5436
 #| msgid ""
 #| "Link products to locations and manage stock, pricing, and availability\n"
 #| "\n"
@@ -4945,6 +4980,9 @@ msgstr "প্রস্তাবনা লোড করা হচ্ছে"
 msgid "Loading recommendations..."
 msgstr "প্রস্তাবনা লোড করা হচ্ছে..."
 
+msgid "Loading..."
+msgstr "লোড হচ্ছে..."
+
 #: admin/settings.php:4759
 msgid ""
 "Local pickup is not enabled in WooCommerce settings. Please enable it to use "
@@ -4953,8 +4991,8 @@ msgstr ""
 "WooCommerce সেটিংসে লোকাল পিকআপ সক্রিয় করা হয়নি। এই ফিচারটি ব্যবহার করতে "
 "অনুগ্রহ করে এটি সক্রিয় করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:4584
-#: multi-location-product-and-inventory-management-pro.php:13706
+#: multi-location-product-and-inventory-management-pro.php:4612
+#: multi-location-product-and-inventory-management-pro.php:14246
 #: admin/admin.php:834 admin/admin.php:6096 admin/dashboard.php:272
 #: admin/dashboard.php:283 admin/dashboard.php:295 admin/dashboard.php:305
 #: admin/dashboard.php:317 admin/dashboard.php:348 admin/dashboard.php:601
@@ -4975,7 +5013,7 @@ msgstr "লোকেশন"
 msgid "Location \"%1$s\" is not assigned to product \"%2$s\""
 msgstr "লোকেশন \"%1$s\" পণ্য \"%2$s\"-এর সাথে সংযুক্ত নয়"
 
-#: multi-location-product-and-inventory-management-pro.php:6606
+#: multi-location-product-and-inventory-management-pro.php:6634
 msgid "Location activated successfully."
 msgstr "লোকেশন সফলভাবে সক্রিয় হয়েছে।"
 
@@ -4999,7 +5037,7 @@ msgstr ""
 "ম্যানুয়াল বা ইনভেন্টরি-ভিত্তিক অ্যাসাইনমেন্ট ঐচ্ছিক নির্বাচন ছাড়া সক্রিয় "
 "থাকলে লোকেশন অ্যানালিটিক্স নিষ্ক্রিয় থাকে।"
 
-#: multi-location-product-and-inventory-management-pro.php:5114
+#: multi-location-product-and-inventory-management-pro.php:5142
 msgid "Location and price updated successfully"
 msgstr "লোকেশন এবং মূল্য সফলভাবে আপডেট হয়েছে"
 
@@ -5020,8 +5058,8 @@ msgstr "লোকেশন ভিত্তিক প্রোডাক্ট ত
 msgid "Location Change Confirmation"
 msgstr "লোকেশন পরিবর্তন নিশ্চিতকরণ"
 
-#: multi-location-product-and-inventory-management-pro.php:5691
-#: multi-location-product-and-inventory-management-pro.php:5759
+#: multi-location-product-and-inventory-management-pro.php:5719
+#: multi-location-product-and-inventory-management-pro.php:5787
 msgid "Location change in cart is disabled."
 msgstr "কার্টে লোকেশন পরিবর্তন নিষ্ক্রিয় করা হয়েছে।"
 
@@ -5061,7 +5099,7 @@ msgstr ""
 msgid "Location Cookie Expiry (Days)"
 msgstr "লোকেশন কুকি মেয়াদোত্তীর্ণ (দিন)"
 
-#: multi-location-product-and-inventory-management-pro.php:12168
+#: multi-location-product-and-inventory-management-pro.php:12708
 msgid "Location deleted successfully"
 msgstr "লোকেশন সফলভাবে মুছে ফেলা হয়েছে"
 
@@ -5110,7 +5148,7 @@ msgstr "মেটা বিবরণে লোকেশন"
 msgid "Location in Meta Title"
 msgstr "মেটা শিরোনামে লোকেশন"
 
-#: admin/settings.php:5739
+#: admin/settings.php:5810
 msgid "Location Info Management"
 msgstr "লোকেশন তথ্য ব্যবস্থাপনা"
 
@@ -5122,7 +5160,7 @@ msgstr "লোকেশন তথ্য ট্যাব শিরোনাম"
 msgid "Location Information"
 msgstr "লোকেশন তথ্য"
 
-#: admin/settings.php:6399
+#: admin/settings.php:6470
 #| msgid ""
 #| "Location Information Display & Maps\n"
 msgid "Location Information Display & Maps"
@@ -5163,7 +5201,7 @@ msgstr "লোকেশন ম্যানেজার (নির্ধারি
 msgid "Location manager deleted successfully"
 msgstr "লোকেশন ম্যানেজার সফলভাবে মুছে ফেলা হয়েছে"
 
-#: admin/settings.php:6381
+#: admin/settings.php:6452
 #| msgid ""
 #| "Location Manager Roles & Permissions\n"
 msgid "Location Manager Roles & Permissions"
@@ -5200,8 +5238,13 @@ msgstr "লোকেশন মানচিত্র"
 msgid "Location Map Heading"
 msgstr "লোকেশন মানচিত্র শিরোনাম"
 
-#: multi-location-product-and-inventory-management-pro.php:4930
-#: multi-location-product-and-inventory-management-pro.php:12158
+msgid "Location marked for removal. Save changes to apply."
+msgstr ""
+"অপসারণের জন্য অবস্থান চিহ্নিত করা হয়েছে। প্রয়োগ করতে পরিবর্তনগুলি সংরক্ষণ "
+"করুন।"
+
+#: multi-location-product-and-inventory-management-pro.php:4958
+#: multi-location-product-and-inventory-management-pro.php:12698
 #: admin/admin.php:4957 includes/text-management.php:274
 msgid "Location not found"
 msgstr "লোকেশন পাওয়া যায়নি"
@@ -5249,11 +5292,11 @@ msgstr "লোকেশন সুপারিশ নিষ্ক্রিয় 
 msgid "Location regular price cannot be less than purchase price"
 msgstr "লোকেশনের নিয়মিত মূল্য ক্রয়মূল্যের চেয়ে কম হতে পারে না"
 
-#: multi-location-product-and-inventory-management-pro.php:6631
+#: multi-location-product-and-inventory-management-pro.php:6659
 msgid "Location removed from product successfully."
 msgstr "পণ্য থেকে লোকেশন সফলভাবে সরানো হয়েছে।"
 
-#: multi-location-product-and-inventory-management-pro.php:7259
+#: multi-location-product-and-inventory-management-pro.php:7287
 msgid "Location removed successfully."
 msgstr "লোকেশন সফলভাবে সরানো হয়েছে।"
 
@@ -5284,11 +5327,11 @@ msgid "Location Selection Display"
 msgstr ""
 "লোকেশন নির্বাচন প্রদর্শন\n"
 
-#: admin/settings.php:6372
+#: admin/settings.php:6443
 msgid "Location Selector Anywhere"
 msgstr "যেকোনো স্থানে লোকেশন সিলেক্টর"
 
-#: admin/settings.php:6490
+#: admin/settings.php:6561
 #| msgid ""
 #| "Location Selector for specific Product\n"
 msgid "Location Selector for specific Product"
@@ -5299,7 +5342,7 @@ msgstr ""
 msgid "Location Selector Layout"
 msgstr "লোকেশন সিলেক্টর লেআউট"
 
-#: admin/settings.php:6096
+#: admin/settings.php:6167
 msgid "Location Selector Shortcode"
 msgstr "লোকেশন সিলেক্টর শর্টকোড"
 
@@ -5311,11 +5354,11 @@ msgstr "লোকেশন SEO সেটিংস"
 msgid "Location Settings"
 msgstr "লোকেশন সেটিংস"
 
-#: multi-location-product-and-inventory-management-pro.php:11889
+#: multi-location-product-and-inventory-management-pro.php:12150
 msgid "Location slug is required."
 msgstr "লোকেশন স্লাগ প্রয়োজনীয়।"
 
-#: admin/settings.php:6412
+#: admin/settings.php:6483
 #| msgid ""
 #| "Location slug(s)\n"
 msgid "Location slug(s)"
@@ -5334,7 +5377,7 @@ msgstr "লোকেশন নির্দিষ্ট সেটিংস"
 msgid "Location Specific Stock & Price Settings"
 msgstr "লোকেশন নির্দিষ্ট স্টক ও মূল্য সেটিংস"
 
-#: admin/settings.php:6744
+#: admin/settings.php:6815
 #| msgid ""
 #| "Location Status Badge Shortcode\n"
 msgid "Location Status Badge Shortcode"
@@ -5354,14 +5397,14 @@ msgstr "লোকেশন স্ট্রাকচার্ড ডেটা"
 msgid "Location Switching Behavior"
 msgstr "লোকেশন পরিবর্তনের আচরণ"
 
-#: admin/settings.php:6754
+#: admin/settings.php:6825
 #| msgid ""
 #| "Location term ID\n"
 msgid "Location term ID"
 msgstr ""
 "লোকেশন টার্ম আইডি\n"
 
-#: admin/settings.php:6759
+#: admin/settings.php:6830
 #| msgid ""
 #| "Location term slug\n"
 msgid "Location term slug"
@@ -5380,7 +5423,7 @@ msgstr ""
 "ম্যানুয়াল বা ইনভেন্টরি-ভিত্তিক অ্যাসাইনমেন্ট ঐচ্ছিক নির্বাচন ছাড়া সক্রিয় "
 "থাকলে লোকেশন ট্র্যাকিং নিষ্ক্রিয় থাকে।"
 
-#: multi-location-product-and-inventory-management-pro.php:4924
+#: multi-location-product-and-inventory-management-pro.php:4952
 msgid "Location unchanged"
 msgstr "লোকেশন অপরিবর্তিত"
 
@@ -5388,11 +5431,11 @@ msgstr "লোকেশন অপরিবর্তিত"
 msgid "Location updated successfully"
 msgstr "লোকেশন সফলভাবে আপডেট হয়েছে"
 
-#: multi-location-product-and-inventory-management-pro.php:5724
+#: multi-location-product-and-inventory-management-pro.php:5752
 msgid "Location updated successfully."
 msgstr "লোকেশন সফলভাবে আপডেট হয়েছে।"
 
-#: multi-location-product-and-inventory-management-pro.php:4879
+#: multi-location-product-and-inventory-management-pro.php:4907
 msgid "Location updates are locked when location-wise currency is enabled."
 msgstr "অবস্থান-ভিত্তিক মুদ্রা সক্ষম করা হলে অবস্থানের আপডেটগুলি লক করা হয়।"
 
@@ -5404,7 +5447,7 @@ msgstr "লোকেশন URL প্রিফিক্স"
 msgid "Location URL Settings"
 msgstr "লোকেশন URL সেটিংস"
 
-#: multi-location-product-and-inventory-management-pro.php:11902
+#: multi-location-product-and-inventory-management-pro.php:12163
 msgid "Location validated."
 msgstr "লোকেশন যাচাই করা হয়েছে।"
 
@@ -5412,7 +5455,7 @@ msgstr "লোকেশন যাচাই করা হয়েছে।"
 msgid "Location Wise"
 msgstr "লোকেশন ভিত্তিক"
 
-#: admin/settings.php:5737
+#: admin/settings.php:5808
 msgid "Location Wise Everything"
 msgstr "লোকেশন ভিত্তিক সবকিছু"
 
@@ -5424,12 +5467,12 @@ msgstr "লোকেশন ভিত্তিক পণ্য ও ইনভে�
 msgid "Location Wise Products Dashboard"
 msgstr "লোকেশন ভিত্তিক পণ্যের ড্যাশবোর্ড"
 
-#: multi-location-product-and-inventory-management-pro.php:1723
+#: multi-location-product-and-inventory-management-pro.php:1751
 msgid "Location Wise Products requires WooCommerce to be installed and active."
 msgstr ""
 "লোকেশন ভিত্তিক পণ্যসমূহের জন্য WooCommerce ইনস্টল এবং সক্রিয় থাকতে হবে।"
 
-#: multi-location-product-and-inventory-management-pro.php:1758
+#: multi-location-product-and-inventory-management-pro.php:1786
 msgid "Location Wise Products requires WooCommerce version 4.0 or higher. "
 msgstr ""
 "লোকেশন ভিত্তিক পণ্যসমূহের জন্য WooCommerce সংস্করণ 4.0 বা তার উপরের প্রয়োজন।"
@@ -5437,6 +5480,16 @@ msgstr ""
 #: admin/stock-central.php:103 admin/stock-central.php:106
 msgid "Location Wise Products Stock Management"
 msgstr "লোকেশন ভিত্তিক পণ্য স্টক ব্যবস্থাপনা"
+
+msgid "Location(s) added to all variations. Click \"Save Changes\" to apply."
+msgstr ""
+"সমস্ত ভেরিয়েশনে অবস্থান(গুলি) যোগ করা হয়েছে। প্রয়োগ করতে \"পরিবর্তনগুলি "
+"সংরক্ষণ করুন\"-এ ক্লিক করুন।"
+
+msgid "Location(s) added. Click \"Save Changes\" to apply."
+msgstr ""
+"অবস্থান(গুলি) যোগ করা হয়েছে। প্রয়োগ করতে \"পরিবর্তনগুলি সংরক্ষণ করুন\" এ "
+"ক্লিক করুন।"
 
 #: admin/settings.php:4797
 #| msgid ""
@@ -5453,14 +5506,14 @@ msgstr "লোকেশন ভিত্তিক ছাড়"
 msgid "Location-based Email Notifications"
 msgstr "লোকেশন ভিত্তিক ইমেইল নোটিফিকেশন"
 
-#: admin/settings.php:6354
+#: admin/settings.php:6425
 #| msgid ""
 #| "Location-Based Pricing Setup\n"
 msgid "Location-Based Pricing Setup"
 msgstr ""
 "লোকেশন ভিত্তিক মূল্য নির্ধারণ সেটআপ\n"
 
-#: admin/settings.php:6449
+#: admin/settings.php:6520
 #| msgid ""
 #| "Location-Based Product Recommendations\n"
 msgid "Location-Based Product Recommendations"
@@ -5506,20 +5559,20 @@ msgstr "লোকেশন নির্দিষ্ট রিভিউ"
 msgid "Location-wise Payment Methods"
 msgstr "লোকেশন ভিত্তিক পেমেন্ট পদ্ধতি"
 
-#: multi-location-product-and-inventory-management-pro.php:4711
-#: multi-location-product-and-inventory-management-pro.php:4752
+#: multi-location-product-and-inventory-management-pro.php:4739
+#: multi-location-product-and-inventory-management-pro.php:4780
 #: admin/admin.php:4480
 msgid "Location:"
 msgstr "লোকেশন:"
 
-#: multi-location-product-and-inventory-management-pro.php:13493
+#: multi-location-product-and-inventory-management-pro.php:14033
 #: includes/order-split-by-location.php:431
 #: includes/order-split-by-location.php:433 includes/text-management.php:657
 #, php-format
 msgid "Location: %s"
 msgstr "লোকেশন: %s"
 
-#: multi-location-product-and-inventory-management-pro.php:14216
+#: multi-location-product-and-inventory-management-pro.php:14756
 #, php-format
 msgid "Location: %s (%s)"
 msgstr "লোকেশন: %s (%s)"
@@ -5539,6 +5592,11 @@ msgstr " %d টি শিপিং পদ্ধতিতে লোকেশন �
 msgid "Locations Count Title"
 msgstr "লোকেশন সংখ্যা শিরোনাম"
 
+msgid "Locations queued. Click \"Save Changes\" to apply."
+msgstr ""
+"অবস্থানগুলি সারিবদ্ধ করা হয়েছে। প্রয়োগ করতে \"পরিবর্তনগুলি সংরক্ষণ করুন\" "
+"এ ক্লিক করুন।"
+
 #: includes/location-based-shipping.php:457
 #: includes/location-based-shipping.php:484
 msgid "Locations saved successfully"
@@ -5550,7 +5608,7 @@ msgstr ""
 msgid "Locations Tracked:"
 msgstr "ট্র্যাক করা লোকেশনসমূহ:"
 
-#: multi-location-product-and-inventory-management-pro.php:4827
+#: multi-location-product-and-inventory-management-pro.php:4855
 msgid "Locked while location-wise currency is enabled."
 msgstr "অবস্থানভিত্তিক মুদ্রা সক্ষম থাকাকালীন লক করা হয়েছে।"
 
@@ -5581,7 +5639,7 @@ msgstr "লোগো"
 msgid "Longitude"
 msgstr "দ্রাঘিমাংশ"
 
-#: multi-location-product-and-inventory-management-pro.php:13772
+#: multi-location-product-and-inventory-management-pro.php:14312
 msgid "Low rating review"
 msgstr "নিম্ন রেটিং রিভিউ"
 
@@ -5597,14 +5655,14 @@ msgid "Low review rating threshold"
 msgstr ""
 "নিম্ন রিভিউ রেটিং সীমা\n"
 
-#: multi-location-product-and-inventory-management-pro.php:12368
-#: multi-location-product-and-inventory-management-pro.php:13116
+#: multi-location-product-and-inventory-management-pro.php:12908
+#: multi-location-product-and-inventory-management-pro.php:13656
 #: admin/dashboard.php:790 admin/dashboard.php:1662 admin/dashboard.php:2465
 #: admin/dashboard.php:2493
 msgid "Low Stock"
 msgstr "কম স্টক"
 
-#: multi-location-product-and-inventory-management-pro.php:12514
+#: multi-location-product-and-inventory-management-pro.php:13054
 msgid "Low stock"
 msgstr "কম স্টক"
 
@@ -5645,17 +5703,20 @@ msgstr ""
 msgid "Main heading shown in all popup layouts."
 msgstr "সব পপআপ লেআউটে প্রদর্শিত প্রধান শিরোনাম।"
 
-#: admin/settings.php:7798
+#: admin/settings.php:7869
 msgid "Main Shop & Archive Pages"
 msgstr "প্রধান দোকান ও আর্কাইভ পেজসমূহ"
 
-#: multi-location-product-and-inventory-management-pro.php:8781
+#: multi-location-product-and-inventory-management-pro.php:8874
 msgid "Manage Locations"
 msgstr "লোকেশন পরিচালনা করুন"
 
 #: admin/admin.php:6115
 msgid "Manage locations for products and inventory tracking"
 msgstr "পণ্য ও ইনভেন্টরি ট্র্যাকিংয়ের জন্য লোকেশন পরিচালনা করুন"
+
+msgid "Manage Locations:"
+msgstr "অবস্থান পরিচালনা করুন:"
 
 #: admin/location-managers.php:335
 msgid "Manage Orders"
@@ -5665,7 +5726,7 @@ msgstr "অর্ডার পরিচালনা করুন"
 msgid "Manage Products"
 msgstr "পণ্য পরিচালনা করুন"
 
-#: admin/settings.php:5343
+#: admin/settings.php:5414
 #| msgid ""
 #| "Manage products, inventory, and pricing across multiple store locations "
 #| "effortlessly\n"
@@ -5699,6 +5760,9 @@ msgstr "স্টক পরিচালনা করুন"
 msgid "Manage stock levels and prices for each product by location."
 msgstr "প্রতিটি পণ্যের স্টক স্তর এবং মূল্য লোকেশন অনুযায়ী পরিচালনা করুন।"
 
+msgid "Manage Stock:"
+msgstr "স্টক পরিচালনা করুন:"
+
 #: admin/license-page.php:696
 msgid "Manage your license key, check status, and update to the latest version"
 msgstr ""
@@ -5716,6 +5780,9 @@ msgstr "সব অর্ডার পরিচালনা/দেখুন"
 #: admin/location-managers.php:339
 msgid "Manage/View All Products"
 msgstr "সব পণ্য পরিচালনা/দেখুন"
+
+msgid "Manage:"
+msgstr "পরিচালনা করুন:"
 
 #: admin/location-managers.php:1497 admin/location-managers.php:2339
 #| msgid "Manage"
@@ -5744,7 +5811,7 @@ msgstr "ম্যানেজার আপডেট হয়েছে"
 msgid "Manager updated: %s"
 msgstr "ম্যানেজার আপডেট হয়েছে: %s"
 
-#: admin/settings.php:6345
+#: admin/settings.php:6416
 #| msgid ""
 #| "Managing Location-Based Inventory\n"
 msgid "Managing Location-Based Inventory"
@@ -5795,7 +5862,7 @@ msgstr "সক্রিয় হিসাবে চিহ্নিত করু
 msgid "Mark as inactive"
 msgstr "নিষ্ক্রিয় হিসাবে চিহ্নিত করুন"
 
-#: admin/settings.php:6346
+#: admin/settings.php:6417
 #| msgid ""
 #| "Master inventory management across multiple locations. Learn to set stock "
 #| "levels, manage backorders, configure low-stock alerts, and sync inventory "
@@ -5811,7 +5878,7 @@ msgstr ""
 "সিঙ্ক করা শিখুন।\n"
 "\n"
 
-#: admin/settings.php:6204
+#: admin/settings.php:6275
 msgid "Maximum width in pixels"
 msgstr "পিক্সেলগুলিতে সর্বাধিক প্রস্থ"
 
@@ -5829,7 +5896,7 @@ msgstr "মিডিয়া রেফারেন্স সারিগুল�
 msgid "Media sideload failed for %s: %s"
 msgstr "%s এর জন্য মিডিয়া সাইডলোড ব্যর্থ হয়েছে: %s"
 
-#: multi-location-product-and-inventory-management-pro.php:12521
+#: multi-location-product-and-inventory-management-pro.php:13061
 msgid "Medium stock"
 msgstr "মধ্যম স্টক"
 
@@ -5857,7 +5924,7 @@ msgstr "মাইক্রোসফট ডক্স: ইনকামিং ও�
 msgid "Minimal"
 msgstr "মিনিমাল"
 
-#: admin/settings.php:6811
+#: admin/settings.php:6882
 msgid "Minutes"
 msgstr "মিনিট"
 
@@ -5890,7 +5957,7 @@ msgstr "আধুনিক ও সরল"
 msgid "Monday"
 msgstr "সোমবার"
 
-#: multi-location-product-and-inventory-management-pro.php:13541
+#: multi-location-product-and-inventory-management-pro.php:14081
 #, php-format
 msgid "Monitoring shows %s is reachable again."
 msgstr "মনিটরিং দেখাচ্ছে %s আবার অ্যাক্সেসযোগ্য।"
@@ -5917,7 +5984,7 @@ msgstr ""
 "করে, অন্য লোকেশনগুলো তাদের নিজস্ব অর্ডারে বিভক্ত হয়।"
 
 #. Name of the plugin
-#: admin/settings.php:5342
+#: admin/settings.php:5413
 msgid "Multi Location Product & Inventory Management for WooCommerce Pro"
 msgstr "মাল্টি লোকেশন প্রোডাক্ট এবং ইনভেন্টরি ম্যানেজমেন্ট ফর WooCommerce Pro"
 
@@ -5937,7 +6004,7 @@ msgstr "প্রযোজ্য নয়"
 msgid "name@example.com"
 msgstr "name@example.com"
 
-#: admin/settings.php:6562
+#: admin/settings.php:6633
 msgid "Navigate to WordPress Admin Dashboard"
 msgstr "ওয়ার্ডপ্রেস অ্যাডমিন ড্যাশবোর্ডে যান"
 
@@ -5957,7 +6024,7 @@ msgstr "নিকটতম দোকান"
 msgid "Nearest with inter-hub transfer cost"
 msgstr "ইন্টার-হাব ট্রান্সফার খরচসহ নিকটতম"
 
-#: admin/settings.php:6996
+#: admin/settings.php:7067
 #| msgid ""
 #| "Need Additional Help?\n"
 msgid "Need Additional Help?"
@@ -5972,7 +6039,7 @@ msgstr "অ্যাসাইনমেন্ট প্রয়োজন"
 msgid "New Location Name"
 msgstr "নতুন লোকেশনের নাম"
 
-#: multi-location-product-and-inventory-management-pro.php:13223
+#: multi-location-product-and-inventory-management-pro.php:13763
 #, php-format
 msgid "New order #%s at %s"
 msgstr "নতুন অর্ডার #%s এ %s"
@@ -6006,7 +6073,7 @@ msgstr "নতুন পণ্যসমূহ (শেষ ৩০ দিনে) �
 msgid "No"
 msgstr "না"
 
-#: multi-location-product-and-inventory-management-pro.php:12034
+#: multi-location-product-and-inventory-management-pro.php:12627
 msgid "No address data provided."
 msgstr "কোনো ঠিকানার তথ্য প্রদান করা হয়নি।"
 
@@ -6074,7 +6141,7 @@ msgstr "কোনো ফাইল নির্বাচন করা হয়ন�
 msgid "No items in order"
 msgstr "অর্ডারে কোনো আইটেম নেই"
 
-#: multi-location-product-and-inventory-management-pro.php:4764
+#: multi-location-product-and-inventory-management-pro.php:4792
 msgid "No location assigned"
 msgstr "কোনো লোকেশন নির্ধারিত নয়"
 
@@ -6164,7 +6231,7 @@ msgstr "কোনো লোকেশনের জন্য কম স্টক�
 msgid "No Matching Locations"
 msgstr "কোনো মিল থাকা লোকেশন নেই"
 
-#: multi-location-product-and-inventory-management-pro.php:13693
+#: multi-location-product-and-inventory-management-pro.php:14233
 msgid "No orders found for today yet. This is a digest preview test."
 msgstr "আজকের জন্য কোনো অর্ডার পাওয়া যায়নি। এটি একটি ডাইজেস্ট প্রিভিউ টেস্ট।"
 
@@ -6224,7 +6291,7 @@ msgstr "কোনো প্রস্তাবনার বার্তা নে
 msgid "No saved address yet"
 msgstr "এখনও কোনো সংরক্ষিত ঠিকানা নেই"
 
-#: multi-location-product-and-inventory-management-pro.php:12142
+#: multi-location-product-and-inventory-management-pro.php:12682
 msgid "No saved locations found"
 msgstr "কোনো সংরক্ষিত লোকেশন পাওয়া যায়নি"
 
@@ -6255,7 +6322,7 @@ msgstr ""
 "কোনো নির্দিষ্ট অনুমতি সেট করা হয়নি (গ্লোবাল ডিফল্ট ব্যবহার করা হচ্ছে)\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:4799
+#: multi-location-product-and-inventory-management-pro.php:4827
 msgid "No stock set"
 msgstr "কোনো স্টক নির্ধারিত নয়"
 
@@ -6293,9 +6360,12 @@ msgstr "কোনো ব্যবহারকারী পাওয়া যা
 msgid "No valid orders found"
 msgstr "কোনো বৈধ অর্ডার পাওয়া যায়নি"
 
-#: multi-location-product-and-inventory-management-pro.php:14204
+#: multi-location-product-and-inventory-management-pro.php:14744
 msgid "No valid recipient email could be resolved for this test."
 msgstr "এই পরীক্ষার জন্য কোনো বৈধ প্রাপকের ইমেইল নির্ধারণ করা যায়নি।"
+
+msgid "No variations found for this product."
+msgstr "এই পণ্যের জন্য কোনো প্রকারভেদ পাওয়া যায়নি।"
 
 #: admin/settings.php:2269
 msgid "None"
@@ -6309,8 +6379,8 @@ msgstr "কিছুই নয়"
 msgid "Not editable"
 msgstr "সম্পাদনযোগ্য নয়"
 
-#: multi-location-product-and-inventory-management-pro.php:4823
-#: multi-location-product-and-inventory-management-pro.php:5085
+#: multi-location-product-and-inventory-management-pro.php:4851
+#: multi-location-product-and-inventory-management-pro.php:5113
 #: includes/class-product-location-table.php:1837
 #: includes/class-product-location-table.php:1840
 #: includes/class-product-location-table.php:1848
@@ -6330,7 +6400,7 @@ msgstr "নোটিফিকেশন স্টাইল"
 msgid "Notification template"
 msgstr "নোটিফিকেশন টেমপ্লেট"
 
-#: admin/admin.php:6349 admin/settings.php:5736
+#: admin/admin.php:6349 admin/settings.php:5807
 msgid "Notifications"
 msgstr "নোটিফিকেশনসমূহ"
 
@@ -6342,7 +6412,7 @@ msgstr "ব্যবহারকারীর লোকেশন পছন্দ 
 msgid "Number of items per page:"
 msgstr "প্রতি পৃষ্ঠায় আইটেমের সংখ্যা:"
 
-#: admin/settings.php:6458
+#: admin/settings.php:6529
 #| msgid ""
 #| "Number of products to display\n"
 msgid "Number of products to display"
@@ -6366,8 +6436,8 @@ msgstr ""
 #: admin/settings.php:3380 admin/settings.php:3858 admin/settings.php:3880
 #: admin/settings.php:3920 admin/settings.php:3942 admin/settings.php:4738
 #: admin/settings.php:4744 admin/settings.php:4825 admin/settings.php:4831
-#: admin/settings.php:4890 admin/settings.php:4896 admin/settings.php:8071
-#: admin/settings.php:8374
+#: admin/settings.php:4890 admin/settings.php:4896 admin/settings.php:8142
+#: admin/settings.php:8462
 msgid "Off"
 msgstr "বন্ধ"
 
@@ -6388,8 +6458,8 @@ msgstr "বন্ধ"
 #: admin/settings.php:3379 admin/settings.php:3857 admin/settings.php:3879
 #: admin/settings.php:3919 admin/settings.php:3941 admin/settings.php:4737
 #: admin/settings.php:4743 admin/settings.php:4824 admin/settings.php:4830
-#: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8070
-#: admin/settings.php:8373
+#: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8141
+#: admin/settings.php:8461
 msgid "On"
 msgstr "চালু"
 
@@ -6401,9 +6471,9 @@ msgstr "ব্যাকঅর্ডারে"
 msgid "On Hold"
 msgstr "স্থগিত"
 
-#: multi-location-product-and-inventory-management-pro.php:6960
-#: multi-location-product-and-inventory-management-pro.php:6969
-#: multi-location-product-and-inventory-management-pro.php:7144
+#: multi-location-product-and-inventory-management-pro.php:6988
+#: multi-location-product-and-inventory-management-pro.php:6997
+#: multi-location-product-and-inventory-management-pro.php:7172
 msgid "One or more submitted variations do not belong to this product."
 msgstr "এক বা একাধিক জমাকৃত ভ্যারিয়েশন এই পণ্যের অন্তর্ভুক্ত নয়।"
 
@@ -6448,7 +6518,7 @@ msgstr "২৪ ঘণ্টা খোলা"
 msgid "Open 24 hours"
 msgstr "২৪ ঘণ্টা খোলা"
 
-#: multi-location-product-and-inventory-management-pro.php:9752
+#: multi-location-product-and-inventory-management-pro.php:9966
 msgid "Open Modal"
 msgstr "মডাল খোলা"
 
@@ -6539,12 +6609,12 @@ msgstr ""
 msgid "Order"
 msgstr "অর্ডার"
 
-#: multi-location-product-and-inventory-management-pro.php:13490
+#: multi-location-product-and-inventory-management-pro.php:14030
 #, php-format
 msgid "Order #%s"
 msgstr "অর্ডার #%s"
 
-#: multi-location-product-and-inventory-management-pro.php:13247
+#: multi-location-product-and-inventory-management-pro.php:13787
 #, php-format
 msgid "Order #%s | Total: %s | Location: %s"
 msgstr "অর্ডার #%s | মোট: %s | অবস্থান: %s"
@@ -6555,7 +6625,7 @@ msgstr "অর্ডার #%s | মোট: %s | অবস্থান: %s"
 msgid "Order %s"
 msgstr "অর্ডার %s"
 
-#: admin/settings.php:5735
+#: admin/settings.php:5806
 msgid "Order & Cart"
 msgstr "অর্ডার ও কার্ট"
 
@@ -6563,7 +6633,7 @@ msgstr "অর্ডার ও কার্ট"
 msgid "Order Assignment Method"
 msgstr "অর্ডার অ্যাসাইনমেন্ট পদ্ধতি"
 
-#: multi-location-product-and-inventory-management-pro.php:13457
+#: multi-location-product-and-inventory-management-pro.php:13997
 #: admin/settings.php:3392
 #| msgid ""
 #| "Order cancelled\n"
@@ -6573,7 +6643,7 @@ msgstr ""
 "অর্ডার বাতিল হয়েছে\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:13461
+#: multi-location-product-and-inventory-management-pro.php:14001
 #: admin/settings.php:3393
 #| msgid ""
 #| "Order completed\n"
@@ -6591,16 +6661,16 @@ msgstr "অর্ডার পূরণ"
 msgid "Order IDs and location are required"
 msgstr "অর্ডার আইডি এবং অবস্থান প্রয়োজনীয়"
 
-#: multi-location-product-and-inventory-management-pro.php:5088
+#: multi-location-product-and-inventory-management-pro.php:5116
 #, php-format
 msgid "Order item location changed from %s to %s"
 msgstr "অর্ডার আইটেমের অবস্থান %s থেকে %s-এ পরিবর্তিত হয়েছে"
 
-#: multi-location-product-and-inventory-management-pro.php:4911
+#: multi-location-product-and-inventory-management-pro.php:4939
 msgid "Order item not found"
 msgstr "অর্ডার আইটেম পাওয়া যায়নি"
 
-#: multi-location-product-and-inventory-management-pro.php:5328
+#: multi-location-product-and-inventory-management-pro.php:5356
 #, php-format
 msgid ""
 "Order item quantity changed for %s at %s location: %d → %d (Stock: %d → %d)"
@@ -6615,7 +6685,7 @@ msgstr ""
 "অবস্থান ভিত্তিক মুদ্রা সক্ষম করা থাকলে অর্ডার অবস্থান পরিবর্তনগুলি অক্ষম করা "
 "হয়।"
 
-#: multi-location-product-and-inventory-management-pro.php:4906
+#: multi-location-product-and-inventory-management-pro.php:4934
 #: admin/admin.php:4940 admin/admin.php:5383
 msgid "Order not found"
 msgstr "অর্ডার পাওয়া যায়নি"
@@ -6624,7 +6694,7 @@ msgstr "অর্ডার পাওয়া যায়নি"
 msgid "Order Notification Recipients"
 msgstr "অর্ডার নোটিফিকেশনের প্রাপক"
 
-#: multi-location-product-and-inventory-management-pro.php:13453
+#: multi-location-product-and-inventory-management-pro.php:13993
 #: admin/settings.php:3391
 #| msgid ""
 #| "Order refunded\n"
@@ -6647,8 +6717,8 @@ msgstr "অর্ডার সফলভাবে আপডেট হয়েছ
 msgid "Orders"
 msgstr "অর্ডারসমূহ"
 
-#: multi-location-product-and-inventory-management-pro.php:13430
-#: multi-location-product-and-inventory-management-pro.php:13708
+#: multi-location-product-and-inventory-management-pro.php:13970
+#: multi-location-product-and-inventory-management-pro.php:14248
 msgid "orders"
 msgstr "অর্ডারসমূহ"
 
@@ -6668,7 +6738,7 @@ msgstr "অর্ডারের পূর্বরূপ"
 msgid "orders selected"
 msgstr "অর্ডার নির্বাচিত"
 
-#: multi-location-product-and-inventory-management-pro.php:13412
+#: multi-location-product-and-inventory-management-pro.php:13952
 #, php-format
 msgid "Orders: %d | Items: %d | Revenue: %s"
 msgstr "অর্ডার: %d | আইটেম: %d | আয়: %s"
@@ -6677,7 +6747,7 @@ msgstr "অর্ডার: %d | আইটেম: %d | আয়: %s"
 msgid "Other"
 msgstr "অন্যান্য"
 
-#: admin/settings.php:5316
+#: admin/settings.php:5387
 msgid "Others pages"
 msgstr "অন্যান্য পেজসমূহ"
 
@@ -6685,14 +6755,14 @@ msgstr "অন্যান্য পেজসমূহ"
 msgid "Our Locations (%d)"
 msgstr "আমাদের লোকেশনসমূহ (%d)"
 
-#: multi-location-product-and-inventory-management-pro.php:8784
+#: multi-location-product-and-inventory-management-pro.php:8877
 #: includes/customer-location-insights.php:1010
 #: includes/customer-location-insights.php:1011
 msgid "Our Plugins"
 msgstr "আমাদের প্লাগইনসমূহ"
 
-#: multi-location-product-and-inventory-management-pro.php:12366
-#: multi-location-product-and-inventory-management-pro.php:13116
+#: multi-location-product-and-inventory-management-pro.php:12906
+#: multi-location-product-and-inventory-management-pro.php:13656
 #: admin/dashboard.php:2464 admin/dashboard.php:2492
 #: includes/class-product-location-table.php:2682
 #: includes/stock-price-backorder-manage.php:2078
@@ -6700,10 +6770,10 @@ msgstr "আমাদের প্লাগইনসমূহ"
 msgid "Out of Stock"
 msgstr "স্টক শেষ"
 
-#: multi-location-product-and-inventory-management-pro.php:12484
-#: multi-location-product-and-inventory-management-pro.php:12491
-#: multi-location-product-and-inventory-management-pro.php:12511
-#: multi-location-product-and-inventory-management-pro.php:12544
+#: multi-location-product-and-inventory-management-pro.php:13024
+#: multi-location-product-and-inventory-management-pro.php:13031
+#: multi-location-product-and-inventory-management-pro.php:13051
+#: multi-location-product-and-inventory-management-pro.php:13084
 #: includes/class-product-location-table.php:1193
 #: includes/class-product-location-table.php:1201
 #: includes/class-product-location-table.php:1224
@@ -6754,7 +6824,7 @@ msgstr "স্টক শেষ: %s (%s)"
 msgid "Paid via parent order."
 msgstr "প্যারেন্ট অর্ডারের মাধ্যমে পরিশোধ করা হয়েছে।"
 
-#: admin/settings.php:6903
+#: admin/settings.php:6974
 msgid "Parameters"
 msgstr "প্যারামিটারসমূহ"
 
@@ -6885,7 +6955,7 @@ msgstr "পাথ প্রিফিক্স (/%s/লোকেশন-নাম)
 msgid "Pause"
 msgstr "বিরতি"
 
-#: includes/cash-on-pickup-payment-gateway.php:288
+#: includes/cash-on-pickup-payment-gateway.php:363
 msgid ""
 "Pay with cash when you pick up your order from the store location. Powered "
 "by <a href=\"https://plugincy.com/multi-location-product-and-inventory-"
@@ -6894,7 +6964,7 @@ msgstr ""
 "স্টোর লোকেশন থেকে অর্ডার সংগ্রহ করার সময় নগদ অর্থে পরিশোধ করুন। চালিত হচ্ছে "
 "Plugincy দ্বারা।"
 
-#: multi-location-product-and-inventory-management-pro.php:13449
+#: multi-location-product-and-inventory-management-pro.php:13989
 #: admin/settings.php:3390
 #| msgid ""
 #| "Payment failed\n"
@@ -6904,12 +6974,12 @@ msgstr ""
 "পেমেন্ট ব্যর্থ হয়েছে\n"
 "\n"
 
-#: includes/cash-on-pickup-payment-gateway.php:280
-#: includes/cash-on-pickup-payment-gateway.php:287
+#: includes/cash-on-pickup-payment-gateway.php:355
+#: includes/cash-on-pickup-payment-gateway.php:362
 msgid "Payment method description that the customer will see on your checkout."
 msgstr "চেকআউটে কাস্টমার যে পেমেন্ট মেথডের বিবরণ দেখবেন।"
 
-#: includes/cash-on-pickup-payment-gateway.php:424
+#: includes/cash-on-pickup-payment-gateway.php:463
 msgid "Payment method powered by Plugincy"
 msgstr "Plugincy দ্বারা চালিত পেমেন্ট মেথড"
 
@@ -6920,11 +6990,11 @@ msgid "Payment Methods"
 msgstr ""
 "পেমেন্ট পদ্ধতি\n"
 
-#: includes/cash-on-pickup-payment-gateway.php:399
+#: includes/cash-on-pickup-payment-gateway.php:438
 msgid "Payment to be collected on pickup."
 msgstr "পিকআপের সময় অর্থ সংগ্রহ করা হবে।"
 
-#: admin/settings.php:5892
+#: admin/settings.php:5963
 msgid "Payments"
 msgstr "পেমেন্টসমূহ"
 
@@ -6954,8 +7024,8 @@ msgid "Performance Score"
 msgstr ""
 "পারফরম্যান্স স্কোর\n"
 
-#: multi-location-product-and-inventory-management-pro.php:13594
-#: multi-location-product-and-inventory-management-pro.php:13648
+#: multi-location-product-and-inventory-management-pro.php:14134
+#: multi-location-product-and-inventory-management-pro.php:14188
 #: admin/admin.php:3764 admin/admin.php:3790 admin/admin.php:3812
 #: admin/admin.php:3863 admin/admin.php:3956 admin/dashboard.php:193
 #: admin/dashboard.php:396 admin/dashboard.php:1982 admin/dashboard.php:3954
@@ -7035,7 +7105,7 @@ msgstr "নতুন নোটিফিকেশন আসলে একটি �
 msgid "Please activate your license to access premium features"
 msgstr "প্রিমিয়াম বৈশিষ্ট্যগুলি অ্যাক্সেস করতে আপনার লাইসেন্স সক্রিয় করুন"
 
-#: admin/settings.php:8144
+#: admin/settings.php:8215
 msgid "Please choose a language first."
 msgstr "অনুগ্রহ করে প্রথমে একটি ভাষা নির্বাচন করুন।"
 
@@ -7049,7 +7119,7 @@ msgstr ""
 "অনুগ্রহ করে অর্ডার সম্পাদনা করুন এবং প্রতিটি পণ্যের জন্য আলাদাভাবে অবস্থান "
 "নির্ধারণ করুন"
 
-#: multi-location-product-and-inventory-management-pro.php:14152
+#: multi-location-product-and-inventory-management-pro.php:14692
 msgid "Please enter a valid email address."
 msgstr "অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা লিখুন।"
 
@@ -7061,7 +7131,7 @@ msgstr "অনুগ্রহ করে ০ এর চেয়ে বড় একট
 msgid "Please fix the validation errors before saving."
 msgstr "সংরক্ষণের আগে অনুগ্রহ করে ভ্যালিডেশন ত্রুটিগুলি ঠিক করুন।"
 
-#: includes/cash-on-pickup-payment-gateway.php:295
+#: includes/cash-on-pickup-payment-gateway.php:370
 msgid ""
 "Please have exact cash ready when you pick up your order from the store "
 "location. Powered by Plugincy - Multi Location Product & Inventory "
@@ -7095,11 +7165,11 @@ msgstr "অনুগ্রহ করে প্রথমে একটি লো�
 msgid "Please select a location to see recommendations."
 msgstr "প্রস্তাবনা দেখতে একটি লোকেশন নির্বাচন করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:14139
+#: multi-location-product-and-inventory-management-pro.php:14679
 msgid "Please select a location."
 msgstr "অনুগ্রহ করে একটি লোকেশন নির্বাচন করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:3688
+#: multi-location-product-and-inventory-management-pro.php:3716
 #: includes/text-management.php:909
 msgid "Please select a store location before adding this product to your cart."
 msgstr ""
@@ -7140,6 +7210,9 @@ msgstr ""
 "একটি জোন নির্বাচন করুন।\n"
 "\n"
 
+msgid "Please select at least one location."
+msgstr "দয়া করে কমপক্ষে একটি অবস্থান নির্বাচন করুন।"
+
 #: admin/admin.php:5824
 msgid "Please select at least one order."
 msgstr "অনুগ্রহ করে অন্তত একটি অর্ডার নির্বাচন করুন।"
@@ -7160,18 +7233,18 @@ msgstr "অনুগ্রহ করে একটি বৈধ CSV বা প্
 msgid "Please wait before requesting another update."
 msgstr "অন্য একটি আপডেটের অনুরোধ করার আগে অনুগ্রহ করে অপেক্ষা করুন।"
 
-#: admin/settings.php:6327
+#: admin/settings.php:6398
 #| msgid ""
 #| "Plugin Installation & Setup\n"
 msgid "Plugin Installation & Setup"
 msgstr ""
 "প্লাগইন ইনস্টলেশন ও সেটআপ\n"
 
-#: admin/settings.php:5742
+#: admin/settings.php:5813
 msgid "Plugin License"
 msgstr "প্লাগইন লাইসেন্স"
 
-#: includes/cash-on-pickup-payment-gateway.php:681
+#: includes/cash-on-pickup-payment-gateway.php:722
 msgid "Plugincy"
 msgstr "প্লাগেন্সি "
 
@@ -7179,13 +7252,13 @@ msgstr "প্লাগেন্সি "
 msgid "plugincy"
 msgstr "প্লাগেন্সি "
 
-#: includes/cash-on-pickup-payment-gateway.php:679
+#: includes/cash-on-pickup-payment-gateway.php:720
 msgid "Plugincy add-on"
 msgstr ""
 "প্লাগেন্সি অ্যাড-অন\n"
 "\n"
 
-#: includes/cash-on-pickup-payment-gateway.php:682
+#: includes/cash-on-pickup-payment-gateway.php:723
 msgid "Plugincy cash on pickup add-on"
 msgstr ""
 "প্লাগেন্সি ক্যাশ অন পিকআপ অ্যাড-অন\n"
@@ -7212,7 +7285,7 @@ msgstr "%s-এ জনপ্রিয়"
 msgid "Popular Locations"
 msgstr "জনপ্রিয় লোকেশনসমূহ"
 
-#: admin/settings.php:5734
+#: admin/settings.php:5805
 msgid "Popup"
 msgstr "পপআপ"
 
@@ -7312,7 +7385,7 @@ msgstr "পোস্টাল কোড"
 msgid "Premium License Active"
 msgstr "প্রিমিয়াম লাইসেন্স সক্রিয়"
 
-#: admin/settings.php:5407
+#: admin/settings.php:5478
 msgid "Premium Support"
 msgstr "প্রিমিয়াম সাপোর্ট"
 
@@ -7324,7 +7397,7 @@ msgstr "সম্পূর্ণ পণ্য এবং অবস্থান �
 msgid "Preparing import package..."
 msgstr "আমদানি প্যাকেজ প্রস্তুত করা হচ্ছে..."
 
-#: admin/settings.php:5292
+#: admin/settings.php:5363
 msgid "Prepend to title (Location - Title)"
 msgstr "শিরোনামের আগে যুক্ত করুন (লোকেশন - শিরোনাম)"
 
@@ -7349,7 +7422,7 @@ msgstr "এই লোকেশনে মূল্য:"
 msgid "Price by Location"
 msgstr "লোকেশন অনুযায়ী মূল্য"
 
-#: multi-location-product-and-inventory-management-pro.php:11517
+#: multi-location-product-and-inventory-management-pro.php:11778
 msgid "Price updated! Reloading..."
 msgstr "মূল্য আপডেট হয়েছে! পুনরায় লোড হচ্ছে..."
 
@@ -7369,7 +7442,7 @@ msgstr ""
 msgid "Primary Color"
 msgstr "প্রাথমিক রঙ"
 
-#: admin/settings.php:8546
+#: admin/settings.php:8634
 msgid ""
 "Primary color used for buttons, gradients, and main interactive elements. "
 "This replaces the button background color."
@@ -7377,22 +7450,22 @@ msgstr ""
 "বোতাম, গ্রেডিয়েন্ট এবং প্রধান ইন্টারেক্টিভ উপাদানগুলির জন্য ব্যবহৃত "
 "প্রাথমিক রঙ। এটি বোতামের ব্যাকগ্রাউন্ড রঙ প্রতিস্থাপন করে।"
 
-#: admin/settings.php:7031
+#: admin/settings.php:7102
 #| msgid ""
 #| "Priority Email Support\n"
 msgid "Priority Email Support"
 msgstr ""
 "অগ্রাধিকার ইমেইল সাপোর্ট\n"
 
-#: admin/settings.php:8318
+#: admin/settings.php:8406
 msgid "Pro"
 msgstr "প্রো"
 
-#: admin/settings.php:6230
+#: admin/settings.php:6301
 msgid "Pro Tip:"
 msgstr "বিশেষ টিপ:"
 
-#: admin/settings.php:5346
+#: admin/settings.php:5417
 msgid "Pro Version"
 msgstr "প্রো সংস্করণ"
 
@@ -7408,10 +7481,10 @@ msgstr "প্রক্রিয়াধীন"
 msgid "Processing orders"
 msgstr "অর্ডার প্রক্রিয়াকরণ"
 
-#: multi-location-product-and-inventory-management-pro.php:4954
-#: multi-location-product-and-inventory-management-pro.php:5278
-#: multi-location-product-and-inventory-management-pro.php:5325
-#: multi-location-product-and-inventory-management-pro.php:13767
+#: multi-location-product-and-inventory-management-pro.php:4982
+#: multi-location-product-and-inventory-management-pro.php:5306
+#: multi-location-product-and-inventory-management-pro.php:5353
+#: multi-location-product-and-inventory-management-pro.php:14307
 #: admin/dashboard.php:347 admin/dashboard.php:771 admin/dashboard.php:1636
 #: admin/dashboard.php:4327 admin/stock-central.php:2048
 #: includes/class-product-location-table.php:227
@@ -7424,7 +7497,7 @@ msgstr "পণ্য"
 msgid "Product Allocation Settings"
 msgstr "পণ্য বরাদ্দ সেটিংস"
 
-#: admin/settings.php:7805
+#: admin/settings.php:7876
 msgid "Product Blocks (Gutenberg)"
 msgstr "পণ্য ব্লকসমূহ (গুটেনবার্গ)"
 
@@ -7432,7 +7505,10 @@ msgstr "পণ্য ব্লকসমূহ (গুটেনবার্গ)"
 msgid "Product Count"
 msgstr "পণ্যের সংখ্যা"
 
-#: multi-location-product-and-inventory-management-pro.php:7208
+msgid "Product data saved successfully"
+msgstr "পণ্য ডেটা সফলভাবে সংরক্ষণ করা হয়েছে"
+
+#: multi-location-product-and-inventory-management-pro.php:7236
 msgid "Product data saved successfully."
 msgstr "পণ্যের তথ্য সফলভাবে সংরক্ষিত হয়েছে।"
 
@@ -7440,7 +7516,7 @@ msgstr "পণ্যের তথ্য সফলভাবে সংরক্ষ
 msgid "Product Filter"
 msgstr "পণ্য ফিল্টার"
 
-#: multi-location-product-and-inventory-management-pro.php:5799
+#: multi-location-product-and-inventory-management-pro.php:5827
 msgid "Product has no locations assigned."
 msgstr "পণ্যের জন্য কোনো লোকেশন নির্ধারিত নেই।"
 
@@ -7453,17 +7529,17 @@ msgstr "প্রোডাক্ট আইডি বা SKU প্রয়ো�
 msgid "Product import progress: %1$d/%2$d"
 msgstr "পণ্য আমদানি অগ্রগতি: %1$d/%2$d"
 
-#: multi-location-product-and-inventory-management-pro.php:5774
-#: multi-location-product-and-inventory-management-pro.php:5816
+#: multi-location-product-and-inventory-management-pro.php:5802
+#: multi-location-product-and-inventory-management-pro.php:5844
 msgid "Product is not available in multiple locations."
 msgstr "পণ্য একাধিক লোকেশনে উপলব্ধ নয়।"
 
-#: multi-location-product-and-inventory-management-pro.php:6571
+#: multi-location-product-and-inventory-management-pro.php:6599
 msgid "Product locations saved successfully."
 msgstr "পণ্যের লোকেশনসমূহ সফলভাবে সংরক্ষিত হয়েছে।"
 
-#: multi-location-product-and-inventory-management-pro.php:6658
-#: multi-location-product-and-inventory-management-pro.php:6911
+#: multi-location-product-and-inventory-management-pro.php:6686
+#: multi-location-product-and-inventory-management-pro.php:6939
 #: includes/api/inventory-sync-api.php:234
 msgid "Product not found."
 msgstr ""
@@ -7495,7 +7571,7 @@ msgid "Product Views"
 msgstr ""
 "পণ্যের ভিউ\n"
 
-#: admin/settings.php:5733
+#: admin/settings.php:5804
 msgid "Product Visibility"
 msgstr "পণ্যের দৃশ্যমানতা"
 
@@ -7503,7 +7579,7 @@ msgstr "পণ্যের দৃশ্যমানতা"
 msgid "Product Visibility Rules"
 msgstr "পণ্যের দৃশ্যমানতার নিয়ম"
 
-#: admin/settings.php:7804
+#: admin/settings.php:7875
 msgid "Product Widgets"
 msgstr "পণ্য উইজেটসমূহ"
 
@@ -7555,6 +7631,9 @@ msgstr "ক্রয় তথ্য"
 msgid "Purchase Price"
 msgstr "ক্রয়মূল্য"
 
+msgid "Purchase Price:"
+msgstr "ক্রয় মূল্য:"
+
 #: includes/class-product-location-table.php:890
 #: includes/class-product-location-table.php:1089
 #: includes/stock-price-backorder-manage.php:183
@@ -7564,6 +7643,9 @@ msgstr "ক্রয়ের পরিমাণ"
 #: admin/stock-central.php:2567
 msgid "Purchase quantity cannot be less than stock quantity"
 msgstr "ক্রয়ের পরিমাণ স্টক পরিমাণের চেয়ে কম হতে পারে না"
+
+msgid "Purchase Quantity:"
+msgstr "ক্রয়ের পরিমাণ:"
 
 #: includes/customer-location-insights.php:1486
 #: includes/customer-location-insights.php:1547
@@ -7594,7 +7676,7 @@ msgstr "দ্রুত সম্পাদনা"
 msgid "Quick Select"
 msgstr "দ্রুত নির্বাচন"
 
-#: admin/settings.php:5352
+#: admin/settings.php:5423
 #| msgid ""
 #| "Quick Start Guide:\n"
 msgid "Quick Start Guide:"
@@ -7605,7 +7687,7 @@ msgstr ""
 msgid "Quick tests"
 msgstr "দ্রুত পরীক্ষা"
 
-#: admin/settings.php:8085
+#: admin/settings.php:8156
 #| msgid ""
 #| "Quick Translate\n"
 #| "\n"
@@ -7671,11 +7753,11 @@ msgstr ""
 "সাম্প্রতিক রিভিউ লেবেল\n"
 "\n"
 
-#: admin/settings.php:7801
+#: admin/settings.php:7872
 msgid "Recently Viewed Products"
 msgstr "সম্প্রতি দেখা পণ্যসমূহ"
 
-#: multi-location-product-and-inventory-management-pro.php:14214
+#: multi-location-product-and-inventory-management-pro.php:14754
 #, php-format
 msgid "Recipient type: %s"
 msgstr "প্রাপক ধরণ: %s"
@@ -7733,18 +7815,21 @@ msgstr "দৈনিক মূল্য"
 msgid "Regular price cannot be less than purchase price"
 msgstr "নিয়মিত মূল্য ক্রয়মূল্যের চেয়ে কম হতে পারে না"
 
-#: admin/settings.php:5403 admin/settings.php:7037
+msgid "Regular Price:"
+msgstr "সাধারণ মূল্য:"
+
+#: admin/settings.php:5474 admin/settings.php:7108
 #| msgid ""
 #| "Regular Updates\n"
 msgid "Regular Updates"
 msgstr ""
 "নিয়মিত আপডেটসমূহ\n"
 
-#: admin/settings.php:7800
+#: admin/settings.php:7871
 msgid "Related Products"
 msgstr "সম্পর্কিত পণ্যসমূহ"
 
-#: admin/settings.php:6883
+#: admin/settings.php:6954
 #| msgid ""
 #| "Related Shortcode\n"
 msgid "Related Shortcode"
@@ -7774,6 +7859,9 @@ msgstr "গ্রাহকের লোকেশন মনে রাখুন"
 msgid "Remove"
 msgstr "অপসারণ করুন"
 
+msgid "Remove \"%s\" from this product? Changes will apply after saving."
+msgstr "এই পণ্য থেকে \"%s\" সরান? পরিবর্তনগুলি সংরক্ষণ করার পরে প্রযোজ্য হবে।"
+
 #: includes/class-product-location-table.php:284
 msgid "Remove from Location"
 msgstr "লোকেশন থেকে অপসারণ করুন"
@@ -7791,11 +7879,17 @@ msgstr "লোকেশন অপসারণ করুন"
 msgid "Remove order #"
 msgstr "অর্ডার # অপসারণ করুন"
 
+msgid ""
+"Remove this location from all variations? Changes will apply after saving."
+msgstr ""
+"সমস্ত বৈচিত্র্য থেকে এই অবস্থানটি সরান? সংরক্ষণ করার পরে পরিবর্তনগুলি "
+"প্রযোজ্য হবে।"
+
 #: includes/text-management.php:640
 msgid "Removed Items Notice"
 msgstr "অপসারিত আইটেমের নোটিশ"
 
-#: admin/settings.php:6390
+#: admin/settings.php:6461
 #| msgid ""
 #| "Reports, Analytics & Order Management\n"
 msgid "Reports, Analytics & Order Management"
@@ -7819,7 +7913,7 @@ msgstr "মিশ্র-লোকেশন কার্ট অনুমোদন
 msgid "Requires the bot token configured in Advanced → Social Notifications."
 msgstr "অ্যাডভান্সড → সোশ্যাল নোটিফিকেশন-এ কনফিগার করা বট টোকেন প্রয়োজন।"
 
-#: admin/dashboard.php:1374 admin/settings.php:8426
+#: admin/dashboard.php:1374 admin/settings.php:8514
 msgid "Reset"
 msgstr "রিসেট করুন"
 
@@ -7827,18 +7921,18 @@ msgstr "রিসেট করুন"
 msgid "Reset All Changes"
 msgstr "সব পরিবর্তন রিসেট করুন"
 
-#: admin/settings.php:6056
+#: admin/settings.php:6127
 msgid "Reset All Settings"
 msgstr "সব সেটিংস রিসেট করুন"
 
-#: admin/settings.php:8121
+#: admin/settings.php:8192
 msgid ""
 "Reset all text fields to their default values? This action cannot be undone."
 msgstr ""
 "সব টেক্সট ফিল্ডকে তাদের ডিফল্ট মানে রিসেট করবেন? এই কাজটি পূর্বাবস্থায় "
 "ফেরানো যাবে না।"
 
-#: admin/settings.php:8124
+#: admin/settings.php:8195
 #| msgid ""
 #| "Reset only the Text Management fields to their defaults.\n"
 #| "\n"
@@ -7851,14 +7945,14 @@ msgstr ""
 msgid "Reset product row changes"
 msgstr "পণ্যের সারি পরিবর্তন পুনরায় সেট করুন"
 
-#: admin/settings.php:6049
+#: admin/settings.php:6120
 #| msgid ""
 #| " Reset Settings\n"
 msgid "Reset Settings"
 msgstr ""
 "সেটিংস রিসেট করুন\n"
 
-#: admin/settings.php:8116
+#: admin/settings.php:8187
 #| msgid ""
 #| "Reset Text\n"
 #| "\n"
@@ -7867,26 +7961,26 @@ msgstr ""
 "টেক্সট রিসেট করুন\n"
 "\n"
 
-#: admin/settings.php:8122
+#: admin/settings.php:8193
 msgid "Reset Text to Defaults"
 msgstr "টেক্সটকে ডিফল্টে রিসেট করুন"
 
-#: multi-location-product-and-inventory-management-pro.php:11848
+#: multi-location-product-and-inventory-management-pro.php:12109
 msgid "Resolver service is unavailable."
 msgstr "রিজলভার সার্ভিস উপলব্ধ নয়।"
 
-#: admin/settings.php:6973
+#: admin/settings.php:7044
 #| msgid ""
 #| "Response:\n"
 msgid "Response:"
 msgstr ""
 "প্রতিক্রিয়া:\n"
 
-#: admin/settings.php:7806
+#: admin/settings.php:7877
 msgid "REST API & AJAX Responses"
 msgstr "REST API ও AJAX প্রতিক্রিয়া"
 
-#: multi-location-product-and-inventory-management-pro.php:7062
+#: multi-location-product-and-inventory-management-pro.php:7090
 msgid "Restocked"
 msgstr "পুনরায় মজুদ করা হয়েছে"
 
@@ -7904,7 +7998,7 @@ msgstr ""
 msgid "Restocked: %s"
 msgstr "পুনরায় মজুদ করা হয়েছে: %s"
 
-#: admin/settings.php:8117
+#: admin/settings.php:8188
 #| msgid ""
 #| "Restore the original defaults for all text fields.\n"
 #| "\n"
@@ -7947,7 +8041,7 @@ msgstr "রিভিউ লোকেশন লেবেল"
 msgid "Reviewed from: %s"
 msgstr "%s থেকে রিভিউ করা হয়েছে"
 
-#: admin/settings.php:5903 includes/text-management.php:685
+#: admin/settings.php:5974 includes/text-management.php:685
 msgid "Reviews"
 msgstr "রিভিউসমূহ"
 
@@ -8013,15 +8107,18 @@ msgstr "বিক্রয়মূল্য ক্রয়মূল্যে�
 msgid "Sale price must be less than regular price"
 msgstr "বিক্রয়মূল্য অবশ্যই নিয়মিত মূল্যের চেয়ে কম হতে হবে"
 
+msgid "Sale Price:"
+msgstr "বিক্রয় মূল্য:"
+
 #: admin/settings.php:956
 msgid "Same Location"
 msgstr "একই লোকেশন"
 
-#: admin/settings.php:5807
+#: admin/settings.php:5878
 msgid "Sample Button"
 msgstr "নমুনা বোতাম"
 
-#: admin/settings.php:5805
+#: admin/settings.php:5876
 #| msgid ""
 #| "Sample Button:\n"
 #| "\n"
@@ -8039,13 +8136,12 @@ msgstr "শনিবার"
 msgid "Save All Product Changes"
 msgstr "সব পণ্যের পরিবর্তন সংরক্ষণ করুন"
 
+msgid "Save Changes"
+msgstr "পরিবর্তনগুলি সংরক্ষণ করুন"
+
 #: includes/text-management.php:392 includes/text-management.php:393
 msgid "Save Location"
 msgstr "লোকেশন সংরক্ষণ করুন"
-
-#: multi-location-product-and-inventory-management-pro.php:7311
-msgid "Save Locations"
-msgstr "লোকেশনসমূহ সংরক্ষণ করুন"
 
 #: admin/location-managers.php:703
 msgid "Save Manager"
@@ -8085,7 +8181,7 @@ msgstr "স্কিমা সংস্করণযুক্ত ক্যান�
 msgid "Score"
 msgstr "স্কোর"
 
-#: admin/settings.php:6564
+#: admin/settings.php:6635
 msgid "Scroll to \"API Authentication\" section"
 msgstr "\"API Authentication\" বিভাগে স্ক্রোল করুন"
 
@@ -8134,7 +8230,7 @@ msgstr "সার্চ কুয়েরি খুব দীর্ঘ।"
 msgid "Search query must be at least 2 characters."
 msgstr "সার্চ কুয়েরি অন্তত ২ অক্ষরের হতে হবে।"
 
-#: admin/settings.php:7799
+#: admin/settings.php:7870
 msgid "Search Results"
 msgstr "সার্চ ফলাফল"
 
@@ -8158,7 +8254,7 @@ msgstr ""
 msgid "Secondary Color"
 msgstr "গৌণ রঙ"
 
-#: admin/settings.php:8557
+#: admin/settings.php:8645
 msgid ""
 "Secondary color used for button hover states, gradients, and complementary "
 "elements. This replaces the button hover background color."
@@ -8166,14 +8262,14 @@ msgstr ""
 "বোতাম হোভার অবস্থা, গ্রেডিয়েন্ট এবং পরিপূরক উপাদানগুলির জন্য ব্যবহৃত গৌণ "
 "রঙ। এটি বোতামের হোভার ব্যাকগ্রাউন্ড রঙ প্রতিস্থাপন করে।"
 
-#: admin/settings.php:6468
+#: admin/settings.php:6539
 #| msgid ""
 #| "Section title (use {location} placeholder)\n"
 msgid "Section title (use {location} placeholder)"
 msgstr ""
 "সেকশন শিরোনাম ( {location} প্লেসহোল্ডার ব্যবহার করুন)\n"
 
-#: multi-location-product-and-inventory-management-pro.php:4856
+#: multi-location-product-and-inventory-management-pro.php:4884
 #: includes/class-product-location-table.php:2089
 #: includes/text-management.php:260
 msgid "Security check failed"
@@ -8181,8 +8277,8 @@ msgstr ""
 "নিরাপত্তা যাচাই ব্যর্থ হয়েছে\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:5672
-#: multi-location-product-and-inventory-management-pro.php:5739
+#: multi-location-product-and-inventory-management-pro.php:5700
+#: multi-location-product-and-inventory-management-pro.php:5767
 msgid "Security check failed."
 msgstr "নিরাপত্তা যাচাই ব্যর্থ হয়েছে।"
 
@@ -8195,7 +8291,7 @@ msgstr ""
 msgid "Security Error Message"
 msgstr "নিরাপত্তা ত্রুটির বার্তা"
 
-#: includes/cash-on-pickup-payment-gateway.php:304
+#: includes/cash-on-pickup-payment-gateway.php:379
 msgid ""
 "Select \"All Shipping Methods\" to enable Cash on Pickup for all shipping "
 "methods, or select specific shipping methods."
@@ -8223,8 +8319,8 @@ msgstr "স্টক প্রাপ্যতা দেখতে একটি �
 msgid "Select a location…"
 msgstr "একটি লোকেশন নির্বাচন করুন…"
 
-#: multi-location-product-and-inventory-management-pro.php:13604
-#: multi-location-product-and-inventory-management-pro.php:13658
+#: multi-location-product-and-inventory-management-pro.php:14144
+#: multi-location-product-and-inventory-management-pro.php:14198
 msgid "Select a platform to test."
 msgstr "পরীক্ষার জন্য একটি প্ল্যাটফর্ম নির্বাচন করুন।"
 
@@ -8272,7 +8368,7 @@ msgstr "পরিবর্তে বিদ্যমান ব্যবহার�
 msgid "Select File & Import"
 msgstr "ফাইল নির্বাচন করুন ও আমদানি করুন"
 
-#: admin/settings.php:8091
+#: admin/settings.php:8162
 msgid "Select language"
 msgstr "ভাষা নির্বাচন করুন"
 
@@ -8284,6 +8380,9 @@ msgstr "লোকেশন নির্বাচন করুন"
 #: includes/class-product-location-table.php:933
 msgid "Select location"
 msgstr "লোকেশন নির্বাচন করুন"
+
+msgid "Select Location for Variation"
+msgstr "পরিবর্তনের জন্য অবস্থান নির্বাচন করুন"
 
 #: includes/text-management.php:852
 msgid "Select Location Prompt"
@@ -8297,7 +8396,6 @@ msgstr "লোকেশন নির্বাচন করুন..."
 msgid "Select Location:"
 msgstr "লোকেশন নির্বাচন করুন:"
 
-#: multi-location-product-and-inventory-management-pro.php:7310
 #: includes/location-based-shipping.php:454
 msgid "Select Locations"
 msgstr "লোকেশনসমূহ নির্বাচন করুন"
@@ -8310,7 +8408,7 @@ msgstr "পেমেন্ট পদ্ধতি নির্বাচন কর
 msgid "Select pickup locations..."
 msgstr "পিকআপ লোকেশন নির্বাচন করুন..."
 
-#: includes/cash-on-pickup-payment-gateway.php:308
+#: includes/cash-on-pickup-payment-gateway.php:383
 msgid "Select shipping methods"
 msgstr "শিপিং পদ্ধতি নির্বাচন করুন"
 
@@ -8326,7 +8424,7 @@ msgstr "শিপিং জোন নির্বাচন করুন..."
 msgid "Select Store Alert"
 msgstr "স্টোর নির্বাচন সতর্কতা"
 
-#: multi-location-product-and-inventory-management-pro.php:9694
+#: multi-location-product-and-inventory-management-pro.php:9908
 msgid "Select Store Location"
 msgstr "স্টোর লোকেশন নির্বাচন করুন"
 
@@ -8339,6 +8437,13 @@ msgid ""
 "Select the default location to show when a customer first visits your store."
 msgstr ""
 "গ্রাহক প্রথমবার আপনার স্টোরে এলে প্রদর্শনের জন্য ডিফল্ট লোকেশন নির্বাচন করুন।"
+
+msgid ""
+"Select the locations where this grouped product should be available. "
+"Individual child products are managed separately."
+msgstr ""
+"এই গ্রুপিং করা পণ্যটি কোথায় কোথায় উপলব্ধ করা উচিত তা নির্বাচন করুন। পৃথক "
+"চাইল্ড পণ্যগুলি আলাদাভাবে পরিচালিত হয়।"
 
 #: admin/settings.php:3675
 msgid "Select the target channel and copy the webhook URL."
@@ -8366,7 +8471,7 @@ msgid "Select which map provider to use for the store locator."
 msgstr ""
 "স্টোর লোকেটরের জন্য কোন ম্যাপ প্রদানকারী ব্যবহার করবেন তা নির্বাচন করুন।"
 
-#: admin/settings.php:7814
+#: admin/settings.php:7885
 msgid ""
 "Select which parts of your store should have location-based filtering "
 "applied."
@@ -8411,7 +8516,7 @@ msgstr ""
 "সিলেক্টর লেবেল\n"
 "\n"
 
-#: admin/settings.php:6505
+#: admin/settings.php:6576
 #| msgid ""
 #| "Selector layout style\n"
 msgid "Selector layout style"
@@ -8441,7 +8546,7 @@ msgstr "টেস্ট ইমেইল পাঠান"
 msgid "Send test email to"
 msgstr "টেস্ট ইমেইল পাঠান"
 
-#: admin/settings.php:5906
+#: admin/settings.php:5977
 msgid "SEO"
 msgstr "এসইও"
 
@@ -8470,7 +8575,7 @@ msgstr ""
 "নির্বাচিত না হলে ব্যবহৃত হবে।\n"
 "\n"
 
-#: admin/settings.php:6132
+#: admin/settings.php:6203
 msgid "Set custom selector title"
 msgstr "কাস্টম নির্বাচক শিরোনাম সেট করুন"
 
@@ -8496,7 +8601,7 @@ msgstr ""
 "সারাদিনের জন্য “24 hours” ব্যবহার করুন।\n"
 "\n"
 
-#: admin/settings.php:6364
+#: admin/settings.php:6435
 #| msgid ""
 #| "Set up location-based shipping methods, configure pickup locations, and "
 #| "manage delivery options. Learn to optimize shipping costs and customer "
@@ -8512,7 +8617,7 @@ msgstr ""
 "শিখুন।\n"
 "\n"
 
-#: admin/settings.php:5358
+#: admin/settings.php:5429
 #| msgid ""
 #| "Set up your store locations with names, addresses, and contact details\n"
 #| "\n"
@@ -8556,8 +8661,8 @@ msgstr "এই লোকেশন সক্রিয় বা নিষ্ক�
 msgid "Set Your Location"
 msgstr "আপনার লোকেশন সেট করুন"
 
-#: multi-location-product-and-inventory-management-pro.php:8780
-#: admin/admin.php:4167 admin/admin.php:4168 admin/settings.php:5334
+#: multi-location-product-and-inventory-management-pro.php:8873
+#: admin/admin.php:4167 admin/admin.php:4168 admin/settings.php:5405
 msgid "Settings"
 msgstr "সেটিংস"
 
@@ -8583,11 +8688,11 @@ msgstr ""
 "সেটিংস সফলভাবে ইমপোর্ট হয়েছে! অনুগ্রহ করে পেজটি রিফ্রেশ করুন।\n"
 "\n"
 
-#: admin/settings.php:5889
+#: admin/settings.php:5960
 msgid "Shipping"
 msgstr "শিপিং"
 
-#: admin/settings.php:6363
+#: admin/settings.php:6434
 #| msgid ""
 #| "Shipping & Pickup Configuration\n"
 msgid "Shipping & Pickup Configuration"
@@ -8598,7 +8703,7 @@ msgstr ""
 msgid "Shipping Calculation Method"
 msgstr "শিপিং গণনার পদ্ধতি"
 
-#: multi-location-product-and-inventory-management-pro.php:4051
+#: multi-location-product-and-inventory-management-pro.php:4079
 #, php-format
 msgid "Shipping from %s"
 msgstr "%s থেকে শিপিং"
@@ -8620,7 +8725,7 @@ msgid "Shipping Zones"
 msgstr ""
 "শিপিং জোনসমূহ\n"
 
-#: admin/settings.php:5314
+#: admin/settings.php:5385
 msgid "Shop/Archive Pages"
 msgstr "শপ/আর্কাইভ পেজসমূহ"
 
@@ -8628,7 +8733,7 @@ msgstr "শপ/আর্কাইভ পেজসমূহ"
 msgid "Short Description"
 msgstr "সংক্ষিপ্ত বিবরণ"
 
-#: admin/settings.php:6105
+#: admin/settings.php:6176
 msgid "Shortcode"
 msgstr "শর্টকোড"
 
@@ -8672,7 +8777,7 @@ msgstr "গ্লোবাল পণ্য দেখান"
 msgid "Show Grayed Out"
 msgstr "গ্রে আউট দেখান"
 
-#: admin/settings.php:6528
+#: admin/settings.php:6599
 #| msgid ""
 #| "Show location filter dropdown\n"
 msgid "Show location filter dropdown"
@@ -8700,7 +8805,7 @@ msgstr ""
 msgid "Show Out of Stock Products"
 msgstr "স্টক শেষ পণ্য দেখান"
 
-#: admin/settings.php:6478
+#: admin/settings.php:6549
 #| msgid ""
 #| "Show popularity badge\n"
 msgid "Show popularity badge"
@@ -8736,7 +8841,7 @@ msgstr ""
 "স্টক স্তর দেখান (উচ্চ/মাঝারি/নিম্ন)\n"
 "\n"
 
-#: admin/settings.php:6533
+#: admin/settings.php:6604
 #| msgid ""
 #| "Show stock status filter dropdown\n"
 msgid "Show stock status filter dropdown"
@@ -8748,7 +8853,7 @@ msgid ""
 "Show store hours on Location Archive pages next to location information."
 msgstr "লোকেশন আর্কাইভ পেজে লোকেশন তথ্যের পাশে স্টোর সময়সূচি দেখান।"
 
-#: admin/settings.php:6745
+#: admin/settings.php:6816
 #| msgid ""
 #| "Show the open/closed status badge for a single location anywhere on your "
 #| "site. Useful for headers, sidebars, or location detail pages.\n"
@@ -9034,7 +9139,7 @@ msgstr "সাধারণ"
 msgid "Single Product Page Position"
 msgstr "একক পণ্যের পেজের অবস্থান"
 
-#: admin/settings.php:5315
+#: admin/settings.php:5386
 msgid "Single Product Pages"
 msgstr "একক পণ্যের পেজসমূহ"
 
@@ -9042,11 +9147,11 @@ msgstr "একক পণ্যের পেজসমূহ"
 msgid "Single Product Unavailable Behavior"
 msgstr "একক পণ্যের অপ্রাপ্য আচরণ"
 
-#: admin/settings.php:6616
+#: admin/settings.php:6687
 msgid "Single Product Update Example"
 msgstr "একক পণ্যের আপডেট উদাহরণ"
 
-#: multi-location-product-and-inventory-management-pro.php:13540
+#: multi-location-product-and-inventory-management-pro.php:14080
 msgid "Site back online"
 msgstr "সাইট আবার অনলাইনে"
 
@@ -9059,7 +9164,7 @@ msgstr ""
 "সাইট ডাউন / আপ মনিটর\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:13532
+#: multi-location-product-and-inventory-management-pro.php:14072
 msgid "Site down alert"
 msgstr "সাইট ডাউন সতর্কতা"
 
@@ -9120,7 +9225,7 @@ msgid "Social Notification Channels"
 msgstr "সামাজিক নোটিফিকেশন চ্যানেলসমূহ"
 
 #: admin/location-managers.php:674 admin/settings.php:3337
-#: admin/settings.php:3373 admin/settings.php:6540
+#: admin/settings.php:3373 admin/settings.php:6611
 #| msgid ""
 #| "Social Notifications\n"
 msgid "Social Notifications"
@@ -9151,35 +9256,35 @@ msgstr ""
 "কিছু নির্বাচিত অর্ডার সম্পাদনযোগ্য নয়। লোকেশন নির্বাচন সক্রিয় করতে হাইলাইট "
 "করা অর্ডারগুলো সরিয়ে দিন।"
 
-#: admin/settings.php:6437
+#: admin/settings.php:6508
 #| msgid ""
 #| "Sort locations by\n"
 msgid "Sort locations by"
 msgstr ""
 "লোকেশনগুলো সাজান\n"
 
-#: admin/settings.php:6442
+#: admin/settings.php:6513
 #| msgid ""
 #| "Sort order\n"
 msgid "Sort order"
 msgstr ""
 "সাজানোর ক্রম\n"
 
-#: admin/settings.php:6483
+#: admin/settings.php:6554
 #| msgid ""
 #| "Sort products by\n"
 msgid "Sort products by"
 msgstr ""
 "পণ্যগুলো সাজান\n"
 
-#: admin/settings.php:6407
+#: admin/settings.php:6478
 #| msgid ""
 #| "Specific location ID(s)\n"
 msgid "Specific location ID(s)"
 msgstr ""
 "নির্দিষ্ট লোকেশন আইডি(সমূহ)\n"
 
-#: admin/settings.php:6500
+#: admin/settings.php:6571
 msgid "Specific product ID (auto-detects if not provided)"
 msgstr "নির্দিষ্ট প্রোডাক্ট আইডি (প্রদান না করলে স্বয়ংক্রিয়ভাবে শনাক্ত করবে)"
 
@@ -9272,12 +9377,12 @@ msgstr ""
 "পপআপ লেআউটে প্রদর্শিত স্ট্যাটাস টেক্সট এবং সহায়ক বার্তা।\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:13491
+#: multi-location-product-and-inventory-management-pro.php:14031
 #, php-format
 msgid "Status: %s"
 msgstr "স্থিতি: %s"
 
-#: admin/settings.php:6337
+#: admin/settings.php:6408
 #| msgid ""
 #| "Step-by-step guide on creating and configuring store locations with "
 #| "addresses, contact details, business hours, and geographical coordinates "
@@ -9293,7 +9398,7 @@ msgstr ""
 "অন্তর্ভুক্ত থাকবে।\n"
 "\n"
 
-#: admin/settings.php:6800
+#: admin/settings.php:6871
 #| msgid ""
 #| "Step-by-step guides to master location-based inventory management\n"
 #| "\n"
@@ -9302,7 +9407,7 @@ msgstr ""
 "লোকেশন-ভিত্তিক ইনভেন্টরি ব্যবস্থাপনা আয়ত্ত করার ধাপে ধাপে নির্দেশিকা\n"
 "\n"
 
-#: admin/settings.php:6952
+#: admin/settings.php:7023
 #| msgid ""
 #| "Steps / Request Body:\n"
 msgid "Steps / Request Body:"
@@ -9382,11 +9487,14 @@ msgstr "স্টকের পরিমাণ"
 msgid "Stock quantity cannot be greater than purchase quantity"
 msgstr "স্টকের পরিমাণ ক্রয়ের পরিমাণের চেয়ে বেশি হতে পারে না"
 
+msgid "Stock Quantity:"
+msgstr "স্টকের পরিমাণ:"
+
 #: includes/text-management.php:526
 msgid "Stock Status"
 msgstr "স্টকের অবস্থা"
 
-#: admin/settings.php:6569
+#: admin/settings.php:6640
 msgid "Store both keys securely (they are shown only once)"
 msgstr "উভয় কী নিরাপদে সংরক্ষণ করুন (এগুলি কেবল একবার দেখানো হবে)"
 
@@ -9398,7 +9506,7 @@ msgstr "সম্পূর্ণ ইতিহাস সংরক্ষণ কর
 msgid "Store Latest Only"
 msgstr "শুধুমাত্র সর্বশেষ সংরক্ষণ করুন"
 
-#: multi-location-product-and-inventory-management-pro.php:4843
+#: multi-location-product-and-inventory-management-pro.php:4871
 #: admin/admin.php:4193 admin/admin.php:4199 admin/admin.php:5743
 #: admin/admin.php:5941
 msgid "Store Location"
@@ -9485,9 +9593,9 @@ msgstr "রবিবার"
 msgid "Supplemental note that shows opening time. Use %s for time."
 msgstr "খোলার সময় প্রদর্শনকারী অতিরিক্ত নোট। সময়ের জন্য %s ব্যবহার করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:8782
-#: multi-location-product-and-inventory-management-pro.php:8816
-#: multi-location-product-and-inventory-management-pro.php:8816
+#: multi-location-product-and-inventory-management-pro.php:8875
+#: multi-location-product-and-inventory-management-pro.php:8909
+#: multi-location-product-and-inventory-management-pro.php:8909
 msgid "Support"
 msgstr "সহায়তা"
 
@@ -9533,7 +9641,7 @@ msgstr "ট্যাব"
 msgid "Tags"
 msgstr "ট্যাবসমূহ"
 
-#: admin/settings.php:5896
+#: admin/settings.php:5967
 msgid "Tax"
 msgstr "ট্যাক্স"
 
@@ -9567,8 +9675,8 @@ msgstr "টেলিগ্রাম চ্যাট আইডি:"
 msgid "Telegram Docs: Bots API"
 msgstr "টেলিগ্রাম ডকস: বটস এপিআই"
 
-#: multi-location-product-and-inventory-management-pro.php:13608
-#: multi-location-product-and-inventory-management-pro.php:13662
+#: multi-location-product-and-inventory-management-pro.php:14148
+#: multi-location-product-and-inventory-management-pro.php:14202
 msgid "Telegram requires a chat ID (and bot token)."
 msgstr "টেলিগ্রামের জন্য একটি চ্যাট আইডি (এবং বট টোকেন) প্রয়োজন।"
 
@@ -9576,7 +9684,7 @@ msgstr "টেলিগ্রামের জন্য একটি চ্যা
 msgid "Template Selection"
 msgstr "টেমপ্লেট নির্বাচন"
 
-#: admin/settings.php:8315
+#: admin/settings.php:8403
 #, php-format
 msgid "Template: %s"
 msgstr "টেমপ্লেট: %s"
@@ -9597,11 +9705,11 @@ msgstr "টেস্ট ব্যর্থ হয়েছে। বিস্ত
 msgid "Test Floating Notification"
 msgstr "টেস্ট ফ্লোটিং নোটিফিকেশন"
 
-#: multi-location-product-and-inventory-management-pro.php:13630
+#: multi-location-product-and-inventory-management-pro.php:14170
 msgid "Test notification"
 msgstr "টেস্ট নোটিফিকেশন"
 
-#: multi-location-product-and-inventory-management-pro.php:14209
+#: multi-location-product-and-inventory-management-pro.php:14749
 msgid "Test notification email"
 msgstr "টেস্ট নোটিফিকেশন ইমেইল"
 
@@ -9617,7 +9725,7 @@ msgstr "পুশ নোটিফিকেশন পরীক্ষা করু
 msgid "Test PWA Notification"
 msgstr "টেস্ট PWA নোটিফিকেশন"
 
-#: multi-location-product-and-inventory-management-pro.php:13637
+#: multi-location-product-and-inventory-management-pro.php:14177
 msgid "Test sent (check your channel)."
 msgstr "টেস্ট পাঠানো হয়েছে (আপনার চ্যানেল পরীক্ষা করুন)।"
 
@@ -9633,19 +9741,19 @@ msgstr "ডাইজেস্ট পরীক্ষা করা হচ্ছে
 msgid "Testing..."
 msgstr "পরীক্ষা করা হচ্ছে..."
 
-#: admin/settings.php:8579
+#: admin/settings.php:8667
 msgid "Text color for buttons."
 msgstr "বোতামের জন্য টেক্সটের রঙ।"
 
-#: admin/settings.php:8523
+#: admin/settings.php:8611
 msgid "Text color for popup/modal content."
 msgstr "পপআপ/মডাল কনটেন্টের জন্য টেক্সটের রঙ।"
 
-#: admin/settings.php:5740 admin/settings.php:8058
+#: admin/settings.php:5811 admin/settings.php:8129
 msgid "Text Management"
 msgstr "টেক্সট ব্যবস্থাপনা"
 
-#: admin/settings.php:7821
+#: admin/settings.php:7892
 msgid "Text management configuration is not available."
 msgstr "টেক্সট ম্যানেজমেন্ট কনফিগারেশন উপলব্ধ নয়।"
 
@@ -9657,7 +9765,7 @@ msgstr ""
 "টেক্সট ম্যানেজমেন্ট ডিফল্টসমূহ উপলব্ধ নয়। অনুগ্রহ করে পেজটি রিলোড করুন এবং "
 "আবার চেষ্টা করুন।"
 
-#: admin/settings.php:8059
+#: admin/settings.php:8130
 #| msgid ""
 #| "Text Management Overview\n"
 msgid "Text Management Overview"
@@ -9722,7 +9830,7 @@ msgstr ""
 "WooCommerce Pro-এর জন্য মাল্টি লোকেশন প্রোডাক্ট ও ইনভেন্টরি ম্যানেজমেন্ট "
 "ব্যবহার করার জন্য ধন্যবাদ!"
 
-#: admin/settings.php:5305
+#: admin/settings.php:5376
 msgid "The character(s) used to separate the title and location."
 msgstr "শিরোনাম এবং লোকেশন আলাদা করতে ব্যবহৃত অক্ষর(গুলি)।"
 
@@ -9760,14 +9868,14 @@ msgstr ""
 "এই ফাইলটি এই প্লাগইন থেকে বৈধ সেটিংস এক্সপোর্ট বলে মনে হচ্ছে না।\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:14212
+#: multi-location-product-and-inventory-management-pro.php:14752
 msgid ""
 "This is a test email sent from Multi Location Product & Inventory Management."
 msgstr ""
 "এটি মাল্টি লোকেশন প্রোডাক্ট ও ইনভেন্টরি ম্যানেজমেন্ট থেকে পাঠানো একটি টেস্ট "
 "ইমেইল।"
 
-#: multi-location-product-and-inventory-management-pro.php:13631
+#: multi-location-product-and-inventory-management-pro.php:14171
 msgid "This is a test from Multi Location Product & Inventory Management."
 msgstr "এটি মাল্টি লোকেশন প্রোডাক্ট ও ইনভেন্টরি ম্যানেজমেন্ট থেকে একটি টেস্ট।"
 
@@ -9775,12 +9883,12 @@ msgstr "এটি মাল্টি লোকেশন প্রোডাক্
 msgid "This Month"
 msgstr "এই মাস"
 
-#: multi-location-product-and-inventory-management-pro.php:4916
+#: multi-location-product-and-inventory-management-pro.php:4944
 #: admin/admin.php:4948
 msgid "This order is no longer editable"
 msgstr "এই অর্ডার আর সম্পাদনযোগ্য নয়"
 
-#: multi-location-product-and-inventory-management-pro.php:10987
+#: multi-location-product-and-inventory-management-pro.php:11248
 #, php-format
 msgid ""
 "This product is not available at %s. Please select a different location to "
@@ -9789,7 +9897,7 @@ msgstr ""
 "এই প্রোডাক্ট %s-এ উপলব্ধ নয়। অনুগ্রহ করে প্রোডাক্টটি দেখতে অন্য একটি লোকেশন "
 "নির্বাচন করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:10984
+#: multi-location-product-and-inventory-management-pro.php:11245
 msgid "This product is not available in your selected location."
 msgstr "এই প্রোডাক্ট আপনার নির্বাচিত লোকেশনে উপলব্ধ নয়।"
 
@@ -9812,7 +9920,7 @@ msgstr ""
 "\n"
 "\n"
 
-#: admin/settings.php:6052
+#: admin/settings.php:6123
 #| msgid ""
 #| "This will reset all plugin settings to their default values. This action "
 #| "cannot be undone. Please make sure you have exported your settings if you "
@@ -9845,7 +9953,7 @@ msgstr ""
 "সময় সীমার বিন্যাস\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:14218
+#: multi-location-product-and-inventory-management-pro.php:14758
 #, php-format
 msgid "Time: %s"
 msgstr "সময়: %s"
@@ -9854,7 +9962,7 @@ msgstr "সময়: %s"
 msgid "Timezone"
 msgstr "টাইমজোন"
 
-#: includes/cash-on-pickup-payment-gateway.php:278
+#: includes/cash-on-pickup-payment-gateway.php:353
 msgid "Title"
 msgstr "শিরোনাম"
 
@@ -9884,7 +9992,7 @@ msgstr ""
 msgid "Title-Location Separator"
 msgstr "শিরোনাম-লোকেশন বিভাজক"
 
-#: multi-location-product-and-inventory-management-pro.php:3756
+#: multi-location-product-and-inventory-management-pro.php:3784
 msgid "To Location"
 msgstr "লোকেশনে"
 
@@ -9896,11 +10004,11 @@ msgstr "আজ"
 msgid "Today Label"
 msgstr "আজকের লেবেল"
 
-#: multi-location-product-and-inventory-management-pro.php:13438
+#: multi-location-product-and-inventory-management-pro.php:13978
 msgid "Today's location performance"
 msgstr "আজকের লোকেশন পারফরম্যান্স"
 
-#: multi-location-product-and-inventory-management-pro.php:13410
+#: multi-location-product-and-inventory-management-pro.php:13950
 #, php-format
 msgid "Today's performance - %s"
 msgstr "আজকের পারফরম্যান্স - %s"
@@ -9923,7 +10031,7 @@ msgstr ""
 "ছোট ছোট ভাগে বিভক্ত করুন।\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:11854
+#: multi-location-product-and-inventory-management-pro.php:12115
 msgid "Too many location resolve requests. Please try again shortly."
 msgstr ""
 "অতিরিক্ত লোকেশন রিজলভ অনুরোধ হয়েছে। অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা "
@@ -9964,7 +10072,7 @@ msgid "Top Selling Product"
 msgstr ""
 "সর্বাধিক বিক্রিত পণ্য\n"
 
-#: admin/settings.php:6866
+#: admin/settings.php:6937
 #| msgid ""
 #| "Topics Covered\n"
 msgid "Topics Covered"
@@ -9983,6 +10091,11 @@ msgstr "মোট CSV সারি: %d"
 #: admin/dashboard.php:266 admin/dashboard.php:581 admin/dashboard.php:1455
 msgid "Total Investment"
 msgstr "মোট বিনিয়োগ"
+
+msgid ""
+"Total location stock (%s) cannot be greater than default stock quantity (%s)"
+msgstr ""
+"মোট অবস্থানের স্টক (%s) ডিফল্ট স্টকের পরিমাণ (%s) এর চেয়ে বেশি হতে পারে না"
 
 #: admin/stock-central.php:2568
 msgid "Total location stock exceeds default stock"
@@ -10024,7 +10137,7 @@ msgstr "মোট রাজস্ব"
 msgid "Total Stock"
 msgstr "মোট স্টক"
 
-#: multi-location-product-and-inventory-management-pro.php:3773
+#: multi-location-product-and-inventory-management-pro.php:3801
 msgid "Total Transfer Cost"
 msgstr "মোট স্থানান্তর খরচ"
 
@@ -10043,12 +10156,12 @@ msgid "Total Views"
 msgstr ""
 "মোট ভিউ\n"
 
-#: multi-location-product-and-inventory-management-pro.php:13492
+#: multi-location-product-and-inventory-management-pro.php:14032
 #, php-format
 msgid "Total: %s"
 msgstr "মোট: %s"
 
-#: multi-location-product-and-inventory-management-pro.php:13226
+#: multi-location-product-and-inventory-management-pro.php:13766
 #, php-format
 msgid "Total: %s | Status: %s | Items: %d"
 msgstr "মোট: %s | অবস্থা: %s | আইটেম: %d"
@@ -10057,7 +10170,7 @@ msgstr "মোট: %s | অবস্থা: %s | আইটেম: %d"
 msgid "Totally restrict (default)"
 msgstr "সম্পূর্ণভাবে সীমাবদ্ধ করুন (ডিফল্ট)"
 
-#: multi-location-product-and-inventory-management-pro.php:13697
+#: multi-location-product-and-inventory-management-pro.php:14237
 #, php-format
 msgid "Totals - Orders: %d | Items: %d | Revenue: %s"
 msgstr "মোট - অর্ডার: %d | আইটেম: %d | রাজস্ব: %s"
@@ -10070,7 +10183,7 @@ msgstr "লোকেশন অনুযায়ী গ্রাহকের প
 msgid "Tracking Entries:"
 msgstr "ট্র্যাকিং এন্ট্রি:"
 
-#: multi-location-product-and-inventory-management-pro.php:4142
+#: multi-location-product-and-inventory-management-pro.php:4170
 msgid "Transfer Costs Applied"
 msgstr "স্থানান্তর খরচ প্রয়োগ করা হয়েছে"
 
@@ -10093,7 +10206,7 @@ msgstr ""
 "লোকেশন স্টক এই সংখ্যা (ইউনিট) এর কম বা সমান হলে আউট-অফ-স্টক সতর্কতা চালু "
 "করুন।"
 
-#: admin/settings.php:7017
+#: admin/settings.php:7088
 msgid "Try Live Demo"
 msgstr "লাইভ ডেমো চেষ্টা করুন"
 
@@ -10102,7 +10215,7 @@ msgstr "লাইভ ডেমো চেষ্টা করুন"
 msgid "Tuesday"
 msgstr "মঙ্গলবার"
 
-#: admin/settings.php:6807
+#: admin/settings.php:6878
 #| msgid ""
 #| "Tutorials\n"
 msgid "Tutorials"
@@ -10151,6 +10264,11 @@ msgstr ""
 msgid "Unable to open artifact file."
 msgstr "আর্টিফ্যাক্ট ফাইল খোলা যাচ্ছে না।"
 
+msgid "Unable to queue locations right now. Please reopen Manage Product."
+msgstr ""
+"এই মুহূর্তে অবস্থানগুলি কিউ করতে অক্ষম। অনুগ্রহ করে পণ্য পরিচালনা পুনরায় "
+"খুলুন।"
+
 #: includes/class-import-export-v2.php:434
 msgid "Unable to read uploaded chunk size."
 msgstr "আপলোড করা খণ্ডের আকার পড়তে অক্ষম।"
@@ -10171,7 +10289,7 @@ msgstr "রেট সিঙ্ক করা যাচ্ছে না।"
 msgid "Unable to sync rate. Please try again."
 msgstr "রেট সিঙ্ক করা যাচ্ছে না। অনুগ্রহ করে আবার চেষ্টা করুন।"
 
-#: multi-location-product-and-inventory-management-pro.php:8688
+#: multi-location-product-and-inventory-management-pro.php:8781
 #: admin/admin.php:4423 admin/admin.php:4476 admin/admin.php:4555
 #: admin/admin.php:4559 admin/admin.php:5342 admin/admin.php:5355
 #: admin/admin.php:5830 includes/order-split-by-location.php:376
@@ -10181,9 +10299,9 @@ msgstr ""
 "অবর্পিত\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:13213
-#: multi-location-product-and-inventory-management-pro.php:13354
-#: multi-location-product-and-inventory-management-pro.php:13485
+#: multi-location-product-and-inventory-management-pro.php:13753
+#: multi-location-product-and-inventory-management-pro.php:13894
+#: multi-location-product-and-inventory-management-pro.php:14025
 #: admin/admin.php:4304 admin/admin.php:5944
 msgid "Unassigned location"
 msgstr "অনির্ধারিত লোকেশন"
@@ -10219,7 +10337,7 @@ msgstr "অজানা প্রোডাক্ট"
 msgid "Unknown product"
 msgstr "অজানা প্রোডাক্ট"
 
-#: admin/settings.php:5399
+#: admin/settings.php:5470
 #| msgid ""
 #| "Unlimited Locations\n"
 msgid "Unlimited Locations"
@@ -10250,7 +10368,7 @@ msgstr "আপডেট উপলব্ধ!"
 msgid "Update Cart (Remove unavailable products)"
 msgstr "কার্ট আপডেট করুন (অপ্রাপ্য পণ্য সরান)"
 
-#: admin/settings.php:8060
+#: admin/settings.php:8131
 #| msgid ""
 #| "Update every customer-facing label, prompt, and message from one place. "
 #| "Each section groups related text so it is clear where the copy appears on "
@@ -10286,7 +10404,7 @@ msgstr "এই অর্ডারের জন্য ব্যবহারকা
 msgid "updated"
 msgstr "আপডেট হয়েছে"
 
-#: multi-location-product-and-inventory-management-pro.php:11523
+#: multi-location-product-and-inventory-management-pro.php:11784
 msgid "Updated!"
 msgstr "আপডেট হয়েছে!"
 
@@ -10294,9 +10412,9 @@ msgstr "আপডেট হয়েছে!"
 msgid "Updating Text"
 msgstr "আপডেটিং টেক্সট"
 
-#: multi-location-product-and-inventory-management-pro.php:4812
-#: multi-location-product-and-inventory-management-pro.php:11527
-#: multi-location-product-and-inventory-management-pro.php:11545
+#: multi-location-product-and-inventory-management-pro.php:4840
+#: multi-location-product-and-inventory-management-pro.php:11788
+#: multi-location-product-and-inventory-management-pro.php:11806
 #: includes/text-management.php:620
 msgid "Updating..."
 msgstr "আপডেট হচ্ছে..."
@@ -10330,7 +10448,7 @@ msgstr "লোগো আপলোড/নির্বাচন করুন"
 msgid "Uploading file in chunks..."
 msgstr "ফাইল খণ্ডে খণ্ডে আপলোড করা হচ্ছে..."
 
-#: admin/settings.php:7803
+#: admin/settings.php:7874
 msgid "Upsells"
 msgstr "আপসেলস"
 
@@ -10342,7 +10460,7 @@ msgstr "URL লোকেশন ফরম্যাট"
 msgid "URL Prefix (e.g., \"store\" for store-name.example.com):"
 msgstr "URL প্রিফিক্স (যেমন, \"store\" store-name.example.com এর জন্য):"
 
-#: admin/settings.php:6924
+#: admin/settings.php:6995
 #| msgid ""
 #| "Usage Examples\n"
 msgid "Usage Examples"
@@ -10387,11 +10505,11 @@ msgstr "বিভিন্ন স্টোর লোকেশনের জন্
 msgid "Use first assigned location"
 msgstr "প্রথম এসাইন করা লোকেশন ব্যবহার করুন"
 
-#: admin/settings.php:6576
+#: admin/settings.php:6647
 msgid "Use in X-API-Key header for REST API requests"
 msgstr "REST API অনুরোধের জন্য X-API-Key হেডারে ব্যবহার করুন"
 
-#: admin/settings.php:6577
+#: admin/settings.php:6648
 msgid "Use in X-Webhook-Secret header for webhook requests"
 msgstr "ওয়েবহুক অনুরোধের জন্য X-Webhook-Secret হেডারে ব্যবহার করুন"
 
@@ -10407,7 +10525,7 @@ msgstr "Select2 ব্যবহার করুন"
 msgid "Use select2 instead of normal select"
 msgstr "সাধারণ সিলেক্টের পরিবর্তে Select2 ব্যবহার করুন"
 
-#: admin/settings.php:6100
+#: admin/settings.php:6171
 msgid ""
 "Use this shortcode to display the location selector on any page or post. "
 "Copy and paste it into the WordPress editor or use it in your template files."
@@ -10433,7 +10551,7 @@ msgstr ""
 msgid "Used with the stock quantity. Use %s for quantity."
 msgstr "স্টকের পরিমাণের সাথে ব্যবহৃত। পরিমাণের জন্য %s ব্যবহার করুন।"
 
-#: admin/settings.php:5738
+#: admin/settings.php:5809
 msgid "User Experience"
 msgstr "ব্যবহারকারীর অভিজ্ঞতা"
 
@@ -10459,6 +10577,9 @@ msgstr ""
 #: includes/customer-location-insights.php:1548
 msgid "Users"
 msgstr "ব্যবহারকারী"
+
+msgid "Validation issue"
+msgstr "যাচাইকরণ সমস্যা"
 
 #: admin/dashboard.php:261 admin/dashboard.php:562
 msgid "Value"
@@ -10518,7 +10639,14 @@ msgstr "পরিবর্তন সারিগুলি সারিবদ্�
 msgid "Variation Stock Label"
 msgstr "ভ্যারিয়েশন স্টক লেবেল"
 
-#: multi-location-product-and-inventory-management-pro.php:6947
+msgid ""
+"Variation: Total location stock (%s) cannot be greater than default stock "
+"quantity (%s)"
+msgstr ""
+"পরিবর্তন: মোট অবস্থানের স্টক (%s) ডিফল্ট স্টক পরিমাণের (%s) চেয়ে বেশি হতে "
+"পারে না"
+
+#: multi-location-product-and-inventory-management-pro.php:6975
 msgid "Variations can only be saved for variable products."
 msgstr "ভ্যারিয়েশন শুধুমাত্র ভ্যারিয়েবল প্রোডাক্টের জন্য সংরক্ষণ করা যাবে।"
 
@@ -10531,7 +10659,7 @@ msgstr "ভার্সন %s"
 msgid "Version Information"
 msgstr "সংস্করণ তথ্য"
 
-#: admin/settings.php:6797
+#: admin/settings.php:6868
 msgid "Video Tutorials & Documentation"
 msgstr "ভিডিও টিউটোরিয়াল ও ডকুমেন্টেশন"
 
@@ -10544,7 +10672,7 @@ msgstr "দেখুন"
 msgid "View Dashboard"
 msgstr "ড্যাশবোর্ড দেখুন"
 
-#: admin/settings.php:5382
+#: admin/settings.php:5453
 msgid "View Demo"
 msgstr "ডেমো দেখুন"
 
@@ -10556,11 +10684,11 @@ msgstr "বিস্তারিত দেখুন"
 msgid "View Details Button"
 msgstr "বিস্তারিত দেখার বোতাম"
 
-#: admin/settings.php:5387 admin/settings.php:7005
+#: admin/settings.php:5458 admin/settings.php:7076
 msgid "View Documentation"
 msgstr "ডকুমেন্টেশন দেখুন"
 
-#: multi-location-product-and-inventory-management-pro.php:8815
+#: multi-location-product-and-inventory-management-pro.php:8908
 msgid "View documentation"
 msgstr "ডকুমেন্টেশন দেখুন"
 
@@ -10592,7 +10720,7 @@ msgstr ""
 "ভিউ: %d | ক্রয়: %d\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:8817
+#: multi-location-product-and-inventory-management-pro.php:8910
 msgid "Visit community forums"
 msgstr "কমিউনিটি ফোরাম ভিজিট করুন"
 
@@ -10624,7 +10752,7 @@ msgstr ""
 "করুন।\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:13533
+#: multi-location-product-and-inventory-management-pro.php:14073
 #, php-format
 msgid "We could not reach %s at %s."
 msgstr "আমরা %s-কে %s-এ পৌঁছাতে পারিনি।"
@@ -10638,7 +10766,7 @@ msgstr "আমরা %s এ খুলি।"
 msgid "We Open At Note"
 msgstr "আমরা খুলি নোট"
 
-#: admin/settings.php:6683
+#: admin/settings.php:6754
 msgid "Webhook Example"
 msgstr "ওয়েবহুক উদাহরণ"
 
@@ -10662,8 +10790,8 @@ msgstr "ওয়েবহুক সিক্রেট সফলভাবে ত
 msgid "Webhook URL"
 msgstr "ওয়েবহুক URL"
 
-#: multi-location-product-and-inventory-management-pro.php:13612
-#: multi-location-product-and-inventory-management-pro.php:13666
+#: multi-location-product-and-inventory-management-pro.php:14152
+#: multi-location-product-and-inventory-management-pro.php:14206
 msgid "Webhook URL is required for this platform."
 msgstr "এই প্ল্যাটফর্মের জন্য ওয়েবহুক URL প্রয়োজন।"
 
@@ -10684,7 +10812,7 @@ msgstr ""
 "যখন কোনো গ্রাহক তাদের নির্বাচিত লোকেশন পরিবর্তন করেন, প্লাগইন কনফিগার করা "
 "আচরণের ভিত্তিতে কার্টকে জানাতে এবং আপডেট করতে পারে।"
 
-#: admin/settings.php:8065
+#: admin/settings.php:8136
 msgid ""
 "When disabled, custom text overrides are ignored and plugin defaults are "
 "used."
@@ -10702,7 +10830,7 @@ msgstr ""
 "থাকে) এবং লোকেশন কন্টাক্ট ইমেইলে পাঠানো হবে। অ্যাডমিন প্রাপকেরা আপনার "
 "নোটিফিকেশন সেটিংসের উপর নির্ভর করবে।"
 
-#: admin/settings.php:7779
+#: admin/settings.php:7850
 msgid ""
 "When enabled, users will only see products from their selected location. "
 "When disabled, all products will be visible."
@@ -10727,7 +10855,7 @@ msgstr "লো স্টক নোটিফিকেশন কারা পা�
 msgid "Who should receive order notifications."
 msgstr "অর্ডার নোটিফিকেশন কারা পাবেন।"
 
-#: multi-location-product-and-inventory-management-pro.php:12004
+#: multi-location-product-and-inventory-management-pro.php:12597
 msgid "WooCommerce is not available."
 msgstr "WooCommerce উপলব্ধ নয়।"
 
@@ -10755,7 +10883,7 @@ msgstr ""
 msgid "Work"
 msgstr "কাজ"
 
-#: multi-location-product-and-inventory-management-pro.php:14229
+#: multi-location-product-and-inventory-management-pro.php:14769
 msgid "wp_mail() reported failure. Please check your SMTP/mail configuration."
 msgstr ""
 "wp_mail() ব্যর্থতার রিপোর্ট করেছে। অনুগ্রহ করে আপনার SMTP/মেইল কনফিগারেশন "
@@ -10775,7 +10903,7 @@ msgstr "আপনাকে কোনো লোকেশনে নিয়োগ
 msgid "You are viewing orders for: %s"
 msgstr "আপনি %s এর জন্য অর্ডার দেখছেন"
 
-#: admin/settings.php:6230
+#: admin/settings.php:6301
 msgid ""
 "You can modify the parameter values directly in the shortcode to customize "
 "the location selector appearance and behavior."
@@ -10821,12 +10949,12 @@ msgstr "অ্যানালিটিক্স ডেটা পরিষ্ক�
 msgid "You do not have permission to clear cache."
 msgstr "আপনার ক্যাশ পরিষ্কার করার অনুমতি নেই।"
 
-#: multi-location-product-and-inventory-management-pro.php:4861
-#: multi-location-product-and-inventory-management-pro.php:4868
+#: multi-location-product-and-inventory-management-pro.php:4889
+#: multi-location-product-and-inventory-management-pro.php:4896
 msgid "You do not have permission to edit orders"
 msgstr "অর্ডার সম্পাদনা করার অনুমতি আপনার নেই"
 
-#: multi-location-product-and-inventory-management-pro.php:6662
+#: multi-location-product-and-inventory-management-pro.php:6690
 msgid "You do not have permission to edit this product."
 msgstr "এই প্রোডাক্ট সম্পাদনা করার অনুমতি আপনার নেই।"
 
@@ -10859,17 +10987,17 @@ msgstr ""
 "আপনার সেটিংস আমদানি করার অনুমতি নেই।\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:6599
-#: multi-location-product-and-inventory-management-pro.php:7234
+#: multi-location-product-and-inventory-management-pro.php:6627
+#: multi-location-product-and-inventory-management-pro.php:7262
 msgid "You do not have permission to modify this location."
 msgstr "এই লোকেশন পরিবর্তন করার অনুমতি আপনার নেই।"
 
-#: multi-location-product-and-inventory-management-pro.php:6507
-#: multi-location-product-and-inventory-management-pro.php:6547
-#: multi-location-product-and-inventory-management-pro.php:6585
-#: multi-location-product-and-inventory-management-pro.php:6647
-#: multi-location-product-and-inventory-management-pro.php:6900
-#: multi-location-product-and-inventory-management-pro.php:7221
+#: multi-location-product-and-inventory-management-pro.php:6535
+#: multi-location-product-and-inventory-management-pro.php:6575
+#: multi-location-product-and-inventory-management-pro.php:6613
+#: multi-location-product-and-inventory-management-pro.php:6675
+#: multi-location-product-and-inventory-management-pro.php:6928
+#: multi-location-product-and-inventory-management-pro.php:7249
 #: admin/api-settings.php:132 admin/api-settings.php:148 admin/settings.php:36
 #: admin/settings.php:84
 msgid "You do not have permission to perform this action."
@@ -10889,6 +11017,9 @@ msgstr "আপনার এক্সচেঞ্জ রেট সিঙ্ক �
 msgid "You do not have sufficient permissions to install plugins on this site."
 msgstr "এই সাইটে প্লাগইন ইনস্টল করার জন্য আপনার পর্যাপ্ত অনুমতি নেই।"
 
+msgid "You have the latest version installed."
+msgstr "আপনি ইতিমধ্যে সর্বশেষ সংস্করণ ব্যবহার করছেন।"
+
 #: admin/stock-central.php:2247
 msgid ""
 "You have unsaved Classic row changes. Leaving this page will discard them."
@@ -10896,11 +11027,11 @@ msgstr ""
 "আপনার ক্লাসিক সারিতে সংরক্ষিত নয় এমন পরিবর্তন রয়েছে। এই পৃষ্ঠা ত্যাগ করলে "
 "সেগুলো বাতিল হয়ে যাবে।"
 
-#: multi-location-product-and-inventory-management-pro.php:12120
+#: multi-location-product-and-inventory-management-pro.php:12660
 msgid "You must be logged in to delete locations."
 msgstr "লোকেশন মুছে ফেলতে হলে আপনাকে লগইন করতে হবে।"
 
-#: admin/settings.php:5803
+#: admin/settings.php:5874
 #| msgid ""
 #| "Your branding settings will be applied to all popups, buttons, and "
 #| "frontend elements. Changes take effect immediately after saving.\n"
@@ -10913,7 +11044,7 @@ msgstr ""
 "হবে। সংরক্ষণের পরপরই পরিবর্তন কার্যকর হবে।\n"
 "\n"
 
-#: multi-location-product-and-inventory-management-pro.php:5516
+#: multi-location-product-and-inventory-management-pro.php:5544
 msgid "Your cart contains items from multiple locations:"
 msgstr "আপনার কার্টে একাধিক লোকেশন থেকে আইটেম রয়েছে:"
 
@@ -10937,7 +11068,7 @@ msgid ""
 "Your Location Manager permissions or assigned locations have been updated."
 msgstr "আপনার লোকেশন ম্যানেজার অনুমতি বা নির্ধারিত লোকেশন আপডেট করা হয়েছে।"
 
-#: multi-location-product-and-inventory-management-pro.php:4146
+#: multi-location-product-and-inventory-management-pro.php:4174
 #, php-format
 msgid ""
 "Your order includes products from multiple locations. Transfer costs to %s "

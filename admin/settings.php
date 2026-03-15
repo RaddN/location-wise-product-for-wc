@@ -6307,6 +6307,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         </div>
 
                         <script>
+                            var copyCopiedLabel = <?php echo wp_json_encode(__('Copied!', 'multi-location-product-and-inventory-management')); ?>;
                             function copyToClipboard(event, shortcode) {
                                 const shortcodeText = shortcode;
                                 const button = event.currentTarget;
@@ -6347,7 +6348,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span class="btn-text">Copied!</span>
+                    <span class="btn-text">${copyCopiedLabel}</span>
                 `;
                                     } else {
                                         button.innerHTML = `

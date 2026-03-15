@@ -867,6 +867,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
 
             const userLocationCookieExpiryDays = <?php echo esc_js(mulopimfwc_get_location_cookie_expiry_days()); ?>;
             const userLocationCookieExpiryMs = userLocationCookieExpiryDays * 24 * 60 * 60 * 1000;
+            const deleteLocationConfirmMessage = <?php echo wp_json_encode(__('Are you sure you want to delete this location?', 'multi-location-product-and-inventory-management')); ?>;
 
             const LocationFeatures = {
                 map: null,
@@ -1886,7 +1887,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     e.stopPropagation();
                     const locationId = $(e.currentTarget).data('locationId');
 
-                    if (confirm('Are you sure you want to delete this location?')) {
+                    if (confirm(deleteLocationConfirmMessage)) {
                         this.deleteLocation(locationId);
                     }
                 },

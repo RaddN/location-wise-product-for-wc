@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Multi Location Product & Inventory Management for "
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-12 07:21+0000\n"
+"POT-Creation-Date: 2026-03-15 06:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -17,17 +17,17 @@ msgstr ""
 "X-Loco-Version: 2.8.2; wp-6.9.1; php-8.2.27\n"
 "X-Domain: multi-location-product-and-inventory-management"
 
-#: multi-location-product-and-inventory-management-pro.php:5106
+#: multi-location-product-and-inventory-management-pro.php:5134
 #, php-format
 msgid " | Order location set to %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5096
+#: multi-location-product-and-inventory-management-pro.php:5124
 #, php-format
 msgid " | Price updated from %s to %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5372
+#: multi-location-product-and-inventory-management-pro.php:5400
 #, php-format
 msgid ""
 "\"%s\" is no longer available at %s location and has been removed from your "
@@ -59,7 +59,7 @@ msgstr[1] ""
 msgid "%s - %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7064
+#: multi-location-product-and-inventory-management-pro.php:7092
 #, php-format
 msgid "%s @ %s is back above low threshold. Stock: %d (threshold %d)"
 msgstr ""
@@ -91,12 +91,12 @@ msgstr ""
 msgid "%s profile was updated. Locations: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13774
+#: multi-location-product-and-inventory-management-pro.php:14314
 #, php-format
 msgid "%s received a %s★ review: \"%s\""
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3954
+#: multi-location-product-and-inventory-management-pro.php:3982
 #, php-format
 msgid "%s to %s: %s"
 msgstr ""
@@ -111,28 +111,28 @@ msgstr ""
 msgid "%s+ active installs"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5521
+#: multi-location-product-and-inventory-management-pro.php:5549
 #, php-format
 msgid "%s: %d item(s)"
 msgstr ""
 
-#: admin/settings.php:6142
+#: admin/settings.php:6213
 msgid "- Display title"
 msgstr ""
 
-#: admin/settings.php:6152
+#: admin/settings.php:6223
 msgid "- Enhanced dropdown"
 msgstr ""
 
-#: admin/settings.php:6214
+#: admin/settings.php:6285
 msgid "- Multi-line display"
 msgstr ""
 
-#: admin/settings.php:6172
+#: admin/settings.php:6243
 msgid "- Show item count"
 msgstr ""
 
-#: admin/settings.php:6194
+#: admin/settings.php:6265
 msgid "- User locations"
 msgstr ""
 
@@ -154,7 +154,7 @@ msgstr ""
 msgid "-- Select Sub-area --"
 msgstr ""
 
-#: admin/settings.php:5355
+#: admin/settings.php:5426
 msgid "1"
 msgstr ""
 
@@ -170,7 +170,7 @@ msgstr ""
 msgid "123456:ABCDEF-TOKEN (optional global fallback)"
 msgstr ""
 
-#: admin/settings.php:5362
+#: admin/settings.php:5433
 msgid "2"
 msgstr ""
 
@@ -178,7 +178,7 @@ msgstr ""
 msgid "24 Hours"
 msgstr ""
 
-#: admin/settings.php:5369
+#: admin/settings.php:5440
 msgid "3"
 msgstr ""
 
@@ -190,7 +190,7 @@ msgstr ""
 msgid "@username or chat ID"
 msgstr ""
 
-#: admin/settings.php:6997
+#: admin/settings.php:7068
 msgid ""
 "Access our comprehensive documentation, knowledge base articles, and get "
 "direct support from our expert team"
@@ -201,7 +201,6 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7308
 #: includes/customer-location-insights.php:1089
 msgid "Activate"
 msgstr ""
@@ -324,7 +323,7 @@ msgstr ""
 msgid "Admin Visibility Controls"
 msgstr ""
 
-#: admin/settings.php:5741
+#: admin/settings.php:5812
 msgid "Advanced"
 msgstr ""
 
@@ -378,7 +377,7 @@ msgstr ""
 msgid "AJAX error while saving."
 msgstr ""
 
-#: admin/settings.php:6518
+#: admin/settings.php:6589
 msgid "AJAX Product Filter by Location & Stock"
 msgstr ""
 
@@ -434,7 +433,7 @@ msgstr ""
 msgid "All items in stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8682
+#: multi-location-product-and-inventory-management-pro.php:8775
 #: admin/admin.php:6098 admin/dashboard.php:1305
 #: admin/location-managers.php:2614
 #: includes/class-product-location-table.php:2642
@@ -477,7 +476,7 @@ msgstr ""
 msgid "All Products Label"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:261
+#: includes/cash-on-pickup-payment-gateway.php:336
 msgid "All Shipping Methods"
 msgstr ""
 
@@ -579,11 +578,10 @@ msgstr ""
 msgid "An error occurred while loading recommendations. Please try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11555
+#: multi-location-product-and-inventory-management-pro.php:11816
 msgid "An error occurred while updating the location"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7312
 #: includes/text-management.php:589
 msgid "An error occurred. Please try again."
 msgstr ""
@@ -648,7 +646,7 @@ msgstr ""
 msgid "Apartment, suite, etc."
 msgstr ""
 
-#: admin/settings.php:6549
+#: admin/settings.php:6620
 msgid "API & Webhook Integration: Bulk Inventory Sync"
 msgstr ""
 
@@ -668,11 +666,11 @@ msgstr ""
 msgid "API key generated successfully!"
 msgstr ""
 
-#: admin/settings.php:5291
+#: admin/settings.php:5362
 msgid "Append to title (Title - Location)"
 msgstr ""
 
-#: admin/settings.php:8086
+#: admin/settings.php:8157
 msgid "Apply a preset language pack to all text fields."
 msgstr ""
 
@@ -696,11 +694,11 @@ msgstr ""
 msgid "Apply to All Methods in Zone"
 msgstr ""
 
-#: admin/settings.php:8102
+#: admin/settings.php:8173
 msgid "Apply Translation"
 msgstr ""
 
-#: admin/settings.php:8104
+#: admin/settings.php:8175
 msgid ""
 "Applying a language will replace current text values. Save changes to keep "
 "them."
@@ -740,7 +738,7 @@ msgstr ""
 msgid "Are you sure you want to delete this location manager?"
 msgstr ""
 
-#: admin/settings.php:6054
+#: admin/settings.php:6125
 msgid ""
 "Are you sure you want to reset all settings to their default values? This "
 "action cannot be undone!"
@@ -771,7 +769,7 @@ msgstr ""
 msgid "Assign Locations:"
 msgstr ""
 
-#: admin/settings.php:5364
+#: admin/settings.php:5435
 msgid "Assign Products"
 msgstr ""
 
@@ -812,7 +810,7 @@ msgstr ""
 msgid "Auto-create terms/locations"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11999
+#: multi-location-product-and-inventory-management-pro.php:12592
 msgid "Auto-populate addresses is disabled."
 msgstr ""
 
@@ -848,7 +846,7 @@ msgid ""
 "is enabled and Optional Location Selection is disabled."
 msgstr ""
 
-#: admin/settings.php:6126
+#: admin/settings.php:6197
 msgid "Available Parameters"
 msgstr ""
 
@@ -864,7 +862,7 @@ msgstr ""
 msgid "Avg. Age (days)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7387
+#: multi-location-product-and-inventory-management-pro.php:7480
 msgid "Awaiting manual location assignment."
 msgstr ""
 
@@ -880,15 +878,15 @@ msgstr ""
 msgid "Back to Locations"
 msgstr ""
 
-#: admin/settings.php:8534
+#: admin/settings.php:8622
 msgid "Background color for popup overlay (supports rgba format)."
 msgstr ""
 
-#: admin/settings.php:8512
+#: admin/settings.php:8600
 msgid "Background color for popup/modal panels."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12475
+#: multi-location-product-and-inventory-management-pro.php:13015
 msgid "Backorder"
 msgstr ""
 
@@ -917,7 +915,7 @@ msgstr ""
 msgid "Base Font Size"
 msgstr ""
 
-#: admin/settings.php:8590
+#: admin/settings.php:8678
 msgid "Base font size (e.g., 15px, 16px, 1rem)."
 msgstr ""
 
@@ -967,7 +965,7 @@ msgstr ""
 msgid "Border Color"
 msgstr ""
 
-#: admin/settings.php:8568
+#: admin/settings.php:8656
 msgid "Border color for popups, cards, inputs, and other bordered elements."
 msgstr ""
 
@@ -975,7 +973,7 @@ msgstr ""
 msgid "Border Radius"
 msgstr ""
 
-#: admin/settings.php:8645
+#: admin/settings.php:8733
 msgid "Border radius for popups and buttons (e.g., 20px, 10px, 5px)."
 msgstr ""
 
@@ -999,7 +997,7 @@ msgstr ""
 msgid "Box Shadow"
 msgstr ""
 
-#: admin/settings.php:8633
+#: admin/settings.php:8721
 msgid ""
 "Box shadow for popups and cards (e.g., 0 18px 45px rgba(24, 24, 24, 0.18))."
 msgstr ""
@@ -1008,7 +1006,7 @@ msgstr ""
 msgid "Branding & Styling Settings"
 msgstr ""
 
-#: admin/settings.php:5802
+#: admin/settings.php:5873
 msgid "Branding Preview"
 msgstr ""
 
@@ -1032,7 +1030,7 @@ msgstr ""
 msgid "Bulk Location Assignment"
 msgstr ""
 
-#: admin/settings.php:6581
+#: admin/settings.php:6652
 msgid "Bulk Sync Example"
 msgstr ""
 
@@ -1136,14 +1134,14 @@ msgstr ""
 msgid "Cannot add to cart. %s is currently closed."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4958
+#: multi-location-product-and-inventory-management-pro.php:4986
 #, php-format
 msgid ""
 "Cannot change location. Insufficient stock at %s location. Available: %d, "
 "Required: %d"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5290
+#: multi-location-product-and-inventory-management-pro.php:5318
 #, php-format
 msgid ""
 "Cannot increase quantity for %s. Insufficient stock at %s location. "
@@ -1159,13 +1157,13 @@ msgstr ""
 msgid "Cart & Checkout"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5698
-#: multi-location-product-and-inventory-management-pro.php:5766
+#: multi-location-product-and-inventory-management-pro.php:5726
+#: multi-location-product-and-inventory-management-pro.php:5794
 msgid "Cart item not found."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5683
-#: multi-location-product-and-inventory-management-pro.php:5751
+#: multi-location-product-and-inventory-management-pro.php:5711
+#: multi-location-product-and-inventory-management-pro.php:5779
 msgid "Cart not available."
 msgstr ""
 
@@ -1177,12 +1175,12 @@ msgstr ""
 msgid "Cart Update Error"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:147
-#: includes/cash-on-pickup-payment-gateway.php:281
+#: includes/cash-on-pickup-payment-gateway.php:151
+#: includes/cash-on-pickup-payment-gateway.php:356
 msgid "Cash on Pickup"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:387
+#: includes/cash-on-pickup-payment-gateway.php:426
 msgid "Cash on Pickup is not available for the selected location."
 msgstr ""
 
@@ -1206,7 +1204,7 @@ msgstr ""
 msgid "Change Location Label"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5652
+#: multi-location-product-and-inventory-management-pro.php:5680
 #: includes/text-management.php:613
 msgid "Change Location:"
 msgstr ""
@@ -1377,11 +1375,11 @@ msgstr ""
 msgid "Clearing cache..."
 msgstr ""
 
-#: admin/settings.php:6565
+#: admin/settings.php:6636
 msgid "Click \"Generate API Key\" button (if no key exists)"
 msgstr ""
 
-#: admin/settings.php:6567
+#: admin/settings.php:6638
 msgid "Click \"Generate Webhook Secret\" button (if no secret exists)"
 msgstr ""
 
@@ -1436,7 +1434,7 @@ msgstr ""
 msgid "Comfy"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8817
+#: multi-location-product-and-inventory-management-pro.php:8910
 msgid "Community support"
 msgstr ""
 
@@ -1444,7 +1442,7 @@ msgstr ""
 msgid "Compact"
 msgstr ""
 
-#: admin/settings.php:6427
+#: admin/settings.php:6498
 msgid "Compact view for single location"
 msgstr ""
 
@@ -1452,7 +1450,7 @@ msgstr ""
 msgid "Compatible with your version of WordPress"
 msgstr ""
 
-#: admin/settings.php:6550
+#: admin/settings.php:6621
 msgid ""
 "Complete guide to integrating your WMS, POS, or ERP systems with the plugin "
 "using REST API endpoints and webhooks. Learn how to sync inventory in bulk "
@@ -1503,7 +1501,7 @@ msgstr ""
 msgid "Configure customer analytics and insights based on location data."
 msgstr ""
 
-#: admin/settings.php:6355
+#: admin/settings.php:6426
 msgid ""
 "Configure different prices for products at different locations. Set up "
 "location-specific discounts, sale prices, and promotional offers to optimize "
@@ -1563,11 +1561,11 @@ msgid ""
 "stock."
 msgstr ""
 
-#: admin/settings.php:5281
+#: admin/settings.php:5352
 msgid "Configure how store locations appear with product titles."
 msgstr ""
 
-#: admin/settings.php:7763
+#: admin/settings.php:7834
 msgid ""
 "Configure how strictly products are filtered by location throughout your "
 "store."
@@ -1577,7 +1575,7 @@ msgstr ""
 msgid "Configure how the location selector appears to customers."
 msgstr ""
 
-#: admin/settings.php:6382
+#: admin/settings.php:6453
 msgid ""
 "Configure location manager roles, assign staff to specific locations, manage "
 "permissions, and set up multi-user workflows for decentralized inventory "
@@ -1613,7 +1611,7 @@ msgstr ""
 msgid "Configure shipping options based on product locations."
 msgstr ""
 
-#: admin/settings.php:6541
+#: admin/settings.php:6612
 msgid ""
 "Configure social alerts (orders, stock, digests) using a Microsoft Teams "
 "incoming webhook. Covers creating the webhook in Teams and pasting it into "
@@ -1652,7 +1650,7 @@ msgstr ""
 msgid "Contact Information Heading"
 msgstr ""
 
-#: admin/license-page.php:995 admin/settings.php:7011
+#: admin/license-page.php:995 admin/settings.php:7082
 msgid "Contact Support"
 msgstr ""
 
@@ -1684,19 +1682,19 @@ msgstr ""
 msgid "Conversion Rate"
 msgstr ""
 
-#: admin/settings.php:6111
+#: admin/settings.php:6182
 msgid "Copy Code"
 msgstr ""
 
-#: admin/settings.php:6887
+#: admin/settings.php:6958
 msgid "Copy shortcode"
 msgstr ""
 
-#: admin/settings.php:6566
+#: admin/settings.php:6637
 msgid "Copy the generated API key immediately"
 msgstr ""
 
-#: admin/settings.php:6568
+#: admin/settings.php:6639
 msgid "Copy the generated webhook secret immediately"
 msgstr ""
 
@@ -1711,7 +1709,7 @@ msgid ""
 "Copy the webhook URL, paste it into the Webhook URL field above, and save."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3757
+#: multi-location-product-and-inventory-management-pro.php:3785
 msgid "Cost"
 msgstr ""
 
@@ -1752,7 +1750,7 @@ msgid ""
 "multiple locations."
 msgstr ""
 
-#: admin/settings.php:5357
+#: admin/settings.php:5428
 msgid "Create Locations"
 msgstr ""
 
@@ -1773,7 +1771,7 @@ msgstr ""
 msgid "created"
 msgstr ""
 
-#: admin/settings.php:6336
+#: admin/settings.php:6407
 msgid "Creating Store Locations"
 msgstr ""
 
@@ -1781,7 +1779,7 @@ msgstr ""
 msgid "Cross-Location Order Management"
 msgstr ""
 
-#: admin/settings.php:7802
+#: admin/settings.php:7873
 msgid "Cross-Sells"
 msgstr ""
 
@@ -1830,7 +1828,7 @@ msgstr ""
 msgid "Current Version:"
 msgstr ""
 
-#: admin/settings.php:6182
+#: admin/settings.php:6253
 msgid "Custom CSS class name"
 msgstr ""
 
@@ -1842,7 +1840,7 @@ msgstr ""
 msgid "Custom Hours"
 msgstr ""
 
-#: admin/settings.php:6510
+#: admin/settings.php:6581
 msgid "Custom label text"
 msgstr ""
 
@@ -1870,22 +1868,23 @@ msgstr ""
 msgid "Customer Selection (Based on selected location)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12013
+#: multi-location-product-and-inventory-management-pro.php:12606
+#: multi-location-product-and-inventory-management-pro.php:12633
 msgid "Customer session unavailable."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13228
+#: multi-location-product-and-inventory-management-pro.php:13768
 #, php-format
 msgid "Customer: %s"
 msgstr ""
 
-#: admin/settings.php:8404
+#: admin/settings.php:8492
 msgid ""
 "Customize the appearance and styling of popups, buttons, and other frontend "
 "elements to match your brand identity."
 msgstr ""
 
-#: admin/settings.php:6491
+#: admin/settings.php:6562
 msgid ""
 "Customize the location selector display on product pages and throughout your "
 "store. Learn to use shortcodes, and enhance customer experience with "
@@ -1941,10 +1940,6 @@ msgstr ""
 
 #: includes/text-management.php:791
 msgid "Day label for Wednesday."
-msgstr ""
-
-#: multi-location-product-and-inventory-management-pro.php:7309
-msgid "Deactivate"
 msgstr ""
 
 #: admin/license-page.php:784
@@ -2048,21 +2043,21 @@ msgstr ""
 msgid "Delete location"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:285
+#: includes/cash-on-pickup-payment-gateway.php:360
 #: includes/class-product-location-table.php:247
 msgid "Description"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3748
+#: multi-location-product-and-inventory-management-pro.php:3776
 #, php-format
 msgid "Destination: %s"
 msgstr ""
 
-#: admin/settings.php:7025
+#: admin/settings.php:7096
 msgid "Detailed KB Articles"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:1760
+#: multi-location-product-and-inventory-management-pro.php:1788
 #, php-format
 msgid "Detected WooCommerce version: %s"
 msgstr ""
@@ -2075,7 +2070,7 @@ msgstr ""
 msgid "Detecting your location..."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13690
+#: multi-location-product-and-inventory-management-pro.php:14230
 #, php-format
 msgid "Digest preview - %s"
 msgstr ""
@@ -2084,7 +2079,7 @@ msgstr ""
 msgid "Digest test failed. Check the details and try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13726
+#: multi-location-product-and-inventory-management-pro.php:14266
 msgid "Digest test sent (check your channel)."
 msgstr ""
 
@@ -2100,7 +2095,7 @@ msgstr ""
 msgid "Dimensions"
 msgstr ""
 
-#: admin/settings.php:7777
+#: admin/settings.php:7848
 msgid "Disabled (Show all products regardless of location)"
 msgstr ""
 
@@ -2116,7 +2111,7 @@ msgid ""
 "keep items from multiple locations, so this behavior is not applied."
 msgstr ""
 
-#: admin/settings.php:8309
+#: admin/settings.php:8397
 msgid ""
 "Disabled because Text Management is turned off. Frontend text will use "
 "defaults."
@@ -2132,7 +2127,7 @@ msgstr ""
 msgid "Disabled while Manual or Inventory-Based assignment is enabled."
 msgstr ""
 
-#: admin/settings.php:4604 admin/settings.php:4646 admin/settings.php:7748
+#: admin/settings.php:4604 admin/settings.php:4646 admin/settings.php:7819
 msgid ""
 "Disabled while Manual, Inventory-Based, or Proximity-Based assignment is "
 "enabled without optional selection."
@@ -2142,7 +2137,7 @@ msgstr ""
 msgid "Discord Docs: Webhooks"
 msgstr ""
 
-#: admin/settings.php:5899
+#: admin/settings.php:5970
 msgid "Discounts"
 msgstr ""
 
@@ -2154,7 +2149,7 @@ msgstr ""
 msgid "Display Hours on Location Archive"
 msgstr ""
 
-#: admin/settings.php:6417
+#: admin/settings.php:6488
 msgid "Display layout style"
 msgstr ""
 
@@ -2174,22 +2169,22 @@ msgstr ""
 msgid "Display Order"
 msgstr ""
 
-#: admin/settings.php:6450
+#: admin/settings.php:6521
 msgid ""
 "Display popular products for each location using customer insights and "
 "analytics. Learn to track customer preferences, show location-specific "
 "recommendations, and boost sales with personalized product suggestions."
 msgstr ""
 
-#: admin/settings.php:6473
+#: admin/settings.php:6544
 msgid "Display section title"
 msgstr ""
 
-#: admin/settings.php:6573
+#: admin/settings.php:6644
 msgid "Displayed in \"API Key\" field after generation"
 msgstr ""
 
-#: admin/settings.php:6574
+#: admin/settings.php:6645
 msgid "Displayed in \"Webhook Secret\" field after generation"
 msgstr ""
 
@@ -2217,7 +2212,7 @@ msgstr ""
 msgid "Do not allow"
 msgstr ""
 
-#: admin/settings.php:5294
+#: admin/settings.php:5365
 msgid "Do not display location"
 msgstr ""
 
@@ -2225,18 +2220,18 @@ msgstr ""
 msgid "Do Not Store"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8997
+#: multi-location-product-and-inventory-management-pro.php:9090
 #: includes/product-location-selector-single.php:188
 #: includes/product-location-selector-single.php:1061
 #: includes/text-management.php:603
 msgid "Do you want to change the store location? Your cart will be updated."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8815
+#: multi-location-product-and-inventory-management-pro.php:8908
 msgid "Docs"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8783
+#: multi-location-product-and-inventory-management-pro.php:8876
 msgid "Documentation"
 msgstr ""
 
@@ -2381,7 +2376,7 @@ msgstr ""
 msgid "Enable Business Hours"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:274
+#: includes/cash-on-pickup-payment-gateway.php:349
 msgid "Enable Cash on Pickup"
 msgstr ""
 
@@ -2401,7 +2396,7 @@ msgstr ""
 msgid "Enable events and click Test."
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:299
+#: includes/cash-on-pickup-payment-gateway.php:374
 msgid "Enable for shipping methods"
 msgstr ""
 
@@ -2437,11 +2432,11 @@ msgstr ""
 msgid "Enable Location Pricing"
 msgstr ""
 
-#: admin/settings.php:6422
+#: admin/settings.php:6493
 msgid "Enable location search"
 msgstr ""
 
-#: admin/settings.php:5371
+#: admin/settings.php:5442
 msgid "Enable Location Selector"
 msgstr ""
 
@@ -2531,7 +2526,7 @@ msgstr ""
 msgid "Enable store locator with map functionality."
 msgstr ""
 
-#: admin/settings.php:8064
+#: admin/settings.php:8135
 msgid "Enable Text Management"
 msgstr ""
 
@@ -2545,11 +2540,11 @@ msgstr ""
 msgid "Enable WooCommerce Manage stock to edit stock quantity and backorders."
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:272
+#: includes/cash-on-pickup-payment-gateway.php:347
 msgid "Enable/Disable"
 msgstr ""
 
-#: admin/settings.php:7776
+#: admin/settings.php:7847
 msgid "Enabled (Only show products from selected location)"
 msgstr ""
 
@@ -2557,7 +2552,7 @@ msgstr ""
 msgid "End of Report"
 msgstr ""
 
-#: admin/settings.php:6941
+#: admin/settings.php:7012
 msgid "Endpoint:"
 msgstr ""
 
@@ -2675,7 +2670,7 @@ msgstr ""
 msgid "Error updating location. Please try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13553
+#: multi-location-product-and-inventory-management-pro.php:14093
 msgid "Every 5 Minutes"
 msgstr ""
 
@@ -2725,11 +2720,11 @@ msgstr ""
 msgid "Export in Excel (HTML)"
 msgstr ""
 
-#: admin/settings.php:6643
+#: admin/settings.php:6714
 msgid "Export Inventory CSV Example"
 msgstr ""
 
-#: admin/settings.php:6655
+#: admin/settings.php:6726
 msgid "Export Inventory JSON Example"
 msgstr ""
 
@@ -2803,7 +2798,7 @@ msgstr ""
 msgid "Failed to retrieve locations."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11538
+#: multi-location-product-and-inventory-management-pro.php:11799
 msgid "Failed to update location"
 msgstr ""
 
@@ -2956,7 +2951,7 @@ msgstr ""
 msgid "Font Family"
 msgstr ""
 
-#: admin/settings.php:8621
+#: admin/settings.php:8709
 msgid "Font family for popup and frontend elements."
 msgstr ""
 
@@ -2977,7 +2972,7 @@ msgstr ""
 msgid "Friday"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3755
+#: multi-location-product-and-inventory-management-pro.php:3783
 msgid "From Location"
 msgstr ""
 
@@ -2993,7 +2988,7 @@ msgstr ""
 msgid "Gallery Heading"
 msgstr ""
 
-#: admin/settings.php:5731
+#: admin/settings.php:5802
 msgid "General"
 msgstr ""
 
@@ -3019,7 +3014,7 @@ msgstr ""
 msgid "Generate API Key"
 msgstr ""
 
-#: admin/settings.php:6391
+#: admin/settings.php:6462
 msgid ""
 "Generate location-based reports, analyze sales data, track inventory "
 "movements, manage orders by location, and optimize your multi-location "
@@ -3046,20 +3041,20 @@ msgstr ""
 msgid "Get Directions Button"
 msgstr ""
 
-#: admin/settings.php:6706
+#: admin/settings.php:6777
 msgid "Get Locations Example"
 msgstr ""
 
-#: admin/settings.php:6733
+#: admin/settings.php:6804
 msgid "Get Products Example"
 msgstr ""
 
-#: admin/settings.php:5392
+#: admin/settings.php:5463
 msgid "Get Support"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5425
-#: multi-location-product-and-inventory-management-pro.php:5483
+#: multi-location-product-and-inventory-management-pro.php:5453
+#: multi-location-product-and-inventory-management-pro.php:5511
 msgid "Global"
 msgstr ""
 
@@ -3075,7 +3070,7 @@ msgstr ""
 msgid "Global Products First"
 msgstr ""
 
-#: admin/settings.php:6563
+#: admin/settings.php:6634
 msgid "Go to: Multi Location Products → API & Webhooks"
 msgstr ""
 
@@ -3083,7 +3078,7 @@ msgstr ""
 msgid "Grid"
 msgstr ""
 
-#: admin/settings.php:6463
+#: admin/settings.php:6534
 msgid "Grid columns layout"
 msgstr ""
 
@@ -3107,7 +3102,7 @@ msgstr ""
 msgid "Guest"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:148
+#: includes/cash-on-pickup-payment-gateway.php:152
 msgid ""
 "Have your customers pay with cash when they pick up their order from your "
 "store location. Powered by Plugincy - Multi Location Product & Inventory "
@@ -3118,7 +3113,7 @@ msgstr ""
 msgid "Header shown before listing distances in the classic popup."
 msgstr ""
 
-#: admin/settings.php:6946
+#: admin/settings.php:7017
 msgid "Headers:"
 msgstr ""
 
@@ -3209,11 +3204,11 @@ msgstr ""
 msgid "Hierarchical Option"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12525
+#: multi-location-product-and-inventory-management-pro.php:13065
 msgid "High stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13245
+#: multi-location-product-and-inventory-management-pro.php:13785
 msgid "High value order"
 msgstr ""
 
@@ -3293,7 +3288,7 @@ msgstr ""
 msgid "How to format location information in URLs."
 msgstr ""
 
-#: admin/settings.php:6557
+#: admin/settings.php:6628
 msgid "How to Get API Key & Webhook Secret"
 msgstr ""
 
@@ -3326,7 +3321,7 @@ msgid ""
 "target=\"_blank\">plugin documentation</a>."
 msgstr ""
 
-#: admin/settings.php:6570
+#: admin/settings.php:6641
 msgid ""
 "If you lose your keys, you must generate new ones. Old keys will no longer "
 "work."
@@ -3454,7 +3449,7 @@ msgstr ""
 msgid "Importing settings..."
 msgstr ""
 
-#: admin/settings.php:5293
+#: admin/settings.php:5364
 msgid "In brackets (Title [Location])"
 msgstr ""
 
@@ -3476,14 +3471,14 @@ msgid ""
 "WebHooks” and click Add."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12369
+#: multi-location-product-and-inventory-management-pro.php:12909
 #: includes/class-product-location-table.php:2681
 #: includes/stock-price-backorder-manage.php:2078
 #: includes/text-management.php:547
 msgid "In Stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12479
+#: multi-location-product-and-inventory-management-pro.php:13019
 #: includes/class-product-location-table.php:1193
 #: includes/class-product-location-table.php:1201
 #: includes/class-product-location-table.php:1224
@@ -3569,15 +3564,15 @@ msgstr ""
 msgid "Installed"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:292
+#: includes/cash-on-pickup-payment-gateway.php:367
 msgid "Instructions"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:294
+#: includes/cash-on-pickup-payment-gateway.php:369
 msgid "Instructions that will be added to the thank you page and emails."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4794
+#: multi-location-product-and-inventory-management-pro.php:4822
 msgid "Insufficient"
 msgstr ""
 
@@ -3593,11 +3588,11 @@ msgstr ""
 msgid "Insufficient stock for all products at any location."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3965
+#: multi-location-product-and-inventory-management-pro.php:3993
 msgid "Inter-location Transfer"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3743
+#: multi-location-product-and-inventory-management-pro.php:3771
 #: admin/settings.php:906
 msgid "Inter-Location Transfer Costs"
 msgstr ""
@@ -3645,7 +3640,7 @@ msgstr ""
 msgid "Invalid instance ID"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4887
+#: multi-location-product-and-inventory-management-pro.php:4915
 msgid "Invalid item ID or location"
 msgstr ""
 
@@ -3665,11 +3660,11 @@ msgstr ""
 msgid "Invalid location data"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12128
+#: multi-location-product-and-inventory-management-pro.php:12668
 msgid "Invalid location ID"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12134
+#: multi-location-product-and-inventory-management-pro.php:12674
 msgid "Invalid location ID format"
 msgstr ""
 
@@ -3677,9 +3672,9 @@ msgstr ""
 msgid "Invalid Location Message"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5704
-#: multi-location-product-and-inventory-management-pro.php:11225
-#: multi-location-product-and-inventory-management-pro.php:11898
+#: multi-location-product-and-inventory-management-pro.php:5732
+#: multi-location-product-and-inventory-management-pro.php:11486
+#: multi-location-product-and-inventory-management-pro.php:12159
 #: admin/admin.php:3817 admin/admin.php:3868
 msgid "Invalid location."
 msgstr ""
@@ -3697,17 +3692,17 @@ msgstr ""
 msgid "Invalid order ID"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5679
-#: multi-location-product-and-inventory-management-pro.php:5747
-#: multi-location-product-and-inventory-management-pro.php:6594
-#: multi-location-product-and-inventory-management-pro.php:7229
+#: multi-location-product-and-inventory-management-pro.php:5707
+#: multi-location-product-and-inventory-management-pro.php:5775
+#: multi-location-product-and-inventory-management-pro.php:6622
+#: multi-location-product-and-inventory-management-pro.php:7257
 msgid "Invalid parameters."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6514
-#: multi-location-product-and-inventory-management-pro.php:6555
-#: multi-location-product-and-inventory-management-pro.php:6653
-#: multi-location-product-and-inventory-management-pro.php:6906
+#: multi-location-product-and-inventory-management-pro.php:6542
+#: multi-location-product-and-inventory-management-pro.php:6583
+#: multi-location-product-and-inventory-management-pro.php:6681
+#: multi-location-product-and-inventory-management-pro.php:6934
 msgid "Invalid product ID."
 msgstr ""
 
@@ -3715,7 +3710,7 @@ msgstr ""
 msgid "Invalid request. Please refresh the page and try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11882
+#: multi-location-product-and-inventory-management-pro.php:12143
 msgid "Invalid security token."
 msgstr ""
 
@@ -3731,8 +3726,8 @@ msgstr ""
 msgid "Invalid upload chunk payload."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6942
-#: multi-location-product-and-inventory-management-pro.php:6955
+#: multi-location-product-and-inventory-management-pro.php:6970
+#: multi-location-product-and-inventory-management-pro.php:6983
 msgid "Invalid variation payload."
 msgstr ""
 
@@ -3748,7 +3743,7 @@ msgstr ""
 msgid "Invalid zone ID"
 msgstr ""
 
-#: admin/settings.php:5732
+#: admin/settings.php:5803
 msgid "Inventory"
 msgstr ""
 
@@ -3785,12 +3780,12 @@ msgstr ""
 msgid "Item %d: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13432
-#: multi-location-product-and-inventory-management-pro.php:13710
+#: multi-location-product-and-inventory-management-pro.php:13972
+#: multi-location-product-and-inventory-management-pro.php:14250
 msgid "items"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13231
+#: multi-location-product-and-inventory-management-pro.php:13771
 #, php-format
 msgid "Items: %s"
 msgstr ""
@@ -3843,7 +3838,7 @@ msgid ""
 "items are split into child orders."
 msgstr ""
 
-#: admin/settings.php:6575
+#: admin/settings.php:6646
 msgid "Keys are displayed only once for security. Copy them immediately."
 msgstr ""
 
@@ -3990,13 +3985,13 @@ msgstr ""
 msgid "Layouts Unavailable Message"
 msgstr ""
 
-#: admin/settings.php:6328
+#: admin/settings.php:6399
 msgid ""
 "Learn how to install the plugin, activate your license, and configure basic "
 "settings. This tutorial covers the initial setup process and activation."
 msgstr ""
 
-#: admin/settings.php:6519
+#: admin/settings.php:6590
 msgid ""
 "Learn how to use the AJAX-powered product filter to allow customers to "
 "filter products by location and stock status without page reload. Includes "
@@ -4027,7 +4022,7 @@ msgstr ""
 msgid "Legacy import proxy only supports CSV or ZIP files."
 msgstr ""
 
-#: admin/settings.php:5372
+#: admin/settings.php:5443
 msgid "Let customers choose their preferred location and see relevant products"
 msgstr ""
 
@@ -4059,7 +4054,7 @@ msgstr ""
 msgid "Lifetime"
 msgstr ""
 
-#: admin/settings.php:6432
+#: admin/settings.php:6503
 msgid "Limit number of locations"
 msgstr ""
 
@@ -4185,7 +4180,7 @@ msgstr ""
 msgid "Link Location to User Account"
 msgstr ""
 
-#: admin/settings.php:5365
+#: admin/settings.php:5436
 msgid "Link products to locations and manage stock, pricing, and availability"
 msgstr ""
 
@@ -4227,8 +4222,8 @@ msgid ""
 "this feature."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4584
-#: multi-location-product-and-inventory-management-pro.php:13706
+#: multi-location-product-and-inventory-management-pro.php:4612
+#: multi-location-product-and-inventory-management-pro.php:14246
 #: admin/admin.php:834 admin/admin.php:6096 admin/dashboard.php:272
 #: admin/dashboard.php:283 admin/dashboard.php:295 admin/dashboard.php:305
 #: admin/dashboard.php:317 admin/dashboard.php:348 admin/dashboard.php:601
@@ -4249,7 +4244,7 @@ msgstr ""
 msgid "Location \"%1$s\" is not assigned to product \"%2$s\""
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6606
+#: multi-location-product-and-inventory-management-pro.php:6634
 msgid "Location activated successfully."
 msgstr ""
 
@@ -4268,7 +4263,7 @@ msgid ""
 "enabled without optional selection."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5114
+#: multi-location-product-and-inventory-management-pro.php:5142
 msgid "Location and price updated successfully"
 msgstr ""
 
@@ -4289,8 +4284,8 @@ msgstr ""
 msgid "Location Change Confirmation"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5691
-#: multi-location-product-and-inventory-management-pro.php:5759
+#: multi-location-product-and-inventory-management-pro.php:5719
+#: multi-location-product-and-inventory-management-pro.php:5787
 msgid "Location change in cart is disabled."
 msgstr ""
 
@@ -4323,7 +4318,7 @@ msgstr ""
 msgid "Location Cookie Expiry (Days)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12168
+#: multi-location-product-and-inventory-management-pro.php:12708
 msgid "Location deleted successfully"
 msgstr ""
 
@@ -4372,7 +4367,7 @@ msgstr ""
 msgid "Location in Meta Title"
 msgstr ""
 
-#: admin/settings.php:5739
+#: admin/settings.php:5810
 msgid "Location Info Management"
 msgstr ""
 
@@ -4384,7 +4379,7 @@ msgstr ""
 msgid "Location Information"
 msgstr ""
 
-#: admin/settings.php:6399
+#: admin/settings.php:6470
 msgid "Location Information Display & Maps"
 msgstr ""
 
@@ -4422,7 +4417,7 @@ msgstr ""
 msgid "Location manager deleted successfully"
 msgstr ""
 
-#: admin/settings.php:6381
+#: admin/settings.php:6452
 msgid "Location Manager Roles & Permissions"
 msgstr ""
 
@@ -4456,8 +4451,8 @@ msgstr ""
 msgid "Location Map Heading"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4930
-#: multi-location-product-and-inventory-management-pro.php:12158
+#: multi-location-product-and-inventory-management-pro.php:4958
+#: multi-location-product-and-inventory-management-pro.php:12698
 #: admin/admin.php:4957 includes/text-management.php:274
 msgid "Location not found"
 msgstr ""
@@ -4497,11 +4492,11 @@ msgstr ""
 msgid "Location regular price cannot be less than purchase price"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6631
+#: multi-location-product-and-inventory-management-pro.php:6659
 msgid "Location removed from product successfully."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7259
+#: multi-location-product-and-inventory-management-pro.php:7287
 msgid "Location removed successfully."
 msgstr ""
 
@@ -4529,11 +4524,11 @@ msgstr ""
 msgid "Location Selection Display"
 msgstr ""
 
-#: admin/settings.php:6372
+#: admin/settings.php:6443
 msgid "Location Selector Anywhere"
 msgstr ""
 
-#: admin/settings.php:6490
+#: admin/settings.php:6561
 msgid "Location Selector for specific Product"
 msgstr ""
 
@@ -4541,7 +4536,7 @@ msgstr ""
 msgid "Location Selector Layout"
 msgstr ""
 
-#: admin/settings.php:6096
+#: admin/settings.php:6167
 msgid "Location Selector Shortcode"
 msgstr ""
 
@@ -4553,11 +4548,11 @@ msgstr ""
 msgid "Location Settings"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11889
+#: multi-location-product-and-inventory-management-pro.php:12150
 msgid "Location slug is required."
 msgstr ""
 
-#: admin/settings.php:6412
+#: admin/settings.php:6483
 msgid "Location slug(s)"
 msgstr ""
 
@@ -4573,7 +4568,7 @@ msgstr ""
 msgid "Location Specific Stock & Price Settings"
 msgstr ""
 
-#: admin/settings.php:6744
+#: admin/settings.php:6815
 msgid "Location Status Badge Shortcode"
 msgstr ""
 
@@ -4590,11 +4585,11 @@ msgstr ""
 msgid "Location Switching Behavior"
 msgstr ""
 
-#: admin/settings.php:6754
+#: admin/settings.php:6825
 msgid "Location term ID"
 msgstr ""
 
-#: admin/settings.php:6759
+#: admin/settings.php:6830
 msgid "Location term slug"
 msgstr ""
 
@@ -4608,7 +4603,7 @@ msgid ""
 "enabled without optional selection."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4924
+#: multi-location-product-and-inventory-management-pro.php:4952
 msgid "Location unchanged"
 msgstr ""
 
@@ -4616,11 +4611,11 @@ msgstr ""
 msgid "Location updated successfully"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5724
+#: multi-location-product-and-inventory-management-pro.php:5752
 msgid "Location updated successfully."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4879
+#: multi-location-product-and-inventory-management-pro.php:4907
 msgid "Location updates are locked when location-wise currency is enabled."
 msgstr ""
 
@@ -4632,7 +4627,7 @@ msgstr ""
 msgid "Location URL Settings"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11902
+#: multi-location-product-and-inventory-management-pro.php:12163
 msgid "Location validated."
 msgstr ""
 
@@ -4640,7 +4635,7 @@ msgstr ""
 msgid "Location Wise"
 msgstr ""
 
-#: admin/settings.php:5737
+#: admin/settings.php:5808
 msgid "Location Wise Everything"
 msgstr ""
 
@@ -4652,11 +4647,11 @@ msgstr ""
 msgid "Location Wise Products Dashboard"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:1723
+#: multi-location-product-and-inventory-management-pro.php:1751
 msgid "Location Wise Products requires WooCommerce to be installed and active."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:1758
+#: multi-location-product-and-inventory-management-pro.php:1786
 msgid "Location Wise Products requires WooCommerce version 4.0 or higher. "
 msgstr ""
 
@@ -4676,11 +4671,11 @@ msgstr ""
 msgid "Location-based Email Notifications"
 msgstr ""
 
-#: admin/settings.php:6354
+#: admin/settings.php:6425
 msgid "Location-Based Pricing Setup"
 msgstr ""
 
-#: admin/settings.php:6449
+#: admin/settings.php:6520
 msgid "Location-Based Product Recommendations"
 msgstr ""
 
@@ -4720,20 +4715,20 @@ msgstr ""
 msgid "Location-wise Payment Methods"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4711
-#: multi-location-product-and-inventory-management-pro.php:4752
+#: multi-location-product-and-inventory-management-pro.php:4739
+#: multi-location-product-and-inventory-management-pro.php:4780
 #: admin/admin.php:4480
 msgid "Location:"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13493
+#: multi-location-product-and-inventory-management-pro.php:14033
 #: includes/order-split-by-location.php:431
 #: includes/order-split-by-location.php:433 includes/text-management.php:657
 #, php-format
 msgid "Location: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14216
+#: multi-location-product-and-inventory-management-pro.php:14756
 #, php-format
 msgid "Location: %s (%s)"
 msgstr ""
@@ -4762,7 +4757,7 @@ msgstr ""
 msgid "Locations Tracked:"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4827
+#: multi-location-product-and-inventory-management-pro.php:4855
 msgid "Locked while location-wise currency is enabled."
 msgstr ""
 
@@ -4791,7 +4786,7 @@ msgstr ""
 msgid "Longitude"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13772
+#: multi-location-product-and-inventory-management-pro.php:14312
 msgid "Low rating review"
 msgstr ""
 
@@ -4804,14 +4799,14 @@ msgstr ""
 msgid "Low review rating threshold"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12368
-#: multi-location-product-and-inventory-management-pro.php:13116
+#: multi-location-product-and-inventory-management-pro.php:12908
+#: multi-location-product-and-inventory-management-pro.php:13656
 #: admin/dashboard.php:790 admin/dashboard.php:1662 admin/dashboard.php:2465
 #: admin/dashboard.php:2493
 msgid "Low Stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12514
+#: multi-location-product-and-inventory-management-pro.php:13054
 msgid "Low stock"
 msgstr ""
 
@@ -4844,11 +4839,11 @@ msgstr ""
 msgid "Main heading shown in all popup layouts."
 msgstr ""
 
-#: admin/settings.php:7798
+#: admin/settings.php:7869
 msgid "Main Shop & Archive Pages"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8781
+#: multi-location-product-and-inventory-management-pro.php:8874
 msgid "Manage Locations"
 msgstr ""
 
@@ -4864,7 +4859,7 @@ msgstr ""
 msgid "Manage Products"
 msgstr ""
 
-#: admin/settings.php:5343
+#: admin/settings.php:5414
 msgid ""
 "Manage products, inventory, and pricing across multiple store locations "
 "effortlessly"
@@ -4922,7 +4917,7 @@ msgstr ""
 msgid "Manager updated: %s"
 msgstr ""
 
-#: admin/settings.php:6345
+#: admin/settings.php:6416
 msgid "Managing Location-Based Inventory"
 msgstr ""
 
@@ -4968,14 +4963,14 @@ msgstr ""
 msgid "Mark as inactive"
 msgstr ""
 
-#: admin/settings.php:6346
+#: admin/settings.php:6417
 msgid ""
 "Master inventory management across multiple locations. Learn to set stock "
 "levels, manage backorders, configure low-stock alerts, and sync inventory "
 "between locations."
 msgstr ""
 
-#: admin/settings.php:6204
+#: admin/settings.php:6275
 msgid "Maximum width in pixels"
 msgstr ""
 
@@ -4993,7 +4988,7 @@ msgstr ""
 msgid "Media sideload failed for %s: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12521
+#: multi-location-product-and-inventory-management-pro.php:13061
 msgid "Medium stock"
 msgstr ""
 
@@ -5021,7 +5016,7 @@ msgstr ""
 msgid "Minimal"
 msgstr ""
 
-#: admin/settings.php:6811
+#: admin/settings.php:6882
 msgid "Minutes"
 msgstr ""
 
@@ -5054,7 +5049,7 @@ msgstr ""
 msgid "Monday"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13541
+#: multi-location-product-and-inventory-management-pro.php:14081
 #, php-format
 msgid "Monitoring shows %s is reachable again."
 msgstr ""
@@ -5079,7 +5074,7 @@ msgid ""
 msgstr ""
 
 #. Name of the plugin
-#: admin/settings.php:5342
+#: admin/settings.php:5413
 msgid "Multi Location Product & Inventory Management for WooCommerce Pro"
 msgstr ""
 
@@ -5099,7 +5094,7 @@ msgstr ""
 msgid "name@example.com"
 msgstr ""
 
-#: admin/settings.php:6562
+#: admin/settings.php:6633
 msgid "Navigate to WordPress Admin Dashboard"
 msgstr ""
 
@@ -5119,7 +5114,7 @@ msgstr ""
 msgid "Nearest with inter-hub transfer cost"
 msgstr ""
 
-#: admin/settings.php:6996
+#: admin/settings.php:7067
 msgid "Need Additional Help?"
 msgstr ""
 
@@ -5131,7 +5126,7 @@ msgstr ""
 msgid "New Location Name"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13223
+#: multi-location-product-and-inventory-management-pro.php:13763
 #, php-format
 msgid "New order #%s at %s"
 msgstr ""
@@ -5165,7 +5160,7 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12034
+#: multi-location-product-and-inventory-management-pro.php:12627
 msgid "No address data provided."
 msgstr ""
 
@@ -5233,7 +5228,7 @@ msgstr ""
 msgid "No items in order"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4764
+#: multi-location-product-and-inventory-management-pro.php:4792
 msgid "No location assigned"
 msgstr ""
 
@@ -5310,7 +5305,7 @@ msgstr ""
 msgid "No Matching Locations"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13693
+#: multi-location-product-and-inventory-management-pro.php:14233
 msgid "No orders found for today yet. This is a digest preview test."
 msgstr ""
 
@@ -5364,7 +5359,7 @@ msgstr ""
 msgid "No saved address yet"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12142
+#: multi-location-product-and-inventory-management-pro.php:12682
 msgid "No saved locations found"
 msgstr ""
 
@@ -5386,7 +5381,7 @@ msgstr ""
 msgid "No specific permissions set (using global defaults)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4799
+#: multi-location-product-and-inventory-management-pro.php:4827
 msgid "No stock set"
 msgstr ""
 
@@ -5419,7 +5414,7 @@ msgstr ""
 msgid "No valid orders found"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14204
+#: multi-location-product-and-inventory-management-pro.php:14744
 msgid "No valid recipient email could be resolved for this test."
 msgstr ""
 
@@ -5435,8 +5430,8 @@ msgstr ""
 msgid "Not editable"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4823
-#: multi-location-product-and-inventory-management-pro.php:5085
+#: multi-location-product-and-inventory-management-pro.php:4851
+#: multi-location-product-and-inventory-management-pro.php:5113
 #: includes/class-product-location-table.php:1837
 #: includes/class-product-location-table.php:1840
 #: includes/class-product-location-table.php:1848
@@ -5456,7 +5451,7 @@ msgstr ""
 msgid "Notification template"
 msgstr ""
 
-#: admin/admin.php:6349 admin/settings.php:5736
+#: admin/admin.php:6349 admin/settings.php:5807
 msgid "Notifications"
 msgstr ""
 
@@ -5468,7 +5463,7 @@ msgstr ""
 msgid "Number of items per page:"
 msgstr ""
 
-#: admin/settings.php:6458
+#: admin/settings.php:6529
 msgid "Number of products to display"
 msgstr ""
 
@@ -5489,8 +5484,8 @@ msgstr ""
 #: admin/settings.php:3380 admin/settings.php:3858 admin/settings.php:3880
 #: admin/settings.php:3920 admin/settings.php:3942 admin/settings.php:4738
 #: admin/settings.php:4744 admin/settings.php:4825 admin/settings.php:4831
-#: admin/settings.php:4890 admin/settings.php:4896 admin/settings.php:8071
-#: admin/settings.php:8374
+#: admin/settings.php:4890 admin/settings.php:4896 admin/settings.php:8142
+#: admin/settings.php:8462
 msgid "Off"
 msgstr ""
 
@@ -5511,8 +5506,8 @@ msgstr ""
 #: admin/settings.php:3379 admin/settings.php:3857 admin/settings.php:3879
 #: admin/settings.php:3919 admin/settings.php:3941 admin/settings.php:4737
 #: admin/settings.php:4743 admin/settings.php:4824 admin/settings.php:4830
-#: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8070
-#: admin/settings.php:8373
+#: admin/settings.php:4889 admin/settings.php:4895 admin/settings.php:8141
+#: admin/settings.php:8461
 msgid "On"
 msgstr ""
 
@@ -5524,9 +5519,9 @@ msgstr ""
 msgid "On Hold"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6960
-#: multi-location-product-and-inventory-management-pro.php:6969
-#: multi-location-product-and-inventory-management-pro.php:7144
+#: multi-location-product-and-inventory-management-pro.php:6988
+#: multi-location-product-and-inventory-management-pro.php:6997
+#: multi-location-product-and-inventory-management-pro.php:7172
 msgid "One or more submitted variations do not belong to this product."
 msgstr ""
 
@@ -5562,7 +5557,7 @@ msgstr ""
 msgid "Open 24 hours"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:9752
+#: multi-location-product-and-inventory-management-pro.php:9966
 msgid "Open Modal"
 msgstr ""
 
@@ -5636,12 +5631,12 @@ msgstr ""
 msgid "Order"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13490
+#: multi-location-product-and-inventory-management-pro.php:14030
 #, php-format
 msgid "Order #%s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13247
+#: multi-location-product-and-inventory-management-pro.php:13787
 #, php-format
 msgid "Order #%s | Total: %s | Location: %s"
 msgstr ""
@@ -5652,7 +5647,7 @@ msgstr ""
 msgid "Order %s"
 msgstr ""
 
-#: admin/settings.php:5735
+#: admin/settings.php:5806
 msgid "Order & Cart"
 msgstr ""
 
@@ -5660,12 +5655,12 @@ msgstr ""
 msgid "Order Assignment Method"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13457
+#: multi-location-product-and-inventory-management-pro.php:13997
 #: admin/settings.php:3392
 msgid "Order cancelled"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13461
+#: multi-location-product-and-inventory-management-pro.php:14001
 #: admin/settings.php:3393
 msgid "Order completed"
 msgstr ""
@@ -5678,16 +5673,16 @@ msgstr ""
 msgid "Order IDs and location are required"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5088
+#: multi-location-product-and-inventory-management-pro.php:5116
 #, php-format
 msgid "Order item location changed from %s to %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4911
+#: multi-location-product-and-inventory-management-pro.php:4939
 msgid "Order item not found"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5328
+#: multi-location-product-and-inventory-management-pro.php:5356
 #, php-format
 msgid ""
 "Order item quantity changed for %s at %s location: %d → %d (Stock: %d → %d)"
@@ -5698,7 +5693,7 @@ msgid ""
 "Order location changes are disabled while Location Wise Currency is enabled."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4906
+#: multi-location-product-and-inventory-management-pro.php:4934
 #: admin/admin.php:4940 admin/admin.php:5383
 msgid "Order not found"
 msgstr ""
@@ -5707,7 +5702,7 @@ msgstr ""
 msgid "Order Notification Recipients"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13453
+#: multi-location-product-and-inventory-management-pro.php:13993
 #: admin/settings.php:3391
 msgid "Order refunded"
 msgstr ""
@@ -5725,8 +5720,8 @@ msgstr ""
 msgid "Orders"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13430
-#: multi-location-product-and-inventory-management-pro.php:13708
+#: multi-location-product-and-inventory-management-pro.php:13970
+#: multi-location-product-and-inventory-management-pro.php:14248
 msgid "orders"
 msgstr ""
 
@@ -5746,7 +5741,7 @@ msgstr ""
 msgid "orders selected"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13412
+#: multi-location-product-and-inventory-management-pro.php:13952
 #, php-format
 msgid "Orders: %d | Items: %d | Revenue: %s"
 msgstr ""
@@ -5755,7 +5750,7 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
-#: admin/settings.php:5316
+#: admin/settings.php:5387
 msgid "Others pages"
 msgstr ""
 
@@ -5763,14 +5758,14 @@ msgstr ""
 msgid "Our Locations (%d)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8784
+#: multi-location-product-and-inventory-management-pro.php:8877
 #: includes/customer-location-insights.php:1010
 #: includes/customer-location-insights.php:1011
 msgid "Our Plugins"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12366
-#: multi-location-product-and-inventory-management-pro.php:13116
+#: multi-location-product-and-inventory-management-pro.php:12906
+#: multi-location-product-and-inventory-management-pro.php:13656
 #: admin/dashboard.php:2464 admin/dashboard.php:2492
 #: includes/class-product-location-table.php:2682
 #: includes/stock-price-backorder-manage.php:2078
@@ -5778,10 +5773,10 @@ msgstr ""
 msgid "Out of Stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12484
-#: multi-location-product-and-inventory-management-pro.php:12491
-#: multi-location-product-and-inventory-management-pro.php:12511
-#: multi-location-product-and-inventory-management-pro.php:12544
+#: multi-location-product-and-inventory-management-pro.php:13024
+#: multi-location-product-and-inventory-management-pro.php:13031
+#: multi-location-product-and-inventory-management-pro.php:13051
+#: multi-location-product-and-inventory-management-pro.php:13084
 #: includes/class-product-location-table.php:1193
 #: includes/class-product-location-table.php:1201
 #: includes/class-product-location-table.php:1224
@@ -5829,7 +5824,7 @@ msgstr ""
 msgid "Paid via parent order."
 msgstr ""
 
-#: admin/settings.php:6903
+#: admin/settings.php:6974
 msgid "Parameters"
 msgstr ""
 
@@ -5945,24 +5940,24 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:288
+#: includes/cash-on-pickup-payment-gateway.php:363
 msgid ""
 "Pay with cash when you pick up your order from the store location. Powered "
 "by <a href=\"https://plugincy.com/multi-location-product-and-inventory-"
 "management\" target=\"_blank\">Plugincy</a>."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13449
+#: multi-location-product-and-inventory-management-pro.php:13989
 #: admin/settings.php:3390
 msgid "Payment failed"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:280
-#: includes/cash-on-pickup-payment-gateway.php:287
+#: includes/cash-on-pickup-payment-gateway.php:355
+#: includes/cash-on-pickup-payment-gateway.php:362
 msgid "Payment method description that the customer will see on your checkout."
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:424
+#: includes/cash-on-pickup-payment-gateway.php:463
 msgid "Payment method powered by Plugincy"
 msgstr ""
 
@@ -5970,11 +5965,11 @@ msgstr ""
 msgid "Payment Methods"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:399
+#: includes/cash-on-pickup-payment-gateway.php:438
 msgid "Payment to be collected on pickup."
 msgstr ""
 
-#: admin/settings.php:5892
+#: admin/settings.php:5963
 msgid "Payments"
 msgstr ""
 
@@ -5996,8 +5991,8 @@ msgstr ""
 msgid "Performance Score"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13594
-#: multi-location-product-and-inventory-management-pro.php:13648
+#: multi-location-product-and-inventory-management-pro.php:14134
+#: multi-location-product-and-inventory-management-pro.php:14188
 #: admin/admin.php:3764 admin/admin.php:3790 admin/admin.php:3812
 #: admin/admin.php:3863 admin/admin.php:3956 admin/dashboard.php:193
 #: admin/dashboard.php:396 admin/dashboard.php:1982 admin/dashboard.php:3954
@@ -6066,7 +6061,7 @@ msgstr ""
 msgid "Please activate your license to access premium features"
 msgstr ""
 
-#: admin/settings.php:8144
+#: admin/settings.php:8215
 msgid "Please choose a language first."
 msgstr ""
 
@@ -6078,7 +6073,7 @@ msgstr ""
 msgid "Please edit the order and set locations for each product individually"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14152
+#: multi-location-product-and-inventory-management-pro.php:14692
 msgid "Please enter a valid email address."
 msgstr ""
 
@@ -6090,7 +6085,7 @@ msgstr ""
 msgid "Please fix the validation errors before saving."
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:295
+#: includes/cash-on-pickup-payment-gateway.php:370
 msgid ""
 "Please have exact cash ready when you pick up your order from the store "
 "location. Powered by Plugincy - Multi Location Product & Inventory "
@@ -6117,11 +6112,11 @@ msgstr ""
 msgid "Please select a location to see recommendations."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14139
+#: multi-location-product-and-inventory-management-pro.php:14679
 msgid "Please select a location."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3688
+#: multi-location-product-and-inventory-management-pro.php:3716
 #: includes/text-management.php:909
 msgid "Please select a store location before adding this product to your cart."
 msgstr ""
@@ -6170,15 +6165,15 @@ msgstr ""
 msgid "Please wait before requesting another update."
 msgstr ""
 
-#: admin/settings.php:6327
+#: admin/settings.php:6398
 msgid "Plugin Installation & Setup"
 msgstr ""
 
-#: admin/settings.php:5742
+#: admin/settings.php:5813
 msgid "Plugin License"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:681
+#: includes/cash-on-pickup-payment-gateway.php:722
 msgid "Plugincy"
 msgstr ""
 
@@ -6186,11 +6181,11 @@ msgstr ""
 msgid "plugincy"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:679
+#: includes/cash-on-pickup-payment-gateway.php:720
 msgid "Plugincy add-on"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:682
+#: includes/cash-on-pickup-payment-gateway.php:723
 msgid "Plugincy cash on pickup add-on"
 msgstr ""
 
@@ -6215,7 +6210,7 @@ msgstr ""
 msgid "Popular Locations"
 msgstr ""
 
-#: admin/settings.php:5734
+#: admin/settings.php:5805
 msgid "Popup"
 msgstr ""
 
@@ -6306,7 +6301,7 @@ msgstr ""
 msgid "Premium License Active"
 msgstr ""
 
-#: admin/settings.php:5407
+#: admin/settings.php:5478
 msgid "Premium Support"
 msgstr ""
 
@@ -6318,7 +6313,7 @@ msgstr ""
 msgid "Preparing import package..."
 msgstr ""
 
-#: admin/settings.php:5292
+#: admin/settings.php:5363
 msgid "Prepend to title (Location - Title)"
 msgstr ""
 
@@ -6338,7 +6333,7 @@ msgstr ""
 msgid "Price by Location"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11517
+#: multi-location-product-and-inventory-management-pro.php:11778
 msgid "Price updated! Reloading..."
 msgstr ""
 
@@ -6355,25 +6350,25 @@ msgstr ""
 msgid "Primary Color"
 msgstr ""
 
-#: admin/settings.php:8546
+#: admin/settings.php:8634
 msgid ""
 "Primary color used for buttons, gradients, and main interactive elements. "
 "This replaces the button background color."
 msgstr ""
 
-#: admin/settings.php:7031
+#: admin/settings.php:7102
 msgid "Priority Email Support"
 msgstr ""
 
-#: admin/settings.php:8318
+#: admin/settings.php:8406
 msgid "Pro"
 msgstr ""
 
-#: admin/settings.php:6230
+#: admin/settings.php:6301
 msgid "Pro Tip:"
 msgstr ""
 
-#: admin/settings.php:5346
+#: admin/settings.php:5417
 msgid "Pro Version"
 msgstr ""
 
@@ -6389,10 +6384,10 @@ msgstr ""
 msgid "Processing orders"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4954
-#: multi-location-product-and-inventory-management-pro.php:5278
-#: multi-location-product-and-inventory-management-pro.php:5325
-#: multi-location-product-and-inventory-management-pro.php:13767
+#: multi-location-product-and-inventory-management-pro.php:4982
+#: multi-location-product-and-inventory-management-pro.php:5306
+#: multi-location-product-and-inventory-management-pro.php:5353
+#: multi-location-product-and-inventory-management-pro.php:14307
 #: admin/dashboard.php:347 admin/dashboard.php:771 admin/dashboard.php:1636
 #: admin/dashboard.php:4327 admin/stock-central.php:2048
 #: includes/class-product-location-table.php:227
@@ -6405,7 +6400,7 @@ msgstr ""
 msgid "Product Allocation Settings"
 msgstr ""
 
-#: admin/settings.php:7805
+#: admin/settings.php:7876
 msgid "Product Blocks (Gutenberg)"
 msgstr ""
 
@@ -6413,7 +6408,7 @@ msgstr ""
 msgid "Product Count"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7208
+#: multi-location-product-and-inventory-management-pro.php:7236
 msgid "Product data saved successfully."
 msgstr ""
 
@@ -6421,7 +6416,7 @@ msgstr ""
 msgid "Product Filter"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5799
+#: multi-location-product-and-inventory-management-pro.php:5827
 msgid "Product has no locations assigned."
 msgstr ""
 
@@ -6434,17 +6429,17 @@ msgstr ""
 msgid "Product import progress: %1$d/%2$d"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5774
-#: multi-location-product-and-inventory-management-pro.php:5816
+#: multi-location-product-and-inventory-management-pro.php:5802
+#: multi-location-product-and-inventory-management-pro.php:5844
 msgid "Product is not available in multiple locations."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6571
+#: multi-location-product-and-inventory-management-pro.php:6599
 msgid "Product locations saved successfully."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6658
-#: multi-location-product-and-inventory-management-pro.php:6911
+#: multi-location-product-and-inventory-management-pro.php:6686
+#: multi-location-product-and-inventory-management-pro.php:6939
 #: includes/api/inventory-sync-api.php:234
 msgid "Product not found."
 msgstr ""
@@ -6469,7 +6464,7 @@ msgstr ""
 msgid "Product Views"
 msgstr ""
 
-#: admin/settings.php:5733
+#: admin/settings.php:5804
 msgid "Product Visibility"
 msgstr ""
 
@@ -6477,7 +6472,7 @@ msgstr ""
 msgid "Product Visibility Rules"
 msgstr ""
 
-#: admin/settings.php:7804
+#: admin/settings.php:7875
 msgid "Product Widgets"
 msgstr ""
 
@@ -6568,7 +6563,7 @@ msgstr ""
 msgid "Quick Select"
 msgstr ""
 
-#: admin/settings.php:5352
+#: admin/settings.php:5423
 msgid "Quick Start Guide:"
 msgstr ""
 
@@ -6576,7 +6571,7 @@ msgstr ""
 msgid "Quick tests"
 msgstr ""
 
-#: admin/settings.php:8085
+#: admin/settings.php:8156
 msgid "Quick Translate"
 msgstr ""
 
@@ -6633,11 +6628,11 @@ msgstr ""
 msgid "Recent Reviews Label"
 msgstr ""
 
-#: admin/settings.php:7801
+#: admin/settings.php:7872
 msgid "Recently Viewed Products"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14214
+#: multi-location-product-and-inventory-management-pro.php:14754
 #, php-format
 msgid "Recipient type: %s"
 msgstr ""
@@ -6693,15 +6688,15 @@ msgstr ""
 msgid "Regular price cannot be less than purchase price"
 msgstr ""
 
-#: admin/settings.php:5403 admin/settings.php:7037
+#: admin/settings.php:5474 admin/settings.php:7108
 msgid "Regular Updates"
 msgstr ""
 
-#: admin/settings.php:7800
+#: admin/settings.php:7871
 msgid "Related Products"
 msgstr ""
 
-#: admin/settings.php:6883
+#: admin/settings.php:6954
 msgid "Related Shortcode"
 msgstr ""
 
@@ -6749,7 +6744,7 @@ msgstr ""
 msgid "Removed Items Notice"
 msgstr ""
 
-#: admin/settings.php:6390
+#: admin/settings.php:6461
 msgid "Reports, Analytics & Order Management"
 msgstr ""
 
@@ -6770,7 +6765,7 @@ msgstr ""
 msgid "Requires the bot token configured in Advanced → Social Notifications."
 msgstr ""
 
-#: admin/dashboard.php:1374 admin/settings.php:8426
+#: admin/dashboard.php:1374 admin/settings.php:8514
 msgid "Reset"
 msgstr ""
 
@@ -6778,16 +6773,16 @@ msgstr ""
 msgid "Reset All Changes"
 msgstr ""
 
-#: admin/settings.php:6056
+#: admin/settings.php:6127
 msgid "Reset All Settings"
 msgstr ""
 
-#: admin/settings.php:8121
+#: admin/settings.php:8192
 msgid ""
 "Reset all text fields to their default values? This action cannot be undone."
 msgstr ""
 
-#: admin/settings.php:8124
+#: admin/settings.php:8195
 msgid "Reset only the Text Management fields to their defaults."
 msgstr ""
 
@@ -6795,31 +6790,31 @@ msgstr ""
 msgid "Reset product row changes"
 msgstr ""
 
-#: admin/settings.php:6049
+#: admin/settings.php:6120
 msgid "Reset Settings"
 msgstr ""
 
-#: admin/settings.php:8116
+#: admin/settings.php:8187
 msgid "Reset Text"
 msgstr ""
 
-#: admin/settings.php:8122
+#: admin/settings.php:8193
 msgid "Reset Text to Defaults"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11848
+#: multi-location-product-and-inventory-management-pro.php:12109
 msgid "Resolver service is unavailable."
 msgstr ""
 
-#: admin/settings.php:6973
+#: admin/settings.php:7044
 msgid "Response:"
 msgstr ""
 
-#: admin/settings.php:7806
+#: admin/settings.php:7877
 msgid "REST API & AJAX Responses"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7062
+#: multi-location-product-and-inventory-management-pro.php:7090
 msgid "Restocked"
 msgstr ""
 
@@ -6832,7 +6827,7 @@ msgstr ""
 msgid "Restocked: %s"
 msgstr ""
 
-#: admin/settings.php:8117
+#: admin/settings.php:8188
 msgid "Restore the original defaults for all text fields."
 msgstr ""
 
@@ -6870,7 +6865,7 @@ msgstr ""
 msgid "Reviewed from: %s"
 msgstr ""
 
-#: admin/settings.php:5903 includes/text-management.php:685
+#: admin/settings.php:5974 includes/text-management.php:685
 msgid "Reviews"
 msgstr ""
 
@@ -6940,11 +6935,11 @@ msgstr ""
 msgid "Same Location"
 msgstr ""
 
-#: admin/settings.php:5807
+#: admin/settings.php:5878
 msgid "Sample Button"
 msgstr ""
 
-#: admin/settings.php:5805
+#: admin/settings.php:5876
 msgid "Sample Button:"
 msgstr ""
 
@@ -6959,10 +6954,6 @@ msgstr ""
 
 #: includes/text-management.php:392 includes/text-management.php:393
 msgid "Save Location"
-msgstr ""
-
-#: multi-location-product-and-inventory-management-pro.php:7311
-msgid "Save Locations"
 msgstr ""
 
 #: admin/location-managers.php:703
@@ -7002,7 +6993,7 @@ msgstr ""
 msgid "Score"
 msgstr ""
 
-#: admin/settings.php:6564
+#: admin/settings.php:6635
 msgid "Scroll to \"API Authentication\" section"
 msgstr ""
 
@@ -7050,7 +7041,7 @@ msgstr ""
 msgid "Search query must be at least 2 characters."
 msgstr ""
 
-#: admin/settings.php:7799
+#: admin/settings.php:7870
 msgid "Search Results"
 msgstr ""
 
@@ -7070,24 +7061,24 @@ msgstr ""
 msgid "Secondary Color"
 msgstr ""
 
-#: admin/settings.php:8557
+#: admin/settings.php:8645
 msgid ""
 "Secondary color used for button hover states, gradients, and complementary "
 "elements. This replaces the button hover background color."
 msgstr ""
 
-#: admin/settings.php:6468
+#: admin/settings.php:6539
 msgid "Section title (use {location} placeholder)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4856
+#: multi-location-product-and-inventory-management-pro.php:4884
 #: includes/class-product-location-table.php:2089
 #: includes/text-management.php:260
 msgid "Security check failed"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5672
-#: multi-location-product-and-inventory-management-pro.php:5739
+#: multi-location-product-and-inventory-management-pro.php:5700
+#: multi-location-product-and-inventory-management-pro.php:5767
 msgid "Security check failed."
 msgstr ""
 
@@ -7099,7 +7090,7 @@ msgstr ""
 msgid "Security Error Message"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:304
+#: includes/cash-on-pickup-payment-gateway.php:379
 msgid ""
 "Select \"All Shipping Methods\" to enable Cash on Pickup for all shipping "
 "methods, or select specific shipping methods."
@@ -7123,8 +7114,8 @@ msgstr ""
 msgid "Select a location…"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13604
-#: multi-location-product-and-inventory-management-pro.php:13658
+#: multi-location-product-and-inventory-management-pro.php:14144
+#: multi-location-product-and-inventory-management-pro.php:14198
 msgid "Select a platform to test."
 msgstr ""
 
@@ -7156,7 +7147,7 @@ msgstr ""
 msgid "Select File & Import"
 msgstr ""
 
-#: admin/settings.php:8091
+#: admin/settings.php:8162
 msgid "Select language"
 msgstr ""
 
@@ -7181,7 +7172,6 @@ msgstr ""
 msgid "Select Location:"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:7310
 #: includes/location-based-shipping.php:454
 msgid "Select Locations"
 msgstr ""
@@ -7194,7 +7184,7 @@ msgstr ""
 msgid "Select pickup locations..."
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:308
+#: includes/cash-on-pickup-payment-gateway.php:383
 msgid "Select shipping methods"
 msgstr ""
 
@@ -7210,7 +7200,7 @@ msgstr ""
 msgid "Select Store Alert"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:9694
+#: multi-location-product-and-inventory-management-pro.php:9908
 msgid "Select Store Location"
 msgstr ""
 
@@ -7243,7 +7233,7 @@ msgstr ""
 msgid "Select which map provider to use for the store locator."
 msgstr ""
 
-#: admin/settings.php:7814
+#: admin/settings.php:7885
 msgid ""
 "Select which parts of your store should have location-based filtering "
 "applied."
@@ -7276,7 +7266,7 @@ msgstr ""
 msgid "Selector Label"
 msgstr ""
 
-#: admin/settings.php:6505
+#: admin/settings.php:6576
 msgid "Selector layout style"
 msgstr ""
 
@@ -7300,7 +7290,7 @@ msgstr ""
 msgid "Send test email to"
 msgstr ""
 
-#: admin/settings.php:5906
+#: admin/settings.php:5977
 msgid "SEO"
 msgstr ""
 
@@ -7322,7 +7312,7 @@ msgid ""
 "and no location is selected."
 msgstr ""
 
-#: admin/settings.php:6132
+#: admin/settings.php:6203
 msgid "Set custom selector title"
 msgstr ""
 
@@ -7340,14 +7330,14 @@ msgid ""
 "round-the-clock."
 msgstr ""
 
-#: admin/settings.php:6364
+#: admin/settings.php:6435
 msgid ""
 "Set up location-based shipping methods, configure pickup locations, and "
 "manage delivery options. Learn to optimize shipping costs and customer "
 "convenience."
 msgstr ""
 
-#: admin/settings.php:5358
+#: admin/settings.php:5429
 msgid "Set up your store locations with names, addresses, and contact details"
 msgstr ""
 
@@ -7371,8 +7361,8 @@ msgstr ""
 msgid "Set Your Location"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8780
-#: admin/admin.php:4167 admin/admin.php:4168 admin/settings.php:5334
+#: multi-location-product-and-inventory-management-pro.php:8873
+#: admin/admin.php:4167 admin/admin.php:4168 admin/settings.php:5405
 msgid "Settings"
 msgstr ""
 
@@ -7392,11 +7382,11 @@ msgstr ""
 msgid "Settings imported successfully! Please refresh the page."
 msgstr ""
 
-#: admin/settings.php:5889
+#: admin/settings.php:5960
 msgid "Shipping"
 msgstr ""
 
-#: admin/settings.php:6363
+#: admin/settings.php:6434
 msgid "Shipping & Pickup Configuration"
 msgstr ""
 
@@ -7404,7 +7394,7 @@ msgstr ""
 msgid "Shipping Calculation Method"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4051
+#: multi-location-product-and-inventory-management-pro.php:4079
 #, php-format
 msgid "Shipping from %s"
 msgstr ""
@@ -7421,7 +7411,7 @@ msgstr ""
 msgid "Shipping Zones"
 msgstr ""
 
-#: admin/settings.php:5314
+#: admin/settings.php:5385
 msgid "Shop/Archive Pages"
 msgstr ""
 
@@ -7429,7 +7419,7 @@ msgstr ""
 msgid "Short Description"
 msgstr ""
 
-#: admin/settings.php:6105
+#: admin/settings.php:6176
 msgid "Shortcode"
 msgstr ""
 
@@ -7473,7 +7463,7 @@ msgstr ""
 msgid "Show Grayed Out"
 msgstr ""
 
-#: admin/settings.php:6528
+#: admin/settings.php:6599
 msgid "Show location filter dropdown"
 msgstr ""
 
@@ -7493,7 +7483,7 @@ msgstr ""
 msgid "Show Out of Stock Products"
 msgstr ""
 
-#: admin/settings.php:6478
+#: admin/settings.php:6549
 msgid "Show popularity badge"
 msgstr ""
 
@@ -7521,7 +7511,7 @@ msgstr ""
 msgid "Show Stock Levels (High/Medium/Low)"
 msgstr ""
 
-#: admin/settings.php:6533
+#: admin/settings.php:6604
 msgid "Show stock status filter dropdown"
 msgstr ""
 
@@ -7530,7 +7520,7 @@ msgid ""
 "Show store hours on Location Archive pages next to location information."
 msgstr ""
 
-#: admin/settings.php:6745
+#: admin/settings.php:6816
 msgid ""
 "Show the open/closed status badge for a single location anywhere on your "
 "site. Useful for headers, sidebars, or location detail pages."
@@ -7731,7 +7721,7 @@ msgstr ""
 msgid "Single Product Page Position"
 msgstr ""
 
-#: admin/settings.php:5315
+#: admin/settings.php:5386
 msgid "Single Product Pages"
 msgstr ""
 
@@ -7739,11 +7729,11 @@ msgstr ""
 msgid "Single Product Unavailable Behavior"
 msgstr ""
 
-#: admin/settings.php:6616
+#: admin/settings.php:6687
 msgid "Single Product Update Example"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13540
+#: multi-location-product-and-inventory-management-pro.php:14080
 msgid "Site back online"
 msgstr ""
 
@@ -7751,7 +7741,7 @@ msgstr ""
 msgid "Site down / up monitor"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13532
+#: multi-location-product-and-inventory-management-pro.php:14072
 msgid "Site down alert"
 msgstr ""
 
@@ -7808,7 +7798,7 @@ msgid "Social Notification Channels"
 msgstr ""
 
 #: admin/location-managers.php:674 admin/settings.php:3337
-#: admin/settings.php:3373 admin/settings.php:6540
+#: admin/settings.php:3373 admin/settings.php:6611
 msgid "Social Notifications"
 msgstr ""
 
@@ -7832,23 +7822,23 @@ msgid ""
 "enable location selection."
 msgstr ""
 
-#: admin/settings.php:6437
+#: admin/settings.php:6508
 msgid "Sort locations by"
 msgstr ""
 
-#: admin/settings.php:6442
+#: admin/settings.php:6513
 msgid "Sort order"
 msgstr ""
 
-#: admin/settings.php:6483
+#: admin/settings.php:6554
 msgid "Sort products by"
 msgstr ""
 
-#: admin/settings.php:6407
+#: admin/settings.php:6478
 msgid "Specific location ID(s)"
 msgstr ""
 
-#: admin/settings.php:6500
+#: admin/settings.php:6571
 msgid "Specific product ID (auto-detects if not provided)"
 msgstr ""
 
@@ -7921,23 +7911,23 @@ msgstr ""
 msgid "Status text and helper messages shown inside popup layouts."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13491
+#: multi-location-product-and-inventory-management-pro.php:14031
 #, php-format
 msgid "Status: %s"
 msgstr ""
 
-#: admin/settings.php:6337
+#: admin/settings.php:6408
 msgid ""
 "Step-by-step guide on creating and configuring store locations with "
 "addresses, contact details, business hours, and geographical coordinates for "
 "maps."
 msgstr ""
 
-#: admin/settings.php:6800
+#: admin/settings.php:6871
 msgid "Step-by-step guides to master location-based inventory management"
 msgstr ""
 
-#: admin/settings.php:6952
+#: admin/settings.php:7023
 msgid "Steps / Request Body:"
 msgstr ""
 
@@ -8014,7 +8004,7 @@ msgstr ""
 msgid "Stock Status"
 msgstr ""
 
-#: admin/settings.php:6569
+#: admin/settings.php:6640
 msgid "Store both keys securely (they are shown only once)"
 msgstr ""
 
@@ -8026,7 +8016,7 @@ msgstr ""
 msgid "Store Latest Only"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4843
+#: multi-location-product-and-inventory-management-pro.php:4871
 #: admin/admin.php:4193 admin/admin.php:4199 admin/admin.php:5743
 #: admin/admin.php:5941
 msgid "Store Location"
@@ -8103,9 +8093,9 @@ msgstr ""
 msgid "Supplemental note that shows opening time. Use %s for time."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8782
-#: multi-location-product-and-inventory-management-pro.php:8816
-#: multi-location-product-and-inventory-management-pro.php:8816
+#: multi-location-product-and-inventory-management-pro.php:8875
+#: multi-location-product-and-inventory-management-pro.php:8909
+#: multi-location-product-and-inventory-management-pro.php:8909
 msgid "Support"
 msgstr ""
 
@@ -8150,7 +8140,7 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: admin/settings.php:5896
+#: admin/settings.php:5967
 msgid "Tax"
 msgstr ""
 
@@ -8180,8 +8170,8 @@ msgstr ""
 msgid "Telegram Docs: Bots API"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13608
-#: multi-location-product-and-inventory-management-pro.php:13662
+#: multi-location-product-and-inventory-management-pro.php:14148
+#: multi-location-product-and-inventory-management-pro.php:14202
 msgid "Telegram requires a chat ID (and bot token)."
 msgstr ""
 
@@ -8189,7 +8179,7 @@ msgstr ""
 msgid "Template Selection"
 msgstr ""
 
-#: admin/settings.php:8315
+#: admin/settings.php:8403
 #, php-format
 msgid "Template: %s"
 msgstr ""
@@ -8210,11 +8200,11 @@ msgstr ""
 msgid "Test Floating Notification"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13630
+#: multi-location-product-and-inventory-management-pro.php:14170
 msgid "Test notification"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14209
+#: multi-location-product-and-inventory-management-pro.php:14749
 msgid "Test notification email"
 msgstr ""
 
@@ -8230,7 +8220,7 @@ msgstr ""
 msgid "Test PWA Notification"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13637
+#: multi-location-product-and-inventory-management-pro.php:14177
 msgid "Test sent (check your channel)."
 msgstr ""
 
@@ -8246,19 +8236,19 @@ msgstr ""
 msgid "Testing..."
 msgstr ""
 
-#: admin/settings.php:8579
+#: admin/settings.php:8667
 msgid "Text color for buttons."
 msgstr ""
 
-#: admin/settings.php:8523
+#: admin/settings.php:8611
 msgid "Text color for popup/modal content."
 msgstr ""
 
-#: admin/settings.php:5740 admin/settings.php:8058
+#: admin/settings.php:5811 admin/settings.php:8129
 msgid "Text Management"
 msgstr ""
 
-#: admin/settings.php:7821
+#: admin/settings.php:7892
 msgid "Text management configuration is not available."
 msgstr ""
 
@@ -8268,7 +8258,7 @@ msgid ""
 "again."
 msgstr ""
 
-#: admin/settings.php:8059
+#: admin/settings.php:8130
 msgid "Text Management Overview"
 msgstr ""
 
@@ -8315,7 +8305,7 @@ msgid ""
 "WooCommerce Pro!"
 msgstr ""
 
-#: admin/settings.php:5305
+#: admin/settings.php:5376
 msgid "The character(s) used to separate the title and location."
 msgstr ""
 
@@ -8345,12 +8335,12 @@ msgid ""
 "This file does not appear to be a valid settings export from this plugin."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14212
+#: multi-location-product-and-inventory-management-pro.php:14752
 msgid ""
 "This is a test email sent from Multi Location Product & Inventory Management."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13631
+#: multi-location-product-and-inventory-management-pro.php:14171
 msgid "This is a test from Multi Location Product & Inventory Management."
 msgstr ""
 
@@ -8358,19 +8348,19 @@ msgstr ""
 msgid "This Month"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4916
+#: multi-location-product-and-inventory-management-pro.php:4944
 #: admin/admin.php:4948
 msgid "This order is no longer editable"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:10987
+#: multi-location-product-and-inventory-management-pro.php:11248
 #, php-format
 msgid ""
 "This product is not available at %s. Please select a different location to "
 "view this product."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:10984
+#: multi-location-product-and-inventory-management-pro.php:11245
 msgid "This product is not available in your selected location."
 msgstr ""
 
@@ -8387,7 +8377,7 @@ msgid ""
 "This will overwrite your current settings. Are you sure you want to continue?"
 msgstr ""
 
-#: admin/settings.php:6052
+#: admin/settings.php:6123
 msgid ""
 "This will reset all plugin settings to their default values. This action "
 "cannot be undone. Please make sure you have exported your settings if you "
@@ -8407,7 +8397,7 @@ msgstr ""
 msgid "Time Range Format"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14218
+#: multi-location-product-and-inventory-management-pro.php:14758
 #, php-format
 msgid "Time: %s"
 msgstr ""
@@ -8416,7 +8406,7 @@ msgstr ""
 msgid "Timezone"
 msgstr ""
 
-#: includes/cash-on-pickup-payment-gateway.php:278
+#: includes/cash-on-pickup-payment-gateway.php:353
 msgid "Title"
 msgstr ""
 
@@ -8440,7 +8430,7 @@ msgstr ""
 msgid "Title-Location Separator"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3756
+#: multi-location-product-and-inventory-management-pro.php:3784
 msgid "To Location"
 msgstr ""
 
@@ -8452,11 +8442,11 @@ msgstr ""
 msgid "Today Label"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13438
+#: multi-location-product-and-inventory-management-pro.php:13978
 msgid "Today's location performance"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13410
+#: multi-location-product-and-inventory-management-pro.php:13950
 #, php-format
 msgid "Today's performance - %s"
 msgstr ""
@@ -8471,7 +8461,7 @@ msgid ""
 "smaller batches."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11854
+#: multi-location-product-and-inventory-management-pro.php:12115
 msgid "Too many location resolve requests. Please try again shortly."
 msgstr ""
 
@@ -8499,7 +8489,7 @@ msgstr ""
 msgid "Top Selling Product"
 msgstr ""
 
-#: admin/settings.php:6866
+#: admin/settings.php:6937
 msgid "Topics Covered"
 msgstr ""
 
@@ -8553,7 +8543,7 @@ msgstr ""
 msgid "Total Stock"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:3773
+#: multi-location-product-and-inventory-management-pro.php:3801
 msgid "Total Transfer Cost"
 msgstr ""
 
@@ -8566,12 +8556,12 @@ msgstr ""
 msgid "Total Views"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13492
+#: multi-location-product-and-inventory-management-pro.php:14032
 #, php-format
 msgid "Total: %s"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13226
+#: multi-location-product-and-inventory-management-pro.php:13766
 #, php-format
 msgid "Total: %s | Status: %s | Items: %d"
 msgstr ""
@@ -8580,7 +8570,7 @@ msgstr ""
 msgid "Totally restrict (default)"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13697
+#: multi-location-product-and-inventory-management-pro.php:14237
 #, php-format
 msgid "Totals - Orders: %d | Items: %d | Revenue: %s"
 msgstr ""
@@ -8593,7 +8583,7 @@ msgstr ""
 msgid "Tracking Entries:"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4142
+#: multi-location-product-and-inventory-management-pro.php:4170
 msgid "Transfer Costs Applied"
 msgstr ""
 
@@ -8613,7 +8603,7 @@ msgid ""
 "number (units)."
 msgstr ""
 
-#: admin/settings.php:7017
+#: admin/settings.php:7088
 msgid "Try Live Demo"
 msgstr ""
 
@@ -8622,7 +8612,7 @@ msgstr ""
 msgid "Tuesday"
 msgstr ""
 
-#: admin/settings.php:6807
+#: admin/settings.php:6878
 msgid "Tutorials"
 msgstr ""
 
@@ -8678,7 +8668,7 @@ msgstr ""
 msgid "Unable to sync rate. Please try again."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8688
+#: multi-location-product-and-inventory-management-pro.php:8781
 #: admin/admin.php:4423 admin/admin.php:4476 admin/admin.php:4555
 #: admin/admin.php:4559 admin/admin.php:5342 admin/admin.php:5355
 #: admin/admin.php:5830 includes/order-split-by-location.php:376
@@ -8686,9 +8676,9 @@ msgstr ""
 msgid "Unassigned"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13213
-#: multi-location-product-and-inventory-management-pro.php:13354
-#: multi-location-product-and-inventory-management-pro.php:13485
+#: multi-location-product-and-inventory-management-pro.php:13753
+#: multi-location-product-and-inventory-management-pro.php:13894
+#: multi-location-product-and-inventory-management-pro.php:14025
 #: admin/admin.php:4304 admin/admin.php:5944
 msgid "Unassigned location"
 msgstr ""
@@ -8719,7 +8709,7 @@ msgstr ""
 msgid "Unknown product"
 msgstr ""
 
-#: admin/settings.php:5399
+#: admin/settings.php:5470
 msgid "Unlimited Locations"
 msgstr ""
 
@@ -8745,7 +8735,7 @@ msgstr ""
 msgid "Update Cart (Remove unavailable products)"
 msgstr ""
 
-#: admin/settings.php:8060
+#: admin/settings.php:8131
 msgid ""
 "Update every customer-facing label, prompt, and message from one place. Each "
 "section groups related text so it is clear where the copy appears on the "
@@ -8772,7 +8762,7 @@ msgstr ""
 msgid "updated"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:11523
+#: multi-location-product-and-inventory-management-pro.php:11784
 msgid "Updated!"
 msgstr ""
 
@@ -8780,9 +8770,9 @@ msgstr ""
 msgid "Updating Text"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4812
-#: multi-location-product-and-inventory-management-pro.php:11527
-#: multi-location-product-and-inventory-management-pro.php:11545
+#: multi-location-product-and-inventory-management-pro.php:4840
+#: multi-location-product-and-inventory-management-pro.php:11788
+#: multi-location-product-and-inventory-management-pro.php:11806
 #: includes/text-management.php:620
 msgid "Updating..."
 msgstr ""
@@ -8816,7 +8806,7 @@ msgstr ""
 msgid "Uploading file in chunks..."
 msgstr ""
 
-#: admin/settings.php:7803
+#: admin/settings.php:7874
 msgid "Upsells"
 msgstr ""
 
@@ -8828,7 +8818,7 @@ msgstr ""
 msgid "URL Prefix (e.g., \"store\" for store-name.example.com):"
 msgstr ""
 
-#: admin/settings.php:6924
+#: admin/settings.php:6995
 msgid "Usage Examples"
 msgstr ""
 
@@ -8859,11 +8849,11 @@ msgstr ""
 msgid "Use first assigned location"
 msgstr ""
 
-#: admin/settings.php:6576
+#: admin/settings.php:6647
 msgid "Use in X-API-Key header for REST API requests"
 msgstr ""
 
-#: admin/settings.php:6577
+#: admin/settings.php:6648
 msgid "Use in X-Webhook-Secret header for webhook requests"
 msgstr ""
 
@@ -8879,7 +8869,7 @@ msgstr ""
 msgid "Use select2 instead of normal select"
 msgstr ""
 
-#: admin/settings.php:6100
+#: admin/settings.php:6171
 msgid ""
 "Use this shortcode to display the location selector on any page or post. "
 "Copy and paste it into the WordPress editor or use it in your template files."
@@ -8899,7 +8889,7 @@ msgstr ""
 msgid "Used with the stock quantity. Use %s for quantity."
 msgstr ""
 
-#: admin/settings.php:5738
+#: admin/settings.php:5809
 msgid "User Experience"
 msgstr ""
 
@@ -8978,7 +8968,7 @@ msgstr ""
 msgid "Variation Stock Label"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6947
+#: multi-location-product-and-inventory-management-pro.php:6975
 msgid "Variations can only be saved for variable products."
 msgstr ""
 
@@ -8991,7 +8981,7 @@ msgstr ""
 msgid "Version Information"
 msgstr ""
 
-#: admin/settings.php:6797
+#: admin/settings.php:6868
 msgid "Video Tutorials & Documentation"
 msgstr ""
 
@@ -9004,7 +8994,7 @@ msgstr ""
 msgid "View Dashboard"
 msgstr ""
 
-#: admin/settings.php:5382
+#: admin/settings.php:5453
 msgid "View Demo"
 msgstr ""
 
@@ -9016,11 +9006,11 @@ msgstr ""
 msgid "View Details Button"
 msgstr ""
 
-#: admin/settings.php:5387 admin/settings.php:7005
+#: admin/settings.php:5458 admin/settings.php:7076
 msgid "View Documentation"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8815
+#: multi-location-product-and-inventory-management-pro.php:8908
 msgid "View documentation"
 msgstr ""
 
@@ -9050,7 +9040,7 @@ msgstr ""
 msgid "Views: %d | Purchases: %d"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:8817
+#: multi-location-product-and-inventory-management-pro.php:8910
 msgid "Visit community forums"
 msgstr ""
 
@@ -9075,7 +9065,7 @@ msgstr ""
 msgid "We could not detect your location. Please search for a store."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13533
+#: multi-location-product-and-inventory-management-pro.php:14073
 #, php-format
 msgid "We could not reach %s at %s."
 msgstr ""
@@ -9089,7 +9079,7 @@ msgstr ""
 msgid "We Open At Note"
 msgstr ""
 
-#: admin/settings.php:6683
+#: admin/settings.php:6754
 msgid "Webhook Example"
 msgstr ""
 
@@ -9111,8 +9101,8 @@ msgstr ""
 msgid "Webhook URL"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:13612
-#: multi-location-product-and-inventory-management-pro.php:13666
+#: multi-location-product-and-inventory-management-pro.php:14152
+#: multi-location-product-and-inventory-management-pro.php:14206
 msgid "Webhook URL is required for this platform."
 msgstr ""
 
@@ -9131,7 +9121,7 @@ msgid ""
 "update the cart based on configured behavior."
 msgstr ""
 
-#: admin/settings.php:8065
+#: admin/settings.php:8136
 msgid ""
 "When disabled, custom text overrides are ignored and plugin defaults are "
 "used."
@@ -9144,7 +9134,7 @@ msgid ""
 "depend on your notification settings."
 msgstr ""
 
-#: admin/settings.php:7779
+#: admin/settings.php:7850
 msgid ""
 "When enabled, users will only see products from their selected location. "
 "When disabled, all products will be visible."
@@ -9167,7 +9157,7 @@ msgstr ""
 msgid "Who should receive order notifications."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12004
+#: multi-location-product-and-inventory-management-pro.php:12597
 msgid "WooCommerce is not available."
 msgstr ""
 
@@ -9191,7 +9181,7 @@ msgstr ""
 msgid "Work"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:14229
+#: multi-location-product-and-inventory-management-pro.php:14769
 msgid "wp_mail() reported failure. Please check your SMTP/mail configuration."
 msgstr ""
 
@@ -9209,7 +9199,7 @@ msgstr ""
 msgid "You are viewing orders for: %s"
 msgstr ""
 
-#: admin/settings.php:6230
+#: admin/settings.php:6301
 msgid ""
 "You can modify the parameter values directly in the shortcode to customize "
 "the location selector appearance and behavior."
@@ -9251,12 +9241,12 @@ msgstr ""
 msgid "You do not have permission to clear cache."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4861
-#: multi-location-product-and-inventory-management-pro.php:4868
+#: multi-location-product-and-inventory-management-pro.php:4889
+#: multi-location-product-and-inventory-management-pro.php:4896
 msgid "You do not have permission to edit orders"
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6662
+#: multi-location-product-and-inventory-management-pro.php:6690
 msgid "You do not have permission to edit this product."
 msgstr ""
 
@@ -9281,17 +9271,17 @@ msgstr ""
 msgid "You do not have permission to import settings."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6599
-#: multi-location-product-and-inventory-management-pro.php:7234
+#: multi-location-product-and-inventory-management-pro.php:6627
+#: multi-location-product-and-inventory-management-pro.php:7262
 msgid "You do not have permission to modify this location."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:6507
-#: multi-location-product-and-inventory-management-pro.php:6547
-#: multi-location-product-and-inventory-management-pro.php:6585
-#: multi-location-product-and-inventory-management-pro.php:6647
-#: multi-location-product-and-inventory-management-pro.php:6900
-#: multi-location-product-and-inventory-management-pro.php:7221
+#: multi-location-product-and-inventory-management-pro.php:6535
+#: multi-location-product-and-inventory-management-pro.php:6575
+#: multi-location-product-and-inventory-management-pro.php:6613
+#: multi-location-product-and-inventory-management-pro.php:6675
+#: multi-location-product-and-inventory-management-pro.php:6928
+#: multi-location-product-and-inventory-management-pro.php:7249
 #: admin/api-settings.php:132 admin/api-settings.php:148 admin/settings.php:36
 #: admin/settings.php:84
 msgid "You do not have permission to perform this action."
@@ -9314,17 +9304,17 @@ msgid ""
 "You have unsaved Classic row changes. Leaving this page will discard them."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:12120
+#: multi-location-product-and-inventory-management-pro.php:12660
 msgid "You must be logged in to delete locations."
 msgstr ""
 
-#: admin/settings.php:5803
+#: admin/settings.php:5874
 msgid ""
 "Your branding settings will be applied to all popups, buttons, and frontend "
 "elements. Changes take effect immediately after saving."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:5516
+#: multi-location-product-and-inventory-management-pro.php:5544
 msgid "Your cart contains items from multiple locations:"
 msgstr ""
 
@@ -9346,7 +9336,7 @@ msgid ""
 "Your Location Manager permissions or assigned locations have been updated."
 msgstr ""
 
-#: multi-location-product-and-inventory-management-pro.php:4146
+#: multi-location-product-and-inventory-management-pro.php:4174
 #, php-format
 msgid ""
 "Your order includes products from multiple locations. Transfer costs to %s "
@@ -9388,4 +9378,127 @@ msgstr ""
 
 #: admin/license-page.php:932
 msgid "✗ Unlicensed"
+msgstr ""
+
+msgid "Manage:"
+msgstr ""
+
+msgid "Add Selected Locations"
+msgstr ""
+
+msgid "Regular Price:"
+msgstr ""
+
+msgid "Stock Quantity:"
+msgstr ""
+
+msgid "Manage Stock:"
+msgstr ""
+
+msgid "Sale Price:"
+msgstr ""
+
+msgid "Backorders:"
+msgstr ""
+
+msgid "Purchase Price:"
+msgstr ""
+
+msgid "Purchase Quantity:"
+msgstr ""
+
+msgid "Default Settings"
+msgstr ""
+
+msgid "Loading..."
+msgstr ""
+
+msgid "Save Changes"
+msgstr ""
+
+msgid "Manage Locations:"
+msgstr ""
+
+msgid ""
+"Select the locations where this grouped product should be available. "
+"Individual child products are managed separately."
+msgstr ""
+
+msgid "No variations found for this product."
+msgstr ""
+
+msgid "Remove \"%s\" from this product? Changes will apply after saving."
+msgstr ""
+
+msgid ""
+"Remove this location from all variations? Changes will apply after saving."
+msgstr ""
+
+msgid "Error removing location"
+msgstr ""
+
+msgid "Error saving product data"
+msgstr ""
+
+msgid "Product data saved successfully"
+msgstr ""
+
+msgid "Add location"
+msgstr ""
+
+msgid "+ Add Location"
+msgstr ""
+
+msgid "Select Location for Variation"
+msgstr ""
+
+msgid "Please select at least one location."
+msgstr ""
+
+msgid "Location(s) added. Click \"Save Changes\" to apply."
+msgstr ""
+
+msgid "Location(s) added to all variations. Click \"Save Changes\" to apply."
+msgstr ""
+
+msgid "Location marked for removal. Save changes to apply."
+msgstr ""
+
+msgid "Validation issue"
+msgstr ""
+
+msgid "Locations queued. Click \"Save Changes\" to apply."
+msgstr ""
+
+msgid "Unable to queue locations right now. Please reopen Manage Product."
+msgstr ""
+
+msgid "Error, duplicate 1: Enable"
+msgstr ""
+
+msgid "Error parsing location data."
+msgstr ""
+
+msgid ""
+"Total location stock (%s) cannot be greater than default stock quantity (%s)"
+msgstr ""
+
+msgid ""
+"Variation: Total location stock (%s) cannot be greater than default stock "
+"quantity (%s)"
+msgstr ""
+
+msgid "Copied!"
+msgstr ""
+
+msgid "Checking..."
+msgstr ""
+
+msgid "You have the latest version installed."
+msgstr ""
+
+msgid "Are you sure you want to deactivate your license?"
+msgstr ""
+
+msgid "Are you sure you want to delete this location?"
 msgstr ""

@@ -777,7 +777,7 @@ class mulopimfwc_License_Manager
                             <input type="hidden" name="mulopimfwc_license_action" value="deactivate" />
                             <?php if ($is_expired): echo '<a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank" class="button button-primary">Renew License</a>';
                             endif; ?>
-                            <button type="submit" onclick="return confirm('Are you sure you want to deactivate your license?')" class="button button-primary" style="background: #eef1f6;color:#24262a;display: inline-flex;align-items: center;gap: 8px;margin-top: 15px;padding: 6px 20px;border: 1px solid #e3e3e3;">
+                            <button type="submit" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to deactivate your license?', 'multi-location-product-and-inventory-management')); ?>')" class="button button-primary" style="background: #eef1f6;color:#24262a;display: inline-flex;align-items: center;gap: 8px;margin-top: 15px;padding: 6px 20px;border: 1px solid #e3e3e3;">
                                 <svg width="20" height="20" viewBox="0 0 0.8 0.8" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M.564.135a.031.031 0 0 0-.03.055.281.281 0 1 1-.27.001L.265.19A.031.031 0 0 0 .25.131a.02.02 0 0 0-.015.004.344.344 0 1 0 .331.001zM.399.382A.03.03 0 0 0 .43.351V.05a.031.031 0 0 0-.063 0v.301c0 .017.014.031.031.031" />
                                 </svg>
@@ -1025,10 +1025,12 @@ class mulopimfwc_License_Manager
             </style>
 
             <script>
+                var checkUpdatesCheckingLabel = <?php echo wp_json_encode(__('Checking...', 'multi-location-product-and-inventory-management')); ?>;
+                var checkUpdatesLatestLabel = <?php echo wp_json_encode(__('You have the latest version installed.', 'multi-location-product-and-inventory-management')); ?>;
                 function checkForUpdates() {
                     var btn = document.getElementById('check-updates-btn');
                     var originalText = btn.textContent;
-                    btn.textContent = 'Checking...';
+                    btn.textContent = checkUpdatesCheckingLabel;
                     btn.disabled = true;
 
                     var xhr = new XMLHttpRequest();
@@ -1046,7 +1048,7 @@ class mulopimfwc_License_Manager
                                         alert('Update available! Version ' + response.data.new_version + ' is ready to install.');
                                         location.reload();
                                     } else {
-                                        alert('You have the latest version installed.');
+                                        alert(checkUpdatesLatestLabel);
                                     }
                                 } else {
                                     alert('Error checking for updates: ' + response.data);
