@@ -2656,7 +2656,7 @@ JS;
         wp_enqueue_script('jquery-ui-sortable');
 
         // Add inline CSS
-        $css = '
+        ?>
         <style>
         .mulopimfwc-drag-handle {
             cursor: move !important;
@@ -2768,20 +2768,19 @@ JS;
             display: inline;
         }
         </style>
-        ';
-        echo $css;
+        <?php
 
         // Add inline JavaScript
         $ajax_nonce = wp_create_nonce('mulopimfwc_location_ajax');
-        $js = '
+        ?>
         <script type="text/javascript">
         (function($) {
             $(document).ready(function() {
                 var $tbody = $("#the-list");
-                var openLabel = "' . esc_js(__('Open', 'multi-location-product-and-inventory-management-pro')) . '";
-                var closedLabel = "' . esc_js(__('Closed', 'multi-location-product-and-inventory-management-pro')) . '";
-                var markActiveLabel = "' . esc_js(__('Mark as active', 'multi-location-product-and-inventory-management-pro')) . '";
-                var markInactiveLabel = "' . esc_js(__('Mark as inactive', 'multi-location-product-and-inventory-management-pro')) . '";
+                var openLabel = "<?php echo esc_js(__('Open', 'multi-location-product-and-inventory-management-pro')); ?>";
+                var closedLabel = "<?php echo esc_js(__('Closed', 'multi-location-product-and-inventory-management-pro')); ?>";
+                var markActiveLabel = "<?php echo esc_js(__('Mark as active', 'multi-location-product-and-inventory-management-pro')); ?>";
+                var markInactiveLabel = "<?php echo esc_js(__('Mark as inactive', 'multi-location-product-and-inventory-management-pro')); ?>";
 
                 function normalizeStatus(value) {
                     var normalized = String(value === undefined || value === null ? "" : value);
@@ -2900,7 +2899,7 @@ JS;
                                     data: {
                                         action: "mulopimfwc_update_location_order",
                                         term_ids: termIds,
-                                        nonce: "' . esc_js($ajax_nonce) . '"
+                                        nonce: "<?php echo esc_js($ajax_nonce); ?>"
                                     },
                                     success: function(response) {
                                         if (response.success) {
@@ -2960,7 +2959,7 @@ JS;
                             action: "mulopimfwc_toggle_location_status",
                             term_id: termId,
                             status: newStatus,
-                            nonce: "' . esc_js($ajax_nonce) . '"
+                            nonce: "<?php echo esc_js($ajax_nonce); ?>"
                         },
                         beforeSend: function() {
                             $toggle.addClass("is-loading");
@@ -3089,10 +3088,6 @@ JS;
             });
         })(jQuery);
         </script>
-        ';
-        echo $js;
-
-        $rate_css = <<<'CSS'
 <style>
 .column-drag_handle {
     min-width: 100px;
@@ -3262,8 +3257,7 @@ JS;
     to { transform: rotate(360deg); }
 }
 </style>
-CSS;
-        echo $rate_css;
+        <?php
 
         $rate_js_config = array(
             'nonce' => $ajax_nonce,
@@ -3282,10 +3276,10 @@ CSS;
             ),
         );
 
-        $rate_js = <<<'JS'
+        ?>
 <script type="text/javascript">
 (function($) {
-    var config = __MULOPIMFWC_RATE_TABLE_CONFIG__;
+    var config = JSON.parse('<?php echo esc_js(wp_json_encode($rate_js_config)); ?>');
     if (!config || typeof config !== 'object') {
         return;
     }
@@ -3758,9 +3752,7 @@ CSS;
     });
 })(jQuery);
 </script>
-JS;
-        $rate_js = str_replace('__MULOPIMFWC_RATE_TABLE_CONFIG__', wp_json_encode($rate_js_config), $rate_js);
-        echo $rate_js;
+        <?php
     }
 
     /**
