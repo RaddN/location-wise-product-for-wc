@@ -4,7 +4,7 @@ msgstr ""
 "WooCommerce Pro\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 04:13+0000\n"
-"PO-Revision-Date: 2026-03-15 08:55+0000\n"
+"PO-Revision-Date: 2026-03-15 08:53+0000\n"
 "Last-Translator: \n"
 "Language-Team: Bengali (Bangladesh)\n"
 "Language: bn_BD\n"
@@ -63,14 +63,14 @@ msgstr "%s অর্ডার %s"
 
 #. 1: manager display name, 2: comma-separated locations or "none"
 #: admin/location-managers.php:2341
-#, php-format
+#, fuzzy, php-format
 #| msgid "%s profile was updated. Locations: %s"
 msgid "%1$s profile was updated. Locations: %2$s"
 msgstr "%s প্রোফাইল আপডেট হয়েছে। লোকেশনসমূহ: %s"
 
 #. 1: product name, 2: rating number, 3: review excerpt
 #: multi-location-product-and-inventory-management-pro.php:14332
-#, php-format
+#, fuzzy, php-format
 #| msgid "%s received a %s★ review: \"%s\""
 msgid "%1$s received a %2$s★ review: \"%3$s\""
 msgstr "%s একটি %s★ রিভিউ পেয়েছে: \"%s\""
@@ -83,14 +83,14 @@ msgstr "%1$s to %2$s: %3$s"
 
 #. 1: manager display name, 2: action (created/updated), 3: comma-separated locations or "none"
 #: admin/location-managers.php:1498
-#, php-format
+#, fuzzy, php-format
 #| msgid "%s was %s. Locations: %s"
 msgid "%1$s was %2$s. Locations: %3$s"
 msgstr "%s ছিল %s। লোকেশনসমূহ: %s"
 
 #. 1: location name (may include HTML), 2: item count
 #: multi-location-product-and-inventory-management-pro.php:5560
-#, php-format
+#, fuzzy, php-format
 #| msgid "%s: %d item(s)"
 msgid "%1$s: %2$d item(s)"
 msgstr "%s: %d আইটেম"
@@ -1316,7 +1316,7 @@ msgstr "কার্টে যোগ করা যাচ্ছে না। %s �
 
 #. 1: location name, 2: available stock, 3: required quantity
 #: multi-location-product-and-inventory-management-pro.php:4990
-#, php-format
+#, fuzzy, php-format
 #| msgid ""
 #| "Cannot change location. Insufficient stock at %s location. Available: %d, "
 #| "Required: %d"
@@ -1329,7 +1329,7 @@ msgstr ""
 
 #. 1: product name, 2: location name, 3: available stock, 4: required quantity
 #: multi-location-product-and-inventory-management-pro.php:5326
-#, php-format
+#, fuzzy, php-format
 #| msgid ""
 #| "Cannot increase quantity for %s. Insufficient stock at %s location. "
 #| "Available: %d, Required: %d"
@@ -2168,7 +2168,7 @@ msgstr "POST"
 
 #. 1: source location name, 2: destination location name
 #: admin/settings.php:975
-#, php-format
+#, fuzzy, php-format
 #| msgid "Cost from %s to %s"
 msgid "Cost from %1$s to %2$s"
 msgstr "%s থেকে %s পর্যন্ত খরচ"
@@ -3927,7 +3927,7 @@ msgstr ""
 
 #. 1: user display name, 2: username, 3: password, 4: login URL
 #: admin/location-managers.php:1425
-#, php-format
+#, fuzzy, php-format
 #| msgid ""
 #| "Hello %s,\n"
 #| "\n"
@@ -4004,7 +4004,7 @@ msgstr "উচ্চ-মূল্যের অর্ডার"
 
 #. 1: order number, 2: formatted order total
 #: admin/dashboard.php:4230
-#, php-format
+#, fuzzy, php-format
 #| msgid "High-value order: #%s (%s)"
 msgid "High-value order: #%1$s (%2$s)"
 msgstr "উচ্চ-মূল্যের অর্ডার: #%s (%s)"
@@ -4151,7 +4151,7 @@ msgstr "ইমপোর্ট সম্পন্ন হয়েছে।"
 
 #. 1: number of succeeded rows, 2: number of failed rows
 #: admin/import-export-settings.php:843
-#, php-format
+#, fuzzy, php-format
 #| msgid "Import completed. %d succeeded, %d failed."
 msgid "Import completed. %1$d succeeded, %2$d failed."
 msgstr "ইমপোর্ট সম্পন্ন হয়েছে। %d সফল হয়েছে, %d ব্যর্থ হয়েছে।"
@@ -4194,7 +4194,7 @@ msgstr "ইমপোর্ট মোড:"
 #. 1: duration in seconds, 2: processed row count, 3: failed row count
 #: includes/class-stock-central-import-export.php:462
 #: includes/class-stock-central-import-export.php:1356
-#, php-format
+#, fuzzy, php-format
 #| msgid ""
 #| "Import pipeline finished in %s seconds. Processed rows: %d, failed rows: "
 #| "%d"
@@ -4234,7 +4234,7 @@ msgstr "সেটিংস ইমপোর্ট করুন"
 
 #. 1: current row number, 2: maximum rows allowed
 #: admin/import-export-settings.php:732
-#, php-format
+#, fuzzy, php-format
 #| msgid "Import stopped at row %d. Maximum %d rows allowed per import."
 msgid "Import stopped at row %1$d. Maximum %2$d rows allowed per import."
 msgstr ""
@@ -4628,7 +4628,7 @@ msgstr "বিনিয়োগ"
 
 #. 1: item index, 2: error message
 #: includes/api/inventory-sync-api.php:166
-#, php-format
+#, fuzzy, php-format
 #| msgid "Item %d: %s"
 msgid "Item %1$d: %2$s"
 msgstr "আইটেম %d: %s"
@@ -4979,63 +4979,63 @@ msgstr "সীমা অতিক্রম করা হয়েছে"
 #: admin/import-export-settings.php:836
 #: includes/class-stock-central-import-export.php:1709
 #: includes/class-stock-central-import-export.php:1811
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: %s"
 msgid "Line %1$d: %2$s"
 msgstr "লাইন %d: %s"
 
 #. 1: line number, 2: location slug, 3: error message
 #: includes/class-stock-central-import-export.php:1568
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: failed to create location %s (%s)."
 msgid "Line %1$d: failed to create location %2$s (%3$s)."
 msgstr "লাইন %d: অবস্থান %s তৈরি করতে ব্যর্থ হয়েছে (%s)।"
 
 #. 1: line number, 2: term slug, 3: error message
 #: includes/class-stock-central-import-export.php:1441
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: failed to create term %s (%s)."
 msgid "Line %1$d: failed to create term %2$s (%3$s)."
 msgstr "লাইন %d: পদ %s (%s) তৈরি করতে ব্যর্থ হয়েছে।"
 
 #. 1: line number, 2: invalid location ID
 #: admin/import-export-settings.php:754
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: Invalid location ID %d."
 msgid "Line %1$d: Invalid location ID %2$d."
 msgstr "লাইন %d: অবৈধ লোকেশন আইডি %d।"
 
 #. 1: line number, 2: invalid location slug
 #: admin/import-export-settings.php:764
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: Invalid location slug \"%s\"."
 msgid "Line %1$d: Invalid location slug \"%2$s\"."
 msgstr "লাইন %d: অবৈধ লোকেশন স্লাগ \"%s\"।"
 
 #. 1: line number, 2: location slug
 #: includes/class-stock-central-import-export.php:1988
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: location %s could not be resolved."
 msgid "Line %1$d: location %2$s could not be resolved."
 msgstr "লাইন %d: অবস্থান %s সমাধান করা যায়নি।"
 
 #. 1: line number, 2: location slug
 #: includes/class-stock-central-import-export.php:1559
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: location %s not found (update-only mode)."
 msgid "Line %1$d: location %2$s not found (update-only mode)."
 msgstr "লাইন %d: অবস্থান %s খুঁজে পাওয়া যায়নি (শুধুমাত্র আপডেটের মোড)।"
 
 #. 1: line number, 2: taxonomy name
 #: includes/class-stock-central-import-export.php:1420
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: taxonomy %s does not exist on target site."
 msgid "Line %1$d: taxonomy %2$s does not exist on target site."
 msgstr "লাইন %d: টার্গেট সাইটে ট্যাক্সোনমি %s বিদ্যমান নেই।"
 
 #. 1: line number, 2: term slug, 3: taxonomy name
 #: includes/class-stock-central-import-export.php:1431
-#, php-format
+#, fuzzy, php-format
 #| msgid "Line %d: term %s in %s not found (update-only mode)."
 msgid "Line %1$d: term %2$s in %3$s not found (update-only mode)."
 msgstr "লাইন %d: %s টার্মটি %s এ পাওয়া যায়নি (শুধুমাত্র আপডেট মোড)।"
@@ -5783,7 +5783,7 @@ msgstr "লোকেশন:"
 
 #. 1: location name or slug, 2: location slug
 #: multi-location-product-and-inventory-management-pro.php:14774
-#, php-format
+#, fuzzy, php-format
 #| msgid "Location: %s (%s)"
 msgid "Location: %1$s (%2$s)"
 msgstr "লোকেশন: %s (%s)"
@@ -5911,7 +5911,7 @@ msgstr ""
 
 #. 1: product title, 2: location name
 #: admin/dashboard.php:4162
-#, php-format
+#, fuzzy, php-format
 #| msgid "Low stock: %s (%s)"
 msgid "Low stock: %1$s (%2$s)"
 msgstr "কম স্টক: %s (%s)"
@@ -6125,7 +6125,7 @@ msgstr "মিডিয়া রেফারেন্স সারিগুল�
 
 #. 1: media URL, 2: error message
 #: includes/class-stock-central-import-export.php:2097
-#, php-format
+#, fuzzy, php-format
 #| msgid "Media sideload failed for %s: %s"
 msgid "Media sideload failed for %1$s: %2$s"
 msgstr "%s এর জন্য মিডিয়া সাইডলোড ব্যর্থ হয়েছে: %s"
@@ -6286,14 +6286,14 @@ msgstr "নতুন লোকেশনের নাম"
 
 #. 1: order number, 2: location name
 #: multi-location-product-and-inventory-management-pro.php:13777
-#, php-format
+#, fuzzy, php-format
 #| msgid "New order #%s at %s"
 msgid "New order #%1$s at %2$s"
 msgstr "নতুন অর্ডার #%s এ %s"
 
 #. 1: order number, 2: formatted order total
 #: admin/dashboard.php:4136
-#, php-format
+#, fuzzy, php-format
 #| msgid "New order #%s placed - %s"
 msgid "New order #%1$s placed - %2$s"
 msgstr "নতুন অর্ডার #%s সম্পন্ন হয়েছে - %s"
@@ -6864,7 +6864,7 @@ msgstr "অর্ডার"
 
 #. 1: order number, 2: order total, 3: location name
 #: multi-location-product-and-inventory-management-pro.php:13802
-#, php-format
+#, fuzzy, php-format
 #| msgid "Order #%s | Total: %s | Location: %s"
 msgid "Order #%1$s | Total: %2$s | Location: %3$s"
 msgstr "অর্ডার #%s | মোট: %s | অবস্থান: %s"
@@ -6920,7 +6920,7 @@ msgstr "অর্ডার আইডি এবং অবস্থান প্�
 
 #. 1: old location name, 2: new location name
 #: multi-location-product-and-inventory-management-pro.php:5121
-#, php-format
+#, fuzzy, php-format
 #| msgid "Order item location changed from %s to %s"
 msgid "Order item location changed from %1$s to %2$s"
 msgstr "অর্ডার আইটেমের অবস্থান %s থেকে %s-এ পরিবর্তিত হয়েছে"
@@ -6931,7 +6931,7 @@ msgstr "অর্ডার আইটেম পাওয়া যায়নি
 
 #. 1: product name, 2: location name, 3: old quantity, 4: new quantity, 5: old stock, 6: new stock
 #: multi-location-product-and-inventory-management-pro.php:5365
-#, php-format
+#, fuzzy, php-format
 #| msgid ""
 #| "Order item quantity changed for %s at %s location: %d → %d (Stock: %d → "
 #| "%d)"
@@ -7004,7 +7004,7 @@ msgstr "অর্ডার নির্বাচিত"
 
 #. 1: order count, 2: item count, 3: formatted revenue
 #: multi-location-product-and-inventory-management-pro.php:13968
-#, php-format
+#, fuzzy, php-format
 #| msgid "Orders: %d | Items: %d | Revenue: %s"
 msgid "Orders: %1$d | Items: %2$d | Revenue: %3$s"
 msgstr "অর্ডার: %d | আইটেম: %d | আয়: %s"
@@ -7084,7 +7084,7 @@ msgstr ""
 
 #. 1: product title, 2: location name
 #: admin/dashboard.php:4189
-#, php-format
+#, fuzzy, php-format
 #| msgid "Out of stock: %s (%s)"
 msgid "Out of stock: %1$s (%2$s)"
 msgstr "স্টক শেষ: %s (%s)"
@@ -7760,7 +7760,7 @@ msgstr "প্রো সংস্করণ"
 
 #. 1: total items, 2: succeeded count, 3: failed count
 #: includes/api/inventory-sync-api.php:185
-#, php-format
+#, fuzzy, php-format
 #| msgid "Processed %d items. %d succeeded, %d failed."
 msgid "Processed %1$d items. %2$d succeeded, %3$d failed."
 msgstr "%d টি আইটেম প্রক্রিয়াকৃত হয়েছে। %d সফল হয়েছে, %d ব্যর্থ হয়েছে।"
@@ -10512,7 +10512,7 @@ msgstr "মোট বিনিয়োগ"
 
 #. 1: total location stock, 2: default stock quantity
 #: multi-location-product-and-inventory-management-pro.php:7415
-#, php-format
+#, fuzzy, php-format
 #| msgid ""
 #| "Total location stock (%s) cannot be greater than default stock quantity "
 #| "(%s)"
@@ -10585,7 +10585,7 @@ msgstr ""
 
 #. 1: order total, 2: status label, 3: item count
 #: multi-location-product-and-inventory-management-pro.php:13780
-#, php-format
+#, fuzzy, php-format
 #| msgid "Total: %s | Status: %s | Items: %d"
 msgid "Total: %1$s | Status: %2$s | Items: %3$d"
 msgstr "মোট: %s | অবস্থা: %s | আইটেম: %d"
@@ -10602,7 +10602,7 @@ msgstr "সম্পূর্ণভাবে সীমাবদ্ধ করু�
 
 #. 1: order count, 2: item count, 3: formatted revenue
 #: multi-location-product-and-inventory-management-pro.php:14254
-#, php-format
+#, fuzzy, php-format
 #| msgid "Totals - Orders: %d | Items: %d | Revenue: %s"
 msgid "Totals - Orders: %1$d | Items: %2$d | Revenue: %3$s"
 msgstr "মোট - অর্ডার: %d | আইটেম: %d | রাজস্ব: %s"
@@ -10786,7 +10786,7 @@ msgstr ""
 
 #. 1: schema version string, 2: supported major version number
 #: includes/class-stock-central-import-export.php:1122
-#, php-format
+#, fuzzy, php-format
 #| msgid "Unsupported schema version %s. Supported major version is %d."
 msgid "Unsupported schema version %1$s. Supported major version is %2$d."
 msgstr "অসমর্থিত স্কিমা সংস্করণ %s। সমর্থিত প্রধান সংস্করণ হল %d।"
@@ -11090,7 +11090,7 @@ msgstr "ভ্যারিয়েশন স্টক লেবেল"
 
 #. 1: total location stock, 2: default stock quantity
 #: multi-location-product-and-inventory-management-pro.php:7416
-#, php-format
+#, fuzzy, php-format
 #| msgid ""
 #| "Variation: Total location stock (%s) cannot be greater than default stock "
 #| "quantity (%s)"
@@ -11172,7 +11172,7 @@ msgstr "ভিউ"
 
 #. 1: view count, 2: purchase count
 #: includes/text-management.php:881
-#, php-format
+#, fuzzy, php-format
 #| msgid "Views: %d | Purchases: %d"
 msgid "Views: %1$d | Purchases: %2$d"
 msgstr ""
@@ -11214,7 +11214,7 @@ msgstr ""
 
 #. 1: site name, 2: site URL
 #: multi-location-product-and-inventory-management-pro.php:14089
-#, php-format
+#, fuzzy, php-format
 #| msgid "We could not reach %s at %s."
 msgid "We could not reach %1$s at %2$s."
 msgstr "আমরা %s-কে %s-এ পৌঁছাতে পারিনি।"
