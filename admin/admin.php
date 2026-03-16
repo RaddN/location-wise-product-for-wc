@@ -5979,16 +5979,16 @@ JS;
                     $label .= ' - ' . $summary_text;
                 }
 
-                $disabled = '';
+                $is_disabled = false;
                 // Disable if stock status is insufficient or location is not assigned.
                 if (isset($summary['status']) && in_array($summary['status'], ['insufficient', 'not-assigned'], true)) {
-                    $disabled = 'disabled';
+                    $is_disabled = true;
                 }
                 echo '<option value="' . esc_attr($location_term->slug) . '" ' . selected($location_slug, $location_term->slug, false) .
                     ' data-stock-status="' . esc_attr($summary['status'] ?? '') . '"' .
                     ' data-stock-summary="' . esc_attr($summary_text) . '"' .
                     ' data-stock-items="' . esc_attr(wp_json_encode($summary['items'] ?? [])) . '" ' .
-                    $disabled .
+                    disabled($is_disabled, true, false) .
                     '>';
                 echo esc_html($label);
                 echo '</option>';
