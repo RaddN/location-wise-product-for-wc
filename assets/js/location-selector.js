@@ -248,6 +248,9 @@
 
             const fallbackReload = () => {
                 this.setLocationCookie(location);
+                if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.prepareCartContextRefresh === 'function') {
+                    window.mulopimfwcLocationSwitch.prepareCartContextRefresh(location);
+                }
                 // Perform a hard reload, ensuring any potential form data is not resubmitted
                 if (window.location.href.indexOf('//' + window.location.host + window.location.pathname) !== -1) {
                     // Remove query and hash for a clean reload to prevent form resubmission prompt
@@ -297,6 +300,9 @@
                         var url = window.location.origin + window.location.pathname;
                         var separator = '?';
                         url += separator + 'mulopimfwc_loc=' + encodeURIComponent(location) + '&_t=' + Date.now();
+                        if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.prepareCartContextRefresh === 'function') {
+                            window.mulopimfwcLocationSwitch.prepareCartContextRefresh(location);
+                        }
                         window.location.replace(url);
                         return;
                     }

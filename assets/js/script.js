@@ -2,6 +2,8 @@ jQuery(document).ready(function ($) {
     const modal = document.getElementById('lwp-store-selector-modal');
     const modalSubmit = document.getElementById('lwp-store-selector-submit');
     const COOKIE_MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const CART_CONTEXT_LOCATION_KEY = 'mulopimfwc_cart_context_location';
+    const CART_CONTEXT_PENDING_KEY = 'mulopimfwc_cart_context_refresh_pending';
     const locationSettings = window.mulopimfwc_locationWiseProducts || {};
     const i18n = locationSettings.i18n || {};
     const selectStoreAlert = i18n.selectStore || 'Please select a store.';
@@ -85,6 +87,148 @@ jQuery(document).ready(function ($) {
     function setPluginCookie(name, value) {
         const expiryDate = new Date(Date.now() + getLocationCookieExpiryDays() * COOKIE_MS_PER_DAY);
         document.cookie = buildCookieString(name, value, expiryDate);
+    }
+
+    function safeStorageGet(storage, key) {
+        if (!storage || !key) {
+            return '';
+        }
+        try {
+            return storage.getItem(key) || '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function safeStorageSet(storage, key, value) {
+        if (!storage || !key) {
+            return;
+        }
+        try {
+            storage.setItem(key, value);
+        } catch (e) {
+            // Ignore storage write failures.
+        }
+    }
+
+    function safeStorageRemove(storage, key) {
+        if (!storage || !key) {
+            return;
+        }
+        try {
+            storage.removeItem(key);
+        } catch (e) {
+            // Ignore storage remove failures.
+        }
+    }
+
+    function getCurrentLocationContext(nextLocation) {
+        const explicitLocation = normalizeLocationSlug(nextLocation || '');
+        if (explicitLocation) {
+            return explicitLocation;
+        }
+
+        const cookieLocation = normalizeLocationSlug(getCookie(getStoreCookieName()) || '');
+        if (cookieLocation) {
+            return cookieLocation;
+        }
+
+        return normalizeLocationSlug(locationSettings.currentLocation || '');
+    }
+
+    function getWooFragmentCacheKeys(storage) {
+        const keys = new Set(['wc_cart_created']);
+        const fragmentParams = window.wc_cart_fragments_params || {};
+
+        if (fragmentParams.cart_hash_key) {
+            keys.add(fragmentParams.cart_hash_key);
+        }
+        if (fragmentParams.fragment_name) {
+            keys.add(fragmentParams.fragment_name);
+        }
+
+        if (storage && typeof storage.length === 'number' && typeof storage.key === 'function') {
+            for (let i = 0; i < storage.length; i += 1) {
+                const key = storage.key(i);
+                if (key && /^(wc_cart_hash_|wc_fragments_)/.test(key)) {
+                    keys.add(key);
+                }
+            }
+        }
+
+        return Array.from(keys);
+    }
+
+    function clearWooFragmentStorage() {
+        [window.sessionStorage, window.localStorage].forEach(function (storage) {
+            getWooFragmentCacheKeys(storage).forEach(function (key) {
+                safeStorageRemove(storage, key);
+            });
+        });
+    }
+
+    function invalidateWooBlocksCartStore() {
+        const data = window.wp && window.wp.data;
+        if (!data || !data.dispatch) {
+            return;
+        }
+
+        ['wc/store/cart', 'wc/store'].forEach(function (storeName) {
+            try {
+                const store = data.dispatch(storeName);
+                if (store && typeof store.invalidateResolutionForStoreSelector === 'function') {
+                    store.invalidateResolutionForStoreSelector('getCartData');
+                    store.invalidateResolutionForStoreSelector('getCartTotals');
+                }
+            } catch (e) {
+                // Ignore missing Woo Blocks stores.
+            }
+        });
+    }
+
+    function scheduleCartContextRefresh() {
+        clearWooFragmentStorage();
+
+        setTimeout(function () {
+            invalidateWooBlocksCartStore();
+
+            if (window.jQuery) {
+                $(document.body).trigger('wc_fragment_refresh');
+                $(document.body).trigger('update_checkout');
+                $(document.body).trigger('updated_wc_div');
+                $(document.body).trigger('wc_update_cart');
+            }
+        }, 60);
+    }
+
+    function prepareCartContextRefresh(nextLocation) {
+        const locationToken = getCurrentLocationContext(nextLocation) || '__empty__';
+
+        clearWooFragmentStorage();
+        safeStorageSet(window.sessionStorage, CART_CONTEXT_PENDING_KEY, locationToken);
+        safeStorageSet(window.localStorage, CART_CONTEXT_PENDING_KEY, locationToken);
+    }
+
+    function maybeRefreshCartContextAfterLocationChange() {
+        const locationToken = getCurrentLocationContext() || '__empty__';
+        const storedLocation =
+            safeStorageGet(window.localStorage, CART_CONTEXT_LOCATION_KEY) ||
+            safeStorageGet(window.sessionStorage, CART_CONTEXT_LOCATION_KEY) ||
+            '';
+        const pendingLocation =
+            safeStorageGet(window.sessionStorage, CART_CONTEXT_PENDING_KEY) ||
+            safeStorageGet(window.localStorage, CART_CONTEXT_PENDING_KEY) ||
+            '';
+        const shouldRefresh = !!pendingLocation || storedLocation !== locationToken;
+
+        safeStorageSet(window.localStorage, CART_CONTEXT_LOCATION_KEY, locationToken);
+        safeStorageSet(window.sessionStorage, CART_CONTEXT_LOCATION_KEY, locationToken);
+        safeStorageRemove(window.sessionStorage, CART_CONTEXT_PENDING_KEY);
+        safeStorageRemove(window.localStorage, CART_CONTEXT_PENDING_KEY);
+
+        if (shouldRefresh) {
+            scheduleCartContextRefresh();
+        }
     }
 
     // Function to check if the cart has products
@@ -284,6 +428,8 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    maybeRefreshCartContextAfterLocationChange();
+
     let locationChangeInProgress = false;
 
     function isSpecializedPopupModal($modal) {
@@ -341,6 +487,7 @@ jQuery(document).ready(function ($) {
 
         setPluginCookie(getStoreCookieName(), selectedStore);
         syncSelectedUserLocation(selectedStore, config.locationLabel, config.locationId);
+        prepareCartContextRefresh(selectedStore);
         closeLocationModal(config.$modal);
         window.location.href = buildLocationReloadUrl(selectedStore);
     }
@@ -380,6 +527,7 @@ jQuery(document).ready(function ($) {
                         alert(message);
                     }
 
+                    prepareCartContextRefresh(selectedStore);
                     window.location.replace(buildLocationReloadUrl(selectedStore));
                     return;
                 }
@@ -468,6 +616,7 @@ jQuery(document).ready(function ($) {
 
     window.mulopimfwcLocationSwitch = {
         selectLocation: applyLocationSelection,
+        prepareCartContextRefresh: prepareCartContextRefresh,
         isSwitching: function () {
             return locationChangeInProgress;
         }
@@ -603,6 +752,7 @@ jQuery(document).ready(function ($) {
         if (selectedStore === 'all-products') {
             setPluginCookie(storeCookieName, 'all-products');
             setPluginCookie('mulopimfwc_user_location', 'all-products');
+            prepareCartContextRefresh('all-products');
             location.reload();
             return;
         }
@@ -635,6 +785,7 @@ jQuery(document).ready(function ($) {
                 } else if (hasSavedLocationItems()) {
                     clearPluginCookie('mulopimfwc_user_location');
                 }
+                prepareCartContextRefresh(selectedStore);
                 clearCartAndReload();
             });
         } else {
@@ -646,6 +797,7 @@ jQuery(document).ready(function ($) {
                 clearPluginCookie('mulopimfwc_user_location');
             }
             // Reload with cache-busting parameter
+            prepareCartContextRefresh(selectedStore);
             var url = window.location.href.split('?')[0];
             var separator = '?';
             url += separator + 'mulopimfwc_loc=' + encodeURIComponent(selectedStore) + '&_t=' + Date.now();

@@ -2371,6 +2371,9 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     var url = window.location.href.split('?')[0];
                     var separator = '?';
                     var location = this.getStoreLocation() || this.getUserLocation() || '';
+                    if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.prepareCartContextRefresh === 'function') {
+                        window.mulopimfwcLocationSwitch.prepareCartContextRefresh(location);
+                    }
                     if (location) {
                         url += separator + 'mulopimfwc_loc=' + encodeURIComponent(location) + '&_t=' + Date.now();
                     } else {
