@@ -1,4 +1,7 @@
 jQuery(function ($) {
+    const locationI18n = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.i18n) || {};
+    const selectStoreLocationAlert = locationI18n.selectStoreLocation || 'Please select a store location.';
+
     // Function to initialize modern popup modals
     function initializeModernPopups() {
         // Handle all modern popup modals (including instance-specific ones)
@@ -552,11 +555,30 @@ jQuery(function ($) {
             }
         });
 
-        $modal.on('click', '.lwp-modern-location-select', function () {
-            var slug = $(this).data('slug');
+        $modal.on('click', '.lwp-modern-location-select', function (event) {
+            event.preventDefault();
+
+            var $button = $(this);
+            var slug = $button.data('slug');
             if (!slug) {
+                alert(selectStoreLocationAlert);
                 return;
             }
+
+            if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.selectLocation === 'function') {
+                var selectedLabel = $.trim(
+                    $button.data('label') ||
+                    $button.closest('[data-slug], .lwp-modern-location-card, .lwp-modern-location-item, .lwp-modern-popup__location').find('h3, h4, .lwp-modern-location-name').first().text()
+                );
+
+                window.mulopimfwcLocationSwitch.selectLocation(slug, {
+                    $modal: $modal,
+                    locationLabel: selectedLabel,
+                    emptySelectionMessage: selectStoreLocationAlert
+                });
+                return;
+            }
+
             setPluginCookie('mulopimfwc_store_location', slug);
             $modal.hide();
             $('body').removeClass('mulopimfwc-modal-open');

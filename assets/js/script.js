@@ -284,8 +284,201 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    let locationChangeInProgress = false;
+
+    function isSpecializedPopupModal($modal) {
+        return !!(
+            $modal &&
+            $modal.length &&
+            (
+                $modal.hasClass('lwp-location-info-popup') ||
+                $modal.hasClass('lwp-classic-popup') ||
+                $modal.hasClass('lwp-modern-popup')
+            )
+        );
+    }
+
+    function buildLocationReloadUrl(selectedStore) {
+        var url = window.location.href.split('?')[0];
+        var separator = url.indexOf('?') !== -1 ? '&' : '?';
+
+        if (selectedStore) {
+            url += separator + 'mulopimfwc_loc=' + encodeURIComponent(selectedStore) + '&_t=' + Date.now();
+        } else {
+            url += separator + '_t=' + Date.now();
+        }
+
+        return url;
+    }
+
+    function closeLocationModal($modal) {
+        if ($modal && $modal.length) {
+            $modal.hide();
+        }
+        syncModalScrollLock();
+    }
+
+    function syncSelectedUserLocation(selectedStore, locationLabel, explicitLocationId) {
+        if (selectedStore === 'all-products') {
+            setPluginCookie('mulopimfwc_user_location', 'all-products');
+            return;
+        }
+
+        const resolvedLocationId =
+            explicitLocationId ||
+            consumeForcedUserLocationId(selectedStore) ||
+            findMatchingSavedLocationId(selectedStore, locationLabel || '');
+
+        if (resolvedLocationId) {
+            setPluginCookie('mulopimfwc_user_location', resolvedLocationId);
+        } else if (hasSavedLocationItems()) {
+            clearPluginCookie('mulopimfwc_user_location');
+        }
+    }
+
+    function fallbackLocationReload(selectedStore, options) {
+        const config = options || {};
+
+        setPluginCookie(getStoreCookieName(), selectedStore);
+        syncSelectedUserLocation(selectedStore, config.locationLabel, config.locationId);
+        closeLocationModal(config.$modal);
+        window.location.href = buildLocationReloadUrl(selectedStore);
+    }
+
+    function performAjaxLocationSwitch(selectedStore, options) {
+        const config = options || {};
+        const ajaxUrl = getAjaxUrl();
+        const behavior = locationSettings.location_switching_behavior || 'update_cart';
+        const requiresCleanup = locationSettings.allow_mixed_in_cart !== 'on' && behavior !== 'preserve_cart';
+
+        if (!ajaxUrl) {
+            fallbackLocationReload(selectedStore, config);
+            return;
+        }
+
+        $.ajax({
+            url: ajaxUrl,
+            method: 'POST',
+            data: {
+                action: 'mulopimfwc_switch_location',
+                nonce: locationSettings.nonce || '',
+                location: selectedStore
+            },
+            success: function (response) {
+                if (response && response.success) {
+                    syncSelectedUserLocation(selectedStore, config.locationLabel, config.locationId);
+                    closeLocationModal(config.$modal);
+
+                    var removedItems = response.data && response.data.removed_items ? response.data.removed_items : [];
+                    if (removedItems.length) {
+                        const template = i18n.cartRemovedItems ||
+                            'The following items were removed because they are not available at the selected location: %s';
+                        const itemsText = removedItems.join(', ');
+                        const message = template.indexOf('%s') !== -1
+                            ? template.replace('%s', itemsText)
+                            : template + ' ' + itemsText;
+                        alert(message);
+                    }
+
+                    window.location.replace(buildLocationReloadUrl(selectedStore));
+                    return;
+                }
+
+                locationChangeInProgress = false;
+                alert(
+                    (response && response.data && response.data.message) ||
+                    i18n.cartUnableChange ||
+                    'Unable to change location. Please try again.'
+                );
+            },
+            error: function () {
+                if (!requiresCleanup) {
+                    fallbackLocationReload(selectedStore, config);
+                    return;
+                }
+
+                locationChangeInProgress = false;
+                alert(i18n.cartUnableChangeNow || 'Unable to change location right now. Please try again.');
+            }
+        });
+    }
+
+    function applyLocationSelection(selectedStore, options) {
+        const config = options || {};
+        const selectedLocation = (selectedStore || '').toString().trim();
+        const previousLocation = getCookie(getStoreCookieName());
+
+        if (!selectedLocation) {
+            alert(config.emptySelectionMessage || selectStoreLocationAlert);
+            return false;
+        }
+
+        if (locationChangeInProgress) {
+            return false;
+        }
+        locationChangeInProgress = true;
+
+        if (normalizeLocationSlug(previousLocation) === normalizeLocationSlug(selectedLocation)) {
+            closeLocationModal(config.$modal);
+            locationChangeInProgress = false;
+            return true;
+        }
+
+        const allowMixed = locationSettings.allow_mixed_in_cart === 'on';
+        const behavior = locationSettings.location_switching_behavior || 'update_cart';
+        const shouldUpdateCart = !allowMixed && behavior !== 'preserve_cart';
+
+        const proceed = function () {
+            if (!shouldUpdateCart) {
+                fallbackLocationReload(selectedLocation, config);
+                return;
+            }
+
+            performAjaxLocationSwitch(selectedLocation, config);
+        };
+
+        if (!shouldUpdateCart) {
+            proceed();
+            return true;
+        }
+
+        checkCartHasProducts(function (cartHasProducts) {
+            if (!cartHasProducts) {
+                proceed();
+                return;
+            }
+
+            const shouldPrompt = behavior === 'prompt_user' || !!locationSettings.location_change_notification;
+            if (shouldPrompt) {
+                const message =
+                    locationSettings.location_notification_text ||
+                    'Do you want to change the store location? Your cart will be updated.';
+                const confirmed = window.confirm(message);
+                if (!confirmed) {
+                    locationChangeInProgress = false;
+                    return;
+                }
+            }
+
+            proceed();
+        });
+
+        return true;
+    }
+
+    window.mulopimfwcLocationSwitch = {
+        selectLocation: applyLocationSelection,
+        isSwitching: function () {
+            return locationChangeInProgress;
+        }
+    };
+
     // Modal logic for changing store location (works for both global and instance-specific modals)
     function handleModalSubmit($modal) {
+        if (isSpecializedPopupModal($modal)) {
+            return;
+        }
+
         var $submitBtn = $modal.find('#lwp-store-selector-submit');
         var $dropdown = $modal.find('#lwp-selected-store');
         
@@ -293,37 +486,25 @@ jQuery(document).ready(function ($) {
             $submitBtn.off('click.mulopimfwc').on('click.mulopimfwc', function(e) {
                 e.preventDefault();
                 var selectedStore = $dropdown.val();
-                if (selectedStore) {
-                    setPluginCookie(getStoreCookieName(), selectedStore);
-                    $modal.css('display', 'none');
-                    syncModalScrollLock();
-                    location.reload();
-                } else {
+                if (!selectedStore) {
                     alert(selectStoreAlert);
+                    return;
                 }
+
+                var $selectedOption = $dropdown.is('select') ? $dropdown.find('option:selected') : $();
+                applyLocationSelection(selectedStore, {
+                    $modal: $modal,
+                    locationLabel: $selectedOption.length ? ($selectedOption.text() || '') : '',
+                    locationId: $selectedOption.length ? ($selectedOption.data('location-id') || '') : '',
+                    emptySelectionMessage: selectStoreAlert
+                });
             });
         }
     }
 
-    // Handle global modal (backward compatibility)
-    if (modal && modalSubmit) {
-        modalSubmit.addEventListener('click', function () {
-            const modalDropdown = document.getElementById('lwp-selected-store');
-            const selectedStore = modalDropdown.value;
-            if (selectedStore) {
-                setPluginCookie(getStoreCookieName(), selectedStore);
-                modal.style.display = 'none';
-                syncModalScrollLock();
-                location.reload();
-            } else {
-                alert(selectStoreAlert);
-            }
-        });
-    }
-
     // Handle instance-specific modals that are already in the DOM
     setTimeout(function() {
-        $('#lwp-store-selector-modal').each(function() {
+        $('[id^="lwp-store-selector-modal"]').each(function() {
             var $modal = $(this);
             if (!$modal.data('mulopimfwc-handled')) {
                 handleModalSubmit($modal);

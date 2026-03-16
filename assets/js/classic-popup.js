@@ -335,6 +335,25 @@ jQuery(function ($) {
             alert(selectStoreLocationAlert);
             return;
         }
+
+        if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.selectLocation === 'function') {
+            var $activeItem = $items.filter('.selected').first();
+            var selectedLabel = '';
+
+            if ($activeItem.length) {
+                selectedLabel = $.trim(
+                    $activeItem.data('name') ||
+                    $activeItem.find('.lwp-classic-location-name, .lwp-classic-name, h3, h4').first().text()
+                );
+            }
+
+            window.mulopimfwcLocationSwitch.selectLocation(slug, {
+                $modal: $modal,
+                locationLabel: selectedLabel,
+                emptySelectionMessage: selectStoreLocationAlert
+            });
+            return;
+        }
         
         // Set cookie
         var cookieDays = 30;

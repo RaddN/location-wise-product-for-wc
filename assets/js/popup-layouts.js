@@ -144,6 +144,25 @@ jQuery(function ($) {
             alert(selectStoreLocationAlert);
             return;
         }
+
+        if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.selectLocation === 'function') {
+            var $selectedItem = $modal.find('.mulopimfwc-tab-item.is-selected, .mulopimfwc-grid-location-item.is-selected').first();
+            var selectedLabel = '';
+
+            if ($selectedItem.length) {
+                selectedLabel = $.trim(
+                    $selectedItem.data('name') ||
+                    $selectedItem.find('.mulopimfwc-tab-title, .mulopimfwc-grid-location-title, h3, h4').first().text()
+                );
+            }
+
+            window.mulopimfwcLocationSwitch.selectLocation(slug, {
+                $modal: $modal,
+                locationLabel: selectedLabel,
+                emptySelectionMessage: selectStoreLocationAlert
+            });
+            return;
+        }
         
         // Set cookie
         var cookieDays = 30;
