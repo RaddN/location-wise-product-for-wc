@@ -52,7 +52,7 @@ class mulopimfwc_License_Manager
                 wp_enqueue_script('jquery');
             ?>
                 <script type="text/javascript">
-                    var ajaxurl = "<?php echo admin_url('admin-ajax.php'); ?>";
+                    var ajaxurl = "<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>";
                 </script>
         <?php
             }
@@ -602,7 +602,7 @@ class mulopimfwc_License_Manager
                 $message = $this->get_remote_deactivation_message($remote_deactivation_status);
                 echo '<div class="notice notice-error is-dismissible">';
                 echo '<p><strong>License Alert:</strong> ' . esc_html($message) . '</p>';
-                echo '<p><a href="' . admin_url('admin.php?page=multi-location-product-and-inventory-management-settings#license-settings') . '">Manage License</a> | ';
+                echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=multi-location-product-and-inventory-management-settings#license-settings' ) ) . '">Manage License</a> | ';
                 echo '<a href="https://plugincy.com/support" target="_blank">Contact Support</a></p>';
                 echo '</div>';
             }
@@ -616,7 +616,7 @@ class mulopimfwc_License_Manager
                 echo '<div class="notice notice-info is-dismissible">';
                 echo '<p><strong>Multi Location Product & Inventory Management for WooCommerce Pro Update Available!</strong></p>';
                 echo '<p>Version ' . esc_html($update_info->new_version) . ' is now available. ';
-                echo '<a href="' . admin_url('plugins.php') . '?force_check_updates=1">Update now</a> to get the latest features and improvements.</p>';
+                echo '<a href="' . esc_url( add_query_arg( 'force_check_updates', '1', admin_url( 'plugins.php' ) ) ) . '">Update now</a> to get the latest features and improvements.</p>';
                 echo '</div>';
             }
         }
@@ -754,7 +754,7 @@ class mulopimfwc_License_Manager
                                             <br>
                                             <span style="color: #d63384; font-weight: bold; display: flex; align-items: center; gap: 6px; justify-content: space-between;">
                                                 <div><span class="dashicons dashicons-warning" style="color: #d63384; font-size: 16px;"></span>
-                                                    <?php echo esc_html__('Update Available!', 'multi-location-product-and-inventory-management-pro'); ?></div> <a href="<?php echo admin_url('plugins.php'); ?>" class="button button-primary"><?php echo esc_html__('Update Now', 'multi-location-product-and-inventory-management-pro'); ?></a>
+                                                    <?php echo esc_html__('Update Available!', 'multi-location-product-and-inventory-management-pro'); ?></div> <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>" class="button button-primary"><?php echo esc_html__('Update Now', 'multi-location-product-and-inventory-management-pro'); ?></a>
                                             </span>
                                         <?php else: ?>
                                             <br>
