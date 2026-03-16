@@ -1704,7 +1704,7 @@ class MULOPIMFWC_Import_Export_V2_Service
                     $schema_error = $this->legacy->validate_schema_for_v2($headers, array($assoc));
                     if ($schema_error !== '') {
                         fclose($handle);
-                        throw new Exception($schema_error);
+                        throw new Exception(esc_html($schema_error));
                     }
                 }
 
