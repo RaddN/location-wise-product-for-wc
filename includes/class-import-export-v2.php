@@ -3093,6 +3093,7 @@ class MULOPIMFWC_Import_Export_V2_Service
             if ($chunk === false) {
                 break;
             }
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Raw binary file streaming must not be escaped.
             echo $chunk;
             $remaining -= strlen($chunk);
             if (function_exists('fastcgi_finish_request')) {
