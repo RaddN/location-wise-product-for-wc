@@ -539,7 +539,7 @@ class MULOPIMFWC_Dashboard
                             <?php echo esc_html__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management-pro'); ?>
                         </h1>
                         <div style="font-size: 10pt; color: #ffffff; line-height: 1.5;">
-                            <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo gmdate('l, F d, Y - H:i:s'); ?></div>
+                            <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html( gmdate( 'l, F d, Y - H:i:s' ) ); ?></div>
                             <div><strong><?php echo esc_html__('Store:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html(get_bloginfo('name')); ?></div>
                             <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($this->get_dashboard_reporting_currency_code()); ?></div>
                         </div>
@@ -608,8 +608,8 @@ class MULOPIMFWC_Dashboard
                 foreach ($locations_with_default as $loc_name) {
                     $count = isset($product_counts[$loc_name]) ? $product_counts[$loc_name] : 0;
                     $percentage = $total_products > 0 ? round(($count / $total_products) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
-                    echo '<tr' . $row_class . '>';
+                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
                     echo '<td>' . esc_html($loc_name) . '</td>';
                     echo '<td>' . esc_html(number_format($count)) . '</td>';
                     echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
@@ -640,8 +640,8 @@ class MULOPIMFWC_Dashboard
                 foreach ($locations_with_default as $loc_name) {
                     $count = isset($stock_levels[$loc_name]) ? $stock_levels[$loc_name] : 0;
                     $percentage = $total_stocks > 0 ? round(($count / $total_stocks) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
-                    echo '<tr' . $row_class . '>';
+                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
                     echo '<td>' . esc_html($loc_name) . '</td>';
                     echo '<td>' . esc_html(number_format($count)) . '</td>';
                     echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
@@ -671,8 +671,8 @@ class MULOPIMFWC_Dashboard
                 $row_count = 0;
                 foreach ($orders_data['orders'] as $location => $orders) {
                     $percentage = $total_orders > 0 ? round(($orders / $total_orders) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
-                    echo '<tr' . $row_class . '>';
+                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
                     echo '<td>' . esc_html($location) . '</td>';
                     echo '<td>' . esc_html(number_format($orders)) . '</td>';
                     echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
@@ -702,8 +702,8 @@ class MULOPIMFWC_Dashboard
                 $row_count = 0;
                 foreach ($orders_data['revenue'] as $location => $revenue) {
                     $percentage = $total_revenue > 0 ? round(($revenue / $total_revenue) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
-                    echo '<tr' . $row_class . '>';
+                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
                     echo '<td>' . esc_html($location) . '</td>';
                     echo '<td>' . esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($revenue, 2)) . '</td>';
                     echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
@@ -737,9 +737,9 @@ class MULOPIMFWC_Dashboard
                     <?php
                     $row_count = 0;
                     foreach ($profitability_data_export as $summary) :
-                        $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                        $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
                     ?>
-                        <tr<?php echo $row_class; ?>>
+                        <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
                             <td><?php echo esc_html($summary['location_name']); ?></td>
                             <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['inventory_value'], 2)); ?></td>
                             <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['margin_value'], 2)); ?></td>
@@ -776,10 +776,10 @@ class MULOPIMFWC_Dashboard
                     <?php
                     $row_count = 0;
                     foreach ($low_stock_products as $item) :
-                        $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                        $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
                         $is_out_of_stock = isset($item['status']) && $item['status'] === 'out_of_stock';
                     ?>
-                        <tr<?php echo $row_class; ?>>
+                        <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
                             <td><?php echo esc_html($item['product_title']); ?></td>
                             <td><?php echo esc_html($item['location_name']); ?></td>
                             <td class="<?php echo $is_out_of_stock ? 'stock-out' : 'stock-low'; ?>">
@@ -819,9 +819,9 @@ class MULOPIMFWC_Dashboard
                 <?php
                 $row_count = 0;
                 foreach ($recent_matrix['labels'] as $i => $label) :
-                    $row_class = ($row_count % 2 == 1) ? ' class="even-row"' : '';
+                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
                 ?>
-                    <tr<?php echo $row_class; ?>>
+                    <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
                         <td><?php echo esc_html($label); ?></td>
                         <?php foreach ($locations as $loc_name) : ?>
                             <td><?php echo esc_html(isset($recent_matrix['columns'][$loc_name][$i]) ? $recent_matrix['columns'][$loc_name][$i] : 0); ?></td>
