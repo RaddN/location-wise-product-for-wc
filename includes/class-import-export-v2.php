@@ -1626,7 +1626,7 @@ class MULOPIMFWC_Import_Export_V2_Service
 
             $extracted_part_path = $this->extract_package_part($job_id, (string) $job['input_path'], $part_name);
             if (!file_exists($extracted_part_path)) {
-                throw new Exception('Unable to extract package part: ' . $part_name);
+                throw new Exception('Unable to extract package part: ' . esc_html($part_name));
             }
 
             if (!isset($prepare['verified_parts'][$part_name])) {
@@ -1634,7 +1634,7 @@ class MULOPIMFWC_Import_Export_V2_Service
                 if ($expected_sha !== '') {
                     $actual_sha = strtolower((string) hash_file('sha256', $extracted_part_path));
                     if (!hash_equals($expected_sha, $actual_sha)) {
-                        throw new Exception('Part checksum mismatch for ' . $part_name);
+                        throw new Exception('Part checksum mismatch for ' . esc_html($part_name));
                     }
                 }
                 $prepare['verified_parts'][$part_name] = 1;
@@ -1642,13 +1642,13 @@ class MULOPIMFWC_Import_Export_V2_Service
 
             $handle = fopen('compress.zlib://' . $extracted_part_path, 'rb');
             if (!$handle) {
-                throw new Exception('Unable to open package part: ' . $part_name);
+                throw new Exception('Unable to open package part: ' . esc_html($part_name));
             }
 
             $headers = fgetcsv($handle);
             if (!is_array($headers) || empty($headers)) {
                 fclose($handle);
-                throw new Exception('Invalid CSV part format. Header row missing: ' . $part_name);
+                throw new Exception('Invalid CSV part format. Header row missing: ' . esc_html($part_name));
             }
             $headers = array_map(function ($header) {
                 $header = str_replace("\xEF\xBB\xBF", '', (string) $header);
@@ -2081,7 +2081,7 @@ class MULOPIMFWC_Import_Export_V2_Service
         $stream = $zip->getStream($internal_name);
         if (!$stream) {
             $zip->close();
-            throw new Exception('Missing part in package ZIP: ' . basename($part_name));
+            throw new Exception('Missing part in package ZIP: ' . esc_html(basename($part_name)));
         }
         $out = fopen($target_path, 'wb');
         if (!$out) {
