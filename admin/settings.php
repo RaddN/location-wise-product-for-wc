@@ -491,8 +491,7 @@ class mulopimfwc_settings
                         "grid" => __("Grid", 'multi-location-product-and-inventory-management-pro'),
                     ];
                     foreach ($template_options as $value => $label) {
-                        $selected = ($current_template == $value) ? 'selected' : '';
-                        echo "<option value='" . esc_attr($value) . "' " . esc_attr($selected) . ">" . esc_html($label) . "</option>";
+                        echo "<option value='" . esc_attr($value) . "' " . selected( $current_template, $value, false ) . ">" . esc_html($label) . "</option>";
                     }
                     echo '</select>';
                     $description = $this->append_manual_disabled_note(__("Select the template for location selector.", 'multi-location-product-and-inventory-management-pro'));
@@ -521,9 +520,9 @@ class mulopimfwc_settings
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
-                $style = $is_default ? '' : ' style="display: none;"';
+                $style_attr = $is_default ? '' : 'display: none;';
                 if (mulopimfwc_premium_feature()) {
-                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . $style . '>';
+                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('use_select2', $options['use_select2'] ?? 'off');
                     }
@@ -531,7 +530,7 @@ class mulopimfwc_settings
                     $this->render_advance_checkbox("use_select2", $message, $is_manual_mode);
                     echo '</div>';
                 } else {
-                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . $style . '>';
+                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
                     $this->render_advance_checkbox('pro', __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management-pro'), true, false);
                     echo '</div>';
                 }
@@ -569,9 +568,9 @@ class mulopimfwc_settings
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
-                $style = $is_default ? '' : ' style="display: none;"';
+                $style_attr = $is_default ? '' : 'display: none;';
                 $value = isset($options['herichical']) ? $options['herichical'] : 'off';
-                echo '<div data-field="herichical" class="mulopimfwc-default-template-only"' . $style . '>';
+                echo '<div data-field="herichical" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('herichical', $value);
@@ -608,8 +607,8 @@ class mulopimfwc_settings
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
-                $style = $is_default ? '' : ' style="display: none;"';
-                echo '<div data-field="show_count" class="mulopimfwc-default-template-only"' . $style . '>';
+                $style_attr = $is_default ? '' : 'display: none;';
+                echo '<div data-field="show_count" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('show_count', $options['show_count'] ?? 'off');
@@ -2275,8 +2274,7 @@ sprintf(
                 <?php
                 if (!empty($locations)) {
                     foreach ($locations as $location) {
-                        $selected = selected($default_location, $location->slug, false);
-                        echo '<option value="' . esc_attr($location->slug) . '" ' . $selected . '>' . esc_html($location->name) . '</option>';
+                        echo '<option value="' . esc_attr($location->slug) . '" ' . selected( $default_location, $location->slug, false ) . '>' . esc_html($location->name) . '</option>';
                     }
                 }
                 ?>
@@ -8549,8 +8547,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             ?> <select <?php echo $disabled ? 'disabled' : ''; ?> name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]'>
                 <?php
                 foreach ($options as $value => $label) {
-                    $selected = (isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] == $value) ? 'selected' : '';
-                    echo "<option value='" . esc_attr($value) . "' " . esc_attr($selected) . ">" . esc_html($label) . "</option>";
+                    echo "<option value='" . esc_attr($value) . "' " . selected( $mulopimfwc_options[$key] ?? '', $value, false ) . ">" . esc_html($label) . "</option>";
                 }
                 ?>
             </select>
