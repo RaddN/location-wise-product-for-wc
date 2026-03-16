@@ -8452,7 +8452,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         $wrapper_style = '';
         if ($template_only === 'default') {
             $wrapper_class .= ' mulopimfwc-default-template-only';
-            $wrapper_style = ($current_template === 'default') ? '' : ' style="display:none;"';
+            $wrapper_style = ($current_template === 'default') ? '' : 'display:none;';
         }
 
         if ($manual_locked) {
@@ -8479,7 +8479,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             $tags[] = __('Pro', 'multi-location-product-and-inventory-management-pro');
         }
 
-        echo '<div class="' . esc_attr($wrapper_class) . '"' . $wrapper_style . '>';
+        echo '<div class="' . esc_attr($wrapper_class) . '"' . ( $wrapper_style ? ' style="' . esc_attr( $wrapper_style ) . '"' : '' ) . '>';
         echo '<div class="mulopimfwc-text-field__header">';
         echo '<label for="' . esc_attr($key) . '">' . esc_html($label) . '</label>';
         if (!empty($tags)) {
@@ -8514,10 +8514,10 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
     public function render_advance_checkbox($key, $message = null, $disabled = false, $is_free = true)
     {
         global $mulopimfwc_allowed_tags, $mulopimfwc_options;
-        $disabled_class = ($disabled && !in_array($key, ['pro', '_pro'], true)) ? ' mulopimfwc-setting-disabled' : '';
-        $input_class_attr = ($disabled && !in_array($key, ['pro', '_pro'], true))
-            ? ' class="mulopimfwc-setting-disabled"'
-            : '';
+        $disabled_class = ($disabled && !in_array($key, ['pro', '_pro'], true)) ? 'mulopimfwc-setting-disabled' : '';
+        $label_classes = trim(
+            'mulopimfwc_switch ' . $key . ($is_free ? '' : ' mulopimfwc_pro_only') . ($disabled_class ? ' ' . $disabled_class : '')
+        );
         $is_checked = isset($mulopimfwc_options[$key]) && $mulopimfwc_options[$key] === "on";
         if (
             $key === 'location_wise_currency'
@@ -8529,10 +8529,8 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             $this->render_checkbox_unchecked_input('mulopimfwc_display_options[' . $key . ']', $disabled);
         }
         ?>
-            <label class="mulopimfwc_switch <?php echo esc_attr($key);
-                                            echo $is_free ? '' : ' mulopimfwc_pro_only';
-                                            echo $disabled_class; ?>">
-                <input <?php echo $disabled ? 'disabled' : ''; ?><?php echo $input_class_attr; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' value='on' <?php checked($is_checked); ?>>
+            <label class="<?php echo esc_attr( $label_classes ); ?>">
+                <input <?php disabled( $disabled ); ?><?php if ( $disabled_class ) : ?> class="<?php echo esc_attr( $disabled_class ); ?>"<?php endif; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' value='on' <?php checked($is_checked); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
