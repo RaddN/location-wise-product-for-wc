@@ -480,8 +480,7 @@ class mulopimfwc_settings
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('template_selection', $current_template);
                     }
-                    $disabled_attr = $is_manual_mode ? ' disabled' : '';
-                    echo '<select id="template_selection" name="mulopimfwc_display_options[template_selection]"' . $disabled_attr . '>';
+                    echo '<select id="template_selection" name="mulopimfwc_display_options[template_selection]"' . disabled( $is_manual_mode, true, false ) . '>';
                     $template_options = [
                         "default" => __("Default", 'multi-location-product-and-inventory-management-pro'),
                         "modern" => __("Modern", 'multi-location-product-and-inventory-management-pro'),
@@ -577,9 +576,8 @@ class mulopimfwc_settings
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('herichical', $value);
                     }
-                    $disabled_attr = $is_manual_mode ? ' disabled' : '';
             ?>
-                <select id="herichical" name="mulopimfwc_display_options[herichical]" <?php echo $disabled_attr; ?>>
+                <select id="herichical" name="mulopimfwc_display_options[herichical]" <?php disabled( $is_manual_mode ); ?>>
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="seperately" <?php selected($value, 'seperately'); ?>><?php echo esc_html__('Seperately', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -659,9 +657,8 @@ class mulopimfwc_settings
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('mulopimfwc_popup_custom_css', trim($mulopimfwc_popup_custom_css ?? ''));
                     }
-                    $disabled_attr = $is_manual_mode ? ' disabled' : '';
             ?>
-                <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}" <?php echo $disabled_attr; ?>><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
+                <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}" <?php disabled( $is_manual_mode ); ?>><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
             </textarea>
                 <?php if ($is_manual_mode) : ?>
                     <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro'); ?></p>
@@ -2089,9 +2086,8 @@ class mulopimfwc_settings
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_display_position', $value);
                 }
-                $disabled_attr = $is_manual_mode ? ' disabled' : '';
         ?>
-            <select name="mulopimfwc_display_options[location_display_position]" <?php echo $disabled_attr; ?>>
+            <select name="mulopimfwc_display_options[location_display_position]" <?php disabled( $is_manual_mode ); ?>>
                 <option value="after_title" <?php selected($value, 'after_title'); ?>><?php echo esc_html_e('After Product Title', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <option value="after_price" <?php selected($value, 'after_price'); ?>><?php echo esc_html_e('After Product Price', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <option value="before_add_to_cart" <?php selected($value, 'before_add_to_cart'); ?>><?php echo esc_html_e('Before Add to Cart Button', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -2119,11 +2115,10 @@ class mulopimfwc_settings
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_selector_layout', $value);
                 }
-                $disabled_attr = $is_manual_mode ? ' disabled' : '';
                 $label_class = $is_manual_mode ? ' mulopimfwc-setting-disabled' : '';
         ?>
             <label class="<?php echo esc_attr(mulopimfwc_get_pro_class(false) . $label_class); ?>">
-                <select <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', ' disabled ')); ?> name="mulopimfwc_display_options[location_selector_layout]" <?php echo $disabled_attr; ?>>
+                <select <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', ' disabled ')); ?> name="mulopimfwc_display_options[location_selector_layout]" <?php disabled( $is_manual_mode ); ?>>
                     <option value="list" <?php selected($value, 'list'); ?>><?php echo esc_html_e('List View', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="buttons" <?php selected($value, 'buttons'); ?>><?php echo esc_html_e('Button Style', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="select" <?php selected($value, 'select'); ?>><?php echo esc_html_e('Select Dropdown', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -2265,8 +2260,6 @@ sprintf(
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('default_location', $default_location);
                 }
-                $disabled_attr = $is_manual_mode ? ' disabled' : '';
-
                 // Get all locations
                 $locations = get_terms([
                     'taxonomy' => 'mulopimfwc_store_location',
@@ -2277,7 +2270,7 @@ sprintf(
                     $locations = [];
                 }
         ?>
-            <select name="mulopimfwc_display_options[default_location]" id="default_location_select" <?php echo $disabled_attr; ?>>
+            <select name="mulopimfwc_display_options[default_location]" id="default_location_select" <?php disabled( $is_manual_mode ); ?>>
                 <option value=""><?php echo esc_html__('None', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <?php
                 if (!empty($locations)) {
@@ -4634,9 +4627,8 @@ sprintf(
                     echo '<input type="hidden" name="mulopimfwc_display_options[location_switching_behavior]" value="' . esc_attr($value) . '">';
                 }
 
-                $disabled_attr = $disabled ? ' disabled' : '';
             ?>
-                <select name="mulopimfwc_display_options[location_switching_behavior]" <?php echo $disabled_attr; ?>>
+                <select name="mulopimfwc_display_options[location_switching_behavior]" <?php disabled( $disabled ); ?>>
                     <option value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="update_cart" <?php selected($value, 'update_cart'); ?>><?php echo esc_html_e('Update Cart (Remove unavailable products)', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -4838,11 +4830,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('enable_customer_location_tracking', $value);
                 }
-                $disabled_attr = $is_manual_mode ? ' disabled' : '';
-
                 if (mulopimfwc_premium_feature()) {
                 ?>
-                    <select name="mulopimfwc_display_options[enable_customer_location_tracking]" <?php echo $disabled_attr; ?>>
+                    <select name="mulopimfwc_display_options[enable_customer_location_tracking]" <?php disabled( $is_manual_mode ); ?>>
                         <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                         <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     </select>
@@ -4875,9 +4865,8 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('customer_location_history', $value);
                 }
-                $disabled_attr = $is_manual_mode ? ' disabled' : '';
             ?>
-                <select name="mulopimfwc_display_options[customer_location_history]" <?php echo $disabled_attr; ?>>
+                <select name="mulopimfwc_display_options[customer_location_history]" <?php disabled( $is_manual_mode ); ?>>
                     <option value="latest" <?php selected($value, 'latest'); ?>><?php echo esc_html_e('Store Latest Only', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="all" <?php selected($value, 'all'); ?>><?php echo esc_html_e('Store Full History', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('Do Not Store', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -4903,11 +4892,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 if ($is_manual_mode) {
                     $this->render_manual_hidden_input('location_based_recommendations', $value);
                 }
-                $disabled_attr = $is_manual_mode ? ' disabled' : '';
-
                 if (mulopimfwc_premium_feature()) {
                 ?>
-                    <select name="mulopimfwc_display_options[location_based_recommendations]" <?php echo $disabled_attr; ?>>
+                    <select name="mulopimfwc_display_options[location_based_recommendations]" <?php disabled( $is_manual_mode ); ?>>
                         <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                         <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     </select>
@@ -8461,8 +8448,6 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         $base_disabled = $premium_locked || $pro_locked || $manual_locked;
         $base_disabled_flag = $base_disabled ? '1' : '0';
         $toggle_disabled_class = $text_management_locked ? ' mulopimfwc-setting-disabled' : '';
-        $disabled_attr = ($base_disabled || $text_management_locked) ? ' disabled' : '';
-
         $wrapper_class = 'mulopimfwc-text-field';
         $wrapper_style = '';
         if ($template_only === 'default') {
@@ -8510,9 +8495,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
         if ($type === 'textarea') {
             $rows = $rows > 0 ? $rows : 2;
-            echo '<textarea class="mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . $disabled_attr . ' placeholder="' . esc_attr($default) . '">' . esc_textarea($value) . '</textarea>';
+            echo '<textarea class="mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . disabled( ($base_disabled || $text_management_locked), true, false ) . ' placeholder="' . esc_attr($default) . '">' . esc_textarea($value) . '</textarea>';
         } else {
-            echo '<input type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '"' . $disabled_attr . ' placeholder="' . esc_attr($default) . '">';
+            echo '<input type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '"' . disabled( ($base_disabled || $text_management_locked), true, false ) . ' placeholder="' . esc_attr($default) . '">';
         }
 
         if ($pro_locked) {
