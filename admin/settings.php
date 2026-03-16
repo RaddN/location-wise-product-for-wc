@@ -2776,9 +2776,11 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['realtime_enabled']) ? $notif['realtime_enabled'] : '';
+                $disabled = !mulopimfwc_premium_feature();
         ?>
-            <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
-                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
+            <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[notification_settings][realtime_enabled]', $disabled); ?>
+            <label class="mulopimfwc_switch <?php echo $disabled ? 'mulopimfwc_pro_only' : ''; ?>">
+                <input <?php echo $disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][realtime_enabled]" value="on" <?php checked($value, 'on'); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
@@ -2797,9 +2799,11 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['floating_enabled']) ? $notif['floating_enabled'] : '';
+                $disabled = !mulopimfwc_premium_feature();
         ?>
-            <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
-                <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
+            <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[notification_settings][floating_enabled]', $disabled); ?>
+            <label class="mulopimfwc_switch <?php echo $disabled ? 'mulopimfwc_pro_only' : ''; ?>">
+                <input <?php echo $disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][floating_enabled]" value="on" <?php checked($value, 'on'); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
@@ -3192,9 +3196,11 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['pwa_enabled']) ? $notif['pwa_enabled'] : 'off';
+                $disabled = !mulopimfwc_premium_feature();
             ?>
-                <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
-                    <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][pwa_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[notification_settings][pwa_enabled]', $disabled); ?>
+                <label class="mulopimfwc_switch <?php echo $disabled ? 'mulopimfwc_pro_only' : ''; ?>">
+                    <input <?php echo $disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][pwa_enabled]" value="on" <?php checked($value, 'on'); ?>>
                     <span class="mulopimfwc_slider round"></span>
                     <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                     <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
@@ -3327,9 +3333,11 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                 $options = $this->get_display_options();
                 $notif = isset($options['notification_settings']) ? $options['notification_settings'] : [];
                 $value = isset($notif['sound_enabled']) ? $notif['sound_enabled'] : 'off';
+                $disabled = !mulopimfwc_premium_feature();
             ?>
-                <label class="mulopimfwc_switch <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>">
-                    <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][sound_enabled]" value="on" <?php checked($value, 'on'); ?>>
+                <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[notification_settings][sound_enabled]', $disabled); ?>
+                <label class="mulopimfwc_switch <?php echo $disabled ? 'mulopimfwc_pro_only' : ''; ?>">
+                    <input <?php echo $disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][sound_enabled]" value="on" <?php checked($value, 'on'); ?>>
                     <span class="mulopimfwc_slider round"></span>
                     <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
@@ -3378,15 +3386,17 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                     : $defaults;
                 $test_nonce = wp_create_nonce('mulopimfwc_test_social_channel');
                 $test_digest_nonce = wp_create_nonce('mulopimfwc_test_social_digest_channel');
+                $social_disabled = !mulopimfwc_premium_feature();
             ?>
-                <div class="mulopimfwc-social-card <?php echo !mulopimfwc_premium_feature() ? 'mulopimfwc_pro_only' : ''; ?>" style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:10px;max-width:1100px;">
+                <div class="mulopimfwc-social-card <?php echo $social_disabled ? 'mulopimfwc_pro_only' : ''; ?>" style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:10px;max-width:1100px;">
                     <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
                         <div>
                             <h3 style="margin:0;"><?php echo esc_html__('Social Notifications', 'multi-location-product-and-inventory-management-pro'); ?></h3>
                             <p class="description" style="margin:4px 0 0 0;"><?php echo esc_html__('Enable alerts and choose which events to send to your social/webhook destinations.', 'multi-location-product-and-inventory-management-pro'); ?></p>
                         </div>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][enabled]', $social_disabled); ?>
                         <label class="mulopimfwc_switch social-master-toggle">
-                            <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][enabled]" <?php checked($social['enabled'], 'on'); ?>>
+                            <input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][enabled]" value="on" <?php checked($social['enabled'], 'on'); ?>>
                             <span class="mulopimfwc_slider round"></span>
                             <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
@@ -3394,19 +3404,19 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                     </div>
 
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px;">
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][new_order]" <?php checked($social['new_order'], 'on'); ?>> <?php echo esc_html__('New order alerts', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][low_stock]" <?php checked($social['low_stock'], 'on'); ?>> <?php echo esc_html__('Low stock alerts', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][out_of_stock]" <?php checked($social['out_of_stock'], 'on'); ?>> <?php echo esc_html__('Out of stock alerts', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][daily_digest]" <?php checked($social['daily_digest'], 'on'); ?>> <?php echo esc_html__("Today's performance digest", 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][site_status]" <?php checked($social['site_status'], 'on'); ?>> <?php echo esc_html__('Site down / up monitor', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][payment_failed]" <?php checked(isset($social['payment_failed']) ? $social['payment_failed'] : 'off', 'on'); ?>> <?php echo esc_html__('Payment failed', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_refunded]" <?php checked(isset($social['order_refunded']) ? $social['order_refunded'] : 'off', 'on'); ?>> <?php echo esc_html__('Order refunded', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_cancelled]" <?php checked(isset($social['order_cancelled']) ? $social['order_cancelled'] : 'off', 'on'); ?>> <?php echo esc_html__('Order cancelled', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_completed]" <?php checked(isset($social['order_completed']) ? $social['order_completed'] : 'off', 'on'); ?>> <?php echo esc_html__('Order completed', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][high_value_order]" <?php checked(isset($social['high_value_order']) ? $social['high_value_order'] : 'off', 'on'); ?>> <?php echo esc_html__('High-value order', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][restocked]" <?php checked(isset($social['restocked']) ? $social['restocked'] : 'off', 'on'); ?>> <?php echo esc_html__('Restocked (back above low threshold)', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][low_review_alert]" <?php checked(isset($social['low_review_alert']) ? $social['low_review_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Low-rating product review', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                        <label><input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][manager_change_alert]" <?php checked(isset($social['manager_change_alert']) ? $social['manager_change_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Manager change (added/updated)', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][new_order]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][new_order]" value="on" <?php checked($social['new_order'], 'on'); ?>> <?php echo esc_html__('New order alerts', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][low_stock]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][low_stock]" value="on" <?php checked($social['low_stock'], 'on'); ?>> <?php echo esc_html__('Low stock alerts', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][out_of_stock]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][out_of_stock]" value="on" <?php checked($social['out_of_stock'], 'on'); ?>> <?php echo esc_html__('Out of stock alerts', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][daily_digest]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][daily_digest]" value="on" <?php checked($social['daily_digest'], 'on'); ?>> <?php echo esc_html__("Today's performance digest", 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][site_status]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][site_status]" value="on" <?php checked($social['site_status'], 'on'); ?>> <?php echo esc_html__('Site down / up monitor', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][payment_failed]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][payment_failed]" value="on" <?php checked(isset($social['payment_failed']) ? $social['payment_failed'] : 'off', 'on'); ?>> <?php echo esc_html__('Payment failed', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][order_refunded]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_refunded]" value="on" <?php checked(isset($social['order_refunded']) ? $social['order_refunded'] : 'off', 'on'); ?>> <?php echo esc_html__('Order refunded', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][order_cancelled]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_cancelled]" value="on" <?php checked(isset($social['order_cancelled']) ? $social['order_cancelled'] : 'off', 'on'); ?>> <?php echo esc_html__('Order cancelled', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][order_completed]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][order_completed]" value="on" <?php checked(isset($social['order_completed']) ? $social['order_completed'] : 'off', 'on'); ?>> <?php echo esc_html__('Order completed', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][high_value_order]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][high_value_order]" value="on" <?php checked(isset($social['high_value_order']) ? $social['high_value_order'] : 'off', 'on'); ?>> <?php echo esc_html__('High-value order', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][restocked]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][restocked]" value="on" <?php checked(isset($social['restocked']) ? $social['restocked'] : 'off', 'on'); ?>> <?php echo esc_html__('Restocked (back above low threshold)', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][low_review_alert]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][low_review_alert]" value="on" <?php checked(isset($social['low_review_alert']) ? $social['low_review_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Low-rating product review', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                        <?php $this->render_checkbox_unchecked_input('mulopimfwc_display_options[social_notifications][manager_change_alert]', $social_disabled); ?><label><input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][manager_change_alert]" value="on" <?php checked(isset($social['manager_change_alert']) ? $social['manager_change_alert'] : 'off', 'on'); ?>> <?php echo esc_html__('Manager change (added/updated)', 'multi-location-product-and-inventory-management-pro'); ?></label>
                     </div>
                     <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
                         <?php
@@ -4944,6 +4954,14 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         return $value === 'on' ? 'on' : 'off';
     }
 
+    private function sanitize_nested_on_off_value(array $input, array $existing_settings, string $key, string $default = 'off'): string
+    {
+        $fallback = isset($existing_settings[$key]) ? (string) $existing_settings[$key] : $default;
+        $value = isset($input[$key]) ? sanitize_text_field((string) $input[$key]) : $fallback;
+
+        return $value === 'on' ? 'on' : 'off';
+    }
+
     private function sanitize_enum_select(array $input, array $existing_options, string $key, array $allowed_values, string $default): string
     {
         $fallback = isset($existing_options[$key]) ? (string) $existing_options[$key] : $default;
@@ -5040,6 +5058,14 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         if (isset($input['filtered_sections']) && is_array($input['filtered_sections'])) {
             foreach ($input['filtered_sections'] as $section) {
                 $sanitized['filtered_sections'][] = sanitize_text_field($section);
+            }
+        }
+
+        // Handle location access by user role.
+        $sanitized['enable_location_by_user_role'] = [];
+        if (isset($input['enable_location_by_user_role']) && is_array($input['enable_location_by_user_role'])) {
+            foreach ($input['enable_location_by_user_role'] as $role) {
+                $sanitized['enable_location_by_user_role'][] = sanitize_key((string) $role);
             }
         }
 
@@ -5162,6 +5188,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         // Handle social notifications
         if (isset($input['social_notifications']) && is_array($input['social_notifications'])) {
             $social_input = $input['social_notifications'];
+            $existing_social = isset($existing_options['social_notifications']) && is_array($existing_options['social_notifications'])
+                ? $existing_options['social_notifications']
+                : [];
             $social = [];
             $checkbox_keys = [
                 'enabled',
@@ -5180,9 +5209,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 'high_value_order',
             ];
             foreach ($checkbox_keys as $key) {
-                if (isset($social_input[$key]) && $social_input[$key] === 'on') {
-                    $social[$key] = 'on';
-                }
+                $social[$key] = $this->sanitize_nested_on_off_value($social_input, $existing_social, $key, 'off');
             }
             if (!empty($social_input['admin_slack_webhook'])) {
                 $social['admin_slack_webhook'] = esc_url_raw($social_input['admin_slack_webhook']);
@@ -5246,34 +5273,71 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
         if (isset($input['notification_settings']) && is_array($input['notification_settings'])) {
             $notification_input = $input['notification_settings'];
+            $existing_notification = isset($existing_options['notification_settings']) && is_array($existing_options['notification_settings'])
+                ? $existing_options['notification_settings']
+                : [];
             $notification = [];
             $checkbox_keys = [
                 'realtime_enabled',
                 'floating_enabled',
                 'pwa_enabled',
                 'show_admin_notice',
+                'sound_enabled',
             ];
             foreach ($checkbox_keys as $key) {
-                $notification[$key] = (isset($notification_input[$key]) && $notification_input[$key] === 'on') ? 'on' : 'off';
+                $notification[$key] = $this->sanitize_nested_on_off_value(
+                    $notification_input,
+                    $existing_notification,
+                    $key,
+                    $key === 'show_admin_notice' ? 'on' : 'off'
+                );
             }
 
-            $position = sanitize_text_field($notification_input['floating_position'] ?? 'top-right');
+            $position = sanitize_text_field(
+                $notification_input['floating_position']
+                    ?? ($existing_notification['floating_position'] ?? 'top-right')
+            );
             $valid_positions = ['top-right', 'top-left', 'bottom-right', 'bottom-left'];
             if (!in_array($position, $valid_positions, true)) {
                 $position = 'top-right';
             }
             $notification['floating_position'] = $position;
 
-            $size = sanitize_text_field($notification_input['floating_size'] ?? 'comfy');
+            $size = sanitize_text_field(
+                $notification_input['floating_size']
+                    ?? ($existing_notification['floating_size'] ?? 'comfy')
+            );
             $valid_sizes = ['comfy', 'compact'];
             if (!in_array($size, $valid_sizes, true)) {
                 $size = 'comfy';
             }
             $notification['floating_size'] = $size;
 
-            $duration = preg_replace('/[^0-9]/', '', $notification_input['floating_duration'] ?? '');
-            $notification['floating_duration'] = $duration !== '' ? $duration : '6000';
-            $notification['notification_template'] = sanitize_textarea_field($notification_input['notification_template'] ?? '[{event}] {message}');
+            $duration_raw = isset($notification_input['floating_duration'])
+                ? (string) $notification_input['floating_duration']
+                : (string) ($existing_notification['floating_duration'] ?? '6000');
+            $duration = preg_replace('/[^0-9]/', '', $duration_raw);
+            $notification['floating_duration'] = (string) max(2000, absint($duration !== '' ? $duration : '6000'));
+
+            $notification['notification_template'] = sanitize_textarea_field(
+                $notification_input['notification_template']
+                    ?? ($existing_notification['notification_template'] ?? '[{event}] {message}')
+            );
+
+            $poll_interval_raw = isset($notification_input['poll_interval'])
+                ? (string) $notification_input['poll_interval']
+                : (string) ($existing_notification['poll_interval'] ?? '30000');
+            $poll_interval = preg_replace('/[^0-9]/', '', $poll_interval_raw);
+            $notification['poll_interval'] = (string) max(5000, absint($poll_interval !== '' ? $poll_interval : '30000'));
+
+            $notification_style = sanitize_key(
+                (string) ($notification_input['notification_style'] ?? ($existing_notification['notification_style'] ?? 'modern'))
+            );
+            $valid_notification_styles = ['modern', 'minimal', 'classic'];
+            if (!in_array($notification_style, $valid_notification_styles, true)) {
+                $notification_style = 'modern';
+            }
+            $notification['notification_style'] = $notification_style;
 
             $sanitized['notification_settings'] = $notification;
         }
@@ -7842,6 +7906,16 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
         echo '<input type="hidden" data-manual-hidden="true" data-manual-for="mulopimfwc_display_options[' . esc_attr($key) . ']" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '">';
     }
+
+    private function render_checkbox_unchecked_input(string $name, bool $disabled = false, string $value = 'off'): void
+    {
+        if ($disabled) {
+            return;
+        }
+
+        echo '<input type="hidden" data-checkbox-fallback="true" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '">';
+    }
+
     public function filter_settings_section_callback()
     {
         echo '<p>' . esc_html_e('Configure how strictly products are filtered by location throughout your store.', 'multi-location-product-and-inventory-management-pro') . '</p>';
@@ -8148,6 +8222,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         <p class="mulopimfwc-text-management-toggle__title">' . esc_html__('Enable Text Management', 'multi-location-product-and-inventory-management-pro') . '</p>
                         <p class="mulopimfwc-text-management-toggle__desc">' . esc_html__('When disabled, custom text overrides are ignored and plugin defaults are used.', 'multi-location-product-and-inventory-management-pro') . '</p>
                     </div>
+                    ' . (!$is_premium ? '' : '<input type="hidden" data-checkbox-fallback="true" name="mulopimfwc_display_options[enable_text_management]" value="off">') . '
                     <label class="mulopimfwc_switch ' . (!$is_premium ? 'mulopimfwc_pro_only mulopimfwc-setting-disabled' : '') . '">
                         <input ' . (!$is_premium ? 'disabled ' : '') . 'type="checkbox" id="mulopimfwc-enable-text-management" name="mulopimfwc_display_options[enable_text_management]" value="on" data-text-base-disabled="' . esc_attr($text_management_base_disabled) . '" ' . checked($is_text_management_enabled, true, false) . '>
                         <span class="mulopimfwc_slider round"></span>
@@ -8465,11 +8540,14 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         ) {
             $is_checked = mulopimfwc_is_location_wise_currency_enabled($mulopimfwc_options);
         }
+        if (!in_array($key, ['pro', '_pro'], true)) {
+            $this->render_checkbox_unchecked_input('mulopimfwc_display_options[' . $key . ']', $disabled);
+        }
         ?>
             <label class="mulopimfwc_switch <?php echo esc_attr($key);
                                             echo $is_free ? '' : ' mulopimfwc_pro_only';
                                             echo $disabled_class; ?>">
-                <input <?php echo $disabled ? 'disabled' : ''; ?><?php echo $input_class_attr; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' <?php checked($is_checked); ?>>
+                <input <?php echo $disabled ? 'disabled' : ''; ?><?php echo $input_class_attr; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' value='on' <?php checked($is_checked); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
