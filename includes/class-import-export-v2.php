@@ -1937,7 +1937,7 @@ class MULOPIMFWC_Import_Export_V2_Service
                 $context[] = 'row_key ' . $row_key;
             }
             $suffix = !empty($context) ? (' (' . implode(', ', $context) . ')') : '';
-            throw new Exception('Failed to encode import row for pass file' . $suffix . '.');
+            throw new Exception('Failed to encode import row for pass file' . esc_html($suffix) . '.');
         }
         if (!isset($this->pass_file_buffers[$path])) {
             $this->pass_file_buffers[$path] = '';
