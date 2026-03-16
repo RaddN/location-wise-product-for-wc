@@ -654,7 +654,7 @@ class mulopimfwc_License_Manager
         } elseif ($days_until_expiry <= 30) {
             $notice_class = $days_until_expiry <= 7 ? 'notice-error' : 'notice-warning';
             echo '<div class="notice ' . esc_attr( $notice_class ) . ' is-dismissible">';
-            echo '<p><strong>License Expiring Soon:</strong> Your license will expire in ' . $days_until_expiry . ' days (' . esc_html($expires_date->format('M j, Y')) . ').</p>';
+            echo '<p><strong>License Expiring Soon:</strong> Your license will expire in ' . esc_html( $days_until_expiry ) . ' days (' . esc_html($expires_date->format('M j, Y')) . ').</p>';
             echo '<p><a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank" class="button button-primary">Renew Now</a> ';
             echo '<a href="https://plugincy.com/my-account" target="_blank">Manage License</a></p>';
             echo '</div>';
@@ -882,7 +882,7 @@ class mulopimfwc_License_Manager
                                                     <span style="color: #fd7e14; font-weight: bold;">
                                                         <span class="dashicons dashicons-warning" style="font-size: 16px; vertical-align: middle;"></span>
                                                         <?php echo esc_html($expires_date->format('M j, Y')); ?>
-                                                        <small>(<?php echo $days_until_expiry; ?> days left)</small>
+                                                        <small>(<?php echo esc_html( $days_until_expiry ); ?> days left)</small>
                                                         <?php echo '<a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank">Renew License</a>'; ?>
                                                     </span>
                                                 <?php else: ?>
