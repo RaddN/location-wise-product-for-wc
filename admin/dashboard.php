@@ -1383,15 +1383,11 @@ class MULOPIMFWC_Dashboard
                 </div>
                 <div class="lwp-card-stats">
                     <div class="lwp-stats-grid">
-                        <?php
-                        $products_tag = $products_link ? 'a' : 'div';
-                        $products_attrs = $products_link ? ' href="' . esc_url($products_link) . '"' : '';
-                        $locations_tag = $locations_link ? 'a' : 'div';
-                        $locations_attrs = $locations_link ? ' href="' . esc_url($locations_link) . '"' : '';
-                        $orders_tag = $orders_link ? 'a' : 'div';
-                        $orders_attrs = $orders_link ? ' href="' . esc_url($orders_link) . '"' : '';
-                        ?>
-                        <<?php echo $products_tag; ?> class="lwp-stat-item"<?php echo $products_attrs; ?>>
+                        <?php if ( $products_link ) : ?>
+                            <a class="lwp-stat-item" href="<?php echo esc_url( $products_link ); ?>">
+                        <?php else : ?>
+                            <div class="lwp-stat-item">
+                        <?php endif; ?>
                             <div class="lwp-stat-item-icon">
 
                                 <svg class="svg-inline--fa fa-box" aria-hidden="true" data-prefix="fas" data-icon="box" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18">
@@ -1401,10 +1397,18 @@ class MULOPIMFWC_Dashboard
                             <div>
                                 <span class="lwp-stat-progress" data-metric="products"></span>
                                 <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html($this->get_total_products_count()); ?></span>
+                                <span class="lwp-stat-value"><?php echo esc_html( $this->get_total_products_count() ); ?></span>
                             </div>
-                        </<?php echo $products_tag; ?>>
-                        <<?php echo $locations_tag; ?> class="lwp-stat-item"<?php echo $locations_attrs; ?>>
+                        <?php if ( $products_link ) : ?>
+                            </a>
+                        <?php else : ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ( $locations_link ) : ?>
+                            <a class="lwp-stat-item" href="<?php echo esc_url( $locations_link ); ?>">
+                        <?php else : ?>
+                            <div class="lwp-stat-item">
+                        <?php endif; ?>
                             <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
 
                                 <svg class="svg-inline--fa fa-location-dot" aria-hidden="true" data-prefix="fas" data-icon="location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18">
@@ -1414,12 +1418,20 @@ class MULOPIMFWC_Dashboard
                             <div>
                                 <span class="lwp-stat-progress" data-metric="locations"></span>
                                 <span class="lwp-stat-label"><?php echo esc_html__('Locations', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo count($mulopimfwc_locations); ?></span>
+                                <span class="lwp-stat-value"><?php echo esc_html( count( $mulopimfwc_locations ) ); ?></span>
 
                             </div>
 
-                        </<?php echo $locations_tag; ?>>
-                        <<?php echo $orders_tag; ?> class="lwp-stat-item <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>"<?php echo $orders_attrs; ?>>
+                        <?php if ( $locations_link ) : ?>
+                            </a>
+                        <?php else : ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ( $orders_link ) : ?>
+                            <a class="lwp-stat-item <?php echo esc_attr( mulopimfwc_get_pro_class() ); ?>" href="<?php echo esc_url( $orders_link ); ?>">
+                        <?php else : ?>
+                            <div class="lwp-stat-item <?php echo esc_attr( mulopimfwc_get_pro_class() ); ?>">
+                        <?php endif; ?>
                             <div class="lwp-stat-item-icon" style="background-color: #f3e8ff;">
 
                                 <svg class="svg-inline--fa fa-cart-shopping" aria-hidden="true" data-prefix="fas" data-icon="cart-shopping" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="18">
@@ -1429,11 +1441,15 @@ class MULOPIMFWC_Dashboard
                             <div>
                                 <span class="lwp-stat-progress" data-metric="orders"></span>
                                 <span class="lwp-stat-label"><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html(mulopimfwc_get_pro_class(false, array_sum($orders_data["orders"]), rand(1, 100))); ?></span>
+                                <span class="lwp-stat-value"><?php echo esc_html( mulopimfwc_get_pro_class( false, array_sum( $orders_data['orders'] ), rand( 1, 100 ) ) ); ?></span>
 
                             </div>
 
-                        </<?php echo $orders_tag; ?>>
+                        <?php if ( $orders_link ) : ?>
+                            </a>
+                        <?php else : ?>
+                            </div>
+                        <?php endif; ?>
                         <div class="lwp-stat-item">
                             <div class="lwp-stat-item-icon" style="background-color: #cffafe;">
 
