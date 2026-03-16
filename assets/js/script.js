@@ -663,7 +663,7 @@ jQuery(document).ready(function ($) {
     }, 100);
 
     function getShortcodeSelection($form) {
-        const $single = $form.find('#lwp-shortcode-selector');
+        const $single = $form.find('select.lwp-location-dropdown').first();
         if ($single.length) {
             return {
                 value: $single.val() || '',
@@ -690,7 +690,7 @@ jQuery(document).ready(function ($) {
             };
         }
 
-        const $hidden = $form.find('#lwp-selected-store-shortcode');
+        const $hidden = $form.find('input[name="mulopimfwc_selected_store"]').first();
         return {
             value: $hidden.length ? ($hidden.val() || '') : '',
             label: '',
@@ -719,13 +719,13 @@ jQuery(document).ready(function ($) {
     }
 
     function syncShortcodeHiddenValue($form, value) {
-        const $hidden = $form.find('#lwp-selected-store-shortcode');
+        const $hidden = $form.find('input[name="mulopimfwc_selected_store"]').first();
         if ($hidden.length) {
             $hidden.val(value || '');
         }
     }
 
-    $(document).on('submit', '#lwp-shortcode-selector-form', function (e) {
+    $(document).on('submit', 'form.lwp-selector-form', function (e) {
         e.preventDefault();
 
         const $form = $(this);
@@ -858,7 +858,7 @@ jQuery(document).ready(function ($) {
 
     updateSingleProductAddToCartState();
 
-    $(document).on('change', '#lwp-shortcode-selector, .lwp-shortcode-selector-dropdown, #mulopimfwc_store_location, .mulopimfwc-location-selector', function () {
+    $(document).on('change', '.lwp-location-dropdown, .lwp-shortcode-selector-dropdown, #mulopimfwc_store_location, .mulopimfwc-location-selector', function () {
         setTimeout(updateSingleProductAddToCartState, 100);
     });
 

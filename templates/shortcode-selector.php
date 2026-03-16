@@ -53,8 +53,10 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
 
     return $raw_label;
 };
+
+$selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
 ?>
-<div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" style="max-width: <?php echo esc_attr($max_width); ?>;">
+<div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" data-selector-instance="<?php echo esc_attr($selector_instance_id); ?>" style="max-width: <?php echo esc_attr($max_width); ?>;">
     <?php if ($atts['show_title'] === 'on'): ?>
         <h3 class="lwp-shortcode-title"><?php echo esc_html($atts['title']); ?></h3>
     <?php endif; ?>
@@ -534,7 +536,7 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
             }
         </style>
     <?php endif; ?>
-    <form id="lwp-shortcode-selector-form" class="lwp-selector-form">
+    <form id="lwp-shortcode-selector-form" class="lwp-selector-form" data-selector-instance="<?php echo esc_attr($selector_instance_id); ?>">
         <?php wp_nonce_field('mulopimfwc_shortcode_selector', 'mulopimfwc_shortcode_selector_nonce'); ?>
         <?php if ($atts["herichical"] === "seperately"): ?>
             <?php
@@ -771,7 +773,17 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
     $auto_submit_js = $atts['show_button'] === 'off' ? 'true' : 'false';
     $max_depth_js = (int)$max_depth;
     $use_select2 = $atts["use_select2"] === "on";
-    $select2_init = $use_select2 ? "$('.lwp-shortcode-selector-dropdown').select2();" : "";
+    $instance_selector = wp_json_encode('.lwp-shortcode-store-selector[data-selector-instance="' . $selector_instance_id . '"]');
+    $select2_init = $use_select2 ? <<<JS
+        if ($.fn.select2) {
+            $dropdowns.each(function() {
+                var \$dropdown = $(this);
+                if (!\$dropdown.hasClass('select2-hidden-accessible')) {
+                    \$dropdown.select2();
+                }
+            });
+        }
+JS : "";
     $inline_js = <<<JS
 jQuery(document).ready(function($) {
     var locationsData = $locations_json;
@@ -779,22 +791,33 @@ jQuery(document).ready(function($) {
     var childCounts = $child_counts_json;
     var showCount = $show_count_js;
     var autoSubmit = $auto_submit_js;
-    $('.lwp-shortcode-selector-dropdown').on('change', function() {
+    var instanceSelector = $instance_selector;
+    var \$container = $(instanceSelector).first();
+    if (!\$container.length) {
+        return;
+    }
+    var \$form = \$container.find('form.lwp-selector-form').first();
+    var \$hidden = \$form.find('input[name="mulopimfwc_selected_store"]').first();
+    var \$dropdowns = \$form.find('.lwp-shortcode-selector-dropdown');
+    if (!\$dropdowns.length) {
+        return;
+    }
+    \$dropdowns.off('change.mulopimfwcHierarchical').on('change.mulopimfwcHierarchical', function() {
         var selectedLevel = $(this).data('level');
         var selectedTermId = $(this).find(':selected').data('term-id');
         var selectedValue = $(this).val();
         if (selectedValue) {
-            $('#lwp-selected-store-shortcode').val(selectedValue);
+            \$hidden.val(selectedValue);
         } else {
-            $('#lwp-selected-store-shortcode').val('');
+            \$hidden.val('');
         }
         for (var i = selectedLevel + 1; i <= $max_depth_js; i++) {
-            $('.lwp-select-container.level-' + i).hide();
-            $('#lwp-shortcode-selector-level-' + i).empty().append('<option value="">' + mulopimfwc_selector_i18n.select + '</option>');
+            \$form.find('.lwp-select-container.level-' + i).hide();
+            \$form.find('.lwp-shortcode-selector-dropdown[data-level="' + i + '"]').empty().append('<option value="">' + mulopimfwc_selector_i18n.select + '</option>');
         }
         if (selectedValue && selectedTermId && parentChildrenMap[selectedTermId]) {
             var nextLevel = selectedLevel + 1;
-            var nextDropdown = $('#lwp-shortcode-selector-level-' + nextLevel);
+            var nextDropdown = \$form.find('.lwp-shortcode-selector-dropdown[data-level="' + nextLevel + '"]');
             nextDropdown.empty().append('<option value="">' + mulopimfwc_selector_i18n.select + '</option>');
             $.each(parentChildrenMap[selectedTermId], function(index, location) {
                 var childCount = childCounts[location.term_id] || 0;
@@ -804,14 +827,14 @@ jQuery(document).ready(function($) {
                 }
                 nextDropdown.append('<option value="' + location.slug + '" data-term-id="' + location.term_id + '">' + displayText + '</option>');
             });
-            $('.lwp-select-container.level-' + nextLevel).show();
+            \$form.find('.lwp-select-container.level-' + nextLevel).show();
         } else if (autoSubmit && selectedValue) {
-            $('#lwp-shortcode-selector-form').submit();
+            \$form.trigger('submit');
         }
     });
     $select2_init
-    $('.lwp-shortcode-submit').on('click', function() {
-        $('#lwp-shortcode-selector-form').submit();
+    \$form.find('.lwp-shortcode-submit').off('click.mulopimfwcHierarchical').on('click.mulopimfwcHierarchical', function() {
+        \$form.trigger('submit');
     });
 });
 JS;
@@ -825,27 +848,42 @@ else:
     $use_select2 = ($atts['use_select2'] === 'on') ? 'true' : 'false';
     $show_button = ($atts['show_button'] === 'on') ? 'true' : 'false';
     $auto_submit_js = ($atts['show_button'] === 'off') ? 'true' : 'false';
+    $instance_selector = wp_json_encode('.lwp-shortcode-store-selector[data-selector-instance="' . $selector_instance_id . '"]');
     $inline_js = <<<JS
 (function ($) {
   'use strict';
 
   $(function () {
-    if ($use_select2) {
-        $('#lwp-shortcode-selector').select2();
+    var instanceSelector = $instance_selector;
+    var \$container = $(instanceSelector).first();
+    if (!\$container.length) {
+        return;
     }
-    $('#lwp-shortcode-selector').on('change', function() {
-        var selectedValue = $(this).val();
+    var \$form = \$container.find('form.lwp-selector-form').first();
+    var \$dropdown = \$form.find('select.lwp-location-dropdown').first();
+    var \$hidden = \$form.find('input[name="mulopimfwc_selected_store"]').first();
+
+    if (!\$dropdown.length) {
+        return;
+    }
+
+    if ($use_select2 && $.fn.select2 && !\$dropdown.hasClass('select2-hidden-accessible')) {
+        \$dropdown.select2();
+    }
+
+    \$dropdown.off('change.mulopimfwcSingle').on('change.mulopimfwcSingle', function() {
+        var selectedValue = \$dropdown.val();
         if (selectedValue) {
-            $('#lwp-selected-store-shortcode').val(selectedValue);
+            \$hidden.val(selectedValue);
             if ($auto_submit_js) {
-                $('#lwp-shortcode-selector-form').submit();
+                \$form.trigger('submit');
             }
         } else {
-            $('#lwp-selected-store-shortcode').val('');
+            \$hidden.val('');
         }
     });
-    $('.lwp-shortcode-submit').on('click', function() {
-        $('#lwp-shortcode-selector-form').submit();
+    \$form.find('.lwp-shortcode-submit').off('click.mulopimfwcSingle').on('click.mulopimfwcSingle', function() {
+        \$form.trigger('submit');
     });
 });
 
@@ -1532,7 +1570,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         return false;
                     }
 
-                    const $dropdown = $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown');
+                    const $dropdown = $('select.lwp-location-dropdown, select.lwp-shortcode-selector-dropdown');
                     let found = false;
 
                     $dropdown.find('option').each(function() {
@@ -1548,7 +1586,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                     });
 
                     if (found) {
-                        $('#lwp-selected-store-shortcode').val(targetSlug);
+                        $('input[name="mulopimfwc_selected_store"]').val(targetSlug);
                     }
 
                     return found;
@@ -1565,7 +1603,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         return false;
                     }
 
-                    const $dropdown = $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown');
+                    const $dropdown = $('select.lwp-location-dropdown, select.lwp-shortcode-selector-dropdown');
                     let found = false;
 
                     const dropdownValues = [];
@@ -1667,7 +1705,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                                 $item.addClass('selected');
                                 this.updateAddressDisplay($item);
                             }
-                            $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown').trigger('change');
+                            $('select.lwp-location-dropdown, select.lwp-shortcode-selector-dropdown').trigger('change');
                             $('#location-tooltip').hide();
                             return;
                         }
@@ -1693,7 +1731,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                                         this.updateAddressDisplay($item);
                                     }
 
-                                    $('select#lwp-shortcode-selector, select.lwp-shortcode-selector-dropdown').trigger('change');
+                                    $('select.lwp-location-dropdown, select.lwp-shortcode-selector-dropdown').trigger('change');
                                     $('#location-tooltip').hide();
                                     return;
                                 }
