@@ -1719,7 +1719,7 @@ class MULOPIMFWC_Import_Export_V2_Service
                 $max_import_rows = $this->get_max_import_rows();
                 if ($max_import_rows > 0 && $prepare['rows_total'] > $max_import_rows) {
                     fclose($handle);
-                    throw new Exception(sprintf('Import row cap exceeded (%s rows).', number_format_i18n($max_import_rows)));
+                    throw new Exception(sprintf('Import row cap exceeded (%s rows).', esc_html(number_format_i18n($max_import_rows))));
                 }
                 $prepare['rows_by_pass'][$pass] = isset($prepare['rows_by_pass'][$pass]) ? ((int) $prepare['rows_by_pass'][$pass] + 1) : 1;
                 $checkpoint['rows_since_checkpoint'] = isset($checkpoint['rows_since_checkpoint']) ? ((int) $checkpoint['rows_since_checkpoint'] + 1) : 1;
