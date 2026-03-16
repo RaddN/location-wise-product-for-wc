@@ -447,8 +447,8 @@ class MULOPIMFWC_Dashboard
         header('Pragma: no-cache');
         header('Expires: 0');
 
-        // Start HTML output with UTF-8 BOM
-        echo chr(0xEF) . chr(0xBB) . chr(0xBF);
+        // Start HTML output with UTF-8 BOM.
+        echo esc_html( "\xEF\xBB\xBF" );
 
 ?>
         <!DOCTYPE html>
