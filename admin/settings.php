@@ -6321,7 +6321,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <div class="param-item">
                                                 <div class="param-content">
                                                     <div class="param-name">enable_user_locations
-                                                        <?php echo mulopimfwc_get_pro_class(false, '', '<span style="background: #ff5a36;color: #fff;padding: 3px 6px;border-radius: 4px;">Paid</span>'); ?>
+                                                        <?php if ( ! mulopimfwc_premium_feature() ) : ?>
+                                                            <span style="background: #ff5a36;color: #fff;padding: 3px 6px;border-radius: 4px;"><?php echo esc_html__( 'Paid', 'multi-location-product-and-inventory-management-pro' ); ?></span>
+                                                        <?php endif; ?>
                                                     </div>
                                                     <div class="param-value">on / off <?php echo esc_html_e('- User locations', 'multi-location-product-and-inventory-management-pro'); ?></div>
                                                 </div>
