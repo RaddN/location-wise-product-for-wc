@@ -1,5 +1,7 @@
 <?php
 
+if (!defined('ABSPATH')) exit;
+
 class MULOPIMFWC_Location_Wise_Local_Pickup
 {
     private static $current_location_cache = null;

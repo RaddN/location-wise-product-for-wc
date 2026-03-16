@@ -1,6 +1,8 @@
 <?php
 // Add this to your class or in a separate file that's included in your plugin
 
+if (!defined('ABSPATH')) exit;
+
 class mulopimfwc_Import_Export
 {
 

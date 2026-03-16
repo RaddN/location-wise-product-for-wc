@@ -4,6 +4,8 @@
  * Add this code to your main plugin file or create a new file in the includes folder
  */
 
+if (!defined('ABSPATH')) exit;
+
 class MULOPIMFWC_Business_Hours_Restriction {
     
     public function __construct() {
