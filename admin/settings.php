@@ -2964,7 +2964,7 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                         <label class="mulopimfwc-size-card <?php echo $value === $size_key ? 'selected' : ''; ?> <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?>">
                             <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="radio" name="mulopimfwc_display_options[notification_settings][floating_size]" value="<?php echo esc_attr($size_key); ?>" <?php checked($value, $size_key); ?>>
                             <div class="mulopimfwc-size-visual">
-                                <div class="mulopimfwc-size-preview <?php echo $size_key; ?>">
+                                <div class="mulopimfwc-size-preview <?php echo esc_attr( $size_key ); ?>">
                                     <div class="mulopimfwc-size-icon"></div>
                                     <div class="mulopimfwc-size-lines">
                                         <div class="mulopimfwc-size-line line-1"></div>
