@@ -249,12 +249,20 @@ jQuery(document).ready(function ($) {
     const $stockCentralPauseJobBtn = $stockCentralStatus.find('.mulopimfwc-stock-central-pause-job');
     const $stockCentralResumeJobBtn = $stockCentralStatus.find('.mulopimfwc-stock-central-resume-job');
     const $stockCentralCancelJobBtn = $stockCentralStatus.find('.mulopimfwc-stock-central-cancel-job');
+    const $stockCentralActiveJobsPanel = $('#mulopimfwc-stock-central-active-jobs');
+    const $stockCentralActiveJobsMeta = $stockCentralActiveJobsPanel.find('.mulopimfwc-stock-central-active-jobs-meta');
+    const $stockCentralActiveJobsList = $('#mulopimfwc-stock-central-active-jobs-list');
     const $stockCentralLogPanel = $('#mulopimfwc-stock-central-import-export-log-panel');
     const $stockCentralLogList = $('#mulopimfwc-stock-central-import-export-log-list');
     const maxLogLines = 250;
     let statusContextJob = null;
     let activeWatchToken = 0;
     let activeWatchJobId = '';
+    let selectedQueueJobId = '';
+    let activeJobsRefreshTimer = 0;
+    let activeJobsCache = [];
+    let workflowManagedJobId = '';
+    const jobEventCursors = {};
 
     function escapeHtml(text) {
         return String(text || '').replace(/[&<>"']/g, function (char) {
@@ -266,6 +274,83 @@ jQuery(document).ready(function ($) {
                 '\'': '&#039;'
             }[char];
         });
+    }
+
+    function formatJobLabel(text) {
+        return String(text || '')
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, function (char) {
+                return char.toUpperCase();
+            });
+    }
+
+    function getJobTypeLabel(type) {
+        return String(type || '') === 'export' ? 'Export' : 'Import';
+    }
+
+    function getCachedJobById(jobId) {
+        const normalizedJobId = String(jobId || '');
+        if (normalizedJobId === '') {
+            return null;
+        }
+        for (let i = 0; i < activeJobsCache.length; i++) {
+            const item = activeJobsCache[i];
+            if (item && String(item.job_id || '') === normalizedJobId) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    function upsertCachedJob(job) {
+        if (!job || typeof job !== 'object' || !job.job_id) {
+            return;
+        }
+        const jobId = String(job.job_id || '');
+        const nextCache = [];
+        let inserted = false;
+        activeJobsCache.forEach(function (item) {
+            if (!item || typeof item !== 'object' || !item.job_id) {
+                return;
+            }
+            if (String(item.job_id || '') === jobId) {
+                if (!isFinalJobStatus(job.status)) {
+                    nextCache.push(job);
+                    inserted = true;
+                } else {
+                    inserted = true;
+                }
+                return;
+            }
+            nextCache.push(item);
+        });
+        if (!inserted && !isFinalJobStatus(job.status)) {
+            nextCache.unshift(job);
+        }
+        activeJobsCache = nextCache;
+    }
+
+    function getJobEventCursorRef(jobId, reset) {
+        const normalizedJobId = String(jobId || '');
+        if (normalizedJobId === '') {
+            return { value: 0 };
+        }
+        if (!jobEventCursors[normalizedJobId]) {
+            jobEventCursors[normalizedJobId] = { value: 0 };
+        } else if (reset) {
+            jobEventCursors[normalizedJobId].value = 0;
+        }
+        return jobEventCursors[normalizedJobId];
+    }
+
+    function resetLogPanelForJob(jobId) {
+        if (!$stockCentralLogList.length) {
+            return;
+        }
+        $stockCentralLogList.empty();
+        ensureLogEmptyState();
+        refreshViewLogState();
+        getJobEventCursorRef(jobId, true);
     }
 
     function getNowTimeLabel() {
@@ -509,21 +594,213 @@ jQuery(document).ready(function ($) {
             return '';
         }
         const parts = [];
-        if (job.phase) parts.push('Phase: ' + job.phase);
+        const jobStatus = formatJobLabel(job.status);
+        const jobPhase = formatJobLabel(job.phase);
+        const isExportJob = String(job.type || '') === 'export';
+        const summary = (job.summary && typeof job.summary === 'object') ? job.summary : {};
+        const counterProcessed = isExportJob && typeof summary.processed_products !== 'undefined'
+            ? Number(summary.processed_products)
+            : (typeof job.rows_processed !== 'undefined' ? Number(job.rows_processed) : null);
+        const counterTotal = typeof job.rows_total !== 'undefined' ? Number(job.rows_total) : null;
+
+        if (jobStatus) parts.push('Status: ' + jobStatus);
+        if (jobPhase) parts.push('Phase: ' + jobPhase);
         if (typeof job.progress_percent !== 'undefined') parts.push(Number(job.progress_percent).toFixed(2) + '%');
-        if (typeof job.rows_processed !== 'undefined' && typeof job.rows_total !== 'undefined') {
-            parts.push('Rows: ' + job.rows_processed + '/' + job.rows_total);
+        if (counterProcessed !== null && counterTotal !== null && counterTotal > 0) {
+            parts.push((isExportJob ? 'Products' : 'Rows') + ': ' + counterProcessed + '/' + counterTotal);
         }
         if (typeof job.rows_failed !== 'undefined' && Number(job.rows_failed) > 0) {
             parts.push('Failed: ' + job.rows_failed);
         }
         if (job.current_pass) {
-            parts.push('Pass: ' + job.current_pass);
+            parts.push('Pass: ' + formatJobLabel(job.current_pass));
         }
         if (job.eta_seconds) {
             parts.push('ETA ~' + job.eta_seconds + 's');
         }
         return parts.join(' | ');
+    }
+
+    function getJobControlState(job) {
+        const status = String((job && job.status) || '');
+        const isActive = !!(job && job.job_id) && !isFinalJobStatus(status);
+        return {
+            canPause: isActive && ['queued', 'running', 'uploading'].indexOf(status) !== -1,
+            canResume: isActive && status === 'paused',
+            canCancel: isActive
+        };
+    }
+
+    function renderActiveJobsQueue(jobs) {
+        if (!$stockCentralActiveJobsPanel.length || !$stockCentralActiveJobsList.length) {
+            return;
+        }
+
+        const rows = Array.isArray(jobs) ? jobs.filter(function (job) {
+            return !!(job && typeof job === 'object' && job.job_id);
+        }) : [];
+
+        if (!rows.length) {
+            $stockCentralActiveJobsList.empty();
+            $stockCentralActiveJobsMeta.text('');
+            $stockCentralActiveJobsPanel.prop('hidden', true);
+            return;
+        }
+
+        const selectedJobId = String(selectedQueueJobId || (statusContextJob && statusContextJob.job_id) || '');
+        const html = rows.map(function (job) {
+            const jobId = String(job.job_id || '');
+            const type = String(job.type || '');
+            const status = String(job.status || '');
+            const summary = summarizeJobStatus(job) || ('Job status: ' + formatJobLabel(status || 'unknown'));
+            const controls = getJobControlState(job);
+            const isSelected = selectedJobId !== '' && selectedJobId === jobId;
+
+            return '<div class="mulopimfwc-stock-central-active-job-row' + (isSelected ? ' is-selected' : '') + '" data-job-id="' + escapeHtml(jobId) + '">' +
+                '<button type="button" class="mulopimfwc-stock-central-active-job-main mulopimfwc-stock-central-queue-select" data-job-id="' + escapeHtml(jobId) + '" title="' + escapeHtml(jobId) + '">' +
+                    '<span class="mulopimfwc-stock-central-active-job-topline">' +
+                        '<span class="mulopimfwc-stock-central-active-job-type is-' + escapeHtml(type || 'import') + '">' + escapeHtml(getJobTypeLabel(type)) + '</span>' +
+                        '<span class="mulopimfwc-stock-central-active-job-id">' + escapeHtml(jobId.slice(0, 8)) + '</span>' +
+                        '<span class="mulopimfwc-stock-central-active-job-status is-' + escapeHtml(status || 'unknown') + '">' + escapeHtml(formatJobLabel(status || 'unknown')) + '</span>' +
+                    '</span>' +
+                    '<span class="mulopimfwc-stock-central-active-job-summary">' + escapeHtml(summary) + '</span>' +
+                '</button>' +
+                '<div class="mulopimfwc-stock-central-active-job-actions">' +
+                    '<button type="button" class="button-link mulopimfwc-stock-central-queue-view" data-job-id="' + escapeHtml(jobId) + '">View</button>' +
+                    '<button type="button" class="button-link mulopimfwc-stock-central-queue-pause" data-job-id="' + escapeHtml(jobId) + '"' + (controls.canPause ? '' : ' hidden="hidden"') + '>Pause</button>' +
+                    '<button type="button" class="button-link mulopimfwc-stock-central-queue-resume" data-job-id="' + escapeHtml(jobId) + '"' + (controls.canResume ? '' : ' hidden="hidden"') + '>Resume</button>' +
+                    '<button type="button" class="button-link mulopimfwc-stock-central-queue-cancel" data-job-id="' + escapeHtml(jobId) + '"' + (controls.canCancel ? '' : ' hidden="hidden"') + '>Cancel</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        $stockCentralActiveJobsList.html(html);
+        $stockCentralActiveJobsMeta.text(rows.length === 1 ? '1 active job' : (rows.length + ' active jobs'));
+        $stockCentralActiveJobsPanel.prop('hidden', false);
+    }
+
+    function selectActiveQueueJob(jobOrId, options) {
+        const opts = options && typeof options === 'object' ? options : {};
+        const job = (jobOrId && typeof jobOrId === 'object') ? jobOrId : getCachedJobById(jobOrId);
+        if (!job || !job.job_id) {
+            return;
+        }
+
+        const jobId = String(job.job_id || '');
+        const shouldResetLog = typeof opts.resetLog === 'boolean'
+            ? opts.resetLog
+            : (selectedQueueJobId !== '' && selectedQueueJobId !== jobId);
+        const shouldWatch = typeof opts.watch === 'boolean' ? opts.watch : (jobId !== workflowManagedJobId);
+
+        selectedQueueJobId = jobId;
+        if (shouldResetLog) {
+            resetLogPanelForJob(jobId);
+        } else {
+            getJobEventCursorRef(jobId, false);
+        }
+
+        applyJobStatusToUi(job, { appendLog: false });
+        renderActiveJobsQueue(activeJobsCache);
+
+        if (shouldResetLog) {
+            appendStockCentralLog('Viewing ' + getJobTypeLabel(job.type) + ' job: ' + jobId, 'info');
+        }
+        streamJobEvents(jobId, getJobEventCursorRef(jobId, false));
+
+        if (shouldWatch && !isFinalJobStatus(job.status)) {
+            watchActiveJob(job, { silent: true });
+        }
+    }
+
+    function primeActiveJobsQueueFromPayload(payload, preferredJobId) {
+        if (!payload || typeof payload !== 'object') {
+            return;
+        }
+
+        const jobs = [];
+        if (Array.isArray(payload.active_jobs)) {
+            payload.active_jobs.forEach(function (job) {
+                if (job && typeof job === 'object' && job.job_id) {
+                    jobs.push(job);
+                }
+            });
+        }
+        if (payload.active_job && typeof payload.active_job === 'object' && payload.active_job.job_id) {
+            jobs.push(payload.active_job);
+        }
+
+        if (!jobs.length) {
+            return;
+        }
+
+        const seen = {};
+        activeJobsCache = jobs.filter(function (job) {
+            const jobId = String(job.job_id || '');
+            if (jobId === '' || seen[jobId]) {
+                return false;
+            }
+            seen[jobId] = true;
+            return true;
+        });
+
+        renderActiveJobsQueue(activeJobsCache);
+
+        const nextJobId = preferredJobId
+            || (payload.active_job && payload.active_job.job_id)
+            || (jobs[0] && jobs[0].job_id)
+            || '';
+
+        if (nextJobId !== '') {
+            selectActiveQueueJob(nextJobId, { resetLog: true });
+        }
+    }
+
+    function refreshActiveJobs(options) {
+        if (!ieV2Enabled || !ajaxUrl) {
+            return $.Deferred().resolve().promise();
+        }
+
+        const opts = options && typeof options === 'object' ? options : {};
+        return postAjax({
+            action: ieActions.get_active_jobs || 'mulopimfwc_ie_get_active_jobs',
+            nonce: nonce,
+            limit: opts.limit || 6
+        }).done(function (response) {
+            if (!response || !response.success || !response.data || !Array.isArray(response.data.jobs)) {
+                return;
+            }
+
+            activeJobsCache = response.data.jobs.filter(function (job) {
+                return !!(job && typeof job === 'object' && job.job_id);
+            });
+            renderActiveJobsQueue(activeJobsCache);
+
+            const preferredJobId = String(opts.preferredJobId || '');
+            const existingSelection = String(selectedQueueJobId || (statusContextJob && statusContextJob.job_id) || '');
+            const candidateJobId = preferredJobId !== ''
+                ? preferredJobId
+                : (existingSelection !== '' ? existingSelection : (activeJobsCache[0] && activeJobsCache[0].job_id) || '');
+
+            if (candidateJobId !== '' && getCachedJobById(candidateJobId)) {
+                const shouldResetLog = typeof opts.resetLog === 'boolean'
+                    ? opts.resetLog
+                    : (selectedQueueJobId !== '' && selectedQueueJobId !== candidateJobId);
+                selectActiveQueueJob(candidateJobId, { resetLog: shouldResetLog });
+            } else if (!activeJobsCache.length) {
+                selectedQueueJobId = '';
+            }
+        }).fail(function () {
+            // Keep the current UI state if background discovery fails.
+        });
+    }
+
+    function startActiveJobsRefresh() {
+        if (!ieV2Enabled || !ajaxUrl || activeJobsRefreshTimer) {
+            return;
+        }
+        activeJobsRefreshTimer = window.setInterval(function () {
+            refreshActiveJobs({ preferredJobId: selectedQueueJobId });
+        }, 4000);
     }
 
     function updateActiveJobControls(job) {
@@ -534,18 +811,14 @@ jQuery(document).ready(function ($) {
         const hasJob = !!(job && job.job_id);
         const status = String((job && job.status) || '');
         const type = String((job && job.type) || 'job');
-        const isActive = hasJob && !isFinalJobStatus(status);
+        const controls = getJobControlState(job);
 
-        const canPause = isActive && ['queued', 'running', 'uploading'].indexOf(status) !== -1;
-        const canResume = isActive && status === 'paused';
-        const canCancel = isActive;
-
-        $stockCentralPauseJobBtn.prop('hidden', !canPause).prop('disabled', !canPause);
-        $stockCentralResumeJobBtn.prop('hidden', !canResume).prop('disabled', !canResume);
-        $stockCentralCancelJobBtn.prop('hidden', !canCancel).prop('disabled', !canCancel);
+        $stockCentralPauseJobBtn.prop('hidden', !controls.canPause).prop('disabled', !controls.canPause);
+        $stockCentralResumeJobBtn.prop('hidden', !controls.canResume).prop('disabled', !controls.canResume);
+        $stockCentralCancelJobBtn.prop('hidden', !controls.canCancel).prop('disabled', !controls.canCancel);
 
         if ($stockCentralActiveJobMeta.length) {
-            if (isActive) {
+            if (hasJob && !isFinalJobStatus(status)) {
                 $stockCentralActiveJobMeta
                     .text('Active ' + type + ' job: ' + job.job_id)
                     .prop('hidden', false);
@@ -578,7 +851,9 @@ jQuery(document).ready(function ($) {
 
     function waitForJobTerminal(jobId, options) {
         const opts = options && typeof options === 'object' ? options : {};
-        const cursorRef = { value: Number(opts.cursor || 0) };
+        const cursorRef = (opts.cursorRef && typeof opts.cursorRef === 'object')
+            ? opts.cursorRef
+            : { value: Number(opts.cursor || 0) };
         const terminalStatuses = Array.isArray(opts.terminalStatuses) && opts.terminalStatuses.length
             ? opts.terminalStatuses.map(function (status) { return String(status || '').toLowerCase(); })
             : ['completed', 'failed', 'cancelled', 'awaiting_confirmation'];
@@ -658,6 +933,18 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    async function waitForManagedJob(jobId, options) {
+        const normalizedJobId = String(jobId || '');
+        workflowManagedJobId = normalizedJobId;
+        try {
+            return await waitForJobTerminal(normalizedJobId, options);
+        } finally {
+            if (workflowManagedJobId === normalizedJobId) {
+                workflowManagedJobId = '';
+            }
+        }
+    }
+
     function watchActiveJob(jobOrId, options) {
         if (!ieV2Enabled) {
             return;
@@ -676,7 +963,9 @@ jQuery(document).ready(function ($) {
         const watchToken = ++activeWatchToken;
         activeWatchJobId = jobId;
         if (initialJob) {
+            upsertCachedJob(initialJob);
             applyJobStatusToUi(initialJob, { appendLog: false });
+            renderActiveJobsQueue(activeJobsCache);
         }
         if (!opts.silent) {
             appendStockCentralLog('Tracking active job: ' + jobId, 'info');
@@ -685,14 +974,18 @@ jQuery(document).ready(function ($) {
         waitForJobTerminal(jobId, {
             terminalStatuses: ['completed', 'failed', 'cancelled'],
             appendStatusLog: false,
+            cursorRef: getJobEventCursorRef(jobId, false),
             shouldStop: function () {
                 return watchToken !== activeWatchToken;
             }
-        }).then(function () {
+        }).then(function (terminalJob) {
             if (watchToken !== activeWatchToken) {
                 return;
             }
             activeWatchJobId = '';
+            upsertCachedJob(terminalJob);
+            renderActiveJobsQueue(activeJobsCache);
+            refreshActiveJobs({ preferredJobId: selectedQueueJobId });
         }).catch(function (err) {
             if (watchToken !== activeWatchToken) {
                 return;
@@ -703,34 +996,21 @@ jQuery(document).ready(function ($) {
             }
             const message = err && err.message ? err.message : 'Failed to monitor active job.';
             appendStockCentralLog(message, 'error');
+            refreshActiveJobs({ preferredJobId: selectedQueueJobId });
         });
     }
 
-    function discoverActiveImportJob() {
-        if (!ieV2Enabled || !ajaxUrl) {
-            return;
-        }
-        postAjax({
-            action: ieActions.get_active_jobs || 'mulopimfwc_ie_get_active_jobs',
-            nonce: nonce,
-            type: 'import',
-            limit: 1
-        }).done(function (response) {
-            if (!response || !response.success || !response.data || !Array.isArray(response.data.jobs) || !response.data.jobs.length) {
-                return;
-            }
-            watchActiveJob(response.data.jobs[0], { silent: true });
-        }).fail(function () {
-            // Keep UI usable even if active-job discovery fails.
-        });
+    function discoverActiveJobs() {
+        refreshActiveJobs({ resetLog: false });
+        startActiveJobsRefresh();
     }
 
-    function performJobControlAction(actionName, startedMessage) {
-        if (!ieV2Enabled || !statusContextJob || !statusContextJob.job_id) {
+    function performJobControlAction(actionName, startedMessage, explicitJobId) {
+        const jobId = String(explicitJobId || (statusContextJob && statusContextJob.job_id) || '');
+        if (!ieV2Enabled || jobId === '') {
             setStockCentralStatus('No active job selected.', 'error');
             return;
         }
-        const jobId = statusContextJob.job_id;
         if (startedMessage) {
             setStockCentralStatus(startedMessage, 'info');
         }
@@ -744,9 +1024,13 @@ jQuery(document).ready(function ($) {
                 setStockCentralStatus(errorMessage, 'error');
                 return;
             }
+            upsertCachedJob(response.data);
             applyJobStatusToUi(response.data, { appendLog: true });
+            renderActiveJobsQueue(activeJobsCache);
             if (!isFinalJobStatus(response.data.status)) {
                 watchActiveJob(response.data, { silent: true });
+            } else {
+                refreshActiveJobs({ preferredJobId: selectedQueueJobId });
             }
         }).fail(function (_xhr, _status, error) {
             setStockCentralStatus('Job action failed: ' + (error || 'Unknown error'), 'error');
@@ -880,6 +1164,7 @@ jQuery(document).ready(function ($) {
         if (!job || typeof job !== 'object') {
             return;
         }
+        upsertCachedJob(job);
         const statusLine = summarizeJobStatus(job) || ('Job status: ' + (job.status || 'unknown'));
         const statusType = (job.status === 'failed' || job.status === 'cancelled')
             ? 'error'
@@ -894,6 +1179,7 @@ jQuery(document).ready(function ($) {
             status: String(job.status || '')
         };
         updateActiveJobControls(statusContextJob);
+        renderActiveJobsQueue(activeJobsCache);
     }
 
     function renderSummary(prefix, summary, errors, warnings) {
@@ -961,16 +1247,15 @@ jQuery(document).ready(function ($) {
         });
         if (!startResponse || !startResponse.success || !startResponse.data) {
             const payload = startResponse && startResponse.data ? startResponse.data : {};
-            if (payload && payload.active_job && payload.active_job.job_id) {
-                watchActiveJob(payload.active_job);
-            } else {
-                discoverActiveImportJob();
-            }
+            primeActiveJobsQueueFromPayload(payload);
+            refreshActiveJobs({
+                preferredJobId: (payload && payload.active_job && payload.active_job.job_id) ? payload.active_job.job_id : ''
+            });
             throw new Error((payload && payload.message) || 'Failed to start import job.');
         }
         const jobId = startResponse.data.job_id;
         const uploadId = startResponse.data.upload_id;
-        applyJobStatusToUi(startResponse.data, { appendLog: false });
+        selectActiveQueueJob(startResponse.data, { resetLog: true, watch: false });
         appendStockCentralLog('Import job created: ' + jobId, 'info');
 
         const totalChunks = await uploadFileInChunks(jobId, uploadId, file);
@@ -999,7 +1284,9 @@ jQuery(document).ready(function ($) {
             throw new Error((dryRunResponse && dryRunResponse.data && dryRunResponse.data.message) || 'Failed to start dry-run.');
         }
 
-        const dryRunTerminal = await waitForJobTerminal(jobId);
+        const dryRunTerminal = await waitForManagedJob(jobId, {
+            cursorRef: getJobEventCursorRef(jobId, false)
+        });
         if (dryRunTerminal.status === 'failed' || dryRunTerminal.status === 'cancelled') {
             throw new Error('Dry-run ended with status: ' + dryRunTerminal.status);
         }
@@ -1023,7 +1310,9 @@ jQuery(document).ready(function ($) {
                 throw new Error((applyResponse && applyResponse.data && applyResponse.data.message) || 'Failed to start apply phase.');
             }
 
-            const applyTerminal = await waitForJobTerminal(jobId);
+            const applyTerminal = await waitForManagedJob(jobId, {
+                cursorRef: getJobEventCursorRef(jobId, false)
+            });
             if (applyTerminal.status !== 'completed') {
                 throw new Error('Apply ended with status: ' + applyTerminal.status);
             }
@@ -1120,9 +1409,10 @@ jQuery(document).ready(function ($) {
 
         runFullImport(file, 'dry_run', false, function (ok, data) {
             if (!ok) {
-                if (data && data.active_job && data.active_job.job_id) {
-                    watchActiveJob(data.active_job);
-                }
+                primeActiveJobsQueueFromPayload(data);
+                refreshActiveJobs({
+                    preferredJobId: (data && data.active_job && data.active_job.job_id) ? data.active_job.job_id : ''
+                });
                 const message = data && data.message ? data.message : (cfg.strings.full_import_error || 'Import failed.');
                 setSettingsProgress(message, 100);
                 setStockCentralStatus(message, 'error');
@@ -1206,12 +1496,17 @@ jQuery(document).ready(function ($) {
                 const message = (response && response.data && response.data.message) || 'Failed to start export job.';
                 setSettingsProgress(message, 100);
                 setStockCentralStatus(message, 'error');
+                primeActiveJobsQueueFromPayload(response && response.data ? response.data : {});
+                refreshActiveJobs();
                 $btn.prop('disabled', false).html(original);
                 return;
             }
             const jobId = response.data.job_id;
+            selectActiveQueueJob(response.data, { resetLog: true, watch: false });
             appendStockCentralLog('Export job started: ' + jobId, 'info');
-            waitForJobTerminal(jobId).then(function (terminal) {
+            waitForManagedJob(jobId, {
+                cursorRef: getJobEventCursorRef(jobId, false)
+            }).then(function (terminal) {
                 if (terminal.status !== 'completed') {
                     throw new Error('Export ended with status: ' + terminal.status);
                 }
@@ -1350,6 +1645,44 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('click', '.mulopimfwc-stock-central-queue-select', function (e) {
+        e.preventDefault();
+        selectActiveQueueJob($(this).data('job-id'), { resetLog: true });
+    });
+
+    $(document).on('click', '.mulopimfwc-stock-central-queue-view', function (e) {
+        e.preventDefault();
+        const jobId = $(this).data('job-id');
+        selectActiveQueueJob(jobId, { resetLog: true });
+        if ($stockCentralLogPanel.length) {
+            $stockCentralLogPanel.prop('hidden', false);
+        }
+    });
+
+    $(document).on('click', '.mulopimfwc-stock-central-queue-pause', function (e) {
+        e.preventDefault();
+        const jobId = $(this).data('job-id');
+        selectActiveQueueJob(jobId, { resetLog: true });
+        performJobControlAction(ieActions.pause_job || 'mulopimfwc_ie_pause_job', 'Pausing active job...', jobId);
+    });
+
+    $(document).on('click', '.mulopimfwc-stock-central-queue-resume', function (e) {
+        e.preventDefault();
+        const jobId = $(this).data('job-id');
+        selectActiveQueueJob(jobId, { resetLog: true });
+        performJobControlAction(ieActions.resume_job || 'mulopimfwc_ie_resume_job', 'Resuming active job...', jobId);
+    });
+
+    $(document).on('click', '.mulopimfwc-stock-central-queue-cancel', function (e) {
+        e.preventDefault();
+        const jobId = $(this).data('job-id');
+        if (!window.confirm('Cancel this active job?')) {
+            return;
+        }
+        selectActiveQueueJob(jobId, { resetLog: true });
+        performJobControlAction(ieActions.cancel_job || 'mulopimfwc_ie_cancel_job', 'Cancelling active job...', jobId);
+    });
+
     $(document).on('click', '.mulopimfwc-stock-central-pause-job', function (e) {
         e.preventDefault();
         performJobControlAction(ieActions.pause_job || 'mulopimfwc_ie_pause_job', 'Pausing active job...');
@@ -1440,6 +1773,6 @@ jQuery(document).ready(function ($) {
     refreshViewLogState();
     updateActiveJobControls(null);
     if (ieV2Enabled) {
-        discoverActiveImportJob();
+        discoverActiveJobs();
     }
 });

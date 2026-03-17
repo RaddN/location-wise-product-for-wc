@@ -25,11 +25,17 @@ class mulopimfwc_Import_Export
         //     return;
         // }
 
+        $script_version = '2.0.1';
+        $script_path = plugin_dir_path(dirname(__FILE__)) . 'assets/js/import-export.js';
+        if (file_exists($script_path)) {
+            $script_version = (string) filemtime($script_path);
+        }
+
         wp_enqueue_script(
             'mulopimfwc-import-export',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/import-export.js',
             ['jquery'],
-            '2.0.0',
+            $script_version,
             true
         );
 

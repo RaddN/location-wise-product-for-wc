@@ -296,6 +296,13 @@ class mulopimfwc_Stock_Central
                     </button>
                 </div>
             </div>
+            <div id="mulopimfwc-stock-central-active-jobs" class="mulopimfwc-stock-central-active-jobs" hidden="hidden">
+                <div class="mulopimfwc-stock-central-active-jobs-header">
+                    <strong><?php echo esc_html__('Active Import Export Queue', 'multi-location-product-and-inventory-management-pro'); ?></strong>
+                    <span class="mulopimfwc-stock-central-active-jobs-meta"></span>
+                </div>
+                <div id="mulopimfwc-stock-central-active-jobs-list" class="mulopimfwc-stock-central-active-jobs-list"></div>
+            </div>
             <div id="mulopimfwc-stock-central-import-export-log-panel" class="mulopimfwc-stock-central-import-export-log-panel" hidden="hidden">
                 <div class="mulopimfwc-stock-central-import-export-log-header">
                     <strong><?php echo esc_html__('Import Export Log', 'multi-location-product-and-inventory-management-pro'); ?></strong>
@@ -844,6 +851,159 @@ class mulopimfwc_Stock_Central
                 color: #065f46;
             }
 
+            .mulopimfwc-stock-central-active-jobs {
+                margin: 8px 25px 0;
+                border: 1px solid #dbe4ff;
+                border-radius: 8px;
+                background: #ffffff;
+                box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+                overflow: hidden;
+            }
+
+            .mulopimfwc-stock-central-active-jobs[hidden] {
+                display: none !important;
+            }
+
+            .mulopimfwc-stock-central-active-jobs-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 10px 12px;
+                border-bottom: 1px solid #e5e7eb;
+                background: #f8fafc;
+            }
+
+            .mulopimfwc-stock-central-active-jobs-header strong {
+                color: #0f172a;
+                font-size: 13px;
+            }
+
+            .mulopimfwc-stock-central-active-jobs-meta {
+                color: #475569;
+                font-size: 12px;
+            }
+
+            .mulopimfwc-stock-central-active-jobs-list {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .mulopimfwc-stock-central-active-job-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-top: 1px solid #eef2ff;
+            }
+
+            .mulopimfwc-stock-central-active-job-row:first-child {
+                border-top: none;
+            }
+
+            .mulopimfwc-stock-central-active-job-row.is-selected {
+                background: #eff6ff;
+            }
+
+            .mulopimfwc-stock-central-active-job-main {
+                flex: 1 1 auto;
+                min-width: 0;
+                padding: 0;
+                border: none;
+                background: transparent;
+                text-align: left;
+                cursor: pointer;
+            }
+
+            .mulopimfwc-stock-central-active-job-main:focus-visible {
+                outline: 2px solid #2563eb;
+                outline-offset: 2px;
+                border-radius: 6px;
+            }
+
+            .mulopimfwc-stock-central-active-job-topline {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 4px;
+            }
+
+            .mulopimfwc-stock-central-active-job-type,
+            .mulopimfwc-stock-central-active-job-status {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 20px;
+                padding: 0 8px;
+                border-radius: 999px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.01em;
+            }
+
+            .mulopimfwc-stock-central-active-job-type.is-import {
+                background: #dcfce7;
+                color: #166534;
+            }
+
+            .mulopimfwc-stock-central-active-job-type.is-export {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+
+            .mulopimfwc-stock-central-active-job-status {
+                background: #f1f5f9;
+                color: #334155;
+            }
+
+            .mulopimfwc-stock-central-active-job-status.is-paused {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+            .mulopimfwc-stock-central-active-job-status.is-running,
+            .mulopimfwc-stock-central-active-job-status.is-uploading,
+            .mulopimfwc-stock-central-active-job-status.is-queued,
+            .mulopimfwc-stock-central-active-job-status.is-uploaded,
+            .mulopimfwc-stock-central-active-job-status.is-awaiting_confirmation {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+
+            .mulopimfwc-stock-central-active-job-id {
+                color: #0f172a;
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.01em;
+            }
+
+            .mulopimfwc-stock-central-active-job-summary {
+                color: #475569;
+                font-size: 12px;
+                line-height: 1.45;
+                word-break: break-word;
+            }
+
+            .mulopimfwc-stock-central-active-job-actions {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                gap: 8px;
+            }
+
+            .mulopimfwc-stock-central-active-job-actions .button-link {
+                font-size: 12px;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .mulopimfwc-stock-central-active-job-actions .mulopimfwc-stock-central-queue-cancel {
+                color: #b91c1c;
+            }
+
             .mulopimfwc-stock-central-import-export-log-panel {
                 margin: 8px 25px 0;
                 border: 1px solid #d1d5db;
@@ -1108,6 +1268,16 @@ class mulopimfwc_Stock_Central
                     left: 0;
                     right: auto;
                     min-width: min(360px, calc(100vw - 64px));
+                }
+
+                .mulopimfwc-stock-central-active-jobs-header,
+                .mulopimfwc-stock-central-active-job-row {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .mulopimfwc-stock-central-active-job-actions {
+                    justify-content: flex-start;
                 }
 
                 .mulopimfwc-stock-central-import-export-status {
