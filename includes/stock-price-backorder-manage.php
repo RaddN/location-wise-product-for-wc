@@ -820,13 +820,65 @@ if (!function_exists('mulopimfwc_is_cart_checkout_runtime_context')) {
             $wc_ajax_action = isset($_REQUEST['wc-ajax'])
                 ? sanitize_text_field(wp_unslash($_REQUEST['wc-ajax']))
                 : '';
+            $ajax_action = isset($_REQUEST['action'])
+                ? sanitize_key(wp_unslash($_REQUEST['action']))
+                : '';
 
             if (in_array($wc_ajax_action, ['update_order_review', 'checkout'], true)) {
+                return true;
+            }
+
+            $cart_runtime_ajax_actions = array_map('sanitize_key', (array) apply_filters(
+                'mulopimfwc_cart_runtime_ajax_actions',
+                [
+                    'woodmart_update_cart_item',
+                ]
+            ));
+
+            if ($ajax_action !== '' && in_array($ajax_action, $cart_runtime_ajax_actions, true)) {
                 return true;
             }
         }
 
         return false;
+    }
+}
+
+if (!function_exists('mulopimfwc_should_load_frontend_runtime_product_filters')) {
+    /**
+     * Allow frontend product runtime filters during customer-facing AJAX refreshes.
+     *
+     * Some themes rebuild the mini-cart through admin-ajax.php, where is_admin()
+     * is true even though the request originates from the storefront.
+     *
+     * @return bool
+     */
+    function mulopimfwc_should_load_frontend_runtime_product_filters(): bool
+    {
+        if (!is_admin()) {
+            return true;
+        }
+
+        if (!function_exists('wp_doing_ajax') || !wp_doing_ajax()) {
+            return false;
+        }
+
+        $ajax_action = isset($_REQUEST['action'])
+            ? sanitize_key(wp_unslash($_REQUEST['action']))
+            : '';
+
+        if ($ajax_action === '') {
+            return false;
+        }
+
+        $frontend_runtime_ajax_actions = array_map('sanitize_key', (array) apply_filters(
+            'mulopimfwc_frontend_runtime_product_filter_ajax_actions',
+            [
+                'woodmart_update_cart_item',
+            ]
+        ));
+
+        return in_array($ajax_action, $frontend_runtime_ajax_actions, true);
     }
 }
 
@@ -885,7 +937,7 @@ if (!function_exists('mulopimfwc_get_order_item_location_slug')) {
     }
 }
 
-if (!is_admin()) {
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
     // Override regular price for simple products
     add_filter('woocommerce_product_get_regular_price', function ($price, $product) {
         global $mulopimfwc_options;
@@ -945,7 +997,7 @@ if (!is_admin()) {
 
 
 
-if (!is_admin()) {
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
     // Override stock quantity for simple products
     add_filter('woocommerce_product_get_stock_quantity', function ($quantity, $product) {
         global $mulopimfwc_options;
@@ -975,7 +1027,7 @@ if (!is_admin()) {
     }, 10, 2);
 }
 
-if (!is_admin()) {
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
 
     // Override backorder setting for simple products
     add_filter('woocommerce_product_get_backorders', function ($backorders, $product) {
@@ -1005,7 +1057,7 @@ if (!is_admin()) {
         return $normalized_backorders !== '' ? $normalized_backorders : $backorders;
     }, 10, 2);
 }
-if (!is_admin()) {
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
     // Override product stock status based on location stock
     add_filter('woocommerce_product_get_stock_status', function ($status, $product) {
         global $mulopimfwc_options;
@@ -1065,7 +1117,7 @@ if (!is_admin()) {
 }
 
 
-if (!is_admin()) {
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
 
     // Override variation stock
     add_filter('woocommerce_product_variation_get_stock_quantity', function ($quantity, $variation) {
@@ -1088,7 +1140,7 @@ if (!is_admin()) {
     }, 10, 2);
 }
 
-if (!is_admin()) {
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
     // Override variation backorders
     add_filter('woocommerce_product_variation_get_backorders', function ($backorders, $variation) {
         global $mulopimfwc_options;
@@ -1441,7 +1493,7 @@ add_filter('woocommerce_add_to_cart_validation', function ($passed, $product_id,
 
     return $passed;
 }, 10, 5);
-if (!is_admin()) {
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
     // Override the final price for simple products
     add_filter('woocommerce_product_get_price', function ($price, $product) {
         global $mulopimfwc_options;
