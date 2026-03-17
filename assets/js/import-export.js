@@ -260,6 +260,8 @@ jQuery(document).ready(function ($) {
     let activeWatchJobId = '';
     let selectedQueueJobId = '';
     let activeJobsRefreshTimer = 0;
+    let activeJobsRefreshRequest = null;
+    let queuedActiveJobsRefreshOptions = null;
     let activeJobsCache = [];
     let workflowManagedJobId = '';
     const jobEventCursors = {};
@@ -755,13 +757,22 @@ jQuery(document).ready(function ($) {
         }
     }
 
+    function mergeActiveJobsRefreshOptions(baseOptions, nextOptions) {
+        return $.extend({}, baseOptions || {}, nextOptions || {});
+    }
+
     function refreshActiveJobs(options) {
         if (!ieV2Enabled || !ajaxUrl) {
             return $.Deferred().resolve().promise();
         }
 
         const opts = options && typeof options === 'object' ? options : {};
-        return postAjax({
+        if (activeJobsRefreshRequest) {
+            queuedActiveJobsRefreshOptions = mergeActiveJobsRefreshOptions(queuedActiveJobsRefreshOptions, opts);
+            return activeJobsRefreshRequest;
+        }
+
+        activeJobsRefreshRequest = postAjax({
             action: ieActions.get_active_jobs || 'mulopimfwc_ie_get_active_jobs',
             nonce: nonce,
             limit: opts.limit || 6
@@ -791,7 +802,16 @@ jQuery(document).ready(function ($) {
             }
         }).fail(function () {
             // Keep the current UI state if background discovery fails.
+        }).always(function () {
+            activeJobsRefreshRequest = null;
+            if (queuedActiveJobsRefreshOptions) {
+                const nextOptions = queuedActiveJobsRefreshOptions;
+                queuedActiveJobsRefreshOptions = null;
+                refreshActiveJobs(nextOptions);
+            }
         });
+
+        return activeJobsRefreshRequest;
     }
 
     function startActiveJobsRefresh() {
@@ -862,6 +882,8 @@ jQuery(document).ready(function ($) {
         const onUpdate = typeof opts.onUpdate === 'function' ? opts.onUpdate : null;
         return new Promise(function (resolve, reject) {
             let stopped = false;
+            let transientFailureCount = 0;
+            const maxTransientFailures = 6;
 
             function finish(err, payload) {
                 if (stopped) {
@@ -899,6 +921,7 @@ jQuery(document).ready(function ($) {
                     nonce: nonce,
                     job_id: jobId
                 }).done(function (response) {
+                    transientFailureCount = 0;
                     if (!response || !response.success || !response.data) {
                         finish(new Error((response && response.data && response.data.message) || 'Failed to fetch job status.'));
                         return;
@@ -924,7 +947,14 @@ jQuery(document).ready(function ($) {
                         }
                         window.setTimeout(poll, 2500);
                     });
-                }).fail(function (_xhr, _status, error) {
+                }).fail(function (xhr, _status, error) {
+                    transientFailureCount++;
+                    const statusCode = Number((xhr && xhr.status) || 0);
+                    const isRetryable = statusCode === 0 || statusCode === 429 || statusCode === 502 || statusCode === 503 || statusCode === 504;
+                    if (isRetryable && transientFailureCount < maxTransientFailures) {
+                        window.setTimeout(poll, Math.min(12000, 2500 * transientFailureCount));
+                        return;
+                    }
                     finish(new Error(error || 'Failed to poll job status.'));
                 });
             }

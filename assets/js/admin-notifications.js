@@ -17,6 +17,7 @@
     let serviceWorkerRegistration = null;
     let allNotifications = []; // Store all notifications for admin bar dropdown
     let lastRealtimeDataAt = 0;
+    let liveRequestInFlight = false;
     const LIVE_RATE_LIMIT_MS = 5000;
 
     // Storage keys for read/unread notifications
@@ -238,6 +239,9 @@
     }
 
     function canSendLiveRequest() {
+        if (liveRequestInFlight || window.mulopimfwcRealtimeActive) {
+            return false;
+        }
         const now = Date.now();
         const lastRequestAt = window.mulopimfwcLiveRequestAt || 0;
         if (lastRequestAt && (now - lastRequestAt) < LIVE_RATE_LIMIT_MS) {
@@ -580,6 +584,7 @@
         if (!canSendLiveRequest()) {
             return;
         }
+        liveRequestInFlight = true;
         $.post(config.ajaxurl, {
             action: 'mulopimfwc_dashboard_live_data',
             nonce: config.nonce
@@ -588,6 +593,9 @@
                 if (response.success && response.data) {
                     handleRealtimeData(response.data);
                 }
+            })
+            .always(function () {
+                liveRequestInFlight = false;
             });
     }
 

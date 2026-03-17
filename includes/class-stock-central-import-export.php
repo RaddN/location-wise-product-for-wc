@@ -70,6 +70,12 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         'is_active',
     );
 
+    private $export_attachment_url_cache = array();
+    private $export_attachment_alt_cache = array();
+    private $export_object_terms_cache = array();
+    private $export_term_slug_cache = array();
+    private $export_sku_cache = array();
+
     public function handle_export_ajax()
     {
         check_ajax_referer('mulopimfwc_import_export_nonce', 'nonce');
@@ -669,6 +675,114 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         return $csv;
     }
 
+    private function get_cached_object_terms($object_id, $taxonomy)
+    {
+        $object_id = (int) $object_id;
+        $taxonomy = sanitize_key((string) $taxonomy);
+        if ($object_id <= 0 || $taxonomy === '') {
+            return array();
+        }
+
+        if (!isset($this->export_object_terms_cache[$taxonomy])) {
+            $this->export_object_terms_cache[$taxonomy] = array();
+        }
+
+        if (!array_key_exists($object_id, $this->export_object_terms_cache[$taxonomy])) {
+            $terms = get_the_terms($object_id, $taxonomy);
+            if (is_wp_error($terms) || !is_array($terms)) {
+                $terms = array();
+            }
+
+            $normalized_terms = array();
+            foreach ($terms as $term) {
+                if ($term && !is_wp_error($term) && isset($term->term_id)) {
+                    $normalized_terms[] = $term;
+                }
+            }
+
+            $this->export_object_terms_cache[$taxonomy][$object_id] = $normalized_terms;
+        }
+
+        return $this->export_object_terms_cache[$taxonomy][$object_id];
+    }
+
+    private function get_cached_term_slugs_for_object($object_id, $taxonomy)
+    {
+        $slugs = array();
+        foreach ($this->get_cached_object_terms($object_id, $taxonomy) as $term) {
+            $slug = isset($term->slug) ? (string) $term->slug : '';
+            if ($slug !== '') {
+                $slugs[] = $slug;
+            }
+        }
+
+        return array_values(array_unique($slugs));
+    }
+
+    private function get_cached_term_ids_for_object($object_id, $taxonomy)
+    {
+        $term_ids = array();
+        foreach ($this->get_cached_object_terms($object_id, $taxonomy) as $term) {
+            $term_id = isset($term->term_id) ? (int) $term->term_id : 0;
+            if ($term_id > 0) {
+                $term_ids[] = $term_id;
+            }
+        }
+
+        return array_values(array_unique($term_ids));
+    }
+
+    private function get_cached_term_slug($term_id, $taxonomy)
+    {
+        $term_id = (int) $term_id;
+        $taxonomy = sanitize_key((string) $taxonomy);
+        if ($term_id <= 0 || $taxonomy === '') {
+            return '';
+        }
+
+        if (!isset($this->export_term_slug_cache[$taxonomy])) {
+            $this->export_term_slug_cache[$taxonomy] = array();
+        }
+
+        if (!array_key_exists($term_id, $this->export_term_slug_cache[$taxonomy])) {
+            $term = get_term($term_id, $taxonomy);
+            $this->export_term_slug_cache[$taxonomy][$term_id] = ($term && !is_wp_error($term))
+                ? (string) $term->slug
+                : '';
+        }
+
+        return $this->export_term_slug_cache[$taxonomy][$term_id];
+    }
+
+    private function get_cached_attachment_url($attachment_id)
+    {
+        $attachment_id = (int) $attachment_id;
+        if ($attachment_id <= 0) {
+            return '';
+        }
+
+        if (!array_key_exists($attachment_id, $this->export_attachment_url_cache)) {
+            $url = wp_get_attachment_url($attachment_id);
+            $this->export_attachment_url_cache[$attachment_id] = $url ? (string) $url : '';
+        }
+
+        return $this->export_attachment_url_cache[$attachment_id];
+    }
+
+    private function get_cached_attachment_alt($attachment_id)
+    {
+        $attachment_id = (int) $attachment_id;
+        if ($attachment_id <= 0) {
+            return '';
+        }
+
+        if (!array_key_exists($attachment_id, $this->export_attachment_alt_cache)) {
+            $this->export_attachment_alt_cache[$attachment_id] = (string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
+        }
+
+        return $this->export_attachment_alt_cache[$attachment_id];
+    }
+
     private function build_product_export_row($product, $product_taxonomies, $exported_at, $source_site, $options)
     {
         $row = $this->new_row_template();
@@ -696,16 +810,13 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             if ($taxonomy === 'product_type') {
                 continue;
             }
-            $term_slugs = wp_get_post_terms($product_id, $taxonomy, array('fields' => 'slugs'));
-            if (!is_wp_error($term_slugs)) {
-                $taxonomies_payload[$taxonomy] = array_values(array_filter(array_map('strval', (array) $term_slugs)));
-            }
+            $taxonomies_payload[$taxonomy] = $this->get_cached_term_slugs_for_object($product_id, $taxonomy);
         }
 
         $image_src = '';
         $image_id = (int) $product->get_image_id();
         if ($image_id > 0) {
-            $image_url = wp_get_attachment_url($image_id);
+            $image_url = $this->get_cached_attachment_url($image_id);
             if ($image_url) {
                 $image_src = (string) $image_url;
             }
@@ -717,7 +828,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             if ($gallery_id <= 0) {
                 continue;
             }
-            $url = wp_get_attachment_url($gallery_id);
+            $url = $this->get_cached_attachment_url($gallery_id);
             if ($url) {
                 $gallery_sources[] = (string) $url;
             }
@@ -831,7 +942,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
 
         $image_id = (int) $variation->get_image_id();
         if ($image_id > 0) {
-            $url = wp_get_attachment_url($image_id);
+            $url = $this->get_cached_attachment_url($image_id);
             if ($url) {
                 $row['image_src'] = (string) $url;
             }
@@ -921,23 +1032,9 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $location_meta_map[$location_id][$base_key] = is_array($first) || is_object($first) ? wp_json_encode($first) : (string) $first;
         }
 
-        $assigned_location_slugs = wp_get_post_terms((int) $item_id, 'mulopimfwc_store_location', array('fields' => 'slugs'));
-        if (is_wp_error($assigned_location_slugs)) {
-            $assigned_location_slugs = array();
-        }
-        $location_ids_from_assignment = array();
-        foreach ((array) $assigned_location_slugs as $slug) {
-            foreach ($location_by_id as $location_id => $location_term) {
-                if ((string) $location_term->slug === (string) $slug) {
-                    $location_ids_from_assignment[] = (int) $location_id;
-                    break;
-                }
-            }
-        }
-
         $candidate_location_ids = array_unique(array_merge(
             array_map('intval', array_keys($location_meta_map)),
-            array_map('intval', $location_ids_from_assignment)
+            array_map('intval', $this->get_cached_term_ids_for_object((int) $item_id, 'mulopimfwc_store_location'))
         ));
 
         foreach ($candidate_location_ids as $location_id) {
@@ -968,12 +1065,12 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
 
         $image_id = (int) $product->get_image_id();
         if ($image_id > 0) {
-            $url = wp_get_attachment_url($image_id);
+            $url = $this->get_cached_attachment_url($image_id);
             if ($url) {
                 $media_items[] = array(
                     'url' => (string) $url,
                     'context' => $context . '_featured',
-                    'alt' => (string) get_post_meta($image_id, '_wp_attachment_image_alt', true),
+                    'alt' => $this->get_cached_attachment_alt($image_id),
                 );
             }
         }
@@ -983,12 +1080,12 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             if ($gallery_id <= 0) {
                 continue;
             }
-            $url = wp_get_attachment_url($gallery_id);
+            $url = $this->get_cached_attachment_url($gallery_id);
             if ($url) {
                 $media_items[] = array(
                     'url' => (string) $url,
                     'context' => $context . '_gallery',
-                    'alt' => (string) get_post_meta($gallery_id, '_wp_attachment_image_alt', true),
+                    'alt' => $this->get_cached_attachment_alt($gallery_id),
                 );
             }
         }
@@ -2803,9 +2900,9 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                     if ($option_id <= 0) {
                         continue;
                     }
-                    $term = get_term($option_id, $taxonomy);
-                    if ($term && !is_wp_error($term)) {
-                        $slugs[] = (string) $term->slug;
+                    $slug = $this->get_cached_term_slug($option_id, $taxonomy);
+                    if ($slug !== '') {
+                        $slugs[] = $slug;
                     }
                 }
                 $item['options'] = $slugs;
@@ -3016,22 +3113,62 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
 
     private function ids_to_skus($ids)
     {
-        $skus = array();
-        foreach ((array) $ids as $id) {
-            $id = (int) $id;
-            if ($id <= 0) {
-                continue;
-            }
-            $product = wc_get_product($id);
-            if (!$product) {
-                continue;
-            }
-            $sku = (string) $product->get_sku();
-            if ($sku !== '') {
-                $skus[] = $sku;
+        global $wpdb;
+
+        $normalized_ids = array_values(array_unique(array_filter(array_map('intval', (array) $ids))));
+        if (empty($normalized_ids)) {
+            return array();
+        }
+
+        $missing_ids = array();
+        foreach ($normalized_ids as $id) {
+            if (!array_key_exists($id, $this->export_sku_cache)) {
+                $missing_ids[] = $id;
             }
         }
-        return array_values(array_unique($skus));
+
+        if (!empty($missing_ids)) {
+            $placeholders = implode(',', array_fill(0, count($missing_ids), '%d'));
+            $query = $wpdb->prepare(
+                "SELECT post_id, meta_value
+                 FROM {$wpdb->postmeta}
+                 WHERE meta_key = '_sku'
+                 AND post_id IN ($placeholders)",
+                $missing_ids
+            );
+            $rows = $query ? $wpdb->get_results($query, ARRAY_A) : array();
+            $loaded_ids = array();
+
+            if (is_array($rows)) {
+                foreach ($rows as $row) {
+                    $post_id = isset($row['post_id']) ? (int) $row['post_id'] : 0;
+                    if ($post_id <= 0) {
+                        continue;
+                    }
+
+                    $this->export_sku_cache[$post_id] = isset($row['meta_value']) ? (string) $row['meta_value'] : '';
+                    $loaded_ids[$post_id] = true;
+                }
+            }
+
+            foreach ($missing_ids as $missing_id) {
+                if (!isset($loaded_ids[$missing_id])) {
+                    $this->export_sku_cache[$missing_id] = '';
+                }
+            }
+        }
+
+        $skus = array();
+        $seen = array();
+        foreach ($normalized_ids as $id) {
+            $sku = isset($this->export_sku_cache[$id]) ? (string) $this->export_sku_cache[$id] : '';
+            if ($sku === '' || isset($seen[$sku])) {
+                continue;
+            }
+            $seen[$sku] = true;
+            $skus[] = $sku;
+        }
+        return $skus;
     }
 
     private function ids_to_sku_csv($ids)

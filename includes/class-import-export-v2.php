@@ -1195,6 +1195,95 @@ class MULOPIMFWC_Import_Export_V2_Service
         }
     }
 
+    private function prime_export_batch_data($product_ids)
+    {
+        $product_ids = array_values(array_unique(array_filter(array_map('intval', (array) $product_ids))));
+        if (empty($product_ids)) {
+            return array();
+        }
+
+        $this->prime_post_caches_for_export($product_ids, 'product');
+        $variation_ids_by_parent = $this->fetch_export_variation_ids_by_parent($product_ids);
+
+        if (!empty($variation_ids_by_parent)) {
+            $variation_ids = array();
+            foreach ($variation_ids_by_parent as $ids) {
+                foreach ((array) $ids as $variation_id) {
+                    $variation_id = (int) $variation_id;
+                    if ($variation_id > 0) {
+                        $variation_ids[] = $variation_id;
+                    }
+                }
+            }
+
+            if (!empty($variation_ids)) {
+                $this->prime_post_caches_for_export($variation_ids, 'product_variation');
+            }
+        }
+
+        return $variation_ids_by_parent;
+    }
+
+    private function prime_post_caches_for_export($post_ids, $object_type)
+    {
+        $post_ids = array_values(array_unique(array_filter(array_map('intval', (array) $post_ids))));
+        if (empty($post_ids)) {
+            return;
+        }
+
+        if (function_exists('_prime_post_caches')) {
+            _prime_post_caches($post_ids, false, true);
+        } else {
+            update_meta_cache('post', $post_ids);
+            foreach ($post_ids as $post_id) {
+                get_post($post_id);
+            }
+        }
+
+        if (function_exists('update_object_term_cache')) {
+            update_object_term_cache($post_ids, $object_type);
+        }
+    }
+
+    private function fetch_export_variation_ids_by_parent($product_ids)
+    {
+        $product_ids = array_values(array_unique(array_filter(array_map('intval', (array) $product_ids))));
+        if (empty($product_ids)) {
+            return array();
+        }
+
+        $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
+        $query = $this->wpdb->prepare(
+            "SELECT ID, post_parent
+             FROM {$this->wpdb->posts}
+             WHERE post_type = 'product_variation'
+             AND post_parent IN ($placeholders)
+             AND post_status <> 'trash'
+             ORDER BY post_parent ASC, menu_order ASC, ID ASC",
+            $product_ids
+        );
+        $rows = $query ? $this->wpdb->get_results($query) : array();
+        $grouped = array();
+
+        if (!is_array($rows)) {
+            return $grouped;
+        }
+
+        foreach ($rows as $row) {
+            $variation_id = isset($row->ID) ? (int) $row->ID : 0;
+            $parent_id = isset($row->post_parent) ? (int) $row->post_parent : 0;
+            if ($variation_id <= 0 || $parent_id <= 0) {
+                continue;
+            }
+            if (!isset($grouped[$parent_id])) {
+                $grouped[$parent_id] = array();
+            }
+            $grouped[$parent_id][] = $variation_id;
+        }
+
+        return $grouped;
+    }
+
     private function process_export_job($job, $deadline)
     {
         $job_id = $job['job_id'];
@@ -1313,6 +1402,7 @@ class MULOPIMFWC_Import_Export_V2_Service
                     $checkpoint['stage'] = 'finalize';
                     break;
                 }
+                $variation_ids_by_parent = $this->prime_export_batch_data($product_ids);
 
                 foreach ($product_ids as $product_id) {
                     if (microtime(true) >= $deadline || $this->memory_guard_reached()) {
@@ -1352,7 +1442,12 @@ class MULOPIMFWC_Import_Export_V2_Service
                     $checkpoint['summary']['media_refs'] = isset($checkpoint['summary']['media_refs']) ? ((int) $checkpoint['summary']['media_refs'] + (int) $media_rows) : (int) $media_rows;
 
                     if ($product->is_type('variable')) {
-                        foreach ((array) $product->get_children() as $variation_id) {
+                        $child_ids = isset($variation_ids_by_parent[(int) $product_id]) ? (array) $variation_ids_by_parent[(int) $product_id] : array();
+                        if (empty($child_ids)) {
+                            $child_ids = (array) $product->get_children();
+                        }
+
+                        foreach ($child_ids as $variation_id) {
                             $variation = wc_get_product($variation_id);
                             if (!$variation || !$variation->is_type('variation')) {
                                 continue;
@@ -2904,6 +2999,21 @@ class MULOPIMFWC_Import_Export_V2_Service
     private function schedule_worker($job_id, $delay_seconds = 0)
     {
         $delay_seconds = max(0, (int) $delay_seconds);
+        if (function_exists('as_get_scheduled_actions') && function_exists('as_schedule_single_action')) {
+            $pending = as_get_scheduled_actions(array(
+                'hook' => self::ACTION_HOOK_PROCESS_JOB,
+                'args' => array('job_id' => $job_id),
+                'group' => self::ACTION_GROUP,
+                'status' => 'pending',
+                'per_page' => 1,
+                'orderby' => 'date',
+                'order' => 'ASC',
+            ), 'ids');
+            if (empty($pending)) {
+                as_schedule_single_action(time() + $delay_seconds, self::ACTION_HOOK_PROCESS_JOB, array('job_id' => $job_id), self::ACTION_GROUP);
+            }
+            return;
+        }
         if (function_exists('as_next_scheduled_action') && function_exists('as_schedule_single_action')) {
             $next = as_next_scheduled_action(self::ACTION_HOOK_PROCESS_JOB, array('job_id' => $job_id), self::ACTION_GROUP);
             if ($next === false) {
