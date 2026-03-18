@@ -875,6 +875,8 @@ if (!function_exists('mulopimfwc_should_load_frontend_runtime_product_filters'))
             'mulopimfwc_frontend_runtime_product_filter_ajax_actions',
             [
                 'woodmart_update_cart_item',
+                // Woodmart renders customer-facing quick view content through admin-ajax.php.
+                'woodmart_quick_view',
             ]
         ));
 
