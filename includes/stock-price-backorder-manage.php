@@ -824,7 +824,21 @@ if (!function_exists('mulopimfwc_is_cart_checkout_runtime_context')) {
                 ? sanitize_key(wp_unslash($_REQUEST['action']))
                 : '';
 
-            if (in_array($wc_ajax_action, ['update_order_review', 'checkout'], true)) {
+            $cart_runtime_wc_ajax_actions = array_map('sanitize_key', (array) apply_filters(
+                'mulopimfwc_cart_runtime_wc_ajax_actions',
+                [
+                    'update_order_review',
+                    'checkout',
+                    'add_to_cart',
+                    'get_refreshed_fragments',
+                    'remove_from_cart',
+                    'update_shipping_method',
+                    'apply_coupon',
+                    'remove_coupon',
+                ]
+            ));
+
+            if ($wc_ajax_action !== '' && in_array($wc_ajax_action, $cart_runtime_wc_ajax_actions, true)) {
                 return true;
             }
 
@@ -844,6 +858,33 @@ if (!function_exists('mulopimfwc_is_cart_checkout_runtime_context')) {
     }
 }
 
+if (!function_exists('mulopimfwc_is_frontend_wc_ajax_request')) {
+    /**
+     * Detect WooCommerce frontend AJAX requests served through `?wc-ajax=...`.
+     *
+     * Some frontend requests are handled as AJAX while still requiring product
+     * runtime filters and cart-item location context.
+     *
+     * @return bool
+     */
+    function mulopimfwc_is_frontend_wc_ajax_request()
+    {
+        $wc_ajax_action = isset($_REQUEST['wc-ajax'])
+            ? sanitize_key(wp_unslash($_REQUEST['wc-ajax']))
+            : '';
+
+        if ($wc_ajax_action !== '') {
+            return true;
+        }
+
+        $request_uri = isset($_SERVER['REQUEST_URI'])
+            ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']))
+            : '';
+
+        return strpos($request_uri, 'wc-ajax=') !== false;
+    }
+}
+
 if (!function_exists('mulopimfwc_should_load_frontend_runtime_product_filters')) {
     /**
      * Allow frontend product runtime filters during customer-facing AJAX refreshes.
@@ -856,6 +897,10 @@ if (!function_exists('mulopimfwc_should_load_frontend_runtime_product_filters'))
     function mulopimfwc_should_load_frontend_runtime_product_filters(): bool
     {
         if (!is_admin()) {
+            return true;
+        }
+
+        if (mulopimfwc_is_frontend_wc_ajax_request()) {
             return true;
         }
 
@@ -883,6 +928,286 @@ if (!function_exists('mulopimfwc_should_load_frontend_runtime_product_filters'))
         return in_array($ajax_action, $frontend_runtime_ajax_actions, true);
     }
 }
+
+if (!function_exists('mulopimfwc_format_runtime_price_for_cart')) {
+    /**
+     * Normalize a runtime price for cart product setters.
+     *
+     * @param mixed $price
+     * @return string
+     */
+    function mulopimfwc_format_runtime_price_for_cart($price)
+    {
+        $normalized = mulopimfwc_normalize_price_amount($price);
+        if ($normalized === null) {
+            return '';
+        }
+
+        if (function_exists('wc_format_decimal')) {
+            return (string) wc_format_decimal($normalized, 6, false);
+        }
+
+        return (string) $normalized;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_runtime_price_data_for_location')) {
+    /**
+     * Resolve regular/sale/active prices for a cart item in a specific location.
+     *
+     * The returned values are display/runtime prices in the selected location's
+     * currency context and are safe to apply to cart-item product objects.
+     *
+     * @param int $product_id
+     * @param int $variation_id
+     * @param int $location_id
+     * @return array{regular: string, sale: string, active: string}
+     */
+    function mulopimfwc_get_runtime_price_data_for_location($product_id, $variation_id = 0, $location_id = 0)
+    {
+        $product_id = absint($product_id);
+        $variation_id = absint($variation_id);
+        $location_id = absint($location_id);
+        $target_id = $variation_id > 0 ? $variation_id : $product_id;
+
+        $empty = [
+            'regular' => '',
+            'sale' => '',
+            'active' => '',
+        ];
+
+        if ($target_id <= 0 || $location_id <= 0) {
+            return $empty;
+        }
+
+        $raw_regular_price = get_post_meta($target_id, '_regular_price', true);
+        $raw_sale_price = get_post_meta($target_id, '_sale_price', true);
+        $location_regular_price = get_post_meta($target_id, '_location_regular_price_' . $location_id, true);
+        $location_sale_price = get_post_meta($target_id, '_location_sale_price_' . $location_id, true);
+
+        $display_regular_price = '';
+        $display_sale_price = '';
+        $active_price = '';
+
+        if (mulopimfwc_has_price_value($location_sale_price)) {
+            $display_regular_price = mulopimfwc_has_price_value($location_regular_price)
+                ? $location_regular_price
+                : mulopimfwc_convert_price_amount_for_location($raw_regular_price, $location_id);
+            $display_sale_price = $location_sale_price;
+            $active_price = $location_sale_price;
+        } elseif (mulopimfwc_has_price_value($location_regular_price)) {
+            $display_regular_price = $location_regular_price;
+            $active_price = $location_regular_price;
+        } else {
+            $display_regular_price = mulopimfwc_convert_price_amount_for_location($raw_regular_price, $location_id);
+
+            if (mulopimfwc_has_price_value($raw_sale_price)) {
+                $display_sale_price = mulopimfwc_convert_price_amount_for_location($raw_sale_price, $location_id);
+                $active_price = $display_sale_price;
+            } else {
+                $active_price = $display_regular_price;
+            }
+        }
+
+        if (!mulopimfwc_has_price_value($active_price) && mulopimfwc_has_price_value($display_regular_price)) {
+            $active_price = $display_regular_price;
+        }
+
+        if (!mulopimfwc_has_price_value($display_regular_price) && mulopimfwc_has_price_value($active_price)) {
+            $display_regular_price = $active_price;
+        }
+
+        $normalized_regular = mulopimfwc_normalize_price_amount($display_regular_price);
+        $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
+        $normalized_active = mulopimfwc_normalize_price_amount($active_price);
+
+        if (
+            $normalized_regular !== null &&
+            $normalized_sale !== null &&
+            abs((float) $normalized_regular - (float) $normalized_sale) < 0.0001
+        ) {
+            $display_sale_price = '';
+            $normalized_sale = null;
+        }
+
+        return [
+            'regular' => $normalized_regular !== null ? mulopimfwc_format_runtime_price_for_cart($display_regular_price) : '',
+            'sale' => $normalized_sale !== null ? mulopimfwc_format_runtime_price_for_cart($display_sale_price) : '',
+            'active' => $normalized_active !== null ? mulopimfwc_format_runtime_price_for_cart($active_price) : '',
+        ];
+    }
+}
+
+if (!function_exists('mulopimfwc_apply_runtime_price_data_to_product')) {
+    /**
+     * Apply resolved runtime price data to a cart product object.
+     *
+     * @param WC_Product $product
+     * @param array      $price_data
+     * @return WC_Product
+     */
+    function mulopimfwc_apply_runtime_price_data_to_product($product, array $price_data)
+    {
+        if (!is_object($product) || !method_exists($product, 'set_price')) {
+            return $product;
+        }
+
+        if (method_exists($product, 'set_regular_price')) {
+            $product->set_regular_price($price_data['regular'] ?? '');
+        }
+
+        if (method_exists($product, 'set_sale_price')) {
+            $product->set_sale_price($price_data['sale'] ?? '');
+        }
+
+        $product->set_price($price_data['active'] ?? '');
+        return $product;
+    }
+}
+
+if (!function_exists('mulopimfwc_restore_cart_item_product_prices_from_session')) {
+    /**
+     * Re-apply location pricing when WooCommerce rebuilds cart item products from session.
+     *
+     * @param array  $session_data
+     * @param array  $values
+     * @param string $cart_item_key
+     * @return array
+     */
+    function mulopimfwc_restore_cart_item_product_prices_from_session($session_data, $values, $cart_item_key)
+    {
+        if (!isset($session_data['data']) || !is_object($session_data['data'])) {
+            return $session_data;
+        }
+
+        global $mulopimfwc_options;
+        if (
+            !isset($mulopimfwc_options['enable_location_price']) ||
+            $mulopimfwc_options['enable_location_price'] !== 'on'
+        ) {
+            return $session_data;
+        }
+
+        $product_id = isset($session_data['product_id']) ? absint($session_data['product_id']) : 0;
+        $variation_id = isset($session_data['variation_id']) ? absint($session_data['variation_id']) : 0;
+        $location_slug = isset($session_data['mulopimfwc_location'])
+            ? sanitize_title(rawurldecode((string) $session_data['mulopimfwc_location']))
+            : '';
+
+        if ($location_slug === '') {
+            $single_location_slug = mulopimfwc_get_single_assigned_location_slug($product_id, $variation_id);
+            if (!empty($single_location_slug)) {
+                $location_slug = (string) $single_location_slug;
+            }
+        }
+
+        if ($location_slug === '' || $location_slug === 'all-products') {
+            $location_slug = mulopimfwc_get_current_store_location();
+        }
+
+        $location_id = mulopimfwc_get_location_term_id($location_slug);
+        if (!$location_id) {
+            return $session_data;
+        }
+
+        $price_data = mulopimfwc_get_runtime_price_data_for_location($product_id, $variation_id, $location_id);
+        if ($price_data['active'] === '') {
+            return $session_data;
+        }
+
+        $session_data['data'] = mulopimfwc_apply_runtime_price_data_to_product($session_data['data'], $price_data);
+        return $session_data;
+    }
+}
+
+add_filter('woocommerce_get_cart_item_from_session', 'mulopimfwc_restore_cart_item_product_prices_from_session', 20, 3);
+
+if (!function_exists('mulopimfwc_sync_cart_item_product_prices')) {
+    /**
+     * Canonicalize cart-item product prices from the stored item location.
+     *
+     * This keeps totals, mini-cart fragments, drawers, and theme/plugin cart
+     * widgets aligned even when add-to-cart happens through different request
+     * flows (single product forms, quick view modals, AJAX fragments, etc.).
+     *
+     * @param WC_Cart $cart
+     * @return void
+     */
+    function mulopimfwc_sync_cart_item_product_prices($cart)
+    {
+        if (!is_object($cart) || !method_exists($cart, 'get_cart')) {
+            return;
+        }
+
+        if (is_admin() && (!function_exists('wp_doing_ajax') || !wp_doing_ajax())) {
+            return;
+        }
+
+        global $mulopimfwc_options;
+        if (
+            !isset($mulopimfwc_options['enable_location_price']) ||
+            $mulopimfwc_options['enable_location_price'] !== 'on'
+        ) {
+            return;
+        }
+
+        static $is_syncing = false;
+        if ($is_syncing) {
+            return;
+        }
+
+        $is_syncing = true;
+
+        foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+            $product = isset($cart_item['data']) ? $cart_item['data'] : null;
+            if (!is_object($product) || !method_exists($product, 'set_price')) {
+                continue;
+            }
+
+            $product_id = isset($cart_item['product_id']) ? absint($cart_item['product_id']) : 0;
+            $variation_id = isset($cart_item['variation_id']) ? absint($cart_item['variation_id']) : 0;
+
+            if ($product_id <= 0 && method_exists($product, 'get_id')) {
+                $product_id = absint($product->get_id());
+            }
+
+            $location_slug = isset($cart_item['mulopimfwc_location'])
+                ? sanitize_title(rawurldecode((string) $cart_item['mulopimfwc_location']))
+                : '';
+
+            if ($location_slug === '') {
+                $single_location_slug = mulopimfwc_get_single_assigned_location_slug($product_id, $variation_id);
+                if (!empty($single_location_slug)) {
+                    $location_slug = (string) $single_location_slug;
+                }
+            }
+
+            if ($location_slug === '' || $location_slug === 'all-products') {
+                $location_slug = mulopimfwc_get_current_store_location();
+            }
+
+            $location_id = mulopimfwc_get_location_term_id($location_slug);
+            if (!$location_id) {
+                continue;
+            }
+
+            $price_data = mulopimfwc_get_runtime_price_data_for_location($product_id, $variation_id, $location_id);
+            if ($price_data['active'] === '') {
+                continue;
+            }
+
+            $product = mulopimfwc_apply_runtime_price_data_to_product($product, $price_data);
+
+            if (isset($cart->cart_contents[$cart_item_key]['data'])) {
+                $cart->cart_contents[$cart_item_key]['data'] = $product;
+            }
+        }
+
+        $is_syncing = false;
+    }
+}
+
+add_action('woocommerce_before_calculate_totals', 'mulopimfwc_sync_cart_item_product_prices', 5);
 
 if (!function_exists('mulopimfwc_resolve_runtime_item_location')) {
     /**
