@@ -920,6 +920,8 @@ if (!function_exists('mulopimfwc_should_load_frontend_runtime_product_filters'))
             'mulopimfwc_frontend_runtime_product_filter_ajax_actions',
             [
                 'woodmart_update_cart_item',
+                // Woodmart archive "Select options" panels render through admin-ajax.php.
+                'woodmart_quick_shop',
                 // Woodmart renders customer-facing quick view content through admin-ajax.php.
                 'woodmart_quick_view',
             ]
@@ -1034,6 +1036,170 @@ if (!function_exists('mulopimfwc_get_runtime_price_data_for_location')) {
             'regular' => $normalized_regular !== null ? mulopimfwc_format_runtime_price_for_cart($display_regular_price) : '',
             'sale' => $normalized_sale !== null ? mulopimfwc_format_runtime_price_for_cart($display_sale_price) : '',
             'active' => $normalized_active !== null ? mulopimfwc_format_runtime_price_for_cart($active_price) : '',
+        ];
+    }
+}
+
+if (!function_exists('mulopimfwc_get_frontend_runtime_product_location_slug')) {
+    /**
+     * Resolve the storefront location for frontend product payloads.
+     *
+     * Frontend product UIs can be rendered in request-driven or AJAX flows before
+     * the store-location cookie is available. Prefer explicit request context,
+     * then fall back to runtime helpers and the selected cookie/default location.
+     *
+     * @return string
+     */
+    function mulopimfwc_get_frontend_runtime_product_location_slug()
+    {
+        $request_keys = [
+            'mulopimfwc_loc',
+            'mulopimfwc_store_location',
+            'store_location',
+            'location',
+            'location_filter',
+        ];
+
+        $candidates = [];
+
+        foreach ($request_keys as $request_key) {
+            if (isset($_REQUEST[$request_key])) {
+                $candidates[] = (string) wp_unslash($_REQUEST[$request_key]);
+            }
+        }
+
+        $referer = isset($_SERVER['HTTP_REFERER'])
+            ? (string) wp_unslash($_SERVER['HTTP_REFERER'])
+            : '';
+
+        if ($referer !== '') {
+            $referer_query = wp_parse_url($referer, PHP_URL_QUERY);
+            if (is_string($referer_query) && $referer_query !== '') {
+                $referer_args = [];
+                wp_parse_str($referer_query, $referer_args);
+
+                foreach ($request_keys as $request_key) {
+                    if (isset($referer_args[$request_key])) {
+                        $candidates[] = (string) $referer_args[$request_key];
+                    }
+                }
+            }
+        }
+
+        if (function_exists('mulopimfwc_get_effective_runtime_location_slug')) {
+            $candidates[] = (string) mulopimfwc_get_effective_runtime_location_slug();
+        }
+
+        $candidates[] = (string) mulopimfwc_get_current_store_location();
+
+        foreach ($candidates as $candidate) {
+            $candidate_slug = sanitize_title(rawurldecode(trim((string) $candidate)));
+
+            if ($candidate_slug === '') {
+                continue;
+            }
+
+            if ($candidate_slug === 'all-products') {
+                return $candidate_slug;
+            }
+
+            $location_term = function_exists('mulopimfwc_validate_location_slug')
+                ? mulopimfwc_validate_location_slug($candidate_slug, false)
+                : get_term_by('slug', $candidate_slug, 'mulopimfwc_store_location');
+
+            if ($location_term && !is_wp_error($location_term)) {
+                return sanitize_title(rawurldecode((string) $location_term->slug));
+            }
+        }
+
+        return '';
+    }
+}
+
+if (!function_exists('mulopimfwc_format_runtime_price_for_location_display')) {
+    /**
+     * Format a runtime price for a specific location without depending on global currency filters.
+     *
+     * @param mixed $price
+     * @param int   $location_id
+     * @return string
+     */
+    function mulopimfwc_format_runtime_price_for_location_display($price, $location_id = 0)
+    {
+        $location_id = absint($location_id);
+
+        if (
+            $location_id > 0 &&
+            function_exists('mulopimfwc_get_currency_settings_for_location') &&
+            function_exists('mulopimfwc_get_price_format_for_currency_position')
+        ) {
+            $currency_settings = mulopimfwc_get_currency_settings_for_location($location_id);
+            return wc_price($price, [
+                'currency' => $currency_settings['currency'],
+                'price_format' => mulopimfwc_get_price_format_for_currency_position($currency_settings['position']),
+            ]);
+        }
+
+        return wc_price($price);
+    }
+}
+
+if (!function_exists('mulopimfwc_get_runtime_variation_price_payload')) {
+    /**
+     * Build native WooCommerce variation price fields for a selected location.
+     *
+     * Themes and plugins often read `display_price`, `display_regular_price`, and
+     * `price_html` directly from the variation payload. Populate those fields with
+     * location-aware values so every frontend variation UI stays consistent.
+     *
+     * @param int $product_id
+     * @param int $variation_id
+     * @param int $location_id
+     * @return array{regular:?float,sale:?float,active:?float,price_html:string}
+     */
+    function mulopimfwc_get_runtime_variation_price_payload($product_id, $variation_id, $location_id)
+    {
+        $empty = [
+            'regular' => null,
+            'sale' => null,
+            'active' => null,
+            'price_html' => '',
+        ];
+
+        $price_data = mulopimfwc_get_runtime_price_data_for_location($product_id, $variation_id, $location_id);
+        $regular_price = mulopimfwc_normalize_price_amount($price_data['regular'] ?? '');
+        $sale_price = mulopimfwc_normalize_price_amount($price_data['sale'] ?? '');
+        $active_price = mulopimfwc_normalize_price_amount($price_data['active'] ?? '');
+
+        if ($active_price === null && $regular_price !== null) {
+            $active_price = $regular_price;
+        }
+
+        if ($regular_price === null && $active_price !== null) {
+            $regular_price = $active_price;
+        }
+
+        if ($regular_price === null && $active_price === null) {
+            return $empty;
+        }
+
+        $price_html = '';
+
+        if (
+            $sale_price !== null &&
+            $regular_price !== null &&
+            abs((float) $regular_price - (float) $sale_price) > 0.0001
+        ) {
+            $price_html = '<span class="price"><del>' . mulopimfwc_format_runtime_price_for_location_display($regular_price, $location_id) . '</del> <ins>' . mulopimfwc_format_runtime_price_for_location_display($sale_price, $location_id) . '</ins></span>';
+        } elseif ($active_price !== null) {
+            $price_html = '<span class="price">' . mulopimfwc_format_runtime_price_for_location_display($active_price, $location_id) . '</span>';
+        }
+
+        return [
+            'regular' => $regular_price !== null ? (float) $regular_price : null,
+            'sale' => $sale_price !== null ? (float) $sale_price : null,
+            'active' => $active_price !== null ? (float) $active_price : null,
+            'price_html' => $price_html,
         ];
     }
 }
@@ -2303,7 +2469,7 @@ add_action('woocommerce_available_variation', 'mulopimfwc_add_location_data_to_v
 function mulopimfwc_add_location_data_to_variations($variation_data, $product, $variation)
 {
     // Get current location
-    $location_slug = mulopimfwc_get_current_store_location();
+    $location_slug = mulopimfwc_get_frontend_runtime_product_location_slug();
     if (empty($location_slug) || $location_slug === 'all-products') {
         return $variation_data; // No specific location selected
     }
@@ -2325,24 +2491,22 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
     // Get location-specific stock
     $location_stock = get_post_meta($variation_id, '_location_stock_' . $location->term_id, true);
 
-    // Get location-specific prices
-    $location_regular_price = get_post_meta($variation_id, '_location_regular_price_' . $location->term_id, true);
-    $location_sale_price = get_post_meta($variation_id, '_location_sale_price_' . $location->term_id, true);
-    $default_regular_price = get_post_meta($variation_id, '_regular_price', true);
-    $default_sale_price = get_post_meta($variation_id, '_sale_price', true);
+    $price_payload = mulopimfwc_get_runtime_variation_price_payload(
+        $product->get_id(),
+        $variation_id,
+        (int) $location->term_id
+    );
 
-    $display_regular_price = '';
-    $display_sale_price = '';
-    if (mulopimfwc_has_price_value($location_sale_price)) {
-        $display_regular_price = mulopimfwc_has_price_value($location_regular_price)
-            ? $location_regular_price
-            : mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
-        $display_sale_price = $location_sale_price;
-    } elseif (mulopimfwc_has_price_value($location_regular_price)) {
-        $display_regular_price = $location_regular_price;
-    } else {
-        $display_regular_price = mulopimfwc_convert_price_amount_for_location($default_regular_price, (int) $location->term_id);
-        $display_sale_price = mulopimfwc_convert_price_amount_for_location($default_sale_price, (int) $location->term_id);
+    if ($price_payload['regular'] !== null) {
+        $variation_data['display_regular_price'] = (float) $price_payload['regular'];
+    }
+
+    if ($price_payload['active'] !== null) {
+        $variation_data['display_price'] = (float) $price_payload['active'];
+    }
+
+    if ($price_payload['price_html'] !== '') {
+        $variation_data['price_html'] = $price_payload['price_html'];
     }
 
     // Get backorder setting
@@ -2363,16 +2527,14 @@ function mulopimfwc_add_location_data_to_variations($variation_data, $product, $
         : ['show' => true, 'label' => ($location_stock > 0 ? sprintf(esc_html('%d in stock', 'multi-location-product-and-inventory-management-pro'), esc_attr($location_stock)) : __('Out of stock', 'multi-location-product-and-inventory-management-pro')), 'status' => ($location_stock > 0 ? 'instock' : 'outofstock'), 'level' => '', 'class' => ''];
 
     // Add location data to variation data
-    $normalized_display_regular = mulopimfwc_normalize_price_amount($display_regular_price);
-    $normalized_display_sale = mulopimfwc_normalize_price_amount($display_sale_price);
     $variation_data['location_data'] = [
         'location_name' => $location->name,
         'location_stock' => $location_stock,
-        'location_regular_price' => ($normalized_display_regular !== null)
-            ? wc_price($display_regular_price)
+        'location_regular_price' => ($price_payload['regular'] !== null)
+            ? mulopimfwc_format_runtime_price_for_location_display($price_payload['regular'], (int) $location->term_id)
             : '',
-        'location_sale_price' => ($normalized_display_sale !== null)
-            ? wc_price($display_sale_price)
+        'location_sale_price' => ($price_payload['sale'] !== null)
+            ? mulopimfwc_format_runtime_price_for_location_display($price_payload['sale'], (int) $location->term_id)
             : '',
         'location_backorders' => mulopimfwc_normalize_backorder_value($location_backorders, 'location'),
         'stock_display' => [
