@@ -283,6 +283,8 @@ class MULOPIMFWC_Runtime_Filters
     /** Cache of current location config for this request */
     protected static $loc_cache = null;
     protected $converted_package_rate_hashes = [];
+    protected $shipping_zone_ids_by_instance = [];
+    protected $matching_zone_ids_by_package = [];
 
     public function __construct()
     {
@@ -368,7 +370,9 @@ class MULOPIMFWC_Runtime_Filters
      * Returns:
      * [
      *   'payments' => [ 'cod', 'bacs', ... ],
-     *   'shipping_instances' => [ 12, 34, ... ], // instance_id ints
+     *   'shipping_zones' => [ 0, 6, 9, ... ],   // zone_id ints
+     *   'shipping_methods_by_zone' => [ 6 => [ 12 ], 9 => [ 34, 35 ] ],
+     *   'shipping_instances' => [ 12, 34, ... ], // flattened instance_id ints
      *   'tax_class' => 'reduced-rate' or '' (standard)
      * ]
      */
@@ -387,23 +391,65 @@ class MULOPIMFWC_Runtime_Filters
         // Gateways (array of IDs)
         $payments = (array) get_term_meta($loc_id, 'payment_methods', true);
 
-        // Shipping: stored as ["zoneId:instanceId", ...] -> reduce to instance IDs
+        // Shipping zones (array of zone IDs).
+        $zone_ids = array_map('absint', (array) get_term_meta($loc_id, 'shipping_zones', true));
+        $zone_ids = array_values(array_unique(array_filter($zone_ids, static function ($zone_id) {
+            return $zone_id >= 0;
+        })));
+
+        // Shipping: stored as ["zoneId:instanceId", ...].
         $raw_methods = (array) get_term_meta($loc_id, 'shipping_methods', true);
+        $methods_by_zone = [];
         $instance_ids = [];
         foreach ($raw_methods as $pair) {
             // keep digits and colon; then split
             $pair = preg_replace('/[^0-9:]/', '', (string) $pair);
-            if (preg_match('/^\d+:(\d+)$/', $pair, $m)) {
-                $instance_ids[] = absint($m[1]);
+            if (preg_match('/^(\d+):(\d+)$/', $pair, $m)) {
+                $zone_id = absint($m[1]);
+                $instance_id = absint($m[2]);
+
+                if (!isset($methods_by_zone[$zone_id])) {
+                    $methods_by_zone[$zone_id] = [];
+                }
+
+                $methods_by_zone[$zone_id][] = $instance_id;
+                $instance_ids[] = $instance_id;
             }
         }
+
+        foreach ($methods_by_zone as $zone_id => $zone_instance_ids) {
+            $zone_instance_ids = array_map('absint', (array) $zone_instance_ids);
+            $zone_instance_ids = array_values(array_unique(array_filter($zone_instance_ids, static function ($instance_id) {
+                return $instance_id >= 0;
+            })));
+
+            if (empty($zone_instance_ids)) {
+                unset($methods_by_zone[$zone_id]);
+                continue;
+            }
+
+            $methods_by_zone[(int) $zone_id] = $zone_instance_ids;
+        }
+
         $instance_ids = array_values(array_unique($instance_ids));
+
+        if (!empty($zone_ids)) {
+            $allowed_zone_lookup = array_fill_keys($zone_ids, true);
+            $methods_by_zone = array_filter($methods_by_zone, static function ($zone_instance_ids, $zone_id) use ($allowed_zone_lookup) {
+                return isset($allowed_zone_lookup[(int) $zone_id]);
+            }, ARRAY_FILTER_USE_BOTH);
+        } elseif (!empty($methods_by_zone)) {
+            // If zone meta is missing but method pairs exist, infer the relevant zones from the pairs.
+            $zone_ids = array_values(array_map('intval', array_keys($methods_by_zone)));
+        }
 
         // Tax class (slug or '' for Standard)
         $tax_class = (string) get_term_meta($loc_id, 'tax_class', true);
 
         self::$loc_cache = [
             'payments'           => $payments,
+            'shipping_zones'     => $zone_ids,
+            'shipping_methods_by_zone' => $methods_by_zone,
             'shipping_instances' => $instance_ids,
             'tax_class'          => $tax_class,
             'location_id'        => $loc_id,
@@ -464,7 +510,198 @@ class MULOPIMFWC_Runtime_Filters
     }
 
     /**
-     * SHIPPING: Keep only rates whose instance_id is allowed for the location.
+     * Resolve the shipping zone ID for a zone-based shipping rate.
+     *
+     * Returns null when the rate is not tied to a WooCommerce shipping-zone instance.
+     */
+    protected function get_shipping_zone_id_for_rate($rate): ?int
+    {
+        if (!is_object($rate) || $this->is_local_pickup_rate($rate) || !class_exists('WC_Shipping_Zones')) {
+            return null;
+        }
+
+        $instance_id = is_callable([$rate, 'get_instance_id']) ? (int) $rate->get_instance_id() : 0;
+        if ($instance_id <= 0) {
+            return null;
+        }
+
+        if (array_key_exists($instance_id, $this->shipping_zone_ids_by_instance)) {
+            return $this->shipping_zone_ids_by_instance[$instance_id];
+        }
+
+        $zone = WC_Shipping_Zones::get_zone_by('instance_id', $instance_id);
+        $zone_id = ($zone && is_object($zone) && is_callable([$zone, 'get_id']))
+            ? (int) $zone->get_id()
+            : null;
+
+        $this->shipping_zone_ids_by_instance[$instance_id] = $zone_id;
+
+        return $zone_id;
+    }
+
+    /**
+     * Resolve all WooCommerce shipping zones matching the package destination.
+     *
+     * Unlike WooCommerce core, this returns every matching non-default zone instead of
+     * stopping at the first `zone_order` match. Zone `0` is only returned when no
+     * non-default zone matches the package.
+     *
+     * @param array $package Shipping package.
+     * @return int[]
+     */
+    protected function get_matching_zone_ids_for_package($package): array
+    {
+        if (!function_exists('WC') || !WC() || !WC()->countries) {
+            return [];
+        }
+
+        $destination = isset($package['destination']) && is_array($package['destination'])
+            ? $package['destination']
+            : [];
+
+        $country = strtoupper(wc_clean($destination['country'] ?? ''));
+        $state = strtoupper(wc_clean($destination['state'] ?? ''));
+        $postcode = wc_normalize_postcode(wc_clean($destination['postcode'] ?? ''));
+        $continent = strtoupper(wc_clean(WC()->countries->get_continent_code_for_country($country)));
+
+        $cache_key = md5(wp_json_encode([
+            'country' => $country,
+            'state' => $state,
+            'postcode' => $postcode,
+            'continent' => $continent,
+        ]));
+
+        if (isset($this->matching_zone_ids_by_package[$cache_key])) {
+            return $this->matching_zone_ids_by_package[$cache_key];
+        }
+
+        if ($country === '') {
+            $this->matching_zone_ids_by_package[$cache_key] = [];
+            return [];
+        }
+
+        global $wpdb;
+
+        $criteria = [];
+        $criteria[] = $wpdb->prepare("( ( location_type = 'country' AND location_code = %s )", $country);
+        $criteria[] = $wpdb->prepare("OR ( location_type = 'state' AND location_code = %s )", $country . ':' . $state);
+        $criteria[] = $wpdb->prepare("OR ( location_type = 'continent' AND location_code = %s )", $continent);
+        $criteria[] = 'OR ( location_type IS NULL ) )';
+
+        $postcode_locations = $wpdb->get_results(
+            "SELECT zone_id, location_code FROM {$wpdb->prefix}woocommerce_shipping_zone_locations WHERE location_type = 'postcode';"
+        );
+
+        if (!empty($postcode_locations)) {
+            $zone_ids_with_postcode_rules = array_map('absint', wp_list_pluck($postcode_locations, 'zone_id'));
+            $matches = wc_postcode_location_matcher($postcode, $postcode_locations, 'zone_id', 'location_code', $country);
+            $do_not_match = array_unique(array_diff($zone_ids_with_postcode_rules, array_keys($matches)));
+
+            if (!empty($do_not_match)) {
+                $criteria[] = 'AND zones.zone_id NOT IN (' . implode(',', array_map('absint', $do_not_match)) . ')';
+            }
+        }
+
+        $query = "SELECT DISTINCT zones.zone_id
+            FROM {$wpdb->prefix}woocommerce_shipping_zones as zones
+            LEFT OUTER JOIN {$wpdb->prefix}woocommerce_shipping_zone_locations as locations
+                ON zones.zone_id = locations.zone_id AND location_type != 'postcode'
+            WHERE " . implode(' ', $criteria) . '
+            ORDER BY zone_order ASC, zones.zone_id ASC';
+
+        $zone_ids = array_map('absint', (array) $wpdb->get_col($query));
+        $zone_ids = array_values(array_unique(array_filter($zone_ids)));
+
+        if (empty($zone_ids)) {
+            $zone_ids = [0];
+        }
+
+        $this->matching_zone_ids_by_package[$cache_key] = $zone_ids;
+
+        return $zone_ids;
+    }
+
+    /**
+     * Merge rates from every selected zone that matches the package destination.
+     *
+     * WooCommerce core calculates only one matching zone. This supplements rates from
+     * other matching zones that the active location explicitly allows.
+     *
+     * @param array $rates Existing package rates.
+     * @param array $package Shipping package.
+     * @param array $allowed_zone_ids Allowed zone IDs for the active location.
+     * @param array $allowed_methods_by_zone Optional method restrictions keyed by zone ID.
+     * @return array
+     */
+    protected function merge_matching_zone_rates($rates, $package, array $allowed_zone_ids, array $allowed_methods_by_zone): array
+    {
+        if (empty($allowed_zone_ids) || !class_exists('WC_Shipping_Zone')) {
+            return $rates;
+        }
+
+        $matching_zone_ids = $this->get_matching_zone_ids_for_package($package);
+        if (empty($matching_zone_ids)) {
+            return $rates;
+        }
+
+        $matching_allowed_zone_ids = array_values(array_intersect($matching_zone_ids, $allowed_zone_ids));
+        if (empty($matching_allowed_zone_ids)) {
+            return $rates;
+        }
+
+        $present_zone_ids = [];
+        foreach ($rates as $rate) {
+            $zone_id = $this->get_shipping_zone_id_for_rate($rate);
+            if ($zone_id !== null) {
+                $present_zone_ids[$zone_id] = true;
+            }
+        }
+
+        foreach ($matching_allowed_zone_ids as $zone_id) {
+            if (isset($present_zone_ids[$zone_id])) {
+                continue;
+            }
+
+            $zone = new WC_Shipping_Zone($zone_id);
+            $methods = is_callable([$zone, 'get_shipping_methods'])
+                ? $zone->get_shipping_methods()
+                : [];
+
+            foreach ((array) $methods as $method) {
+                if (!is_object($method)) {
+                    continue;
+                }
+
+                if (isset($method->enabled) && $method->enabled !== 'yes') {
+                    continue;
+                }
+
+                $instance_id = isset($method->instance_id) ? (int) $method->instance_id : 0;
+                if (!empty($allowed_methods_by_zone[$zone_id]) && !in_array($instance_id, $allowed_methods_by_zone[$zone_id], true)) {
+                    continue;
+                }
+
+                if (!is_callable([$method, 'get_rates_for_package'])) {
+                    continue;
+                }
+
+                $zone_rates = $method->get_rates_for_package($package);
+                foreach ((array) $zone_rates as $rate_id => $rate) {
+                    if (!isset($rates[$rate_id])) {
+                        $rates[$rate_id] = $rate;
+                    }
+                }
+            }
+        }
+
+        return $rates;
+    }
+
+    /**
+     * SHIPPING: Keep only rates whose zone/instance is allowed for the location.
+     *
+     * Shipping zones act as the primary allowlist for a location. Shipping methods are
+     * an optional narrower allowlist within those zones.
      */
     public function filter_package_rates($rates, $package)
     {
@@ -474,23 +711,56 @@ class MULOPIMFWC_Runtime_Filters
         }
 
         $cfg = $this->get_location_config();
-        if (empty($cfg['shipping_instances'])) {
+        $allowed_zone_ids = isset($cfg['shipping_zones']) && is_array($cfg['shipping_zones'])
+            ? array_map('intval', $cfg['shipping_zones'])
+            : [];
+        $allowed_methods_by_zone = isset($cfg['shipping_methods_by_zone']) && is_array($cfg['shipping_methods_by_zone'])
+            ? $cfg['shipping_methods_by_zone']
+            : [];
+
+        $has_zone_restrictions = !empty($allowed_zone_ids);
+        $has_method_restrictions = !empty($allowed_methods_by_zone);
+
+        if (!$has_zone_restrictions && !$has_method_restrictions) {
             // No restriction configured -> leave as is
             return $rates;
+        }
+
+        if ($has_zone_restrictions) {
+            $rates = $this->merge_matching_zone_rates($rates, $package, $allowed_zone_ids, $allowed_methods_by_zone);
         }
 
         $allow_pickup = $this->is_location_pickup_enabled();
 
         foreach ($rates as $key => $rate) {
+            if ($this->is_local_pickup_rate($rate)) {
+                // Pickup availability is controlled separately by location pickup settings.
+                if ($has_method_restrictions && !$allow_pickup) {
+                    unset($rates[$key]);
+                }
+                continue;
+            }
+
             // $rate is WC_Shipping_Rate
             $instance_id = is_callable([$rate, 'get_instance_id']) ? (int) $rate->get_instance_id() : 0;
 
-            // Some methods can have instance_id 0 (legacy table rate etc). If 0, require explicit '0' in allowlist.
-            if (! in_array($instance_id, $cfg['shipping_instances'], true)) {
-                if ($allow_pickup && $this->is_local_pickup_rate($rate)) {
+            if ($has_zone_restrictions) {
+                $zone_id = $this->get_shipping_zone_id_for_rate($rate);
+                if ($zone_id === null || !in_array($zone_id, $allowed_zone_ids, true)) {
+                    unset($rates[$key]);
                     continue;
                 }
-                unset($rates[$key]);
+
+                // If a zone has explicit method selections, only those methods are allowed there.
+                if (!empty($allowed_methods_by_zone[$zone_id]) && !in_array($instance_id, $allowed_methods_by_zone[$zone_id], true)) {
+                    unset($rates[$key]);
+                }
+            } elseif ($has_method_restrictions) {
+                // Fallback for malformed data where methods are stored but no zones are defined.
+                $zone_id = $this->get_shipping_zone_id_for_rate($rate);
+                if ($zone_id === null || empty($allowed_methods_by_zone[$zone_id]) || !in_array($instance_id, $allowed_methods_by_zone[$zone_id], true)) {
+                    unset($rates[$key]);
+                }
             }
         }
 

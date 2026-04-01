@@ -5,7 +5,7 @@
  * Handles shipping zone and method filtering based on selected store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.5.9
+ * @since 1.1.5.11
  */
 
 if (!defined('ABSPATH')) {
@@ -86,6 +86,171 @@ class MULOPIMFWC_Location_Based_Shipping
             : 'per_location';
 
         return $shipping_calculation_method === 'per_location';
+    }
+
+    /**
+     * Prefer the most specific matching zone type before WooCommerce applies zone order.
+     *
+     * WooCommerce normally returns the first matching zone by `zone_order`, so a broad
+     * country zone can hide a narrower state/postcode zone when both overlap.
+     *
+     * @param array $criteria Existing SQL criteria fragments.
+     * @param array $package Shipping package.
+     * @param array $postcode_locations Postcode location rows from WooCommerce.
+     * @return array
+     */
+    public function prioritize_specific_zone_matches($criteria, $package, $postcode_locations)
+    {
+        $matching_zone_ids = $this->get_highest_specificity_matching_zone_ids($package, $postcode_locations);
+
+        if (empty($matching_zone_ids)) {
+            return $criteria;
+        }
+
+        $criteria[] = 'AND zones.zone_id IN (' . implode(',', array_map('absint', $matching_zone_ids)) . ')';
+
+        return $criteria;
+    }
+
+    /**
+     * Resolve matching zones with the highest location specificity for the package destination.
+     *
+     * @param array $package Shipping package.
+     * @param array $postcode_locations Postcode location rows from WooCommerce.
+     * @return int[]
+     */
+    private function get_highest_specificity_matching_zone_ids($package, $postcode_locations)
+    {
+        static $cache = array();
+
+        $destination = isset($package['destination']) && is_array($package['destination'])
+            ? $package['destination']
+            : array();
+
+        $country = strtoupper(wc_clean($destination['country'] ?? ''));
+        $state = strtoupper(wc_clean($destination['state'] ?? ''));
+        $postcode = wc_normalize_postcode(wc_clean($destination['postcode'] ?? ''));
+        $continent = '';
+
+        if (function_exists('WC') && WC() && WC()->countries) {
+            $continent = strtoupper(wc_clean(WC()->countries->get_continent_code_for_country($country)));
+        }
+
+        $postcode_cache = array_map(static function ($location) {
+            return array(
+                'zone_id' => isset($location->zone_id) ? (int) $location->zone_id : 0,
+                'location_code' => isset($location->location_code) ? (string) $location->location_code : '',
+            );
+        }, is_array($postcode_locations) ? $postcode_locations : array());
+
+        $cache_key = md5(wp_json_encode(array(
+            'country' => $country,
+            'state' => $state,
+            'postcode' => $postcode,
+            'continent' => $continent,
+            'postcode_locations' => $postcode_cache,
+        )));
+
+        if (isset($cache[$cache_key])) {
+            return $cache[$cache_key];
+        }
+
+        if ($country === '') {
+            $cache[$cache_key] = array();
+            return $cache[$cache_key];
+        }
+
+        $scores = array();
+        $specificity_scores = $this->get_zone_match_specificity_scores();
+
+        if (!empty($postcode) && !empty($postcode_locations)) {
+            $postcode_matches = wc_postcode_location_matcher($postcode, $postcode_locations, 'zone_id', 'location_code', $country);
+            foreach (array_keys($postcode_matches) as $zone_id) {
+                $zone_id = absint($zone_id);
+                if ($zone_id > 0 && isset($specificity_scores['postcode'])) {
+                    $scores[$zone_id] = (int) $specificity_scores['postcode'];
+                }
+            }
+        }
+
+        global $wpdb;
+        $clauses = array();
+        $bindings = array();
+
+        if ($state !== '') {
+            $clauses[] = '(location_type = %s AND location_code = %s)';
+            $bindings[] = 'state';
+            $bindings[] = $country . ':' . $state;
+        }
+
+        $clauses[] = '(location_type = %s AND location_code = %s)';
+        $bindings[] = 'country';
+        $bindings[] = $country;
+
+        if ($continent !== '') {
+            $clauses[] = '(location_type = %s AND location_code = %s)';
+            $bindings[] = 'continent';
+            $bindings[] = $continent;
+        }
+
+        if (!empty($clauses)) {
+            $sql = "
+                SELECT zone_id, location_type
+                FROM {$wpdb->prefix}woocommerce_shipping_zone_locations
+                WHERE " . implode(' OR ', $clauses);
+
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $bindings), ARRAY_A);
+
+            foreach ((array) $rows as $row) {
+                $zone_id = isset($row['zone_id']) ? absint($row['zone_id']) : 0;
+                $location_type = isset($row['location_type']) ? (string) $row['location_type'] : '';
+                $score = isset($specificity_scores[$location_type]) ? (int) $specificity_scores[$location_type] : 0;
+
+                if ($zone_id > 0 && $score > 0) {
+                    $scores[$zone_id] = isset($scores[$zone_id])
+                        ? max((int) $scores[$zone_id], $score)
+                        : $score;
+                }
+            }
+        }
+
+        if (empty($scores)) {
+            $cache[$cache_key] = array();
+            return $cache[$cache_key];
+        }
+
+        $best_score = max($scores);
+        $best_zone_ids = array();
+
+        foreach ($scores as $zone_id => $score) {
+            if ((int) $score === (int) $best_score) {
+                $best_zone_ids[] = (int) $zone_id;
+            }
+        }
+
+        $cache[$cache_key] = array_values(array_unique(array_filter($best_zone_ids)));
+
+        return $cache[$cache_key];
+    }
+
+    /**
+     * Specificity scores for native WooCommerce zone location types.
+     *
+     * Higher values take precedence over broader matches. Same-specificity ties
+     * still respect WooCommerce's existing `zone_order`.
+     *
+     * @return array<string,int>
+     */
+    private function get_zone_match_specificity_scores()
+    {
+        $scores = array(
+            'postcode' => 400,
+            'state' => 300,
+            'country' => 200,
+            'continent' => 100,
+        );
+
+        return apply_filters('mulopimfwc_shipping_zone_match_specificity_scores', $scores);
     }
 
     /**
@@ -436,14 +601,14 @@ class MULOPIMFWC_Location_Based_Shipping
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/css/shipping-admin.css',
             array(),
-            '1.1.5.9'
+            '1.1.5.11'
         );
 
         wp_enqueue_script(
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/js/shipping-admin.js',
             array('jquery'),
-            '1.1.5.9',
+            '1.1.5.11',
             true
         );
 
