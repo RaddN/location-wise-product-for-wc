@@ -506,8 +506,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $disabled_attr = $disabled ? ' disabled="disabled"' : '';
         $classes = trim('mulopimfwc-classic-field mulopimfwc-classic-number ' . $extra_class);
         $string_value = (string) $value;
+        $min_attr = ($min !== null && $min !== '')
+            ? ' min="' . esc_attr((string) $min) . '"'
+            : '';
 
-        return '<input type="number" class="' . esc_attr($classes) . '" data-field="' . esc_attr($field) . '" data-initial-value="' . esc_attr($string_value) . '" value="' . esc_attr($string_value) . '" min="' . esc_attr($min) . '" step="' . esc_attr($step) . '"' . $disabled_attr . ' />';
+        return '<input type="number" class="' . esc_attr($classes) . '" data-field="' . esc_attr($field) . '" data-initial-value="' . esc_attr($string_value) . '" value="' . esc_attr($string_value) . '"' . $min_attr . ' step="' . esc_attr($step) . '"' . $disabled_attr . ' />';
     }
 
     private function classic_price_input($field, $value, $location_term_id = null, $disabled = false, $extra_class = '')
@@ -688,7 +691,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<tr class="mulopimfwc-classic-product-location-row" data-location-id="' . esc_attr($location_id) . '" data-location-name="' . esc_attr($location_name) . '" data-currency-symbol="' . esc_attr($location_currency_symbol) . '" data-currency-rate="' . esc_attr($this->format_currency_rate_attr($location_conversion_context['rate'])) . '" data-currency-should-convert="' . esc_attr($location_conversion_context['should_convert'] ? 'yes' : 'no') . '">';
             $output .= '<td class="mulopimfwc-classic-location-label">' . esc_html($location_name) . '</td>';
             if ($layout_mode === 'full') {
-                $output .= '<td>' . $this->classic_number_input('stock', $stock, '1', '0', !$supports_manage_stock) . '</td>';
+                $output .= '<td>' . $this->classic_number_input('stock', $stock, '1', null, !$supports_manage_stock) . '</td>';
                 $output .= '<td>' . $this->classic_price_input('regular_price', $regular_price, $location_id > 0 ? $location_id : null) . '</td>';
                 $output .= '<td>' . $this->classic_price_input('sale_price', $sale_price, $location_id > 0 ? $location_id : null) . '</td>';
                 $output .= '<td>' . $this->classic_select_input('backorders', $backorders, [
@@ -731,7 +734,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<tr class="mulopimfwc-classic-variation-location-row" data-location-id="' . esc_attr($location_id) . '" data-location-name="' . esc_attr($location_name) . '" data-currency-symbol="' . esc_attr($location_currency_symbol) . '" data-currency-rate="' . esc_attr($this->format_currency_rate_attr($location_conversion_context['rate'])) . '" data-currency-should-convert="' . esc_attr($location_conversion_context['should_convert'] ? 'yes' : 'no') . '">';
             $output .= '<td class="mulopimfwc-classic-location-label">' . esc_html($location_name) . '</td>';
             if ($supports_manage_stock) {
-                $output .= '<td>' . $this->classic_number_input('stock', $stock, '1', '0') . '</td>';
+                $output .= '<td>' . $this->classic_number_input('stock', $stock, '1', null) . '</td>';
             }
             $output .= '<td>' . $this->classic_price_input('regular_price', $regular_price, $location_id > 0 ? $location_id : null) . '</td>';
             $output .= '<td>' . $this->classic_price_input('sale_price', $sale_price, $location_id > 0 ? $location_id : null) . '</td>';
@@ -818,7 +821,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         if ($context['supports_manage_stock']) {
             $default_grid .= '<div><label>' . esc_html__('Stock Qty', 'multi-location-product-and-inventory-management-pro') . '</label>';
-            $default_grid .= $this->classic_number_input('stock_quantity', isset($default['stock_quantity']) ? $default['stock_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-default-field');
+            $default_grid .= $this->classic_number_input('stock_quantity', isset($default['stock_quantity']) ? $default['stock_quantity'] : '', '1', null, false, 'mulopimfwc-classic-default-field');
             $default_grid .= '</div>';
         }
 
@@ -885,10 +888,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         $output .= '<div class="mulopimfwc-classic-grid">';
         $output .= '<div><label>' . esc_html__('Purchase Price', 'multi-location-product-and-inventory-management-pro') . '</label>';
         $output .= $this->classic_price_input('purchase_price', isset($default['purchase_price']) ? $default['purchase_price'] : '', null, false, 'mulopimfwc-classic-default-field');
-        $output .= '</div>';
-
-        $output .= '<div><label>' . esc_html__('Purchase Quantity', 'multi-location-product-and-inventory-management-pro') . '</label>';
-        $output .= $this->classic_number_input('purchase_quantity', isset($default['purchase_quantity']) ? $default['purchase_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-default-field');
         $output .= '</div>';
         $output .= '</div>';
         $output .= '</div>';
@@ -1032,7 +1031,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<div class="mulopimfwc-classic-grid mulopimfwc-classic-variation-default-grid">';
             if ($supports_manage_stock) {
                 $output .= '<div><label>' . esc_html__('Stock Qty', 'multi-location-product-and-inventory-management-pro') . '</label>';
-                $output .= $this->classic_number_input('stock_quantity', isset($variation_default['stock_quantity']) ? $variation_default['stock_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-variation-default-field');
+                $output .= $this->classic_number_input('stock_quantity', isset($variation_default['stock_quantity']) ? $variation_default['stock_quantity'] : '', '1', null, false, 'mulopimfwc-classic-variation-default-field');
                 $output .= '</div>';
             }
 
@@ -1084,10 +1083,6 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $output .= '<div class="mulopimfwc-classic-grid mulopimfwc-classic-variation-default-grid">';
             $output .= '<div><label>' . esc_html__('Purchase Price', 'multi-location-product-and-inventory-management-pro') . '</label>';
             $output .= $this->classic_price_input('purchase_price', isset($variation_default['purchase_price']) ? $variation_default['purchase_price'] : '', null, false, 'mulopimfwc-classic-variation-default-field');
-            $output .= '</div>';
-
-            $output .= '<div><label>' . esc_html__('Purchase Quantity', 'multi-location-product-and-inventory-management-pro') . '</label>';
-            $output .= $this->classic_number_input('purchase_quantity', isset($variation_default['purchase_quantity']) ? $variation_default['purchase_quantity'] : '', '1', '0', false, 'mulopimfwc-classic-variation-default-field');
             $output .= '</div>';
             $output .= '</div>';
             $output .= '</details>';
@@ -1829,26 +1824,17 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 }, array_keys($variation['attributes']), $variation['attributes']));
 
                 $purchase_price = get_post_meta($variation['id'], '_purchase_price', true);
-                $purchase_quantity = get_post_meta($variation['id'], '_purchase_quantity', true);
-
                 $output .= '<div class="variation-purchase-price-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="purchase-price-item">';
                 $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
                 $output .= '</div>';
-                $output .= '<div class="purchase-price-item">';
-                $output .= '<span class="purchase-price-value">' . esc_html__('Quantity:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_quantity) ? esc_html($purchase_quantity) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
-                $output .= '</div>';
                 $output .= '</div>';
             }
         } else {
             $purchase_price = get_post_meta($item['id'], '_purchase_price', true);
-            $purchase_quantity = get_post_meta($item['id'], '_purchase_quantity', true);
             $output .= '<div class="purchase-price-item">';
             $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
-            $output .= '</div>';
-            $output .= '<div class="purchase-price-item">';
-            $output .= '<span class="purchase-price-value">' . esc_html__('Quantity:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_quantity) ? esc_html($purchase_quantity) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
             $output .= '</div>';
         }
 

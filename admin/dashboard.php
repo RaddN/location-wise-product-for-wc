@@ -10,6 +10,7 @@ class MULOPIMFWC_Dashboard
     public function __construct()
     {
         add_action('wp_ajax_mulopimfwc_apply_filters', array($this, 'apply_dashboard_filters'));
+        add_action('wp_ajax_mulopimfwc_dashboard_profitability', array($this, 'handle_profitability_panel_request'));
     }
 
     /**
@@ -124,6 +125,42 @@ class MULOPIMFWC_Dashboard
         }
 
         return array_values(array_map('intval', (array) $terms));
+    }
+
+    /**
+     * Normalize and scope a dashboard location filter value from request input.
+     */
+    private function resolve_dashboard_location_filter($location_raw): string
+    {
+        if (is_array($location_raw)) {
+            $location_raw = reset($location_raw);
+        }
+
+        $location_filter = is_string($location_raw)
+            ? sanitize_text_field(rawurldecode($location_raw))
+            : 'all';
+        $location_filter = $this->normalize_location_slug($location_filter);
+
+        if ($location_filter === '') {
+            $location_filter = 'all';
+        }
+
+        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        if (is_array($manager_location_slugs)) {
+            if (empty($manager_location_slugs)) {
+                return '__none__';
+            }
+
+            if ($location_filter === 'default') {
+                return '__none__';
+            }
+
+            if ($location_filter !== 'all' && !in_array($location_filter, $manager_location_slugs, true)) {
+                return '__none__';
+            }
+        }
+
+        return $location_filter;
     }
 
     /**
@@ -1063,11 +1100,16 @@ class MULOPIMFWC_Dashboard
         set_time_limit(300);
 
         // Enqueue necessary scripts and styles
-        wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), "1.1.5.11", true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), "1.1.5.11");
+        $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
+        $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.5.11';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.5.11';
 
-        $payload = $this->build_dashboard_payload();
+        wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), $dashboard_css_version);
+
+        $payload = $this->get_dashboard_payload_cached();
 
         $dummydata = [];
         foreach ($payload['orders_by_location'] as $location => $_) {
@@ -1122,7 +1164,6 @@ class MULOPIMFWC_Dashboard
                 $payload['monthly_investment_data']['data'],
                 array_fill(0, count($payload['monthly_investment_data']['data']), 0)
             ),
-            'profitabilityByLocation' => $payload['profitability_by_location'],
             'deadStockDays' => $payload['dead_stock_days'],
             'currency' => $this->get_dashboard_reporting_currency_symbol(),
             'currency_code' => $this->get_dashboard_reporting_currency_code(),
@@ -1135,15 +1176,24 @@ class MULOPIMFWC_Dashboard
                 'orders' => __('Orders', 'multi-location-product-and-inventory-management-pro'),
                 'revenue' => __('Revenue', 'multi-location-product-and-inventory-management-pro'),
                 'previousPeriod' => __('Previous period', 'multi-location-product-and-inventory-management-pro'),
-                'noOrders' => __('No orders yet', 'multi-location-product-and-inventory-management-pro')
+                'noOrders' => __('No orders yet', 'multi-location-product-and-inventory-management-pro'),
+                'loadingProfitability' => __('Loading profitability data...', 'multi-location-product-and-inventory-management-pro'),
+                'profitabilityLoadError' => __('Unable to load profitability data right now.', 'multi-location-product-and-inventory-management-pro')
             ]
         ]);
 
-        $orders_data          = $this->get_orders_data_efficiently();
-        $total_investment     = $this->calculate_total_investment_efficiently();
-        
-        // Extract profitability data for template
-        $profitability_by_location = isset($payload['profitability_by_location']) ? $payload['profitability_by_location'] : [];
+        $dashboard_summary = isset($payload['summary']) && is_array($payload['summary']) ? $payload['summary'] : [];
+        $orders_data = [
+            'orders' => isset($payload['orders_by_location']) && is_array($payload['orders_by_location']) ? $payload['orders_by_location'] : [],
+            'revenue' => isset($payload['revenue_by_location']) && is_array($payload['revenue_by_location']) ? $payload['revenue_by_location'] : [],
+        ];
+        $total_investment = isset($dashboard_summary['total_investment'])
+            ? (float) $dashboard_summary['total_investment']
+            : (float) ($payload['total_investment'] ?? 0);
+        $low_stock_products = isset($payload['low_stock_products']) && is_array($payload['low_stock_products'])
+            ? $payload['low_stock_products']
+            : [];
+        $dead_stock_days = isset($payload['dead_stock_days']) ? (int) $payload['dead_stock_days'] : 90;
 
     ?>
         <div class="wrap lwp-dashboard">
@@ -1397,7 +1447,7 @@ class MULOPIMFWC_Dashboard
                             <div>
                                 <span class="lwp-stat-progress" data-metric="products"></span>
                                 <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html( $this->get_total_products_count() ); ?></span>
+                                <span class="lwp-stat-value"><?php echo esc_html((int) ($dashboard_summary['total_products'] ?? 0)); ?></span>
                             </div>
                         <?php if ( $products_link ) : ?>
                             </a>
@@ -1417,8 +1467,8 @@ class MULOPIMFWC_Dashboard
                             </div>
                             <div>
                                 <span class="lwp-stat-progress" data-metric="locations"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Locations', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html( count( $mulopimfwc_locations ) ); ?></span>
+                                <span class="lwp-stat-label"><?php echo esc_html((string) ($dashboard_summary['location_card_label'] ?? __('Locations', 'multi-location-product-and-inventory-management-pro'))); ?></span>
+                                <span class="lwp-stat-value"><?php echo esc_html((string) ($dashboard_summary['location_card_value'] ?? 0)); ?></span>
 
                             </div>
 
@@ -1556,7 +1606,6 @@ class MULOPIMFWC_Dashboard
                         <div class="lwp-card">
                             <h2><?php esc_html_e('Stock Alerts by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
                             <?php
-                            $low_stock_products   = $this->get_low_stock_products_efficiently();
                             $low_stock_sample_products = array_map([$this, 'normalize_stock_alert_item'], [
                                 [
                                     "product_id" => 1,
@@ -1692,51 +1741,15 @@ class MULOPIMFWC_Dashboard
                 <div class="lwp-row">
                     <div class="lwp-col">
                         <div class="lwp-card">
-                            <h2><?php esc_html_e('Profitability & Aging by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <p class="lwp-profitability-description">
-                                <?php
-                                $dead_stock_days = 90;
-                                printf(
-                                    /* translators: %s: number of days */
-                                    esc_html__('Dead stock in this table represents inventory that has not sold in the last %s days. Shrinkage reflects any sold quantity that could not be matched to current stock records.', 'multi-location-product-and-inventory-management-pro'),
-                                    esc_html($dead_stock_days)
-                                );
-                                ?>
-                            </p>
-                            <?php if (!empty($profitability_by_location)) : ?>
-                                <div class="lwp-table-responsive">
-                                    <table class="lwp-profitability-table">
-                                        <thead>
-                                            <tr>
-                                                <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                                <th><?php esc_html_e('Inventory Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                                <th><?php esc_html_e('Margin Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                                <th><?php esc_html_e('Margin %', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                                <th><?php esc_html_e('Dead Stock Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                                <th><?php esc_html_e('Dead Stock Units', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                                <th><?php esc_html_e('Avg. Age (days)', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                                <th><?php esc_html_e('Shrinkage %', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($profitability_by_location as $summary) : ?>
-                                                <tr>
-                                                    <td><?php echo esc_html($summary['location_name']); ?></td>
-                                                    <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['inventory_value'])); ?></td>
-                                                    <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['margin_value'])); ?></td>
-                                                    <td><?php echo esc_html(number_format((float) $summary['margin_rate'], 1)); ?>%</td>
-                                                    <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['dead_stock_value'])); ?></td>
-                                                    <td><?php echo esc_html(number_format($summary['dead_stock_units'], 0)); ?></td>
-                                                    <td><?php echo esc_html(number_format((float) $summary['average_age_days'], 1)); ?></td>
-                                                    <td><?php echo esc_html(number_format((float) $summary['shrinkage_rate'], 1)); ?>%</td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                            <div
+                                id="lwp-profitability-panel"
+                                class="lwp-profitability-panel"
+                                data-dead-stock-days="<?php echo esc_attr($dead_stock_days); ?>"
+                            >
+                                <div class="lwp-profitability-state is-loading">
+                                    <?php esc_html_e('Loading profitability data...', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </div>
-                            <?php else : ?>
-                                <p><?php esc_html_e('No profitability data available yet.', 'multi-location-product-and-inventory-management-pro'); ?></p>
-                            <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2014,30 +2027,12 @@ class MULOPIMFWC_Dashboard
         $date_to = is_string($date_to_raw) ? sanitize_text_field($date_to_raw) : '';
 
         $location_raw = isset($_POST['location']) ? wp_unslash($_POST['location']) : 'all';
-        if (is_array($location_raw)) {
-            $location_raw = reset($location_raw);
-        }
-        $location_filter_raw = is_string($location_raw) ? sanitize_text_field(rawurldecode($location_raw)) : 'all';
-        $location_filter = $this->normalize_location_slug($location_filter_raw);
-        if ($location_filter === '') {
-            $location_filter = 'all';
-        }
+        $location_filter = $this->resolve_dashboard_location_filter($location_raw);
         $status_raw = isset($_POST['status']) ? wp_unslash($_POST['status']) : 'all';
         if (is_array($status_raw)) {
             $status_raw = reset($status_raw);
         }
         $status_filter = is_string($status_raw) ? sanitize_text_field($status_raw) : 'all';
-        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
-
-        if (is_array($manager_location_slugs)) {
-            if (empty($manager_location_slugs)) {
-                $location_filter = '__none__';
-            } elseif ($location_filter === 'default') {
-                $location_filter = '__none__';
-            } elseif ($location_filter !== 'all' && !in_array($location_filter, $manager_location_slugs, true)) {
-                $location_filter = '__none__';
-            }
-        }
 
         // Get filtered data
         $orders_data = $this->get_orders_data_efficiently($date_from, $date_to, $location_filter, $status_filter);
@@ -2095,8 +2090,12 @@ class MULOPIMFWC_Dashboard
                 $location_filter
             );
 
-            $current_products_total = array_sum($recent_products_data['counts']);
-            $previous_products_total = array_sum($previous_products_data['counts']);
+            $current_products_total = $this->get_total_products_count($location_filter, $date_from, $date_to);
+            $previous_products_total = $this->get_total_products_count(
+                $location_filter,
+                $period['previous_start']->format('Y-m-d'),
+                $period['previous_end']->format('Y-m-d')
+            );
             $current_locations_total = $this->count_active_locations($orders_data['orders'], $include_default);
             $previous_locations_total = $this->count_active_locations($previous_orders_data['orders'], $include_default);
             $current_investment_total = array_sum($investment_data['totals']);
@@ -2107,22 +2106,34 @@ class MULOPIMFWC_Dashboard
             $comparison['investment'] = $this->build_comparison_metric($current_investment_total, $previous_investment_total);
         }
 
+        $location_card = $this->get_location_card_summary($location_filter);
         $summary = array(
             'total_orders' => array_sum($orders_data['orders']),
             'total_revenue' => array_sum($orders_data['revenue']),
         );
 
         if (!empty($period)) {
-            $summary['total_products'] = array_sum($recent_products_data['counts']);
-            $summary['total_locations'] = $this->count_active_locations($orders_data['orders'], $include_default);
+            $summary['total_products'] = $this->get_total_products_count($location_filter, $date_from, $date_to);
+            $summary['total_locations'] = ($location_card['mode'] ?? 'count') === 'selected'
+                ? (int) ($location_card['count'] ?? 0)
+                : $this->count_active_locations($orders_data['orders'], $include_default);
             $summary['total_investment'] = array_sum($investment_data['totals']);
         } else {
             if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
                 $mulopimfwc_locations = [];
             }
-            $summary['total_products'] = $this->get_total_products_count();
-            $summary['total_locations'] = count($mulopimfwc_locations);
-            $summary['total_investment'] = $this->calculate_total_investment_efficiently();
+            $summary['total_products'] = $this->get_total_products_count($location_filter);
+            $summary['total_locations'] = (int) ($location_card['count'] ?? 0);
+            $summary['total_investment'] = $this->calculate_total_investment_efficiently($location_filter);
+        }
+
+        $summary['location_card_label'] = isset($location_card['label']) ? (string) $location_card['label'] : __('Locations', 'multi-location-product-and-inventory-management-pro');
+        $summary['location_card_value'] = $location_card['mode'] === 'selected'
+            ? (string) ($location_card['value'] ?? '')
+            : (int) $summary['total_locations'];
+
+        if (!empty($comparison) && ($location_card['mode'] ?? 'count') === 'selected') {
+            $comparison['locations'] = null;
         }
 
         $response = array(
@@ -2142,6 +2153,10 @@ class MULOPIMFWC_Dashboard
         if (!empty($investment_data)) {
             $response['monthlyInvestmentLabels'] = $investment_data['labels'];
             $response['monthlyInvestmentData'] = $investment_data['totals'];
+        } else {
+            $monthly_investment_data = $this->get_monthly_investment_data_cached($location_filter);
+            $response['monthlyInvestmentLabels'] = $monthly_investment_data['labels'];
+            $response['monthlyInvestmentData'] = $monthly_investment_data['data'];
         }
 
         if (!empty($previous_products_data)) {
@@ -2170,6 +2185,34 @@ class MULOPIMFWC_Dashboard
         }
 
         wp_send_json_success($response);
+    }
+
+    /**
+     * AJAX endpoint for deferred profitability panel loading.
+     */
+    public function handle_profitability_panel_request()
+    {
+        check_ajax_referer('mulopimfwc_dashboard_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error([
+                'message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro'),
+            ]);
+            return;
+        }
+
+        $location_raw = isset($_POST['location']) ? wp_unslash($_POST['location']) : 'all';
+        $location_filter = $this->resolve_dashboard_location_filter($location_raw);
+        $dead_stock_days = isset($_POST['dead_stock_days']) ? absint(wp_unslash($_POST['dead_stock_days'])) : 90;
+        if ($dead_stock_days <= 0) {
+            $dead_stock_days = 90;
+        }
+
+        $profitability_data = $this->get_location_profitability_data($dead_stock_days, $location_filter);
+
+        wp_send_json_success([
+            'html' => $this->render_profitability_panel_html($profitability_data, $dead_stock_days),
+        ]);
     }
 
     /**
@@ -2825,318 +2868,262 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
-     * Get investment data for products created in a date range.
+     * Get daily investment data for the requested dashboard scope.
+     *
+     * Investment is calculated from the purchase cost of net stock-affecting
+     * order quantities, plus the current on-hand stock cost on the current day.
      */
     private function get_investment_data($date_from = '', $date_to = '', $location_filter = 'all')
     {
-        global $wpdb;
-        $normalized_location_filter = $this->normalize_location_slug($location_filter);
-        $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
-        $selected_manager_term_id = 0;
         if (is_array($date_from)) {
             $date_from = reset($date_from);
         }
         if (is_array($date_to)) {
             $date_to = reset($date_to);
         }
+
         $date_from = is_string($date_from) ? sanitize_text_field($date_from) : '';
         $date_to = is_string($date_to) ? sanitize_text_field($date_to) : '';
 
-        // Determine date range
-        if (!empty($date_from) && !empty($date_to)) {
+        if ($date_from !== '' && $date_to !== '') {
             $start_date = $date_from;
             $end_date = $date_to;
             $start_ts = strtotime($start_date);
             $end_ts = strtotime($end_date);
             if ($start_ts === false || $end_ts === false || $end_ts < $start_ts) {
-                $days = 30;
                 $start_ts = strtotime('-29 days');
                 $start_date = gmdate('Y-m-d', $start_ts);
                 $end_date = gmdate('Y-m-d');
+                $days = 30;
             } else {
                 $days = (int) floor(($end_ts - $start_ts) / DAY_IN_SECONDS) + 1;
             }
         } else {
-            $days = 30;
             $start_ts = strtotime('-29 days');
             $start_date = gmdate('Y-m-d', $start_ts);
             $end_date = gmdate('Y-m-d');
+            $days = 30;
         }
 
         $labels = [];
         $totals = [];
-
-        if (is_array($manager_location_term_ids)) {
-            if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
-                for ($i = 0; $i < $days; $i++) {
-                    $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-                    $date = gmdate('Y-m-d', $date_ts);
-                    $labels[] = gmdate('M d', $date_ts);
-                    $totals[] = 0.0;
-                }
-
-                return [
-                    'labels' => $labels,
-                    'totals' => $totals,
-                ];
-            }
-
-            if ($normalized_location_filter !== 'all') {
-                $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
-                if (!$selected_term || is_wp_error($selected_term)) {
-                    for ($i = 0; $i < $days; $i++) {
-                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-                        $date = gmdate('Y-m-d', $date_ts);
-                        $labels[] = gmdate('M d', $date_ts);
-                        $totals[] = 0.0;
-                    }
-
-                    return [
-                        'labels' => $labels,
-                        'totals' => $totals,
-                    ];
-                }
-
-                $selected_manager_term_id = (int) $selected_term->term_id;
-                if (!in_array($selected_manager_term_id, $manager_location_term_ids, true)) {
-                    for ($i = 0; $i < $days; $i++) {
-                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-                        $date = gmdate('Y-m-d', $date_ts);
-                        $labels[] = gmdate('M d', $date_ts);
-                        $totals[] = 0.0;
-                    }
-
-                    return [
-                        'labels' => $labels,
-                        'totals' => $totals,
-                    ];
-                }
-            }
-        }
+        $date_keys = [];
 
         for ($i = 0; $i < $days; $i++) {
             $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-            $date = gmdate('Y-m-d', $date_ts);
             $labels[] = gmdate('M d', $date_ts);
+            $totals[] = 0.0;
+            $date_keys[] = gmdate('Y-m-d', $date_ts);
+        }
 
-            if (is_array($manager_location_term_ids)) {
-                if ($selected_manager_term_id > 0) {
-                    $query = $wpdb->prepare("
-                        SELECT COALESCE(SUM(
-                            CAST(pm_price.meta_value AS DECIMAL(10,2)) *
-                            COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                        ), 0)
-                        FROM {$wpdb->posts} p
-                        INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                        INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                        WHERE p.post_type IN ('product', 'product_variation')
-                        AND p.post_status IN ('publish', 'private')
-                        AND DATE(p.post_date) = %s
-                        AND EXISTS (
-                            SELECT 1
-                            FROM {$wpdb->term_relationships} tr
-                            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                            WHERE tr.object_id = (
-                                CASE
-                                    WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                                    ELSE p.ID
-                                END
-                            )
-                            AND tt.taxonomy = 'mulopimfwc_store_location'
-                            AND tt.term_id = %d
-                        )
-                        AND pm_price.meta_value != ''
-                        AND pm_price.meta_value > 0
-                        AND pm_qty.meta_value != ''
-                        AND pm_qty.meta_value > 0
-                    ", $date, $selected_manager_term_id);
-                } else {
-                    $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
-                    $query = $wpdb->prepare(
-                        "
-                        SELECT COALESCE(SUM(
-                            CAST(pm_price.meta_value AS DECIMAL(10,2)) *
-                            COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                        ), 0)
-                        FROM {$wpdb->posts} p
-                        INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                        INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                        WHERE p.post_type IN ('product', 'product_variation')
-                        AND p.post_status IN ('publish', 'private')
-                        AND DATE(p.post_date) = %s
-                        AND EXISTS (
-                            SELECT 1
-                            FROM {$wpdb->term_relationships} tr
-                            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                            WHERE tr.object_id = (
-                                CASE
-                                    WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                                    ELSE p.ID
-                                END
-                            )
-                            AND tt.taxonomy = 'mulopimfwc_store_location'
-                            AND tt.term_id IN ({$term_placeholders})
-                        )
-                        AND pm_price.meta_value != ''
-                        AND pm_price.meta_value > 0
-                        AND pm_qty.meta_value != ''
-                        AND pm_qty.meta_value > 0
-                        ",
-                        ...array_merge([$date], $manager_location_term_ids)
-                    );
-                }
-            } elseif ($location_filter === 'all') {
-                $query = $wpdb->prepare("
-                SELECT COALESCE(SUM(
-                    CAST(pm_price.meta_value AS DECIMAL(10,2)) * 
-                    COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                ), 0)
-                FROM {$wpdb->posts} p
-                INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                WHERE p.post_type IN ('product', 'product_variation')
-                AND p.post_status IN ('publish', 'private')
-                AND DATE(p.post_date) = %s
-                AND pm_price.meta_value != ''
-                AND pm_price.meta_value > 0
-                AND pm_qty.meta_value != ''
-                AND pm_qty.meta_value > 0
-            ", $date);
-            } elseif ($location_filter === 'default') {
-                $query = $wpdb->prepare("
-                SELECT COALESCE(SUM(
-                    CAST(pm_price.meta_value AS DECIMAL(10,2)) * 
-                    COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                ), 0)
-                FROM {$wpdb->posts} p
-                INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                WHERE p.post_type IN ('product', 'product_variation')
-                AND p.post_status IN ('publish', 'private')
-                AND DATE(p.post_date) = %s
-                AND pm_price.meta_value != ''
-                AND pm_price.meta_value > 0
-                AND pm_qty.meta_value != ''
-                AND pm_qty.meta_value > 0
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM {$wpdb->term_relationships} tr
-                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE tr.object_id = (
-                        CASE
-                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                            ELSE p.ID
-                        END
-                    )
-                    AND tt.taxonomy = 'mulopimfwc_store_location'
-                )
-            ", $date);
-            } else {
-                $term = get_term_by('slug', $location_filter, 'mulopimfwc_store_location');
-                if ($term) {
-                    $query = $wpdb->prepare("
-                    SELECT COALESCE(SUM(
-                        CAST(pm_price.meta_value AS DECIMAL(10,2)) * 
-                        COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                    ), 0)
-                    FROM {$wpdb->posts} p
-                    INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                    INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                    INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = (
-                        CASE
-                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                            ELSE p.ID
-                        END
-                    )
-                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE p.post_type IN ('product', 'product_variation')
-                    AND p.post_status IN ('publish', 'private')
-                    AND DATE(p.post_date) = %s
-                    AND tt.taxonomy = 'mulopimfwc_store_location'
-                    AND tt.term_id = %d
-                    AND pm_price.meta_value != ''
-                    AND pm_price.meta_value > 0
-                    AND pm_qty.meta_value != ''
-                    AND pm_qty.meta_value > 0
-                ", $date, $term->term_id);
-                } else {
-                    $query = $wpdb->prepare("
-                    SELECT COALESCE(SUM(
-                        CAST(pm_price.meta_value AS DECIMAL(10,2)) * 
-                        COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                    ), 0)
-                    FROM {$wpdb->posts} p
-                    INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                    INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                    WHERE p.post_type IN ('product', 'product_variation')
-                    AND p.post_status IN ('publish', 'private')
-                    AND DATE(p.post_date) = %s
-                    AND pm_price.meta_value != ''
-                    AND pm_price.meta_value > 0
-                    AND pm_qty.meta_value != ''
-                    AND pm_qty.meta_value > 0
-                ", $date);
-                }
+        $scope = $this->build_investment_scope((string) $location_filter);
+        if (($scope['mode'] ?? 'empty') === 'empty') {
+            return [
+                'labels' => $labels,
+                'totals' => $totals,
+            ];
+        }
+
+        $daily_quantities = $this->collect_investment_order_quantities($scope, $start_date, $end_date, 'day');
+        foreach ($date_keys as $index => $date_key) {
+            $totals[$index] = round(
+                $this->calculate_investment_amount_from_product_quantities($daily_quantities[$date_key] ?? []),
+                2
+            );
+        }
+
+        $today_key = gmdate('Y-m-d');
+        if ($today_key >= $start_date && $today_key <= $end_date) {
+            $today_index = array_search($today_key, $date_keys, true);
+            if ($today_index !== false) {
+                $totals[$today_index] = round(
+                    $totals[$today_index] + $this->calculate_current_stock_investment_total($scope),
+                    2
+                );
             }
-
-            $totals[] = (float) $wpdb->get_var($query);
         }
 
         return [
             'labels' => $labels,
-            'totals' => $totals
+            'totals' => $totals,
         ];
     }
 
     /**
      * Get total products count efficiently
      */
-    private function get_total_products_count()
+    private function get_total_products_count($location_filter = 'all', $date_from = '', $date_to = '')
     {
         global $wpdb;
 
-        $assigned_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        if (is_array($date_from)) {
+            $date_from = reset($date_from);
+        }
+        if (is_array($date_to)) {
+            $date_to = reset($date_to);
+        }
 
-        // For location managers, always scope by assigned locations
-        if (is_array($assigned_location_slugs)) {
-            if (empty($assigned_location_slugs)) {
+        $date_from = is_string($date_from) ? sanitize_text_field($date_from) : '';
+        $date_to = is_string($date_to) ? sanitize_text_field($date_to) : '';
+        $normalized_location_filter = $this->normalize_location_slug((string) $location_filter);
+        if ($normalized_location_filter === '') {
+            $normalized_location_filter = 'all';
+        }
+
+        $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $has_range = ($date_from !== '' && $date_to !== '');
+        $where = [
+            "p.post_type = 'product'",
+        ];
+        $params = [];
+
+        if ($has_range) {
+            $where[] = "p.post_status = 'publish'";
+            $where[] = "DATE(p.post_date) BETWEEN %s AND %s";
+            $params[] = $date_from;
+            $params[] = $date_to;
+        } else {
+            $where[] = "p.post_status NOT IN ('trash', 'auto-draft')";
+        }
+
+        if (is_array($manager_location_term_ids)) {
+            if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
                 return 0;
             }
 
-            // Get term IDs from slugs
-            $term_ids = [];
-            foreach ($assigned_location_slugs as $slug) {
-                $term = get_term_by('slug', $slug, 'mulopimfwc_store_location');
-                if ($term && !is_wp_error($term)) {
-                    $term_ids[] = $term->term_id;
+            if ($normalized_location_filter !== 'all') {
+                $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+                if (!$selected_term || is_wp_error($selected_term)) {
+                    return 0;
                 }
+
+                $selected_term_id = (int) $selected_term->term_id;
+                if (!in_array($selected_term_id, $manager_location_term_ids, true)) {
+                    return 0;
+                }
+
+                $where[] = "EXISTS (
+                    SELECT 1
+                    FROM {$wpdb->term_relationships} tr
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE tr.object_id = p.ID
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id = %d
+                )";
+                $params[] = $selected_term_id;
+            } else {
+                $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
+                $where[] = "EXISTS (
+                    SELECT 1
+                    FROM {$wpdb->term_relationships} tr
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE tr.object_id = p.ID
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id IN ({$term_placeholders})
+                )";
+                $params = array_merge($params, array_map('intval', $manager_location_term_ids));
             }
+        } else {
+            if ($normalized_location_filter === 'default') {
+                $where[] = "NOT EXISTS (
+                    SELECT 1
+                    FROM {$wpdb->term_relationships} tr
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE tr.object_id = p.ID
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                )";
+            } elseif ($normalized_location_filter !== 'all') {
+                $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+                if (!$selected_term || is_wp_error($selected_term)) {
+                    return 0;
+                }
 
-            if (empty($term_ids)) {
-                return 0;
+                $where[] = "EXISTS (
+                    SELECT 1
+                    FROM {$wpdb->term_relationships} tr
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE tr.object_id = p.ID
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id = %d
+                )";
+                $params[] = (int) $selected_term->term_id;
             }
+        }
 
-            // Build query to count products in assigned locations
-            $term_ids_placeholder = implode(',', array_fill(0, count($term_ids), '%d'));
-
-            $query = $wpdb->prepare(
-                "SELECT COUNT(DISTINCT p.ID) 
-            FROM {$wpdb->posts} p
-            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-            INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-            WHERE p.post_type = 'product' 
-            AND p.post_status NOT IN ('trash', 'auto-draft')
-            AND tt.taxonomy = 'mulopimfwc_store_location'
-            AND tt.term_id IN ({$term_ids_placeholder})",
-                ...$term_ids
-            );
-
+        $query = "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p WHERE " . implode(' AND ', $where);
+        if (empty($params)) {
             return (int) $wpdb->get_var($query);
         }
 
-        // For admins and other users, return all products
-        $query = "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status NOT IN ('trash', 'auto-draft')";
-        return (int) $wpdb->get_var($query);
+        return (int) $wpdb->get_var($wpdb->prepare($query, ...$params));
+    }
+
+    /**
+     * Resolve the label/value shown in the locations summary card.
+     */
+    private function get_location_card_summary($location_filter = 'all'): array
+    {
+        global $mulopimfwc_locations;
+
+        if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
+            $mulopimfwc_locations = [];
+        }
+
+        $plural_label = __('Locations', 'multi-location-product-and-inventory-management-pro');
+        $singular_label = __('Location', 'multi-location-product-and-inventory-management-pro');
+        $normalized_location_filter = $this->normalize_location_slug((string) $location_filter);
+        if ($normalized_location_filter === '') {
+            $normalized_location_filter = 'all';
+        }
+
+        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        $accessible_location_count = is_array($manager_location_slugs)
+            ? count($manager_location_slugs)
+            : count($mulopimfwc_locations);
+
+        if ($normalized_location_filter === 'default') {
+            return [
+                'mode' => 'selected',
+                'label' => $singular_label,
+                'value' => __('Default', 'multi-location-product-and-inventory-management-pro'),
+                'count' => 1,
+            ];
+        }
+
+        if ($normalized_location_filter !== 'all') {
+            if (is_array($manager_location_slugs) && !in_array($normalized_location_filter, $manager_location_slugs, true)) {
+                return [
+                    'mode' => 'count',
+                    'label' => $plural_label,
+                    'value' => 0,
+                    'count' => 0,
+                ];
+            }
+
+            $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+            if ($selected_term && !is_wp_error($selected_term)) {
+                return [
+                    'mode' => 'selected',
+                    'label' => $singular_label,
+                    'value' => (string) $selected_term->name,
+                    'count' => 1,
+                ];
+            }
+
+            return [
+                'mode' => 'count',
+                'label' => $plural_label,
+                'value' => 0,
+                'count' => 0,
+            ];
+        }
+
+        return [
+            'mode' => 'count',
+            'label' => $plural_label,
+            'value' => $accessible_location_count,
+            'count' => $accessible_location_count,
+        ];
     }
 
     /**
@@ -3144,134 +3131,115 @@ class MULOPIMFWC_Dashboard
      */
     private function get_location_recent_sales_info(string $location_slug, int $since_timestamp): array
     {
+        $grouped_sales = $this->get_recent_sales_info_by_location([$location_slug], $since_timestamp);
+        $normalized_location_slug = $this->normalize_location_slug($location_slug);
+        if ($normalized_location_slug === '') {
+            $normalized_location_slug = 'default';
+        }
+
+        return $grouped_sales[$normalized_location_slug] ?? [
+            'last_sale_dates' => [],
+            'sold_quantities' => [],
+        ];
+    }
+
+    /**
+     * Fetch recent sales data grouped by location in a single order pass.
+     */
+    private function get_recent_sales_info_by_location(array $location_slugs, int $since_timestamp): array
+    {
+        $normalized_slugs = array_values(array_unique(array_filter(array_map(function ($slug) {
+            $normalized = $this->normalize_location_slug($slug);
+            return $normalized === '' ? 'default' : $normalized;
+        }, $location_slugs))));
+
+        if (empty($normalized_slugs)) {
+            return [];
+        }
+
+        $results = [];
+        foreach ($normalized_slugs as $slug) {
+            $results[$slug] = [
+                'last_sale_dates' => [],
+                'sold_quantities' => [],
+            ];
+        }
+
         $since_date = gmdate('Y-m-d', $since_timestamp);
         $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
             ? mulopimfwc_get_revenue_order_statuses()
             : ['processing', 'completed'];
 
-        // Process orders in batches to prevent memory exhaustion
-        $batch_size = 1000;
+        $batch_size = 250;
         $page = 1;
-        $all_order_ids = [];
-        
+        $max_pages = 1;
+
         do {
-            $args = [
+            $orders_query = wc_get_orders([
+                'paginate' => true,
+                'page' => $page,
                 'limit' => $batch_size,
-                'offset' => ($page - 1) * $batch_size,
                 'status' => $revenue_statuses,
                 'date_created' => '>=' . $since_date,
-                'return' => 'ids'
-            ];
-            
-            $order_ids = wc_get_orders($args);
-            
-            if (empty($order_ids)) {
+            ]);
+
+            if (
+                !is_object($orders_query)
+                || empty($orders_query->orders)
+                || !is_array($orders_query->orders)
+            ) {
                 break;
             }
-            
-            $all_order_ids = array_merge($all_order_ids, $order_ids);
-            
-            // Safety check
-            if ($page > 200) {
-                break;
+
+            $max_pages = max(1, (int) ($orders_query->max_num_pages ?? 1));
+
+            foreach ($orders_query->orders as $order) {
+                if (!is_object($order) || !method_exists($order, 'get_meta')) {
+                    continue;
+                }
+
+                if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
+                    continue;
+                }
+
+                $order_location = $this->normalize_location_slug((string) $order->get_meta('_store_location'));
+                if ($order_location === '') {
+                    $order_location = 'default';
+                }
+
+                if (!isset($results[$order_location])) {
+                    continue;
+                }
+
+                $order_date = $order->get_date_created();
+                $timestamp = $order_date ? $order_date->getTimestamp() : time();
+
+                foreach ($order->get_items() as $item) {
+                    $product_id = $item->get_variation_id() ?: $item->get_product_id();
+
+                    if (empty($product_id)) {
+                        continue;
+                    }
+
+                    $quantity = (float) $item->get_quantity();
+                    if ($quantity <= 0) {
+                        continue;
+                    }
+
+                    $results[$order_location]['sold_quantities'][$product_id] = ($results[$order_location]['sold_quantities'][$product_id] ?? 0) + $quantity;
+                    if (
+                        !isset($results[$order_location]['last_sale_dates'][$product_id])
+                        || $timestamp > $results[$order_location]['last_sale_dates'][$product_id]
+                    ) {
+                        $results[$order_location]['last_sale_dates'][$product_id] = $timestamp;
+                    }
+                }
             }
-            
+
             $page++;
-            
-        } while (count($order_ids) === $batch_size);
-        
-        $args = [
-            'order_ids' => $all_order_ids, // Use collected IDs
-        ];
+        } while ($page <= $max_pages && $page <= 200);
 
-        $meta_query = [];
-
-        if ($location_slug === 'default') {
-            $meta_query['relation'] = 'OR';
-            $meta_query[] = [
-                'key' => '_store_location',
-                'compare' => 'NOT EXISTS'
-            ];
-            $meta_query[] = [
-                'key' => '_store_location',
-                'value' => '',
-                'compare' => '='
-            ];
-            $meta_query[] = [
-                'key' => '_store_location',
-                'value' => 'default',
-                'compare' => '='
-            ];
-        } else {
-            $meta_query[] = [
-                'key' => '_store_location',
-                'value' => $location_slug,
-                'compare' => '='
-            ];
-        }
-
-        // Filter collected order IDs by location meta query
-        $filtered_order_ids = [];
-        
-        foreach ($all_order_ids as $order_id) {
-            $order = wc_get_order($order_id);
-            if (!$order) {
-                continue;
-            }
-
-            if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
-                continue;
-            }
-            
-            $order_location = $order->get_meta('_store_location');
-            
-            // Apply location filter
-            if ($location_slug === 'default') {
-                if (empty($order_location) || $order_location === 'default') {
-                    $filtered_order_ids[] = $order_id;
-                }
-            } else {
-                if ($order_location === $location_slug) {
-                    $filtered_order_ids[] = $order_id;
-                }
-            }
-        }
-
-        $last_sale_dates = [];
-        $sold_quantities = [];
-
-        foreach ($filtered_order_ids as $order_id) {
-            $order = wc_get_order($order_id);
-            if (!$order) {
-                continue;
-            }
-
-            $order_date = $order->get_date_created();
-            $timestamp = $order_date ? $order_date->getTimestamp() : time();
-
-            foreach ($order->get_items() as $item) {
-                $product_id = $item->get_variation_id() ?: $item->get_product_id();
-
-                if (empty($product_id)) {
-                    continue;
-                }
-
-                $quantity = (float) $item->get_quantity();
-                if ($quantity <= 0) {
-                    continue;
-                }
-
-                $sold_quantities[$product_id] = ($sold_quantities[$product_id] ?? 0) + $quantity;
-                if (!isset($last_sale_dates[$product_id]) || $timestamp > $last_sale_dates[$product_id]) {
-                    $last_sale_dates[$product_id] = $timestamp;
-                }
-            }
-        }
-
-        return [
-            'last_sale_dates' => $last_sale_dates,
-            'sold_quantities' => $sold_quantities
-        ];
+        return $results;
     }
 
     /**
@@ -3441,35 +3409,150 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
-     * Build profitability, dead stock, shrinkage, and aging summaries for every location.
+     * Render profitability panel markup.
      */
-    private function get_location_profitability_data(int $dead_stock_days = 90): array
+    private function render_profitability_panel_html(array $profitability_by_location, int $dead_stock_days = 90): string
     {
-        global $mulopimfwc_locations;
-        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        ob_start();
+        ?>
+        <h2><?php esc_html_e('Profitability & Aging by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+        <p class="lwp-profitability-description">
+            <?php
+            printf(
+                /* translators: %s: number of days */
+                esc_html__('Dead stock in this table represents inventory that has not sold in the last %s days. Shrinkage reflects any sold quantity that could not be matched to current stock records.', 'multi-location-product-and-inventory-management-pro'),
+                esc_html($dead_stock_days)
+            );
+            ?>
+        </p>
+        <?php if (!empty($profitability_by_location)) : ?>
+            <div class="lwp-table-responsive">
+                <table class="lwp-profitability-table">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php esc_html_e('Inventory Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php esc_html_e('Margin Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php esc_html_e('Margin %', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php esc_html_e('Dead Stock Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php esc_html_e('Dead Stock Units', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php esc_html_e('Avg. Age (days)', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php esc_html_e('Shrinkage %', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($profitability_by_location as $summary) : ?>
+                            <tr>
+                                <td><?php echo esc_html($summary['location_name']); ?></td>
+                                <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['inventory_value'])); ?></td>
+                                <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['margin_value'])); ?></td>
+                                <td><?php echo esc_html(number_format((float) $summary['margin_rate'], 1)); ?>%</td>
+                                <td><?php echo wp_kses_post($this->format_dashboard_reporting_price($summary['dead_stock_value'])); ?></td>
+                                <td><?php echo esc_html(number_format((float) $summary['dead_stock_units'], 0)); ?></td>
+                                <td><?php echo esc_html(number_format((float) $summary['average_age_days'], 1)); ?></td>
+                                <td><?php echo esc_html(number_format((float) $summary['shrinkage_rate'], 1)); ?>%</td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else : ?>
+            <p><?php esc_html_e('No profitability data available yet.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+        <?php endif; ?>
+        <?php
+
+        return trim((string) ob_get_clean());
+    }
+
+    /**
+     * Resolve the location list used by the profitability panel.
+     */
+    private function get_profitability_location_entries(string $location_filter = 'all'): array
+    {
+        $normalized_location_filter = $location_filter === '__none__'
+            ? '__none__'
+            : $this->normalize_location_slug($location_filter);
+
+        if ($normalized_location_filter === '__none__') {
+            return [];
+        }
+
+        if ($normalized_location_filter === '') {
+            $normalized_location_filter = 'all';
+        }
 
         $locations = [];
-        if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
-            foreach ($mulopimfwc_locations as $location) {
+        $scoped_locations = $this->get_dashboard_scoped_locations();
+        if (!empty($scoped_locations) && !is_wp_error($scoped_locations)) {
+            foreach ($scoped_locations as $location) {
                 $locations[] = [
-                    'name' => $location->name,
-                    'slug' => rawurldecode($location->slug),
-                    'term_id' => $location->term_id
+                    'name' => (string) $location->name,
+                    'slug' => $this->normalize_location_slug($location->slug),
+                    'term_id' => isset($location->term_id) ? (int) $location->term_id : 0,
                 ];
             }
         }
 
-        if (!is_array($manager_location_slugs)) {
+        $is_location_manager = is_array($this->get_dashboard_manager_assigned_location_slugs());
+        if (!$is_location_manager) {
             $locations[] = [
                 'name' => __('Default', 'multi-location-product-and-inventory-management-pro'),
                 'slug' => 'default',
-                'term_id' => null
+                'term_id' => null,
             ];
+        }
+
+        if ($normalized_location_filter === 'all') {
+            return $locations;
+        }
+
+        return array_values(array_filter($locations, function ($location) use ($normalized_location_filter) {
+            return isset($location['slug']) && $location['slug'] === $normalized_location_filter;
+        }));
+    }
+
+    /**
+     * Build profitability, dead stock, shrinkage, and aging summaries for every location.
+     */
+    private function get_location_profitability_data(int $dead_stock_days = 90, string $location_filter = 'all'): array
+    {
+        $dead_stock_days = max(1, $dead_stock_days);
+        $normalized_location_filter = $location_filter === '__none__'
+            ? '__none__'
+            : $this->normalize_location_slug($location_filter);
+
+        if ($normalized_location_filter === '') {
+            $normalized_location_filter = 'all';
+        }
+
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_scope = [
+            'scope_hash' => $this->get_live_dashboard_cache_scope_hash(),
+            'location_filter' => $normalized_location_filter,
+            'dead_stock_days' => $dead_stock_days,
+        ];
+        $cache_scope_json = wp_json_encode($cache_scope);
+        if (!is_string($cache_scope_json) || $cache_scope_json === '') {
+            $cache_scope_json = serialize($cache_scope);
+        }
+        $cache_key = 'mulopimfwc_profitability_v' . $cache_version . '_' . md5($cache_scope_json);
+        $cached_results = get_transient($cache_key);
+        if (is_array($cached_results)) {
+            return $cached_results;
+        }
+
+        $locations = $this->get_profitability_location_entries($normalized_location_filter);
+        if (empty($locations)) {
+            set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
+            return [];
         }
 
         $results = [];
         $now = time();
         $threshold_timestamp = $now - ($dead_stock_days * DAY_IN_SECONDS);
+        $sales_info_by_location = $this->get_recent_sales_info_by_location(array_column($locations, 'slug'), $threshold_timestamp);
 
         foreach ($locations as $entry) {
             // FIXED: Process records in batches to prevent memory exhaustion (Issue #38)
@@ -3495,7 +3578,10 @@ class MULOPIMFWC_Dashboard
             } while (count($records) === $batch_size);
             
             $records = $all_records;
-            $sales_info = $this->get_location_recent_sales_info($entry['slug'], $threshold_timestamp);
+            $sales_info = $sales_info_by_location[$entry['slug']] ?? [
+                'last_sale_dates' => [],
+                'sold_quantities' => [],
+            ];
             $last_sale_dates = $sales_info['last_sale_dates'];
             $sold_quantities = $sales_info['sold_quantities'];
 
@@ -3577,22 +3663,599 @@ class MULOPIMFWC_Dashboard
             $results[] = $summary;
         }
 
+        set_transient($cache_key, $results, 5 * MINUTE_IN_SECONDS);
+
         return $results;
     }
 
     /**
-     * Calculate total investment efficiently
+     * Build a normalized scope descriptor for investment calculations.
+     *
+     * Scope modes:
+     * - all: all products/orders
+     * - default: products/orders without a location bucket
+     * - terms: one or more specific store locations
+     * - empty: no accessible scope
      */
-    private function calculate_total_investment_efficiently()
+    private function build_investment_scope(string $location_filter = 'all'): array
     {
-        global $wpdb;
+        $normalized_location_filter = $this->normalize_location_slug($location_filter);
         $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
+        $empty_scope = [
+            'mode' => 'empty',
+            'term_ids' => [],
+            'term_slugs' => [],
+        ];
+
+        if (is_array($manager_location_term_ids)) {
+            if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
+                return $empty_scope;
+            }
+
+            if ($normalized_location_filter !== '' && $normalized_location_filter !== 'all') {
+                $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+                if (!$selected_term || is_wp_error($selected_term)) {
+                    return $empty_scope;
+                }
+
+                $selected_term_id = (int) $selected_term->term_id;
+                if (!in_array($selected_term_id, $manager_location_term_ids, true)) {
+                    return $empty_scope;
+                }
+
+                return [
+                    'mode' => 'terms',
+                    'term_ids' => [$selected_term_id],
+                    'term_slugs' => [$this->normalize_location_slug((string) $selected_term->slug)],
+                ];
+            }
+
+            $term_ids = array_values(array_unique(array_map('intval', $manager_location_term_ids)));
+            sort($term_ids, SORT_NUMERIC);
+
+            $term_slugs = is_array($manager_location_slugs)
+                ? array_values(array_unique(array_map([$this, 'normalize_location_slug'], $manager_location_slugs)))
+                : [];
+            sort($term_slugs, SORT_STRING);
+
+            return [
+                'mode' => 'terms',
+                'term_ids' => $term_ids,
+                'term_slugs' => $term_slugs,
+            ];
+        }
+
+        if ($normalized_location_filter === 'default') {
+            return [
+                'mode' => 'default',
+                'term_ids' => [],
+                'term_slugs' => [],
+            ];
+        }
+
+        if ($normalized_location_filter !== '' && $normalized_location_filter !== 'all') {
+            $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+            if (!$selected_term || is_wp_error($selected_term)) {
+                return $empty_scope;
+            }
+
+            return [
+                'mode' => 'terms',
+                'term_ids' => [(int) $selected_term->term_id],
+                'term_slugs' => [$this->normalize_location_slug((string) $selected_term->slug)],
+            ];
+        }
+
+        return [
+            'mode' => 'all',
+            'term_ids' => [],
+            'term_slugs' => [],
+        ];
+    }
+
+    /**
+     * Build a stable cache fragment for investment scope-aware caches.
+     */
+    private function get_investment_scope_cache_fragment(array $scope): string
+    {
+        $term_ids = isset($scope['term_ids']) && is_array($scope['term_ids'])
+            ? array_values(array_unique(array_map('intval', $scope['term_ids'])))
+            : [];
+        $term_slugs = isset($scope['term_slugs']) && is_array($scope['term_slugs'])
+            ? array_values(array_unique(array_map([$this, 'normalize_location_slug'], $scope['term_slugs'])))
+            : [];
+
+        sort($term_ids, SORT_NUMERIC);
+        sort($term_slugs, SORT_STRING);
+
+        $payload = [
+            'mode' => isset($scope['mode']) ? (string) $scope['mode'] : 'all',
+            'term_ids' => $term_ids,
+            'term_slugs' => $term_slugs,
+        ];
+
+        $json = wp_json_encode($payload);
+        if (!is_string($json) || $json === '') {
+            $json = serialize($payload);
+        }
+
+        return md5($json);
+    }
+
+    /**
+     * Resolve order statuses that represent stock-reduced orders.
+     */
+    private function get_investment_stock_affecting_statuses(): array
+    {
+        $statuses = apply_filters('mulopimfwc_split_stock_reduction_statuses', ['processing', 'completed', 'on-hold']);
+        if (!is_array($statuses)) {
+            $statuses = ['processing', 'completed', 'on-hold'];
+        }
+
+        $statuses = array_map(function ($status) {
+            $status = sanitize_key((string) $status);
+            if (strpos($status, 'wc-') === 0) {
+                $status = substr($status, 3);
+            }
+            return $status;
+        }, $statuses);
+
+        return array_values(array_unique(array_filter($statuses, 'strlen')));
+    }
+
+    /**
+     * Return product/variation IDs that may contribute to investment.
+     */
+    private function get_investment_product_ids(): array
+    {
+        static $product_ids = null;
+
+        if (is_array($product_ids)) {
+            return $product_ids;
+        }
+
+        $product_ids = get_posts([
+            'post_type' => ['product', 'product_variation'],
+            'post_status' => ['publish', 'private'],
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'orderby' => 'ID',
+            'order' => 'ASC',
+        ]);
+
+        if (!is_array($product_ids)) {
+            $product_ids = [];
+        }
+
+        return array_values(array_map('intval', $product_ids));
+    }
+
+    /**
+     * Get the parent product ID for variations, otherwise the product ID itself.
+     */
+    private function get_investment_product_reference_id(int $product_id): int
+    {
+        static $reference_cache = [];
+
+        if (isset($reference_cache[$product_id])) {
+            return $reference_cache[$product_id];
+        }
+
+        $reference_id = $product_id;
+        if (get_post_type($product_id) === 'product_variation') {
+            $parent_id = wp_get_post_parent_id($product_id);
+            if ($parent_id > 0) {
+                $reference_id = (int) $parent_id;
+            }
+        }
+
+        $reference_cache[$product_id] = $reference_id;
+        return $reference_cache[$product_id];
+    }
+
+    /**
+     * Return assigned location term IDs for a product or variation.
+     */
+    private function get_investment_product_location_term_ids(int $product_id): array
+    {
+        static $location_cache = [];
+
+        $reference_id = $this->get_investment_product_reference_id($product_id);
+        if (isset($location_cache[$reference_id])) {
+            return $location_cache[$reference_id];
+        }
+
+        $term_ids = wp_get_object_terms($reference_id, 'mulopimfwc_store_location', ['fields' => 'ids']);
+        if (is_wp_error($term_ids) || !is_array($term_ids)) {
+            $term_ids = [];
+        }
+
+        $term_ids = array_values(array_unique(array_map('intval', $term_ids)));
+        sort($term_ids, SORT_NUMERIC);
+
+        $location_cache[$reference_id] = $term_ids;
+        return $location_cache[$reference_id];
+    }
+
+    /**
+     * Get all post meta for a product or variation.
+     */
+    private function get_investment_product_meta(int $product_id): array
+    {
+        static $meta_cache = [];
+
+        if (!isset($meta_cache[$product_id])) {
+            $meta = get_post_meta($product_id);
+            $meta_cache[$product_id] = is_array($meta) ? $meta : [];
+        }
+
+        return $meta_cache[$product_id];
+    }
+
+    /**
+     * Resolve purchase price, falling back from variation to parent when needed.
+     */
+    private function get_investment_product_purchase_price(int $product_id): float
+    {
+        static $price_cache = [];
+
+        if (isset($price_cache[$product_id])) {
+            return $price_cache[$product_id];
+        }
+
+        $purchase_price = $this->normalize_price_value(get_post_meta($product_id, '_purchase_price', true));
+        if ($purchase_price <= 0 && get_post_type($product_id) === 'product_variation') {
+            $parent_id = wp_get_post_parent_id($product_id);
+            if ($parent_id > 0) {
+                $purchase_price = $this->normalize_price_value(get_post_meta($parent_id, '_purchase_price', true));
+            }
+        }
+
+        $price_cache[$product_id] = $purchase_price > 0 ? $purchase_price : 0.0;
+        return $price_cache[$product_id];
+    }
+
+    /**
+     * Get WooCommerce default stock quantity for a product or variation.
+     */
+    private function get_investment_default_stock_quantity(int $product_id): float
+    {
+        $stock = get_post_meta($product_id, '_stock', true);
+        return ($stock !== '' && $stock !== null && is_numeric($stock)) ? (float) $stock : 0.0;
+    }
+
+    /**
+     * Summarize location stock meta for a product or variation.
+     */
+    private function get_investment_location_stock_snapshot(int $product_id, ?array $allowed_term_ids = null): array
+    {
+        $meta = $this->get_investment_product_meta($product_id);
+        $allowed_lookup = null;
+
+        if (is_array($allowed_term_ids)) {
+            $allowed_term_ids = array_values(array_unique(array_map('intval', $allowed_term_ids)));
+            $allowed_lookup = array_fill_keys($allowed_term_ids, true);
+        }
+
+        $sum = 0.0;
+        $has_any = false;
+
+        foreach ($meta as $meta_key => $values) {
+            if (strpos((string) $meta_key, '_location_stock_') !== 0) {
+                continue;
+            }
+
+            $has_any = true;
+            $term_id = (int) substr((string) $meta_key, strlen('_location_stock_'));
+            if (is_array($allowed_lookup) && !isset($allowed_lookup[$term_id])) {
+                continue;
+            }
+
+            $raw_value = is_array($values) ? reset($values) : $values;
+            if ($raw_value === '' || $raw_value === null || !is_numeric($raw_value)) {
+                continue;
+            }
+
+            $sum += (float) $raw_value;
+        }
+
+        return [
+            'sum' => $sum,
+            'has_any' => $has_any,
+        ];
+    }
+
+    /**
+     * Resolve the current scoped stock quantity for a product or variation.
+     */
+    private function get_investment_current_stock_quantity(int $product_id, array $scope): float
+    {
+        $mode = isset($scope['mode']) ? (string) $scope['mode'] : 'all';
+        if ($mode === 'empty') {
+            return 0.0;
+        }
+
+        $location_snapshot = $this->get_investment_location_stock_snapshot($product_id);
+        $assigned_term_ids = $this->get_investment_product_location_term_ids($product_id);
+
+        if ($mode === 'terms') {
+            $term_ids = isset($scope['term_ids']) && is_array($scope['term_ids']) ? $scope['term_ids'] : [];
+            return $this->get_investment_location_stock_snapshot($product_id, $term_ids)['sum'];
+        }
+
+        if ($mode === 'default') {
+            if ($location_snapshot['has_any'] || !empty($assigned_term_ids)) {
+                return 0.0;
+            }
+
+            return $this->get_investment_default_stock_quantity($product_id);
+        }
+
+        if ($location_snapshot['has_any']) {
+            return $location_snapshot['sum'];
+        }
+
+        return $this->get_investment_default_stock_quantity($product_id);
+    }
+
+    /**
+     * Calculate the current stock investment total for a scope.
+     */
+    private function calculate_current_stock_investment_total(array $scope): float
+    {
+        static $totals_cache = [];
+
+        $scope_key = $this->get_investment_scope_cache_fragment($scope);
+        if (isset($totals_cache[$scope_key])) {
+            return $totals_cache[$scope_key];
+        }
+
+        $total = 0.0;
+        foreach ($this->get_investment_product_ids() as $product_id) {
+            $purchase_price = $this->get_investment_product_purchase_price((int) $product_id);
+            if ($purchase_price <= 0) {
+                continue;
+            }
+
+            $quantity = $this->get_investment_current_stock_quantity((int) $product_id, $scope);
+            if ($quantity == 0.0) {
+                continue;
+            }
+
+            $total += $purchase_price * $quantity;
+        }
+
+        $totals_cache[$scope_key] = $total;
+        return $totals_cache[$scope_key];
+    }
+
+    /**
+     * Convert product quantity aggregates into an investment amount.
+     */
+    private function calculate_investment_amount_from_product_quantities(array $product_quantities): float
+    {
+        $total = 0.0;
+
+        foreach ($product_quantities as $product_id => $quantity) {
+            $quantity = (float) $quantity;
+            if ($quantity <= 0) {
+                continue;
+            }
+
+            $purchase_price = $this->get_investment_product_purchase_price((int) $product_id);
+            if ($purchase_price <= 0) {
+                continue;
+            }
+
+            $total += $purchase_price * $quantity;
+        }
+
+        return $total;
+    }
+
+    /**
+     * Resolve the final location slug for an order item.
+     */
+    private function get_investment_order_item_location_slug(WC_Order_Item_Product $item, string $order_location_slug = ''): string
+    {
+        $item_location_slug = $this->normalize_location_slug((string) $item->get_meta('_mulopimfwc_location'));
+        if ($item_location_slug !== '') {
+            return $item_location_slug;
+        }
+
+        return $this->normalize_location_slug($order_location_slug);
+    }
+
+    /**
+     * Check whether an order item location belongs to a requested scope.
+     */
+    private function investment_order_location_matches_scope(string $location_slug, array $scope): bool
+    {
+        $mode = isset($scope['mode']) ? (string) $scope['mode'] : 'all';
+        $location_slug = $this->normalize_location_slug($location_slug);
+
+        if ($mode === 'all') {
+            return true;
+        }
+
+        if ($mode === 'default') {
+            return $location_slug === '' || $location_slug === 'default';
+        }
+
+        if ($mode === 'terms') {
+            $term_slugs = isset($scope['term_slugs']) && is_array($scope['term_slugs']) ? $scope['term_slugs'] : [];
+            return $location_slug !== '' && in_array($location_slug, $term_slugs, true);
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the net stock-reduced quantity for an order item.
+     *
+     * WooCommerce keeps `_reduced_stock` up to date for core-managed stock. For
+     * location-only stock we fall back to refunded quantity as a best-effort
+     * approximation when no core stock markers exist.
+     */
+    private function get_investment_net_order_item_quantity(WC_Order $order, WC_Order_Item_Product $item): float
+    {
+        $ordered_qty = max(0.0, (float) $item->get_quantity());
+        if ($ordered_qty <= 0) {
+            return 0.0;
+        }
+
+        $reduced_qty = $item->get_meta('_reduced_stock', true);
+        if ($reduced_qty !== '' && $reduced_qty !== null && is_numeric($reduced_qty)) {
+            return max(0.0, min($ordered_qty, abs((float) $reduced_qty)));
+        }
+
+        $refunded_qty = abs((float) $order->get_qty_refunded_for_item($item->get_id()));
+        if ($refunded_qty > 0) {
+            $product = $item->get_product();
+            $uses_core_stock = $product && method_exists($product, 'managing_stock') && $product->managing_stock();
+            if (!$uses_core_stock) {
+                return max(0.0, $ordered_qty - min($ordered_qty, $refunded_qty));
+            }
+        }
+
+        return $ordered_qty;
+    }
+
+    /**
+     * Collect scoped order quantities grouped by product, day, or month.
+     */
+    private function collect_investment_order_quantities(array $scope, string $date_from = '', string $date_to = '', string $bucket = ''): array
+    {
+        static $quantities_cache = [];
+
+        $scope_key = $this->get_investment_scope_cache_fragment($scope);
+        $cache_key = md5(wp_json_encode([
+            'scope' => $scope_key,
+            'date_from' => $date_from,
+            'date_to' => $date_to,
+            'bucket' => $bucket,
+        ]));
+
+        if (isset($quantities_cache[$cache_key])) {
+            return $quantities_cache[$cache_key];
+        }
+
+        if (($scope['mode'] ?? 'empty') === 'empty') {
+            $quantities_cache[$cache_key] = [];
+            return [];
+        }
+
+        $statuses = $this->get_investment_stock_affecting_statuses();
+        if (empty($statuses)) {
+            $quantities_cache[$cache_key] = [];
+            return [];
+        }
+
+        if (function_exists('ini_set')) {
+            @ini_set('memory_limit', '512M');
+        }
+        @set_time_limit(300);
+
+        $quantities = [];
+        $batch_size = 1000;
+        $page = 1;
+
+        do {
+            $query_args = [
+                'limit' => $batch_size,
+                'offset' => ($page - 1) * $batch_size,
+                'status' => $statuses,
+                'return' => 'ids',
+            ];
+
+            if ($date_from !== '' && $date_to !== '') {
+                $query_args['date_created'] = $date_from . '...' . $date_to;
+            } elseif ($date_from !== '') {
+                $query_args['date_created'] = '>=' . $date_from;
+            } elseif ($date_to !== '') {
+                $query_args['date_created'] = '<=' . $date_to;
+            }
+
+            $order_ids = wc_get_orders($query_args);
+            if (empty($order_ids)) {
+                break;
+            }
+
+            foreach ($order_ids as $order_id) {
+                $order = wc_get_order($order_id);
+                if (!$order instanceof WC_Order) {
+                    continue;
+                }
+
+                if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
+                    continue;
+                }
+
+                $bucket_key = '';
+                $order_date = $order->get_date_created();
+                if ($bucket === 'day') {
+                    $bucket_key = $order_date ? gmdate('Y-m-d', $order_date->getTimestamp()) : gmdate('Y-m-d');
+                } elseif ($bucket === 'month') {
+                    $bucket_key = $order_date ? gmdate('Y-m', $order_date->getTimestamp()) : gmdate('Y-m');
+                }
+
+                $order_location_slug = $this->normalize_location_slug((string) $order->get_meta('_store_location'));
+
+                foreach ($order->get_items('line_item') as $item) {
+                    if (!$item instanceof WC_Order_Item_Product) {
+                        continue;
+                    }
+
+                    $product_id = $item->get_variation_id() ?: $item->get_product_id();
+                    if (!$product_id) {
+                        continue;
+                    }
+
+                    $quantity = $this->get_investment_net_order_item_quantity($order, $item);
+                    if ($quantity <= 0) {
+                        continue;
+                    }
+
+                    $item_location_slug = $this->get_investment_order_item_location_slug($item, $order_location_slug);
+                    if (!$this->investment_order_location_matches_scope($item_location_slug, $scope)) {
+                        continue;
+                    }
+
+                    if ($bucket_key === '') {
+                        $quantities[$product_id] = ($quantities[$product_id] ?? 0) + $quantity;
+                        continue;
+                    }
+
+                    if (!isset($quantities[$bucket_key])) {
+                        $quantities[$bucket_key] = [];
+                    }
+
+                    $quantities[$bucket_key][$product_id] = ($quantities[$bucket_key][$product_id] ?? 0) + $quantity;
+                }
+            }
+
+            if ($page > 200) {
+                break;
+            }
+
+            $page++;
+        } while (count($order_ids) === $batch_size);
+
+        $quantities_cache[$cache_key] = $quantities;
+        return $quantities_cache[$cache_key];
+    }
+
+    /**
+     * Calculate total investment from current stock plus historical order quantities.
+     */
+    private function calculate_total_investment_efficiently($location_filter = 'all')
+    {
+        $scope = $this->build_investment_scope((string) $location_filter);
         $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
             ? mulopimfwc_get_dashboard_cache_version()
             : 1;
-        $cache_scope = is_array($manager_location_term_ids)
-            ? md5(wp_json_encode($manager_location_term_ids))
-            : 'global';
+        $cache_scope = $this->get_investment_scope_cache_fragment($scope);
         $cache_key = 'mulopimfwc_total_investment_v' . $cache_version . '_' . $cache_scope;
         $cached_value = get_transient($cache_key);
 
@@ -3600,92 +4263,33 @@ class MULOPIMFWC_Dashboard
             return (float) $cached_value;
         }
 
-        if (is_array($manager_location_term_ids) && empty($manager_location_term_ids)) {
+        if (($scope['mode'] ?? 'empty') === 'empty') {
             set_transient($cache_key, 0.0, HOUR_IN_SECONDS);
             return 0.0;
         }
 
-        if (is_array($manager_location_term_ids)) {
-            $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
-            $total_investment = $wpdb->get_var(
-                $wpdb->prepare(
-                    "
-                    SELECT COALESCE(SUM(
-                        CAST(pm1.meta_value AS DECIMAL(10,2)) *
-                        COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
-                    ), 0) as total
-                    FROM {$wpdb->postmeta} pm1
-                    INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
-                    INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
-                    WHERE pm1.meta_key = %s
-                    AND pm2.meta_key = %s
-                    AND p.post_type IN ('product', 'product_variation')
-                    AND p.post_status IN ('publish', 'private')
-                    AND EXISTS (
-                        SELECT 1
-                        FROM {$wpdb->term_relationships} tr
-                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                        WHERE tr.object_id = (
-                            CASE
-                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                                ELSE p.ID
-                            END
-                        )
-                        AND tt.taxonomy = 'mulopimfwc_store_location'
-                        AND tt.term_id IN ({$term_placeholders})
-                    )
-                    AND pm1.meta_value != ''
-                    AND pm1.meta_value > 0
-                    AND pm2.meta_value != ''
-                    AND pm2.meta_value > 0
-                    ",
-                    ...array_merge(['_purchase_price', '_purchase_quantity'], $manager_location_term_ids)
-                )
-            );
-        } else {
-            $total_investment = $wpdb->get_var($wpdb->prepare("
-                SELECT COALESCE(SUM(
-                    CAST(pm1.meta_value AS DECIMAL(10,2)) *
-                    COALESCE(CAST(pm2.meta_value AS SIGNED), 0)
-                ), 0) as total
-                FROM {$wpdb->postmeta} pm1
-                INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
-                INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
-                WHERE pm1.meta_key = %s
-                AND pm2.meta_key = %s
-                AND p.post_type IN ('product', 'product_variation')
-                AND p.post_status IN ('publish', 'private')
-                AND pm1.meta_value != ''
-                AND pm1.meta_value > 0
-                AND pm2.meta_value != ''
-                AND pm2.meta_value > 0
-            ", '_purchase_price', '_purchase_quantity'));
-        }
+        $current_stock_total = $this->calculate_current_stock_investment_total($scope);
+        $ordered_quantities = $this->collect_investment_order_quantities($scope);
+        $ordered_total = $this->calculate_investment_amount_from_product_quantities($ordered_quantities);
+        $total_investment = round($current_stock_total + $ordered_total, 2);
 
-        $total_investment = floatval($total_investment);
-
-        // Cache for 1 hour
         set_transient($cache_key, $total_investment, HOUR_IN_SECONDS);
 
         return $total_investment;
     }
 
     /**
-     * Get monthly investment data with caching
+     * Get monthly investment trend data with caching.
      */
-    private function get_monthly_investment_data_cached()
+    private function get_monthly_investment_data_cached($location_filter = 'all')
     {
-        $manager_location_term_ids = $this->get_dashboard_manager_assigned_location_term_ids();
+        $scope = $this->build_investment_scope((string) $location_filter);
         $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
             ? mulopimfwc_get_dashboard_cache_version()
             : 1;
-        $cache_scope = is_array($manager_location_term_ids)
-            ? md5(wp_json_encode($manager_location_term_ids))
-            : 'global';
+        $cache_scope = $this->get_investment_scope_cache_fragment($scope);
         $cache_key = 'mulopimfwc_monthly_investment_v' . $cache_version . '_' . $cache_scope;
         $cached_data = get_transient($cache_key);
-
-        global $wpdb;
 
         $now = new DateTimeImmutable('first day of this month 00:00:00', new DateTimeZone('UTC'));
         $start = $now->modify('-11 months');
@@ -3698,153 +4302,43 @@ class MULOPIMFWC_Dashboard
             $cursor = $cursor->modify('+1 month');
         }
 
-        if (is_array($manager_location_term_ids) && empty($manager_location_term_ids)) {
+        if (($scope['mode'] ?? 'empty') === 'empty') {
             return [
                 'labels' => $labels,
                 'data' => array_fill(0, 12, 0.0),
             ];
         }
 
-        // If no purchase prices exist in the scoped dataset, investment is zero across the board.
-        if (is_array($manager_location_term_ids)) {
-            $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
-            $has_purchase_price = (int) $wpdb->get_var(
-                $wpdb->prepare(
-                    "
-                    SELECT 1
-                    FROM {$wpdb->postmeta} pm
-                    INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-                    WHERE pm.meta_key = '_purchase_price'
-                    AND pm.meta_value != ''
-                    AND pm.meta_value > 0
-                    AND p.post_type IN ('product', 'product_variation')
-                    AND p.post_status IN ('publish', 'private')
-                    AND EXISTS (
-                        SELECT 1
-                        FROM {$wpdb->term_relationships} tr
-                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                        WHERE tr.object_id = (
-                            CASE
-                                WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                                ELSE p.ID
-                            END
-                        )
-                        AND tt.taxonomy = 'mulopimfwc_store_location'
-                        AND tt.term_id IN ({$term_placeholders})
-                    )
-                    LIMIT 1
-                    ",
-                    ...$manager_location_term_ids
-                )
-            );
-        } else {
-            $has_purchase_price = (int) $wpdb->get_var("
-                SELECT 1
-                FROM {$wpdb->postmeta} pm
-                INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-                WHERE pm.meta_key = '_purchase_price'
-                AND pm.meta_value != ''
-                AND pm.meta_value > 0
-                AND p.post_type IN ('product', 'product_variation')
-                AND p.post_status IN ('publish', 'private')
-                LIMIT 1
-            ");
-        }
-
-        if (!$has_purchase_price) {
-            $result = [
-                'labels' => $labels,
-                'data' => array_fill(0, 12, 0.0),
-            ];
-            set_transient($cache_key, $result, 6 * HOUR_IN_SECONDS);
-            return $result;
-        }
-
         if ($cached_data !== false) {
             return $cached_data;
         }
 
-        if (is_array($manager_location_term_ids)) {
-            $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
-            $query = $wpdb->prepare(
-                "
-                SELECT DATE_FORMAT(p.post_date, '%%Y-%%m') AS ym,
-                       COALESCE(SUM(
-                           CAST(pm_price.meta_value AS DECIMAL(10,2)) *
-                           COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                       ), 0) AS total
-                FROM {$wpdb->posts} p
-                INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                WHERE p.post_type IN ('product', 'product_variation')
-                AND p.post_status IN ('publish', 'private')
-                AND p.post_date >= %s
-                AND p.post_date < %s
-                AND EXISTS (
-                    SELECT 1
-                    FROM {$wpdb->term_relationships} tr
-                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE tr.object_id = (
-                        CASE
-                            WHEN p.post_type = 'product_variation' AND p.post_parent > 0 THEN p.post_parent
-                            ELSE p.ID
-                        END
-                    )
-                    AND tt.taxonomy = 'mulopimfwc_store_location'
-                    AND tt.term_id IN ({$term_placeholders})
-                )
-                AND pm_price.meta_value != ''
-                AND pm_price.meta_value > 0
-                AND pm_qty.meta_value != ''
-                AND pm_qty.meta_value > 0
-                GROUP BY ym
-                ",
-                ...array_merge([$start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s')], $manager_location_term_ids)
-            );
-        } else {
-            $query = $wpdb->prepare("
-                SELECT DATE_FORMAT(p.post_date, '%%Y-%%m') AS ym,
-                       COALESCE(SUM(
-                           CAST(pm_price.meta_value AS DECIMAL(10,2)) *
-                           COALESCE(CAST(pm_qty.meta_value AS SIGNED), 0)
-                       ), 0) AS total
-                FROM {$wpdb->posts} p
-                INNER JOIN {$wpdb->postmeta} pm_price ON pm_price.post_id = p.ID AND pm_price.meta_key = '_purchase_price'
-                INNER JOIN {$wpdb->postmeta} pm_qty ON pm_qty.post_id = p.ID AND pm_qty.meta_key = '_purchase_quantity'
-                WHERE p.post_type IN ('product', 'product_variation')
-                AND p.post_status IN ('publish', 'private')
-                AND p.post_date >= %s
-                AND p.post_date < %s
-                AND pm_price.meta_value != ''
-                AND pm_price.meta_value > 0
-                AND pm_qty.meta_value != ''
-                AND pm_qty.meta_value > 0
-                GROUP BY ym
-            ", $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'));
-        }
-
-        $rows = $wpdb->get_results($query);
-        $totals_by_month = [];
-        foreach ($rows as $row) {
-            if (isset($row->ym)) {
-                $totals_by_month[$row->ym] = isset($row->total) ? (float) $row->total : 0.0;
-            }
-        }
+        $bucketed_quantities = $this->collect_investment_order_quantities(
+            $scope,
+            $start->format('Y-m-d'),
+            $end->modify('-1 day')->format('Y-m-d'),
+            'month'
+        );
+        $current_stock_total = $this->calculate_current_stock_investment_total($scope);
+        $current_month_key = $now->format('Y-m');
 
         $data = [];
         $cursor = $start;
         for ($i = 0; $i < 12; $i++) {
-            $key = $cursor->format('Y-m');
-            $data[] = isset($totals_by_month[$key]) ? (float) $totals_by_month[$key] : 0.0;
+            $month_key = $cursor->format('Y-m');
+            $month_total = $this->calculate_investment_amount_from_product_quantities($bucketed_quantities[$month_key] ?? []);
+            if ($month_key === $current_month_key) {
+                $month_total += $current_stock_total;
+            }
+            $data[] = round($month_total, 2);
             $cursor = $cursor->modify('+1 month');
         }
 
         $result = [
             'labels' => $labels,
-            'data' => $data
+            'data' => $data,
         ];
 
-        // Cache for 6 hours
         set_transient($cache_key, $result, 6 * HOUR_IN_SECONDS);
 
         return $result;
@@ -3853,6 +4347,24 @@ class MULOPIMFWC_Dashboard
     /**
      * Build a reusable payload for the dashboard and live APIs.
      */
+    private function get_dashboard_payload_cached(): array
+    {
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_dashboard_payload_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
+        $cached_payload = get_transient($cache_key);
+
+        if (is_array($cached_payload)) {
+            return $cached_payload;
+        }
+
+        $payload = $this->build_dashboard_payload();
+        set_transient($cache_key, $payload, 30);
+
+        return $payload;
+    }
+
     private function build_dashboard_payload(): array
     {
         global $mulopimfwc_locations;
@@ -3899,8 +4411,9 @@ class MULOPIMFWC_Dashboard
         $monthly_investment_data = $this->get_monthly_investment_data_cached();
         $total_investment = $this->calculate_total_investment_efficiently();
         $dead_stock_days = 90;
-        $profitability = $this->get_location_profitability_data($dead_stock_days);
         $low_stock_products = $this->get_low_stock_products_efficiently();
+        $location_card = $this->get_location_card_summary('all');
+        $total_products = $this->get_total_products_count();
 
         return [
             'product_counts' => $product_counts,
@@ -3911,15 +4424,18 @@ class MULOPIMFWC_Dashboard
             'revenue_by_location' => $orders_data['revenue'],
             'recent_products_data' => $recent_products_data,
             'monthly_investment_data' => $monthly_investment_data,
-            'profitability_by_location' => $profitability,
             'dead_stock_days' => $dead_stock_days,
             'total_investment' => $total_investment,
             'low_stock_products' => $low_stock_products,
             'summary' => [
+                'total_products' => $total_products,
+                'total_locations' => (int) ($location_card['count'] ?? count($mulopimfwc_locations)),
                 'total_orders' => array_sum($orders_data['orders']),
                 'total_revenue' => array_sum($orders_data['revenue']),
                 'total_stock' => array_sum($stock_levels),
                 'total_investment' => $total_investment,
+                'location_card_label' => isset($location_card['label']) ? (string) $location_card['label'] : __('Locations', 'multi-location-product-and-inventory-management-pro'),
+                'location_card_value' => isset($location_card['value']) ? (string) $location_card['value'] : (string) count($mulopimfwc_locations),
             ],
         ];
     }
@@ -3996,7 +4512,7 @@ class MULOPIMFWC_Dashboard
             return;
         }
 
-        $payload = $this->build_dashboard_payload();
+        $payload = $this->get_dashboard_payload_cached();
         $last_check = (int) get_option('mulopimfwc_dashboard_last_check', 0);
         $site_status = $this->resolve_site_status();
         $alerts = $this->collect_live_alerts($last_check, $payload, $site_status);
@@ -4015,7 +4531,6 @@ class MULOPIMFWC_Dashboard
             'dateCounts' => $payload['recent_products_data']['counts'],
             'monthlyInvestmentLabels' => $payload['monthly_investment_data']['labels'],
             'monthlyInvestmentData' => $payload['monthly_investment_data']['data'],
-            'profitabilityByLocation' => $payload['profitability_by_location'],
             'deadStockDays' => $payload['dead_stock_days'],
             'totalInvestment' => $payload['total_investment'],
             // Return the full low stock list so the live sync view matches initial render

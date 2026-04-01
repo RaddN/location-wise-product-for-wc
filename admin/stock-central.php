@@ -318,7 +318,7 @@ class mulopimfwc_Stock_Central
                 <div id="mulopimfwc-stock-central-import-export-log-list" class="mulopimfwc-stock-central-import-export-log-list"></div>
             </div>
 
-            <form method="get" id="stock-central-form">
+            <form method="get" id="stock-central-form" novalidate="novalidate">
                 <input type="hidden" name="page" value="<?php echo isset($_REQUEST['page']) ? esc_attr(sanitize_text_field(wp_unslash($_REQUEST['page']))) : 'location-stock-management'; ?>" />
                 <input type="hidden" name="stock_central_view" value="<?php echo esc_attr($view_mode); ?>" />
                 <?php if ($is_classic_mode && $can_manage_products) : ?>
@@ -2733,8 +2733,6 @@ class mulopimfwc_Stock_Central
                             locationRegularVsPurchase: '<?php echo esc_js(__('Location regular price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro')); ?>',
                             locationSaleVsPurchase: '<?php echo esc_js(__('Location sale price cannot be less than purchase price', 'multi-location-product-and-inventory-management-pro')); ?>',
                             locationSaleVsLocationRegular: '<?php echo esc_js(__('Location sale price must be less than location regular price', 'multi-location-product-and-inventory-management-pro')); ?>',
-                            stockVsPurchaseQty: '<?php echo esc_js(__('Stock quantity cannot be greater than purchase quantity', 'multi-location-product-and-inventory-management-pro')); ?>',
-                            purchaseQtyVsStock: '<?php echo esc_js(__('Purchase quantity cannot be less than stock quantity', 'multi-location-product-and-inventory-management-pro')); ?>',
                             totalLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds default stock', 'multi-location-product-and-inventory-management-pro')); ?>',
                             totalVariationLocationStockExceeded: '<?php echo esc_js(__('Total location stock exceeds variation default stock', 'multi-location-product-and-inventory-management-pro')); ?>',
                             generic: '<?php echo esc_js(__('Please fix the validation errors before saving.', 'multi-location-product-and-inventory-management-pro')); ?>'
@@ -2754,13 +2752,11 @@ class mulopimfwc_Stock_Central
                         var $defaultRegularField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"regular_price\"]').first();
                         var $defaultSaleField = $row.find('.column-classic_default .mulopimfwc-classic-default-field[data-field=\"sale_price\"]').first();
                         var $defaultPurchasePriceField = $row.find('.column-classic_purchase .mulopimfwc-classic-default-field[data-field=\"purchase_price\"]').first();
-                        var $defaultPurchaseQtyField = $row.find('.column-classic_purchase .mulopimfwc-classic-default-field[data-field=\"purchase_quantity\"]').first();
 
                         var defaultStock = getNumericFieldValue($defaultStockField);
                         var defaultRegularPrice = getNumericFieldValue($defaultRegularField);
                         var defaultSalePrice = getNumericFieldValue($defaultSaleField);
                         var defaultPurchasePrice = getNumericFieldValue($defaultPurchasePriceField);
-                        var defaultPurchaseQty = getNumericFieldValue($defaultPurchaseQtyField);
 
                         if (!isGrouped && !isVariable) {
                             if (defaultPurchasePrice > 0 && defaultRegularPrice > 0 && defaultRegularPrice < defaultPurchasePrice) {
@@ -2777,14 +2773,6 @@ class mulopimfwc_Stock_Central
                         }
 
                         if (!isGrouped && !isVariable && !isExternal && defaultManageStockEnabled) {
-                            if (defaultPurchaseQty > 0 && defaultStock > defaultPurchaseQty) {
-                                addRowValidationError(errors, $defaultStockField, messages.stockVsPurchaseQty);
-                            }
-
-                            if (defaultStock > 0 && defaultPurchaseQty < defaultStock) {
-                                addRowValidationError(errors, $defaultPurchaseQtyField, messages.purchaseQtyVsStock);
-                            }
-
                             var totalLocationStock = 0;
                             var $positiveLocationStockFields = $();
                             $row.find('.column-classic_location_wise .mulopimfwc-classic-product-location-table tbody tr.mulopimfwc-classic-product-location-row [data-field=\"stock\"]').each(function() {
@@ -2837,14 +2825,12 @@ class mulopimfwc_Stock_Central
                                 var $variationSaleField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"sale_price\"]').first();
                                 var $variationStockField = $row.find('.column-classic_default [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"stock_quantity\"]').first();
                                 var $variationPurchasePriceField = $row.find('.column-classic_purchase [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"purchase_price\"]').first();
-                                var $variationPurchaseQtyField = $row.find('.column-classic_purchase [data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"purchase_quantity\"]').first();
                                 var $variationManageStockField = $row.find('.column-classic_manage_stock .mulopimfwc-classic-variation-manage-item[data-variation-id=\"' + variationId + '\"] .mulopimfwc-classic-variation-default-field[data-field=\"manage_stock\"]').first();
 
                                 var variationRegularPrice = getNumericFieldValue($variationRegularField);
                                 var variationSalePrice = getNumericFieldValue($variationSaleField);
                                 var variationStock = getNumericFieldValue($variationStockField);
                                 var variationPurchasePrice = getNumericFieldValue($variationPurchasePriceField);
-                                var variationPurchaseQty = getNumericFieldValue($variationPurchaseQtyField);
                                 var variationManageStockEnabled = !$variationManageStockField.length || $variationManageStockField.is(':checked');
 
                                 if (variationPurchasePrice > 0 && variationRegularPrice > 0 && variationRegularPrice < variationPurchasePrice) {
@@ -2853,16 +2839,6 @@ class mulopimfwc_Stock_Central
 
                                 if (variationSalePrice > 0 && variationRegularPrice > 0 && variationSalePrice >= variationRegularPrice) {
                                     addRowValidationError(errors, $variationSaleField, messages.saleVsRegular);
-                                }
-
-                                if (variationManageStockEnabled) {
-                                    if (variationPurchaseQty > 0 && variationStock > variationPurchaseQty) {
-                                        addRowValidationError(errors, $variationStockField, messages.stockVsPurchaseQty);
-                                    }
-
-                                    if (variationStock > 0 && variationPurchaseQty < variationStock) {
-                                        addRowValidationError(errors, $variationPurchaseQtyField, messages.purchaseQtyVsStock);
-                                    }
                                 }
 
                                 var $variationLocationRows = $row.find('.column-classic_location_wise .mulopimfwc-classic-variation-location-table[data-variation-id=\"' + variationId + '\"] tbody tr.mulopimfwc-classic-variation-location-row');
@@ -3134,7 +3110,7 @@ class mulopimfwc_Stock_Central
                         return '' +
                             '<tr class=\"mulopimfwc-classic-product-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\" data-currency-rate=\"' + escapedCurrencyRate + '\" data-currency-should-convert=\"' + escapedShouldConvert + '\">' +
                             '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
-                            '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"' + disabled + '></td>' +
+                            '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" step=\"1\"' + disabled + '></td>' +
                             '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
                             '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
                             '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\"' + disabled + '>' +
@@ -3156,7 +3132,7 @@ class mulopimfwc_Stock_Central
                         return '' +
                             '<tr class=\"mulopimfwc-classic-variation-location-row\" data-location-id=\"' + locationId + '\" data-location-name=\"' + escapeHtml(locationName) + '\" data-currency-symbol=\"' + escapedCurrencySymbol + '\" data-currency-rate=\"' + escapedCurrencyRate + '\" data-currency-should-convert=\"' + escapedShouldConvert + '\">' +
                             '<td class=\"mulopimfwc-classic-location-label\">' + escapeHtml(locationName) + '</td>' +
-                            (includeStockFields ? '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" min=\"0\" step=\"1\"></td>' : '') +
+                            (includeStockFields ? '<td><input type=\"number\" class=\"mulopimfwc-classic-field mulopimfwc-classic-number\" data-field=\"stock\" data-initial-value=\"\" value=\"\" step=\"1\"></td>' : '') +
                             '<td>' + buildClassicPriceInput('regular_price', safeCurrencySymbol) + '</td>' +
                             '<td>' + buildClassicPriceInput('sale_price', safeCurrencySymbol) + '</td>' +
                             (includeStockFields ? '<td><select class=\"mulopimfwc-classic-field mulopimfwc-classic-select\" data-field=\"backorders\" data-initial-value=\"no\">' +

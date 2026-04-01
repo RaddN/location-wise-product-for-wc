@@ -84,7 +84,7 @@ if (!function_exists('mulopimfwc_get_currency_conversion_for_admin_input')) {
 
 
 /**
- * Add Purchase Price & Purchase Quantity field to WooCommerce product general tab
+ * Add purchase price field to WooCommerce product general tab.
  */
 
 // Add the Purchase Price field to the General tab
@@ -120,20 +120,6 @@ function mulopimfwc_add_purchase_price_field()
         )
     );
 
-    woocommerce_wp_text_input(
-        array(
-            'id'          => '_purchase_quantity',
-            'label'       => __('Total Quantity Purchase', 'multi-location-product-and-inventory-management-pro'),
-            'desc_tip'    => true,
-            'description' => __('Enter the total quantity purchase for this product.', 'multi-location-product-and-inventory-management-pro'),
-            'type'        => 'number',
-            'custom_attributes' => array(
-                'step' => 'any',
-                'min'  => '0'
-            )
-        )
-    );
-
     echo '</div>';
 }
 
@@ -147,9 +133,11 @@ function mulopimfwc_save_purchase_price_field($post_id)
         return;
     }
     $purchase_price = isset($_POST['_purchase_price']) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_price']))) : '';
-    $purchase_quantity =  isset($_POST['_purchase_quantity']) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_quantity']))) : '';
     update_post_meta($post_id, '_purchase_price', $purchase_price);
-    update_post_meta($post_id, '_purchase_quantity', $purchase_quantity);
+    if (isset($_POST['_purchase_quantity'])) {
+        $purchase_quantity = wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_quantity'])));
+        update_post_meta($post_id, '_purchase_quantity', $purchase_quantity);
+    }
 }
 
 // Add Purchase Price to variable products (if needed)
@@ -177,21 +165,6 @@ function mulopimfwc_add_variation_purchase_price_field($loop, $variation_data, $
         )
     );
 
-    woocommerce_wp_text_input(
-        array(
-            'id'            => '_purchase_quantity[' . $loop . ']',
-            'label'         => __('Purchase Quantity', 'multi-location-product-and-inventory-management-pro'),
-            'desc_tip'      => true,
-            'description'   => __('Enter the purchase quantiy for this variation.', 'multi-location-product-and-inventory-management-pro'),
-            'value'         => get_post_meta($variation->ID, '_purchase_quantity', true),
-            'type'          => 'number',
-            'custom_attributes' => array(
-                'step' => 'any',
-                'min'  => '0'
-            ),
-            'wrapper_class' => 'form-row form-row-last'
-        )
-    );
 }
 
 // Save the Purchase Price field value for variable products
@@ -204,9 +177,11 @@ function mulopimfwc_save_variation_purchase_price_field($variation_id, $loop)
         return;
     }
     $purchase_price = isset($_POST['_purchase_price'][$loop]) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_price'][$loop]))) : '';
-    $purchase_quantity = isset($_POST['_purchase_quantity'][$loop]) ? wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_quantity'][$loop]))) : '';
     update_post_meta($variation_id, '_purchase_price', $purchase_price);
-    update_post_meta($variation_id, '_purchase_quantity', $purchase_quantity);
+    if (isset($_POST['_purchase_quantity'][$loop])) {
+        $purchase_quantity = wc_clean(sanitize_text_field(wp_unslash($_POST['_purchase_quantity'][$loop])));
+        update_post_meta($variation_id, '_purchase_quantity', $purchase_quantity);
+    }
 }
 
 // stock manage, price manage, backorder manage

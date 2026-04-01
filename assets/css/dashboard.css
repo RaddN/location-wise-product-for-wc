@@ -290,6 +290,48 @@ table.lwp-low-stock-table a {
   color: #475569;
 }
 
+.lwp-profitability-panel {
+  min-height: 180px;
+}
+
+.lwp-profitability-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  padding: 24px;
+}
+
+.lwp-profitability-state.is-loading::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  margin-right: 10px;
+  animation: lwp-profitability-spin 0.7s linear infinite;
+}
+
+.lwp-profitability-state.is-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+@keyframes lwp-profitability-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Responsive styles */
 @media screen and (max-width: 782px) {
   .lwp-col {

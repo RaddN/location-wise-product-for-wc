@@ -1492,11 +1492,6 @@ jQuery(document).ready(function ($) {
         htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][purchase_price]', variation.default.purchase_price || '', currencySymbol));
         htmlParts.push('</div>');
 
-        htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>' + (_modalI18n.purchaseQuantity || 'Purchase Quantity:') + '</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_quantity]" value="' + (variation.default.purchase_quantity || '') + '" min="0" step="1">');
-        htmlParts.push('</div>');
-        
         htmlParts.push('</form>');
         return htmlParts.join('');
     }
@@ -1717,14 +1712,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
             htmlParts.push('</div>');
         }
         
-        // Purchase Quantity - not for grouped products
-        if (!isGrouped) {
-            htmlParts.push('<div class="manage-form-row">');
-            htmlParts.push('<label>' + (_modalI18n.purchaseQuantity || 'Purchase Quantity:') + '</label>');
-            htmlParts.push('<input type="number" name="default[purchase_quantity]" value="' + (data.default.purchase_quantity || '') + '" min="0" step="1">');
-            htmlParts.push('</div>');
-        }
-        
         htmlParts.push('</form>');
         htmlParts.push('</div>');
         return htmlParts.join('');
@@ -1872,10 +1859,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         htmlParts.push(buildManagePriceInput('variations[' + variation.id + '][default][purchase_price]', variation.default.purchase_price || '', currencySymbol));
         htmlParts.push('</div>');
 
-        htmlParts.push('<div class="manage-form-row">');
-        htmlParts.push('<label>' + (_modalI18n.purchaseQuantity || 'Purchase Quantity:') + '</label>');
-        htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_quantity]" value="' + (variation.default.purchase_quantity || '') + '" min="0" step="1">');
-        htmlParts.push('</div>');
         htmlParts.push('</div>');
 
         // Location settings for variation
@@ -2048,13 +2031,11 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         var defaultSalePrice = 0;
         var defaultPurchasePrice = 0;
         var defaultStock = 0;
-        var defaultPurchaseQty = 0;
         
         var $regularPriceField = $('#manage-product-modal input[name="default[regular_price]"]');
         var $salePriceField = $('#manage-product-modal input[name="default[sale_price]"]');
         var $purchasePriceField = $('#manage-product-modal input[name="default[purchase_price]"]');
         var $stockField = $('#manage-product-modal input[name="default[stock_quantity]"]');
-        var $purchaseQtyField = $('#manage-product-modal input[name="default[purchase_quantity]"]');
         
         if ($regularPriceField.length && !isGrouped) {
             defaultRegularPrice = parseFloat($regularPriceField.val()) || 0;
@@ -2068,10 +2049,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         if ($stockField.length && !isGrouped && !isExternal) {
             defaultStock = parseFloat($stockField.val()) || 0;
         }
-        if ($purchaseQtyField.length && !isGrouped) {
-            defaultPurchaseQty = parseFloat($purchaseQtyField.val()) || 0;
-        }
-
         // Validation rules (skip for grouped/external products where applicable)
         if (fieldName.indexOf('default[regular_price]') !== -1 && !isGrouped) {
             if (defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
@@ -2095,13 +2072,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
             if (defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
                 isValid = false;
                 errorMessage = (_modalI18n.salePriceCannotBeLessThanPurchase || 'Sale price cannot be less than purchase price') + ' (' + defaultPurchasePrice + ')';
-            }
-        }
-
-        if (fieldName.indexOf('default[stock_quantity]') !== -1 && !isGrouped && !isExternal && defaultManageStockEnabled) {
-            if (defaultPurchaseQty > 0 && value > defaultPurchaseQty) {
-                isValid = false;
-                errorMessage = (_modalI18n.stockQuantityCannotExceedPurchase || 'Stock quantity cannot be greater than purchase quantity') + ' (' + defaultPurchaseQty + ')';
             }
         }
 
@@ -2144,9 +2114,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
                 var varDefaultRegularPrice = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][regular_price]"]').val()) || 0;
                 var varDefaultSalePrice = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][sale_price]"]').val()) || 0;
                 var varDefaultPurchasePrice = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][purchase_price]"]').val()) || 0;
-                var varDefaultStock = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][stock_quantity]"]').val()) || 0;
-                var varDefaultPurchaseQty = parseFloat($('#manage-product-modal input[name="variations[' + varId + '][default][purchase_quantity]"]').val()) || 0;
-                var varManageStockEnabled = isVariationManageStockEnabled(varId);
 
                 if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value > 0 && value < varDefaultPurchasePrice) {
                     isValid = false;
@@ -2155,14 +2122,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
                 if (varFieldType === 'sale_price' && varDefaultRegularPrice > 0 && value >= varDefaultRegularPrice) {
                     isValid = false;
                     errorMessage = (_modalI18n.salePriceMustBeLessThanRegular || 'Sale price must be less than regular price') + ' (' + varDefaultRegularPrice + ')';
-                }
-                if (varFieldType === 'stock_quantity' && varManageStockEnabled && varDefaultPurchaseQty > 0 && value > varDefaultPurchaseQty) {
-                    isValid = false;
-                    errorMessage = (_modalI18n.stockQuantityCannotExceedPurchase || 'Stock quantity cannot be greater than purchase quantity') + ' (' + varDefaultPurchaseQty + ')';
-                }
-                if (varFieldType === 'purchase_quantity' && varManageStockEnabled && varDefaultStock > 0 && value < varDefaultStock) {
-                    isValid = false;
-                    errorMessage = (_modalI18n.purchaseQuantityCannotBeLessThanStock || 'Purchase quantity cannot be less than stock quantity') + ' (' + varDefaultStock + ')';
                 }
             }
         }
@@ -2299,7 +2258,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         var defaultSalePrice = 0;
         var defaultPurchasePrice = 0;
         var defaultStock = 0;
-        var defaultPurchaseQty = 0;
         
         if (!$('#manage-product-modal input[name="default[regular_price]"]').length || !isGrouped) {
             defaultRegularPrice = parseFloat($('#manage-product-modal input[name="default[regular_price]"]').val()) || 0;
@@ -2315,12 +2273,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         } else {
             defaultStock = parseFloat($('#manage-product-modal input[name="default[stock_quantity]"]').val()) || 0;
         }
-        if (!$('#manage-product-modal input[name="default[purchase_quantity]"]').length || isGrouped) {
-            defaultPurchaseQty = 0;
-        } else {
-            defaultPurchaseQty = parseFloat($('#manage-product-modal input[name="default[purchase_quantity]"]').val()) || 0;
-        }
-
         // Skip default field validations for variable products (they have variation-specific validations)
         if (!isVariable) {
             // Validation 1: Regular price can't be less than purchase price (skip for grouped products)
@@ -2356,18 +2308,7 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
                 }
             }
 
-            // Validation 4: Default quantity can't be greater than purchase quantity (skip for grouped/external products)
-            if (!isGrouped && !isExternal && defaultManageStockEnabled && defaultPurchaseQty > 0 && defaultStock > defaultPurchaseQty) {
-                var $field = $('#manage-product-modal input[name="default[stock_quantity]"]');
-                if ($field.length) {
-                    $field.addClass('manage-error');
-                    showManageFieldError($field, _modalI18n.stockQuantityCannotExceedPurchase || 'Stock quantity cannot be greater than purchase quantity');
-                    isValid = false;
-                    tabErrors['default'] = true;
-                }
-            }
-
-            // Validation 5: Sum of all location stock can't be greater than default quantity (skip for grouped/external products)
+            // Validation 4: Sum of all location stock can't be greater than default quantity (skip for grouped/external products)
             if (!isGrouped && !isExternal && defaultManageStockEnabled) {
                 var totalLocationStock = 0;
             $('#manage-product-modal input[name*="locations["][name*="[stock]"]').each(function() {
@@ -2873,10 +2814,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
         htmlParts.push('<input type="number" name="default[purchase_price]" value="' + (data.default.purchase_price || '') + '" min="0" step="0.01">');
         htmlParts.push('</div>');
-        htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
-        htmlParts.push('<label>' + (_modalI18n.purchaseQuantity || 'Purchase Quantity:') + '</label>');
-        htmlParts.push('<input type="number" name="default[purchase_quantity]" value="' + (data.default.purchase_quantity || '') + '" min="0" step="1">');
-        htmlParts.push('</div>');
         htmlParts.push('</div>');
 
         // Location sections
@@ -2947,10 +2884,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
                 htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
                 htmlParts.push('<label>Purchase Price (' + currencySymbol + '):</label>');
                 htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_price]" value="' + (variation.default.purchase_price || '') + '" min="0" step="0.01">');
-                htmlParts.push('</div>');
-                htmlParts.push('<div class="mulopimfwc-quick-edit-row">');
-                htmlParts.push('<label>' + (_modalI18n.purchaseQuantity || 'Purchase Quantity:') + '</label>');
-                htmlParts.push('<input type="number" name="variations[' + variation.id + '][default][purchase_quantity]" value="' + (variation.default.purchase_quantity || '') + '" min="0" step="1">');
                 htmlParts.push('</div>');
                 htmlParts.push('</div>');
 
@@ -3054,8 +2987,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         var defaultRegularPrice = parseFloat($('input[name="default[regular_price]"]').val()) || 0;
         var defaultSalePrice = parseFloat($('input[name="default[sale_price]"]').val()) || 0;
         var defaultPurchasePrice = parseFloat($('input[name="default[purchase_price]"]').val()) || 0;
-        var defaultStock = parseFloat($('input[name="default[stock_quantity]"]').val()) || 0;
-        var defaultPurchaseQty = parseFloat($('input[name="default[purchase_quantity]"]').val()) || 0;
 
         // Validation rules
         if (fieldName.indexOf('default[regular_price]') !== -1) {
@@ -3082,22 +3013,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
             if (defaultPurchasePrice > 0 && value > 0 && value < defaultPurchasePrice) {
                 isValid = false;
                 errorMessage = (_modalI18n.salePriceCannotBeLessThanPurchase || 'Sale price cannot be less than purchase price') + ' (' + defaultPurchasePrice + ')';
-            }
-        }
-
-        if (fieldName.indexOf('default[stock_quantity]') !== -1) {
-            // Default quantity can't be greater than purchase quantity
-            if (defaultPurchaseQty > 0 && value > defaultPurchaseQty) {
-                isValid = false;
-                errorMessage = (_modalI18n.stockQuantityCannotExceedPurchase || 'Stock quantity cannot be greater than purchase quantity') + ' (' + defaultPurchaseQty + ')';
-            }
-        }
-
-        if (fieldName.indexOf('default[purchase_quantity]') !== -1) {
-            // Purchase quantity can't be less than default stock
-            if (defaultStock > 0 && value < defaultStock) {
-                isValid = false;
-                errorMessage = (_modalI18n.purchaseQuantityCannotBeLessThanStock || 'Purchase quantity cannot be less than stock quantity') + ' (' + defaultStock + ')';
             }
         }
 
@@ -3130,8 +3045,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
                 var varDefaultRegularPrice = parseFloat($('input[name="variations[' + varMatch[1] + '][default][regular_price]"]').val()) || 0;
                 var varDefaultSalePrice = parseFloat($('input[name="variations[' + varMatch[1] + '][default][sale_price]"]').val()) || 0;
                 var varDefaultPurchasePrice = parseFloat($('input[name="variations[' + varMatch[1] + '][default][purchase_price]"]').val()) || 0;
-                var varDefaultStock = parseFloat($('input[name="variations[' + varMatch[1] + '][default][stock_quantity]"]').val()) || 0;
-                var varDefaultPurchaseQty = parseFloat($('input[name="variations[' + varMatch[1] + '][default][purchase_quantity]"]').val()) || 0;
 
                 if (varFieldType === 'regular_price' && varDefaultPurchasePrice > 0 && value > 0 && value < varDefaultPurchasePrice) {
                     isValid = false;
@@ -3140,14 +3053,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
                 if (varFieldType === 'sale_price' && varDefaultRegularPrice > 0 && value >= varDefaultRegularPrice) {
                     isValid = false;
                     errorMessage = (_modalI18n.salePriceMustBeLessThanRegular || 'Sale price must be less than regular price') + ' (' + varDefaultRegularPrice + ')';
-                }
-                if (varFieldType === 'stock_quantity' && varDefaultPurchaseQty > 0 && value > varDefaultPurchaseQty) {
-                    isValid = false;
-                    errorMessage = (_modalI18n.stockQuantityCannotExceedPurchase || 'Stock quantity cannot be greater than purchase quantity') + ' (' + varDefaultPurchaseQty + ')';
-                }
-                if (varFieldType === 'purchase_quantity' && varDefaultStock > 0 && value < varDefaultStock) {
-                    isValid = false;
-                    errorMessage = (_modalI18n.purchaseQuantityCannotBeLessThanStock || 'Purchase quantity cannot be less than stock quantity') + ' (' + varDefaultStock + ')';
                 }
             }
         }
@@ -3181,7 +3086,6 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
         var defaultSalePrice = parseFloat($('input[name="default[sale_price]"]').val()) || 0;
         var defaultPurchasePrice = parseFloat($('input[name="default[purchase_price]"]').val()) || 0;
         var defaultStock = parseFloat($('input[name="default[stock_quantity]"]').val()) || 0;
-        var defaultPurchaseQty = parseFloat($('input[name="default[purchase_quantity]"]').val()) || 0;
 
         // Validation 1: Regular price can't be less than purchase price
         if (defaultPurchasePrice > 0 && defaultRegularPrice > 0 && defaultRegularPrice < defaultPurchasePrice) {
@@ -3207,15 +3111,7 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
             isValid = false;
         }
 
-        // Validation 4: Default quantity can't be greater than purchase quantity
-        if (defaultPurchaseQty > 0 && defaultStock > defaultPurchaseQty) {
-            var $field = $('input[name="default[stock_quantity]"]');
-            $field.addClass('quick-edit-error');
-            showFieldError($field, 'Stock quantity cannot be greater than purchase quantity');
-            isValid = false;
-        }
-
-        // Validation 5: Sum of all location stock can't be greater than default quantity
+        // Validation 4: Sum of all location stock can't be greater than default quantity
         var totalLocationStock = 0;
         $('input[name^="locations["][name$="[stock]"]').each(function() {
             var stock = parseFloat($(this).val()) || 0;
@@ -4220,12 +4116,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 self.validateLocationPrices();
             });
 
-            // Validate on purchase quantity change
-            $(document).on('change', '#_purchase_quantity', function () {
-                self.validateStock();
-                self.validateLocationStock();
-            });
-
             // Check manage stock when checkbox changes
             $(document).on('change', '#_manage_stock', function () {
                 self.checkManageStock();
@@ -4300,22 +4190,12 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
         validateStock() {
-            const purchaseQuantity = parseFloat($('#_purchase_quantity').val()) || 0;
             const stock = parseFloat($('#_stock').val()) || 0;
 
             let isValid = true;
 
             // Remove previous error states
             $('#_stock').removeClass('product-field-error');
-
-            if (purchaseQuantity > 0 && stock > purchaseQuantity) {
-                $('#_stock').addClass('product-field-error');
-                NotificationSystem.show(
-                    `Stock quantity (${stock}) cannot be greater than purchase quantity (${purchaseQuantity})`,
-                    'error'
-                );
-                isValid = false;
-            }
 
             return isValid;
         },
@@ -4446,7 +4326,6 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
         validateLocationStock() {
-            const purchaseQuantity = parseFloat($('#_purchase_quantity').val()) || 0;
             const totalStock = parseFloat($('#_stock').val()) || 0;
             let isValid = true;
             let totalLocationStock = 0;
@@ -4492,19 +4371,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
-
-            // Check if total location stock exceeds purchase quantity
-            if (purchaseQuantity > 0 && totalLocationStock > purchaseQuantity) {
-                locationStocks.forEach(loc => {
-                    loc.field.addClass('product-field-error');
-                });
-
-                NotificationSystem.show(
-                    `Total location stock (${totalLocationStock}) cannot be greater than purchase quantity (${purchaseQuantity})`,
-                    'error'
-                );
-                isValid = false;
-            }
 
             // Check if total location stock exceeds total stock
             if (totalStock > 0 && totalLocationStock > totalStock) {

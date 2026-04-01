@@ -19,6 +19,7 @@
         initDashboardCharts();
         initFilterHandlers();
         initExportHandlers();
+        initProfitabilityPanel();
         startRealtimeSync();
     });
 
@@ -144,6 +145,10 @@
                         } else {
                             $('.lwp-filter-active-badge').remove();
                         }
+
+                        loadProfitabilityPanel({
+                            location: location
+                        });
                     }
                 },
                 error: function (xhr, status, error) {
@@ -250,21 +255,34 @@
 
         if (data.summary) {
             $('.lwp-stat-item').each(function () {
-                const label = $(this).find('.lwp-stat-label').text();
-                const labelText = label.toLowerCase();
+                const metric = $(this).find('.lwp-stat-progress').data('metric') || '';
+                const $label = $(this).find('.lwp-stat-label');
+                const $value = $(this).find('.lwp-stat-value');
 
-                if (labelText.includes('products') && data.summary.total_products !== undefined) {
-                    $(this).find('.lwp-stat-value').text(data.summary.total_products.toLocaleString());
-                } else if (labelText.includes('locations') && data.summary.total_locations !== undefined) {
-                    $(this).find('.lwp-stat-value').text(data.summary.total_locations.toLocaleString());
-                } else if (labelText.includes('orders') && data.summary.total_orders !== undefined) {
-                    $(this).find('.lwp-stat-value').text(data.summary.total_orders.toLocaleString());
-                } else if (labelText.includes('revenue') && data.summary.total_revenue !== undefined) {
-                    $(this).find('.lwp-stat-value').html(formatCurrency(data.summary.total_revenue));
-                } else if (labelText.includes('stock') && data.summary.total_stock !== undefined) {
-                    $(this).find('.lwp-stat-value').text(data.summary.total_stock.toLocaleString());
-                } else if (labelText.includes('investment') && data.summary.total_investment !== undefined) {
-                    $(this).find('.lwp-stat-value').html(formatCurrency(data.summary.total_investment));
+                if (metric === 'products' && data.summary.total_products !== undefined) {
+                    $value.text(data.summary.total_products.toLocaleString());
+                } else if (metric === 'locations') {
+                    if (data.summary.location_card_label !== undefined) {
+                        $label.text(data.summary.location_card_label);
+                    }
+
+                    if (data.summary.location_card_value !== undefined) {
+                        if (typeof data.summary.location_card_value === 'number') {
+                            $value.text(data.summary.location_card_value.toLocaleString());
+                        } else {
+                            $value.text(data.summary.location_card_value);
+                        }
+                    } else if (data.summary.total_locations !== undefined) {
+                        $value.text(data.summary.total_locations.toLocaleString());
+                    }
+                } else if (metric === 'orders' && data.summary.total_orders !== undefined) {
+                    $value.text(data.summary.total_orders.toLocaleString());
+                } else if (metric === 'revenue' && data.summary.total_revenue !== undefined) {
+                    $value.html(formatCurrency(data.summary.total_revenue));
+                } else if (metric === 'stock' && data.summary.total_stock !== undefined) {
+                    $value.text(data.summary.total_stock.toLocaleString());
+                } else if (metric === 'investment' && data.summary.total_investment !== undefined) {
+                    $value.html(formatCurrency(data.summary.total_investment));
                 }
             });
         }
@@ -296,6 +314,95 @@
         if (data.low_stock) {
             updateLowStockTable(data.low_stock);
         }
+    }
+
+    function initProfitabilityPanel() {
+        const queueInitialLoad = function () {
+            loadProfitabilityPanel(getCurrentDashboardFilters());
+        };
+
+        if (document.readyState === 'complete') {
+            window.setTimeout(queueInitialLoad, 0);
+            return;
+        }
+
+        $(window).one('load', queueInitialLoad);
+    }
+
+    function getCurrentDashboardFilters() {
+        return {
+            dateFrom: $('#filter-date-from').val() || '',
+            dateTo: $('#filter-date-to').val() || '',
+            location: $('#filter-location').val() || 'all',
+            status: $('#filter-status').val() || 'all'
+        };
+    }
+
+    function setProfitabilityPanelState(state, message) {
+        const $panel = $('#lwp-profitability-panel');
+        if ($panel.length === 0) {
+            return;
+        }
+
+        if (state === 'loading') {
+            const loadingText = message || mulopimfwc_DashboardData.i18n.loadingProfitability || 'Loading profitability data...';
+            $panel.html(`<div class="lwp-profitability-state is-loading">${escapeHtml(loadingText)}</div>`);
+            return;
+        }
+
+        if (state === 'error') {
+            const errorText = message || mulopimfwc_DashboardData.i18n.profitabilityLoadError || 'Unable to load profitability data right now.';
+            $panel.html(`<div class="lwp-profitability-state is-error">${escapeHtml(errorText)}</div>`);
+        }
+    }
+
+    function loadProfitabilityPanel(filters) {
+        const $panel = $('#lwp-profitability-panel');
+        if ($panel.length === 0) {
+            return;
+        }
+
+        if (window.mulopimfwcProfitabilityRequest && typeof window.mulopimfwcProfitabilityRequest.abort === 'function') {
+            window.mulopimfwcProfitabilityRequest.abort();
+        }
+
+        setProfitabilityPanelState('loading');
+
+        const request = $.ajax({
+            url: mulopimfwc_DashboardData.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_dashboard_profitability',
+                nonce: mulopimfwc_DashboardData.dashboard_nonce,
+                location: (filters && filters.location) ? filters.location : 'all',
+                dead_stock_days: parseInt($panel.data('dead-stock-days'), 10) || parseInt(mulopimfwc_DashboardData.deadStockDays || 90, 10) || 90
+            }
+        });
+
+        window.mulopimfwcProfitabilityRequest = request;
+
+        request.done(function (response) {
+            if (response && response.success && response.data && typeof response.data.html === 'string') {
+                $panel.html(response.data.html);
+                return;
+            }
+
+            setProfitabilityPanelState('error');
+        });
+
+        request.fail(function (xhr, status) {
+            if (status === 'abort') {
+                return;
+            }
+
+            setProfitabilityPanelState('error');
+        });
+
+        request.always(function () {
+            if (window.mulopimfwcProfitabilityRequest === request) {
+                window.mulopimfwcProfitabilityRequest = null;
+            }
+        });
     }
 
     /**
