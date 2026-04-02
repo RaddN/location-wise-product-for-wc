@@ -11,6 +11,7 @@ class MULOPIMFWC_Dashboard
     {
         add_action('wp_ajax_mulopimfwc_apply_filters', array($this, 'apply_dashboard_filters'));
         add_action('wp_ajax_mulopimfwc_dashboard_profitability', array($this, 'handle_profitability_panel_request'));
+        add_action('wp_ajax_mulopimfwc_dashboard_investment', array($this, 'handle_dashboard_investment_request'));
     }
 
     /**
@@ -1102,14 +1103,14 @@ class MULOPIMFWC_Dashboard
         // Enqueue necessary scripts and styles
         $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
         $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
-        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.5.11';
-        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.5.11';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.5.16';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.5.16';
 
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
         wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
         wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), $dashboard_css_version);
 
-        $payload = $this->get_dashboard_payload_cached();
+        $payload = $this->get_dashboard_render_payload();
 
         $dummydata = [];
         foreach ($payload['orders_by_location'] as $location => $_) {
@@ -1181,6 +1182,68 @@ class MULOPIMFWC_Dashboard
                 'profitabilityLoadError' => __('Unable to load profitability data right now.', 'multi-location-product-and-inventory-management-pro')
             ]
         ]);
+
+        wp_add_inline_script('lwp-dashboard-js', <<<'JS'
+(function ($) {
+    function getDeferredInvestmentFilters() {
+        return {
+            date_from: $('#filter-date-from').val() || '',
+            date_to: $('#filter-date-to').val() || '',
+            location: $('#filter-location').val() || 'all'
+        };
+    }
+
+    function requestDeferredInvestment(filters) {
+        if (!window.mulopimfwc_DashboardData || !window.mulopimfwc_update_dashboard) {
+            return;
+        }
+
+        if (window.mulopimfwcDeferredInvestmentRequest && typeof window.mulopimfwcDeferredInvestmentRequest.abort === 'function') {
+            window.mulopimfwcDeferredInvestmentRequest.abort();
+        }
+
+        window.mulopimfwcDeferredInvestmentRequest = $.ajax({
+            url: mulopimfwc_DashboardData.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_dashboard_investment',
+                nonce: mulopimfwc_DashboardData.dashboard_nonce,
+                date_from: filters.date_from || '',
+                date_to: filters.date_to || '',
+                location: filters.location || 'all'
+            }
+        }).done(function (response) {
+            if (!response || !response.success || !response.data) {
+                return;
+            }
+
+            window.mulopimfwc_update_dashboard(response.data);
+        });
+    }
+
+    $(window).on('load', function () {
+        var $applyButton = $('#apply-filters');
+        if ($applyButton.length) {
+            window.setTimeout(function () {
+                $applyButton.trigger('click');
+            }, 0);
+            return;
+        }
+
+        window.setTimeout(function () {
+            requestDeferredInvestment(getDeferredInvestmentFilters());
+        }, 0);
+    });
+
+    $(document).ajaxSuccess(function (event, xhr, settings) {
+        var requestData = settings && settings.data ? settings.data.toString() : '';
+        if (requestData.indexOf('action=mulopimfwc_apply_filters') !== -1) {
+            requestDeferredInvestment(getDeferredInvestmentFilters());
+        }
+    });
+})(jQuery);
+JS
+        , 'after');
 
         $dashboard_summary = isset($payload['summary']) && is_array($payload['summary']) ? $payload['summary'] : [];
         $orders_data = [
@@ -2034,7 +2097,6 @@ class MULOPIMFWC_Dashboard
         }
         $status_filter = is_string($status_raw) ? sanitize_text_field($status_raw) : 'all';
 
-        // Get filtered data
         $orders_data = $this->get_orders_data_efficiently($date_from, $date_to, $location_filter, $status_filter);
         $recent_products_data = $this->get_recent_products_data($date_from, $date_to, $location_filter);
         $low_stock_products = $this->get_low_stock_products_efficiently($location_filter);
@@ -2047,8 +2109,6 @@ class MULOPIMFWC_Dashboard
         $previous_products_data = null;
         $previous_product_counts = null;
         $previous_stock_levels = null;
-        $investment_data = null;
-        $previous_investment_data = null;
         $include_default = ($location_filter === 'default');
 
         if (!empty($date_from) && !empty($date_to)) {
@@ -2083,13 +2143,6 @@ class MULOPIMFWC_Dashboard
                 $location_filter
             );
 
-            $investment_data = $this->get_investment_data($date_from, $date_to, $location_filter);
-            $previous_investment_data = $this->get_investment_data(
-                $period['previous_start']->format('Y-m-d'),
-                $period['previous_end']->format('Y-m-d'),
-                $location_filter
-            );
-
             $current_products_total = $this->get_total_products_count($location_filter, $date_from, $date_to);
             $previous_products_total = $this->get_total_products_count(
                 $location_filter,
@@ -2098,12 +2151,9 @@ class MULOPIMFWC_Dashboard
             );
             $current_locations_total = $this->count_active_locations($orders_data['orders'], $include_default);
             $previous_locations_total = $this->count_active_locations($previous_orders_data['orders'], $include_default);
-            $current_investment_total = array_sum($investment_data['totals']);
-            $previous_investment_total = array_sum($previous_investment_data['totals']);
 
             $comparison['products'] = $this->build_comparison_metric($current_products_total, $previous_products_total);
             $comparison['locations'] = $this->build_comparison_metric($current_locations_total, $previous_locations_total);
-            $comparison['investment'] = $this->build_comparison_metric($current_investment_total, $previous_investment_total);
         }
 
         $location_card = $this->get_location_card_summary($location_filter);
@@ -2117,14 +2167,12 @@ class MULOPIMFWC_Dashboard
             $summary['total_locations'] = ($location_card['mode'] ?? 'count') === 'selected'
                 ? (int) ($location_card['count'] ?? 0)
                 : $this->count_active_locations($orders_data['orders'], $include_default);
-            $summary['total_investment'] = array_sum($investment_data['totals']);
         } else {
             if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
                 $mulopimfwc_locations = [];
             }
             $summary['total_products'] = $this->get_total_products_count($location_filter);
             $summary['total_locations'] = (int) ($location_card['count'] ?? 0);
-            $summary['total_investment'] = $this->calculate_total_investment_efficiently($location_filter);
         }
 
         $summary['location_card_label'] = isset($location_card['label']) ? (string) $location_card['label'] : __('Locations', 'multi-location-product-and-inventory-management-pro');
@@ -2150,15 +2198,6 @@ class MULOPIMFWC_Dashboard
             'currency_code' => $this->get_dashboard_reporting_currency_code(),
         );
 
-        if (!empty($investment_data)) {
-            $response['monthlyInvestmentLabels'] = $investment_data['labels'];
-            $response['monthlyInvestmentData'] = $investment_data['totals'];
-        } else {
-            $monthly_investment_data = $this->get_monthly_investment_data_cached($location_filter);
-            $response['monthlyInvestmentLabels'] = $monthly_investment_data['labels'];
-            $response['monthlyInvestmentData'] = $monthly_investment_data['data'];
-        }
-
         if (!empty($previous_products_data)) {
             $response['previousDateCounts'] = $previous_products_data['counts'];
         }
@@ -2169,10 +2208,6 @@ class MULOPIMFWC_Dashboard
 
         if (!empty($previous_stock_levels)) {
             $response['previousStockLevels'] = $previous_stock_levels;
-        }
-
-        if (!empty($previous_investment_data)) {
-            $response['previousInvestmentData'] = $previous_investment_data['totals'];
         }
 
         if (!empty($previous_orders_data)) {
@@ -2329,176 +2364,490 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Check whether WooCommerce HPOS is enabled for order queries.
+     */
+    private function is_dashboard_hpos_enabled(): bool
+    {
+        if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil')) {
+            return \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+        }
+
+        if (function_exists('wc_get_order_datastore')) {
+            $datastore = wc_get_order_datastore();
+            return is_a($datastore, 'Automattic\WooCommerce\Internal\DataStores\Orders\OrdersTableDataStore');
+        }
+
+        return false;
+    }
+
+    /**
+     * Normalize order statuses to their stored database form.
+     */
+    private function normalize_dashboard_order_statuses_for_storage($statuses): array
+    {
+        if (!is_array($statuses)) {
+            $statuses = [$statuses];
+        }
+
+        $normalized = array_map(function ($status) {
+            $status = is_string($status) ? trim($status) : '';
+            if ($status === '') {
+                return '';
+            }
+
+            return strpos($status, 'wc-') === 0 ? $status : 'wc-' . $status;
+        }, $statuses);
+
+        return array_values(array_unique(array_filter($normalized, 'strlen')));
+    }
+
+    /**
+     * Resolve the dashboard bucket label for an order location slug.
+     */
+    private function get_dashboard_order_bucket_label(string $location_slug, array $slug_to_label, bool $is_manager_scope): ?string
+    {
+        $normalized_location_slug = $this->normalize_location_slug($location_slug);
+
+        if ($normalized_location_slug === '') {
+            return $is_manager_scope ? null : 'Default';
+        }
+
+        if (isset($slug_to_label[$normalized_location_slug])) {
+            return $slug_to_label[$normalized_location_slug];
+        }
+
+        return $is_manager_scope ? null : 'Default';
+    }
+
+    /**
+     * Build location currency conversion data keyed by location slug.
+     */
+    private function get_dashboard_location_currency_map(array $locations): array
+    {
+        $map = [];
+
+        foreach ($locations as $location) {
+            if (
+                !is_object($location)
+                || !isset($location->term_id)
+                || !isset($location->slug)
+            ) {
+                continue;
+            }
+
+            $term_id = (int) $location->term_id;
+            if ($term_id <= 0) {
+                continue;
+            }
+
+            $slug = $this->normalize_location_slug((string) $location->slug);
+            if ($slug === '') {
+                continue;
+            }
+
+            $target_currency = '';
+            if (function_exists('mulopimfwc_get_currency_settings_for_location')) {
+                $currency_settings = (array) mulopimfwc_get_currency_settings_for_location($term_id);
+                $target_currency = strtoupper(trim((string) ($currency_settings['currency'] ?? '')));
+            }
+
+            if ($target_currency === '') {
+                $target_currency = strtoupper(trim((string) get_term_meta($term_id, 'location_currency', true)));
+            }
+
+            $rate_raw = get_term_meta($term_id, 'location_currency_rate', true);
+            $rate = (is_numeric($rate_raw) && (float) $rate_raw > 0) ? (float) $rate_raw : 0.0;
+
+            $map[$slug] = [
+                'currency' => $target_currency,
+                'rate' => $rate,
+            ];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Convert a raw order amount into the store base currency without instantiating WC_Order.
+     */
+    private function convert_dashboard_order_amount_to_base_currency(float $amount, string $location_slug, string $order_currency, array $location_currency_map): float
+    {
+        if ($amount <= 0) {
+            return 0.0;
+        }
+
+        $base_currency = function_exists('mulopimfwc_get_store_base_currency_code_raw')
+            ? strtoupper(trim((string) mulopimfwc_get_store_base_currency_code_raw()))
+            : strtoupper(trim((string) get_option('woocommerce_currency', 'USD')));
+        if ($base_currency === '') {
+            $base_currency = 'USD';
+        }
+
+        $normalized_order_currency = strtoupper(trim($order_currency));
+        if ($normalized_order_currency === '' || $normalized_order_currency === $base_currency) {
+            return $amount;
+        }
+
+        $normalized_location_slug = $this->normalize_location_slug($location_slug);
+        if ($normalized_location_slug === '' || !isset($location_currency_map[$normalized_location_slug])) {
+            return $amount;
+        }
+
+        $location_currency = strtoupper(trim((string) ($location_currency_map[$normalized_location_slug]['currency'] ?? '')));
+        $rate = (float) ($location_currency_map[$normalized_location_slug]['rate'] ?? 0.0);
+
+        if (
+            $location_currency === ''
+            || $rate <= 0
+            || $location_currency !== $normalized_order_currency
+            || $location_currency === $base_currency
+        ) {
+            return $amount;
+        }
+
+        $converted_amount = $amount / $rate;
+        if (function_exists('wc_format_decimal')) {
+            $converted_amount = (float) wc_format_decimal($converted_amount, 6, false);
+        }
+
+        return $converted_amount;
+    }
+
+    /**
      * Get orders data efficiently
      */
     private function get_orders_data_efficiently($date_from = '', $date_to = '', $location_filter = 'all', $status_filter = 'all')
     {
-        global $mulopimfwc_locations;
+        global $wpdb, $mulopimfwc_locations;
 
-        $normalized_location_filter = $this->normalize_location_slug($location_filter);
+        static $memory_cache = [];
+
+        $normalized_location_filter = $this->normalize_location_slug((string) $location_filter);
+        if ($normalized_location_filter === '') {
+            $normalized_location_filter = 'all';
+        }
+
         $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
         $is_manager_scope = is_array($manager_location_slugs);
-        $orders_by_location = $is_manager_scope ? [] : ['Default' => 0];
-        $location_revenue = $is_manager_scope ? [] : ['Default' => 0];
-        $location_slugs = $is_manager_scope ? [] : ['Default' => 'default'];
-
         if ($is_manager_scope) {
-            if (empty($manager_location_slugs)) {
-                return [
-                    'orders' => $orders_by_location,
-                    'revenue' => $location_revenue,
-                ];
-            }
-
-            if ($normalized_location_filter === 'default') {
-                return [
-                    'orders' => $orders_by_location,
-                    'revenue' => $location_revenue,
-                ];
-            }
-
-            if (
-                $normalized_location_filter !== 'all' &&
-                !in_array($normalized_location_filter, $manager_location_slugs, true)
-            ) {
-                return [
-                    'orders' => $orders_by_location,
-                    'revenue' => $location_revenue,
-                ];
-            }
+            $manager_location_slugs = array_values(array_unique(array_filter(array_map([$this, 'normalize_location_slug'], $manager_location_slugs), 'strlen')));
+            sort($manager_location_slugs, SORT_STRING);
         }
 
-        $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
-            ? mulopimfwc_get_revenue_order_statuses()
-            : ['processing', 'completed'];
-        $calculate_revenue = function_exists('mulopimfwc_calculate_order_revenue') ? 'mulopimfwc_calculate_order_revenue' : null;
+        $orders_by_location = $is_manager_scope ? [] : ['Default' => 0];
+        $location_revenue = $is_manager_scope ? [] : ['Default' => 0.0];
+        $slug_to_label = [];
+
+        if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
+            $mulopimfwc_locations = [];
+        }
 
         foreach ($mulopimfwc_locations as $location) {
-            $location_slugs[$location->name] = $this->normalize_location_slug($location->slug);
-            $orders_by_location[$location->name] = 0;
-            $location_revenue[$location->name] = 0;
-        }
-
-        // Build order query args with pagination to prevent memory exhaustion
-        // Process orders in batches (1000 per batch)
-        $batch_size = 1000;
-        $page = 1;
-        $all_order_ids = [];
-        
-        // Increase memory and time limits for dashboard operations
-        if (function_exists('ini_set')) {
-            @ini_set('memory_limit', '512M');
-        }
-        @set_time_limit(300);
-        
-        do {
-            $args = array(
-                'limit' => $batch_size,
-                'offset' => ($page - 1) * $batch_size,
-                'return' => 'ids'
-            );
-
-            // Status filter
-            if ($status_filter === 'all') {
-                $args['status'] = ['completed', 'pending', 'processing', 'on-hold'];
-            } else {
-                $args['status'] = $status_filter;
+            if (!is_object($location) || !isset($location->name) || !isset($location->slug)) {
+                continue;
             }
 
-            // Date filter
-            if (!empty($date_from) && !empty($date_to)) {
-                $args['date_created'] = $date_from . '...' . $date_to;
-            } elseif (!empty($date_from)) {
-                $args['date_created'] = '>=' . $date_from;
-            } elseif (!empty($date_to)) {
-                $args['date_created'] = '<=' . $date_to;
+            $location_slug = $this->normalize_location_slug((string) $location->slug);
+            if ($location_slug === '') {
+                continue;
+            }
+
+            $slug_to_label[$location_slug] = (string) $location->name;
+            $orders_by_location[(string) $location->name] = 0;
+            $location_revenue[(string) $location->name] = 0.0;
+        }
+
+        if ($is_manager_scope) {
+            if (empty($manager_location_slugs) || $normalized_location_filter === 'default') {
+                return [
+                    'orders' => $orders_by_location,
+                    'revenue' => $location_revenue,
+                ];
+            }
+
+            if ($normalized_location_filter !== 'all' && !in_array($normalized_location_filter, $manager_location_slugs, true)) {
+                return [
+                    'orders' => $orders_by_location,
+                    'revenue' => $location_revenue,
+                ];
+            }
+        }
+
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_scope = [
+            'scope_hash' => $this->get_live_dashboard_cache_scope_hash(),
+            'date_from' => is_string($date_from) ? $date_from : '',
+            'date_to' => is_string($date_to) ? $date_to : '',
+            'location_filter' => $normalized_location_filter,
+            'status_filter' => is_string($status_filter) ? $status_filter : 'all',
+            'manager_scope' => $is_manager_scope ? $manager_location_slugs : [],
+        ];
+        $cache_scope_json = wp_json_encode($cache_scope);
+        if (!is_string($cache_scope_json) || $cache_scope_json === '') {
+            $cache_scope_json = serialize($cache_scope);
+        }
+        $cache_key = 'mulopimfwc_dashboard_orders_v' . $cache_version . '_' . md5($cache_scope_json);
+
+        if (isset($memory_cache[$cache_key])) {
+            return $memory_cache[$cache_key];
+        }
+
+        $cached_result = get_transient($cache_key);
+        if (is_array($cached_result)) {
+            $memory_cache[$cache_key] = $cached_result;
+            return $cached_result;
+        }
+
+        $stored_statuses = $this->normalize_dashboard_order_statuses_for_storage(
+            $status_filter === 'all'
+                ? ['completed', 'pending', 'processing', 'on-hold']
+                : $status_filter
+        );
+        $revenue_statuses = $this->normalize_dashboard_order_statuses_for_storage(
+            function_exists('mulopimfwc_get_revenue_order_statuses')
+                ? mulopimfwc_get_revenue_order_statuses()
+                : ['processing', 'completed']
+        );
+
+        if (empty($stored_statuses)) {
+            $result = [
+                'orders' => $orders_by_location,
+                'revenue' => $location_revenue,
+            ];
+            $memory_cache[$cache_key] = $result;
+            set_transient($cache_key, $result, 30);
+            return $result;
+        }
+
+        $hpos_enabled = $this->is_dashboard_hpos_enabled();
+        $orders_table = $hpos_enabled ? $wpdb->prefix . 'wc_orders' : $wpdb->posts;
+        $orders_meta_table = $hpos_enabled ? $wpdb->prefix . 'wc_orders_meta' : $wpdb->postmeta;
+        $order_id_column = $hpos_enabled ? 'o.id' : 'o.ID';
+        $order_type_column = $hpos_enabled ? 'o.type' : 'o.post_type';
+        $order_status_column = $hpos_enabled ? 'o.status' : 'o.post_status';
+        $order_date_column = $hpos_enabled ? 'o.date_created_gmt' : 'o.post_date_gmt';
+        $meta_order_id_column = $hpos_enabled ? 'order_id' : 'post_id';
+        // Match wc_get_orders() defaults so internal order records are excluded.
+        $order_types = function_exists('wc_get_order_types')
+            ? array_values(array_unique(array_filter(array_map('strval', wc_get_order_types('view-orders')))))
+            : ['shop_order'];
+        if (empty($order_types)) {
+            $order_types = ['shop_order'];
+        }
+
+        $date_from = is_string($date_from) ? sanitize_text_field($date_from) : '';
+        $date_to = is_string($date_to) ? sanitize_text_field($date_to) : '';
+        $date_start = ($date_from !== '') ? $date_from . ' 00:00:00' : '';
+        $date_end = ($date_to !== '') ? $date_to . ' 23:59:59' : '';
+
+        $base_where = [];
+        $base_params = [];
+
+        $type_placeholders = implode(',', array_fill(0, count($order_types), '%s'));
+        $base_where[] = "{$order_type_column} IN ({$type_placeholders})";
+        $base_params = array_merge($base_params, $order_types);
+
+        $status_placeholders = implode(',', array_fill(0, count($stored_statuses), '%s'));
+        $base_where[] = "{$order_status_column} IN ({$status_placeholders})";
+        $base_params = array_merge($base_params, $stored_statuses);
+
+        $base_where[] = "(split_meta.meta_value IS NULL OR split_meta.meta_value <> 'yes')";
+
+        if ($date_start !== '' && $date_end !== '') {
+            $base_where[] = "{$order_date_column} BETWEEN %s AND %s";
+            $base_params[] = $date_start;
+            $base_params[] = $date_end;
+        } elseif ($date_start !== '') {
+            $base_where[] = "{$order_date_column} >= %s";
+            $base_params[] = $date_start;
+        } elseif ($date_end !== '') {
+            $base_where[] = "{$order_date_column} <= %s";
+            $base_params[] = $date_end;
+        }
+
+        if ($is_manager_scope) {
+            if ($normalized_location_filter !== 'all') {
+                $base_where[] = "location_meta.meta_value = %s";
+                $base_params[] = $normalized_location_filter;
+            } else {
+                $location_placeholders = implode(',', array_fill(0, count($manager_location_slugs), '%s'));
+                $base_where[] = "location_meta.meta_value IN ({$location_placeholders})";
+                $base_params = array_merge($base_params, $manager_location_slugs);
+            }
+        } else {
+            if ($normalized_location_filter === 'default') {
+                $base_where[] = "(location_meta.meta_value IS NULL OR location_meta.meta_value = '')";
+            } elseif ($normalized_location_filter !== 'all') {
+                $base_where[] = "location_meta.meta_value = %s";
+                $base_params[] = $normalized_location_filter;
+            }
+        }
+
+        $count_sql = "
+            SELECT COALESCE(location_meta.meta_value, '') AS location_slug, COUNT(DISTINCT {$order_id_column}) AS order_count
+            FROM {$orders_table} o
+            LEFT JOIN {$orders_meta_table} location_meta
+                ON location_meta.{$meta_order_id_column} = {$order_id_column}
+                AND location_meta.meta_key = '_store_location'
+            LEFT JOIN {$orders_meta_table} split_meta
+                ON split_meta.{$meta_order_id_column} = {$order_id_column}
+                AND split_meta.meta_key = '_mulopimfwc_split_parent'
+            WHERE " . implode(' AND ', $base_where) . "
+            GROUP BY COALESCE(location_meta.meta_value, '')
+        ";
+
+        $count_rows = $wpdb->get_results($wpdb->prepare($count_sql, ...$base_params));
+
+        foreach ((array) $count_rows as $row) {
+            $bucket_label = $this->get_dashboard_order_bucket_label(
+                isset($row->location_slug) ? (string) $row->location_slug : '',
+                $slug_to_label,
+                $is_manager_scope
+            );
+            if ($bucket_label === null) {
+                continue;
+            }
+
+            $orders_by_location[$bucket_label] = (int) ($orders_by_location[$bucket_label] ?? 0) + (int) ($row->order_count ?? 0);
+        }
+
+        if (!empty($revenue_statuses)) {
+            $revenue_where = [];
+            $revenue_params = [];
+
+            $revenue_status_placeholders = implode(',', array_fill(0, count($revenue_statuses), '%s'));
+            $revenue_where[] = "{$order_type_column} IN ({$type_placeholders})";
+            $revenue_params = array_merge($revenue_params, $order_types);
+            $revenue_where[] = "{$order_status_column} IN ({$revenue_status_placeholders})";
+            $revenue_params = array_merge($revenue_params, $revenue_statuses);
+            $revenue_where[] = "(split_meta.meta_value IS NULL OR split_meta.meta_value <> 'yes')";
+
+            if ($date_start !== '' && $date_end !== '') {
+                $revenue_where[] = "{$order_date_column} BETWEEN %s AND %s";
+                $revenue_params[] = $date_start;
+                $revenue_params[] = $date_end;
+            } elseif ($date_start !== '') {
+                $revenue_where[] = "{$order_date_column} >= %s";
+                $revenue_params[] = $date_start;
+            } elseif ($date_end !== '') {
+                $revenue_where[] = "{$order_date_column} <= %s";
+                $revenue_params[] = $date_end;
             }
 
             if ($is_manager_scope) {
                 if ($normalized_location_filter !== 'all') {
-                    $args['meta_query'] = [
-                        [
-                            'key' => '_store_location',
-                            'value' => $normalized_location_filter,
-                            'compare' => '=',
-                        ],
-                    ];
+                    $revenue_where[] = "location_meta.meta_value = %s";
+                    $revenue_params[] = $normalized_location_filter;
                 } else {
-                    $args['meta_query'] = [
-                        [
-                            'key' => '_store_location',
-                            'value' => $manager_location_slugs,
-                            'compare' => 'IN',
-                        ],
-                    ];
+                    $location_placeholders = implode(',', array_fill(0, count($manager_location_slugs), '%s'));
+                    $revenue_where[] = "location_meta.meta_value IN ({$location_placeholders})";
+                    $revenue_params = array_merge($revenue_params, $manager_location_slugs);
+                }
+            } else {
+                if ($normalized_location_filter === 'default') {
+                    $revenue_where[] = "(location_meta.meta_value IS NULL OR location_meta.meta_value = '')";
+                } elseif ($normalized_location_filter !== 'all') {
+                    $revenue_where[] = "location_meta.meta_value = %s";
+                    $revenue_params[] = $normalized_location_filter;
                 }
             }
 
-            $order_ids = wc_get_orders($args);
-            
-            if (empty($order_ids)) {
-                break;
-            }
-            
-            $all_order_ids = array_merge($all_order_ids, $order_ids);
-            
-            // Safety check: limit total batches to prevent infinite loops
-            if ($page > 200) { // Max 200,000 orders (1000 * 200)
-                break;
-            }
-            
-            $page++;
-            
-        } while (count($order_ids) === $batch_size);
+            $currency_select = $hpos_enabled
+                ? "COALESCE(o.currency, '')"
+                : "COALESCE(currency_meta.meta_value, '')";
+            $currency_join = $hpos_enabled
+                ? ''
+                : "LEFT JOIN {$orders_meta_table} currency_meta
+                    ON currency_meta.{$meta_order_id_column} = {$order_id_column}
+                    AND currency_meta.meta_key = '_order_currency'";
 
-        foreach ($all_order_ids as $order_id) {
-            $order = wc_get_order($order_id);
-            if (!$order) continue;
+            $revenue_sql = "
+                SELECT
+                    COALESCE(location_meta.meta_value, '') AS location_slug,
+                    {$currency_select} AS order_currency,
+                    SUM(CAST(COALESCE(NULLIF(line_subtotal_meta.meta_value, ''), NULLIF(line_total_meta.meta_value, ''), '0') AS DECIMAL(20,6))) AS sell_total,
+                    SUM(
+                        CAST(COALESCE(NULLIF(quantity_meta.meta_value, ''), '0') AS DECIMAL(20,6))
+                        * CAST(COALESCE(NULLIF(variation_purchase_meta.meta_value, ''), NULLIF(product_purchase_meta.meta_value, ''), '0') AS DECIMAL(20,6))
+                    ) AS purchase_total
+                FROM {$orders_table} o
+                LEFT JOIN {$orders_meta_table} location_meta
+                    ON location_meta.{$meta_order_id_column} = {$order_id_column}
+                    AND location_meta.meta_key = '_store_location'
+                LEFT JOIN {$orders_meta_table} split_meta
+                    ON split_meta.{$meta_order_id_column} = {$order_id_column}
+                    AND split_meta.meta_key = '_mulopimfwc_split_parent'
+                {$currency_join}
+                INNER JOIN {$wpdb->prefix}woocommerce_order_items order_items
+                    ON order_items.order_id = {$order_id_column}
+                    AND order_items.order_item_type = 'line_item'
+                LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta quantity_meta
+                    ON quantity_meta.order_item_id = order_items.order_item_id
+                    AND quantity_meta.meta_key = '_qty'
+                LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta line_subtotal_meta
+                    ON line_subtotal_meta.order_item_id = order_items.order_item_id
+                    AND line_subtotal_meta.meta_key = '_line_subtotal'
+                LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta line_total_meta
+                    ON line_total_meta.order_item_id = order_items.order_item_id
+                    AND line_total_meta.meta_key = '_line_total'
+                LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta product_id_meta
+                    ON product_id_meta.order_item_id = order_items.order_item_id
+                    AND product_id_meta.meta_key = '_product_id'
+                LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta variation_id_meta
+                    ON variation_id_meta.order_item_id = order_items.order_item_id
+                    AND variation_id_meta.meta_key = '_variation_id'
+                LEFT JOIN {$wpdb->postmeta} variation_purchase_meta
+                    ON variation_purchase_meta.post_id = variation_id_meta.meta_value
+                    AND variation_purchase_meta.meta_key = '_purchase_price'
+                LEFT JOIN {$wpdb->postmeta} product_purchase_meta
+                    ON product_purchase_meta.post_id = product_id_meta.meta_value
+                    AND product_purchase_meta.meta_key = '_purchase_price'
+                WHERE " . implode(' AND ', $revenue_where) . "
+                GROUP BY COALESCE(location_meta.meta_value, ''), {$currency_select}
+            ";
 
-            if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
-                continue;
-            }
+            $revenue_rows = $wpdb->get_results($wpdb->prepare($revenue_sql, ...$revenue_params));
+            $location_currency_map = $this->get_dashboard_location_currency_map($mulopimfwc_locations);
 
-            $order_location = $order->get_meta('_store_location');
-            $order_location_slug = $this->normalize_location_slug($order_location);
-            $order_status = $order->get_status();
-
-            if ($is_manager_scope && !in_array($order_location_slug, $manager_location_slugs, true)) {
-                continue;
-            }
-
-            // Location filter
-            if ($normalized_location_filter !== 'all' && $order_location_slug !== $normalized_location_filter) {
-                continue;
-            }
-
-            $location_name = $is_manager_scope ? '' : 'Default';
-            foreach ($location_slugs as $name => $slug) {
-                if ($slug === $order_location_slug) {
-                    $location_name = $name;
-                    break;
+            foreach ((array) $revenue_rows as $row) {
+                $location_slug = isset($row->location_slug) ? (string) $row->location_slug : '';
+                $bucket_label = $this->get_dashboard_order_bucket_label($location_slug, $slug_to_label, $is_manager_scope);
+                if ($bucket_label === null) {
+                    continue;
                 }
-            }
 
-            if ($is_manager_scope && $location_name === '') {
-                continue;
-            }
+                $sell_total = isset($row->sell_total) ? (float) $row->sell_total : 0.0;
+                $purchase_total = isset($row->purchase_total) ? (float) $row->purchase_total : 0.0;
+                if ($sell_total <= 0 && $purchase_total <= 0) {
+                    continue;
+                }
 
-            $orders_by_location[$location_name]++;
-            if (in_array($order_status, $revenue_statuses, true)) {
-                $order_revenue = $calculate_revenue
-                    ? (float) $calculate_revenue($order)
-                    : (function_exists('mulopimfwc_convert_order_amount_to_base_currency')
-                        ? (float) mulopimfwc_convert_order_amount_to_base_currency($order->get_total(), $order)
-                        : (float) $order->get_total());
-                $location_revenue[$location_name] += $order_revenue;
+                $sell_total_base = $this->convert_dashboard_order_amount_to_base_currency(
+                    $sell_total,
+                    $location_slug,
+                    isset($row->order_currency) ? (string) $row->order_currency : '',
+                    $location_currency_map
+                );
+
+                $location_revenue[$bucket_label] = (float) ($location_revenue[$bucket_label] ?? 0.0) + ($sell_total_base - $purchase_total);
             }
         }
 
-        return [
+        foreach ($location_revenue as $label => $amount) {
+            $location_revenue[$label] = round((float) $amount, 2);
+        }
+
+        $result = [
             'orders' => $orders_by_location,
-            'revenue' => $location_revenue
+            'revenue' => $location_revenue,
         ];
+
+        $memory_cache[$cache_key] = $result;
+        set_transient($cache_key, $result, 30);
+
+        return $result;
     }
 
 
@@ -3805,30 +4154,163 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Build and cache an index of products used by investment calculations.
+     */
+    private function get_investment_product_index(): array
+    {
+        static $index = null;
+
+        if (is_array($index)) {
+            return $index;
+        }
+
+        global $wpdb;
+
+        $rows = $wpdb->get_results("
+            SELECT ID, post_parent, post_type
+            FROM {$wpdb->posts}
+            WHERE post_type IN ('product', 'product_variation')
+                AND post_status IN ('publish', 'private')
+            ORDER BY ID ASC
+        ");
+
+        $product_ids = [];
+        $reference_map = [];
+        $reference_ids = [];
+
+        foreach ((array) $rows as $row) {
+            $product_id = isset($row->ID) ? (int) $row->ID : 0;
+            if ($product_id <= 0) {
+                continue;
+            }
+
+            $post_type = isset($row->post_type) ? (string) $row->post_type : 'product';
+            $parent_id = isset($row->post_parent) ? (int) $row->post_parent : 0;
+            $reference_id = ($post_type === 'product_variation' && $parent_id > 0) ? $parent_id : $product_id;
+
+            $product_ids[] = $product_id;
+            $reference_map[$product_id] = $reference_id;
+            $reference_ids[$reference_id] = $reference_id;
+        }
+
+        $index = [
+            'product_ids' => $product_ids,
+            'reference_map' => $reference_map,
+            'reference_ids' => array_values($reference_ids),
+        ];
+
+        return $index;
+    }
+
+    /**
+     * Prime post meta caches used by investment calculations in bulk.
+     */
+    private function prime_investment_product_meta_cache(): void
+    {
+        static $primed = false;
+
+        if ($primed) {
+            return;
+        }
+
+        $index = $this->get_investment_product_index();
+        $cache_ids = array_values(array_unique(array_merge(
+            $index['product_ids'] ?? [],
+            $index['reference_ids'] ?? []
+        )));
+
+        if (!empty($cache_ids) && function_exists('update_meta_cache')) {
+            foreach (array_chunk(array_map('intval', $cache_ids), 500) as $chunk) {
+                update_meta_cache('post', $chunk);
+            }
+        }
+
+        $primed = true;
+    }
+
+    /**
+     * Build a reference-product to location-term map for investment calculations.
+     */
+    private function get_investment_product_location_term_map(): array
+    {
+        static $term_map = null;
+
+        if (is_array($term_map)) {
+            return $term_map;
+        }
+
+        global $wpdb;
+
+        $index = $this->get_investment_product_index();
+        $reference_ids = array_values(array_unique(array_map('intval', $index['reference_ids'] ?? [])));
+        $term_map = [];
+
+        foreach ($reference_ids as $reference_id) {
+            $term_map[$reference_id] = [];
+        }
+
+        if (empty($reference_ids)) {
+            return $term_map;
+        }
+
+        foreach (array_chunk($reference_ids, 500) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '%d'));
+            $query = $wpdb->prepare(
+                "
+                SELECT tr.object_id, tt.term_id
+                FROM {$wpdb->term_relationships} tr
+                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                WHERE tt.taxonomy = %s
+                    AND tr.object_id IN ({$placeholders})
+                ",
+                ...array_merge(['mulopimfwc_store_location'], $chunk)
+            );
+
+            $rows = $wpdb->get_results($query);
+            foreach ((array) $rows as $row) {
+                $reference_id = isset($row->object_id) ? (int) $row->object_id : 0;
+                $term_id = isset($row->term_id) ? (int) $row->term_id : 0;
+                if ($reference_id <= 0 || $term_id <= 0) {
+                    continue;
+                }
+
+                if (!isset($term_map[$reference_id])) {
+                    $term_map[$reference_id] = [];
+                }
+
+                $term_map[$reference_id][$term_id] = $term_id;
+            }
+        }
+
+        foreach ($term_map as $reference_id => $ids) {
+            $sorted_ids = array_values(array_map('intval', $ids));
+            sort($sorted_ids, SORT_NUMERIC);
+            $term_map[$reference_id] = $sorted_ids;
+        }
+
+        return $term_map;
+    }
+
+    /**
+     * Read the first value for a cached meta key.
+     */
+    private function get_investment_meta_value(array $meta, string $meta_key)
+    {
+        if (!array_key_exists($meta_key, $meta)) {
+            return '';
+        }
+
+        $value = $meta[$meta_key];
+        return is_array($value) ? reset($value) : $value;
+    }
+
+    /**
      * Return product/variation IDs that may contribute to investment.
      */
     private function get_investment_product_ids(): array
     {
-        static $product_ids = null;
-
-        if (is_array($product_ids)) {
-            return $product_ids;
-        }
-
-        $product_ids = get_posts([
-            'post_type' => ['product', 'product_variation'],
-            'post_status' => ['publish', 'private'],
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'orderby' => 'ID',
-            'order' => 'ASC',
-        ]);
-
-        if (!is_array($product_ids)) {
-            $product_ids = [];
-        }
-
-        return array_values(array_map('intval', $product_ids));
+        $index = $this->get_investment_product_index();
+        return array_values(array_map('intval', $index['product_ids'] ?? []));
     }
 
     /**
@@ -3839,6 +4321,12 @@ class MULOPIMFWC_Dashboard
         static $reference_cache = [];
 
         if (isset($reference_cache[$product_id])) {
+            return $reference_cache[$product_id];
+        }
+
+        $index = $this->get_investment_product_index();
+        if (isset($index['reference_map'][$product_id])) {
+            $reference_cache[$product_id] = (int) $index['reference_map'][$product_id];
             return $reference_cache[$product_id];
         }
 
@@ -3866,6 +4354,12 @@ class MULOPIMFWC_Dashboard
             return $location_cache[$reference_id];
         }
 
+        $term_map = $this->get_investment_product_location_term_map();
+        if (isset($term_map[$reference_id])) {
+            $location_cache[$reference_id] = $term_map[$reference_id];
+            return $location_cache[$reference_id];
+        }
+
         $term_ids = wp_get_object_terms($reference_id, 'mulopimfwc_store_location', ['fields' => 'ids']);
         if (is_wp_error($term_ids) || !is_array($term_ids)) {
             $term_ids = [];
@@ -3884,6 +4378,8 @@ class MULOPIMFWC_Dashboard
     private function get_investment_product_meta(int $product_id): array
     {
         static $meta_cache = [];
+
+        $this->prime_investment_product_meta_cache();
 
         if (!isset($meta_cache[$product_id])) {
             $meta = get_post_meta($product_id);
@@ -3904,12 +4400,13 @@ class MULOPIMFWC_Dashboard
             return $price_cache[$product_id];
         }
 
-        $purchase_price = $this->normalize_price_value(get_post_meta($product_id, '_purchase_price', true));
-        if ($purchase_price <= 0 && get_post_type($product_id) === 'product_variation') {
-            $parent_id = wp_get_post_parent_id($product_id);
-            if ($parent_id > 0) {
-                $purchase_price = $this->normalize_price_value(get_post_meta($parent_id, '_purchase_price', true));
-            }
+        $meta = $this->get_investment_product_meta($product_id);
+        $purchase_price = $this->normalize_price_value($this->get_investment_meta_value($meta, '_purchase_price'));
+
+        $reference_id = $this->get_investment_product_reference_id($product_id);
+        if ($purchase_price <= 0 && $reference_id > 0 && $reference_id !== $product_id) {
+            $parent_meta = $this->get_investment_product_meta($reference_id);
+            $purchase_price = $this->normalize_price_value($this->get_investment_meta_value($parent_meta, '_purchase_price'));
         }
 
         $price_cache[$product_id] = $purchase_price > 0 ? $purchase_price : 0.0;
@@ -3921,7 +4418,8 @@ class MULOPIMFWC_Dashboard
      */
     private function get_investment_default_stock_quantity(int $product_id): float
     {
-        $stock = get_post_meta($product_id, '_stock', true);
+        $meta = $this->get_investment_product_meta($product_id);
+        $stock = $this->get_investment_meta_value($meta, '_stock');
         return ($stock !== '' && $stock !== null && is_numeric($stock)) ? (float) $stock : 0.0;
     }
 
@@ -4011,6 +4509,9 @@ class MULOPIMFWC_Dashboard
             return $totals_cache[$scope_key];
         }
 
+        $this->prime_investment_product_meta_cache();
+        $this->get_investment_product_location_term_map();
+
         $total = 0.0;
         foreach ($this->get_investment_product_ids() as $product_id) {
             $purchase_price = $this->get_investment_product_purchase_price((int) $product_id);
@@ -4035,6 +4536,12 @@ class MULOPIMFWC_Dashboard
      */
     private function calculate_investment_amount_from_product_quantities(array $product_quantities): float
     {
+        if (empty($product_quantities)) {
+            return 0.0;
+        }
+
+        $this->prime_investment_product_meta_cache();
+
         $total = 0.0;
 
         foreach ($product_quantities as $product_id => $quantity) {
@@ -4127,6 +4634,8 @@ class MULOPIMFWC_Dashboard
      */
     private function collect_investment_order_quantities(array $scope, string $date_from = '', string $date_to = '', string $bucket = ''): array
     {
+        global $wpdb;
+
         static $quantities_cache = [];
 
         $scope_key = $this->get_investment_scope_cache_fragment($scope);
@@ -4146,101 +4655,158 @@ class MULOPIMFWC_Dashboard
             return [];
         }
 
-        $statuses = $this->get_investment_stock_affecting_statuses();
+        $statuses = $this->normalize_dashboard_order_statuses_for_storage($this->get_investment_stock_affecting_statuses());
         if (empty($statuses)) {
             $quantities_cache[$cache_key] = [];
             return [];
         }
 
-        if (function_exists('ini_set')) {
-            @ini_set('memory_limit', '512M');
+        $hpos_enabled = $this->is_dashboard_hpos_enabled();
+        $orders_table = $hpos_enabled ? $wpdb->prefix . 'wc_orders' : $wpdb->posts;
+        $orders_meta_table = $hpos_enabled ? $wpdb->prefix . 'wc_orders_meta' : $wpdb->postmeta;
+        $order_id_column = $hpos_enabled ? 'o.id' : 'o.ID';
+        $order_type_column = $hpos_enabled ? 'o.type' : 'o.post_type';
+        $order_status_column = $hpos_enabled ? 'o.status' : 'o.post_status';
+        $order_date_column = $hpos_enabled ? 'o.date_created_gmt' : 'o.post_date_gmt';
+        $meta_order_id_column = $hpos_enabled ? 'order_id' : 'post_id';
+        // Match wc_get_orders() defaults so internal order records are excluded.
+        $order_types = function_exists('wc_get_order_types')
+            ? array_values(array_unique(array_filter(array_map('strval', wc_get_order_types('view-orders')))))
+            : ['shop_order'];
+        if (empty($order_types)) {
+            $order_types = ['shop_order'];
         }
-        @set_time_limit(300);
 
+        $bucket_select = "''";
+        if ($bucket === 'day') {
+            $bucket_select = "DATE({$order_date_column})";
+        } elseif ($bucket === 'month') {
+            $bucket_select = "DATE_FORMAT({$order_date_column}, '%Y-%m')";
+        }
+
+        $effective_location_sql = "COALESCE(NULLIF(item_location_meta.meta_value, ''), order_location_meta.meta_value, '')";
+        $product_id_sql = "CASE
+            WHEN variation_id_meta.meta_value IS NOT NULL
+                AND variation_id_meta.meta_value != ''
+                AND variation_id_meta.meta_value != '0'
+            THEN variation_id_meta.meta_value
+            ELSE product_id_meta.meta_value
+        END";
+        $quantity_sql = "CASE
+            WHEN reduced_stock_meta.meta_value IS NOT NULL
+                AND reduced_stock_meta.meta_value != ''
+            THEN LEAST(
+                ABS(CAST(reduced_stock_meta.meta_value AS DECIMAL(20,6))),
+                GREATEST(CAST(COALESCE(NULLIF(quantity_meta.meta_value, ''), '0') AS DECIMAL(20,6)), 0)
+            )
+            ELSE GREATEST(CAST(COALESCE(NULLIF(quantity_meta.meta_value, ''), '0') AS DECIMAL(20,6)), 0)
+        END";
+
+        $where = [];
+        $params = [];
+
+        $type_placeholders = implode(',', array_fill(0, count($order_types), '%s'));
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+
+        $where[] = "{$order_type_column} IN ({$type_placeholders})";
+        $params = array_merge($params, $order_types);
+        $where[] = "{$order_status_column} IN ({$status_placeholders})";
+        $params = array_merge($params, $statuses);
+        $where[] = "(split_meta.meta_value IS NULL OR split_meta.meta_value <> 'yes')";
+        $where[] = "{$product_id_sql} IS NOT NULL";
+        $where[] = "{$product_id_sql} != ''";
+        $where[] = "{$quantity_sql} > 0";
+
+        $date_from = is_string($date_from) ? sanitize_text_field($date_from) : '';
+        $date_to = is_string($date_to) ? sanitize_text_field($date_to) : '';
+        $date_start = ($date_from !== '') ? $date_from . ' 00:00:00' : '';
+        $date_end = ($date_to !== '') ? $date_to . ' 23:59:59' : '';
+
+        if ($date_start !== '' && $date_end !== '') {
+            $where[] = "{$order_date_column} BETWEEN %s AND %s";
+            $params[] = $date_start;
+            $params[] = $date_end;
+        } elseif ($date_start !== '') {
+            $where[] = "{$order_date_column} >= %s";
+            $params[] = $date_start;
+        } elseif ($date_end !== '') {
+            $where[] = "{$order_date_column} <= %s";
+            $params[] = $date_end;
+        }
+
+        $mode = isset($scope['mode']) ? (string) $scope['mode'] : 'all';
+        if ($mode === 'default') {
+            $where[] = "({$effective_location_sql} IS NULL OR {$effective_location_sql} = '')";
+        } elseif ($mode === 'terms') {
+            $term_slugs = isset($scope['term_slugs']) && is_array($scope['term_slugs'])
+                ? array_values(array_unique(array_filter(array_map([$this, 'normalize_location_slug'], $scope['term_slugs']), 'strlen')))
+                : [];
+            if (empty($term_slugs)) {
+                $quantities_cache[$cache_key] = [];
+                return [];
+            }
+
+            $location_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
+            $where[] = "{$effective_location_sql} IN ({$location_placeholders})";
+            $params = array_merge($params, $term_slugs);
+        }
+
+        $sql = "
+            SELECT
+                {$bucket_select} AS bucket_key,
+                {$product_id_sql} AS product_id,
+                SUM({$quantity_sql}) AS total_quantity
+            FROM {$orders_table} o
+            LEFT JOIN {$orders_meta_table} order_location_meta
+                ON order_location_meta.{$meta_order_id_column} = {$order_id_column}
+                AND order_location_meta.meta_key = '_store_location'
+            LEFT JOIN {$orders_meta_table} split_meta
+                ON split_meta.{$meta_order_id_column} = {$order_id_column}
+                AND split_meta.meta_key = '_mulopimfwc_split_parent'
+            INNER JOIN {$wpdb->prefix}woocommerce_order_items order_items
+                ON order_items.order_id = {$order_id_column}
+                AND order_items.order_item_type = 'line_item'
+            LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta quantity_meta
+                ON quantity_meta.order_item_id = order_items.order_item_id
+                AND quantity_meta.meta_key = '_qty'
+            LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta reduced_stock_meta
+                ON reduced_stock_meta.order_item_id = order_items.order_item_id
+                AND reduced_stock_meta.meta_key = '_reduced_stock'
+            LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta product_id_meta
+                ON product_id_meta.order_item_id = order_items.order_item_id
+                AND product_id_meta.meta_key = '_product_id'
+            LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta variation_id_meta
+                ON variation_id_meta.order_item_id = order_items.order_item_id
+                AND variation_id_meta.meta_key = '_variation_id'
+            LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta item_location_meta
+                ON item_location_meta.order_item_id = order_items.order_item_id
+                AND item_location_meta.meta_key = '_mulopimfwc_location'
+            WHERE " . implode(' AND ', $where) . "
+            GROUP BY bucket_key, {$product_id_sql}
+        ";
+
+        $rows = $wpdb->get_results($wpdb->prepare($sql, ...$params));
         $quantities = [];
-        $batch_size = 1000;
-        $page = 1;
 
-        do {
-            $query_args = [
-                'limit' => $batch_size,
-                'offset' => ($page - 1) * $batch_size,
-                'status' => $statuses,
-                'return' => 'ids',
-            ];
-
-            if ($date_from !== '' && $date_to !== '') {
-                $query_args['date_created'] = $date_from . '...' . $date_to;
-            } elseif ($date_from !== '') {
-                $query_args['date_created'] = '>=' . $date_from;
-            } elseif ($date_to !== '') {
-                $query_args['date_created'] = '<=' . $date_to;
+        foreach ((array) $rows as $row) {
+            $product_id = isset($row->product_id) ? (int) $row->product_id : 0;
+            $quantity = isset($row->total_quantity) ? (float) $row->total_quantity : 0.0;
+            if ($product_id <= 0 || $quantity <= 0) {
+                continue;
             }
 
-            $order_ids = wc_get_orders($query_args);
-            if (empty($order_ids)) {
-                break;
+            $bucket_key = isset($row->bucket_key) ? (string) $row->bucket_key : '';
+            if ($bucket_key === '') {
+                $quantities[$product_id] = ($quantities[$product_id] ?? 0) + $quantity;
+                continue;
             }
 
-            foreach ($order_ids as $order_id) {
-                $order = wc_get_order($order_id);
-                if (!$order instanceof WC_Order) {
-                    continue;
-                }
-
-                if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
-                    continue;
-                }
-
-                $bucket_key = '';
-                $order_date = $order->get_date_created();
-                if ($bucket === 'day') {
-                    $bucket_key = $order_date ? gmdate('Y-m-d', $order_date->getTimestamp()) : gmdate('Y-m-d');
-                } elseif ($bucket === 'month') {
-                    $bucket_key = $order_date ? gmdate('Y-m', $order_date->getTimestamp()) : gmdate('Y-m');
-                }
-
-                $order_location_slug = $this->normalize_location_slug((string) $order->get_meta('_store_location'));
-
-                foreach ($order->get_items('line_item') as $item) {
-                    if (!$item instanceof WC_Order_Item_Product) {
-                        continue;
-                    }
-
-                    $product_id = $item->get_variation_id() ?: $item->get_product_id();
-                    if (!$product_id) {
-                        continue;
-                    }
-
-                    $quantity = $this->get_investment_net_order_item_quantity($order, $item);
-                    if ($quantity <= 0) {
-                        continue;
-                    }
-
-                    $item_location_slug = $this->get_investment_order_item_location_slug($item, $order_location_slug);
-                    if (!$this->investment_order_location_matches_scope($item_location_slug, $scope)) {
-                        continue;
-                    }
-
-                    if ($bucket_key === '') {
-                        $quantities[$product_id] = ($quantities[$product_id] ?? 0) + $quantity;
-                        continue;
-                    }
-
-                    if (!isset($quantities[$bucket_key])) {
-                        $quantities[$bucket_key] = [];
-                    }
-
-                    $quantities[$bucket_key][$product_id] = ($quantities[$bucket_key][$product_id] ?? 0) + $quantity;
-                }
+            if (!isset($quantities[$bucket_key])) {
+                $quantities[$bucket_key] = [];
             }
 
-            if ($page > 200) {
-                break;
-            }
-
-            $page++;
-        } while (count($order_ids) === $batch_size);
+            $quantities[$bucket_key][$product_id] = ($quantities[$bucket_key][$product_id] ?? 0) + $quantity;
+        }
 
         $quantities_cache[$cache_key] = $quantities;
         return $quantities_cache[$cache_key];
@@ -4345,6 +4911,178 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Build default month labels for deferred dashboard investment charts.
+     */
+    private function get_dashboard_investment_labels(): array
+    {
+        $labels = [];
+        $cursor = new DateTimeImmutable('first day of this month 00:00:00', new DateTimeZone('UTC'));
+        $cursor = $cursor->modify('-11 months');
+
+        for ($i = 0; $i < 12; $i++) {
+            $labels[] = $cursor->format('M Y');
+            $cursor = $cursor->modify('+1 month');
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Return cached investment values so the dashboard shell can render quickly.
+     */
+    private function get_dashboard_cached_investment_snapshot($location_filter = 'all'): array
+    {
+        $labels = $this->get_dashboard_investment_labels();
+        $snapshot = [
+            'labels' => $labels,
+            'data' => array_fill(0, count($labels), 0.0),
+            'total' => 0.0,
+        ];
+
+        $scope = $this->build_investment_scope((string) $location_filter);
+        if (($scope['mode'] ?? 'empty') === 'empty') {
+            return $snapshot;
+        }
+
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_scope = $this->get_investment_scope_cache_fragment($scope);
+
+        $monthly_cache_key = 'mulopimfwc_monthly_investment_v' . $cache_version . '_' . $cache_scope;
+        $cached_monthly = get_transient($monthly_cache_key);
+        if (is_array($cached_monthly)) {
+            if (isset($cached_monthly['labels']) && is_array($cached_monthly['labels']) && !empty($cached_monthly['labels'])) {
+                $snapshot['labels'] = array_values($cached_monthly['labels']);
+            }
+
+            if (isset($cached_monthly['data']) && is_array($cached_monthly['data'])) {
+                $snapshot['data'] = array_values(array_map('floatval', $cached_monthly['data']));
+            }
+        }
+
+        $total_cache_key = 'mulopimfwc_total_investment_v' . $cache_version . '_' . $cache_scope;
+        $cached_total = get_transient($total_cache_key);
+        if ($cached_total !== false) {
+            $snapshot['total'] = (float) $cached_total;
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * Build a lightweight placeholder payload for the initial dashboard render.
+     */
+    private function get_dashboard_placeholder_payload(): array
+    {
+        $locations = $this->get_dashboard_scoped_locations();
+        $product_counts = [];
+        $stock_levels = [];
+        $location_colors = [];
+        $location_border_colors = [];
+
+        $base_colors = [
+            ['fill' => '#ef4444', 'border' => '#f87171'],
+            ['fill' => '#f59e0b', 'border' => '#fbbf24'],
+            ['fill' => '#10b981', 'border' => '#34d399'],
+            ['fill' => '#06b6d4', 'border' => '#22d3ee'],
+            ['fill' => '#8b5cf6', 'border' => '#a78bfa'],
+            ['fill' => '#ec4899', 'border' => '#f472b6'],
+            ['fill' => '#6366f1', 'border' => '#818cf8'],
+        ];
+
+        if (empty($locations) || is_wp_error($locations)) {
+            $locations = [];
+        }
+
+        foreach ($locations as $index => $location) {
+            $base_index = $index % count($base_colors);
+            $cycle = floor($index / count($base_colors));
+
+            if ($cycle === 0) {
+                $location_colors[$location->name] = $base_colors[$base_index]['fill'];
+                $location_border_colors[$location->name] = $base_colors[$base_index]['border'];
+            } else {
+                $adjust = ($cycle * 10) % 30;
+                $location_colors[$location->name] = $this->adjustColorLightness($base_colors[$base_index]['fill'], $adjust);
+                $location_border_colors[$location->name] = $this->adjustColorLightness($base_colors[$base_index]['border'], $adjust);
+            }
+
+            $product_counts[$location->name] = 0;
+            $stock_levels[$location->name] = 0;
+        }
+
+        $orders_by_location = [];
+        $revenue_by_location = [];
+        $manager_scope = is_array($this->get_dashboard_manager_assigned_location_slugs());
+        if (!$manager_scope) {
+            $orders_by_location['Default'] = 0;
+            $revenue_by_location['Default'] = 0.0;
+        }
+
+        foreach ($product_counts as $location_name => $count) {
+            $orders_by_location[$location_name] = 0;
+            $revenue_by_location[$location_name] = 0.0;
+        }
+
+        $recent_labels = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $recent_labels[] = gmdate('M d', strtotime('-' . $i . ' days'));
+        }
+
+        $location_card = $this->get_location_card_summary('all');
+        $investment_snapshot = $this->get_dashboard_cached_investment_snapshot();
+
+        return [
+            'product_counts' => $product_counts,
+            'stock_levels' => $stock_levels,
+            'location_colors' => $location_colors,
+            'location_border_colors' => $location_border_colors,
+            'orders_by_location' => $orders_by_location,
+            'revenue_by_location' => $revenue_by_location,
+            'recent_products_data' => [
+                'labels' => $recent_labels,
+                'counts' => array_fill(0, count($recent_labels), 0),
+            ],
+            'monthly_investment_data' => [
+                'labels' => $investment_snapshot['labels'],
+                'data' => $investment_snapshot['data'],
+            ],
+            'dead_stock_days' => 90,
+            'total_investment' => $investment_snapshot['total'],
+            'low_stock_products' => [],
+            'summary' => [
+                'total_products' => 0,
+                'total_locations' => (int) ($location_card['count'] ?? count($locations)),
+                'total_orders' => 0,
+                'total_revenue' => 0,
+                'total_stock' => 0,
+                'total_investment' => $investment_snapshot['total'],
+                'location_card_label' => isset($location_card['label']) ? (string) $location_card['label'] : __('Locations', 'multi-location-product-and-inventory-management-pro'),
+                'location_card_value' => isset($location_card['value']) ? (string) $location_card['value'] : (string) count($locations),
+            ],
+        ];
+    }
+
+    /**
+     * Return cached dashboard payload data for the initial render, or a placeholder.
+     */
+    private function get_dashboard_render_payload(): array
+    {
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_dashboard_payload_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
+        $cached_payload = get_transient($cache_key);
+
+        if (is_array($cached_payload)) {
+            return $cached_payload;
+        }
+
+        return $this->get_dashboard_placeholder_payload();
+    }
+
+    /**
      * Build a reusable payload for the dashboard and live APIs.
      */
     private function get_dashboard_payload_cached(): array
@@ -4408,8 +5146,12 @@ class MULOPIMFWC_Dashboard
 
         $orders_data = $this->get_orders_data_efficiently();
         $recent_products_data = $this->get_recent_products_data();
-        $monthly_investment_data = $this->get_monthly_investment_data_cached();
-        $total_investment = $this->calculate_total_investment_efficiently();
+        $investment_snapshot = $this->get_dashboard_cached_investment_snapshot();
+        $monthly_investment_data = [
+            'labels' => $investment_snapshot['labels'],
+            'data' => $investment_snapshot['data'],
+        ];
+        $total_investment = $investment_snapshot['total'];
         $dead_stock_days = 90;
         $low_stock_products = $this->get_low_stock_products_efficiently();
         $location_card = $this->get_location_card_summary('all');
@@ -4474,6 +5216,68 @@ class MULOPIMFWC_Dashboard
         }
 
         return md5($scope_json);
+    }
+
+    /**
+     * AJAX endpoint for deferred investment chart/card loading.
+     */
+    public function handle_dashboard_investment_request()
+    {
+        check_ajax_referer('mulopimfwc_dashboard_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error([
+                'message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro'),
+            ]);
+            return;
+        }
+
+        $date_from_raw = isset($_POST['date_from']) ? wp_unslash($_POST['date_from']) : '';
+        $date_to_raw = isset($_POST['date_to']) ? wp_unslash($_POST['date_to']) : '';
+        if (is_array($date_from_raw)) {
+            $date_from_raw = reset($date_from_raw);
+        }
+        if (is_array($date_to_raw)) {
+            $date_to_raw = reset($date_to_raw);
+        }
+
+        $date_from = is_string($date_from_raw) ? sanitize_text_field($date_from_raw) : '';
+        $date_to = is_string($date_to_raw) ? sanitize_text_field($date_to_raw) : '';
+        $location_raw = isset($_POST['location']) ? wp_unslash($_POST['location']) : 'all';
+        $location_filter = $this->resolve_dashboard_location_filter($location_raw);
+
+        $response = [
+            'summary' => [],
+            'currency' => $this->get_dashboard_reporting_currency_symbol(),
+            'currency_code' => $this->get_dashboard_reporting_currency_code(),
+        ];
+
+        if ($date_from !== '' && $date_to !== '') {
+            $investment_data = $this->get_investment_data($date_from, $date_to, $location_filter);
+            $response['monthlyInvestmentLabels'] = $investment_data['labels'];
+            $response['monthlyInvestmentData'] = $investment_data['totals'];
+            $response['summary']['total_investment'] = array_sum($investment_data['totals']);
+
+            $period = $this->get_period_window($date_from, $date_to);
+            if (!empty($period)) {
+                $previous_investment_data = $this->get_investment_data(
+                    $period['previous_start']->format('Y-m-d'),
+                    $period['previous_end']->format('Y-m-d'),
+                    $location_filter
+                );
+
+                if (!empty($previous_investment_data['totals'])) {
+                    $response['previousInvestmentData'] = $previous_investment_data['totals'];
+                }
+            }
+        } else {
+            $monthly_investment_data = $this->get_monthly_investment_data_cached($location_filter);
+            $response['monthlyInvestmentLabels'] = $monthly_investment_data['labels'];
+            $response['monthlyInvestmentData'] = $monthly_investment_data['data'];
+            $response['summary']['total_investment'] = $this->calculate_total_investment_efficiently($location_filter);
+        }
+
+        wp_send_json_success($response);
     }
 
     /**
