@@ -19,11 +19,15 @@ class mulopimfwc_Import_Export
      */
     public function enqueue_scripts($hook)
     {
-        // Only load on your settings page
-        // if ($hook !== 'toplevel_page_location-wise-products' && 
-        //     $hook !== 'multi-location-product_page_location-wise-products-settings') {
-        //     return;
-        // }
+        $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        $allowed_pages = [
+            'location-stock-management',
+            'multi-location-product-and-inventory-management-settings',
+        ];
+
+        if (!in_array($current_page, $allowed_pages, true)) {
+            return;
+        }
 
         $script_version = '2.0.1';
         $script_path = plugin_dir_path(dirname(__FILE__)) . 'assets/js/import-export.js';

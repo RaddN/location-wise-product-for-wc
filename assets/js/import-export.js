@@ -1035,6 +1035,12 @@ jQuery(document).ready(function ($) {
         startActiveJobsRefresh();
     }
 
+    function hasActiveJobsUi() {
+        return $('.mulopimfwc-import-export-wrap').length > 0
+            || $('#mulopimfwc-stock-central-import-export-status').length > 0
+            || $('#mulopimfwc-stock-central-import-export-log-panel').length > 0;
+    }
+
     function performJobControlAction(actionName, startedMessage, explicitJobId) {
         const jobId = String(explicitJobId || (statusContextJob && statusContextJob.job_id) || '');
         if (!ieV2Enabled || jobId === '') {
@@ -1802,7 +1808,7 @@ jQuery(document).ready(function ($) {
     ensureLogEmptyState();
     refreshViewLogState();
     updateActiveJobControls(null);
-    if (ieV2Enabled) {
+    if (ieV2Enabled && hasActiveJobsUi()) {
         discoverActiveJobs();
     }
 });

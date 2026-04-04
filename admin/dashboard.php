@@ -11,6 +11,8 @@ class MULOPIMFWC_Dashboard
     {
         add_action('wp_ajax_mulopimfwc_apply_filters', array($this, 'apply_dashboard_filters'));
         add_action('wp_ajax_mulopimfwc_dashboard_profitability', array($this, 'handle_profitability_panel_request'));
+        add_action('wp_ajax_mulopimfwc_dashboard_deferred_data', array($this, 'handle_deferred_dashboard_data'));
+        add_action('wp_ajax_mulopimfwc_dashboard_investment_data', array($this, 'handle_deferred_dashboard_investment_data'));
     }
 
     /**
@@ -19,6 +21,87 @@ class MULOPIMFWC_Dashboard
     private function normalize_location_slug($location_slug): string
     {
         return sanitize_title(rawurldecode((string) $location_slug));
+    }
+
+    /**
+     * AJAX endpoint for deferred (heavy) dashboard data loaded after page render.
+     */
+    public function handle_deferred_dashboard_data()
+    {
+        check_ajax_referer('mulopimfwc_dashboard_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')]);
+            return;
+        }
+
+        global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
+
+        if (function_exists('ini_set')) {
+            ini_set('memory_limit', '512M');
+        }
+        set_time_limit(300);
+
+        $payload = $this->get_dashboard_orders_payload_cached();
+        $summary = isset($payload['summary']) && is_array($payload['summary']) ? $payload['summary'] : [];
+        $recent_products = isset($payload['recent_products_data']) && is_array($payload['recent_products_data'])
+            ? $payload['recent_products_data']
+            : ['labels' => [], 'counts' => []];
+
+        $response = [
+            'orders_by_location'     => $payload['orders_by_location'] ?? [],
+            'revenue_by_location'    => $payload['revenue_by_location'] ?? [],
+            'recent_products'        => $recent_products,
+            'summary_orders'         => $summary['total_orders'] ?? 0,
+            'summary_revenue'        => $summary['total_revenue'] ?? 0,
+            'currency'               => $this->get_dashboard_reporting_currency_symbol(),
+            'currency_code'          => $this->get_dashboard_reporting_currency_code(),
+        ];
+
+        wp_send_json_success($response);
+    }
+
+    /**
+     * AJAX endpoint for investment and stock-alert data loaded after fast dashboard widgets.
+     */
+    public function handle_deferred_dashboard_investment_data()
+    {
+        check_ajax_referer('mulopimfwc_dashboard_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')]);
+            return;
+        }
+
+        global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
+
+        if (function_exists('ini_set')) {
+            ini_set('memory_limit', '512M');
+        }
+        set_time_limit(300);
+
+        $payload = $this->get_dashboard_investment_payload_cached();
+        $summary = isset($payload['summary']) && is_array($payload['summary']) ? $payload['summary'] : [];
+        $monthly_investment = isset($payload['monthly_investment_data']) && is_array($payload['monthly_investment_data'])
+            ? [
+                'labels' => $payload['monthly_investment_data']['labels'] ?? [],
+                'data' => $payload['monthly_investment_data']['data'] ?? [],
+            ]
+            : ['labels' => [], 'data' => []];
+        $low_stock_products = isset($payload['low_stock_products']) && is_array($payload['low_stock_products'])
+            ? array_slice($payload['low_stock_products'], 0, 8)
+            : [];
+
+        wp_send_json_success([
+            'low_stock_products' => $low_stock_products,
+            'total_investment' => $payload['total_investment'] ?? 0,
+            'monthly_investment' => $monthly_investment,
+            'summary_investment' => $summary['total_investment'] ?? 0,
+            'currency' => $this->get_dashboard_reporting_currency_symbol(),
+            'currency_code' => $this->get_dashboard_reporting_currency_code(),
+        ]);
     }
 
     /**
@@ -440,457 +523,457 @@ class MULOPIMFWC_Dashboard
             ini_set('memory_limit', '512M');
         }
         set_time_limit(300);
-        
+
         // FIXED: Add error handling wrapper
         try {
 
-        // ---------- Build location lists (names & IDs) ----------
-        $locations = [];
-        $location_ids = [];
-        if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
-            foreach ($mulopimfwc_locations as $l) {
-                $locations[]    = $l->name;
-                $location_ids[] = (int) $l->term_id;
+            // ---------- Build location lists (names & IDs) ----------
+            $locations = [];
+            $location_ids = [];
+            if (!empty($mulopimfwc_locations) && !is_wp_error($mulopimfwc_locations)) {
+                foreach ($mulopimfwc_locations as $l) {
+                    $locations[]    = $l->name;
+                    $location_ids[] = (int) $l->term_id;
+                }
             }
-        }
-        $locations_with_default = array_merge($locations, ['Default']);
+            $locations_with_default = array_merge($locations, ['Default']);
 
-        // ---------- Products by location (incl. Default) ----------
-        $product_counts = [];
-        foreach ($mulopimfwc_locations as $location) {
-            $product_counts[$location->name] = $this->get_location_product_count($location->term_id);
-        }
-        $product_counts['Default'] = $this->get_default_product_count();
+            // ---------- Products by location (incl. Default) ----------
+            $product_counts = [];
+            foreach ($mulopimfwc_locations as $location) {
+                $product_counts[$location->name] = $this->get_location_product_count($location->term_id);
+            }
+            $product_counts['Default'] = $this->get_default_product_count();
 
-        // ---------- Stock level by location (incl. Default) ----------
-        $stock_levels = [];
-        foreach ($mulopimfwc_locations as $location) {
-            $stock_levels[$location->name] = $this->get_location_stock_level($location->term_id);
-        }
-        $stock_levels['Default'] = $this->get_default_stock_level();
+            // ---------- Stock level by location (incl. Default) ----------
+            $stock_levels = [];
+            foreach ($mulopimfwc_locations as $location) {
+                $stock_levels[$location->name] = $this->get_location_stock_level($location->term_id);
+            }
+            $stock_levels['Default'] = $this->get_default_stock_level();
 
-        // ---------- Orders / revenue / low stock / totals ----------
-        $orders_data          = $this->get_orders_data_efficiently();
-        $low_stock_products   = $this->get_low_stock_products_efficiently();
-        $total_investment     = $this->calculate_total_investment_efficiently();
+            // ---------- Orders / revenue / low stock / totals ----------
+            $orders_data          = $this->get_orders_data_efficiently();
+            $low_stock_products   = $this->get_low_stock_products_efficiently();
+            $total_investment     = $this->calculate_total_investment_efficiently();
 
-        // ---------- New products (last 30 days) — location-wise matrix ----------
-        $recent_matrix = $this->get_recent_products_data_by_location($location_ids, $locations);
+            // ---------- New products (last 30 days) — location-wise matrix ----------
+            $recent_matrix = $this->get_recent_products_data_by_location($location_ids, $locations);
 
-        // ---------- HTML/Excel headers ----------
-        $filename = 'location-wise-report-' . gmdate('Y-m-d-H-i-s') . '.xls';
-        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Pragma: no-cache');
-        header('Expires: 0');
+            // ---------- HTML/Excel headers ----------
+            $filename = 'location-wise-report-' . gmdate('Y-m-d-H-i-s') . '.xls';
+            header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
 
-        // Start HTML output with UTF-8 BOM.
-        echo esc_html( "\xEF\xBB\xBF" );
+            // Start HTML output with UTF-8 BOM.
+            echo esc_html("\xEF\xBB\xBF");
 
 ?>
-        <!DOCTYPE html>
-        <html>
+            <!DOCTYPE html>
+            <html>
 
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    font-size: 11pt;
-                }
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 11pt;
+                    }
 
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 20px;
-                    background-color: #ffffff;
-                }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 20px;
+                        background-color: #ffffff;
+                    }
 
-                th {
-                    background-color: #5b21b6;
-                    color: #ffffff;
-                    padding: 12px 10px;
-                    text-align: left;
-                    font-weight: bold;
-                    font-size: 11pt;
-                    border: 1px solid #4c1d95;
-                }
+                    th {
+                        background-color: #5b21b6;
+                        color: #ffffff;
+                        padding: 12px 10px;
+                        text-align: left;
+                        font-weight: bold;
+                        font-size: 11pt;
+                        border: 1px solid #4c1d95;
+                    }
 
-                td {
-                    padding: 10px;
-                    border: 1px solid #d1d5db;
-                    font-size: 10pt;
-                    color: #000000;
-                    background-color: #ffffff;
-                }
+                    td {
+                        padding: 10px;
+                        border: 1px solid #d1d5db;
+                        font-size: 10pt;
+                        color: #000000;
+                        background-color: #ffffff;
+                    }
 
-                tr.even-row td {
-                    background-color: #f3f4f6;
-                }
+                    tr.even-row td {
+                        background-color: #f3f4f6;
+                    }
 
-                .summary-table td:first-child {
-                    font-weight: bold;
-                    color: #374151;
-                    background-color: #f9fafb;
-                }
+                    .summary-table td:first-child {
+                        font-weight: bold;
+                        color: #374151;
+                        background-color: #f9fafb;
+                    }
 
-                .percentage {
-                    color: #5b21b6;
-                    font-weight: bold;
-                }
+                    .percentage {
+                        color: #5b21b6;
+                        font-weight: bold;
+                    }
 
-                .stock-low {
-                    color: #d97706;
-                    font-weight: bold;
-                }
+                    .stock-low {
+                        color: #d97706;
+                        font-weight: bold;
+                    }
 
-                .stock-out {
-                    color: #dc2626;
-                    font-weight: bold;
-                }
+                    .stock-out {
+                        color: #dc2626;
+                        font-weight: bold;
+                    }
 
-                .status-badge {
-                    padding: 4px 10px;
-                    font-size: 9pt;
-                    font-weight: bold;
-                }
+                    .status-badge {
+                        padding: 4px 10px;
+                        font-size: 9pt;
+                        font-weight: bold;
+                    }
 
-                .status-low {
-                    background-color: #fef3c7;
-                    color: #92400e;
-                }
+                    .status-low {
+                        background-color: #fef3c7;
+                        color: #92400e;
+                    }
 
-                .status-out {
-                    background-color: #fee2e2;
-                    color: #991b1b;
-                }
-            </style>
-        </head>
+                    .status-out {
+                        background-color: #fee2e2;
+                        color: #991b1b;
+                    }
+                </style>
+            </head>
 
-        <body>
-            <!-- Report Header as Table -->
-            <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-                <tr>
-                    <td style="background-color: #5b21b6; color: #ffffff; padding: 20px; text-align: center;" colspan="10">
-                        <h1 style="margin: 0 0 10px 0; font-size: 18pt; font-weight: bold; color: #ffffff;">
-                            <?php echo esc_html__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management-pro'); ?>
-                        </h1>
-                        <div style="font-size: 10pt; color: #ffffff; line-height: 1.5;">
-                            <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html( gmdate( 'l, F d, Y - H:i:s' ) ); ?></div>
-                            <div><strong><?php echo esc_html__('Store:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html(get_bloginfo('name')); ?></div>
-                            <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($this->get_dashboard_reporting_currency_code()); ?></div>
-                        </div>
-                    </td>
-                </tr>
-            </table>
+            <body>
+                <!-- Report Header as Table -->
+                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                    <tr>
+                        <td style="background-color: #5b21b6; color: #ffffff; padding: 20px; text-align: center;" colspan="10">
+                            <h1 style="margin: 0 0 10px 0; font-size: 18pt; font-weight: bold; color: #ffffff;">
+                                <?php echo esc_html__('LOCATION WISE PRODUCT & INVENTORY DASHBOARD REPORT', 'multi-location-product-and-inventory-management-pro'); ?>
+                            </h1>
+                            <div style="font-size: 10pt; color: #ffffff; line-height: 1.5;">
+                                <div><strong><?php echo esc_html__('Generated:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html(gmdate('l, F d, Y - H:i:s')); ?></div>
+                                <div><strong><?php echo esc_html__('Store:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html(get_bloginfo('name')); ?></div>
+                                <div><strong><?php echo esc_html__('Currency:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($this->get_dashboard_reporting_currency_code()); ?></div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
 
-            <!-- Summary Statistics -->
-            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-                <tr></tr>
-                <tr>
-                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management-pro'); ?>
-                    </td>
-                </tr>
-            </table>
-            <table class="summary-table">
-                <tr>
-                    <th><?php echo esc_html__('Metric', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                </tr>
-                <tr>
-                    <td><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                    <td><?php echo esc_html(number_format($this->get_total_products_count())); ?></td>
-                </tr>
-                <tr class="even-row">
-                    <td><?php echo esc_html__('Total Locations', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                    <td><?php echo esc_html(count($mulopimfwc_locations)); ?></td>
-                </tr>
-                <tr>
-                    <td><?php echo esc_html__('Total Orders', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                    <td><?php echo esc_html(number_format(array_sum($orders_data['orders']))); ?></td>
-                </tr>
-                <tr class="even-row">
-                    <td><?php echo esc_html__('Total Revenue', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                    <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)); ?></td>
-                </tr>
-                <tr>
-                    <td><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                    <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($total_investment, 2)); ?></td>
-                </tr>
-                <tr class="even-row">
-                    <td><?php echo esc_html__('Total Stock', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                    <td><?php echo esc_html(number_format(array_sum($stock_levels))); ?></td>
-                </tr>
-            </table>
-
-            <!-- Products by Location -->
-            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-                <tr></tr>
-                <tr>
-                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
-                    </td>
-                </tr>
-            </table>
-            <table>
-                <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Product Count', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                </tr>
-                <?php
-                $total_products = array_sum($product_counts);
-                $row_count = 0;
-                foreach ($locations_with_default as $loc_name) {
-                    $count = isset($product_counts[$loc_name]) ? $product_counts[$loc_name] : 0;
-                    $percentage = $total_products > 0 ? round(($count / $total_products) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
-                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
-                    echo '<td>' . esc_html($loc_name) . '</td>';
-                    echo '<td>' . esc_html(number_format($count)) . '</td>';
-                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
-                    echo '</tr>';
-                    $row_count++;
-                }
-                ?>
-            </table>
-
-            <!-- Stock Levels by Location -->
-            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-                <tr></tr>
-                <tr>
-                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
-                    </td>
-                </tr>
-            </table>
-            <table>
-                <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Stock Level', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                </tr>
-                <?php
-                $total_stocks = array_sum($stock_levels);
-                $row_count = 0;
-                foreach ($locations_with_default as $loc_name) {
-                    $count = isset($stock_levels[$loc_name]) ? $stock_levels[$loc_name] : 0;
-                    $percentage = $total_stocks > 0 ? round(($count / $total_stocks) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
-                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
-                    echo '<td>' . esc_html($loc_name) . '</td>';
-                    echo '<td>' . esc_html(number_format($count)) . '</td>';
-                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
-                    echo '</tr>';
-                    $row_count++;
-                }
-                ?>
-            </table>
-
-            <!-- Orders by Location -->
-            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-                <tr></tr>
-                <tr>
-                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('ORDERS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
-                    </td>
-                </tr>
-            </table>
-            <table>
-                <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                </tr>
-                <?php
-                $total_orders = array_sum($orders_data['orders']);
-                $row_count = 0;
-                foreach ($orders_data['orders'] as $location => $orders) {
-                    $percentage = $total_orders > 0 ? round(($orders / $total_orders) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
-                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
-                    echo '<td>' . esc_html($location) . '</td>';
-                    echo '<td>' . esc_html(number_format($orders)) . '</td>';
-                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
-                    echo '</tr>';
-                    $row_count++;
-                }
-                ?>
-            </table>
-
-            <!-- Revenue by Location -->
-            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-                <tr></tr>
-                <tr>
-                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management-pro'); ?>
-                    </td>
-                </tr>
-            </table>
-            <table>
-                <tr>
-                    <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                </tr>
-                <?php
-                $total_revenue = array_sum($orders_data['revenue']);
-                $row_count = 0;
-                foreach ($orders_data['revenue'] as $location => $revenue) {
-                    $percentage = $total_revenue > 0 ? round(($revenue / $total_revenue) * 100, 2) : 0;
-                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
-                    echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
-                    echo '<td>' . esc_html($location) . '</td>';
-                    echo '<td>' . esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($revenue, 2)) . '</td>';
-                    echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
-                    echo '</tr>';
-                    $row_count++;
-                }
-                ?>
-            </table>
-
-            <?php $profitability_data_export = $this->get_location_profitability_data(); ?>
-            <?php if (!empty($profitability_data_export)) : ?>
+                <!-- Summary Statistics -->
                 <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
                     <tr></tr>
                     <tr>
                         <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                            <?php echo esc_html__('PROFITABILITY & AGING BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
+                            <?php echo esc_html__('SUMMARY STATISTICS', 'multi-location-product-and-inventory-management-pro'); ?>
+                        </td>
+                    </tr>
+                </table>
+                <table class="summary-table">
+                    <tr>
+                        <th><?php echo esc_html__('Metric', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    </tr>
+                    <tr>
+                        <td><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></td>
+                        <td><?php echo esc_html(number_format($this->get_total_products_count())); ?></td>
+                    </tr>
+                    <tr class="even-row">
+                        <td><?php echo esc_html__('Total Locations', 'multi-location-product-and-inventory-management-pro'); ?></td>
+                        <td><?php echo esc_html(count($mulopimfwc_locations)); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php echo esc_html__('Total Orders', 'multi-location-product-and-inventory-management-pro'); ?></td>
+                        <td><?php echo esc_html(number_format(array_sum($orders_data['orders']))); ?></td>
+                    </tr>
+                    <tr class="even-row">
+                        <td><?php echo esc_html__('Total Revenue', 'multi-location-product-and-inventory-management-pro'); ?></td>
+                        <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format(array_sum($orders_data['revenue']), 2)); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management-pro'); ?></td>
+                        <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($total_investment, 2)); ?></td>
+                    </tr>
+                    <tr class="even-row">
+                        <td><?php echo esc_html__('Total Stock', 'multi-location-product-and-inventory-management-pro'); ?></td>
+                        <td><?php echo esc_html(number_format(array_sum($stock_levels))); ?></td>
+                    </tr>
+                </table>
+
+                <!-- Products by Location -->
+                <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                    <tr></tr>
+                    <tr>
+                        <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                            <?php echo esc_html__('PRODUCTS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
                         </td>
                     </tr>
                 </table>
                 <table>
                     <tr>
                         <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Inventory Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Margin Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Margin %', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Dead Stock Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Dead Stock Units', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Avg Age (days)', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Shrinkage %', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Product Count', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
                     </tr>
                     <?php
+                    $total_products = array_sum($product_counts);
                     $row_count = 0;
-                    foreach ($profitability_data_export as $summary) :
+                    foreach ($locations_with_default as $loc_name) {
+                        $count = isset($product_counts[$loc_name]) ? $product_counts[$loc_name] : 0;
+                        $percentage = $total_products > 0 ? round(($count / $total_products) * 100, 2) : 0;
                         $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
-                    ?>
-                        <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
-                            <td><?php echo esc_html($summary['location_name']); ?></td>
-                            <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['inventory_value'], 2)); ?></td>
-                            <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['margin_value'], 2)); ?></td>
-                            <td class="percentage"><?php echo esc_html(number_format($summary['margin_rate'], 2)); ?>%</td>
-                            <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['dead_stock_value'], 2)); ?></td>
-                            <td><?php echo esc_html(number_format($summary['dead_stock_units'], 2)); ?></td>
-                            <td><?php echo esc_html(number_format($summary['average_age_days'], 1)); ?></td>
-                            <td class="percentage"><?php echo esc_html(number_format($summary['shrinkage_rate'], 2)); ?>%</td>
-                        </tr>
-                    <?php
+                        echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
+                        echo '<td>' . esc_html($loc_name) . '</td>';
+                        echo '<td>' . esc_html(number_format($count)) . '</td>';
+                        echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                        echo '</tr>';
                         $row_count++;
-                    endforeach;
+                    }
                     ?>
                 </table>
-            <?php endif; ?>
 
-            <?php if (!empty($low_stock_products)) : ?>
-                <!-- Low Stock Products -->
+                <!-- Stock Levels by Location -->
                 <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
                     <tr></tr>
                     <tr>
                         <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                            <?php echo esc_html__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management-pro'); ?>
+                            <?php echo esc_html__('STOCK LEVELS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
                         </td>
                     </tr>
                 </table>
                 <table>
                     <tr>
-                        <th><?php echo esc_html__('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
                         <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Stock', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                        <th><?php echo esc_html__('Status', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Stock Level', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    </tr>
+                    <?php
+                    $total_stocks = array_sum($stock_levels);
+                    $row_count = 0;
+                    foreach ($locations_with_default as $loc_name) {
+                        $count = isset($stock_levels[$loc_name]) ? $stock_levels[$loc_name] : 0;
+                        $percentage = $total_stocks > 0 ? round(($count / $total_stocks) * 100, 2) : 0;
+                        $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                        echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
+                        echo '<td>' . esc_html($loc_name) . '</td>';
+                        echo '<td>' . esc_html(number_format($count)) . '</td>';
+                        echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                        echo '</tr>';
+                        $row_count++;
+                    }
+                    ?>
+                </table>
+
+                <!-- Orders by Location -->
+                <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                    <tr></tr>
+                    <tr>
+                        <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                            <?php echo esc_html__('ORDERS BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    </tr>
+                    <?php
+                    $total_orders = array_sum($orders_data['orders']);
+                    $row_count = 0;
+                    foreach ($orders_data['orders'] as $location => $orders) {
+                        $percentage = $total_orders > 0 ? round(($orders / $total_orders) * 100, 2) : 0;
+                        $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                        echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
+                        echo '<td>' . esc_html($location) . '</td>';
+                        echo '<td>' . esc_html(number_format($orders)) . '</td>';
+                        echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                        echo '</tr>';
+                        $row_count++;
+                    }
+                    ?>
+                </table>
+
+                <!-- Revenue by Location -->
+                <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                    <tr></tr>
+                    <tr>
+                        <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                            <?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management-pro'); ?>
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Percentage', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                    </tr>
+                    <?php
+                    $total_revenue = array_sum($orders_data['revenue']);
+                    $row_count = 0;
+                    foreach ($orders_data['revenue'] as $location => $revenue) {
+                        $percentage = $total_revenue > 0 ? round(($revenue / $total_revenue) * 100, 2) : 0;
+                        $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                        echo '<tr' . (!empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
+                        echo '<td>' . esc_html($location) . '</td>';
+                        echo '<td>' . esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($revenue, 2)) . '</td>';
+                        echo '<td class="percentage">' . esc_html($percentage) . '%</td>';
+                        echo '</tr>';
+                        $row_count++;
+                    }
+                    ?>
+                </table>
+
+                <?php $profitability_data_export = $this->get_location_profitability_data(); ?>
+                <?php if (!empty($profitability_data_export)) : ?>
+                    <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                        <tr></tr>
+                        <tr>
+                            <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                                <?php echo esc_html__('PROFITABILITY & AGING BY LOCATION', 'multi-location-product-and-inventory-management-pro'); ?>
+                            </td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
+                            <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Inventory Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Margin Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Margin %', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Dead Stock Value', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Dead Stock Units', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Avg Age (days)', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Shrinkage %', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        </tr>
+                        <?php
+                        $row_count = 0;
+                        foreach ($profitability_data_export as $summary) :
+                            $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                        ?>
+                            <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
+                                <td><?php echo esc_html($summary['location_name']); ?></td>
+                                <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['inventory_value'], 2)); ?></td>
+                                <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['margin_value'], 2)); ?></td>
+                                <td class="percentage"><?php echo esc_html(number_format($summary['margin_rate'], 2)); ?>%</td>
+                                <td><?php echo esc_html($this->get_dashboard_reporting_currency_symbol() . number_format($summary['dead_stock_value'], 2)); ?></td>
+                                <td><?php echo esc_html(number_format($summary['dead_stock_units'], 2)); ?></td>
+                                <td><?php echo esc_html(number_format($summary['average_age_days'], 1)); ?></td>
+                                <td class="percentage"><?php echo esc_html(number_format($summary['shrinkage_rate'], 2)); ?>%</td>
+                                </tr>
+                            <?php
+                            $row_count++;
+                        endforeach;
+                            ?>
+                    </table>
+                <?php endif; ?>
+
+                <?php if (!empty($low_stock_products)) : ?>
+                    <!-- Low Stock Products -->
+                    <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                        <tr></tr>
+                        <tr>
+                            <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                                <?php echo esc_html__('LOW STOCK PRODUCTS', 'multi-location-product-and-inventory-management-pro'); ?>
+                            </td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
+                            <th><?php echo esc_html__('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Stock', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                            <th><?php echo esc_html__('Status', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        </tr>
+                        <?php
+                        $row_count = 0;
+                        foreach ($low_stock_products as $item) :
+                            $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
+                            $is_out_of_stock = isset($item['status']) && $item['status'] === 'out_of_stock';
+                        ?>
+                            <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
+                                <td><?php echo esc_html($item['product_title']); ?></td>
+                                <td><?php echo esc_html($item['location_name']); ?></td>
+                                <td class="<?php echo $is_out_of_stock ? 'stock-out' : 'stock-low'; ?>">
+                                    <?php echo esc_html($item['stock']); ?>
+                                </td>
+                                <td>
+                                    <span class="status-badge <?php echo $is_out_of_stock ? 'status-out' : 'status-low'; ?>">
+                                        <?php echo esc_html(isset($item['status_label']) ? $item['status_label'] : __('Low Stock', 'multi-location-product-and-inventory-management-pro')); ?>
+                                    </span>
+                                </td>
+                                </tr>
+                            <?php
+                            $row_count++;
+                        endforeach;
+                            ?>
+                    </table>
+                <?php endif; ?>
+
+                <!-- New Products (Last 30 Days) -->
+                <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+                    <tr></tr>
+                    <tr>
+                        <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
+                            <?php echo esc_html__('NEW PRODUCTS (LAST 30 DAYS) - LOCATION-WISE', 'multi-location-product-and-inventory-management-pro'); ?>
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <th><?php echo esc_html__('Date', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <?php foreach ($locations as $loc_name) : ?>
+                            <th><?php echo esc_html($loc_name); ?></th>
+                        <?php endforeach; ?>
+                        <th><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                        <th><?php echo esc_html__('Total Added', 'multi-location-product-and-inventory-management-pro'); ?></th>
                     </tr>
                     <?php
                     $row_count = 0;
-                    foreach ($low_stock_products as $item) :
+                    foreach ($recent_matrix['labels'] as $i => $label) :
                         $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
-                        $is_out_of_stock = isset($item['status']) && $item['status'] === 'out_of_stock';
                     ?>
                         <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
-                            <td><?php echo esc_html($item['product_title']); ?></td>
-                            <td><?php echo esc_html($item['location_name']); ?></td>
-                            <td class="<?php echo $is_out_of_stock ? 'stock-out' : 'stock-low'; ?>">
-                                <?php echo esc_html($item['stock']); ?>
-                            </td>
-                            <td>
-                                <span class="status-badge <?php echo $is_out_of_stock ? 'status-out' : 'status-low'; ?>">
-                                    <?php echo esc_html(isset($item['status_label']) ? $item['status_label'] : __('Low Stock', 'multi-location-product-and-inventory-management-pro')); ?>
-                                </span>
-                            </td>
+                            <td><?php echo esc_html($label); ?></td>
+                            <?php foreach ($locations as $loc_name) : ?>
+                                <td><?php echo esc_html(isset($recent_matrix['columns'][$loc_name][$i]) ? $recent_matrix['columns'][$loc_name][$i] : 0); ?></td>
+                            <?php endforeach; ?>
+                            <td><?php echo esc_html(isset($recent_matrix['columns']['Default'][$i]) ? $recent_matrix['columns']['Default'][$i] : 0); ?></td>
+                            <td><strong><?php echo esc_html($recent_matrix['totals'][$i]); ?></strong></td>
                             </tr>
                         <?php
                         $row_count++;
                     endforeach;
                         ?>
                 </table>
-            <?php endif; ?>
 
-            <!-- New Products (Last 30 Days) -->
-            <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-                <tr></tr>
-                <tr>
-                    <td style="background-color: #5b21b6; color: #ffffff; padding: 10px 15px; font-weight: bold; font-size: 12pt;">
-                        <?php echo esc_html__('NEW PRODUCTS (LAST 30 DAYS) - LOCATION-WISE', 'multi-location-product-and-inventory-management-pro'); ?>
-                    </td>
-                </tr>
-            </table>
-            <table>
-                <tr>
-                    <th><?php echo esc_html__('Date', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <?php foreach ($locations as $loc_name) : ?>
-                        <th><?php echo esc_html($loc_name); ?></th>
-                    <?php endforeach; ?>
-                    <th><?php echo esc_html__('Default', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                    <th><?php echo esc_html__('Total Added', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                </tr>
-                <?php
-                $row_count = 0;
-                foreach ($recent_matrix['labels'] as $i => $label) :
-                    $row_class = ($row_count % 2 == 1) ? 'even-row' : '';
-                ?>
-                    <tr<?php echo !empty($row_class) ? ' class="' . esc_attr($row_class) . '"' : ''; ?>>
-                        <td><?php echo esc_html($label); ?></td>
-                        <?php foreach ($locations as $loc_name) : ?>
-                            <td><?php echo esc_html(isset($recent_matrix['columns'][$loc_name][$i]) ? $recent_matrix['columns'][$loc_name][$i] : 0); ?></td>
-                        <?php endforeach; ?>
-                        <td><?php echo esc_html(isset($recent_matrix['columns']['Default'][$i]) ? $recent_matrix['columns']['Default'][$i] : 0); ?></td>
-                        <td><strong><?php echo esc_html($recent_matrix['totals'][$i]); ?></strong></td>
-                        </tr>
-                    <?php
-                    $row_count++;
-                endforeach;
-                    ?>
-            </table>
+                <!-- Footer -->
+                <div class="footer">
+                    <h2>End of Report</h2>
+                    <p>Thank you for using Multi Location Product & Inventory Management for WooCommerce Pro!</p>
+                    <p>Generated by Multi Location Product & Inventory Management for WooCommerce Pro</p>
+                </div>
+            </body>
 
-            <!-- Footer -->
-            <div class="footer">
-                <h2>End of Report</h2>
-                <p>Thank you for using Multi Location Product & Inventory Management for WooCommerce Pro!</p>
-                <p>Generated by Multi Location Product & Inventory Management for WooCommerce Pro</p>
-            </div>
-        </body>
-
-        </html>
-    <?php
-        exit;
-    } catch (Exception $e) {
-        // FIXED: Added catch block for error handling
-        error_log('Mulopimfwc: Error in export_dashboard_report_html - ' . $e->getMessage());
-        wp_send_json_error(array(
-            'message' => __('An error occurred while generating the export. Please try again.', 'multi-location-product-and-inventory-management-pro'),
-            'error' => defined('WP_DEBUG') && WP_DEBUG ? $e->getMessage() : ''
-        ));
-    }
+            </html>
+        <?php
+            exit;
+        } catch (Exception $e) {
+            // FIXED: Added catch block for error handling
+            error_log('Mulopimfwc: Error in export_dashboard_report_html - ' . $e->getMessage());
+            wp_send_json_error(array(
+                'message' => __('An error occurred while generating the export. Please try again.', 'multi-location-product-and-inventory-management-pro'),
+                'error' => defined('WP_DEBUG') && WP_DEBUG ? $e->getMessage() : ''
+            ));
+        }
     }
 
     /**
@@ -1102,14 +1185,14 @@ class MULOPIMFWC_Dashboard
         // Enqueue necessary scripts and styles
         $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
         $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
-        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.5.11';
-        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.5.11';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6';
 
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
         wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
         wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), $dashboard_css_version);
 
-        $payload = $this->get_dashboard_payload_cached();
+        $payload = $this->get_lightweight_dashboard_payload();
 
         $dummydata = [];
         foreach ($payload['orders_by_location'] as $location => $_) {
@@ -1118,9 +1201,9 @@ class MULOPIMFWC_Dashboard
 
         // Get notification settings for poll interval
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings']) ? $options['notification_settings'] : [];
         $poll_interval = isset($notification_settings['poll_interval']) ? $notification_settings['poll_interval'] : '30000';
 
@@ -1144,58 +1227,62 @@ class MULOPIMFWC_Dashboard
             ? ''
             : admin_url('edit-tags.php?taxonomy=mulopimfwc_store_location&post_type=product&orderby=display_order&order=asc');
 
-        wp_localize_script('lwp-dashboard-js', 'mulopimfwc_DashboardData', [
-            'ajaxurl' => admin_url('admin-ajax.php'),
-            'export_nonce' => wp_create_nonce('mulopimfwc_export_nonce'),
-            'dashboard_nonce' => wp_create_nonce('mulopimfwc_dashboard_nonce'),
-            'realtime_nonce' => wp_create_nonce('mulopimfwc_dashboard_realtime_nonce'),
-            'poll_interval' => $poll_interval,
-            'productCounts' => $payload['product_counts'],
-            'stockLevels' => $payload['stock_levels'],
-            'locationColors' => $payload['location_colors'],
-            'locationBorderColors' => $payload['location_border_colors'],
-            'dateLabels' => $payload['recent_products_data']['labels'],
-            'dateCounts' => mulopimfwc_get_pro_class(false, $payload['recent_products_data']['counts'], array_map(fn() => random_int(1, 100), range(1, 30))),
-            'ordersByLocation' => mulopimfwc_get_pro_class(false, $payload['orders_by_location'], $dummydata),
-            'revenueByLocation' => mulopimfwc_get_pro_class(false, $payload['revenue_by_location'], $dummydata),
-            'monthlyInvestmentLabels' => $payload['monthly_investment_data']['labels'],
-            'monthlyInvestmentData' => mulopimfwc_get_pro_class(
-                false,
-                $payload['monthly_investment_data']['data'],
-                array_fill(0, count($payload['monthly_investment_data']['data']), 0)
-            ),
-            'deadStockDays' => $payload['dead_stock_days'],
-            'currency' => $this->get_dashboard_reporting_currency_symbol(),
-            'currency_code' => $this->get_dashboard_reporting_currency_code(),
-            'summary' => $payload['summary'],
-            'lowStock' => array_slice($payload['low_stock_products'], 0, 8),
-            'i18n' => [
-                'totalStock' => __('Total Stock', 'multi-location-product-and-inventory-management-pro'),
-                'newProducts' => __('New Products', 'multi-location-product-and-inventory-management-pro'),
-                'investment' => __('Investment', 'multi-location-product-and-inventory-management-pro'),
-                'orders' => __('Orders', 'multi-location-product-and-inventory-management-pro'),
-                'revenue' => __('Revenue', 'multi-location-product-and-inventory-management-pro'),
-                'previousPeriod' => __('Previous period', 'multi-location-product-and-inventory-management-pro'),
-                'noOrders' => __('No orders yet', 'multi-location-product-and-inventory-management-pro'),
-                'loadingProfitability' => __('Loading profitability data...', 'multi-location-product-and-inventory-management-pro'),
-                'profitabilityLoadError' => __('Unable to load profitability data right now.', 'multi-location-product-and-inventory-management-pro')
-            ]
-        ]);
-
         $dashboard_summary = isset($payload['summary']) && is_array($payload['summary']) ? $payload['summary'] : [];
-        $orders_data = [
-            'orders' => isset($payload['orders_by_location']) && is_array($payload['orders_by_location']) ? $payload['orders_by_location'] : [],
-            'revenue' => isset($payload['revenue_by_location']) && is_array($payload['revenue_by_location']) ? $payload['revenue_by_location'] : [],
-        ];
-        $total_investment = isset($dashboard_summary['total_investment'])
-            ? (float) $dashboard_summary['total_investment']
-            : (float) ($payload['total_investment'] ?? 0);
-        $low_stock_products = isset($payload['low_stock_products']) && is_array($payload['low_stock_products'])
-            ? $payload['low_stock_products']
-            : [];
         $dead_stock_days = isset($payload['dead_stock_days']) ? (int) $payload['dead_stock_days'] : 90;
 
-    ?>
+        // Lightweight data only — heavy data loaded deferred via AJAX
+        wp_localize_script('lwp-dashboard-js', 'mulopimfwc_DashboardData', [
+            'ajaxurl'          => admin_url('admin-ajax.php'),
+            'export_nonce'     => wp_create_nonce('mulopimfwc_export_nonce'),
+            'dashboard_nonce'  => wp_create_nonce('mulopimfwc_dashboard_nonce'),
+            'realtime_nonce'   => wp_create_nonce('mulopimfwc_dashboard_realtime_nonce'),
+            'poll_interval'    => $poll_interval,
+            // Lightweight — computed fast
+            'productCounts'    => $payload['product_counts'],
+            'stockLevels'      => $payload['stock_levels'],
+            'locationColors'   => $payload['location_colors'],
+            'locationBorderColors' => $payload['location_border_colors'],
+            // Zeroed placeholders — filled after deferred load
+            'dateLabels'       => $payload['recent_products_data']['labels'],  // just date strings, cheap
+            'dateCounts'       => array_fill(0, count($payload['recent_products_data']['labels']), 0),
+            'ordersByLocation' => array_map(fn() => 0, $payload['orders_by_location']),
+            'revenueByLocation' => array_map(fn() => 0, $payload['revenue_by_location']),
+            'monthlyInvestmentLabels' => $payload['monthly_investment_data']['labels'],
+            'monthlyInvestmentData'   => array_fill(0, count($payload['monthly_investment_data']['data']), 0),
+            'deadStockDays'    => $dead_stock_days,
+            'currency'         => $this->get_dashboard_reporting_currency_symbol(),
+            'currency_code'    => $this->get_dashboard_reporting_currency_code(),
+            'summary'          => [
+                'total_products'       => $dashboard_summary['total_products'] ?? 0,
+                'total_locations'      => $dashboard_summary['total_locations'] ?? 0,
+                'total_orders'         => 0,   // deferred
+                'total_revenue'        => 0,   // deferred
+                'total_stock'          => $dashboard_summary['total_stock'] ?? 0,
+                'total_investment'     => 0,   // deferred
+                'location_card_label'  => $dashboard_summary['location_card_label'] ?? __('Locations', 'multi-location-product-and-inventory-management-pro'),
+                'location_card_value'  => $dashboard_summary['location_card_value'] ?? 0,
+            ],
+            'lowStock'         => [],          // deferred
+            'deferred'         => true,        // signal to JS to trigger deferred load
+            'i18n'             => [
+                'totalStock'              => __('Total Stock', 'multi-location-product-and-inventory-management-pro'),
+                'newProducts'             => __('New Products', 'multi-location-product-and-inventory-management-pro'),
+                'investment'              => __('Investment', 'multi-location-product-and-inventory-management-pro'),
+                'orders'                  => __('Orders', 'multi-location-product-and-inventory-management-pro'),
+                'revenue'                 => __('Revenue', 'multi-location-product-and-inventory-management-pro'),
+                'previousPeriod'          => __('Previous period', 'multi-location-product-and-inventory-management-pro'),
+                'noOrders'                => __('No orders yet', 'multi-location-product-and-inventory-management-pro'),
+                'loadingProfitability'    => __('Loading profitability data...', 'multi-location-product-and-inventory-management-pro'),
+                'profitabilityLoadError'  => __('Unable to load profitability data right now.', 'multi-location-product-and-inventory-management-pro'),
+                'loadingDeferredData'     => __('Loading dashboard data...', 'multi-location-product-and-inventory-management-pro'),
+            ],
+        ]);
+
+        $orders_data        = ['orders' => [], 'revenue' => []]; // loaded deferred
+        $total_investment   = 0;                                  // loaded deferred
+        $low_stock_products = [];                                 // loaded deferred
+
+        ?>
         <div class="wrap lwp-dashboard">
             <h1 style="display: none !important;"><?php echo esc_html__('Location Wise Products Dashboard', 'multi-location-product-and-inventory-management-pro'); ?></h1>
             <div class="lwp-dashboard-overview">
@@ -1212,25 +1299,25 @@ class MULOPIMFWC_Dashboard
 
                         <!-- Export Dropdown -->
                         <?php if ($can_export_report) : ?>
-                        <div class="export_report_dropdown <?php echo esc_attr(mulopimfwc_get_pro_class(false)); ?>">
-                            <button class="mulopimfwc-btn-primary export_toggle_btn" style="padding: 10px 30px !important;">
-                                <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M.226.046a.02.02 0 0 1 .028 0l.08.08a.02.02 0 0 1-.028.028L.26.108V.32a.02.02 0 1 1-.04 0V.108L.174.154A.02.02 0 0 1 .146.126zM.1.34a.02.02 0 0 1 .02.02V.4h.24V.36a.02.02 0 1 1 .04 0V.4a.04.04 0 0 1-.04.04H.12A.04.04 0 0 1 .08.4V.36A.02.02 0 0 1 .1.34" />
-                                </svg>
-                                <?php echo esc_html__('Export Report', 'multi-location-product-and-inventory-management-pro'); ?>
-                                <span class="dropdown_icon">▾</span>
-                            </button>
-
-                            <div class="dropdown_menu">
-                                <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_csv" data-format="csv">
-                                    <?php echo esc_html__('Export in CSV', 'multi-location-product-and-inventory-management-pro'); ?>
+                            <div class="export_report_dropdown <?php echo esc_attr(mulopimfwc_get_pro_class(false)); ?>">
+                                <button class="mulopimfwc-btn-primary export_toggle_btn" style="padding: 10px 30px !important;">
+                                    <svg width="16" height="16" viewBox="0 0 0.48 0.48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M.226.046a.02.02 0 0 1 .028 0l.08.08a.02.02 0 0 1-.028.028L.26.108V.32a.02.02 0 1 1-.04 0V.108L.174.154A.02.02 0 0 1 .146.126zM.1.34a.02.02 0 0 1 .02.02V.4h.24V.36a.02.02 0 1 1 .04 0V.4a.04.04 0 0 1-.04.04H.12A.04.04 0 0 1 .08.4V.36A.02.02 0 0 1 .1.34" />
+                                    </svg>
+                                    <?php echo esc_html__('Export Report', 'multi-location-product-and-inventory-management-pro'); ?>
+                                    <span class="dropdown_icon">▾</span>
                                 </button>
 
-                                <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_html" data-format="html">
-                                    <?php echo esc_html__('Export in Excel (HTML)', 'multi-location-product-and-inventory-management-pro'); ?>
-                                </button>
+                                <div class="dropdown_menu">
+                                    <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_csv" data-format="csv">
+                                        <?php echo esc_html__('Export in CSV', 'multi-location-product-and-inventory-management-pro'); ?>
+                                    </button>
+
+                                    <button class="<?php echo esc_attr(mulopimfwc_get_pro_class(false, 'export_report')); ?>" id="export_report_html" data-format="html">
+                                        <?php echo esc_html__('Export in Excel (HTML)', 'multi-location-product-and-inventory-management-pro'); ?>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                     </div>
 
@@ -1433,329 +1520,328 @@ class MULOPIMFWC_Dashboard
                 </div>
                 <div class="lwp-card-stats">
                     <div class="lwp-stats-grid">
-                        <?php if ( $products_link ) : ?>
-                            <a class="lwp-stat-item" href="<?php echo esc_url( $products_link ); ?>">
-                        <?php else : ?>
-                            <div class="lwp-stat-item">
-                        <?php endif; ?>
-                            <div class="lwp-stat-item-icon">
+                        <?php if ($products_link) : ?>
+                            <a class="lwp-stat-item" href="<?php echo esc_url($products_link); ?>">
+                            <?php else : ?>
+                                <div class="lwp-stat-item">
+                                <?php endif; ?>
+                                <div class="lwp-stat-item-icon">
 
-                                <svg class="svg-inline--fa fa-box" aria-hidden="true" data-prefix="fas" data-icon="box" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18">
-                                    <path fill="#2563eb" d="M50.7 58.5 0 160h208V32H93.7c-18.2 0-34.8 10.3-43 26.5M240 160h208L397.3 58.5c-8.2-16.2-24.8-26.5-43-26.5H240zm208 32H0v224c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="lwp-stat-progress" data-metric="products"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html((int) ($dashboard_summary['total_products'] ?? 0)); ?></span>
-                            </div>
-                        <?php if ( $products_link ) : ?>
+                                    <svg class="svg-inline--fa fa-box" aria-hidden="true" data-prefix="fas" data-icon="box" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18">
+                                        <path fill="#2563eb" d="M50.7 58.5 0 160h208V32H93.7c-18.2 0-34.8 10.3-43 26.5M240 160h208L397.3 58.5c-8.2-16.2-24.8-26.5-43-26.5H240zm208 32H0v224c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="lwp-stat-progress" data-metric="products"></span>
+                                    <span class="lwp-stat-label"><?php echo esc_html__('Total Products', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                    <span class="lwp-stat-value"><?php echo esc_html((int) ($dashboard_summary['total_products'] ?? 0)); ?></span>
+                                </div>
+                                <?php if ($products_link) : ?>
                             </a>
                         <?php else : ?>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ( $locations_link ) : ?>
-                            <a class="lwp-stat-item" href="<?php echo esc_url( $locations_link ); ?>">
-                        <?php else : ?>
-                            <div class="lwp-stat-item">
-                        <?php endif; ?>
-                            <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
-
-                                <svg class="svg-inline--fa fa-location-dot" aria-hidden="true" data-prefix="fas" data-icon="location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18">
-                                    <path fill="#16a34a" d="M215.7 499.2C267 435 384 279.4 384 192 384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2 12.3 15.3 35.1 15.3 47.4 0M192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128" />
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="lwp-stat-progress" data-metric="locations"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html((string) ($dashboard_summary['location_card_label'] ?? __('Locations', 'multi-location-product-and-inventory-management-pro'))); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html((string) ($dashboard_summary['location_card_value'] ?? 0)); ?></span>
-
-                            </div>
-
-                        <?php if ( $locations_link ) : ?>
-                            </a>
-                        <?php else : ?>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ( $orders_link ) : ?>
-                            <a class="lwp-stat-item <?php echo esc_attr( mulopimfwc_get_pro_class() ); ?>" href="<?php echo esc_url( $orders_link ); ?>">
-                        <?php else : ?>
-                            <div class="lwp-stat-item <?php echo esc_attr( mulopimfwc_get_pro_class() ); ?>">
-                        <?php endif; ?>
-                            <div class="lwp-stat-item-icon" style="background-color: #f3e8ff;">
-
-                                <svg class="svg-inline--fa fa-cart-shopping" aria-hidden="true" data-prefix="fas" data-icon="cart-shopping" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="18">
-                                    <path fill="#9333ea" d="M0 24C0 10.7 10.7 0 24 0h45.5c22 0 41.5 12.8 50.6 32h411c26.3 0 45.5 25 38.6 50.4l-41 152.3c-8.5 31.4-37 53.3-69.5 53.3H170.7l5.4 28.5c2.2 11.3 12.1 19.5 23.6 19.5H488c13.3 0 24 10.7 24 24s-10.7 24-24 24H199.7c-34.6 0-64.3-24.6-70.7-58.5l-51.6-271c-.7-3.8-4-6.5-7.9-6.5H24C10.7 48 0 37.3 0 24m128 440a48 48 0 1 1 96 0 48 48 0 1 1-96 0m336-48a48 48 0 1 1 0 96 48 48 0 1 1 0-96" />
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="lwp-stat-progress" data-metric="orders"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo esc_html( mulopimfwc_get_pro_class( false, array_sum( $orders_data['orders'] ), rand( 1, 100 ) ) ); ?></span>
-
-                            </div>
-
-                        <?php if ( $orders_link ) : ?>
-                            </a>
-                        <?php else : ?>
-                            </div>
-                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($locations_link) : ?>
+                    <a class="lwp-stat-item" href="<?php echo esc_url($locations_link); ?>">
+                    <?php else : ?>
                         <div class="lwp-stat-item">
-                            <div class="lwp-stat-item-icon" style="background-color: #cffafe;">
+                        <?php endif; ?>
+                        <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
 
-                                <svg class="svg-inline--fa fa-money-bag" aria-hidden="true" data-prefix="fas" data-icon="money-bag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18">
-                                    <g class="missing" fill="#0891b2">
-                                        <path d="m156.5 447.7-12.6 29.5c-18.7-9.5-35.9-21.2-51.5-34.9l22.7-22.7c12.5 10.9 26.4 20.4 41.4 28.1M40.6 272H8.5c1.4 21.2 5.4 41.7 11.7 61.1L50 321.2c-4.9-15.7-8.2-32.2-9.4-49.2m0-32c1.4-18.8 5.2-37 11.1-54.1l-29.5-12.6c-7.5 21-12.2 43.4-13.7 66.7zm23.7-83.5c7.8-14.9 17.2-28.8 28.1-41.5L69.7 92.3c-13.7 15.6-25.5 32.8-34.9 51.5zM397 419.6c-13.9 12-29.4 22.3-46.1 30.4l11.9 29.8c20.7-9.9 39.8-22.6 56.9-37.6zM115 92.4c13.9-12 29.4-22.3 46.1-30.4l-11.9-29.8c-20.7 9.9-39.8 22.6-56.8 37.6zm332.7 263.1c-7.8 14.9-17.2 28.8-28.1 41.5l22.7 22.7c13.7-15.6 25.5-32.9 34.9-51.5zm23.7-83.5c-1.4 18.8-5.2 37-11.1 54.1l29.5 12.6c7.5-21.1 12.2-43.5 13.6-66.8h-32zM321.2 462c-15.7 5-32.2 8.2-49.2 9.4v32.1c21.2-1.4 41.7-5.4 61.1-11.7zm-81.2 9.4c-18.8-1.4-37-5.2-54.1-11.1l-12.6 29.5c21.1 7.5 43.5 12.2 66.8 13.6v-32zm222-280.6c5 15.7 8.2 32.2 9.4 49.2h32.1c-1.4-21.2-5.4-41.7-11.7-61.1zM92.4 397c-12-13.9-22.3-29.4-30.4-46.1l-29.8 11.9c9.9 20.7 22.6 39.8 37.6 56.9zM272 40.6c18.8 1.4 36.9 5.2 54.1 11.1l12.6-29.5c-21-7.5-43.4-12.2-66.7-13.7zM190.8 50c15.7-5 32.2-8.2 49.2-9.4V8.5c-21.2 1.4-41.7 5.4-61.1 11.7zm251.5 42.3L419.6 115c12 13.9 22.3 29.4 30.5 46.1l29.8-11.9c-9.9-20.7-22.6-39.8-37.6-56.9m-45.3.1 22.7-22.7c-15.6-13.7-32.8-25.5-51.5-34.9l-12.6 29.5c14.8 7.8 28.8 17.2 41.4 28.1" />
-                                        <circle cx="256" cy="364" r="28">
-                                            <animate attributeType="XML" repeatCount="indefinite" dur="2s" attributeName="r" values="28;14;28;28;14;28;" />
-                                            <animate attributeType="XML" repeatCount="indefinite" dur="2s" attributeName="opacity" values="1;0;1;1;0;1;" />
-                                        </circle>
-                                        <path d="M263.7 312h-16c-6.6 0-12-5.4-12-12 0-71 77.4-63.9 77.4-107.8 0-20-17.8-40.2-57.4-40.2-29.1 0-44.3 9.6-59.2 28.7-3.9 5-11.1 6-16.2 2.4l-13.1-9.2c-5.6-3.9-6.9-11.8-2.6-17.2 21.2-27.2 46.4-44.7 91.2-44.7 52.3 0 97.4 29.8 97.4 80.2 0 67.6-77.4 63.5-77.4 107.8-.1 6.6-5.5 12-12.1 12">
-                                            <animate attributeType="XML" repeatCount="indefinite" dur="2s" attributeName="opacity" values="1;0;0;0;0;1;" />
-                                        </path>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="lwp-stat-progress" data-metric="investment"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price($total_investment)); ?></span>
-
-                            </div>
+                            <svg class="svg-inline--fa fa-location-dot" aria-hidden="true" data-prefix="fas" data-icon="location-dot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18">
+                                <path fill="#16a34a" d="M215.7 499.2C267 435 384 279.4 384 192 384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2 12.3 15.3 35.1 15.3 47.4 0M192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="lwp-stat-progress" data-metric="locations"></span>
+                            <span class="lwp-stat-label"><?php echo esc_html((string) ($dashboard_summary['location_card_label'] ?? __('Locations', 'multi-location-product-and-inventory-management-pro'))); ?></span>
+                            <span class="lwp-stat-value"><?php echo esc_html((string) ($dashboard_summary['location_card_value'] ?? 0)); ?></span>
 
                         </div>
-                        <div class="lwp-stat-item">
-                            <div class="lwp-stat-item-icon" style="background-color: #ffedd5;">
 
-                                <svg class="svg-inline--fa fa-chart-line" aria-hidden="true" data-prefix="fas" data-icon="chart-line" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18">
-                                    <path fill="#ea580c" d="M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64v336c0 44.2 35.8 80 80 80h400c17.7 0 32-14.3 32-32s-14.3-32-32-32H80c-8.8 0-16-7.2-16-16zm406.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L320 210.7l-57.4-57.4c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l89.4-89.3 57.4 57.4c12.5 12.5 32.8 12.5 45.3 0l128-128z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <span class="lwp-stat-progress" data-metric="revenue"></span>
-                                <span class="lwp-stat-label"><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price(array_sum($orders_data["revenue"]))); ?></span>
+                        <?php if ($locations_link) : ?>
+                    </a>
+                <?php else : ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($orders_link) : ?>
+                <a class="lwp-stat-item <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>" href="<?php echo esc_url($orders_link); ?>">
+                <?php else : ?>
+                    <div class="lwp-stat-item <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
+                    <?php endif; ?>
+                    <div class="lwp-stat-item-icon" style="background-color: #f3e8ff;">
 
-                            </div>
+                        <svg class="svg-inline--fa fa-cart-shopping" aria-hidden="true" data-prefix="fas" data-icon="cart-shopping" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="18" height="18">
+                            <path fill="#9333ea" d="M0 24C0 10.7 10.7 0 24 0h45.5c22 0 41.5 12.8 50.6 32h411c26.3 0 45.5 25 38.6 50.4l-41 152.3c-8.5 31.4-37 53.3-69.5 53.3H170.7l5.4 28.5c2.2 11.3 12.1 19.5 23.6 19.5H488c13.3 0 24 10.7 24 24s-10.7 24-24 24H199.7c-34.6 0-64.3-24.6-70.7-58.5l-51.6-271c-.7-3.8-4-6.5-7.9-6.5H24C10.7 48 0 37.3 0 24m128 440a48 48 0 1 1 96 0 48 48 0 1 1-96 0m336-48a48 48 0 1 1 0 96 48 48 0 1 1 0-96" />
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="lwp-stat-progress" data-metric="orders"></span>
+                        <span class="lwp-stat-label"><?php echo esc_html__('Orders', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                        <span class="lwp-stat-value"><?php echo esc_html(mulopimfwc_get_pro_class(false, array_sum($orders_data['orders']), rand(1, 100))); ?></span>
 
+                    </div>
+
+                    <?php if ($orders_link) : ?>
+                </a>
+            <?php else : ?>
+            </div>
+        <?php endif; ?>
+        <div class="lwp-stat-item">
+            <div class="lwp-stat-item-icon" style="background-color: #cffafe;">
+
+                <svg class="svg-inline--fa fa-money-bag" aria-hidden="true" data-prefix="fas" data-icon="money-bag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18">
+                    <g class="missing" fill="#0891b2">
+                        <path d="m156.5 447.7-12.6 29.5c-18.7-9.5-35.9-21.2-51.5-34.9l22.7-22.7c12.5 10.9 26.4 20.4 41.4 28.1M40.6 272H8.5c1.4 21.2 5.4 41.7 11.7 61.1L50 321.2c-4.9-15.7-8.2-32.2-9.4-49.2m0-32c1.4-18.8 5.2-37 11.1-54.1l-29.5-12.6c-7.5 21-12.2 43.4-13.7 66.7zm23.7-83.5c7.8-14.9 17.2-28.8 28.1-41.5L69.7 92.3c-13.7 15.6-25.5 32.8-34.9 51.5zM397 419.6c-13.9 12-29.4 22.3-46.1 30.4l11.9 29.8c20.7-9.9 39.8-22.6 56.9-37.6zM115 92.4c13.9-12 29.4-22.3 46.1-30.4l-11.9-29.8c-20.7 9.9-39.8 22.6-56.8 37.6zm332.7 263.1c-7.8 14.9-17.2 28.8-28.1 41.5l22.7 22.7c13.7-15.6 25.5-32.9 34.9-51.5zm23.7-83.5c-1.4 18.8-5.2 37-11.1 54.1l29.5 12.6c7.5-21.1 12.2-43.5 13.6-66.8h-32zM321.2 462c-15.7 5-32.2 8.2-49.2 9.4v32.1c21.2-1.4 41.7-5.4 61.1-11.7zm-81.2 9.4c-18.8-1.4-37-5.2-54.1-11.1l-12.6 29.5c21.1 7.5 43.5 12.2 66.8 13.6v-32zm222-280.6c5 15.7 8.2 32.2 9.4 49.2h32.1c-1.4-21.2-5.4-41.7-11.7-61.1zM92.4 397c-12-13.9-22.3-29.4-30.4-46.1l-29.8 11.9c9.9 20.7 22.6 39.8 37.6 56.9zM272 40.6c18.8 1.4 36.9 5.2 54.1 11.1l12.6-29.5c-21-7.5-43.4-12.2-66.7-13.7zM190.8 50c15.7-5 32.2-8.2 49.2-9.4V8.5c-21.2 1.4-41.7 5.4-61.1 11.7zm251.5 42.3L419.6 115c12 13.9 22.3 29.4 30.5 46.1l29.8-11.9c-9.9-20.7-22.6-39.8-37.6-56.9m-45.3.1 22.7-22.7c-15.6-13.7-32.8-25.5-51.5-34.9l-12.6 29.5c14.8 7.8 28.8 17.2 41.4 28.1" />
+                        <circle cx="256" cy="364" r="28">
+                            <animate attributeType="XML" repeatCount="indefinite" dur="2s" attributeName="r" values="28;14;28;28;14;28;" />
+                            <animate attributeType="XML" repeatCount="indefinite" dur="2s" attributeName="opacity" values="1;0;1;1;0;1;" />
+                        </circle>
+                        <path d="M263.7 312h-16c-6.6 0-12-5.4-12-12 0-71 77.4-63.9 77.4-107.8 0-20-17.8-40.2-57.4-40.2-29.1 0-44.3 9.6-59.2 28.7-3.9 5-11.1 6-16.2 2.4l-13.1-9.2c-5.6-3.9-6.9-11.8-2.6-17.2 21.2-27.2 46.4-44.7 91.2-44.7 52.3 0 97.4 29.8 97.4 80.2 0 67.6-77.4 63.5-77.4 107.8-.1 6.6-5.5 12-12.1 12">
+                            <animate attributeType="XML" repeatCount="indefinite" dur="2s" attributeName="opacity" values="1;0;0;0;0;1;" />
+                        </path>
+                    </g>
+                </svg>
+            </div>
+            <div>
+                <span class="lwp-stat-progress" data-metric="investment"></span>
+                <span class="lwp-stat-label"><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price($total_investment)); ?></span>
+
+            </div>
+
+        </div>
+        <div class="lwp-stat-item">
+            <div class="lwp-stat-item-icon" style="background-color: #ffedd5;">
+
+                <svg class="svg-inline--fa fa-chart-line" aria-hidden="true" data-prefix="fas" data-icon="chart-line" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18">
+                    <path fill="#ea580c" d="M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64v336c0 44.2 35.8 80 80 80h400c17.7 0 32-14.3 32-32s-14.3-32-32-32H80c-8.8 0-16-7.2-16-16zm406.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L320 210.7l-57.4-57.4c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l89.4-89.3 57.4 57.4c12.5 12.5 32.8 12.5 45.3 0l128-128z" />
+                </svg>
+            </div>
+            <div>
+                <span class="lwp-stat-progress" data-metric="revenue"></span>
+                <span class="lwp-stat-label"><?php echo esc_html__('Revenue', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price(array_sum($orders_data["revenue"]))); ?></span>
+
+            </div>
+
+        </div>
+        </div>
+        </div>
+        </div>
+
+        <div class="lwp-dashboard-charts">
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php echo esc_html__('Products by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+                        <div class="lwp-chart-container">
+                            <canvas id="locationProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php echo esc_html__('Stock Levels by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+                        <div class="lwp-chart-container">
+                            <canvas id="locationStockChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="lwp-dashboard-charts">
-                <div class="lwp-row">
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <h2><?php echo esc_html__('Products by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <div class="lwp-chart-container">
-                                <canvas id="locationProductsChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <h2><?php echo esc_html__('Stock Levels by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <div class="lwp-chart-container">
-                                <canvas id="locationStockChart"></canvas>
-                            </div>
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php echo esc_html__('Orders by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+                        <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
+                            <canvas id="ordersByLocationChart"></canvas>
                         </div>
                     </div>
                 </div>
-
-                <div class="lwp-row">
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <h2><?php echo esc_html__('Orders by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
-                                <canvas id="ordersByLocationChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <h2><?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
-                                <canvas id="revenueByLocationChart"></canvas>
-                            </div>
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php echo esc_html__('Revenue by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+                        <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
+                            <canvas id="revenueByLocationChart"></canvas>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="lwp-row">
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <h2><?php echo esc_html__('New Products (Last 30 Days)', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
-                                <canvas id="newProductsChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <h2><?php echo esc_html__('Investment', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
-                                <canvas id="investment-30day"></canvas>
-                            </div>
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php echo esc_html__('New Products (Last 30 Days)', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+                        <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
+                            <canvas id="newProductsChart"></canvas>
                         </div>
                     </div>
                 </div>
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php echo esc_html__('Investment', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+                        <div class="lwp-chart-container <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
+                            <canvas id="investment-30day"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <div class="lwp-row">
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <h2><?php esc_html_e('Stock Alerts by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
-                            <?php
-                            $low_stock_sample_products = array_map([$this, 'normalize_stock_alert_item'], [
-                                [
-                                    "product_id" => 1,
-                                    "product_title" => "Apple Laptop",
-                                    "location_name" => "New York",
-                                    "location_id" => 1,
-                                    "stock" => 0,
-                                    "status" => "out_of_stock"
-                                ],
-                                [
-                                    "product_id" => 2,
-                                    "product_title" => "Samsung Galaxy Phone",
-                                    "location_name" => "Los Angeles",
-                                    "location_id" => 2,
-                                    "stock" => 2,
-                                    "status" => "low_stock"
-                                ],
-                                [
-                                    "product_id" => 3,
-                                    "product_title" => "Dell XPS 15",
-                                    "location_name" => "Chicago",
-                                    "location_id" => 3,
-                                    "stock" => 1,
-                                    "status" => "low_stock"
-                                ],
-                                [
-                                    "product_id" => 4,
-                                    "product_title" => "Sony Headphones",
-                                    "location_name" => "Miami",
-                                    "location_id" => 4,
-                                    "stock" => 0,
-                                    "status" => "out_of_stock"
-                                ],
-                                [
-                                    "product_id" => 5,
-                                    "product_title" => "LG OLED TV",
-                                    "location_name" => "Houston",
-                                    "location_id" => 5,
-                                    "stock" => 3,
-                                    "status" => "low_stock"
-                                ],
-                                [
-                                    "product_id" => 6,
-                                    "product_title" => "Amazon Echo",
-                                    "location_name" => "Seattle",
-                                    "location_id" => 6,
-                                    "stock" => 1,
-                                    "status" => "low_stock"
-                                ],
-                                [
-                                    "product_id" => 7,
-                                    "product_title" => "Microsoft Surface Pro",
-                                    "location_name" => "San Francisco",
-                                    "location_id" => 7,
-                                    "stock" => 2,
-                                    "status" => "low_stock"
-                                ],
-                                [
-                                    "product_id" => 8,
-                                    "product_title" => "Bose SoundLink Speaker",
-                                    "location_name" => "Boston",
-                                    "location_id" => 8,
-                                    "stock" => 0,
-                                    "status" => "out_of_stock"
-                                ],
-                                [
-                                    "product_id" => 9,
-                                    "product_title" => "iPad Pro",
-                                    "location_name" => "Atlanta",
-                                    "location_id" => 9,
-                                    "stock" => 1,
-                                    "status" => "low_stock"
-                                ],
-                                [
-                                    "product_id" => 10,
-                                    "product_title" => "Fitbit Charge 5",
-                                    "location_name" => "Denver",
-                                    "location_id" => 10,
-                                    "stock" => 0,
-                                    "status" => "out_of_stock"
-                                ]
-                            ]);
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <h2><?php esc_html_e('Stock Alerts by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
+                        <?php
+                        $low_stock_sample_products = array_map([$this, 'normalize_stock_alert_item'], [
+                            [
+                                "product_id" => 1,
+                                "product_title" => "Apple Laptop",
+                                "location_name" => "New York",
+                                "location_id" => 1,
+                                "stock" => 0,
+                                "status" => "out_of_stock"
+                            ],
+                            [
+                                "product_id" => 2,
+                                "product_title" => "Samsung Galaxy Phone",
+                                "location_name" => "Los Angeles",
+                                "location_id" => 2,
+                                "stock" => 2,
+                                "status" => "low_stock"
+                            ],
+                            [
+                                "product_id" => 3,
+                                "product_title" => "Dell XPS 15",
+                                "location_name" => "Chicago",
+                                "location_id" => 3,
+                                "stock" => 1,
+                                "status" => "low_stock"
+                            ],
+                            [
+                                "product_id" => 4,
+                                "product_title" => "Sony Headphones",
+                                "location_name" => "Miami",
+                                "location_id" => 4,
+                                "stock" => 0,
+                                "status" => "out_of_stock"
+                            ],
+                            [
+                                "product_id" => 5,
+                                "product_title" => "LG OLED TV",
+                                "location_name" => "Houston",
+                                "location_id" => 5,
+                                "stock" => 3,
+                                "status" => "low_stock"
+                            ],
+                            [
+                                "product_id" => 6,
+                                "product_title" => "Amazon Echo",
+                                "location_name" => "Seattle",
+                                "location_id" => 6,
+                                "stock" => 1,
+                                "status" => "low_stock"
+                            ],
+                            [
+                                "product_id" => 7,
+                                "product_title" => "Microsoft Surface Pro",
+                                "location_name" => "San Francisco",
+                                "location_id" => 7,
+                                "stock" => 2,
+                                "status" => "low_stock"
+                            ],
+                            [
+                                "product_id" => 8,
+                                "product_title" => "Bose SoundLink Speaker",
+                                "location_name" => "Boston",
+                                "location_id" => 8,
+                                "stock" => 0,
+                                "status" => "out_of_stock"
+                            ],
+                            [
+                                "product_id" => 9,
+                                "product_title" => "iPad Pro",
+                                "location_name" => "Atlanta",
+                                "location_id" => 9,
+                                "stock" => 1,
+                                "status" => "low_stock"
+                            ],
+                            [
+                                "product_id" => 10,
+                                "product_title" => "Fitbit Charge 5",
+                                "location_name" => "Denver",
+                                "location_id" => 10,
+                                "stock" => 0,
+                                "status" => "out_of_stock"
+                            ]
+                        ]);
 
-                            $low_stock_products = mulopimfwc_get_pro_class(false, $low_stock_products, $low_stock_sample_products);
-                            if (is_array($low_stock_products)) {
-                                $low_stock_products = array_values(array_map([$this, 'normalize_stock_alert_item'], $low_stock_products));
-                            }
+                        $low_stock_products = mulopimfwc_get_pro_class(false, $low_stock_products, $low_stock_sample_products);
+                        if (is_array($low_stock_products)) {
+                            $low_stock_products = array_values(array_map([$this, 'normalize_stock_alert_item'], $low_stock_products));
+                        }
 
-                            if (!empty($low_stock_products)) : ?>
-                                <table class="lwp-low-stock-table <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
-                                    <thead>
+                        if (!empty($low_stock_products)) : ?>
+                            <table class="lwp-low-stock-table <?php echo esc_attr(mulopimfwc_get_pro_class()); ?>">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                        <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                        <th><?php esc_html_e('Stock', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                        <th><?php esc_html_e('Status', 'multi-location-product-and-inventory-management-pro'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ((object)$low_stock_products as $item) : ?>
                                         <tr>
-                                            <th><?php esc_html_e('Product', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                            <th><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                            <th><?php esc_html_e('Stock', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                            <th><?php esc_html_e('Status', 'multi-location-product-and-inventory-management-pro'); ?></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ((object)$low_stock_products as $item) : ?>
-                                            <tr>
-                                                <td>
-                                                    <?php if ($can_manage_products) : ?>
-                                                        <a href="<?php echo esc_url(get_edit_post_link((int) ($item['edit_post_id'] ?? $item['product_id']))); ?>">
-                                                            <?php echo esc_html($item['product_title']); ?>
-                                                        </a>
-                                                    <?php else : ?>
+                                            <td>
+                                                <?php if ($can_manage_products) : ?>
+                                                    <a href="<?php echo esc_url(get_edit_post_link((int) ($item['edit_post_id'] ?? $item['product_id']))); ?>">
                                                         <?php echo esc_html($item['product_title']); ?>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td><?php echo esc_html($item['location_name']); ?></td>
-                                                <td>
-                                                    <span class="stock-quantity <?php echo esc_attr($item['status_class'] ?? 'low-stock'); ?>">
-                                                        <?php echo esc_html($item['stock']); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="stock-status <?php echo esc_attr($item['status_class'] ?? 'low-stock'); ?>">
-                                                        <?php echo esc_html($item['status_label'] ?? __('Low Stock', 'multi-location-product-and-inventory-management-pro')); ?>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            <?php else: ?>
-                                <p><?php esc_html_e('No low stock products found for any location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
-                            <?php endif; ?>
-                        </div>
+                                                    </a>
+                                                <?php else : ?>
+                                                    <?php echo esc_html($item['product_title']); ?>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo esc_html($item['location_name']); ?></td>
+                                            <td>
+                                                <span class="stock-quantity <?php echo esc_attr($item['status_class'] ?? 'low-stock'); ?>">
+                                                    <?php echo esc_html($item['stock']); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="stock-status <?php echo esc_attr($item['status_class'] ?? 'low-stock'); ?>">
+                                                    <?php echo esc_html($item['status_label'] ?? __('Low Stock', 'multi-location-product-and-inventory-management-pro')); ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p><?php esc_html_e('No low stock products found for any location.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
+            </div>
 
-                <div class="lwp-row">
-                    <div class="lwp-col">
-                        <div class="lwp-card">
-                            <div
-                                id="lwp-profitability-panel"
-                                class="lwp-profitability-panel"
-                                data-dead-stock-days="<?php echo esc_attr($dead_stock_days); ?>"
-                            >
-                                <div class="lwp-profitability-state is-loading">
-                                    <?php esc_html_e('Loading profitability data...', 'multi-location-product-and-inventory-management-pro'); ?>
-                                </div>
+            <div class="lwp-row">
+                <div class="lwp-col">
+                    <div class="lwp-card">
+                        <div
+                            id="lwp-profitability-panel"
+                            class="lwp-profitability-panel"
+                            data-dead-stock-days="<?php echo esc_attr($dead_stock_days); ?>">
+                            <div class="lwp-profitability-state is-loading">
+                                <?php esc_html_e('Loading profitability data...', 'multi-location-product-and-inventory-management-pro'); ?>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-<?php
+        </div>
+    <?php
     }
 
     /**
@@ -1835,11 +1921,11 @@ class MULOPIMFWC_Dashboard
             if (!$location || !isset($location->term_id) || !isset($location->name)) {
                 continue;
             }
-            
+
             // FIXED: Use cache for repeated queries (Issue #12)
             $cache_key = 'mulopimfwc_product_count_v' . $cache_version . '_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
             $cached_count = wp_cache_get($cache_key, 'mulopimfwc_dashboard');
-            
+
             if ($cached_count !== false) {
                 $counts[$location->name] = (int) $cached_count;
             } else {
@@ -1859,11 +1945,11 @@ class MULOPIMFWC_Dashboard
                 } else {
                     $counts[$location->name] = $this->get_location_product_count($location->term_id);
                 }
-                
+
                 // Cache result for 5 minutes (Issue #12)
                 wp_cache_set($cache_key, $counts[$location->name], 'mulopimfwc_dashboard', 300);
             }
-            
+
             // FIXED: Clear variables to prevent memory leaks (Issue #20)
             unset($query);
         }
@@ -1926,11 +2012,11 @@ class MULOPIMFWC_Dashboard
             if (!$location || !isset($location->term_id) || !isset($location->name)) {
                 continue;
             }
-            
+
             // FIXED: Use cache for repeated queries (Issue #12)
             $cache_key = 'mulopimfwc_stock_level_v' . $cache_version . '_' . $location->term_id . '_' . ($has_range ? md5($date_from . $date_to) : 'all');
             $cached_level = wp_cache_get($cache_key, 'mulopimfwc_dashboard');
-            
+
             if ($cached_level !== false) {
                 $levels[$location->name] = (int) $cached_level;
             } else {
@@ -1951,11 +2037,11 @@ class MULOPIMFWC_Dashboard
                 } else {
                     $levels[$location->name] = $this->get_location_stock_level($location->term_id);
                 }
-                
+
                 // Cache result for 5 minutes (Issue #12)
                 wp_cache_set($cache_key, $levels[$location->name], 'mulopimfwc_dashboard', 300);
             }
-            
+
             // FIXED: Clear variables to prevent memory leaks (Issue #20)
             unset($query, $meta_key);
         }
@@ -2329,18 +2415,238 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
-     * Get orders data efficiently
+     * Check whether WooCommerce HPOS is authoritative for orders.
+     */
+    private function is_dashboard_hpos_enabled(): bool
+    {
+        if (class_exists('Automattic\\WooCommerce\\Utilities\\OrderUtil')) {
+            return \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+        }
+
+        if (function_exists('wc_get_order_datastore')) {
+            $datastore = wc_get_order_datastore();
+            return is_a($datastore, 'Automattic\\WooCommerce\\Internal\\DataStores\\Orders\\OrdersTableDataStore');
+        }
+
+        if (function_exists('wc_get_container') && class_exists('Automattic\\WooCommerce\\Internal\\DataStores\\Orders\\CustomOrdersTableController')) {
+            try {
+                $controller = wc_get_container()->get(\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController::class);
+                if (method_exists($controller, 'custom_orders_table_usage_is_enabled')) {
+                    return (bool) $controller->custom_orders_table_usage_is_enabled();
+                }
+            } catch (Exception $e) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Normalize dashboard status values for direct SQL queries.
+     */
+    private function get_dashboard_order_query_statuses($status_filter): array
+    {
+        $status_values = $status_filter === 'all'
+            ? ['completed', 'pending', 'processing', 'on-hold']
+            : (array) $status_filter;
+
+        $statuses = [];
+        foreach ($status_values as $status) {
+            if (is_array($status)) {
+                continue;
+            }
+
+            $normalized_status = sanitize_key((string) $status);
+            if ($normalized_status === '' || $normalized_status === 'all') {
+                continue;
+            }
+
+            if (strpos($normalized_status, 'wc-') !== 0) {
+                $normalized_status = 'wc-' . $normalized_status;
+            }
+
+            $statuses[] = $normalized_status;
+        }
+
+        if (empty($statuses)) {
+            return ['wc-completed', 'wc-pending', 'wc-processing', 'wc-on-hold'];
+        }
+
+        return array_values(array_unique($statuses));
+    }
+
+    /**
+     * Strip the WooCommerce status prefix for comparisons.
+     */
+    private function normalize_dashboard_order_status(string $status): string
+    {
+        $normalized_status = sanitize_key($status);
+        if (strpos($normalized_status, 'wc-') === 0) {
+            $normalized_status = substr($normalized_status, 3);
+        }
+
+        return $normalized_status;
+    }
+
+    /**
+     * Build local and UTC date ranges for direct order queries.
+     */
+    private function get_dashboard_order_date_range($date_from = '', $date_to = ''): array
+    {
+        $local_timezone = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
+        $utc_timezone = new DateTimeZone('UTC');
+
+        $range = [
+            'local_from' => '',
+            'local_to' => '',
+            'gmt_from' => '',
+            'gmt_to' => '',
+        ];
+
+        try {
+            if (is_string($date_from) && $date_from !== '') {
+                $from_local = new DateTimeImmutable($date_from . ' 00:00:00', $local_timezone);
+                $range['local_from'] = $from_local->format('Y-m-d H:i:s');
+                $range['gmt_from'] = $from_local->setTimezone($utc_timezone)->format('Y-m-d H:i:s');
+            }
+
+            if (is_string($date_to) && $date_to !== '') {
+                $to_local = new DateTimeImmutable($date_to . ' 00:00:00', $local_timezone);
+                $to_local = $to_local->modify('+1 day');
+                $range['local_to'] = $to_local->format('Y-m-d H:i:s');
+                $range['gmt_to'] = $to_local->setTimezone($utc_timezone)->format('Y-m-d H:i:s');
+            }
+        } catch (Exception $e) {
+            return [
+                'local_from' => '',
+                'local_to' => '',
+                'gmt_from' => '',
+                'gmt_to' => '',
+            ];
+        }
+
+        return $range;
+    }
+
+    /**
+     * Map dashboard location slugs to labels.
+     */
+    private function get_dashboard_location_label_map(array $locations): array
+    {
+        $label_map = [
+            'default' => 'Default',
+        ];
+
+        foreach ($locations as $location) {
+            if (!is_object($location)) {
+                continue;
+            }
+
+            $slug = $this->normalize_location_slug($location->slug ?? '');
+            if ($slug === '') {
+                continue;
+            }
+
+            $label_map[$slug] = (string) ($location->name ?? $slug);
+        }
+
+        return $label_map;
+    }
+
+    /**
+     * Build location currency metadata used for aggregate revenue conversion.
+     */
+    private function get_dashboard_location_currency_map(array $locations): array
+    {
+        $currency_map = [];
+
+        foreach ($locations as $location) {
+            if (!is_object($location)) {
+                continue;
+            }
+
+            $slug = $this->normalize_location_slug($location->slug ?? '');
+            $term_id = isset($location->term_id) ? (int) $location->term_id : 0;
+            if ($slug === '' || $term_id <= 0) {
+                continue;
+            }
+
+            $target_currency = '';
+            if (function_exists('mulopimfwc_get_currency_settings_for_location')) {
+                $currency_settings = (array) mulopimfwc_get_currency_settings_for_location($term_id);
+                $target_currency = strtoupper(trim((string) ($currency_settings['currency'] ?? '')));
+            }
+
+            if ($target_currency === '') {
+                $target_currency = strtoupper(trim((string) get_term_meta($term_id, 'location_currency', true)));
+            }
+
+            $rate_raw = get_term_meta($term_id, 'location_currency_rate', true);
+            $rate = (is_numeric($rate_raw) && (float) $rate_raw > 0) ? (float) $rate_raw : 0.0;
+
+            $currency_map[$slug] = [
+                'target_currency' => $target_currency,
+                'rate' => $rate,
+            ];
+        }
+
+        return $currency_map;
+    }
+
+    /**
+     * Convert an aggregate order amount into the dashboard reporting currency.
+     */
+    private function convert_dashboard_aggregate_amount_to_base_currency(float $amount, string $order_currency, string $location_slug, array $location_currency_map, string $base_currency): float
+    {
+        $normalized_currency = strtoupper(trim($order_currency));
+        if ($normalized_currency === '' || $normalized_currency === $base_currency) {
+            return $amount;
+        }
+
+        $location_slug = $this->normalize_location_slug($location_slug);
+        if ($location_slug === '' || !isset($location_currency_map[$location_slug])) {
+            return $amount;
+        }
+
+        $target_currency = strtoupper(trim((string) ($location_currency_map[$location_slug]['target_currency'] ?? '')));
+        $rate = (float) ($location_currency_map[$location_slug]['rate'] ?? 0);
+
+        if ($target_currency === '' || $rate <= 0 || $target_currency !== $normalized_currency || $target_currency === $base_currency) {
+            return $amount;
+        }
+
+        $converted_amount = $amount / $rate;
+        if (function_exists('wc_format_decimal')) {
+            return (float) wc_format_decimal($converted_amount, 6, false);
+        }
+
+        return round($converted_amount, 6);
+    }
+
+    /**
+     * Namespace dashboard order caches so metric-definition changes do not reuse
+     * payloads built with older revenue logic.
+     */
+    private function get_dashboard_orders_cache_namespace(): string
+    {
+        return 'line_margin_v1';
+    }
+
+    /**
+     * Get orders data efficiently.
      */
     private function get_orders_data_efficiently($date_from = '', $date_to = '', $location_filter = 'all', $status_filter = 'all')
     {
-        global $mulopimfwc_locations;
+        global $mulopimfwc_locations, $wpdb;
 
         $normalized_location_filter = $this->normalize_location_slug($location_filter);
         $manager_location_slugs = $this->get_dashboard_manager_assigned_location_slugs();
         $is_manager_scope = is_array($manager_location_slugs);
+        $locations = is_array($mulopimfwc_locations) ? $mulopimfwc_locations : [];
+
         $orders_by_location = $is_manager_scope ? [] : ['Default' => 0];
         $location_revenue = $is_manager_scope ? [] : ['Default' => 0];
-        $location_slugs = $is_manager_scope ? [] : ['Default' => 'default'];
 
         if ($is_manager_scope) {
             if (empty($manager_location_slugs)) {
@@ -2368,137 +2674,379 @@ class MULOPIMFWC_Dashboard
             }
         }
 
-        $revenue_statuses = function_exists('mulopimfwc_get_revenue_order_statuses')
-            ? mulopimfwc_get_revenue_order_statuses()
-            : ['processing', 'completed'];
-        $calculate_revenue = function_exists('mulopimfwc_calculate_order_revenue') ? 'mulopimfwc_calculate_order_revenue' : null;
-
-        foreach ($mulopimfwc_locations as $location) {
-            $location_slugs[$location->name] = $this->normalize_location_slug($location->slug);
-            $orders_by_location[$location->name] = 0;
-            $location_revenue[$location->name] = 0;
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_scope = $this->get_live_dashboard_cache_scope_hash();
+        $cache_key = 'mulopimfwc_dashboard_orders_' . $this->get_dashboard_orders_cache_namespace() . '_v' . $cache_version . '_' . $cache_scope . '_' . md5(wp_json_encode([
+            'date_from' => (string) $date_from,
+            'date_to' => (string) $date_to,
+            'location_filter' => $normalized_location_filter,
+            'status_filter' => (string) $status_filter,
+        ]));
+        $cached_data = get_transient($cache_key);
+        if (is_array($cached_data) && isset($cached_data['orders'], $cached_data['revenue'])) {
+            return $cached_data;
         }
 
-        // Build order query args with pagination to prevent memory exhaustion
-        // Process orders in batches (1000 per batch)
-        $batch_size = 1000;
-        $page = 1;
-        $all_order_ids = [];
-        
-        // Increase memory and time limits for dashboard operations
-        if (function_exists('ini_set')) {
-            @ini_set('memory_limit', '512M');
-        }
-        @set_time_limit(300);
-        
-        do {
-            $args = array(
-                'limit' => $batch_size,
-                'offset' => ($page - 1) * $batch_size,
-                'return' => 'ids'
-            );
+        $query_statuses = $this->get_dashboard_order_query_statuses($status_filter);
+        $revenue_query_statuses = array_values(array_intersect(
+            $query_statuses,
+            $this->get_dashboard_order_query_statuses(
+                function_exists('mulopimfwc_get_revenue_order_statuses')
+                    ? (array) mulopimfwc_get_revenue_order_statuses()
+                    : ['processing', 'completed']
+            )
+        ));
+        $date_range = $this->get_dashboard_order_date_range($date_from, $date_to);
+        $label_map = $this->get_dashboard_location_label_map($locations);
+        $currency_map = $this->get_dashboard_location_currency_map($locations);
+        $base_currency = function_exists('mulopimfwc_get_store_base_currency_code_raw')
+            ? strtoupper(trim((string) mulopimfwc_get_store_base_currency_code_raw()))
+            : strtoupper(trim((string) get_option('woocommerce_currency', 'USD')));
 
-            // Status filter
-            if ($status_filter === 'all') {
-                $args['status'] = ['completed', 'pending', 'processing', 'on-hold'];
-            } else {
-                $args['status'] = $status_filter;
+        foreach ($label_map as $slug => $label) {
+            if ($slug === 'default') {
+                continue;
             }
 
-            // Date filter
-            if (!empty($date_from) && !empty($date_to)) {
-                $args['date_created'] = $date_from . '...' . $date_to;
-            } elseif (!empty($date_from)) {
-                $args['date_created'] = '>=' . $date_from;
-            } elseif (!empty($date_to)) {
-                $args['date_created'] = '<=' . $date_to;
+            $orders_by_location[$label] = 0;
+            $location_revenue[$label] = 0;
+        }
+
+        $status_placeholders = implode(',', array_fill(0, count($query_statuses), '%s'));
+        $date_clauses = [];
+        $date_params = [];
+        $location_clause = '';
+        $location_params = [];
+
+        if ($this->is_dashboard_hpos_enabled()) {
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            $meta_table = $wpdb->prefix . 'wc_orders_meta';
+
+            if ($date_range['gmt_from'] !== '') {
+                $date_clauses[] = "orders.date_created_gmt >= %s";
+                $date_params[] = $date_range['gmt_from'];
+            }
+            if ($date_range['gmt_to'] !== '') {
+                $date_clauses[] = "orders.date_created_gmt < %s";
+                $date_params[] = $date_range['gmt_to'];
             }
 
             if ($is_manager_scope) {
-                if ($normalized_location_filter !== 'all') {
-                    $args['meta_query'] = [
-                        [
-                            'key' => '_store_location',
-                            'value' => $normalized_location_filter,
-                            'compare' => '=',
-                        ],
-                    ];
+                if ($normalized_location_filter === 'all') {
+                    $placeholders = implode(',', array_fill(0, count($manager_location_slugs), '%s'));
+                    $location_clause = " AND location_meta.meta_value IN ({$placeholders})";
+                    $location_params = $manager_location_slugs;
                 } else {
-                    $args['meta_query'] = [
-                        [
-                            'key' => '_store_location',
-                            'value' => $manager_location_slugs,
-                            'compare' => 'IN',
-                        ],
-                    ];
+                    $location_clause = " AND location_meta.meta_value = %s";
+                    $location_params[] = $normalized_location_filter;
                 }
+            } elseif ($normalized_location_filter === 'default') {
+                $location_clause = " AND (location_meta.meta_value IS NULL OR location_meta.meta_value = '' OR location_meta.meta_value = 'default')";
+            } elseif ($normalized_location_filter !== 'all') {
+                $location_clause = " AND location_meta.meta_value = %s";
+                $location_params[] = $normalized_location_filter;
             }
 
-            $order_ids = wc_get_orders($args);
-            
-            if (empty($order_ids)) {
-                break;
+            $date_sql = empty($date_clauses) ? '' : ' AND ' . implode(' AND ', $date_clauses);
+            $sql = "
+                SELECT COALESCE(location_meta.meta_value, '') AS location_slug,
+                       COUNT(DISTINCT orders.id) AS order_count
+                FROM {$orders_table} orders
+                LEFT JOIN {$meta_table} location_meta
+                    ON location_meta.order_id = orders.id
+                    AND location_meta.meta_key = '_store_location'
+                LEFT JOIN {$meta_table} split_meta
+                    ON split_meta.order_id = orders.id
+                    AND split_meta.meta_key = '_mulopimfwc_split_parent'
+                WHERE orders.type = 'shop_order'
+                    AND orders.status IN ({$status_placeholders})
+                    AND (split_meta.meta_value IS NULL OR split_meta.meta_value != 'yes')
+                    {$date_sql}
+                    {$location_clause}
+                GROUP BY location_slug
+            ";
+
+            $query = $wpdb->prepare($sql, array_merge($query_statuses, $date_params, $location_params));
+        } else {
+            if ($date_range['local_from'] !== '') {
+                $date_clauses[] = "orders.post_date >= %s";
+                $date_params[] = $date_range['local_from'];
             }
-            
-            $all_order_ids = array_merge($all_order_ids, $order_ids);
-            
-            // Safety check: limit total batches to prevent infinite loops
-            if ($page > 200) { // Max 200,000 orders (1000 * 200)
-                break;
-            }
-            
-            $page++;
-            
-        } while (count($order_ids) === $batch_size);
-
-        foreach ($all_order_ids as $order_id) {
-            $order = wc_get_order($order_id);
-            if (!$order) continue;
-
-            if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
-                continue;
-            }
-
-            $order_location = $order->get_meta('_store_location');
-            $order_location_slug = $this->normalize_location_slug($order_location);
-            $order_status = $order->get_status();
-
-            if ($is_manager_scope && !in_array($order_location_slug, $manager_location_slugs, true)) {
-                continue;
+            if ($date_range['local_to'] !== '') {
+                $date_clauses[] = "orders.post_date < %s";
+                $date_params[] = $date_range['local_to'];
             }
 
-            // Location filter
-            if ($normalized_location_filter !== 'all' && $order_location_slug !== $normalized_location_filter) {
-                continue;
-            }
-
-            $location_name = $is_manager_scope ? '' : 'Default';
-            foreach ($location_slugs as $name => $slug) {
-                if ($slug === $order_location_slug) {
-                    $location_name = $name;
-                    break;
+            if ($is_manager_scope) {
+                if ($normalized_location_filter === 'all') {
+                    $placeholders = implode(',', array_fill(0, count($manager_location_slugs), '%s'));
+                    $location_clause = " AND location_meta.meta_value IN ({$placeholders})";
+                    $location_params = $manager_location_slugs;
+                } else {
+                    $location_clause = " AND location_meta.meta_value = %s";
+                    $location_params[] = $normalized_location_filter;
                 }
+            } elseif ($normalized_location_filter === 'default') {
+                $location_clause = " AND (location_meta.meta_value IS NULL OR location_meta.meta_value = '' OR location_meta.meta_value = 'default')";
+            } elseif ($normalized_location_filter !== 'all') {
+                $location_clause = " AND location_meta.meta_value = %s";
+                $location_params[] = $normalized_location_filter;
             }
 
-            if ($is_manager_scope && $location_name === '') {
-                continue;
-            }
+            $date_sql = empty($date_clauses) ? '' : ' AND ' . implode(' AND ', $date_clauses);
+            $sql = "
+                SELECT COALESCE(location_meta.meta_value, '') AS location_slug,
+                       COUNT(DISTINCT orders.ID) AS order_count
+                FROM {$wpdb->posts} orders
+                LEFT JOIN {$wpdb->postmeta} location_meta
+                    ON location_meta.post_id = orders.ID
+                    AND location_meta.meta_key = '_store_location'
+                LEFT JOIN {$wpdb->postmeta} split_meta
+                    ON split_meta.post_id = orders.ID
+                    AND split_meta.meta_key = '_mulopimfwc_split_parent'
+                WHERE orders.post_type = 'shop_order'
+                    AND orders.post_status IN ({$status_placeholders})
+                    AND (split_meta.meta_value IS NULL OR split_meta.meta_value != 'yes')
+                    {$date_sql}
+                    {$location_clause}
+                GROUP BY location_slug
+            ";
 
-            $orders_by_location[$location_name]++;
-            if (in_array($order_status, $revenue_statuses, true)) {
-                $order_revenue = $calculate_revenue
-                    ? (float) $calculate_revenue($order)
-                    : (function_exists('mulopimfwc_convert_order_amount_to_base_currency')
-                        ? (float) mulopimfwc_convert_order_amount_to_base_currency($order->get_total(), $order)
-                        : (float) $order->get_total());
-                $location_revenue[$location_name] += $order_revenue;
+            $query = $wpdb->prepare($sql, array_merge($query_statuses, $date_params, $location_params));
+        }
+
+        $rows = $wpdb->get_results($query);
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $location_slug = $this->normalize_location_slug((string) ($row->location_slug ?? ''));
+                if ($location_slug === '') {
+                    $location_slug = 'default';
+                }
+
+                if ($is_manager_scope && !in_array($location_slug, $manager_location_slugs, true)) {
+                    continue;
+                }
+
+                $location_label = $label_map[$location_slug] ?? ($is_manager_scope ? '' : 'Default');
+                if ($location_label === '') {
+                    continue;
+                }
+
+                $order_count = isset($row->order_count) ? (int) $row->order_count : 0;
+                $orders_by_location[$location_label] = (int) ($orders_by_location[$location_label] ?? 0) + $order_count;
             }
         }
 
-        return [
+        if (!empty($revenue_query_statuses)) {
+            $resolved_location_sql = "LOWER(TRIM(COALESCE(NULLIF(item_location_meta.meta_value, ''), NULLIF(order_location_meta.meta_value, ''), '')))";
+            $product_id_sql = "
+                CASE
+                    WHEN CAST(COALESCE(variation_id_meta.meta_value, '0') AS UNSIGNED) > 0
+                        THEN CAST(variation_id_meta.meta_value AS UNSIGNED)
+                    ELSE CAST(COALESCE(product_id_meta.meta_value, '0') AS UNSIGNED)
+                END
+            ";
+            $ordered_quantity_sql = "GREATEST(CAST(COALESCE(qty_meta.meta_value, '0') AS DECIMAL(24,6)), 0)";
+            $net_quantity_sql = "
+                CASE
+                    WHEN reduced_stock_meta.meta_value IS NOT NULL AND reduced_stock_meta.meta_value != ''
+                        THEN GREATEST(
+                            LEAST(
+                                ABS(CAST(reduced_stock_meta.meta_value AS DECIMAL(24,6))),
+                                {$ordered_quantity_sql}
+                            ),
+                            0
+                        )
+                    ELSE {$ordered_quantity_sql}
+                END
+            ";
+            $line_total_sql = "GREATEST(CAST(COALESCE(line_total_meta.meta_value, '0') AS DECIMAL(24,6)), 0)";
+            $net_line_total_sql = "
+                CASE
+                    WHEN {$ordered_quantity_sql} > 0
+                        THEN {$line_total_sql} * ({$net_quantity_sql} / {$ordered_quantity_sql})
+                    ELSE 0
+                END
+            ";
+
+            $revenue_status_placeholders = implode(',', array_fill(0, count($revenue_query_statuses), '%s'));
+            $revenue_date_clauses = [];
+            $revenue_date_params = [];
+            $revenue_location_clause = '';
+            $revenue_location_params = [];
+
+            if ($this->is_dashboard_hpos_enabled()) {
+                $revenue_orders_table = $wpdb->prefix . 'wc_orders';
+                $revenue_order_meta_table = $wpdb->prefix . 'wc_orders_meta';
+                $revenue_order_id_column = 'orders.id';
+                $revenue_order_status_column = 'orders.status';
+                $revenue_order_type_clause = "orders.type = 'shop_order'";
+                $revenue_order_currency_sql = "COALESCE(orders.currency, '')";
+                $revenue_meta_join_key = 'order_id';
+                $revenue_prepare_prefix = [];
+
+                if ($date_range['gmt_from'] !== '') {
+                    $revenue_date_clauses[] = "orders.date_created_gmt >= %s";
+                    $revenue_date_params[] = $date_range['gmt_from'];
+                }
+                if ($date_range['gmt_to'] !== '') {
+                    $revenue_date_clauses[] = "orders.date_created_gmt < %s";
+                    $revenue_date_params[] = $date_range['gmt_to'];
+                }
+            } else {
+                $revenue_orders_table = $wpdb->posts;
+                $revenue_order_meta_table = $wpdb->postmeta;
+                $revenue_order_id_column = 'orders.ID';
+                $revenue_order_status_column = 'orders.post_status';
+                $revenue_order_type_clause = "orders.post_type = 'shop_order'";
+                $revenue_order_currency_sql = "COALESCE(currency_meta.meta_value, %s)";
+                $revenue_meta_join_key = 'post_id';
+                $revenue_prepare_prefix = [$base_currency];
+
+                if ($date_range['local_from'] !== '') {
+                    $revenue_date_clauses[] = "orders.post_date >= %s";
+                    $revenue_date_params[] = $date_range['local_from'];
+                }
+                if ($date_range['local_to'] !== '') {
+                    $revenue_date_clauses[] = "orders.post_date < %s";
+                    $revenue_date_params[] = $date_range['local_to'];
+                }
+            }
+
+            if ($is_manager_scope) {
+                if ($normalized_location_filter === 'all') {
+                    $placeholders = implode(',', array_fill(0, count($manager_location_slugs), '%s'));
+                    $revenue_location_clause = " AND {$resolved_location_sql} IN ({$placeholders})";
+                    $revenue_location_params = $manager_location_slugs;
+                } else {
+                    $revenue_location_clause = " AND {$resolved_location_sql} = %s";
+                    $revenue_location_params[] = $normalized_location_filter;
+                }
+            } elseif ($normalized_location_filter === 'default') {
+                $revenue_location_clause = " AND ({$resolved_location_sql} = '' OR {$resolved_location_sql} = 'default')";
+            } elseif ($normalized_location_filter !== 'all') {
+                $revenue_location_clause = " AND {$resolved_location_sql} = %s";
+                $revenue_location_params[] = $normalized_location_filter;
+            }
+
+            $revenue_date_sql = empty($revenue_date_clauses) ? '' : ' AND ' . implode(' AND ', $revenue_date_clauses);
+            $order_items_table = $wpdb->prefix . 'woocommerce_order_items';
+            $order_itemmeta_table = $wpdb->prefix . 'woocommerce_order_itemmeta';
+            $currency_join_sql = $this->is_dashboard_hpos_enabled()
+                ? ''
+                : "
+                LEFT JOIN {$wpdb->postmeta} currency_meta
+                    ON currency_meta.post_id = orders.ID
+                    AND currency_meta.meta_key = '_order_currency'
+            ";
+
+            $revenue_sql = "
+                SELECT {$resolved_location_sql} AS location_slug,
+                       {$revenue_order_currency_sql} AS order_currency,
+                       {$product_id_sql} AS product_id,
+                       SUM({$net_quantity_sql}) AS quantity,
+                       SUM({$net_line_total_sql}) AS sales_total
+                FROM {$revenue_orders_table} orders
+                INNER JOIN {$order_items_table} order_items
+                    ON order_items.order_id = {$revenue_order_id_column}
+                    AND order_items.order_item_type = 'line_item'
+                LEFT JOIN {$order_itemmeta_table} product_id_meta
+                    ON product_id_meta.order_item_id = order_items.order_item_id
+                    AND product_id_meta.meta_key = '_product_id'
+                LEFT JOIN {$order_itemmeta_table} variation_id_meta
+                    ON variation_id_meta.order_item_id = order_items.order_item_id
+                    AND variation_id_meta.meta_key = '_variation_id'
+                LEFT JOIN {$order_itemmeta_table} qty_meta
+                    ON qty_meta.order_item_id = order_items.order_item_id
+                    AND qty_meta.meta_key = '_qty'
+                LEFT JOIN {$order_itemmeta_table} line_total_meta
+                    ON line_total_meta.order_item_id = order_items.order_item_id
+                    AND line_total_meta.meta_key = '_line_total'
+                LEFT JOIN {$order_itemmeta_table} reduced_stock_meta
+                    ON reduced_stock_meta.order_item_id = order_items.order_item_id
+                    AND reduced_stock_meta.meta_key = '_reduced_stock'
+                LEFT JOIN {$order_itemmeta_table} item_location_meta
+                    ON item_location_meta.order_item_id = order_items.order_item_id
+                    AND item_location_meta.meta_key = '_mulopimfwc_location'
+                LEFT JOIN {$revenue_order_meta_table} order_location_meta
+                    ON order_location_meta.{$revenue_meta_join_key} = {$revenue_order_id_column}
+                    AND order_location_meta.meta_key = '_store_location'
+                LEFT JOIN {$revenue_order_meta_table} split_meta
+                    ON split_meta.{$revenue_meta_join_key} = {$revenue_order_id_column}
+                    AND split_meta.meta_key = '_mulopimfwc_split_parent'
+                {$currency_join_sql}
+                WHERE {$revenue_order_type_clause}
+                    AND {$revenue_order_status_column} IN ({$revenue_status_placeholders})
+                    AND (split_meta.meta_value IS NULL OR split_meta.meta_value != 'yes')
+                    AND {$product_id_sql} > 0
+                    AND {$net_quantity_sql} > 0
+                    {$revenue_date_sql}
+                    {$revenue_location_clause}
+                GROUP BY location_slug, order_currency, {$product_id_sql}
+            ";
+
+            $revenue_query = $wpdb->prepare(
+                $revenue_sql,
+                array_merge($revenue_prepare_prefix, $revenue_query_statuses, $revenue_date_params, $revenue_location_params)
+            );
+            $revenue_rows = $wpdb->get_results($revenue_query);
+
+            if (is_array($revenue_rows)) {
+                foreach ($revenue_rows as $row) {
+                    $location_slug = $this->normalize_location_slug((string) ($row->location_slug ?? ''));
+                    if ($location_slug === '') {
+                        $location_slug = 'default';
+                    }
+
+                    if ($is_manager_scope && !in_array($location_slug, $manager_location_slugs, true)) {
+                        continue;
+                    }
+
+                    $location_label = $label_map[$location_slug] ?? ($is_manager_scope ? '' : 'Default');
+                    if ($location_label === '') {
+                        continue;
+                    }
+
+                    $product_id = isset($row->product_id) ? (int) $row->product_id : 0;
+                    $quantity = isset($row->quantity) ? (float) $row->quantity : 0.0;
+                    if ($product_id <= 0 || $quantity <= 0) {
+                        continue;
+                    }
+
+                    $sales_total = isset($row->sales_total) ? (float) $row->sales_total : 0.0;
+                    $order_currency = (string) ($row->order_currency ?? '');
+                    $sales_total_in_base = $this->convert_dashboard_aggregate_amount_to_base_currency(
+                        $sales_total,
+                        $order_currency,
+                        $location_slug,
+                        $currency_map,
+                        $base_currency
+                    );
+                    $purchase_price = $this->get_investment_product_purchase_price($product_id);
+
+                    $location_revenue[$location_label] = (float) ($location_revenue[$location_label] ?? 0)
+                        + ($sales_total_in_base - ($purchase_price * $quantity));
+                }
+            }
+        }
+
+        $location_revenue = array_map(static function ($amount) {
+            if (function_exists('wc_format_decimal')) {
+                return (float) wc_format_decimal($amount, 6, false);
+            }
+
+            return round((float) $amount, 6);
+        }, $location_revenue);
+
+        $result = [
             'orders' => $orders_by_location,
-            'revenue' => $location_revenue
+            'revenue' => $location_revenue,
         ];
+        set_transient($cache_key, $result, 2 * MINUTE_IN_SECONDS);
+
+        return $result;
     }
 
 
@@ -2609,12 +3157,22 @@ class MULOPIMFWC_Dashboard
             return [];
         }
 
+        $normalized_location_filter = $this->normalize_location_slug($location_filter);
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_dashboard_low_stock_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash() . '_' . md5($normalized_location_filter);
+        $cached_data = get_transient($cache_key);
+        if (is_array($cached_data)) {
+            return $cached_data;
+        }
+
         $low_stock_products = [];
         $locations_to_check = $mulopimfwc_locations;
 
-        if ($location_filter !== 'all') {
-            $locations_to_check = array_filter($mulopimfwc_locations, function ($loc) use ($location_filter) {
-                return $loc->slug === $location_filter;
+        if ($normalized_location_filter !== 'all') {
+            $locations_to_check = array_filter($mulopimfwc_locations, function ($loc) use ($normalized_location_filter) {
+                return $loc->slug === $normalized_location_filter;
             });
         }
 
@@ -2697,6 +3255,8 @@ class MULOPIMFWC_Dashboard
             }
         }
 
+        set_transient($cache_key, $low_stock_products, 2 * MINUTE_IN_SECONDS);
+
         return $low_stock_products;
     }
 
@@ -2740,131 +3300,179 @@ class MULOPIMFWC_Dashboard
         }
 
         $labels = [];
-        $counts = [];
+        $date_keys = [];
+        $counts_by_date = [];
+
+        $build_empty_result = function () use ($days, $start_ts) {
+            $labels = [];
+            $counts = [];
+
+            for ($i = 0; $i < $days; $i++) {
+                $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
+                $labels[] = gmdate('M d', $date_ts);
+                $counts[] = 0;
+            }
+
+            return [
+                'labels' => $labels,
+                'counts' => $counts,
+            ];
+        };
 
         if (is_array($manager_location_term_ids)) {
             if (empty($manager_location_term_ids) || $normalized_location_filter === 'default') {
-                for ($i = 0; $i < $days; $i++) {
-                    $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-                    $date = gmdate('Y-m-d', $date_ts);
-                    $labels[] = gmdate('M d', $date_ts);
-                    $counts[] = 0;
-                }
-
-                return [
-                    'labels' => $labels,
-                    'counts' => $counts,
-                ];
+                return $build_empty_result();
             }
 
             if ($normalized_location_filter !== 'all') {
                 $selected_term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
                 if (!$selected_term || is_wp_error($selected_term)) {
-                    for ($i = 0; $i < $days; $i++) {
-                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-                        $date = gmdate('Y-m-d', $date_ts);
-                        $labels[] = gmdate('M d', $date_ts);
-                        $counts[] = 0;
-                    }
-
-                    return [
-                        'labels' => $labels,
-                        'counts' => $counts,
-                    ];
+                    return $build_empty_result();
                 }
 
                 $selected_manager_term_id = (int) $selected_term->term_id;
                 if (!in_array($selected_manager_term_id, $manager_location_term_ids, true)) {
-                    for ($i = 0; $i < $days; $i++) {
-                        $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-                        $date = gmdate('Y-m-d', $date_ts);
-                        $labels[] = gmdate('M d', $date_ts);
-                        $counts[] = 0;
-                    }
-
-                    return [
-                        'labels' => $labels,
-                        'counts' => $counts,
-                    ];
+                    return $build_empty_result();
                 }
             }
         }
 
         for ($i = 0; $i < $days; $i++) {
             $date_ts = $start_ts + ($i * DAY_IN_SECONDS);
-            $date = gmdate('Y-m-d', $date_ts);
+            $date_key = gmdate('Y-m-d', $date_ts);
             $labels[] = gmdate('M d', $date_ts);
+            $date_keys[] = $date_key;
+            $counts_by_date[$date_key] = 0;
+        }
 
-            if (is_array($manager_location_term_ids)) {
-                if ($selected_manager_term_id > 0) {
-                    $query = $wpdb->prepare("
-                        SELECT COUNT(DISTINCT p.ID)
-                        FROM {$wpdb->posts} p
-                        INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                        WHERE p.post_type = 'product'
-                        AND p.post_status = 'publish'
-                        AND DATE(p.post_date) = %s
-                        AND tt.taxonomy = 'mulopimfwc_store_location'
-                        AND tt.term_id = %d
-                    ", $date, $selected_manager_term_id);
-                } else {
-                    $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
-                    $query = $wpdb->prepare(
-                        "
-                        SELECT COUNT(DISTINCT p.ID)
-                        FROM {$wpdb->posts} p
-                        INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                        WHERE p.post_type = 'product'
-                        AND p.post_status = 'publish'
-                        AND DATE(p.post_date) = %s
-                        AND tt.taxonomy = 'mulopimfwc_store_location'
-                        AND tt.term_id IN ({$term_placeholders})
-                        ",
-                        ...array_merge([$date], $manager_location_term_ids)
-                    );
-                }
-            } elseif ($location_filter === 'all') {
-                $query = $wpdb->prepare("
-                SELECT COUNT(*) 
-                FROM {$wpdb->posts} 
-                WHERE post_type = 'product' 
-                AND post_status = 'publish'
-                AND DATE(post_date) = %s
-            ", $date);
-            } else {
-                $term = get_term_by('slug', $location_filter, 'mulopimfwc_store_location');
-                if ($term) {
-                    $query = $wpdb->prepare("
-                    SELECT COUNT(DISTINCT p.ID) 
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_dashboard_recent_products_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash() . '_' . md5(wp_json_encode([
+            'date_from' => $start_date,
+            'date_to' => $end_date,
+            'location_filter' => $normalized_location_filter,
+            'manager_terms' => is_array($manager_location_term_ids) ? $manager_location_term_ids : null,
+            'selected_manager_term_id' => $selected_manager_term_id,
+        ]));
+        $cached_data = get_transient($cache_key);
+        if (is_array($cached_data) && isset($cached_data['labels'], $cached_data['counts'])) {
+            return $cached_data;
+        }
+
+        $range_start = gmdate('Y-m-d 00:00:00', $start_ts);
+        $range_end = gmdate('Y-m-d 00:00:00', strtotime($end_date . ' +1 day'));
+
+        if (is_array($manager_location_term_ids)) {
+            if ($selected_manager_term_id > 0) {
+                $query = $wpdb->prepare(
+                    "
+                    SELECT DATE(p.post_date) AS date_key, COUNT(DISTINCT p.ID) AS total
                     FROM {$wpdb->posts} p
                     INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
                     INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                    WHERE p.post_type = 'product' 
+                    WHERE p.post_type = 'product'
                     AND p.post_status = 'publish'
-                    AND DATE(p.post_date) = %s
+                    AND p.post_date >= %s
+                    AND p.post_date < %s
                     AND tt.taxonomy = 'mulopimfwc_store_location'
                     AND tt.term_id = %d
-                ", $date, $term->term_id);
-                } else {
-                    $query = $wpdb->prepare("
-                    SELECT COUNT(*) 
-                    FROM {$wpdb->posts} 
-                    WHERE post_type = 'product' 
-                    AND post_status = 'publish'
-                    AND DATE(post_date) = %s
-                ", $date);
-                }
+                    GROUP BY DATE(p.post_date)
+                    ",
+                    $range_start,
+                    $range_end,
+                    $selected_manager_term_id
+                );
+            } else {
+                $term_placeholders = implode(',', array_fill(0, count($manager_location_term_ids), '%d'));
+                $query = $wpdb->prepare(
+                    "
+                    SELECT DATE(p.post_date) AS date_key, COUNT(DISTINCT p.ID) AS total
+                    FROM {$wpdb->posts} p
+                    INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE p.post_type = 'product'
+                    AND p.post_status = 'publish'
+                    AND p.post_date >= %s
+                    AND p.post_date < %s
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id IN ({$term_placeholders})
+                    GROUP BY DATE(p.post_date)
+                    ",
+                    ...array_merge([$range_start, $range_end], $manager_location_term_ids)
+                );
             }
-
-            $counts[] = (int) $wpdb->get_var($query);
+        } elseif ($normalized_location_filter === 'all') {
+            $query = $wpdb->prepare(
+                "
+                SELECT DATE(post_date) AS date_key, COUNT(*) AS total
+                FROM {$wpdb->posts}
+                WHERE post_type = 'product'
+                AND post_status = 'publish'
+                AND post_date >= %s
+                AND post_date < %s
+                GROUP BY DATE(post_date)
+                ",
+                $range_start,
+                $range_end
+            );
+        } else {
+            $term = get_term_by('slug', $normalized_location_filter, 'mulopimfwc_store_location');
+            if ($term && !is_wp_error($term)) {
+                $query = $wpdb->prepare(
+                    "
+                    SELECT DATE(p.post_date) AS date_key, COUNT(DISTINCT p.ID) AS total
+                    FROM {$wpdb->posts} p
+                    INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                    INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                    WHERE p.post_type = 'product'
+                    AND p.post_status = 'publish'
+                    AND p.post_date >= %s
+                    AND p.post_date < %s
+                    AND tt.taxonomy = 'mulopimfwc_store_location'
+                    AND tt.term_id = %d
+                    GROUP BY DATE(p.post_date)
+                    ",
+                    $range_start,
+                    $range_end,
+                    (int) $term->term_id
+                );
+            } else {
+                $query = $wpdb->prepare(
+                    "
+                    SELECT DATE(post_date) AS date_key, COUNT(*) AS total
+                    FROM {$wpdb->posts}
+                    WHERE post_type = 'product'
+                    AND post_status = 'publish'
+                    AND post_date >= %s
+                    AND post_date < %s
+                    GROUP BY DATE(post_date)
+                    ",
+                    $range_start,
+                    $range_end
+                );
+            }
         }
 
-        return [
+        $rows = $wpdb->get_results($query);
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $date_key = isset($row->date_key) ? (string) $row->date_key : '';
+                if ($date_key !== '' && array_key_exists($date_key, $counts_by_date)) {
+                    $counts_by_date[$date_key] = isset($row->total) ? (int) $row->total : 0;
+                }
+            }
+        }
+
+        $result = [
             'labels' => $labels,
-            'counts' => $counts
+            'counts' => array_map(static function ($date_key) use ($counts_by_date) {
+                return (int) ($counts_by_date[$date_key] ?? 0);
+            }, $date_keys)
         ];
+        set_transient($cache_key, $result, 10 * MINUTE_IN_SECONDS);
+
+        return $result;
     }
 
     /**
@@ -2917,11 +3525,29 @@ class MULOPIMFWC_Dashboard
         }
 
         $scope = $this->build_investment_scope((string) $location_filter);
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_scope = $this->get_investment_scope_cache_fragment($scope);
+        $cache_key = 'mulopimfwc_dashboard_range_investment_' . $this->get_investment_cache_namespace() . '_v' . $cache_version . '_' . md5(wp_json_encode([
+            'scope' => $cache_scope,
+            'date_from' => $start_date,
+            'date_to' => $end_date,
+            'days' => $days,
+        ]));
+
+        $cached_data = get_transient($cache_key);
+        if (is_array($cached_data) && isset($cached_data['labels'], $cached_data['totals'])) {
+            return $cached_data;
+        }
+
         if (($scope['mode'] ?? 'empty') === 'empty') {
-            return [
+            $empty_result = [
                 'labels' => $labels,
                 'totals' => $totals,
             ];
+            set_transient($cache_key, $empty_result, 10 * MINUTE_IN_SECONDS);
+            return $empty_result;
         }
 
         $daily_quantities = $this->collect_investment_order_quantities($scope, $start_date, $end_date, 'day');
@@ -2943,10 +3569,13 @@ class MULOPIMFWC_Dashboard
             }
         }
 
-        return [
+        $result = [
             'labels' => $labels,
             'totals' => $totals,
         ];
+        set_transient($cache_key, $result, 10 * MINUTE_IN_SECONDS);
+
+        return $result;
     }
 
     /**
@@ -3312,13 +3941,13 @@ class MULOPIMFWC_Dashboard
         // FIXED: Enhanced error handling with user feedback
         if ($wpdb->last_error) {
             error_log('Mulopimfwc: Error fetching inventory records - ' . $wpdb->last_error);
-            
+
             // Log detailed error information for debugging
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Mulopimfwc: Query was - ' . $query);
                 error_log('Mulopimfwc: Prepare params - ' . print_r($prepare_params, true));
             }
-            
+
             // Return error information instead of silently failing
             // This allows calling code to handle errors appropriately
             return array(
@@ -3414,7 +4043,7 @@ class MULOPIMFWC_Dashboard
     private function render_profitability_panel_html(array $profitability_by_location, int $dead_stock_days = 90): string
     {
         ob_start();
-        ?>
+    ?>
         <h2><?php esc_html_e('Profitability & Aging by Location', 'multi-location-product-and-inventory-management-pro'); ?></h2>
         <p class="lwp-profitability-description">
             <?php
@@ -3459,7 +4088,7 @@ class MULOPIMFWC_Dashboard
         <?php else : ?>
             <p><?php esc_html_e('No profitability data available yet.', 'multi-location-product-and-inventory-management-pro'); ?></p>
         <?php endif; ?>
-        <?php
+<?php
 
         return trim((string) ob_get_clean());
     }
@@ -3559,7 +4188,7 @@ class MULOPIMFWC_Dashboard
             $all_records = [];
             $batch_size = 1000;
             $offset = 0;
-            
+
             do {
                 $records = $this->get_location_inventory_records($entry['term_id'], $batch_size, $offset);
                 if (!empty($records) && !isset($records['error'])) {
@@ -3570,13 +4199,13 @@ class MULOPIMFWC_Dashboard
                     break;
                 }
                 $offset += $batch_size;
-                
+
                 // Safety check to prevent infinite loops
                 if ($offset > 50000) {
                     break;
                 }
             } while (count($records) === $batch_size);
-            
+
             $records = $all_records;
             $sales_info = $sales_info_by_location[$entry['slug']] ?? [
                 'last_sale_dates' => [],
@@ -3784,6 +4413,15 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Namespace investment-related transients so behavior fixes do not reuse
+     * payloads built by older query rules.
+     */
+    private function get_investment_cache_namespace(): string
+    {
+        return 'resolved_location_v1';
+    }
+
+    /**
      * Resolve order statuses that represent stock-reduced orders.
      */
     private function get_investment_stock_affecting_statuses(): array
@@ -3805,30 +4443,190 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Build an in-request snapshot of product inventory meta needed for investment calculations.
+     */
+    private function get_investment_product_snapshot_map(): array
+    {
+        static $snapshot = null;
+
+        if (is_array($snapshot)) {
+            return $snapshot;
+        }
+
+        global $wpdb;
+
+        $snapshot = [];
+        $product_rows = $wpdb->get_results("
+            SELECT ID, post_parent, post_type
+            FROM {$wpdb->posts}
+            WHERE post_type IN ('product', 'product_variation')
+            AND post_status IN ('publish', 'private')
+            ORDER BY ID ASC
+        ");
+
+        if (!is_array($product_rows) || empty($product_rows)) {
+            return $snapshot;
+        }
+
+        $product_ids = [];
+        foreach ($product_rows as $row) {
+            $product_id = isset($row->ID) ? (int) $row->ID : 0;
+            if ($product_id <= 0) {
+                continue;
+            }
+
+            $parent_id = isset($row->post_parent) ? (int) $row->post_parent : 0;
+            $post_type = isset($row->post_type) ? (string) $row->post_type : 'product';
+            $reference_id = ($post_type === 'product_variation' && $parent_id > 0) ? $parent_id : $product_id;
+
+            $snapshot[$product_id] = [
+                'post_type' => $post_type,
+                'parent_id' => $parent_id,
+                'reference_id' => $reference_id,
+                'purchase_price' => 0.0,
+                'default_stock' => 0.0,
+                'location_stock' => [],
+                'has_location_stock_meta' => false,
+            ];
+            $product_ids[] = $product_id;
+        }
+
+        foreach (array_chunk($product_ids, 500) as $product_ids_chunk) {
+            if (empty($product_ids_chunk)) {
+                continue;
+            }
+
+            $placeholders = implode(',', array_fill(0, count($product_ids_chunk), '%d'));
+            $meta_query = "
+                SELECT post_id, meta_key, meta_value
+                FROM {$wpdb->postmeta}
+                WHERE post_id IN ({$placeholders})
+                AND (
+                    meta_key IN ('_purchase_price', '_stock')
+                    OR meta_key LIKE '\\_location\\_stock\\_%' ESCAPE '\\\\'
+                )
+            ";
+            $meta_rows = $wpdb->get_results($wpdb->prepare($meta_query, ...$product_ids_chunk));
+
+            if (!is_array($meta_rows)) {
+                continue;
+            }
+
+            foreach ($meta_rows as $meta_row) {
+                $product_id = isset($meta_row->post_id) ? (int) $meta_row->post_id : 0;
+                if ($product_id <= 0 || !isset($snapshot[$product_id])) {
+                    continue;
+                }
+
+                $meta_key = isset($meta_row->meta_key) ? (string) $meta_row->meta_key : '';
+                $meta_value = $meta_row->meta_value ?? null;
+
+                if ($meta_key === '_purchase_price') {
+                    $snapshot[$product_id]['purchase_price'] = $this->normalize_price_value($meta_value);
+                    continue;
+                }
+
+                if ($meta_key === '_stock') {
+                    $snapshot[$product_id]['default_stock'] = $this->normalize_quantity_value($meta_value);
+                    continue;
+                }
+
+                if (strpos($meta_key, '_location_stock_') === 0) {
+                    $snapshot[$product_id]['has_location_stock_meta'] = true;
+                    $term_id = (int) substr($meta_key, strlen('_location_stock_'));
+                    if ($term_id <= 0) {
+                        continue;
+                    }
+
+                    $snapshot[$product_id]['location_stock'][$term_id] = $this->normalize_quantity_value($meta_value);
+                }
+            }
+        }
+
+        foreach ($snapshot as $product_id => $product_snapshot) {
+            if (
+                (float) $product_snapshot['purchase_price'] > 0
+                || $product_snapshot['post_type'] !== 'product_variation'
+                || (int) $product_snapshot['parent_id'] <= 0
+            ) {
+                continue;
+            }
+
+            $parent_id = (int) $product_snapshot['parent_id'];
+            if (isset($snapshot[$parent_id])) {
+                $snapshot[$product_id]['purchase_price'] = (float) $snapshot[$parent_id]['purchase_price'];
+            }
+        }
+
+        return $snapshot;
+    }
+
+    /**
      * Return product/variation IDs that may contribute to investment.
      */
     private function get_investment_product_ids(): array
     {
-        static $product_ids = null;
+        return array_keys($this->get_investment_product_snapshot_map());
+    }
 
-        if (is_array($product_ids)) {
-            return $product_ids;
+    /**
+     * Build an in-request map of assigned location term IDs for product references.
+     */
+    private function get_investment_reference_location_term_map(): array
+    {
+        static $location_map = null;
+
+        if (is_array($location_map)) {
+            return $location_map;
         }
 
-        $product_ids = get_posts([
-            'post_type' => ['product', 'product_variation'],
-            'post_status' => ['publish', 'private'],
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'orderby' => 'ID',
-            'order' => 'ASC',
-        ]);
+        global $wpdb;
 
-        if (!is_array($product_ids)) {
-            $product_ids = [];
+        $location_map = [];
+        $reference_ids = array_values(array_unique(array_filter(array_map(static function ($snapshot) {
+            return isset($snapshot['reference_id']) ? (int) $snapshot['reference_id'] : 0;
+        }, $this->get_investment_product_snapshot_map()))));
+
+        foreach (array_chunk($reference_ids, 500) as $reference_ids_chunk) {
+            if (empty($reference_ids_chunk)) {
+                continue;
+            }
+
+            $placeholders = implode(',', array_fill(0, count($reference_ids_chunk), '%d'));
+            $term_query = "
+                SELECT tr.object_id, tt.term_id
+                FROM {$wpdb->term_relationships} tr
+                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                WHERE tt.taxonomy = 'mulopimfwc_store_location'
+                AND tr.object_id IN ({$placeholders})
+            ";
+            $term_rows = $wpdb->get_results($wpdb->prepare($term_query, ...$reference_ids_chunk));
+
+            if (!is_array($term_rows)) {
+                continue;
+            }
+
+            foreach ($term_rows as $term_row) {
+                $reference_id = isset($term_row->object_id) ? (int) $term_row->object_id : 0;
+                $term_id = isset($term_row->term_id) ? (int) $term_row->term_id : 0;
+                if ($reference_id <= 0 || $term_id <= 0) {
+                    continue;
+                }
+
+                if (!isset($location_map[$reference_id])) {
+                    $location_map[$reference_id] = [];
+                }
+                $location_map[$reference_id][$term_id] = $term_id;
+            }
         }
 
-        return array_values(array_map('intval', $product_ids));
+        foreach ($location_map as $reference_id => $term_ids) {
+            $term_ids = array_values(array_unique(array_map('intval', $term_ids)));
+            sort($term_ids, SORT_NUMERIC);
+            $location_map[$reference_id] = $term_ids;
+        }
+
+        return $location_map;
     }
 
     /**
@@ -3836,22 +4634,12 @@ class MULOPIMFWC_Dashboard
      */
     private function get_investment_product_reference_id(int $product_id): int
     {
-        static $reference_cache = [];
-
-        if (isset($reference_cache[$product_id])) {
-            return $reference_cache[$product_id];
+        $snapshot = $this->get_investment_product_snapshot_map();
+        if (!isset($snapshot[$product_id])) {
+            return $product_id;
         }
 
-        $reference_id = $product_id;
-        if (get_post_type($product_id) === 'product_variation') {
-            $parent_id = wp_get_post_parent_id($product_id);
-            if ($parent_id > 0) {
-                $reference_id = (int) $parent_id;
-            }
-        }
-
-        $reference_cache[$product_id] = $reference_id;
-        return $reference_cache[$product_id];
+        return (int) ($snapshot[$product_id]['reference_id'] ?? $product_id);
     }
 
     /**
@@ -3859,38 +4647,10 @@ class MULOPIMFWC_Dashboard
      */
     private function get_investment_product_location_term_ids(int $product_id): array
     {
-        static $location_cache = [];
-
         $reference_id = $this->get_investment_product_reference_id($product_id);
-        if (isset($location_cache[$reference_id])) {
-            return $location_cache[$reference_id];
-        }
+        $location_map = $this->get_investment_reference_location_term_map();
 
-        $term_ids = wp_get_object_terms($reference_id, 'mulopimfwc_store_location', ['fields' => 'ids']);
-        if (is_wp_error($term_ids) || !is_array($term_ids)) {
-            $term_ids = [];
-        }
-
-        $term_ids = array_values(array_unique(array_map('intval', $term_ids)));
-        sort($term_ids, SORT_NUMERIC);
-
-        $location_cache[$reference_id] = $term_ids;
-        return $location_cache[$reference_id];
-    }
-
-    /**
-     * Get all post meta for a product or variation.
-     */
-    private function get_investment_product_meta(int $product_id): array
-    {
-        static $meta_cache = [];
-
-        if (!isset($meta_cache[$product_id])) {
-            $meta = get_post_meta($product_id);
-            $meta_cache[$product_id] = is_array($meta) ? $meta : [];
-        }
-
-        return $meta_cache[$product_id];
+        return $location_map[$reference_id] ?? [];
     }
 
     /**
@@ -3898,22 +4658,12 @@ class MULOPIMFWC_Dashboard
      */
     private function get_investment_product_purchase_price(int $product_id): float
     {
-        static $price_cache = [];
-
-        if (isset($price_cache[$product_id])) {
-            return $price_cache[$product_id];
+        $snapshot = $this->get_investment_product_snapshot_map();
+        if (!isset($snapshot[$product_id])) {
+            return 0.0;
         }
 
-        $purchase_price = $this->normalize_price_value(get_post_meta($product_id, '_purchase_price', true));
-        if ($purchase_price <= 0 && get_post_type($product_id) === 'product_variation') {
-            $parent_id = wp_get_post_parent_id($product_id);
-            if ($parent_id > 0) {
-                $purchase_price = $this->normalize_price_value(get_post_meta($parent_id, '_purchase_price', true));
-            }
-        }
-
-        $price_cache[$product_id] = $purchase_price > 0 ? $purchase_price : 0.0;
-        return $price_cache[$product_id];
+        return max(0.0, (float) ($snapshot[$product_id]['purchase_price'] ?? 0.0));
     }
 
     /**
@@ -3921,8 +4671,12 @@ class MULOPIMFWC_Dashboard
      */
     private function get_investment_default_stock_quantity(int $product_id): float
     {
-        $stock = get_post_meta($product_id, '_stock', true);
-        return ($stock !== '' && $stock !== null && is_numeric($stock)) ? (float) $stock : 0.0;
+        $snapshot = $this->get_investment_product_snapshot_map();
+        if (!isset($snapshot[$product_id])) {
+            return 0.0;
+        }
+
+        return (float) ($snapshot[$product_id]['default_stock'] ?? 0.0);
     }
 
     /**
@@ -3930,7 +4684,17 @@ class MULOPIMFWC_Dashboard
      */
     private function get_investment_location_stock_snapshot(int $product_id, ?array $allowed_term_ids = null): array
     {
-        $meta = $this->get_investment_product_meta($product_id);
+        $snapshot = $this->get_investment_product_snapshot_map();
+        if (!isset($snapshot[$product_id])) {
+            return [
+                'sum' => 0.0,
+                'has_any' => false,
+            ];
+        }
+
+        $location_stock = isset($snapshot[$product_id]['location_stock']) && is_array($snapshot[$product_id]['location_stock'])
+            ? $snapshot[$product_id]['location_stock']
+            : [];
         $allowed_lookup = null;
 
         if (is_array($allowed_term_ids)) {
@@ -3939,25 +4703,15 @@ class MULOPIMFWC_Dashboard
         }
 
         $sum = 0.0;
-        $has_any = false;
+        $has_any = !empty($snapshot[$product_id]['has_location_stock_meta']);
 
-        foreach ($meta as $meta_key => $values) {
-            if (strpos((string) $meta_key, '_location_stock_') !== 0) {
-                continue;
-            }
-
-            $has_any = true;
-            $term_id = (int) substr((string) $meta_key, strlen('_location_stock_'));
+        foreach ($location_stock as $term_id => $quantity) {
+            $term_id = (int) $term_id;
             if (is_array($allowed_lookup) && !isset($allowed_lookup[$term_id])) {
                 continue;
             }
 
-            $raw_value = is_array($values) ? reset($values) : $values;
-            if ($raw_value === '' || $raw_value === null || !is_numeric($raw_value)) {
-                continue;
-            }
-
-            $sum += (float) $raw_value;
+            $sum += (float) $quantity;
         }
 
         return [
@@ -4146,101 +4900,189 @@ class MULOPIMFWC_Dashboard
             return [];
         }
 
-        $statuses = $this->get_investment_stock_affecting_statuses();
+        global $wpdb;
+
+        $bucket = in_array($bucket, ['day', 'month'], true) ? $bucket : '';
+        $statuses = $this->get_dashboard_order_query_statuses($this->get_investment_stock_affecting_statuses());
         if (empty($statuses)) {
             $quantities_cache[$cache_key] = [];
             return [];
         }
 
-        if (function_exists('ini_set')) {
-            @ini_set('memory_limit', '512M');
+        $date_range = $this->get_dashboard_order_date_range($date_from, $date_to);
+        $location_clause = '';
+        $location_params = [];
+        $location_slugs = isset($scope['term_slugs']) && is_array($scope['term_slugs'])
+            ? array_values(array_unique(array_filter(array_map([$this, 'normalize_location_slug'], $scope['term_slugs']), 'strlen')))
+            : [];
+
+        $resolved_location_sql = "LOWER(TRIM(COALESCE(NULLIF(item_location_meta.meta_value, ''), NULLIF(order_location_meta.meta_value, ''), '')))";
+        $product_id_sql = "
+            CASE
+                WHEN CAST(COALESCE(variation_id_meta.meta_value, '0') AS UNSIGNED) > 0
+                    THEN CAST(variation_id_meta.meta_value AS UNSIGNED)
+                ELSE CAST(COALESCE(product_id_meta.meta_value, '0') AS UNSIGNED)
+            END
+        ";
+        $quantity_sql = "
+            CASE
+                WHEN reduced_stock_meta.meta_value IS NOT NULL AND reduced_stock_meta.meta_value != ''
+                    THEN GREATEST(
+                        LEAST(
+                            ABS(CAST(reduced_stock_meta.meta_value AS DECIMAL(24,6))),
+                            GREATEST(CAST(COALESCE(qty_meta.meta_value, '0') AS DECIMAL(24,6)), 0)
+                        ),
+                        0
+                    )
+                ELSE GREATEST(CAST(COALESCE(qty_meta.meta_value, '0') AS DECIMAL(24,6)), 0)
+            END
+        ";
+
+        $scope_mode = isset($scope['mode']) ? (string) $scope['mode'] : 'all';
+        if ($scope_mode === 'default') {
+            // Orders without an explicit resolved location are excluded from
+            // investment history because they do not map to a reliable stock
+            // movement bucket and can double count against unchanged inventory.
+            $quantities_cache[$cache_key] = [];
+            return [];
         }
-        @set_time_limit(300);
 
+        $location_clause = " AND {$resolved_location_sql} != '' AND {$resolved_location_sql} != 'default'";
+
+        if ($scope_mode === 'terms') {
+            if (empty($location_slugs)) {
+                $quantities_cache[$cache_key] = [];
+                return [];
+            }
+
+            $placeholders = implode(',', array_fill(0, count($location_slugs), '%s'));
+            $location_clause .= " AND {$resolved_location_sql} IN ({$placeholders})";
+            $location_params = $location_slugs;
+        }
+
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $date_clauses = [];
+        $date_params = [];
+        $bucket_select = '';
+        $group_by = $product_id_sql;
+
+        if ($this->is_dashboard_hpos_enabled()) {
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            $order_meta_table = $wpdb->prefix . 'wc_orders_meta';
+            $order_id_column = 'orders.id';
+            $order_status_column = 'orders.status';
+            $order_date_column = 'orders.date_created_gmt';
+            $order_type_clause = "orders.type = 'shop_order'";
+
+            if ($date_range['gmt_from'] !== '') {
+                $date_clauses[] = "{$order_date_column} >= %s";
+                $date_params[] = $date_range['gmt_from'];
+            }
+            if ($date_range['gmt_to'] !== '') {
+                $date_clauses[] = "{$order_date_column} < %s";
+                $date_params[] = $date_range['gmt_to'];
+            }
+        } else {
+            $orders_table = $wpdb->posts;
+            $order_meta_table = $wpdb->postmeta;
+            $order_id_column = 'orders.ID';
+            $order_status_column = 'orders.post_status';
+            $order_date_column = 'orders.post_date';
+            $order_type_clause = "orders.post_type = 'shop_order'";
+
+            if ($date_range['local_from'] !== '') {
+                $date_clauses[] = "{$order_date_column} >= %s";
+                $date_params[] = $date_range['local_from'];
+            }
+            if ($date_range['local_to'] !== '') {
+                $date_clauses[] = "{$order_date_column} < %s";
+                $date_params[] = $date_range['local_to'];
+            }
+        }
+
+        if ($bucket === 'day') {
+            $bucket_expression = "DATE({$order_date_column})";
+            $bucket_select = "{$bucket_expression} AS bucket_key,";
+            $group_by = "{$bucket_expression}, {$product_id_sql}";
+        } elseif ($bucket === 'month') {
+            $bucket_expression = "DATE_FORMAT({$order_date_column}, '%%Y-%%m')";
+            $bucket_select = "{$bucket_expression} AS bucket_key,";
+            $group_by = "{$bucket_expression}, {$product_id_sql}";
+        }
+
+        $date_sql = empty($date_clauses) ? '' : ' AND ' . implode(' AND ', $date_clauses);
+        $order_items_table = $wpdb->prefix . 'woocommerce_order_items';
+        $order_itemmeta_table = $wpdb->prefix . 'woocommerce_order_itemmeta';
+        $meta_join_key = $this->is_dashboard_hpos_enabled() ? 'order_id' : 'post_id';
+
+        $sql = "
+            SELECT {$bucket_select}
+                   {$product_id_sql} AS product_id,
+                   SUM({$quantity_sql}) AS quantity
+            FROM {$orders_table} orders
+            INNER JOIN {$order_items_table} order_items
+                ON order_items.order_id = {$order_id_column}
+                AND order_items.order_item_type = 'line_item'
+            LEFT JOIN {$order_itemmeta_table} product_id_meta
+                ON product_id_meta.order_item_id = order_items.order_item_id
+                AND product_id_meta.meta_key = '_product_id'
+            LEFT JOIN {$order_itemmeta_table} variation_id_meta
+                ON variation_id_meta.order_item_id = order_items.order_item_id
+                AND variation_id_meta.meta_key = '_variation_id'
+            LEFT JOIN {$order_itemmeta_table} qty_meta
+                ON qty_meta.order_item_id = order_items.order_item_id
+                AND qty_meta.meta_key = '_qty'
+            LEFT JOIN {$order_itemmeta_table} reduced_stock_meta
+                ON reduced_stock_meta.order_item_id = order_items.order_item_id
+                AND reduced_stock_meta.meta_key = '_reduced_stock'
+            LEFT JOIN {$order_itemmeta_table} item_location_meta
+                ON item_location_meta.order_item_id = order_items.order_item_id
+                AND item_location_meta.meta_key = '_mulopimfwc_location'
+            LEFT JOIN {$order_meta_table} order_location_meta
+                ON order_location_meta.{$meta_join_key} = {$order_id_column}
+                AND order_location_meta.meta_key = '_store_location'
+            LEFT JOIN {$order_meta_table} split_meta
+                ON split_meta.{$meta_join_key} = {$order_id_column}
+                AND split_meta.meta_key = '_mulopimfwc_split_parent'
+            WHERE {$order_type_clause}
+                AND {$order_status_column} IN ({$status_placeholders})
+                AND (split_meta.meta_value IS NULL OR split_meta.meta_value != 'yes')
+                AND {$product_id_sql} > 0
+                AND {$quantity_sql} > 0
+                {$date_sql}
+                {$location_clause}
+            GROUP BY {$group_by}
+        ";
+
+        $query = $wpdb->prepare($sql, array_merge($statuses, $date_params, $location_params));
+        $rows = $wpdb->get_results($query);
         $quantities = [];
-        $batch_size = 1000;
-        $page = 1;
 
-        do {
-            $query_args = [
-                'limit' => $batch_size,
-                'offset' => ($page - 1) * $batch_size,
-                'status' => $statuses,
-                'return' => 'ids',
-            ];
-
-            if ($date_from !== '' && $date_to !== '') {
-                $query_args['date_created'] = $date_from . '...' . $date_to;
-            } elseif ($date_from !== '') {
-                $query_args['date_created'] = '>=' . $date_from;
-            } elseif ($date_to !== '') {
-                $query_args['date_created'] = '<=' . $date_to;
-            }
-
-            $order_ids = wc_get_orders($query_args);
-            if (empty($order_ids)) {
-                break;
-            }
-
-            foreach ($order_ids as $order_id) {
-                $order = wc_get_order($order_id);
-                if (!$order instanceof WC_Order) {
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $product_id = isset($row->product_id) ? (int) $row->product_id : 0;
+                $quantity = isset($row->quantity) ? (float) $row->quantity : 0.0;
+                if ($product_id <= 0 || $quantity <= 0) {
                     continue;
                 }
 
-                if ($order->get_meta('_mulopimfwc_split_parent') === 'yes') {
+                if ($bucket === '') {
+                    $quantities[$product_id] = ($quantities[$product_id] ?? 0) + $quantity;
                     continue;
                 }
 
-                $bucket_key = '';
-                $order_date = $order->get_date_created();
-                if ($bucket === 'day') {
-                    $bucket_key = $order_date ? gmdate('Y-m-d', $order_date->getTimestamp()) : gmdate('Y-m-d');
-                } elseif ($bucket === 'month') {
-                    $bucket_key = $order_date ? gmdate('Y-m', $order_date->getTimestamp()) : gmdate('Y-m');
+                $bucket_key = isset($row->bucket_key) ? (string) $row->bucket_key : '';
+                if ($bucket_key === '') {
+                    continue;
                 }
 
-                $order_location_slug = $this->normalize_location_slug((string) $order->get_meta('_store_location'));
-
-                foreach ($order->get_items('line_item') as $item) {
-                    if (!$item instanceof WC_Order_Item_Product) {
-                        continue;
-                    }
-
-                    $product_id = $item->get_variation_id() ?: $item->get_product_id();
-                    if (!$product_id) {
-                        continue;
-                    }
-
-                    $quantity = $this->get_investment_net_order_item_quantity($order, $item);
-                    if ($quantity <= 0) {
-                        continue;
-                    }
-
-                    $item_location_slug = $this->get_investment_order_item_location_slug($item, $order_location_slug);
-                    if (!$this->investment_order_location_matches_scope($item_location_slug, $scope)) {
-                        continue;
-                    }
-
-                    if ($bucket_key === '') {
-                        $quantities[$product_id] = ($quantities[$product_id] ?? 0) + $quantity;
-                        continue;
-                    }
-
-                    if (!isset($quantities[$bucket_key])) {
-                        $quantities[$bucket_key] = [];
-                    }
-
-                    $quantities[$bucket_key][$product_id] = ($quantities[$bucket_key][$product_id] ?? 0) + $quantity;
+                if (!isset($quantities[$bucket_key])) {
+                    $quantities[$bucket_key] = [];
                 }
-            }
 
-            if ($page > 200) {
-                break;
+                $quantities[$bucket_key][$product_id] = ($quantities[$bucket_key][$product_id] ?? 0) + $quantity;
             }
-
-            $page++;
-        } while (count($order_ids) === $batch_size);
+        }
 
         $quantities_cache[$cache_key] = $quantities;
         return $quantities_cache[$cache_key];
@@ -4256,7 +5098,7 @@ class MULOPIMFWC_Dashboard
             ? mulopimfwc_get_dashboard_cache_version()
             : 1;
         $cache_scope = $this->get_investment_scope_cache_fragment($scope);
-        $cache_key = 'mulopimfwc_total_investment_v' . $cache_version . '_' . $cache_scope;
+        $cache_key = 'mulopimfwc_total_investment_' . $this->get_investment_cache_namespace() . '_v' . $cache_version . '_' . $cache_scope;
         $cached_value = get_transient($cache_key);
 
         if ($cached_value !== false) {
@@ -4288,7 +5130,7 @@ class MULOPIMFWC_Dashboard
             ? mulopimfwc_get_dashboard_cache_version()
             : 1;
         $cache_scope = $this->get_investment_scope_cache_fragment($scope);
-        $cache_key = 'mulopimfwc_monthly_investment_v' . $cache_version . '_' . $cache_scope;
+        $cache_key = 'mulopimfwc_monthly_investment_' . $this->get_investment_cache_namespace() . '_v' . $cache_version . '_' . $cache_scope;
         $cached_data = get_transient($cache_key);
 
         $now = new DateTimeImmutable('first day of this month 00:00:00', new DateTimeZone('UTC'));
@@ -4345,6 +5187,95 @@ class MULOPIMFWC_Dashboard
     }
 
     /**
+     * Cache and return the fast order/revenue/recent-product payload.
+     */
+    private function get_dashboard_orders_payload_cached(): array
+    {
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_dashboard_orders_payload_' . $this->get_dashboard_orders_cache_namespace() . '_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
+        $cached_payload = get_transient($cache_key);
+
+        if (is_array($cached_payload)) {
+            return $cached_payload;
+        }
+
+        $payload = $this->build_dashboard_orders_payload();
+        set_transient($cache_key, $payload, 2 * MINUTE_IN_SECONDS);
+
+        return $payload;
+    }
+
+    /**
+     * Build the fast dashboard payload that should always return before heavy calculations.
+     */
+    private function build_dashboard_orders_payload(): array
+    {
+        global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
+
+        $orders_data = $this->get_orders_data_efficiently();
+        $recent_products_data = $this->get_recent_products_data();
+
+        return [
+            'orders_by_location' => $orders_data['orders'] ?? [],
+            'revenue_by_location' => $orders_data['revenue'] ?? [],
+            'recent_products_data' => $recent_products_data,
+            'summary' => [
+                'total_orders' => array_sum($orders_data['orders'] ?? []),
+                'total_revenue' => array_sum($orders_data['revenue'] ?? []),
+            ],
+        ];
+    }
+
+    /**
+     * Cache and return the heavy investment and stock-alert payload.
+     */
+    private function get_dashboard_investment_payload_cached(bool $allow_build = true): array
+    {
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_dashboard_investment_payload_' . $this->get_investment_cache_namespace() . '_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
+        $cached_payload = get_transient($cache_key);
+
+        if (is_array($cached_payload)) {
+            return $cached_payload;
+        }
+
+        if (!$allow_build) {
+            return [];
+        }
+
+        $payload = $this->build_dashboard_investment_payload();
+        set_transient($cache_key, $payload, 10 * MINUTE_IN_SECONDS);
+
+        return $payload;
+    }
+
+    /**
+     * Build the heavy dashboard payload separately so the UI can lazy-load it.
+     */
+    private function build_dashboard_investment_payload(): array
+    {
+        global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
+
+        $total_investment = $this->calculate_total_investment_efficiently();
+
+        return [
+            'monthly_investment_data' => $this->get_monthly_investment_data_cached(),
+            'dead_stock_days' => 90,
+            'total_investment' => $total_investment,
+            'low_stock_products' => $this->get_low_stock_products_efficiently(),
+            'summary' => [
+                'total_investment' => $total_investment,
+            ],
+        ];
+    }
+
+    /**
      * Build a reusable payload for the dashboard and live APIs.
      */
     private function get_dashboard_payload_cached(): array
@@ -4352,7 +5283,7 @@ class MULOPIMFWC_Dashboard
         $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
             ? mulopimfwc_get_dashboard_cache_version()
             : 1;
-        $cache_key = 'mulopimfwc_dashboard_payload_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
+        $cache_key = 'mulopimfwc_dashboard_payload_' . $this->get_dashboard_orders_cache_namespace() . '_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
         $cached_payload = get_transient($cache_key);
 
         if (is_array($cached_payload)) {
@@ -4360,83 +5291,36 @@ class MULOPIMFWC_Dashboard
         }
 
         $payload = $this->build_dashboard_payload();
-        set_transient($cache_key, $payload, 30);
+        set_transient($cache_key, $payload, 2 * MINUTE_IN_SECONDS);
 
         return $payload;
     }
 
     private function build_dashboard_payload(): array
     {
-        global $mulopimfwc_locations;
-        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
+        $lightweight_payload = $this->get_lightweight_dashboard_payload();
+        $orders_payload = $this->get_dashboard_orders_payload_cached();
+        $investment_payload = $this->get_dashboard_investment_payload_cached();
 
-        $product_counts = [];
-        $stock_levels = [];
-        $location_colors = [];
-        $location_border_colors = [];
-
-        $base_colors = [
-            ['fill' => '#ef4444', 'border' => '#f87171'],
-            ['fill' => '#f59e0b', 'border' => '#fbbf24'],
-            ['fill' => '#10b981', 'border' => '#34d399'],
-            ['fill' => '#06b6d4', 'border' => '#22d3ee'],
-            ['fill' => '#8b5cf6', 'border' => '#a78bfa'],
-            ['fill' => '#ec4899', 'border' => '#f472b6'],
-            ['fill' => '#6366f1', 'border' => '#818cf8'],
-        ];
-
-        if (empty($mulopimfwc_locations) || is_wp_error($mulopimfwc_locations)) {
-            $mulopimfwc_locations = [];
-        }
-
-        foreach ($mulopimfwc_locations as $index => $location) {
-            $base_index = $index % count($base_colors);
-            $cycle = floor($index / count($base_colors));
-
-            if ($cycle === 0) {
-                $location_colors[$location->name] = $base_colors[$base_index]['fill'];
-                $location_border_colors[$location->name] = $base_colors[$base_index]['border'];
-            } else {
-                $adjust = ($cycle * 10) % 30;
-                $location_colors[$location->name] = $this->adjustColorLightness($base_colors[$base_index]['fill'], $adjust);
-                $location_border_colors[$location->name] = $this->adjustColorLightness($base_colors[$base_index]['border'], $adjust);
-            }
-
-            $product_counts[$location->name] = $this->get_location_product_count($location->term_id);
-            $stock_levels[$location->name] = $this->get_location_stock_level($location->term_id);
-        }
-
-        $orders_data = $this->get_orders_data_efficiently();
-        $recent_products_data = $this->get_recent_products_data();
-        $monthly_investment_data = $this->get_monthly_investment_data_cached();
-        $total_investment = $this->calculate_total_investment_efficiently();
-        $dead_stock_days = 90;
-        $low_stock_products = $this->get_low_stock_products_efficiently();
-        $location_card = $this->get_location_card_summary('all');
-        $total_products = $this->get_total_products_count();
+        $summary = array_merge(
+            $lightweight_payload['summary'] ?? [],
+            $orders_payload['summary'] ?? [],
+            $investment_payload['summary'] ?? []
+        );
 
         return [
-            'product_counts' => $product_counts,
-            'stock_levels' => $stock_levels,
-            'location_colors' => $location_colors,
-            'location_border_colors' => $location_border_colors,
-            'orders_by_location' => $orders_data['orders'],
-            'revenue_by_location' => $orders_data['revenue'],
-            'recent_products_data' => $recent_products_data,
-            'monthly_investment_data' => $monthly_investment_data,
-            'dead_stock_days' => $dead_stock_days,
-            'total_investment' => $total_investment,
-            'low_stock_products' => $low_stock_products,
-            'summary' => [
-                'total_products' => $total_products,
-                'total_locations' => (int) ($location_card['count'] ?? count($mulopimfwc_locations)),
-                'total_orders' => array_sum($orders_data['orders']),
-                'total_revenue' => array_sum($orders_data['revenue']),
-                'total_stock' => array_sum($stock_levels),
-                'total_investment' => $total_investment,
-                'location_card_label' => isset($location_card['label']) ? (string) $location_card['label'] : __('Locations', 'multi-location-product-and-inventory-management-pro'),
-                'location_card_value' => isset($location_card['value']) ? (string) $location_card['value'] : (string) count($mulopimfwc_locations),
-            ],
+            'product_counts' => $lightweight_payload['product_counts'] ?? [],
+            'stock_levels' => $lightweight_payload['stock_levels'] ?? [],
+            'location_colors' => $lightweight_payload['location_colors'] ?? [],
+            'location_border_colors' => $lightweight_payload['location_border_colors'] ?? [],
+            'orders_by_location' => $orders_payload['orders_by_location'] ?? [],
+            'revenue_by_location' => $orders_payload['revenue_by_location'] ?? [],
+            'recent_products_data' => $orders_payload['recent_products_data'] ?? ($lightweight_payload['recent_products_data'] ?? ['labels' => [], 'counts' => []]),
+            'monthly_investment_data' => $investment_payload['monthly_investment_data'] ?? ($lightweight_payload['monthly_investment_data'] ?? ['labels' => [], 'data' => []]),
+            'dead_stock_days' => $investment_payload['dead_stock_days'] ?? ($lightweight_payload['dead_stock_days'] ?? 90),
+            'total_investment' => $investment_payload['total_investment'] ?? ($lightweight_payload['total_investment'] ?? 0),
+            'low_stock_products' => $investment_payload['low_stock_products'] ?? ($lightweight_payload['low_stock_products'] ?? []),
+            'summary' => $summary,
         ];
     }
 
@@ -4512,39 +5396,151 @@ class MULOPIMFWC_Dashboard
             return;
         }
 
-        $payload = $this->get_dashboard_payload_cached();
+        $lightweight_payload = $this->get_lightweight_dashboard_payload();
+        $orders_payload = $this->get_dashboard_orders_payload_cached();
+        $investment_payload = $this->get_dashboard_investment_payload_cached(false);
+        $summary = array_merge(
+            $lightweight_payload['summary'] ?? [],
+            $orders_payload['summary'] ?? []
+        );
+        unset($summary['total_investment']);
+        if (!empty($investment_payload['summary']) && is_array($investment_payload['summary'])) {
+            $summary = array_merge($summary, $investment_payload['summary']);
+        }
+
         $last_check = (int) get_option('mulopimfwc_dashboard_last_check', 0);
         $site_status = $this->resolve_site_status();
-        $alerts = $this->collect_live_alerts($last_check, $payload, $site_status);
+        $alerts = $this->collect_live_alerts($last_check, [
+            'low_stock_products' => $investment_payload['low_stock_products'] ?? [],
+        ], $site_status);
 
         update_option('mulopimfwc_dashboard_last_check', current_time('timestamp', true));
 
         $response_data = [
-            'productCounts' => $payload['product_counts'],
-            'stockLevels' => $payload['stock_levels'],
-            'locationColors' => $payload['location_colors'],
-            'locationBorderColors' => $payload['location_border_colors'],
-            'orders' => $payload['orders_by_location'],
-            'revenue' => $payload['revenue_by_location'],
-            'summary' => $payload['summary'],
-            'dateLabels' => $payload['recent_products_data']['labels'],
-            'dateCounts' => $payload['recent_products_data']['counts'],
-            'monthlyInvestmentLabels' => $payload['monthly_investment_data']['labels'],
-            'monthlyInvestmentData' => $payload['monthly_investment_data']['data'],
-            'deadStockDays' => $payload['dead_stock_days'],
-            'totalInvestment' => $payload['total_investment'],
-            // Return the full low stock list so the live sync view matches initial render
-            'low_stock' => $payload['low_stock_products'],
+            'productCounts' => $lightweight_payload['product_counts'] ?? [],
+            'stockLevels' => $lightweight_payload['stock_levels'] ?? [],
+            'locationColors' => $lightweight_payload['location_colors'] ?? [],
+            'locationBorderColors' => $lightweight_payload['location_border_colors'] ?? [],
+            'orders' => $orders_payload['orders_by_location'] ?? [],
+            'revenue' => $orders_payload['revenue_by_location'] ?? [],
+            'summary' => $summary,
+            'dateLabels' => $orders_payload['recent_products_data']['labels'] ?? [],
+            'dateCounts' => $orders_payload['recent_products_data']['counts'] ?? [],
             'alerts' => $alerts,
             'site_status' => $site_status,
             'currency' => $this->get_dashboard_reporting_currency_symbol(),
             'currency_code' => $this->get_dashboard_reporting_currency_code(),
         ];
 
+        if (!empty($investment_payload)) {
+            $response_data['monthlyInvestmentLabels'] = $investment_payload['monthly_investment_data']['labels'] ?? [];
+            $response_data['monthlyInvestmentData'] = $investment_payload['monthly_investment_data']['data'] ?? [];
+            $response_data['deadStockDays'] = $investment_payload['dead_stock_days'] ?? 90;
+            $response_data['totalInvestment'] = $investment_payload['total_investment'] ?? 0;
+            $response_data['low_stock'] = array_slice($investment_payload['low_stock_products'] ?? [], 0, 8);
+        }
+
         // Cache for 30 seconds
         set_transient($cache_key, $response_data, 30);
 
         wp_send_json_success($response_data);
+    }
+
+    /**
+     * Lightweight dashboard payload — only fast queries, no orders/investment.
+     */
+    private function get_lightweight_dashboard_payload(): array
+    {
+        global $mulopimfwc_locations;
+        $mulopimfwc_locations = $this->get_dashboard_scoped_locations();
+
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $cache_key = 'mulopimfwc_lightweight_payload_v' . $cache_version . '_' . $this->get_live_dashboard_cache_scope_hash();
+        $cached = get_transient($cache_key);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $product_counts       = [];
+        $stock_levels         = [];
+        $location_colors      = [];
+        $location_border_colors = [];
+        $base_colors = [
+            ['fill' => '#ef4444', 'border' => '#f87171'],
+            ['fill' => '#f59e0b', 'border' => '#fbbf24'],
+            ['fill' => '#10b981', 'border' => '#34d399'],
+            ['fill' => '#06b6d4', 'border' => '#22d3ee'],
+            ['fill' => '#8b5cf6', 'border' => '#a78bfa'],
+            ['fill' => '#ec4899', 'border' => '#f472b6'],
+            ['fill' => '#6366f1', 'border' => '#818cf8'],
+        ];
+
+        foreach ($mulopimfwc_locations as $index => $location) {
+            $base_index = $index % count($base_colors);
+            $cycle      = (int) floor($index / count($base_colors));
+            if ($cycle === 0) {
+                $location_colors[$location->name]       = $base_colors[$base_index]['fill'];
+                $location_border_colors[$location->name] = $base_colors[$base_index]['border'];
+            } else {
+                $adjust = ($cycle * 10) % 30;
+                $location_colors[$location->name]       = $this->adjustColorLightness($base_colors[$base_index]['fill'], $adjust);
+                $location_border_colors[$location->name] = $this->adjustColorLightness($base_colors[$base_index]['border'], $adjust);
+            }
+            $product_counts[$location->name] = $this->get_location_product_count($location->term_id);
+            $stock_levels[$location->name]   = $this->get_location_stock_level($location->term_id);
+        }
+
+        $location_card   = $this->get_location_card_summary('all');
+        $total_products  = $this->get_total_products_count();
+
+        // Date labels only — no counts (cheap)
+        $date_labels = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $date_labels[] = gmdate('M d', strtotime("-$i days"));
+        }
+
+        // Month labels only
+        $month_labels = [];
+        $cursor = new DateTimeImmutable('first day of -11 months 00:00:00', new DateTimeZone('UTC'));
+        for ($i = 0; $i < 12; $i++) {
+            $month_labels[] = $cursor->format('M Y');
+            $cursor = $cursor->modify('+1 month');
+        }
+
+        $payload = [
+            'product_counts'        => $product_counts,
+            'stock_levels'          => $stock_levels,
+            'location_colors'       => $location_colors,
+            'location_border_colors' => $location_border_colors,
+            'orders_by_location'    => array_map(fn() => 0, $product_counts), // placeholder shape
+            'revenue_by_location'   => array_map(fn() => 0, $product_counts),
+            'recent_products_data'  => [
+                'labels' => $date_labels,
+                'counts' => array_fill(0, 30, 0),
+            ],
+            'monthly_investment_data' => [
+                'labels' => $month_labels,
+                'data'   => array_fill(0, 12, 0),
+            ],
+            'dead_stock_days'  => 90,
+            'total_investment' => 0,
+            'low_stock_products' => [],
+            'summary' => [
+                'total_products'      => $total_products,
+                'total_locations'     => (int) ($location_card['count'] ?? count($mulopimfwc_locations)),
+                'total_orders'        => 0,
+                'total_revenue'       => 0,
+                'total_stock'         => array_sum($stock_levels),
+                'total_investment'    => 0,
+                'location_card_label' => (string) ($location_card['label'] ?? __('Locations', 'multi-location-product-and-inventory-management-pro')),
+                'location_card_value' => (string) ($location_card['value'] ?? count($mulopimfwc_locations)),
+            ],
+        ];
+
+        set_transient($cache_key, $payload, 120);
+        return $payload;
     }
 
     /**
@@ -4620,9 +5616,9 @@ class MULOPIMFWC_Dashboard
         ];
         $high_value_orders = [];
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         $social = isset($options['social_notifications']) ? $options['social_notifications'] : [];
         $high_value_threshold = floatval($social['high_value_threshold'] ?? 500);
 
@@ -4657,14 +5653,14 @@ class MULOPIMFWC_Dashboard
                 $order_number = $order->get_order_number();
                 $order_total = $order->get_total();
                 $order_date = $order->get_date_created();
-                
+
                 // Format price and decode HTML entities for plain text notification
                 $formatted_price = wp_strip_all_tags(wc_price($order_total));
                 $formatted_price = html_entity_decode($formatted_price, ENT_QUOTES, 'UTF-8');
-                
+
                 $alerts[] = $this->format_alert(
                     'new_order',
-                    sprintf(/* translators: 1: order number, 2: formatted order total */ __('New order #%1$s placed - %2$s', 'multi-location-product-and-inventory-management-pro'), $order_number, $formatted_price),
+                    sprintf(/* translators: 1: order number, 2: formatted order total */__('New order #%1$s placed - %2$s', 'multi-location-product-and-inventory-management-pro'), $order_number, $formatted_price),
                     'info',
                     [
                         'order_id' => $order_id,
@@ -4676,7 +5672,11 @@ class MULOPIMFWC_Dashboard
             }
         }
 
-        $low_stock_items = array_values(array_filter($payload['low_stock_products'], static function ($item) {
+        $low_stock_products = isset($payload['low_stock_products']) && is_array($payload['low_stock_products'])
+            ? $payload['low_stock_products']
+            : [];
+
+        $low_stock_items = array_values(array_filter($low_stock_products, static function ($item) {
             return isset($item['stock']) && (($item['status'] ?? '') === 'low_stock');
         }));
         if (!empty($low_stock_items)) {
@@ -4690,7 +5690,7 @@ class MULOPIMFWC_Dashboard
                 }
                 $alerts[] = $this->format_alert(
                     'low_stock',
-                    sprintf(/* translators: 1: product title, 2: location name */ __('Low stock: %1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
+                    sprintf(/* translators: 1: product title, 2: location name */__('Low stock: %1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
                     'warning',
                     [
                         'product_id' => $product_id,
@@ -4703,7 +5703,7 @@ class MULOPIMFWC_Dashboard
             }
         }
 
-        $out_of_stock = array_values(array_filter($payload['low_stock_products'], static function ($item) {
+        $out_of_stock = array_values(array_filter($low_stock_products, static function ($item) {
             return isset($item['stock']) && (($item['status'] ?? '') === 'out_of_stock');
         }));
         if (!empty($out_of_stock)) {
@@ -4717,7 +5717,7 @@ class MULOPIMFWC_Dashboard
                 }
                 $alerts[] = $this->format_alert(
                     'out_of_stock',
-                    sprintf(/* translators: 1: product title, 2: location name */ __('Out of stock: %1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
+                    sprintf(/* translators: 1: product title, 2: location name */__('Out of stock: %1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $item['product_title'], $item['location_name']),
                     'critical',
                     [
                         'product_id' => $product_id,
@@ -4740,7 +5740,7 @@ class MULOPIMFWC_Dashboard
                 sort($order_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     "order_{$key}",
-                    sprintf(/* translators: 1: order status label (e.g. Completed), 2: count */ __('%1$s orders %2$s', 'multi-location-product-and-inventory-management-pro'), ucwords(str_replace('_', ' ', $key)), $count),
+                    sprintf(/* translators: 1: order status label (e.g. Completed), 2: count */__('%1$s orders %2$s', 'multi-location-product-and-inventory-management-pro'), ucwords(str_replace('_', ' ', $key)), $count),
                     'info',
                     [
                         'order_ids' => $order_ids,
@@ -4755,10 +5755,10 @@ class MULOPIMFWC_Dashboard
             // Format price and decode HTML entities for plain text notification
             $formatted_price = wp_strip_all_tags(wc_price($order->get_total()));
             $formatted_price = html_entity_decode($formatted_price, ENT_QUOTES, 'UTF-8');
-            
+
             $alerts[] = $this->format_alert(
                 'high_value_order',
-                sprintf(/* translators: 1: order number, 2: formatted order total */ __('High-value order: #%1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number(), $formatted_price),
+                sprintf(/* translators: 1: order number, 2: formatted order total */__('High-value order: #%1$s (%2$s)', 'multi-location-product-and-inventory-management-pro'), $order->get_order_number(), $formatted_price),
                 'info',
                 [
                     'order_id' => $order->get_id(),
@@ -4785,7 +5785,7 @@ class MULOPIMFWC_Dashboard
         }
 
         $current_snapshot = [];
-        foreach ($payload['low_stock_products'] as $item) {
+        foreach ($low_stock_products as $item) {
             if (!empty($item['alert_key'])) {
                 $current_snapshot[(string) $item['alert_key']] = [
                     'product_id' => absint($item['product_id'] ?? 0),
@@ -4828,7 +5828,7 @@ class MULOPIMFWC_Dashboard
                 sort($product_ids, SORT_NUMERIC);
                 $alerts[] = $this->format_alert(
                     'restocked',
-                    sprintf(/* translators: %s: comma-separated list of product/location titles */ __('Restocked: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', array_slice($titles, 0, 3))),
+                    sprintf(/* translators: %s: comma-separated list of product/location titles */__('Restocked: %s', 'multi-location-product-and-inventory-management-pro'), implode(', ', array_slice($titles, 0, 3))),
                     'info',
                     [
                         'product_ids' => $product_ids,
@@ -4857,7 +5857,7 @@ class MULOPIMFWC_Dashboard
             $product = wc_get_product($review->comment_post_ID);
             $alerts[] = $this->format_alert(
                 'low_review_alert',
-                sprintf(/* translators: %s: product name */ __('Low rating review for %s', 'multi-location-product-and-inventory-management-pro'), $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management-pro')),
+                sprintf(/* translators: %s: product name */__('Low rating review for %s', 'multi-location-product-and-inventory-management-pro'), $product ? $product->get_name() : __('Product', 'multi-location-product-and-inventory-management-pro')),
                 'info',
                 [
                     'review_id' => $review->comment_ID,
@@ -4873,7 +5873,7 @@ class MULOPIMFWC_Dashboard
             if ($user) {
                 $alerts[] = $this->format_alert(
                     'manager_change',
-                    sprintf(/* translators: %s: manager display name */ __('Manager updated: %s', 'multi-location-product-and-inventory-management-pro'), $user->display_name),
+                    sprintf(/* translators: %s: manager display name */__('Manager updated: %s', 'multi-location-product-and-inventory-management-pro'), $user->display_name),
                     'info',
                     [
                         'user_id' => $user->ID,
@@ -4947,7 +5947,7 @@ class MULOPIMFWC_Dashboard
         // Strip HTML tags and decode HTML entities for plain text notifications
         $message = wp_strip_all_tags($message);
         $message = html_entity_decode($message, ENT_QUOTES, 'UTF-8');
-        
+
         // Create unique ID based on type and relevant identifiers
         $unique_id = $type;
         $unique_suffix = '';
@@ -4997,7 +5997,7 @@ class MULOPIMFWC_Dashboard
             // Fallback to unique ID with timestamp if no stable identifier is available
             $unique_id .= '-' . wp_unique_id() . '-' . current_time('timestamp', true);
         }
-        
+
         return [
             'id' => $unique_id,
             'type' => $type,
@@ -5008,5 +6008,4 @@ class MULOPIMFWC_Dashboard
             'timestamp' => current_time('timestamp', true),
         ];
     }
-
 }

@@ -18,7 +18,7 @@ class mulopimfwc_License_Manager
 
 
         // Enqueue background check script for both admin and frontend (all users)
-        $enqueue_bg_check = function () {
+        $enqueue_bg_check = function ($hook_suffix = '') {
 
             static $is_enqueued = false;
 
@@ -26,11 +26,34 @@ class mulopimfwc_License_Manager
                 return; // Exit if already enqueued
             }
 
+            if (is_admin()) {
+                $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+                $skip_pages = [
+                    'multi-location-product-and-inventory-management-pro',
+                    'location-stock-management',
+                ];
+
+                if (in_array($current_page, $skip_pages, true)) {
+                    return;
+                }
+            }
+
             $is_enqueued = true; // Mark as enqueued
 ?>
             <script type="text/javascript">
-                document.addEventListener('DOMContentLoaded', function() {
-                    if (typeof ajaxurl !== 'undefined') {
+                (function() {
+                    if (typeof ajaxurl === 'undefined') {
+                        return;
+                    }
+
+                    var hasQueuedRequest = false;
+
+                    var sendBackgroundLicenseCheck = function() {
+                        if (hasQueuedRequest) {
+                            return;
+                        }
+
+                        hasQueuedRequest = true;
                         var xhr = new XMLHttpRequest();
                         var params = new URLSearchParams();
                         params.append('action', 'mulopimfwc_background_license_check');
@@ -38,8 +61,28 @@ class mulopimfwc_License_Manager
                         xhr.open('POST', ajaxurl, true);
                         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                         xhr.send(params.toString());
+                    };
+
+                    var scheduleBackgroundLicenseCheck = function() {
+                        if (typeof window.requestIdleCallback === 'function') {
+                            window.requestIdleCallback(sendBackgroundLicenseCheck, {
+                                timeout: 4000
+                            });
+                            return;
+                        }
+
+                        window.setTimeout(sendBackgroundLicenseCheck, 1500);
+                    };
+
+                    if (document.readyState === 'complete') {
+                        scheduleBackgroundLicenseCheck();
+                        return;
                     }
-                });
+
+                    window.addEventListener('load', scheduleBackgroundLicenseCheck, {
+                        once: true
+                    });
+                })();
             </script>
             <?php
         };

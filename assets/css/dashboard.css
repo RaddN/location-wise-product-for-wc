@@ -501,3 +501,109 @@ table.lwp-low-stock-table a {
 .lwp-filter-active-badge svg {
   stroke: #16a34a;
 }
+
+
+
+
+/* ── Deferred loading skeletons ───────────────────────────────────────── */
+@keyframes mulopimfwc-shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+
+.mulopimfwc-skeleton-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 8px 0;
+}
+
+.mulopimfwc-skeleton-row {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 600px 100%;
+    animation: mulopimfwc-shimmer 1.4s infinite linear;
+}
+
+.mulopimfwc-skeleton-row:nth-child(2) { width: 80%; }
+.mulopimfwc-skeleton-row:nth-child(3) { width: 60%; }
+
+/* Skeleton shimmer on stat card values */
+.mulopimfwc-skeleton-text {
+    display: inline-block;
+    width: 80px;
+    height: 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 600px 100%;
+    animation: mulopimfwc-shimmer 1.4s infinite linear;
+    vertical-align: middle;
+    color: transparent;
+    user-select: none;
+}
+
+/* Chart overlay while deferred data is loading */
+.mulopimfwc-skeleton-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.88);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    border-radius: 8px;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+}
+
+.mulopimfwc-skeleton-pulse {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 4px solid #e2e8f0;
+    border-top-color: #5b21b6;
+    animation: mulopimfwc-spin 0.9s linear infinite;
+}
+
+@keyframes mulopimfwc-spin {
+    to { transform: rotate(360deg); }
+}
+
+.mulopimfwc-skeleton-label {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+/* Chart container must be positioned for overlay to work */
+.lwp-chart-container {
+    position: relative;
+}
+
+/* Low stock loading cell */
+.mulopimfwc-deferred-loading-cell {
+    padding: 16px !important;
+}
+
+/* Error state inside chart */
+.mulopimfwc-deferred-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #dc2626;
+    background: rgba(255,255,255,0.9);
+    border-radius: 8px;
+    z-index: 10;
+}
+
+.mulopimfwc-deferred-error a {
+    color: #5b21b6;
+    text-decoration: underline;
+}

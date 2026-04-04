@@ -14,13 +14,32 @@
     window.newProductsChart = null;
     window.investmentChart = null;
     window.mulopimfwcFiltersApplied = false;
+    window.mulopimfwcDeferredRequest = null;
+    window.mulopimfwcDeferredLoaded = false;
+    window.mulopimfwcDeferredLoadStarted = false;
+    window.mulopimfwcDeferredCancelled = false;
+    window.mulopimfwcDeferredQueueTimer = null;
+    window.mulopimfwcDeferredIdleHandle = null;
+    window.mulopimfwcDeferredInvestmentRequest = null;
+    window.mulopimfwcDeferredInvestmentLoaded = false;
+    window.mulopimfwcDeferredInvestmentLoadStarted = false;
+    window.mulopimfwcDeferredInvestmentTimer = null;
+    window.mulopimfwcFilterRequestActive = false;
+    window.mulopimfwcInitialProfitabilityObserver = null;
+    window.mulopimfwcInitialProfitabilityIdleHandle = null;
+    window.mulopimfwcInitialProfitabilityDelayTimer = null;
 
     $(document).ready(function () {
         initDashboardCharts();
         initFilterHandlers();
         initExportHandlers();
         initProfitabilityPanel();
-        startRealtimeSync();
+        if (mulopimfwc_DashboardData.deferred) {
+            applyDeferredSkeletons();
+            queueDeferredDashboardLoad();
+        } else {
+            startRealtimeSync();
+        }
     });
 
     /**
@@ -117,7 +136,11 @@
                 return;
             }
 
+            window.mulopimfwcFilterRequestActive = true;
+            cancelDeferredDashboardLoad();
+            clearInitialProfitabilitySchedule();
             $('#lwp-loading-overlay').fadeIn(200);
+            let filterRequestSucceeded = false;
 
             $.ajax({
                 url: mulopimfwc_DashboardData.ajaxurl,
@@ -132,6 +155,8 @@
                 },
                 success: function (response) {
                     if (response.success) {
+                        filterRequestSucceeded = true;
+                        window.mulopimfwcDeferredLoaded = true;
                         updateDashboardData(response.data);
                         if (response.data && response.data.comparison) {
                             updateComparisonIndicators(response.data.comparison);
@@ -144,6 +169,7 @@
                             updateConnectionStatus('paused');
                         } else {
                             $('.lwp-filter-active-badge').remove();
+                            startRealtimeSync({ initialFetch: false });
                         }
 
                         loadProfitabilityPanel({
@@ -155,6 +181,11 @@
                     console.error('Filter error:', error);
                 },
                 complete: function () {
+                    window.mulopimfwcFilterRequestActive = false;
+                    if (!filterRequestSucceeded && !window.mulopimfwcDeferredLoaded) {
+                        applyDeferredSkeletons();
+                        queueDeferredDashboardLoad();
+                    }
                     $('#lwp-loading-overlay').fadeOut(200);
                 }
             });
@@ -317,8 +348,12 @@
     }
 
     function initProfitabilityPanel() {
+        if (mulopimfwc_DashboardData.deferred) {
+            return;
+        }
+
         const queueInitialLoad = function () {
-            loadProfitabilityPanel(getCurrentDashboardFilters());
+            queueInitialProfitabilityLoad(getCurrentDashboardFilters());
         };
 
         if (document.readyState === 'complete') {
@@ -327,6 +362,488 @@
         }
 
         $(window).one('load', queueInitialLoad);
+    }
+
+    function clearDeferredDashboardQueue() {
+        if (window.mulopimfwcDeferredQueueTimer) {
+            clearTimeout(window.mulopimfwcDeferredQueueTimer);
+            window.mulopimfwcDeferredQueueTimer = null;
+        }
+
+        if (window.mulopimfwcDeferredIdleHandle) {
+            if (typeof window.cancelIdleCallback === 'function') {
+                window.cancelIdleCallback(window.mulopimfwcDeferredIdleHandle);
+            } else {
+                clearTimeout(window.mulopimfwcDeferredIdleHandle);
+            }
+            window.mulopimfwcDeferredIdleHandle = null;
+        }
+    }
+
+    function clearDeferredInvestmentQueue() {
+        if (window.mulopimfwcDeferredInvestmentTimer) {
+            clearTimeout(window.mulopimfwcDeferredInvestmentTimer);
+            window.mulopimfwcDeferredInvestmentTimer = null;
+        }
+    }
+
+    function queueDeferredDashboardLoad() {
+        if (window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive) {
+            return;
+        }
+
+        window.mulopimfwcDeferredCancelled = false;
+        clearDeferredDashboardQueue();
+
+        const startDeferredLoad = function () {
+            if (window.mulopimfwcDeferredCancelled || window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive) {
+                return;
+            }
+
+            window.mulopimfwcDeferredQueueTimer = window.setTimeout(function () {
+                window.mulopimfwcDeferredQueueTimer = null;
+                if (window.mulopimfwcDeferredCancelled || window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive) {
+                    return;
+                }
+
+                window.mulopimfwcDeferredLoadStarted = true;
+                loadDeferredDashboardData();
+            }, 120);
+        };
+
+        if (document.readyState === 'complete') {
+            startDeferredLoad();
+            return;
+        }
+
+        $(window).one('load', startDeferredLoad);
+    }
+
+    function queueDeferredInvestmentLoad() {
+        if (
+            window.mulopimfwcDeferredCancelled
+            || window.mulopimfwcDeferredInvestmentLoaded
+            || window.mulopimfwcDeferredInvestmentLoadStarted
+            || window.mulopimfwcFilterRequestActive
+            || filtersAreActive()
+        ) {
+            return;
+        }
+
+        clearDeferredInvestmentQueue();
+        window.mulopimfwcDeferredInvestmentTimer = window.setTimeout(function () {
+            window.mulopimfwcDeferredInvestmentTimer = null;
+
+            if (
+                window.mulopimfwcDeferredCancelled
+                || window.mulopimfwcDeferredInvestmentLoaded
+                || window.mulopimfwcDeferredInvestmentLoadStarted
+                || window.mulopimfwcFilterRequestActive
+                || filtersAreActive()
+            ) {
+                return;
+            }
+
+            window.mulopimfwcDeferredInvestmentLoadStarted = true;
+            loadDeferredInvestmentData();
+        }, 160);
+    }
+
+    function cancelDeferredDashboardLoad() {
+        window.mulopimfwcDeferredCancelled = true;
+        window.mulopimfwcDeferredLoadStarted = false;
+        window.mulopimfwcDeferredInvestmentLoadStarted = false;
+        clearDeferredDashboardQueue();
+        clearDeferredInvestmentQueue();
+
+        if (window.mulopimfwcDeferredRequest && typeof window.mulopimfwcDeferredRequest.abort === 'function') {
+            window.mulopimfwcDeferredRequest.abort();
+        }
+
+        if (window.mulopimfwcDeferredInvestmentRequest && typeof window.mulopimfwcDeferredInvestmentRequest.abort === 'function') {
+            window.mulopimfwcDeferredInvestmentRequest.abort();
+        }
+
+        window.mulopimfwcDeferredRequest = null;
+        window.mulopimfwcDeferredInvestmentRequest = null;
+        removeDeferredSkeletons();
+    }
+
+    function clearInitialProfitabilitySchedule() {
+        if (window.mulopimfwcInitialProfitabilityObserver) {
+            window.mulopimfwcInitialProfitabilityObserver.disconnect();
+            window.mulopimfwcInitialProfitabilityObserver = null;
+        }
+
+        if (window.mulopimfwcInitialProfitabilityDelayTimer) {
+            clearTimeout(window.mulopimfwcInitialProfitabilityDelayTimer);
+            window.mulopimfwcInitialProfitabilityDelayTimer = null;
+        }
+
+        if (window.mulopimfwcInitialProfitabilityIdleHandle) {
+            if (typeof window.cancelIdleCallback === 'function') {
+                window.cancelIdleCallback(window.mulopimfwcInitialProfitabilityIdleHandle);
+            } else {
+                clearTimeout(window.mulopimfwcInitialProfitabilityIdleHandle);
+            }
+            window.mulopimfwcInitialProfitabilityIdleHandle = null;
+        }
+    }
+
+    function queueInitialProfitabilityLoad(filters) {
+        const $panel = $('#lwp-profitability-panel');
+        if ($panel.length === 0) {
+            return;
+        }
+
+        clearInitialProfitabilitySchedule();
+
+        const queuedAt = Date.now();
+        const minimumDelayMs = 250;
+
+        const triggerLoad = function () {
+            clearInitialProfitabilitySchedule();
+
+            if (window.mulopimfwcFilterRequestActive || filtersAreActive()) {
+                return;
+            }
+
+            loadProfitabilityPanel(filters || getCurrentDashboardFilters());
+        };
+
+        const scheduleTrigger = function () {
+            const remainingDelayMs = Math.max(0, minimumDelayMs - (Date.now() - queuedAt));
+            window.mulopimfwcInitialProfitabilityDelayTimer = window.setTimeout(function () {
+                window.mulopimfwcInitialProfitabilityDelayTimer = null;
+                triggerLoad();
+            }, remainingDelayMs);
+        };
+
+        const panelElement = $panel.get(0);
+        if (!panelElement) {
+            return;
+        }
+
+        const panelRect = panelElement.getBoundingClientRect();
+        const isNearViewport = panelRect.top <= (window.innerHeight + 160) && panelRect.bottom >= -160;
+
+        if (isNearViewport || typeof window.IntersectionObserver !== 'function') {
+            scheduleTrigger();
+            return;
+        }
+
+        window.mulopimfwcInitialProfitabilityObserver = new IntersectionObserver(function (entries, observer) {
+            const hasVisibleEntry = entries.some(function (entry) {
+                return entry.isIntersecting || entry.intersectionRatio > 0;
+            });
+
+            if (!hasVisibleEntry) {
+                return;
+            }
+
+            observer.disconnect();
+            window.mulopimfwcInitialProfitabilityObserver = null;
+            scheduleTrigger();
+        }, {
+            root: null,
+            rootMargin: '160px 0px 160px 0px',
+            threshold: 0.05
+        });
+
+        window.mulopimfwcInitialProfitabilityObserver.observe(panelElement);
+    }
+
+    /**
+ * Skeleton shimmer markup for deferred sections
+ */
+    function getDeferredSkeletonHtml(rows) {
+        rows = rows || 1;
+        var skeletonRows = '';
+        for (var i = 0; i < rows; i++) {
+            skeletonRows += '<div class="mulopimfwc-skeleton-row"></div>';
+        }
+        return '<div class="mulopimfwc-skeleton-wrap">' + skeletonRows + '</div>';
+    }
+
+    /**
+     * Apply skeleton shimmer to deferred chart containers and stat items
+     */
+    function applyDeferredSkeletons() {
+        applyDeferredSkeletonGroup('quick');
+        applyDeferredSkeletonGroup('heavy');
+    }
+
+    function applyDeferredSkeletonGroup(group) {
+        var deferredMetrics = group === 'heavy'
+            ? ['investment']
+            : ['orders', 'revenue'];
+
+        deferredMetrics.forEach(function (metric) {
+            var $statValue = $('.lwp-stat-item').filter(function () {
+                return $(this).find('.lwp-stat-progress[data-metric="' + metric + '"]').length > 0;
+            }).find('.lwp-stat-value');
+            if ($statValue.length) {
+                $statValue.addClass('mulopimfwc-skeleton-text');
+                $statValue.attr('data-deferred-group', group);
+            }
+        });
+
+        var deferredCharts = group === 'heavy'
+            ? ['#investment-30day']
+            : ['#ordersByLocationChart', '#revenueByLocationChart', '#newProductsChart'];
+
+        deferredCharts.forEach(function (selector) {
+            var $container = $(selector).closest('.lwp-chart-container');
+            if ($container.length && !$container.find('.mulopimfwc-skeleton-overlay[data-deferred-group="' + group + '"]').length) {
+                $container.append(
+                    '<div class="mulopimfwc-skeleton-overlay" data-deferred-group="' + group + '">' +
+                    '<div class="mulopimfwc-skeleton-pulse"></div>' +
+                    '<span class="mulopimfwc-skeleton-label">' +
+                    escapeHtml(mulopimfwc_DashboardData.i18n.loadingDeferredData || 'Loading...') +
+                    '</span>' +
+                    '</div>'
+                );
+            }
+        });
+
+        if (group !== 'heavy') {
+            return;
+        }
+
+        var $lowStockTbody = $('.lwp-low-stock-table tbody');
+        if ($lowStockTbody.length) {
+            $lowStockTbody.html(
+                '<tr data-deferred-group="heavy"><td colspan="4" class="mulopimfwc-deferred-loading-cell">' +
+                '<div class="mulopimfwc-skeleton-wrap">' +
+                '<div class="mulopimfwc-skeleton-row"></div>' +
+                '<div class="mulopimfwc-skeleton-row"></div>' +
+                '<div class="mulopimfwc-skeleton-row"></div>' +
+                '</div>' +
+                '</td></tr>'
+            );
+        }
+    }
+
+    /**
+     * Remove deferred skeleton overlays and shimmer classes
+     */
+    function removeDeferredSkeletons(group) {
+        if (!group) {
+            $('.mulopimfwc-skeleton-overlay').remove();
+            $('.mulopimfwc-skeleton-text').removeClass('mulopimfwc-skeleton-text').removeAttr('data-deferred-group');
+            $('.lwp-low-stock-table tbody').find('tr[data-deferred-group="heavy"]').remove();
+            return;
+        }
+
+        $('.mulopimfwc-skeleton-overlay[data-deferred-group="' + group + '"]').remove();
+        $('.mulopimfwc-skeleton-text[data-deferred-group="' + group + '"]')
+            .removeClass('mulopimfwc-skeleton-text')
+            .removeAttr('data-deferred-group');
+
+        if (group === 'heavy') {
+            $('.lwp-low-stock-table tbody').find('tr[data-deferred-group="heavy"]').remove();
+        }
+    }
+
+    /**
+     * Fetch heavy dashboard data after page load and populate charts/stats
+     */
+    function loadDeferredDashboardData() {
+        if (window.mulopimfwcFilterRequestActive || filtersAreActive()) {
+            window.mulopimfwcDeferredLoadStarted = false;
+            return;
+        }
+
+        const request = $.ajax({
+            url: mulopimfwc_DashboardData.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_dashboard_deferred_data',
+                nonce: mulopimfwc_DashboardData.dashboard_nonce
+            },
+            success: function (response) {
+                removeDeferredSkeletons('quick');
+
+                if (window.mulopimfwcDeferredCancelled || window.mulopimfwcFilterRequestActive || filtersAreActive()) {
+                    return;
+                }
+
+                if (!response.success || !response.data) {
+                    showDeferredError();
+                    showDeferredInvestmentError();
+                    queueInitialProfitabilityLoad(getCurrentDashboardFilters());
+                    startRealtimeSync({ initialFetch: false });
+                    return;
+                }
+
+                var d = response.data;
+                window.mulopimfwcDeferredLoaded = true;
+
+                // Sync currency
+                syncDashboardCurrencyFromResponse(d);
+
+                // Update localized data store so chart refresh helpers work correctly
+                if (d.orders_by_location) {
+                    mulopimfwc_DashboardData.ordersByLocation = d.orders_by_location;
+                }
+                if (d.revenue_by_location) {
+                    mulopimfwc_DashboardData.revenueByLocation = d.revenue_by_location;
+                }
+                if (d.recent_products && d.recent_products.labels) {
+                    mulopimfwc_DashboardData.dateLabels = d.recent_products.labels;
+                    mulopimfwc_DashboardData.dateCounts = d.recent_products.counts;
+                }
+
+                // Build merged update payload compatible with updateDashboardData()
+                var updatePayload = {
+                    orders: d.orders_by_location || {},
+                    revenue: d.revenue_by_location || {},
+                    dateLabels: d.recent_products ? d.recent_products.labels : [],
+                    dateCounts: d.recent_products ? d.recent_products.counts : [],
+                    currency: d.currency,
+                    currency_code: d.currency_code,
+                    summary: {
+                        total_orders: d.summary_orders || 0,
+                        total_revenue: d.summary_revenue || 0
+                    }
+                };
+
+                updateDashboardData(updatePayload);
+                queueDeferredInvestmentLoad();
+
+                // Start realtime polling only after deferred data is loaded.
+                // Skip the immediate fetch because the deferred payload is already fresh.
+                startRealtimeSync({ initialFetch: false });
+
+                // Profitability is the heaviest panel; lazy-load it once the page has settled.
+                queueInitialProfitabilityLoad(getCurrentDashboardFilters());
+            },
+            error: function (xhr, status) {
+                removeDeferredSkeletons('quick');
+
+                if (status === 'abort' || window.mulopimfwcDeferredCancelled) {
+                    return;
+                }
+
+                showDeferredError();
+                showDeferredInvestmentError();
+                queueInitialProfitabilityLoad(getCurrentDashboardFilters());
+                // Still start realtime polling even on error, but do not immediately refetch.
+                startRealtimeSync({ initialFetch: false });
+            },
+            complete: function () {
+                if (window.mulopimfwcDeferredRequest === request) {
+                    window.mulopimfwcDeferredRequest = null;
+                }
+                window.mulopimfwcDeferredLoadStarted = false;
+            }
+        });
+
+        window.mulopimfwcDeferredRequest = request;
+    }
+
+    function loadDeferredInvestmentData() {
+        if (window.mulopimfwcFilterRequestActive || filtersAreActive()) {
+            window.mulopimfwcDeferredInvestmentLoadStarted = false;
+            return;
+        }
+
+        const request = $.ajax({
+            url: mulopimfwc_DashboardData.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_dashboard_investment_data',
+                nonce: mulopimfwc_DashboardData.dashboard_nonce
+            },
+            success: function (response) {
+                removeDeferredSkeletons('heavy');
+
+                if (window.mulopimfwcDeferredCancelled || window.mulopimfwcFilterRequestActive || filtersAreActive()) {
+                    return;
+                }
+
+                if (!response.success || !response.data) {
+                    showDeferredInvestmentError();
+                    return;
+                }
+
+                var d = response.data;
+                window.mulopimfwcDeferredInvestmentLoaded = true;
+
+                syncDashboardCurrencyFromResponse(d);
+
+                if (d.monthly_investment && d.monthly_investment.labels) {
+                    mulopimfwc_DashboardData.monthlyInvestmentLabels = d.monthly_investment.labels;
+                    mulopimfwc_DashboardData.monthlyInvestmentData = d.monthly_investment.data;
+                }
+
+                updateDashboardData({
+                    monthlyInvestmentLabels: d.monthly_investment ? d.monthly_investment.labels : [],
+                    monthlyInvestmentData: d.monthly_investment ? d.monthly_investment.data : [],
+                    low_stock: d.low_stock_products || [],
+                    currency: d.currency,
+                    currency_code: d.currency_code,
+                    summary: {
+                        total_investment: d.summary_investment || d.total_investment || 0
+                    }
+                });
+            },
+            error: function (xhr, status) {
+                removeDeferredSkeletons('heavy');
+
+                if (status === 'abort' || window.mulopimfwcDeferredCancelled) {
+                    return;
+                }
+
+                showDeferredInvestmentError();
+            },
+            complete: function () {
+                if (window.mulopimfwcDeferredInvestmentRequest === request) {
+                    window.mulopimfwcDeferredInvestmentRequest = null;
+                }
+                window.mulopimfwcDeferredInvestmentLoadStarted = false;
+            }
+        });
+
+        window.mulopimfwcDeferredInvestmentRequest = request;
+    }
+
+    function showDeferredError() {
+        var deferredCharts = [
+            '#ordersByLocationChart',
+            '#revenueByLocationChart',
+            '#newProductsChart'
+        ];
+        deferredCharts.forEach(function (selector) {
+            var $container = $(selector).closest('.lwp-chart-container');
+            if ($container.length) {
+                $container.append(
+                    '<div class="mulopimfwc-deferred-error">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+                    ' Could not load data. <a href="" onclick="location.reload();return false;">Retry</a>' +
+                    '</div>'
+                );
+            }
+        });
+    }
+
+    function showDeferredInvestmentError() {
+        var $container = $('#investment-30day').closest('.lwp-chart-container');
+        if ($container.length) {
+            $container.append(
+                '<div class="mulopimfwc-deferred-error">' +
+                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+                ' Could not load investment data. <a href="" onclick="location.reload();return false;">Retry</a>' +
+                '</div>'
+            );
+        }
+
+        var $lowStockTbody = $('.lwp-low-stock-table tbody');
+        if ($lowStockTbody.length) {
+            $lowStockTbody.html(
+                '<tr><td colspan="4" class="mulopimfwc-deferred-loading-cell">Could not load stock alerts. <a href="" onclick="location.reload();return false;">Retry</a></td></tr>'
+            );
+        }
     }
 
     function getCurrentDashboardFilters() {
@@ -361,6 +878,8 @@
         if ($panel.length === 0) {
             return;
         }
+
+        clearInitialProfitabilitySchedule();
 
         if (window.mulopimfwcProfitabilityRequest && typeof window.mulopimfwcProfitabilityRequest.abort === 'function') {
             window.mulopimfwcProfitabilityRequest.abort();
@@ -651,13 +1170,17 @@
         return text.replace(/[&<>"']/g, function (m) { return map[m]; });
     }
 
-    function startRealtimeSync() {
+    function startRealtimeSync(options) {
         if (!mulopimfwc_DashboardData || !mulopimfwc_DashboardData.realtime_nonce) {
             return;
         }
 
-        // Initial fetch
-        fetchRealtimeData();
+        const settings = options || {};
+        const shouldFetchImmediately = settings.initialFetch !== false;
+
+        if (shouldFetchImmediately) {
+            fetchRealtimeData();
+        }
 
         // Set up interval polling
         const pollInterval = parseInt(mulopimfwc_DashboardData.poll_interval || LIVE_POLL_INTERVAL, 10);
