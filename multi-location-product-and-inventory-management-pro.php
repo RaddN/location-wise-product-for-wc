@@ -2900,7 +2900,6 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'includes/text-management.php';
     require_once plugin_dir_path(__FILE__) . 'admin/settings.php';
     require_once plugin_dir_path(__FILE__) . 'admin/dashboard.php';
-    require_once plugin_dir_path(__FILE__) . 'admin/license-page.php';
     require_once plugin_dir_path(__FILE__) . 'admin/stock-central.php';
     require_once plugin_dir_path(__FILE__) . 'admin/admin.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-resolver.php';
@@ -15110,204 +15109,6 @@ function mulopimfwc_flag_manager_change($user_id)
 }
 
 
-
-
-
-
-// Add this after your plugin initialization
-add_action('plugins_loaded', 'mulopimfwc_init_updater');
-
-function mulopimfwc_init_updater()
-{
-    if (class_exists('mulopimfwc_License_Manager')) {
-        global $mulopimfwc_License_Manager;
-
-        // Hook into WordPress update system
-        add_filter('pre_set_site_transient_update_plugins', function ($transient) use ($mulopimfwc_License_Manager) {
-            return mulopimfwc_check_for_plugin_updates($transient, $mulopimfwc_License_Manager);
-        });
-
-        add_filter('plugins_api', function ($result, $action, $args) use ($mulopimfwc_License_Manager) {
-            return mulopimfwc_plugin_api_call($result, $action, $args, $mulopimfwc_License_Manager);
-        }, 10, 3);
-
-        add_action('upgrader_process_complete', function ($upgrader_object, $options) use ($mulopimfwc_License_Manager) {
-            mulopimfwc_clear_cache_after_update($upgrader_object, $options, $mulopimfwc_License_Manager);
-        }, 10, 2);
-
-        add_action('admin_notices', array($mulopimfwc_License_Manager, 'show_license_notices'));
-    }
-}
-
-function mulopimfwc_check_for_plugin_updates($transient, $license_manager)
-{
-    if (empty($transient->checked)) {
-        return $transient;
-    }
-
-    if (!$license_manager->is_license_valid_cached()) {
-        return $transient;
-    }
-
-    $plugin_file = plugin_basename(__FILE__); // This will automatically get the correct path
-    $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0.0';
-
-    $update_info = $license_manager->check_for_updates();
-
-    if ($update_info && version_compare($current_version, $update_info->new_version, '<')) {
-        $transient->response[$plugin_file] = (object) array(
-            'slug' => dirname($plugin_file),
-            'plugin' => $plugin_file,
-            'new_version' => $update_info->new_version,
-            'url' => isset($update_info->homepage) ? $update_info->homepage : 'https://plugincy.com/',
-            'package' => isset($update_info->download_link) ? $update_info->download_link : '',
-            'tested' => /*isset($update_info->tested) ? $update_info->tested :*/ get_bloginfo('version'),
-            'requires_php' => isset($update_info->requires_php) ? $update_info->requires_php : '7.0',
-            'compatibility' => new stdClass()
-        );
-    }
-
-    return $transient;
-}
-
-
-function mulopimfwc_plugin_api_call($result, $action, $args, $license_manager)
-{
-    if ($action !== 'plugin_information') {
-        return $result;
-    }
-
-    $plugin_slug = dirname(plugin_basename(__FILE__)); // Auto-detect plugin slug
-
-    if (!isset($args->slug) || $args->slug !== $plugin_slug) {
-        return $result;
-    }
-
-    if (!$license_manager->is_license_valid_cached()) {
-        return $result;
-    }
-
-    $license_key = get_option('mulopimfwc_license_key', '');
-    $version_info = $license_manager->get_version_info($license_key);
-
-    if ($version_info) {
-        // Unserialize sections if they exist and are serialized
-        $sections = array(
-            'description' => 'Professional dynamic AJAX product filtering solution for WooCommerce.',
-            'changelog' => 'Various improvements and bug fixes.'
-        );
-
-        if (isset($version_info->sections)) {
-            if (is_string($version_info->sections)) {
-                // If sections is a serialized string, unserialize it
-                $unserialized_sections = @unserialize($version_info->sections);
-                if ($unserialized_sections !== false && is_array($unserialized_sections)) {
-                    $sections = array_merge($sections, $unserialized_sections);
-                }
-            } elseif (is_object($version_info->sections)) {
-                // If sections is already an object, convert to array
-                $sections = array_merge($sections, (array)$version_info->sections);
-            } elseif (is_array($version_info->sections)) {
-                // If sections is already an array
-                $sections = array_merge($sections, $version_info->sections);
-            }
-        }
-
-        // Handle banners
-        $banners = array();
-        if (isset($version_info->banners)) {
-            if (is_string($version_info->banners)) {
-                // If banners is a serialized string, unserialize it
-                $unserialized_banners = @unserialize($version_info->banners);
-                if ($unserialized_banners !== false && is_array($unserialized_banners)) {
-                    $banners = $unserialized_banners;
-                }
-            } elseif (is_object($version_info->banners)) {
-                // If banners is already an object, convert to array
-                $banners = (array)$version_info->banners;
-            } elseif (is_array($version_info->banners)) {
-                // If banners is already an array
-                $banners = $version_info->banners;
-            }
-        }
-
-        // Handle screenshots - WordPress expects array of URLs with numeric keys
-        $base_url = "https://ps.w.org/dynamic-ajax-product-filters-for-woocommerce/assets/";
-        $default_screenshots = array(
-            "1" => "Filters Demo 1",
-            "2" => "Filters Demo 2",
-            "3" => "Filters Demo 3",
-            "4" => "Filters Demo 4 - Mobile View",
-            "5" => "Filters Demo 5 - Mobile View",
-            "6" => "Form Manage Settings",
-            "7" => "Form Style Settings",
-            "8" => "Plugin Advance Settings"
-        );
-
-        // Get captions from server or use defaults
-        $screenshot_captions = $default_screenshots;
-        if (isset($version_info->screenshots)) {
-            if (is_string($version_info->screenshots)) {
-                $unserialized_screenshots = @unserialize($version_info->screenshots);
-                if ($unserialized_screenshots !== false && is_array($unserialized_screenshots)) {
-                    $screenshot_captions = $unserialized_screenshots;
-                }
-            } elseif (is_object($version_info->screenshots)) {
-                $screenshot_captions = (array)$version_info->screenshots;
-            } elseif (is_array($version_info->screenshots)) {
-                $screenshot_captions = $version_info->screenshots;
-            }
-        }
-
-        // Also add screenshot captions to sections for better display
-        if (!empty($screenshot_captions)) {
-            $screenshot_section = "<ol>";
-            foreach ($screenshot_captions as $number => $caption) {
-                $screenshot_section .= "<li>";
-                $screenshot_section .= "<a href='{$base_url}screenshot-{$number}.png' target='_blank'><img class='screenshots' src='{$base_url}screenshot-{$number}.png' alt='{$caption}'></a><p>{$caption}</p>";
-                $screenshot_section .= "</li>";
-            }
-            $screenshot_section .= "</ol>";
-            $sections['screenshots'] = $screenshot_section;
-        }
-
-        return (object) array(
-            'name' => 'Dynamic AJAX Product Filters Pro',
-            'slug' => $plugin_slug,
-            'version' => $version_info->new_version,
-            'author' => '<a href="https://plugincy.com">Plugincy</a>',
-            'homepage' => 'https://plugincy.com/',
-            'requires' => isset($version_info->requires) ? $version_info->requires : '5.0',
-            'tested' => /*isset($version_info->tested) ? $version_info->tested :*/ get_bloginfo('version'),
-            'requires_php' => isset($version_info->requires_php) ? $version_info->requires_php : '7.0',
-            'contributors' => array(
-                'plugincy' => array(
-                    'profile' => 'https://profiles.wordpress.org/plugincy/',
-                    'avatar' => 'https://secure.gravatar.com/avatar/ee0db1e8766d68a4bc66e91b4098310d9604ca7670ac9662c15915c517662b39',
-                    'display_name' => 'Plugincy'
-                )
-            ),
-            'sections' => $sections,
-            'banners' => $banners,
-            'download_link' => isset($version_info->download_link) ? $version_info->download_link : ''
-        );
-    }
-
-    return $result;
-}
-
-function mulopimfwc_clear_cache_after_update($upgrader_object, $options, $license_manager)
-{
-    if ($options['action'] === 'update' && $options['type'] === 'plugin') {
-        $plugin_file = plugin_basename(__FILE__);
-
-        if (isset($options['plugins']) && in_array($plugin_file, $options['plugins'])) {
-            $license_manager->clear_all_cache();
-        }
-    }
-}
-
-
 // Add this temporarily for testing - remove after testing
 add_action('admin_init', function () {
     if (isset($_GET['force_check_updates']) && $_GET['force_check_updates'] === '1') {
@@ -15342,5 +15143,31 @@ function mulopimfwc_svg_icon($icon_name){
 }
 
 
+function mulopimfwc_premium_feature()
+{
+    return true;
+}
+
+/**
+ * Get pro-only class string based on user status and blur option.
+ *
+ * @param bool $blur Whether to include blur class.
+ * @return string CSS class for pro-only elements.
+ */
+function mulopimfwc_get_pro_class($blur = true, $selector = '', $not_licenced = 'mulopimfwc_pro_only')
+{
+    $is_pro_user = mulopimfwc_premium_feature();
+
+    if ($is_pro_user) {
+        return $selector;
+    }
+
+    $class = $not_licenced;
+    if ($blur) {
+        $class .= ' mulopimfwc_pro_only_blur';
+    }
+
+    return $class;
+}
 
 

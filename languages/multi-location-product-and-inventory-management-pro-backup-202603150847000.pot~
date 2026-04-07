@@ -6169,10 +6169,6 @@ msgstr ""
 msgid "Plugin Installation & Setup"
 msgstr ""
 
-#: admin/settings.php:5813
-msgid "Plugin License"
-msgstr ""
-
 #: includes/cash-on-pickup-payment-gateway.php:722
 msgid "Plugincy"
 msgstr ""

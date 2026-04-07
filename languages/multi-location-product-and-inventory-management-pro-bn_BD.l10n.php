@@ -294,7 +294,7 @@ Please change your password after logging in.'=>'হ্যালো %s,
 ','Please select a valid target currency first.'=>'প্রথমে একটি বৈধ লক্ষ্য মুদ্রা নির্বাচন করুন।','Please select a zone'=>'একটি জোন নির্বাচন করুন।
 
 ','Please select at least one location'=>'কমপক্ষে একটি অবস্থান নির্বাচন করুন','Please select at least one location.'=>'দয়া করে কমপক্ষে একটি অবস্থান নির্বাচন করুন।','Please select at least one order.'=>'অনুগ্রহ করে অন্তত একটি অর্ডার নির্বাচন করুন।','Please select or create a user'=>'অনুগ্রহ করে একটি ব্যবহারকারী নির্বাচন করুন অথবা তৈরি করুন','Please upload a valid CSV file.'=>'একটি বৈধ CSV ফাইল আপলোড করুন।','Please upload a valid CSV or package ZIP file.'=>'অনুগ্রহ করে একটি বৈধ CSV বা প্যাকেজ ZIP ফাইল আপলোড করুন।','Please wait before requesting another update.'=>'অন্য একটি আপডেটের অনুরোধ করার আগে অনুগ্রহ করে অপেক্ষা করুন।','Plugin Installation & Setup'=>'প্লাগইন ইনস্টলেশন ও সেটআপ
-','Plugin License'=>'প্লাগইন লাইসেন্স','Plugincy'=>'প্লাগেন্সি ','plugincy'=>'প্লাগেন্সি ','Plugincy add-on'=>'প্লাগেন্সি অ্যাড-অন
+','Plugincy'=>'প্লাগেন্সি ','plugincy'=>'প্লাগেন্সি ','Plugincy add-on'=>'প্লাগেন্সি অ্যাড-অন
 
 ','Plugincy cash on pickup add-on'=>'প্লাগেন্সি ক্যাশ অন পিকআপ অ্যাড-অন
 

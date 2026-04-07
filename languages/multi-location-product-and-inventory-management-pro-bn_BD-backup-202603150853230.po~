@@ -7516,10 +7516,6 @@ msgid "Plugin Installation & Setup"
 msgstr ""
 "প্লাগইন ইনস্টলেশন ও সেটআপ\n"
 
-#: admin/settings.php:5816
-msgid "Plugin License"
-msgstr "প্লাগইন লাইসেন্স"
-
 #: includes/cash-on-pickup-payment-gateway.php:722
 msgid "Plugincy"
 msgstr "প্লাগেন্সি "
