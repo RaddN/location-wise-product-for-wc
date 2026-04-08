@@ -308,6 +308,8 @@
                     }
                 } else if (metric === 'orders' && data.summary.total_orders !== undefined) {
                     $value.text(data.summary.total_orders.toLocaleString());
+                } else if (metric === 'sell' && data.summary.total_sell !== undefined) {
+                    $value.html(formatCurrency(data.summary.total_sell));
                 } else if (metric === 'revenue' && data.summary.total_revenue !== undefined) {
                     $value.html(formatCurrency(data.summary.total_revenue));
                 } else if (metric === 'stock' && data.summary.total_stock !== undefined) {
@@ -576,7 +578,7 @@
     function applyDeferredSkeletonGroup(group) {
         var deferredMetrics = group === 'heavy'
             ? ['investment']
-            : ['orders', 'revenue'];
+            : ['orders', 'sell', 'revenue'];
 
         deferredMetrics.forEach(function (metric) {
             var $statValue = $('.lwp-stat-item').filter(function () {
@@ -704,6 +706,7 @@
                     currency_code: d.currency_code,
                     summary: {
                         total_orders: d.summary_orders || 0,
+                        total_sell: d.summary_sell || 0,
                         total_revenue: d.summary_revenue || 0
                     }
                 };
@@ -983,6 +986,7 @@
         setComparisonMetric('products', comparison.products, label);
         setComparisonMetric('locations', comparison.locations, label);
         setComparisonMetric('orders', comparison.orders, label);
+        setComparisonMetric('sell', comparison.sell, label);
         setComparisonMetric('revenue', comparison.revenue, label);
         setComparisonMetric('investment', comparison.investment, label);
     }

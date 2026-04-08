@@ -54,6 +54,7 @@ class MULOPIMFWC_Dashboard
             'revenue_by_location'    => $payload['revenue_by_location'] ?? [],
             'recent_products'        => $recent_products,
             'summary_orders'         => $summary['total_orders'] ?? 0,
+            'summary_sell'           => $summary['total_sell'] ?? 0,
             'summary_revenue'        => $summary['total_revenue'] ?? 0,
             'currency'               => $this->get_dashboard_reporting_currency_symbol(),
             'currency_code'          => $this->get_dashboard_reporting_currency_code(),
@@ -1185,8 +1186,8 @@ class MULOPIMFWC_Dashboard
         // Enqueue necessary scripts and styles
         $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
         $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
-        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6';
-        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6.5';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6.5';
 
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
         wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
@@ -1256,6 +1257,7 @@ class MULOPIMFWC_Dashboard
                 'total_products'       => $dashboard_summary['total_products'] ?? 0,
                 'total_locations'      => $dashboard_summary['total_locations'] ?? 0,
                 'total_orders'         => 0,   // deferred
+                'total_sell'          => 0,   // deferred
                 'total_revenue'        => 0,   // deferred
                 'total_stock'          => $dashboard_summary['total_stock'] ?? 0,
                 'total_investment'     => 0,   // deferred
@@ -1278,7 +1280,7 @@ class MULOPIMFWC_Dashboard
             ],
         ]);
 
-        $orders_data        = ['orders' => [], 'revenue' => []]; // loaded deferred
+        $orders_data        = ['orders' => [], 'sales' => [], 'revenue' => []]; // loaded deferred
         $total_investment   = 0;                                  // loaded deferred
         $low_stock_products = [];                                 // loaded deferred
 
@@ -1607,6 +1609,21 @@ class MULOPIMFWC_Dashboard
                 <span class="lwp-stat-progress" data-metric="investment"></span>
                 <span class="lwp-stat-label"><?php echo esc_html__('Total Investment', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price($total_investment)); ?></span>
+
+            </div>
+
+        </div>
+        <div class="lwp-stat-item">
+            <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
+
+                <svg class="svg-inline--fa fa-sack-dollar" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18">
+                    <path fill="#16a34a" d="M345.7 53.9c22.5-24.6 38.5-53.9 38.5-53.9H256 127.8s16.1 29.3 38.5 53.9c13.4 14.6 29.6 27.8 47.7 37.6-5.2 4.8-10.8 9.2-16.8 13.1C114.7 157.8 48 247.8 48 352c0 88.4 92.3 160 208 160s208-71.6 208-160c0-104.2-66.7-194.2-149.2-247.4-6-3.9-11.6-8.2-16.8-13.1 18.2-9.8 34.4-23 47.7-37.6M256 224c17.7 0 32 14.3 32 32v16h16c17.7 0 32 14.3 32 32s-14.3 32-32 32H288v48h8c22.1 0 40 17.9 40 40s-17.9 40-40 40h-8v8c0 17.7-14.3 32-32 32s-32-14.3-32-32v-8H176c-17.7 0-32-14.3-32-32s14.3-32 32-32h48v-48h-8c-22.1 0-40-17.9-40-40s17.9-40 40-40h8v-16c0-17.7 14.3-32 32-32" />
+                </svg>
+            </div>
+            <div>
+                <span class="lwp-stat-progress" data-metric="sell"></span>
+                <span class="lwp-stat-label"><?php echo esc_html__('Total Sell', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                <span class="lwp-stat-value"><?php echo wp_kses_post($this->format_dashboard_reporting_price(array_sum($orders_data['sales'] ?? []))); ?></span>
 
             </div>
 
@@ -2195,6 +2212,7 @@ class MULOPIMFWC_Dashboard
         $location_card = $this->get_location_card_summary($location_filter);
         $summary = array(
             'total_orders' => array_sum($orders_data['orders']),
+            'total_sell' => array_sum($orders_data['sales'] ?? []),
             'total_revenue' => array_sum($orders_data['revenue']),
         );
 
@@ -2307,8 +2325,10 @@ class MULOPIMFWC_Dashboard
     private function build_period_comparison(array $period, array $current_orders_data, array $previous_orders_data)
     {
         $current_orders_total = array_sum($current_orders_data['orders']);
+        $current_sell_total = array_sum($current_orders_data['sales'] ?? []);
         $current_revenue_total = array_sum($current_orders_data['revenue']);
         $previous_orders_total = array_sum($previous_orders_data['orders']);
+        $previous_sell_total = array_sum($previous_orders_data['sales'] ?? []);
         $previous_revenue_total = array_sum($previous_orders_data['revenue']);
 
         return [
@@ -2319,6 +2339,7 @@ class MULOPIMFWC_Dashboard
                 'to' => $period['previous_end']->format('Y-m-d'),
             ],
             'orders' => $this->build_comparison_metric($current_orders_total, $previous_orders_total),
+            'sell' => $this->build_comparison_metric($current_sell_total, $previous_sell_total),
             'revenue' => $this->build_comparison_metric($current_revenue_total, $previous_revenue_total),
         ];
     }
@@ -2630,7 +2651,7 @@ class MULOPIMFWC_Dashboard
      */
     private function get_dashboard_orders_cache_namespace(): string
     {
-        return 'line_margin_v1';
+        return 'line_margin_sales_v2';
     }
 
     /**
@@ -2646,12 +2667,14 @@ class MULOPIMFWC_Dashboard
         $locations = is_array($mulopimfwc_locations) ? $mulopimfwc_locations : [];
 
         $orders_by_location = $is_manager_scope ? [] : ['Default' => 0];
+        $location_sales = $is_manager_scope ? [] : ['Default' => 0];
         $location_revenue = $is_manager_scope ? [] : ['Default' => 0];
 
         if ($is_manager_scope) {
             if (empty($manager_location_slugs)) {
                 return [
                     'orders' => $orders_by_location,
+                    'sales' => $location_sales,
                     'revenue' => $location_revenue,
                 ];
             }
@@ -2659,6 +2682,7 @@ class MULOPIMFWC_Dashboard
             if ($normalized_location_filter === 'default') {
                 return [
                     'orders' => $orders_by_location,
+                    'sales' => $location_sales,
                     'revenue' => $location_revenue,
                 ];
             }
@@ -2669,6 +2693,7 @@ class MULOPIMFWC_Dashboard
             ) {
                 return [
                     'orders' => $orders_by_location,
+                    'sales' => $location_sales,
                     'revenue' => $location_revenue,
                 ];
             }
@@ -2685,7 +2710,7 @@ class MULOPIMFWC_Dashboard
             'status_filter' => (string) $status_filter,
         ]));
         $cached_data = get_transient($cache_key);
-        if (is_array($cached_data) && isset($cached_data['orders'], $cached_data['revenue'])) {
+        if (is_array($cached_data) && isset($cached_data['orders'], $cached_data['sales'], $cached_data['revenue'])) {
             return $cached_data;
         }
 
@@ -2711,6 +2736,7 @@ class MULOPIMFWC_Dashboard
             }
 
             $orders_by_location[$label] = 0;
+            $location_sales[$label] = 0;
             $location_revenue[$label] = 0;
         }
 
@@ -3026,11 +3052,21 @@ class MULOPIMFWC_Dashboard
                     );
                     $purchase_price = $this->get_investment_product_purchase_price($product_id);
 
+                    $location_sales[$location_label] = (float) ($location_sales[$location_label] ?? 0)
+                        + $sales_total_in_base;
                     $location_revenue[$location_label] = (float) ($location_revenue[$location_label] ?? 0)
                         + ($sales_total_in_base - ($purchase_price * $quantity));
                 }
             }
         }
+
+        $location_sales = array_map(static function ($amount) {
+            if (function_exists('wc_format_decimal')) {
+                return (float) wc_format_decimal($amount, 6, false);
+            }
+
+            return round((float) $amount, 6);
+        }, $location_sales);
 
         $location_revenue = array_map(static function ($amount) {
             if (function_exists('wc_format_decimal')) {
@@ -3042,6 +3078,7 @@ class MULOPIMFWC_Dashboard
 
         $result = [
             'orders' => $orders_by_location,
+            'sales' => $location_sales,
             'revenue' => $location_revenue,
         ];
         set_transient($cache_key, $result, 2 * MINUTE_IN_SECONDS);
@@ -5220,10 +5257,12 @@ class MULOPIMFWC_Dashboard
 
         return [
             'orders_by_location' => $orders_data['orders'] ?? [],
+            'sales_by_location' => $orders_data['sales'] ?? [],
             'revenue_by_location' => $orders_data['revenue'] ?? [],
             'recent_products_data' => $recent_products_data,
             'summary' => [
                 'total_orders' => array_sum($orders_data['orders'] ?? []),
+                'total_sell' => array_sum($orders_data['sales'] ?? []),
                 'total_revenue' => array_sum($orders_data['revenue'] ?? []),
             ],
         ];

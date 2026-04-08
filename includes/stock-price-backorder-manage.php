@@ -821,6 +821,8 @@ if (!function_exists('mulopimfwc_is_cart_checkout_runtime_context')) {
                 'mulopimfwc_cart_runtime_ajax_actions',
                 [
                     'woodmart_update_cart_item',
+                    // Theme/cart-drawer quantity refresh served through admin-ajax.php.
+                    'update_mini_cart_quantity',
                 ]
             ));
 
@@ -895,6 +897,8 @@ if (!function_exists('mulopimfwc_should_load_frontend_runtime_product_filters'))
             'mulopimfwc_frontend_runtime_product_filter_ajax_actions',
             [
                 'woodmart_update_cart_item',
+                // Theme/cart-drawer quantity refresh served through admin-ajax.php.
+                'update_mini_cart_quantity',
                 // Woodmart archive "Select options" panels render through admin-ajax.php.
                 'woodmart_quick_shop',
                 // Woodmart renders customer-facing quick view content through admin-ajax.php.

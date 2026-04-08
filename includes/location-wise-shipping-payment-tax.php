@@ -892,9 +892,36 @@ class MULOPIMFWC_Runtime_Filters
 
 // Bootstrap (frontend + checkout contexts)
 add_action('init', function () {
-    if (! is_admin()) {
+    $should_bootstrap = !is_admin();
+
+    if (
+        !$should_bootstrap &&
+        function_exists('wp_doing_ajax') &&
+        wp_doing_ajax()
+    ) {
+        if (function_exists('mulopimfwc_is_frontend_wc_ajax_request') && mulopimfwc_is_frontend_wc_ajax_request()) {
+            $should_bootstrap = true;
+        } else {
+            $ajax_action = isset($_REQUEST['action'])
+                ? sanitize_key(wp_unslash($_REQUEST['action']))
+                : '';
+
+            $frontend_runtime_ajax_actions = array_map('sanitize_key', (array) apply_filters(
+                'mulopimfwc_runtime_filter_ajax_actions',
+                [
+                    'woodmart_update_cart_item',
+                    // Live drawer-cart quantity refresh uses this admin-ajax action.
+                    'update_mini_cart_quantity',
+                ]
+            ));
+
+            $should_bootstrap = $ajax_action !== '' && in_array($ajax_action, $frontend_runtime_ajax_actions, true);
+        }
+    }
+
+    if ($should_bootstrap) {
         // optional: ensure PHP session exists if you plan to use session-based location selection
-        if (! session_id()) {
+        if (!session_id()) {
             @session_start();
         }
         new MULOPIMFWC_Runtime_Filters();
