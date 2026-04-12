@@ -1186,8 +1186,8 @@ class MULOPIMFWC_Dashboard
         // Enqueue necessary scripts and styles
         $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
         $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
-        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6.5';
-        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6.5';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6.6';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6.6';
 
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
         wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);

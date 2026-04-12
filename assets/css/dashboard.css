@@ -168,7 +168,7 @@ table.lwp-low-stock-table a {
   gap: 6px;
   position: absolute;
   right: 12px;
-  bottom: 10px;
+  top: 10px;
   color: #64748b;
   font-size: 11px;
   white-space: nowrap;

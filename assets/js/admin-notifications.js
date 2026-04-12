@@ -648,13 +648,6 @@
                 return;
             }
 
-            // This is a truly new notification - mark it immediately BEFORE showing
-            // Mark in both storage and session to prevent any race conditions
-            alertHistory.add(alertId);
-            markAsSeen(alertId); // Mark as seen immediately so it won't show again on reload
-            seenNotificationsSet.add(alertId); // Also add to our local Set for this iteration
-            markRecentNotification(fingerprint);
-            
             const message = formatAlertMessage(alert);
 
             if (config.floating_enabled !== 'off') {
@@ -664,6 +657,14 @@
             if (config.pwa_enabled === 'on') {
                 sendPushNotification(alert, message, fingerprint);
             }
+
+            // Record the notification only after display channels have had a chance to render it.
+            // The floating renderer checks these stores to suppress duplicates, so marking earlier
+            // prevents the first floating notification from appearing.
+            alertHistory.add(alertId);
+            markAsSeen(alertId);
+            seenNotificationsSet.add(alertId);
+            markRecentNotification(fingerprint);
         });
     }
 
