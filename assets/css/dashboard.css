@@ -130,12 +130,21 @@ table.lwp-low-stock-table a {
   align-items: center;
   border: 1px solid #f3f4f6;
   border-radius: 8px;
-  padding: 15px;
+  padding: 10px;
   flex: 1;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   text-decoration: none;
   position: relative;
 }
+
+.lwp-stat-content {
+  min-width: 0;
+}
+
+.lwp-stat-item--location .lwp-stat-content {
+  flex: 1;
+}
+
 .lwp-stat-item-icon {
   color: #2563eb;
   background: #dbeafe;
@@ -152,6 +161,15 @@ table.lwp-low-stock-table a {
   font-size: 26px;
   font-weight: bold;
   color: #111827;
+}
+
+.lwp-stat-value--location {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 20px;
+  line-height: 1.25;
 }
 
 .lwp-stat-label {

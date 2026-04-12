@@ -1186,8 +1186,8 @@ class MULOPIMFWC_Dashboard
         // Enqueue necessary scripts and styles
         $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
         $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
-        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6.6';
-        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6.6';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6.8';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6.8';
 
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
         wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
@@ -1475,14 +1475,14 @@ class MULOPIMFWC_Dashboard
                             <div class="lwp-filter-group lwp-quick-filters">
                                 <label><?php echo esc_html__('Quick Select', 'multi-location-product-and-inventory-management-pro'); ?></label>
                                 <div class="lwp-quick-buttons">
+                                    <button type="button" class="lwp-quick-btn" data-days="1">
+                                        <?php echo esc_html__('Today', 'multi-location-product-and-inventory-management-pro'); ?>
+                                    </button>
                                     <button type="button" class="lwp-quick-btn" data-days="7">
                                         <?php echo esc_html__('Last 7 Days', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                     <button type="button" class="lwp-quick-btn" data-days="30">
                                         <?php echo esc_html__('Last 30 Days', 'multi-location-product-and-inventory-management-pro'); ?>
-                                    </button>
-                                    <button type="button" class="lwp-quick-btn" data-days="90">
-                                        <?php echo esc_html__('Last 90 Days', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                     <button type="button" class="lwp-quick-btn" data-period="this-month">
                                         <?php echo esc_html__('This Month', 'multi-location-product-and-inventory-management-pro'); ?>
@@ -1544,9 +1544,9 @@ class MULOPIMFWC_Dashboard
                     </div>
                 <?php endif; ?>
                 <?php if ($locations_link) : ?>
-                    <a class="lwp-stat-item" href="<?php echo esc_url($locations_link); ?>">
+                    <a class="lwp-stat-item lwp-stat-item--location" href="<?php echo esc_url($locations_link); ?>">
                     <?php else : ?>
-                        <div class="lwp-stat-item">
+                        <div class="lwp-stat-item lwp-stat-item--location">
                         <?php endif; ?>
                         <div class="lwp-stat-item-icon" style="background-color: #dcfce7;">
 
@@ -1554,11 +1554,10 @@ class MULOPIMFWC_Dashboard
                                 <path fill="#16a34a" d="M215.7 499.2C267 435 384 279.4 384 192 384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2 12.3 15.3 35.1 15.3 47.4 0M192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128" />
                             </svg>
                         </div>
-                        <div>
+                        <div class="lwp-stat-content">
                             <span class="lwp-stat-progress" data-metric="locations"></span>
                             <span class="lwp-stat-label"><?php echo esc_html((string) ($dashboard_summary['location_card_label'] ?? __('Locations', 'multi-location-product-and-inventory-management-pro'))); ?></span>
-                            <span class="lwp-stat-value"><?php echo esc_html((string) ($dashboard_summary['location_card_value'] ?? 0)); ?></span>
-
+                            <span class="lwp-stat-value lwp-stat-add-location" title="<?php echo esc_attr((string) ($dashboard_summary['location_card_value'] ?? 0)); ?>"><?php echo esc_html((string) ($dashboard_summary['location_card_value'] ?? 0)); ?></span>
                         </div>
 
                         <?php if ($locations_link) : ?>

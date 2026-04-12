@@ -5,6 +5,12 @@
     'use strict';
     const LIVE_POLL_INTERVAL = 30000;
     const LIVE_RATE_LIMIT_MS = 5000;
+    const DASHBOARD_FILTER_URL_PARAMS = {
+        dateFrom: 'lwp_date_from',
+        dateTo: 'lwp_date_to',
+        location: 'lwp_location',
+        status: 'lwp_status'
+    };
 
     // Store chart instances globally for updates
     window.locationProductsChart = null;
@@ -35,9 +41,11 @@
         initExportHandlers();
         initProfitabilityPanel();
         if (mulopimfwc_DashboardData.deferred) {
-            applyDeferredSkeletons();
-            queueDeferredDashboardLoad();
-        } else {
+            if (!window.mulopimfwcFilterRequestActive && !filtersAreActive()) {
+                applyDeferredSkeletons();
+                queueDeferredDashboardLoad();
+            }
+        } else if (!window.mulopimfwcFilterRequestActive && !filtersAreActive()) {
             startRealtimeSync();
         }
     });
@@ -79,17 +87,7 @@
             e.stopPropagation();
 
             const $filters = $('.lwp-dashboard-filters');
-            const $btn = $(this);
-
-            if ($filters.hasClass('show')) {
-                $filters.removeClass('show');
-                $btn.removeClass('active');
-                localStorage.setItem('lwp_filter_state', 'closed');
-            } else {
-                $filters.addClass('show');
-                $btn.addClass('active');
-                localStorage.setItem('lwp_filter_state', 'open');
-            }
+            setDashboardFilterPanelOpen(!$filters.hasClass('show'));
         });
 
         // Quick date range buttons
@@ -97,98 +95,18 @@
             $('.lwp-quick-btn').removeClass('active');
             $(this).addClass('active');
 
-            const days = $(this).data('days');
-            const period = $(this).data('period');
-            const today = new Date();
-
-            let dateFrom, dateTo;
-
-            if (days) {
-                dateTo = formatDate(today);
-                const fromDate = new Date(today);
-                fromDate.setDate(today.getDate() - (days - 1));
-                dateFrom = formatDate(fromDate);
-            } else if (period === 'this-month') {
-                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                dateFrom = formatDate(firstDay);
-                dateTo = formatDate(today);
-            } else if (period === 'last-month') {
-                const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
-                dateFrom = formatDate(firstDay);
-                dateTo = formatDate(lastDay);
+            const range = getQuickDateRange($(this));
+            if (!range) {
+                return;
             }
 
-            $('#filter-date-from').val(dateFrom);
-            $('#filter-date-to').val(dateTo);
+            $('#filter-date-from').val(range.dateFrom);
+            $('#filter-date-to').val(range.dateTo);
         });
 
         // Apply filters
         $('#apply-filters').on('click', function () {
-            const dateFrom = $('#filter-date-from').val();
-            const dateTo = $('#filter-date-to').val();
-            const location = $('#filter-location').val();
-            const status = $('#filter-status').val();
-            const filtersActive = isFilterActiveInput(dateFrom, dateTo, location, status);
-
-            if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
-                alert('Date From cannot be later than Date To');
-                return;
-            }
-
-            window.mulopimfwcFilterRequestActive = true;
-            cancelDeferredDashboardLoad();
-            clearInitialProfitabilitySchedule();
-            $('#lwp-loading-overlay').fadeIn(200);
-            let filterRequestSucceeded = false;
-
-            $.ajax({
-                url: mulopimfwc_DashboardData.ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'mulopimfwc_apply_filters',
-                    nonce: mulopimfwc_DashboardData.dashboard_nonce,
-                    date_from: dateFrom,
-                    date_to: dateTo,
-                    location: location,
-                    status: status
-                },
-                success: function (response) {
-                    if (response.success) {
-                        filterRequestSucceeded = true;
-                        window.mulopimfwcDeferredLoaded = true;
-                        updateDashboardData(response.data);
-                        if (response.data && response.data.comparison) {
-                            updateComparisonIndicators(response.data.comparison);
-                        } else {
-                            clearComparisonIndicators();
-                        }
-                        window.mulopimfwcFiltersApplied = filtersActive;
-                        if (filtersActive) {
-                            showFilterBadge();
-                            updateConnectionStatus('paused');
-                        } else {
-                            $('.lwp-filter-active-badge').remove();
-                            startRealtimeSync({ initialFetch: false });
-                        }
-
-                        loadProfitabilityPanel({
-                            location: location
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Filter error:', error);
-                },
-                complete: function () {
-                    window.mulopimfwcFilterRequestActive = false;
-                    if (!filterRequestSucceeded && !window.mulopimfwcDeferredLoaded) {
-                        applyDeferredSkeletons();
-                        queueDeferredDashboardLoad();
-                    }
-                    $('#lwp-loading-overlay').fadeOut(200);
-                }
-            });
+            applyDashboardFilters({ syncUrl: true });
         });
 
         // Reset filters
@@ -201,7 +119,326 @@
             $('.lwp-filter-active-badge').remove();
             clearComparisonIndicators();
             window.mulopimfwcFiltersApplied = false;
-            location.reload();
+            reloadDashboardWithoutFilters();
+        });
+
+        const hydratedFilters = hydrateDashboardFiltersFromUrl();
+        if (hydratedFilters && hydratedFilters.active) {
+            applyDashboardFilters({ syncUrl: true, replaceUrl: true });
+        }
+    }
+
+    function applyDashboardFilters(options) {
+        const settings = options || {};
+        const filters = normalizeDashboardFilters(getCurrentDashboardFilters());
+        const filtersActive = areDashboardFiltersActive(filters);
+
+        if (filters.dateFrom && filters.dateTo && filters.dateFrom > filters.dateTo) {
+            alert('Date From cannot be later than Date To');
+            return;
+        }
+
+        setDashboardFilterInputs(filters);
+        syncQuickDateButtonState(filters);
+        window.mulopimfwcFilterRequestActive = true;
+        cancelDeferredDashboardLoad();
+        clearInitialProfitabilitySchedule();
+        $('#lwp-loading-overlay').fadeIn(200);
+        let filterRequestSucceeded = false;
+
+        $.ajax({
+            url: mulopimfwc_DashboardData.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'mulopimfwc_apply_filters',
+                nonce: mulopimfwc_DashboardData.dashboard_nonce,
+                date_from: filters.dateFrom,
+                date_to: filters.dateTo,
+                location: filters.location,
+                status: filters.status
+            },
+            success: function (response) {
+                if (response.success) {
+                    filterRequestSucceeded = true;
+                    window.mulopimfwcDeferredLoaded = true;
+                    window.mulopimfwcDeferredInvestmentLoaded = true;
+                    removeDeferredSkeletons();
+                    updateDashboardData(response.data);
+                    if (response.data && response.data.comparison) {
+                        updateComparisonIndicators(response.data.comparison);
+                    } else {
+                        clearComparisonIndicators();
+                    }
+                    window.mulopimfwcFiltersApplied = filtersActive;
+                    if (settings.syncUrl) {
+                        syncDashboardFilterUrl(filters, { replace: settings.replaceUrl !== false });
+                    }
+                    if (filtersActive) {
+                        showFilterBadge();
+                        updateConnectionStatus('paused');
+                    } else {
+                        $('.lwp-filter-active-badge').remove();
+                        startRealtimeSync({ initialFetch: false });
+                    }
+
+                    loadProfitabilityPanel({
+                        location: filters.location
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Filter error:', error);
+            },
+            complete: function () {
+                window.mulopimfwcFilterRequestActive = false;
+                if (!filterRequestSucceeded && !window.mulopimfwcDeferredLoaded) {
+                    applyDeferredSkeletons();
+                    queueDeferredDashboardLoad();
+                }
+                $('#lwp-loading-overlay').fadeOut(200);
+            }
+        });
+    }
+
+    function hydrateDashboardFiltersFromUrl() {
+        const parsed = getDashboardFiltersFromUrl();
+        if (!parsed || !parsed.hasParams) {
+            return parsed;
+        }
+
+        setDashboardFilterInputs(parsed.filters);
+        syncQuickDateButtonState(parsed.filters);
+        syncDashboardFilterUrl(parsed.filters, { replace: true });
+
+        if (parsed.active) {
+            setDashboardFilterPanelOpen(true);
+            showFilterBadge();
+        } else {
+            $('.lwp-filter-active-badge').remove();
+        }
+
+        return parsed;
+    }
+
+    function getDashboardFiltersFromUrl() {
+        if (!window.URLSearchParams) {
+            return null;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const hasParams = Object.keys(DASHBOARD_FILTER_URL_PARAMS).some(function (key) {
+            return params.has(DASHBOARD_FILTER_URL_PARAMS[key]);
+        });
+
+        if (!hasParams) {
+            return {
+                hasParams: false,
+                active: false,
+                filters: getEmptyDashboardFilters()
+            };
+        }
+
+        const filters = normalizeDashboardFilters({
+            dateFrom: params.get(DASHBOARD_FILTER_URL_PARAMS.dateFrom),
+            dateTo: params.get(DASHBOARD_FILTER_URL_PARAMS.dateTo),
+            location: params.get(DASHBOARD_FILTER_URL_PARAMS.location),
+            status: params.get(DASHBOARD_FILTER_URL_PARAMS.status)
+        });
+
+        if (filters.dateFrom && filters.dateTo && filters.dateFrom > filters.dateTo) {
+            filters.dateFrom = '';
+            filters.dateTo = '';
+        }
+
+        return {
+            hasParams: true,
+            active: areDashboardFiltersActive(filters),
+            filters: filters
+        };
+    }
+
+    function normalizeDashboardFilters(filters) {
+        const normalized = filters || {};
+        const location = normalizeSelectFilterValue('#filter-location', normalized.location, 'all');
+        const status = normalizeSelectFilterValue('#filter-status', normalized.status, 'all');
+
+        return {
+            dateFrom: normalizeDashboardDateValue(normalized.dateFrom),
+            dateTo: normalizeDashboardDateValue(normalized.dateTo),
+            location: location,
+            status: status
+        };
+    }
+
+    function normalizeDashboardDateValue(value) {
+        const dateValue = typeof value === 'string' ? value.trim() : '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+            return '';
+        }
+
+        const date = new Date(dateValue + 'T00:00:00');
+        if (Number.isNaN(date.getTime()) || formatDate(date) !== dateValue) {
+            return '';
+        }
+
+        return dateValue;
+    }
+
+    function normalizeSelectFilterValue(selector, value, fallback) {
+        const filterValue = typeof value === 'string' ? value.trim() : '';
+        if (filterValue && hasSelectOption(selector, filterValue)) {
+            return filterValue;
+        }
+
+        return fallback;
+    }
+
+    function hasSelectOption(selector, value) {
+        return $(selector).find('option').filter(function () {
+            return this.value === value;
+        }).length > 0;
+    }
+
+    function setDashboardFilterInputs(filters) {
+        const normalizedFilters = normalizeDashboardFilters(filters);
+        $('#filter-date-from').val(normalizedFilters.dateFrom);
+        $('#filter-date-to').val(normalizedFilters.dateTo);
+        $('#filter-location').val(normalizedFilters.location);
+        $('#filter-status').val(normalizedFilters.status);
+    }
+
+    function syncDashboardFilterUrl(filters, options) {
+        const url = buildDashboardFilterUrl(filters);
+        if (!url || !window.history || typeof window.history.replaceState !== 'function') {
+            return url;
+        }
+
+        const replace = !options || options.replace !== false;
+        if (replace || typeof window.history.pushState !== 'function') {
+            window.history.replaceState(window.history.state, document.title, url.toString());
+        } else {
+            window.history.pushState(window.history.state, document.title, url.toString());
+        }
+
+        return url;
+    }
+
+    function buildDashboardFilterUrl(filters) {
+        if (!window.URL) {
+            return null;
+        }
+
+        const url = new URL(window.location.href);
+        const normalizedFilters = normalizeDashboardFilters(filters);
+        Object.keys(DASHBOARD_FILTER_URL_PARAMS).forEach(function (key) {
+            url.searchParams.delete(DASHBOARD_FILTER_URL_PARAMS[key]);
+        });
+
+        if (normalizedFilters.dateFrom) {
+            url.searchParams.set(DASHBOARD_FILTER_URL_PARAMS.dateFrom, normalizedFilters.dateFrom);
+        }
+
+        if (normalizedFilters.dateTo) {
+            url.searchParams.set(DASHBOARD_FILTER_URL_PARAMS.dateTo, normalizedFilters.dateTo);
+        }
+
+        if (normalizedFilters.location !== 'all') {
+            url.searchParams.set(DASHBOARD_FILTER_URL_PARAMS.location, normalizedFilters.location);
+        }
+
+        if (normalizedFilters.status !== 'all') {
+            url.searchParams.set(DASHBOARD_FILTER_URL_PARAMS.status, normalizedFilters.status);
+        }
+
+        return url;
+    }
+
+    function reloadDashboardWithoutFilters() {
+        const url = buildDashboardFilterUrl(getEmptyDashboardFilters());
+        if (url) {
+            window.location.href = url.toString();
+            return;
+        }
+
+        location.reload();
+    }
+
+    function getEmptyDashboardFilters() {
+        return {
+            dateFrom: '',
+            dateTo: '',
+            location: 'all',
+            status: 'all'
+        };
+    }
+
+    function areDashboardFiltersActive(filters) {
+        const normalizedFilters = normalizeDashboardFilters(filters);
+        return isFilterActiveInput(
+            normalizedFilters.dateFrom,
+            normalizedFilters.dateTo,
+            normalizedFilters.location,
+            normalizedFilters.status
+        );
+    }
+
+    function isLocationSpecificFilterApplied(filters) {
+        return normalizeDashboardFilters(filters).location !== 'all';
+    }
+
+    function setDashboardFilterPanelOpen(isOpen) {
+        $('.lwp-dashboard-filters').toggleClass('show', isOpen);
+        $('.filter_toggle_btn').toggleClass('active', isOpen);
+        localStorage.setItem('lwp_filter_state', isOpen ? 'open' : 'closed');
+    }
+
+    function getQuickDateRange($button) {
+        const days = $button.data('days');
+        const period = $button.data('period');
+        const today = new Date();
+        let dateFrom = '';
+        let dateTo = '';
+
+        if (days) {
+            dateTo = formatDate(today);
+            const fromDate = new Date(today);
+            fromDate.setDate(today.getDate() - (days - 1));
+            dateFrom = formatDate(fromDate);
+        } else if (period === 'this-month') {
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            dateFrom = formatDate(firstDay);
+            dateTo = formatDate(today);
+        } else if (period === 'last-month') {
+            const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+            dateFrom = formatDate(firstDay);
+            dateTo = formatDate(lastDay);
+        }
+
+        if (!dateFrom || !dateTo) {
+            return null;
+        }
+
+        return {
+            dateFrom: dateFrom,
+            dateTo: dateTo
+        };
+    }
+
+    function syncQuickDateButtonState(filters) {
+        const normalizedFilters = normalizeDashboardFilters(filters);
+        $('.lwp-quick-btn').removeClass('active');
+
+        if (!normalizedFilters.dateFrom || !normalizedFilters.dateTo) {
+            return;
+        }
+
+        $('.lwp-quick-btn').each(function () {
+            const range = getQuickDateRange($(this));
+            if (range && range.dateFrom === normalizedFilters.dateFrom && range.dateTo === normalizedFilters.dateTo) {
+                $(this).addClass('active');
+                return false;
+            }
         });
     }
 
@@ -293,6 +530,9 @@
                 if (metric === 'products' && data.summary.total_products !== undefined) {
                     $value.text(data.summary.total_products.toLocaleString());
                 } else if (metric === 'locations') {
+                    const locationSpecificFilterActive = isLocationSpecificFilterApplied(getCurrentDashboardFilters());
+                    $value.toggleClass('lwp-stat-value--location', locationSpecificFilterActive);
+
                     if (data.summary.location_card_label !== undefined) {
                         $label.text(data.summary.location_card_label);
                     }
@@ -300,11 +540,14 @@
                     if (data.summary.location_card_value !== undefined) {
                         if (typeof data.summary.location_card_value === 'number') {
                             $value.text(data.summary.location_card_value.toLocaleString());
+                            $value.attr('title', data.summary.location_card_value.toLocaleString());
                         } else {
                             $value.text(data.summary.location_card_value);
+                            $value.attr('title', data.summary.location_card_value);
                         }
                     } else if (data.summary.total_locations !== undefined) {
                         $value.text(data.summary.total_locations.toLocaleString());
+                        $value.attr('title', data.summary.total_locations.toLocaleString());
                     }
                 } else if (metric === 'orders' && data.summary.total_orders !== undefined) {
                     $value.text(data.summary.total_orders.toLocaleString());
@@ -390,7 +633,7 @@
     }
 
     function queueDeferredDashboardLoad() {
-        if (window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive) {
+        if (window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive || filtersAreActive()) {
             return;
         }
 
@@ -398,13 +641,13 @@
         clearDeferredDashboardQueue();
 
         const startDeferredLoad = function () {
-            if (window.mulopimfwcDeferredCancelled || window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive) {
+            if (window.mulopimfwcDeferredCancelled || window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive || filtersAreActive()) {
                 return;
             }
 
             window.mulopimfwcDeferredQueueTimer = window.setTimeout(function () {
                 window.mulopimfwcDeferredQueueTimer = null;
-                if (window.mulopimfwcDeferredCancelled || window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive) {
+                if (window.mulopimfwcDeferredCancelled || window.mulopimfwcDeferredLoaded || window.mulopimfwcDeferredLoadStarted || window.mulopimfwcFilterRequestActive || filtersAreActive()) {
                     return;
                 }
 
@@ -1231,7 +1474,7 @@
     }
 
     function fetchRealtimeData() {
-        if (filtersAreActive()) {
+        if (window.mulopimfwcFilterRequestActive || filtersAreActive()) {
             updateConnectionStatus('paused');
             return;
         }
