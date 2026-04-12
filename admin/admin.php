@@ -6353,10 +6353,11 @@ JS;
         }
 
         // Add main notification menu item to top-secondary (right side of admin bar)
+        $notification_icon = '<span class="mulopimfwc-adminbar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>';
         $wp_admin_bar->add_node(array(
             'id' => 'mulopimfwc-notifications',
             'parent' => 'top-secondary',
-            'title' => '<span class="ab-icon dashicons-bell" aria-hidden="true"></span><span class="ab-label mulopimfwc-notification-count" data-count="0">0</span>',
+            'title' => $notification_icon . '<span class="screen-reader-text">' . esc_html__('Notifications', 'multi-location-product-and-inventory-management-pro') . '</span><span class="ab-label mulopimfwc-notification-count" data-count="0">0</span>',
             'meta' => array(
                 'class' => 'mulopimfwc-admin-bar-notification',
                 'title' => __('Notifications', 'multi-location-product-and-inventory-management-pro'),

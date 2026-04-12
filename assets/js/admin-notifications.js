@@ -1305,227 +1305,508 @@
         return (text || '').replace(/[&<>"']/g, function (m) { return map[m]; });
     }
 
+    function normalizeSeverity(severity) {
+        const normalized = String(severity || 'info').toLowerCase();
+        return ['critical', 'warning', 'info'].includes(normalized) ? normalized : 'info';
+    }
+
+    function getAdminBarSvgIcon(name) {
+        const icons = {
+            info: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path></svg>',
+            warning: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 2.8 19a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L12 3Z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg>',
+            critical: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v6"></path><path d="M12 17h.01"></path></svg>',
+            empty: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M4 4 20 20"></path></svg>',
+            more: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg>',
+            view: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>',
+            markRead: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 5 5L20 6"></path></svg>',
+            markUnread: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 4h16v16H4z"></path><path d="m4 7 8 6 8-6"></path></svg>',
+            remove: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg>',
+            readAll: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 4 4L20 5"></path><path d="m4 19 3 3 4-4"></path></svg>',
+            clearAll: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path></svg>'
+        };
+
+        return icons[name] || icons.info;
+    }
+
+    function getAdminBarAlertMessage(alert) {
+        const message = stripHtmlTags(alert && alert.message ? alert.message : '');
+        return message || formatAlertMessage(alert || {});
+    }
+
+    function getNotificationTimeLabel(alert) {
+        const timestamp = alert && alert.timestamp ? Number(alert.timestamp) : 0;
+        if (!timestamp) {
+            return '';
+        }
+
+        const timestampMs = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
+        const diffSeconds = Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
+
+        if (diffSeconds < 60) {
+            return 'Just now';
+        }
+
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        if (diffMinutes < 60) {
+            return diffMinutes + 'm ago';
+        }
+
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) {
+            return diffHours + 'h ago';
+        }
+
+        const diffDays = Math.floor(diffHours / 24);
+        return diffDays + 'd ago';
+    }
+
+    function getAdminBarSummaryText(count, unreadCount) {
+        if (count === 1) {
+            return unreadCount === 1 ? '1 unread alert' : '1 alert';
+        }
+
+        return unreadCount > 0
+            ? unreadCount + ' unread of ' + count
+            : count + ' alerts';
+    }
+
     function initAdminBarNotifications() {
         // Add styles for admin bar notifications
         if ($('#mulopimfwc-admin-bar-styles').length === 0) {
             $('<style id="mulopimfwc-admin-bar-styles"></style>').text(`
-                #wp-admin-bar-mulopimfwc-notifications .ab-icon {
-                    font-size: 20px;
-                    line-height: 1;
-                    margin-right: 5px;
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications > .ab-item {
+                    display: flex!important;
+                    align-items: center!important;
+                    gap: 6px!important;
+                    min-width: 42px!important;
+                    padding: 0 10px !important;
+                    color: #f0f0f1!important;
                 }
-                #wp-admin-bar-mulopimfwc-notifications .mulopimfwc-notification-count[data-count="0"] {
-                    display: none;
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications > .ab-item:hover,
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications.hover > .ab-item,
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications > .ab-item:focus {
+                    color: #fff!important;
+                    background: #1d2327!important;
                 }
-                #wp-admin-bar-mulopimfwc-notifications-dropdown {
-                    min-width: 350px;
-                    max-width: 400px;
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications {
+                    position: relative!important;
                 }
-                #wp-admin-bar-mulopimfwc-notifications-dropdown .ab-item {
-                    padding: 0;
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications .mulopimfwc-adminbar-icon {
+                    display: inline-flex!important;
+                    align-items: center!important;
+                    justify-content: center!important;
+                    width: 22px!important;
+                    height: 32px!important;
+                    color: currentColor!important;
                 }
-                ul#wp-admin-bar-mulopimfwc-notifications-default {
-                    max-height: 500px;
-                    min-height: 390px;
-                    background: #fff;
-                    overflow: hidden;
-                    overflow-y: auto;
-                    scrollbar-width: thin;
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications .mulopimfwc-adminbar-icon svg,
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications .mulopimfwc-adminbar-svg {
+                    width: 18px!important;
+                    height: 18px!important;
+                    display: block!important;
+                }
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications .mulopimfwc-notification-count {
+                    display: inline-flex!important;
+                    align-items: center!important;
+                    justify-content: center!important;
+                    min-width: 17px!important;
+                    height: 17px!important;
+                    padding: 0 5px!important;
+                    border-radius: 999px!important;
+                    background: #d63638!important;
+                    color: #fff!important;
+                    font-size: 11px!important;
+                    font-weight: 700!important;
+                    line-height: 17px!important;
+                    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22)!important;
+                }
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications .mulopimfwc-notification-count[data-count="0"] {
+                    display: none!important;
+                }
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications .ab-sub-wrapper {
+                    position: absolute !important;
+                    top: 32px !important;
+                    right: 0 !important;
+                    left: auto !important;
+                    width: 420px !important;
+                    padding: 8px 0 0!important;
+                    background: transparent!important;
+                    box-shadow: none!important;
+                    z-index: 1000001!important;
+                }
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications.hover > .ab-sub-wrapper,
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications:focus-within > .ab-sub-wrapper {
+                    display: block !important;
+                }
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications-dropdown {
+                    width: 100%!important;
+                }
+                #wpadminbar #wp-admin-bar-mulopimfwc-notifications-dropdown .ab-item {
+                    height: auto !important;
+                    min-height: 0!important;
+                    padding: 0 !important;
+                    line-height: normal !important;
+                    color: #1d2327 !important;
+                    background: transparent !important;
+                    white-space: normal!important;
+                }
+                #wpadminbar ul#wp-admin-bar-mulopimfwc-notifications-default {
+                    width: 420px !important;
+                    max-height: min(560px, calc(100vh - 48px)) !important;
+                    min-height: 0 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    background: #fff !important;
+                    border: 1px solid #dcdcde!important;
+                    border-radius: 8px!important;
+                    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.20)!important;
+                    overflow: hidden auto!important;
+                    scrollbar-width: thin!important;
+                    z-index: 1000002!important;
+                }
+                .mulopimfwc-notifications-dropdown-content {
+                    color: #1d2327!important;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif!important;
+                    font-size: 13px!important;
+                    line-height: 1.4!important;
+                    padding: 16px !important;
                 }
                 .mulopimfwc-notifications-header {
-                    padding: 12px 15px;
-                    border-bottom: 1px solid #eee;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    background: #f9f9f9;
-                    position: sticky;
-                    top: 0;
-                    z-index: 10;
+                    padding: 14px 16px!important;
+                    border-bottom: 1px solid #dcdcde!important;
+                    display: flex!important;
+                    justify-content: space-between!important;
+                    align-items: flex-start!important;
+                    gap: 12px!important;
+                    background: #fff!important;
+                    position: sticky!important;
+                    top: 0!important;
+                    z-index: 20!important;
+                }
+                .mulopimfwc-notifications-heading {
+                    display: flex!important;
+                    flex-direction: column!important;
+                    gap: 2px!important;
+                    min-width: 0!important;
+                }
+                .mulopimfwc-notifications-title {
+                    color: #1d2327!important;
+                    font-size: 14px!important;
+                    font-weight: 700!important;
+                    line-height: 1.25!important;
+                }
+                .mulopimfwc-notifications-subtitle {
+                    color: #646970!important;
+                    font-size: 12px!important;
+                    line-height: 1.35!important;
                 }
                 .mulopimfwc-notifications-header-buttons {
-                    display: flex;
-                    gap: 8px;
+                    display: flex!important;
+                    gap: 6px!important;
+                    flex-shrink: 0!important;
                 }
                 .mulopimfwc-notifications-header-btn {
-                    padding: 4px 12px;
-                    font-size: 12px;
-                    border: 1px solid #ddd;
-                    background: #fff;
-                    cursor: pointer;
-                    border-radius: 3px;
-                    transition: all 0.2s;
+                    display: inline-flex!important;
+                    align-items: center!important;
+                    justify-content: center!important;
+                    gap: 5px!important;
+                    min-height: 28px!important;
+                    min-width: 78px!important;
+                    padding: 5px 9px !important;
+                    font-size: 12px !important;
+                    font-weight: 600 !important;
+                    line-height: 1 !important;
+                    font-family: inherit!important;
+                    color: #1d2327!important;
+                    border: 1px solid #c3c4c7!important;
+                    background: #fff!important;
+                    cursor: pointer!important;
+                    border-radius: 6px !important;
+                    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease !important;
+                    white-space: nowrap!important;
+                    box-sizing: border-box !important;
+                }
+                .mulopimfwc-notifications-header-btn span,
+                .mulopimfwc-notification-item-menu-item span {
+                    line-height: 1.2!important;
+                    white-space: nowrap!important;
+                }
+                .mulopimfwc-notifications-header-btn svg,
+                .mulopimfwc-notification-item-menu-item svg,
+                .mulopimfwc-notification-item-menu-btn svg {
+                    width: 14px!important;
+                    height: 14px!important;
+                    display: block!important;
+                    fill: none!important;
+                    stroke: currentColor!important;
+                    stroke-width: 1.9!important;
+                    stroke-linecap: round!important;
+                    stroke-linejoin: round!important;
                 }
                 .mulopimfwc-notifications-header-btn:hover {
-                    background: #f0f0f0;
-                    border-color: #999;
+                    background: #f6f7f7!important;
+                    border-color: #8c8f94!important;
                 }
                 .mulopimfwc-notification-item {
-                    padding: 12px 15px;
-                    border-bottom: 1px solid #eee;
-                    transition: background-color 0.2s;
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 10px;
-                    position: relative;
+                    padding: 12px 14px !important;
+                    border-bottom: 1px solid #f0f0f1!important;
+                    transition: background-color 0.18s ease !important;
+                    display: grid!important;
+                    grid-template-columns: 36px minmax(0, 1fr) 30px!important;
+                    gap: 11px!important;
+                    position: relative !important;
+                    background: #fff !important;
                 }
                 .mulopimfwc-notification-item:hover {
-                    background-color: #f5f5f5;
+                    background-color: #f6f7f7!important;
                 }
                 .mulopimfwc-notification-item:last-child {
-                    border-bottom: none;
+                    border-bottom: none!important;
                 }
                 .mulopimfwc-notification-item.unread {
-                    background-color: #f0f6ff;
-                    font-weight: 500;
+                    background-color: #f5f9ff!important;
                 }
                 .mulopimfwc-notification-item.unread .mulopimfwc-notification-item-title {
-                    font-weight: 700;
+                    font-weight: 700!important;
                 }
-                .mulopimfwc-notification-item.read {
-                    opacity: 0.7;
+                .mulopimfwc-notification-item.unread:after {
+                    content: ""!important;
+                    position: absolute!important;
+                    top: 18px!important;
+                    right: 12px!important;
+                    width: 6px!important;
+                    height: 6px!important;
+                    border-radius: 999px!important;
+                    background: #2271b1!important;
                 }
                 .mulopimfwc-notification-item.severity-critical {
-                    border-left: 3px solid #dc3232;
+                    box-shadow: inset 3px 0 0 #d63638!important;
                 }
                 .mulopimfwc-notification-item.severity-warning {
-                    border-left: 3px solid #f56e28;
+                    box-shadow: inset 3px 0 0 #dba617!important;
                 }
                 .mulopimfwc-notification-item.severity-info {
-                    border-left: 3px solid #2271b1;
+                    box-shadow: inset 3px 0 0 #2271b1 !important;
                 }
                 .mulopimfwc-notification-item-icon {
-                    flex-shrink: 0;
-                    width: 20px;
-                    height: 20px;
-                    margin-top: 2px;
+                    width: 34px !important;
+                    height: 34px!important;
+                    border-radius: 8px!important;
+                    display: inline-flex!important;
+                    align-items: center!important;
+                    justify-content: center!important;
+                    margin-top: 1px!important;
+                    color: #2271b1!important;
+                    background: #e7f1fb!important;
+                }
+                .mulopimfwc-notification-item-icon svg {
+                    width: 18px!important;
+                    height: 18px!important;
+                    fill: none!important;
+                    stroke: currentColor!important;
+                    stroke-width: 1.9!important;
+                    stroke-linecap: round!important;
+                    stroke-linejoin: round!important;
+                }
+                .mulopimfwc-notification-item.severity-critical .mulopimfwc-notification-item-icon {
+                    color: #b32d2e!important;
+                    background: #fcf0f1!important;
+                }
+                .mulopimfwc-notification-item.severity-warning .mulopimfwc-notification-item-icon {
+                    color: #996800!important;
+                    background: #fcf9e8!important;
                 }
                 .mulopimfwc-notification-item-content {
-                    flex: 1;
-                    min-width: 0;
-                    cursor: pointer;
+                    min-width: 0!important;
+                    cursor: pointer!important;
+                }
+                .mulopimfwc-notification-item-meta {
+                    display: flex!important;
+                    align-items: center!important;
+                    gap: 8px!important;
+                    margin-bottom: 3px!important;
                 }
                 .mulopimfwc-notification-item-title {
-                    font-weight: 600;
-                    font-size: 13px;
-                    color: #1d2327;
-                    margin-bottom: 4px;
+                    font-weight: 600!important;
+                    font-size: 13px!important;
+                    color: #1d2327!important;
+                    line-height: 1.3!important;
+                    overflow: hidden!important;
+                    text-overflow: ellipsis!important;
+                    white-space: nowrap!important;
+                }
+                .mulopimfwc-notification-item-time {
+                    color: #8c8f94!important;
+                    font-size: 11px!important;
+                    line-height: 1.3!important;
+                    white-space: nowrap!important;
                 }
                 .mulopimfwc-notification-item-message {
-                    font-size: 12px;
-                    color: #646970;
-                    line-height: 1.4;
+                    font-size: 12px!important;
+                    color: #646970!important;
+                    line-height: 1.45!important;
+                    overflow: hidden!important;
+                    display: -webkit-box!important;
+                    -webkit-line-clamp: 2!important;
+                    -webkit-box-orient: vertical!important;
+                    word-break: break-word!important;
                 }
                 .mulopimfwc-notification-item-actions {
-                    position: relative;
-                    flex-shrink: 0;
+                    position: relative!important;
+                    justify-self: end!important;
                 }
                 .mulopimfwc-notification-item-menu-btn {
-                    width: 24px;
-                    height: 24px;
-                    border: none;
-                    background: transparent;
-                    cursor: pointer;
-                    border-radius: 3px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 16px;
-                    color: #646970;
-                    padding: 0;
-                    transition: all 0.2s;
+                    width: 28px!important;
+                    height: 28px!important;
+                    border: none!important;
+                    background: transparent!important;
+                    cursor: pointer!important;
+                    border-radius: 6px!important;
+                    display: flex!important;
+                    align-items: center!important;
+                    justify-content: center!important;
+                    color: #646970!important;
+                    padding: 0!important;
+                    transition: background 0.18s ease, color 0.18s ease!important;
                 }
                 .mulopimfwc-notification-item-menu-btn:hover {
-                    background: #e0e0e0;
-                    color: #1d2327;
+                    background: #e7f1fb!important;
+                    color: #1d2327!important;
                 }
                 .mulopimfwc-notification-item-menu {
-                    position: absolute;
-                    top: 100%;
-                    right: 0;
-                    background: #fff;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                    min-width: 120px;
-                    z-index: 1000;
-                    display: none;
-                    margin-top: 4px;
+                    position: absolute!important;
+                    top: 100%!important;
+                    right: 0!important;
+                    background: #fff!important;
+                    border: 1px solid #dcdcde!important;
+                    border-radius: 8px!important;
+                    box-shadow: 0 10px 24px rgba(0,0,0,0.16)!important;
+                    min-width: 168px!important;
+                    z-index: 100000!important;
+                    display: none!important;
+                    margin-top: 4px!important;
+                    padding: 5px!important;
+                    overflow: hidden!important;
                 }
                 .mulopimfwc-notification-item-menu.show {
-                    display: block;
+                    display: block!important;
                 }
                 .mulopimfwc-notification-item-menu-item {
-                    padding: 8px 12px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    border-bottom: 1px solid #f0f0f0;
-                    transition: background 0.2s;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .mulopimfwc-notification-item-menu-item:last-child {
-                    border-bottom: none;
+                    width: 100%!important;
+                    min-height: 32px!important;
+                    padding: 7px 9px!important;
+                    font-size: 12px!important;
+                    line-height: 1.2!important;
+                    color: #1d2327!important;
+                    cursor: pointer!important;
+                    border: 0!important;
+                    background: transparent!important;
+                    border-radius: 6px!important;
+                    transition: background 0.18s ease, color 0.18s ease!important;
+                    display: flex!important;
+                    align-items: center!important;
+                    gap: 8px!important;
+                    text-align: left!important;
                 }
                 .mulopimfwc-notification-item-menu-item:hover {
-                    background: #f5f5f5;
+                    background: #f6f7f7!important;
                 }
                 .mulopimfwc-notification-item-menu-item.danger {
-                    color: #dc3232;
+                    color: #b32d2e!important;
                 }
                 .mulopimfwc-notification-item-menu-item.danger:hover {
-                    background: #ffe0e0;
+                    background: #fcf0f1!important;
                 }
                 .mulopimfwc-notifications-empty {
-                    padding: 20px;
-                    text-align: center;
-                    color: #646970;
-                    font-size: 13px;
+                    padding: 46px 28px!important;
+                    text-align: center!important;
+                    color: #646970!important;
+                    font-size: 13px!important;
+                    display: flex!important;
+                    flex-direction: column!important;
+                    align-items: center!important;
+                    justify-content: center!important;
+                    gap: 8px!important;
+                    min-height: 220px!important;
                 }
-                .mulopimfwc-notifications-empty {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    max-height: 500px;
-                    min-height: 390px;
+                .mulopimfwc-notifications-empty svg {
+                    width: 36px!important;
+                    height: 36px!important;
+                    margin-bottom: 4px!important;
+                    color: #8c8f94!important;
+                    fill: none!important;
+                    stroke: currentColor!important;
+                    stroke-width: 1.8!important;
+                    stroke-linecap: round!important;
+                    stroke-linejoin: round!important;
+                }
+                .mulopimfwc-notifications-empty strong {
+                    color: #1d2327!important;
+                    font-size: 14px!important;
+                }
+                .mulopimfwc-notifications-empty span {
+                    max-width: 250px!important;
+                    color: #646970!important;
+                    line-height: 1.45!important;
                 }
                 .mulopimfwc-notifications-loading {
-                    padding: 20px;
-                    text-align: center;
-                    color: #646970;
-                    font-size: 13px;
+                    padding: 42px 20px!important;
+                    text-align: center!important;
+                    color: #646970!important;
+                    font-size: 13px!important;
+                }
+                @media screen and (max-width: 782px) {
+                    #wpadminbar #wp-admin-bar-mulopimfwc-notifications .ab-sub-wrapper {
+                        position: fixed !important;
+                        top: 46px !important;
+                        right: 10px !important;
+                        left: 10px !important;
+                        width: auto !important;
+                    }
+                    #wpadminbar ul#wp-admin-bar-mulopimfwc-notifications-default {
+                        width: auto !important;
+                        max-height: calc(100vh - 66px)!important;
+                    }
+                    .mulopimfwc-notifications-header {
+                        flex-direction: column!important;
+                    }
+                    .mulopimfwc-notifications-header-buttons {
+                        width: 100%!important;
+                    }
+                    .mulopimfwc-notifications-header-btn {
+                        flex: 1!important;
+                        justify-content: center!important;
+                    }
                 }
                 .mulopimfwc-floating-notification {
-                    position: relative;
+                    position: relative!important;
                 }
                 .mulopimfwc-notification-close {
-                    position: absolute;
-                    top: 8px;
-                    right: 8px;
-                    background: rgba(0, 0, 0, 0.3);
-                    border: none;
-                    color: #fff;
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    font-size: 18px;
-                    line-height: 1;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    opacity: 0.7;
-                    transition: opacity 0.2s, background 0.2s;
-                    z-index: 10;
+                    position: absolute!important;
+                    top: 8px!important;
+                    right: 8px!important;
+                    background: rgba(0, 0, 0, 0.3)!important;
+                    border: none!important;
+                    color: #fff!important;
+                    width: 24px!important;
+                    height: 24px!important;
+                    border-radius: 50%!important;
+                    cursor: pointer!important;
+                    font-size: 18px!important;
+                    line-height: 1!important;
+                    display: flex!important;
+                    align-items: center!important;
+                    justify-content: center!important;
+                    opacity: 0.7!important;
+                    transition: opacity 0.2s, background 0.2s!important;
+                    z-index: 10!important;
                 }
                 .mulopimfwc-notification-close:hover {
-                    opacity: 1;
-                    background: rgba(0, 0, 0, 0.5);
+                    opacity: 1!important;
+                    background: rgba(0, 0, 0, 0.5)!important;
                 }
                 .mulopimfwc-notification-content {
-                    padding-right: 30px;
+                    padding-right: 30px!important;
                 }
             `).appendTo('head');
         }
@@ -1547,8 +1828,9 @@
     }
 
     function updateAdminBarNotifications(alerts) {
-        const count = alerts ? alerts.length : 0;
-        const unreadCount = alerts ? alerts.filter(function (a) { return !isRead(a.id); }).length : 0;
+        const activeAlerts = Array.isArray(alerts) ? alerts : [];
+        const count = activeAlerts.length;
+        const unreadCount = activeAlerts.filter(function (a) { return !isRead(a.id); }).length;
         const countElement = $('.mulopimfwc-notification-count');
         countElement.attr('data-count', unreadCount);
         countElement.text(unreadCount);
@@ -1559,44 +1841,59 @@
         }
 
         if (count === 0) {
-            dropdown.html('<div class="mulopimfwc-notifications-empty"><svg width="30" height="30" viewBox="0 0 0.9 0.9" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1"><path d="M.758.331.525.104a.106.106 0 0 0-.146 0L.146.329a.1.1 0 0 0-.034.073v.322a.103.103 0 0 0 .105.101h.466A.103.103 0 0 0 .787.723V.401A.1.1 0 0 0 .757.33M.428.158a.03.03 0 0 1 .042 0l.205.198L.47.554a.03.03 0 0 1-.042 0L.225.356Zm.285.565A.03.03 0 0 1 .684.75H.217A.03.03 0 0 1 .188.723V.425L.34.571l-.062.06a.037.037 0 0 0 0 .053.04.04 0 0 0 .027.012.04.04 0 0 0 .026-.011L.397.621a.1.1 0 0 0 .11 0l.066.064a.04.04 0 0 0 .026.011.04.04 0 0 0 .027-.012.037.037 0 0 0 0-.053L.563.572l.15-.146Z"/></svg> No new notifications</div>');
+            dropdown.html(
+                '<div class="mulopimfwc-notifications-empty">' +
+                getAdminBarSvgIcon('empty') +
+                '<strong>No new notifications</strong>' +
+                '<span>Order, stock, and system alerts will appear here.</span>' +
+                '</div>'
+            );
             return;
         }
 
         // Build header with buttons
         let html = '<div class="mulopimfwc-notifications-header">';
-        html += '<strong>Notifications</strong>';
+        html += '<div class="mulopimfwc-notifications-heading">';
+        html += '<span class="mulopimfwc-notifications-title">Notifications</span>';
+        html += '<span class="mulopimfwc-notifications-subtitle">' + escapeHtml(getAdminBarSummaryText(count, unreadCount)) + '</span>';
+        html += '</div>';
         html += '<div class="mulopimfwc-notifications-header-buttons">';
-        html += '<button class="mulopimfwc-notifications-header-btn" data-action="read-all">Read All</button>';
-        html += '<button class="mulopimfwc-notifications-header-btn" data-action="clear-all">Clear All</button>';
+        html += '<button type="button" class="mulopimfwc-notifications-header-btn" data-action="read-all">' + getAdminBarSvgIcon('readAll') + '<span>Read All</span></button>';
+        html += '<button type="button" class="mulopimfwc-notifications-header-btn" data-action="clear-all">' + getAdminBarSvgIcon('clearAll') + '<span>Clear All</span></button>';
         html += '</div></div>';
 
         // Build notification items
-        alerts.forEach(function (alert) {
-            const severity = alert.severity || 'info';
-            const message = formatAlertMessage(alert);
+        activeAlerts.forEach(function (alert) {
+            const severity = normalizeSeverity(alert.severity);
+            const message = getAdminBarAlertMessage(alert);
             const url = getNotificationUrl(alert);
-            const icon = severity === 'critical' ? '⚠️' : (severity === 'warning' ? '⚡' : 'ℹ️');
+            const icon = getAdminBarSvgIcon(severity);
             const read = isRead(alert.id);
             const readClass = read ? 'read' : 'unread';
+            const timeLabel = getNotificationTimeLabel(alert);
 
             html += '<div class="mulopimfwc-notification-item severity-' + severity + ' ' + readClass + '" data-url="' +
                 escapeHtml(url || '') + '" data-alert-id="' + escapeHtml(alert.id || '') + '">';
             html += '<span class="mulopimfwc-notification-item-icon">' + icon + '</span>';
             html += '<div class="mulopimfwc-notification-item-content">';
+            html += '<div class="mulopimfwc-notification-item-meta">';
             html += '<div class="mulopimfwc-notification-item-title">' + escapeHtml(alert.label || 'Notification') + '</div>';
-            html += '<div class="mulopimfwc-notification-item-message">' + message + '</div>';
+            if (timeLabel) {
+                html += '<span class="mulopimfwc-notification-item-time">' + escapeHtml(timeLabel) + '</span>';
+            }
+            html += '</div>';
+            html += '<div class="mulopimfwc-notification-item-message">' + escapeHtml(message) + '</div>';
             html += '</div>';
             html += '<div class="mulopimfwc-notification-item-actions">';
-            html += '<button class="mulopimfwc-notification-item-menu-btn" data-alert-id="' + escapeHtml(alert.id || '') + '">⋯</button>';
+            html += '<button type="button" class="mulopimfwc-notification-item-menu-btn" aria-label="Notification actions" data-alert-id="' + escapeHtml(alert.id || '') + '">' + getAdminBarSvgIcon('more') + '</button>';
             html += '<div class="mulopimfwc-notification-item-menu" data-alert-id="' + escapeHtml(alert.id || '') + '">';
-            html += '<div class="mulopimfwc-notification-item-menu-item" data-action="view" data-url="' + escapeHtml(url || '') + '">👁️ View</div>';
+            html += '<button type="button" class="mulopimfwc-notification-item-menu-item" data-action="view" data-url="' + escapeHtml(url || '') + '">' + getAdminBarSvgIcon('view') + '<span>View</span></button>';
             if (read) {
-                html += '<div class="mulopimfwc-notification-item-menu-item" data-action="mark-unread" data-alert-id="' + escapeHtml(alert.id || '') + '">↩️ Mark as Unread</div>';
+                html += '<button type="button" class="mulopimfwc-notification-item-menu-item" data-action="mark-unread" data-alert-id="' + escapeHtml(alert.id || '') + '">' + getAdminBarSvgIcon('markUnread') + '<span>Mark as Unread</span></button>';
             } else {
-                html += '<div class="mulopimfwc-notification-item-menu-item" data-action="mark-read" data-alert-id="' + escapeHtml(alert.id || '') + '">✓ Mark as Read</div>';
+                html += '<button type="button" class="mulopimfwc-notification-item-menu-item" data-action="mark-read" data-alert-id="' + escapeHtml(alert.id || '') + '">' + getAdminBarSvgIcon('markRead') + '<span>Mark as Read</span></button>';
             }
-            html += '<div class="mulopimfwc-notification-item-menu-item danger" data-action="remove" data-alert-id="' + escapeHtml(alert.id || '') + '"> Remove</div>';
+            html += '<button type="button" class="mulopimfwc-notification-item-menu-item danger" data-action="remove" data-alert-id="' + escapeHtml(alert.id || '') + '">' + getAdminBarSvgIcon('remove') + '<span>Remove</span></button>';
             html += '</div></div></div>';
         });
 
@@ -1605,8 +1902,8 @@
         // Header button handlers
         $('.mulopimfwc-notifications-header-btn[data-action="read-all"]').on('click', function (e) {
             e.stopPropagation();
-            markAllAsRead(alerts);
-            updateAdminBarNotifications(alerts);
+            markAllAsRead(activeAlerts);
+            updateAdminBarNotifications(activeAlerts);
         });
 
         $('.mulopimfwc-notification-item-menu-btn').on('click', function (e) {
@@ -1634,14 +1931,14 @@
             e.stopPropagation();
             const alertId = $(this).attr('data-alert-id');
             markAsRead(alertId);
-            updateAdminBarNotifications(alerts);
+            updateAdminBarNotifications(activeAlerts);
         });
 
         $('.mulopimfwc-notification-item-menu-item[data-action="mark-unread"]').on('click', function (e) {
             e.stopPropagation();
             const alertId = $(this).attr('data-alert-id');
             markAsUnread(alertId);
-            updateAdminBarNotifications(alerts);
+            updateAdminBarNotifications(activeAlerts);
         });
 
         $('.mulopimfwc-notification-item-menu-item[data-action="remove"]').on('click', function (e) {
@@ -1660,7 +1957,7 @@
             markAsRead(alertId);
 
             // Remove from alerts array
-            const filtered = alerts.filter(function (a) { return a.id !== alertId; });
+            const filtered = activeAlerts.filter(function (a) { return a.id !== alertId; });
             allNotifications = filtered;
             updateAdminBarNotifications(filtered);
 
@@ -1678,7 +1975,7 @@
             // Mark as read when clicked
             if (alertId && !isRead(alertId)) {
                 markAsRead(alertId);
-                updateAdminBarNotifications(alerts);
+                updateAdminBarNotifications(activeAlerts);
             }
 
             if (url) {
@@ -1697,7 +1994,7 @@
             e.stopPropagation();
             if (confirm('Are you sure you want to clear all notifications?')) {
                 // Clear all notifications and mark current ones as seen
-                clearAllNotifications(alerts);
+                clearAllNotifications(activeAlerts);
                 // Update UI to show empty state
                 updateAdminBarNotifications([]);
                 // Also clear any floating notifications
