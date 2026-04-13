@@ -1186,8 +1186,8 @@ class MULOPIMFWC_Dashboard
         // Enqueue necessary scripts and styles
         $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
         $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
-        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6.9';
-        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6.9';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.6.10';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.6.10';
 
         wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
         wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
@@ -5398,6 +5398,110 @@ class MULOPIMFWC_Dashboard
         return md5($scope_json);
     }
 
+    private function current_user_can_view_live_notifications(): bool
+    {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        if (current_user_can('manage_woocommerce')) {
+            return true;
+        }
+
+        if (!class_exists('MULOPIMFWC_Location_Managers')) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        if (!in_array('mulopimfwc_location_manager', (array) $user->roles, true)) {
+            return false;
+        }
+
+        return (
+            MULOPIMFWC_Location_Managers::user_has_capability('view_dashboard') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('view_products') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('manage_products') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('view_orders') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('manage_orders') ||
+            MULOPIMFWC_Location_Managers::user_has_capability('run_reports')
+        );
+    }
+
+    private function get_cached_site_status_for_notifications(): array
+    {
+        $state = get_option('mulopimfwc_site_status_state', 'up');
+
+        return [
+            'status' => is_string($state) && $state !== '' ? $state : 'up',
+            'changed' => false,
+            'changed_at' => null,
+            'message' => __('Site monitoring is stable.', 'multi-location-product-and-inventory-management-pro'),
+        ];
+    }
+
+    /**
+     * Lightweight AJAX endpoint for the admin-bar dropdown.
+     *
+     * This intentionally avoids rebuilding the full dashboard payload and does
+     * not advance the live dashboard last-check timestamp. The realtime dashboard
+     * request remains responsible for floating/PWA notification delivery.
+     */
+    public function handle_admin_bar_notifications()
+    {
+        check_ajax_referer('mulopimfwc_dashboard_realtime_nonce', 'nonce');
+
+        if (!$this->current_user_can_view_live_notifications()) {
+            wp_send_json_error([
+                'message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro'),
+            ]);
+            return;
+        }
+
+        $cache_version = function_exists('mulopimfwc_get_dashboard_cache_version')
+            ? mulopimfwc_get_dashboard_cache_version()
+            : 1;
+        $last_check = (int) get_option('mulopimfwc_dashboard_last_check', 0);
+        $scope_hash = $this->get_live_dashboard_cache_scope_hash();
+        $cache_key = 'mulopimfwc_admin_bar_notifications_v' . $cache_version . '_' . $scope_hash;
+        $cached_data = get_transient($cache_key);
+        if (is_array($cached_data)) {
+            wp_send_json_success($cached_data);
+            return;
+        }
+
+        $live_cache_key = 'mulopimfwc_dashboard_live_data_v' . $cache_version . '_' . $scope_hash;
+        $cached_live_data = get_transient($live_cache_key);
+        if (is_array($cached_live_data) && isset($cached_live_data['alerts']) && is_array($cached_live_data['alerts'])) {
+            $response_data = [
+                'alerts' => $cached_live_data['alerts'],
+                'generated_at' => current_time('timestamp', true),
+            ];
+            set_transient($cache_key, $response_data, 15);
+            wp_send_json_success($response_data);
+            return;
+        }
+
+        $investment_payload = $this->get_dashboard_investment_payload_cached(false);
+        $alerts = $this->collect_live_alerts(
+            $last_check,
+            [
+                'low_stock_products' => $investment_payload['low_stock_products'] ?? [],
+            ],
+            $this->get_cached_site_status_for_notifications(),
+            [
+                'mutate_state' => false,
+            ]
+        );
+
+        $response_data = [
+            'alerts' => $alerts,
+            'generated_at' => current_time('timestamp', true),
+        ];
+
+        set_transient($cache_key, $response_data, 15);
+        wp_send_json_success($response_data);
+    }
+
     /**
      * AJAX endpoint for live dashboard updates.
      */
@@ -5584,12 +5688,13 @@ class MULOPIMFWC_Dashboard
     /**
      * Collect alert information for live dashboards.
      */
-    private function collect_live_alerts($since_timestamp, $payload, $site_status): array
+    private function collect_live_alerts($since_timestamp, $payload, $site_status, array $args = []): array
     {
         if (!function_exists('wc_get_orders')) {
             return [];
         }
 
+        $mutate_state = !isset($args['mutate_state']) || (bool) $args['mutate_state'];
         $alerts = [];
         $since = $since_timestamp ?: (current_time('timestamp', true) - 300);
         $date_from = gmdate('Y-m-d H:i:s', $since);
@@ -5845,7 +5950,9 @@ class MULOPIMFWC_Dashboard
                 }
             }
         }
-        update_option('mulopimfwc_live_low_stock_snapshot', $current_snapshot);
+        if ($mutate_state) {
+            update_option('mulopimfwc_live_low_stock_snapshot', $current_snapshot);
+        }
         if (!empty($restocked)) {
             $titles = [];
             $product_ids = [];
@@ -5920,7 +6027,9 @@ class MULOPIMFWC_Dashboard
                     ]
                 );
             }
-            delete_option('mulopimfwc_manager_change_pending');
+            if ($mutate_state) {
+                delete_option('mulopimfwc_manager_change_pending');
+            }
         }
 
         if (!empty($site_status['changed'])) {

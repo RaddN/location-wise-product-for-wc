@@ -18,7 +18,10 @@
     let allNotifications = []; // Store all notifications for admin bar dropdown
     let lastRealtimeDataAt = 0;
     let liveRequestInFlight = false;
+    let adminBarRequestInFlight = false;
+    let lastAdminBarRequestAt = 0;
     const LIVE_RATE_LIMIT_MS = 5000;
+    const ADMIN_BAR_RATE_LIMIT_MS = 2000;
 
     // Storage keys for read/unread notifications
     const STORAGE_READ_KEY = 'mulopimfwc_read_notifications';
@@ -554,15 +557,16 @@
         initAdminBarNotifications();
 
         // Fetch notifications for admin bar on load
-        if ($('#wp-admin-bar-mulopimfwc-notifications').length > 0 && !isDashboard) {
-            if (!realtimeEnabled) {
-                fetchNotificationsForAdminBar();
-            } else {
+        if ($('#wp-admin-bar-mulopimfwc-notifications').length > 0) {
+            if (isDashboard || !realtimeEnabled) {
+                fetchNotificationsForAdminBar({ retry: true });
+            }
+            if (realtimeEnabled) {
                 setTimeout(function () {
-                    if (lastRealtimeDataAt === 0) {
-                        fetchNotificationsForAdminBar();
+                    if ($('#mulopimfwc-notifications-list .mulopimfwc-notifications-loading').length) {
+                        fetchNotificationsForAdminBar({ retry: false });
                     }
-                }, 6000);
+                }, isDashboard ? 2000 : 6000);
             }
         }
     });
@@ -1691,6 +1695,13 @@
                 .mulopimfwc-notification-item-menu.show {
                     display: block!important;
                 }
+                .mulopimfwc-notification-item-menu.is-floating {
+                    position: fixed!important;
+                    top: auto!important;
+                    right: auto!important;
+                    margin-top: 0!important;
+                    z-index: 1000005!important;
+                }
                 .mulopimfwc-notification-item-menu-item {
                     width: 100%!important;
                     min-height: 32px!important;
@@ -1812,22 +1823,116 @@
         }
     }
 
-    function fetchNotificationsForAdminBar() {
-        if (!canSendLiveRequest()) {
+    function setImportantStyle(element, property, value) {
+        if (element && element.style && element.style.setProperty) {
+            element.style.setProperty(property, value, 'important');
+        }
+    }
+
+    function resetImportantStyle(element, property) {
+        if (element && element.style && element.style.removeProperty) {
+            element.style.removeProperty(property);
+        }
+    }
+
+    function closeAdminBarActionMenus() {
+        $('.mulopimfwc-notification-item-menu.show, .mulopimfwc-notification-item-menu.is-floating').each(function () {
+            const menu = $(this);
+            const originalParent = menu.data('mulopimfwcOriginalParent');
+            const element = menu.get(0);
+
+            menu.removeClass('show is-floating');
+            ['position', 'top', 'left', 'right', 'display', 'visibility', 'z-index'].forEach(function (property) {
+                resetImportantStyle(element, property);
+            });
+
+            if (originalParent && originalParent.length && menu.parent().get(0) !== originalParent.get(0)) {
+                originalParent.append(menu);
+            }
+        });
+    }
+
+    function positionAdminBarActionMenu(menu, button) {
+        const buttonElement = button.get(0);
+        const menuElement = menu.get(0);
+        if (!buttonElement || !menuElement) {
             return;
         }
+
+        const originalParent = button.closest('.mulopimfwc-notification-item-actions');
+        menu.data('mulopimfwcOriginalParent', originalParent);
+        $('body').append(menu);
+        menu.addClass('show is-floating');
+
+        setImportantStyle(menuElement, 'position', 'fixed');
+        setImportantStyle(menuElement, 'display', 'block');
+        setImportantStyle(menuElement, 'visibility', 'hidden');
+        setImportantStyle(menuElement, 'top', '0px');
+        setImportantStyle(menuElement, 'left', '0px');
+        setImportantStyle(menuElement, 'right', 'auto');
+        setImportantStyle(menuElement, 'z-index', '1000005');
+
+        const rect = buttonElement.getBoundingClientRect();
+        const viewportPadding = 8;
+        const gap = 6;
+        const menuWidth = menu.outerWidth();
+        const menuHeight = menu.outerHeight();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+
+        let left = rect.right - menuWidth;
+        left = Math.max(viewportPadding, Math.min(left, viewportWidth - menuWidth - viewportPadding));
+
+        let top = rect.bottom + gap;
+        if (top + menuHeight > viewportHeight - viewportPadding) {
+            top = Math.max(viewportPadding, rect.top - menuHeight - gap);
+        }
+
+        setImportantStyle(menuElement, 'top', Math.round(top) + 'px');
+        setImportantStyle(menuElement, 'left', Math.round(left) + 'px');
+        setImportantStyle(menuElement, 'visibility', 'visible');
+    }
+
+    function fetchNotificationsForAdminBar(options) {
+        const settings = options || {};
+        const now = Date.now();
+        const waitMs = lastAdminBarRequestAt ? ADMIN_BAR_RATE_LIMIT_MS - (now - lastAdminBarRequestAt) : 0;
+        if (adminBarRequestInFlight || waitMs > 0) {
+            if (settings.retry !== false) {
+                setTimeout(function () {
+                    fetchNotificationsForAdminBar({ retry: false });
+                }, Math.max(waitMs, ADMIN_BAR_RATE_LIMIT_MS) + 250);
+            }
+            return;
+        }
+
+        adminBarRequestInFlight = true;
+        lastAdminBarRequestAt = now;
+
         $.post(config.ajaxurl, {
-            action: 'mulopimfwc_dashboard_live_data',
+            action: 'mulopimfwc_admin_bar_notifications',
             nonce: config.nonce
         })
             .done(function (response) {
-                if (response.success && response.data && response.data.alerts) {
-                    updateAdminBarNotifications(response.data.alerts);
+                if (response.success && response.data && Array.isArray(response.data.alerts)) {
+                    const activeAlerts = response.data.alerts.filter(function (alert) {
+                        return alert.id && !isCleared(alert.id);
+                    });
+                    allNotifications = activeAlerts;
+                    updateAdminBarNotifications(activeAlerts);
+                } else if (response.success) {
+                    allNotifications = [];
+                    updateAdminBarNotifications([]);
                 }
+            })
+            .always(function () {
+                adminBarRequestInFlight = false;
             });
     }
 
     function updateAdminBarNotifications(alerts) {
+        closeAdminBarActionMenus();
+
         const activeAlerts = Array.isArray(alerts) ? alerts : [];
         const count = activeAlerts.length;
         const unreadCount = activeAlerts.filter(function (a) { return !isRead(a.id); }).length;
@@ -1907,15 +2012,18 @@
         });
 
         $('.mulopimfwc-notification-item-menu-btn').on('click', function (e) {
+            e.preventDefault();
             e.stopPropagation();
-            const alertId = $(this).attr('data-alert-id');
+            const button = $(this);
+            const alertId = button.attr('data-alert-id');
             const menu = $('.mulopimfwc-notification-item-menu[data-alert-id="' + alertId + '"]');
+            const wasOpen = menu.hasClass('show');
 
-            // Close all other menus
-            $('.mulopimfwc-notification-item-menu').not(menu).removeClass('show');
+            closeAdminBarActionMenus();
 
-            // Toggle current menu
-            menu.toggleClass('show');
+            if (!wasOpen) {
+                positionAdminBarActionMenu(menu, button);
+            }
         });
 
         // Menu item handlers
@@ -1984,10 +2092,16 @@
         });
 
         // Close menu when clicking outside
-        $(document).on('click', function (e) {
-            if (!$(e.target).closest('.mulopimfwc-notification-item-actions').length) {
-                $('.mulopimfwc-notification-item-menu').removeClass('show');
+        $(document).off('click.mulopimfwcAdminBarMenus').on('click.mulopimfwcAdminBarMenus', function (e) {
+            if (!$(e.target).closest('.mulopimfwc-notification-item-actions, .mulopimfwc-notification-item-menu').length) {
+                closeAdminBarActionMenus();
             }
+        });
+        $(window).off('resize.mulopimfwcAdminBarMenus scroll.mulopimfwcAdminBarMenus').on('resize.mulopimfwcAdminBarMenus scroll.mulopimfwcAdminBarMenus', function () {
+            closeAdminBarActionMenus();
+        });
+        $('#wp-admin-bar-mulopimfwc-notifications-default').off('scroll.mulopimfwcAdminBarMenus').on('scroll.mulopimfwcAdminBarMenus', function () {
+            closeAdminBarActionMenus();
         });
 
         $('.mulopimfwc-notifications-header-btn[data-action="clear-all"]').on('click', function (e) {

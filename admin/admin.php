@@ -83,6 +83,7 @@ class MULOPIMFWC_Admin
         $dashboard_instance = new MULOPIMFWC_Dashboard();
         add_action('wp_ajax_mulopimfwc_export_dashboard_report', array($dashboard_instance, 'export_dashboard_report'));
         add_action('wp_ajax_mulopimfwc_dashboard_live_data', array($dashboard_instance, 'handle_live_dashboard_data'));
+        add_action('wp_ajax_mulopimfwc_admin_bar_notifications', array($dashboard_instance, 'handle_admin_bar_notifications'));
 
         // Add admin bar notification icon
         add_action('admin_bar_menu', array($this, 'add_admin_bar_notification_icon'), 100);
