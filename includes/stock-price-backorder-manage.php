@@ -24,16 +24,7 @@ if (!function_exists('mulopimfwc_get_currency_symbol_for_admin_input')) {
             }
         }
 
-        $currency_symbol = function_exists('get_woocommerce_currency_symbol')
-            ? (string) get_woocommerce_currency_symbol($currency_code)
-            : '';
-
-        if ($currency_symbol === '') {
-            $currency_symbol = $currency_code;
-        }
-
-        $currency_symbol = html_entity_decode($currency_symbol, ENT_QUOTES, get_bloginfo('charset'));
-        return $currency_symbol !== '' ? $currency_symbol : $currency_code;
+        return mulopimfwc_get_unfiltered_currency_symbol($currency_code);
     }
 }
 

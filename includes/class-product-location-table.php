@@ -1693,8 +1693,8 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $currency_code = 'USD';
         }
 
-        $currency_symbol = function_exists('get_woocommerce_currency_symbol')
-            ? (string) get_woocommerce_currency_symbol($currency_code)
+        $currency_symbol = function_exists('mulopimfwc_get_unfiltered_currency_symbol')
+            ? (string) mulopimfwc_get_unfiltered_currency_symbol($currency_code)
             : '';
         if ($currency_symbol === '') {
             $currency_symbol = $currency_code;
@@ -1802,6 +1802,16 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         return '<span class="price-value">' . wc_price($display, $price_args) . '</span>';
     }
 
+    private function format_amount_by_location_display($amount, $location_term_id = null)
+    {
+        $currency_settings = $this->get_currency_settings_for_location($location_term_id);
+
+        return wc_price($amount, [
+            'currency' => $currency_settings['currency'],
+            'price_format' => $this->get_price_format_for_currency_position($currency_settings['position']),
+        ]);
+    }
+
     /**
      * Get purchase price display
      *
@@ -1827,14 +1837,14 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $output .= '<div class="variation-purchase-price-item">';
                 $output .= '<strong>' . esc_html($variation_title) . '</strong>';
                 $output .= '<div class="purchase-price-item">';
-                $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
+                $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_price) ? $this->format_amount_by_location_display($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
                 $output .= '</div>';
                 $output .= '</div>';
             }
         } else {
             $purchase_price = get_post_meta($item['id'], '_purchase_price', true);
             $output .= '<div class="purchase-price-item">';
-            $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_price) ? wc_price($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
+            $output .= '<span class="purchase-price-value">' . esc_html__('Price:', 'multi-location-product-and-inventory-management-pro') . ' ' . (!empty($purchase_price) ? $this->format_amount_by_location_display($purchase_price) : __('Not set', 'multi-location-product-and-inventory-management-pro')) . '</span>';
             $output .= '</div>';
         }
 
@@ -1901,7 +1911,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
                         $output .= '<div class="location-gross-profit-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                        $output .= $this->calculate_profit_display($price_to_use, $purchase_price);
+                        $output .= $this->calculate_profit_display($price_to_use, $purchase_price, (int) $location->term_id);
                         $output .= '</div>';
                     }
                 }
@@ -1933,7 +1943,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
                     $output .= '<div class="location-gross-profit-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                    $output .= $this->calculate_profit_display($price_to_use, $purchase_price);
+                    $output .= $this->calculate_profit_display($price_to_use, $purchase_price, (int) $location->term_id);
                     $output .= '</div>';
                 }
             }
@@ -1950,11 +1960,11 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
      * @param float $purchase_price Purchase price
      * @return string Formatted profit display
      */
-    private function calculate_profit_display($sale_price, $purchase_price)
+    private function calculate_profit_display($sale_price, $purchase_price, $location_term_id = null)
     {
         if (!empty($purchase_price) && is_numeric($purchase_price) && $purchase_price > 0 && !empty($sale_price) && is_numeric($sale_price)) {
             $profit = $sale_price - $purchase_price;
-            $gross_profit = wc_price($profit);
+            $gross_profit = $this->format_amount_by_location_display($profit, $location_term_id);
 
             // Calculate profit percentage
             $percentage = ($profit / $purchase_price) * 100;

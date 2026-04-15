@@ -920,6 +920,20 @@ JS;
         return (array) get_woocommerce_currencies();
     }
 
+    private function get_unfiltered_currency_symbol(string $currency_code): string
+    {
+        $currency_code = strtoupper(trim($currency_code));
+        if ($currency_code === '') {
+            return '';
+        }
+
+        if (function_exists('mulopimfwc_get_unfiltered_currency_symbol')) {
+            return (string) mulopimfwc_get_unfiltered_currency_symbol($currency_code);
+        }
+
+        return $currency_code;
+    }
+
     private function get_currency_position_options()
     {
         return array(
@@ -1035,17 +1049,7 @@ JS;
             $position = $configured_position;
         }
 
-        $symbol = function_exists('get_woocommerce_currency_symbol')
-            ? (string) get_woocommerce_currency_symbol($currency)
-            : '';
-        if ($symbol === '') {
-            $symbol = $currency;
-        }
-
-        $symbol = html_entity_decode($symbol, ENT_QUOTES, get_bloginfo('charset'));
-        if ($symbol === '') {
-            $symbol = $currency;
-        }
+        $symbol = $this->get_unfiltered_currency_symbol($currency);
 
         return array(
             'currency' => $currency,
@@ -1578,7 +1582,7 @@ JS;
                 <?php foreach ($currencies as $currency_code => $currency_name): ?>
                     <?php
                     $currency_code = strtoupper((string) $currency_code);
-                    $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($currency_code) : '';
+                    $currency_symbol = $this->get_unfiltered_currency_symbol($currency_code);
                     $currency_label = $currency_code . ' - ' . $currency_name;
                     if ($currency_symbol !== '') {
                         $currency_label .= ' (' . $currency_symbol . ')';
@@ -2027,7 +2031,7 @@ JS;
                     <?php foreach ($currencies as $currency_code => $currency_name): ?>
                         <?php
                         $currency_code = strtoupper((string) $currency_code);
-                        $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($currency_code) : '';
+                        $currency_symbol = $this->get_unfiltered_currency_symbol($currency_code);
                         $currency_label = $currency_code . ' - ' . $currency_name;
                         if ($currency_symbol !== '') {
                             $currency_label .= ' (' . $currency_symbol . ')';
@@ -2532,7 +2536,7 @@ JS;
                 $selected_currency = isset($row_data['currency_selected']) ? (string) $row_data['currency_selected'] : '';
                 echo '<div class="mulopimfwc-rate-cell" data-term-id="' . esc_attr((string) $row_data['term_id']) . '" data-currency="' . esc_attr((string) $row_data['currency']) . '" data-position="' . esc_attr((string) $row_data['position']) . '">';
                 echo '<div class="mulopimfwc-rate-controls">';
-                echo '<button type="button" class="button mulopimfwc-rate-currency-trigger" aria-label="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management-pro') . '" title="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management-pro') . '">';
+                echo '<button type="button" class="button mulopimfwc-rate-currency-trigger" aria-label="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management-pro') . '" title="' . esc_attr__('Change currency', 'multi-location-product-and-inventory-management-pro') . '" aria-haspopup="listbox" aria-expanded="false">';
                 echo '<span class="mulopimfwc-rate-symbol mulopimfwc-rate-symbol-prefix">' . esc_html((string) $row_data['symbol_prefix']) . '</span>';
                 echo '<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>';
                 echo '</button>';
@@ -2545,7 +2549,7 @@ JS;
                 echo '</div>';
                 echo '<div class="mulopimfwc-rate-currency-popover" aria-hidden="true">';
                 echo '<select class="mulopimfwc-rate-currency" aria-label="' . esc_attr__('Currency', 'multi-location-product-and-inventory-management-pro') . '" data-placeholder="' . esc_attr__('Search currency...', 'multi-location-product-and-inventory-management-pro') . '">';
-                $default_currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($default_currency) : '';
+                $default_currency_symbol = $this->get_unfiltered_currency_symbol($default_currency);
                 $default_currency_label = sprintf(/* translators: %s: default currency code */ __('Default (%s)', 'multi-location-product-and-inventory-management-pro'), $default_currency);
                 if ($default_currency_symbol !== '') {
                     $default_currency_label .= ' (' . $default_currency_symbol . ')';
@@ -2553,7 +2557,7 @@ JS;
                 echo '<option value="" ' . selected($selected_currency, '', false) . '>' . esc_html($default_currency_label) . '</option>';
                 foreach ($currency_options as $currency_code => $currency_name) {
                     $currency_code = strtoupper((string) $currency_code);
-                    $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol($currency_code) : '';
+                    $currency_symbol = $this->get_unfiltered_currency_symbol($currency_code);
                     $currency_label = $currency_code . ' - ' . $currency_name;
                     if ($currency_symbol !== '') {
                         $currency_label .= ' (' . $currency_symbol . ')';
@@ -3097,6 +3101,7 @@ JS;
 .column-rate {
     min-width: 160px;
     width: 160px;
+    overflow: visible !important;
 }
 .mulopimfwc-actions-cell {
     display: flex;
@@ -3114,7 +3119,7 @@ JS;
     min-width: 280px;
 }
 .mulopimfwc-rate-cell.is-currency-open {
-    z-index: 30;
+    z-index: 100000;
 }
 .mulopimfwc-rate-controls {
     display: flex;
@@ -3186,6 +3191,7 @@ JS;
     border-radius: 10px;
     background: #fff;
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+    z-index: 100001;
 }
 .mulopimfwc-rate-cell.is-currency-open .mulopimfwc-rate-currency-popover {
     display: block;
@@ -3276,11 +3282,18 @@ JS;
                 'syncAllPartial' => __('Some rates could not be synced. Please check row messages.', 'multi-location-product-and-inventory-management-pro'),
             ),
         );
+        $rate_js_config_json = wp_json_encode($rate_js_config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        if (!is_string($rate_js_config_json)) {
+            $rate_js_config_json = '{}';
+        }
 
         ?>
 <script type="text/javascript">
 (function($) {
-    var config = JSON.parse('<?php echo esc_js(wp_json_encode($rate_js_config)); ?>');
+    var config = <?php
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON_HEX_* encoded for inline JavaScript.
+    echo $rate_js_config_json;
+    ?>;
     if (!config || typeof config !== 'object') {
         return;
     }
@@ -3357,6 +3370,7 @@ JS;
         var open = !!isOpen;
         $cell.toggleClass('is-currency-open', open);
         $cell.find('.mulopimfwc-rate-currency-popover').attr('aria-hidden', open ? 'false' : 'true');
+        $cell.find('.mulopimfwc-rate-currency-trigger').attr('aria-expanded', open ? 'true' : 'false');
         if (!open) {
             var $currency = $cell.find('.mulopimfwc-rate-currency').first();
             if ($currency.length && $currency.data('select2')) {
@@ -3383,6 +3397,56 @@ JS;
         });
 
         return $currency;
+    }
+
+    function openRateCurrencySelect($cell) {
+        var $select = initRateCurrencySelect($cell);
+        if (!$select.length) {
+            return;
+        }
+
+        if (!$select.data('select2') && $select[0] && typeof $select[0].showPicker === 'function') {
+            try {
+                $select[0].showPicker();
+                return;
+            } catch (error) {
+                // Fall through to focus for browsers that block showPicker.
+            }
+        }
+
+        setTimeout(function() {
+            if (!$cell.hasClass('is-currency-open')) {
+                return;
+            }
+
+            if ($select.data('select2')) {
+                $select.select2('open');
+                return;
+            }
+
+            $select.trigger('focus');
+        }, 20);
+    }
+
+    function toggleRateCurrencyPopover(trigger, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        var $trigger = $(trigger);
+        var $cell = $trigger.closest('.mulopimfwc-rate-cell');
+        if (!$cell.length || $cell.hasClass('is-saving') || $trigger.prop('disabled')) {
+            return;
+        }
+
+        var shouldOpen = !$cell.hasClass('is-currency-open');
+        closeCurrencyPopovers(shouldOpen ? $cell : null);
+        setCurrencyPopoverState($cell, shouldOpen);
+
+        if (shouldOpen) {
+            openRateCurrencySelect($cell);
+        }
     }
 
     function closeCurrencyPopovers($exceptCell) {
@@ -3592,31 +3656,27 @@ JS;
     }
 
     $(document).on('click', '.mulopimfwc-rate-currency-trigger', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        var $cell = $(this).closest('.mulopimfwc-rate-cell');
-        if (!$cell.length || $cell.hasClass('is-saving')) {
-            return;
-        }
-
-        var shouldOpen = !$cell.hasClass('is-currency-open');
-        closeCurrencyPopovers(shouldOpen ? $cell : null);
-        setCurrencyPopoverState($cell, shouldOpen);
-
-        if (shouldOpen) {
-            var $select = initRateCurrencySelect($cell);
-            if ($select.length) {
-                setTimeout(function() {
-                    if ($select.data('select2')) {
-                        $select.select2('open');
-                    } else {
-                        $select.trigger('focus');
-                    }
-                }, 20);
-            }
-        }
+        toggleRateCurrencyPopover(this, e);
     });
+
+    if (document.addEventListener) {
+        document.addEventListener('click', function(event) {
+            var target = event.target;
+            if (!target || target.nodeType !== 1) {
+                target = target && target.parentElement ? target.parentElement : null;
+            }
+            if (!target || typeof target.closest !== 'function') {
+                return;
+            }
+
+            var trigger = target.closest('.mulopimfwc-rate-currency-trigger');
+            if (!trigger || !document.documentElement.contains(trigger)) {
+                return;
+            }
+
+            toggleRateCurrencyPopover(trigger, event);
+        }, true);
+    }
 
     $(document).on('click', '.mulopimfwc-rate-currency-popover', function(e) {
         e.stopPropagation();

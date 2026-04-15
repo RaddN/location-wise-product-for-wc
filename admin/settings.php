@@ -957,7 +957,15 @@ class mulopimfwc_settings
                                                 ?>
                                                     <div style="position: relative;">
                                                         <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 14px;">
-                                                            <?php echo esc_html(get_woocommerce_currency_symbol()); ?>
+                                                            <?php
+                                                            $transfer_cost_currency = function_exists('mulopimfwc_get_store_base_currency_code_raw')
+                                                                ? mulopimfwc_get_store_base_currency_code_raw()
+                                                                : get_option('woocommerce_currency', 'USD');
+                                                            $transfer_cost_symbol = function_exists('mulopimfwc_get_unfiltered_currency_symbol')
+                                                                ? mulopimfwc_get_unfiltered_currency_symbol($transfer_cost_currency)
+                                                                : $transfer_cost_currency;
+                                                            echo esc_html($transfer_cost_symbol);
+                                                            ?>
                                                         </span>
                                                         <input
                                                             type="number"
