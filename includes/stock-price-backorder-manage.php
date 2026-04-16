@@ -3125,12 +3125,3 @@ function mulopimfwc_populate_locations_column_in_product_list($column, $post_id)
     }
 }
 
-// hide stock & price column
-add_filter('manage_edit-product_columns', 'mulopimfwc_remove_default_product_columns', 20);
-function mulopimfwc_remove_default_product_columns($columns)
-{
-    // Unset the default stock and price columns
-    unset($columns['is_in_stock']);
-    unset($columns['price']);
-    return $columns;
-}
