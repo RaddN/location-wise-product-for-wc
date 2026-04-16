@@ -71,9 +71,8 @@ msgstr "%s প্রোফাইল আপডেট হয়েছে। লো
 #. 1: product name, 2: rating number, 3: review excerpt
 #: multi-location-product-and-inventory-management-pro.php:14332
 #, php-format
-#| msgid "%s received a %s★ review: \"%s\""
-msgid "%1$s received a %2$s★ review: \"%3$s\""
-msgstr "%s একটি %s★ রিভিউ পেয়েছে: \"%s\""
+msgid "%1$s received a %2$s-star review: \"%3$s\""
+msgstr "%s একটি %s-স্টার রিভিউ পেয়েছে: \"%s\""
 
 #. 1: source location name, 2: destination location name, 3: cost label
 #: multi-location-product-and-inventory-management-pro.php:3983
@@ -11574,22 +11573,14 @@ msgstr "জোন: %s"
 msgid "| Prices updated based on location pricing"
 msgstr "| লোকেশন ভিত্তিক মূল্য অনুযায়ী দাম আপডেট করা হয়েছে"
 
-#: admin/dashboard.php:353
-msgid "⚠ Out of Stock"
-msgstr "⚠ স্টক শেষ"
+#: admin/admin.php:6007
+msgid "This order needs location assignment"
+msgstr "এই অর্ডারের জন্য লোকেশন নির্ধারণ প্রয়োজন"
 
-#: admin/admin.php:5948
-msgid "⚠️ This order needs location assignment"
-msgstr "⚠️ এই অর্ডারের জন্য লোকেশন নির্ধারণ প্রয়োজন"
+#: admin/license-page.php:865
+msgid "License Expired"
+msgstr "লাইসেন্স মেয়াদ উত্তীর্ণ"
 
-#: admin/dashboard.php:353
-msgid "⚡ Low Stock"
-msgstr "⚡ কম স্টক"
-
-#: admin/license-page.php:822
-msgid "✗ License Expired"
-msgstr "✗ লাইসেন্স মেয়াদ উত্তীর্ণ"
-
-#: admin/license-page.php:932
-msgid "✗ Unlicensed"
-msgstr "✗ লাইসেন্সবিহীন"
+#: admin/license-page.php:975
+msgid "Unlicensed"
+msgstr "লাইসেন্সবিহীন"

@@ -1606,7 +1606,8 @@ input.disabled + .mulopimfwc_slider {
 }
 
 .manage-tab-btn.has-error::after {
-  content: "⚠";
+  content: "\f534";
+  font-family: dashicons;
   position: absolute;
   top: 4px;
   right: 4px;
@@ -1625,6 +1626,7 @@ input.disabled + .mulopimfwc_slider {
 .manage-product-tabs .tab-nav-error-message {
   display: flex;
   align-items: center;
+  gap: 4px;
   padding: 8px 12px;
   margin: 8px 12px 8px 0;
   background: #fff5f5;
@@ -2136,6 +2138,9 @@ input.disabled + .mulopimfwc_slider {
 }
 
 .variation-accordion-header .accordion-error-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: #dc3545;
   font-weight: 500;
@@ -2217,6 +2222,7 @@ input.disabled + .mulopimfwc_slider {
 .variation-tabs-nav .tab-nav-error-message {
   display: flex;
   align-items: center;
+  gap: 4px;
   padding: 8px 12px;
   margin: 8px 0;
   background: #fff5f5;
@@ -2227,6 +2233,16 @@ input.disabled + .mulopimfwc_slider {
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.manage-product-tabs .tab-nav-error-message .dashicons,
+.variation-accordion-header .accordion-error-message .dashicons,
+.variation-tabs-nav .tab-nav-error-message .dashicons {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  line-height: 1;
+  flex: 0 0 14px;
 }
 
 .variation-tab-btn {
@@ -2267,7 +2283,8 @@ input.disabled + .mulopimfwc_slider {
 }
 
 .variation-tab-btn.has-error::after {
-  content: "⚠";
+  content: "\f534";
+  font-family: dashicons;
   position: absolute;
   top: 4px;
   right: 4px;

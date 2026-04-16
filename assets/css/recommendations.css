@@ -235,9 +235,10 @@
     gap: 5px;
 }
 
-.mulopimfwc-recommendation-stats::before {
-    content: "🔥";
-    font-size: 14px;
+.mulopimfwc-recommendation-stats-icon {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
 }
 
 /* Actions */

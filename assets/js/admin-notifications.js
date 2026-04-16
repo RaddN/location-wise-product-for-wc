@@ -382,7 +382,7 @@
                 if (!serviceWorkerRegistration) {
                     serviceWorkerRegistration = await registerServiceWorker();
                     if (!serviceWorkerRegistration) {
-                        alert('❌ Failed to register service worker. Please check:\n\n' +
+                        alert('Failed to register service worker. Please check:\n\n' +
                             '1. Your site is using HTTPS (required for service workers)\n' +
                             '2. Try refreshing the page');
                         $btn.prop('disabled', false).text(originalText);
@@ -395,12 +395,12 @@
                     $btn.text('Requesting permission...');
                     const permission = await Notification.requestPermission();
                     if (permission !== 'granted') {
-                        alert('❌ Notification permission denied. Please allow notifications in your browser settings to receive alerts.');
+                        alert('Notification permission denied. Please allow notifications in your browser settings to receive alerts.');
                         $btn.prop('disabled', false).text(originalText);
                         return;
                     }
                 } else if (Notification.permission === 'denied') {
-                    alert('❌ Notifications are blocked. Please enable them in your browser settings:\n\n' +
+                    alert('Notifications are blocked. Please enable them in your browser settings:\n\n' +
                         'Chrome/Edge: Click the lock icon → Site settings → Notifications → Allow\n' +
                         'Firefox: Options → Privacy & Security → Permissions → Notifications → Settings');
                     $btn.prop('disabled', false).text(originalText);
@@ -434,15 +434,15 @@
                             }
                         });
                         
-                        alert('✓ Test notification sent! Check your desktop notification area.');
+                        alert('Test notification sent! Check your desktop notification area.');
                     } catch (err) {
-                        alert('❌ Failed to show notification. Check browser console for errors.');
+                        alert('Failed to show notification. Check browser console for errors.');
                     }
                 } else {
-                    alert('❌ Service worker not ready or notification permission not granted.');
+                    alert('Service worker not ready or notification permission not granted.');
                 }
             } catch (error) {
-                alert('❌ Error: ' + (error.message || 'Unknown error occurred.'));
+                alert('Error: ' + (error.message || 'Unknown error occurred.'));
             } finally {
                 $btn.prop('disabled', false).text(originalText);
             }
@@ -462,7 +462,7 @@
                 const msg = formatAlertMessage(alert);
                 showFloatingNotification(alert, msg);
             } catch (e) {
-                alert('❌ Failed to show floating notification. Check console for details.');
+                alert('Failed to show floating notification. Check console for details.');
             }
         });
 
@@ -524,13 +524,13 @@
             }).done(function (resp) {
                 if (resp && resp.success) {
                     const list = (resp.data && resp.data.recipients) ? resp.data.recipients : [];
-                    $result.html('<div class="notice notice-success inline"><p><strong>✓ Sent.</strong> Recipients: ' + escapeHtml(list.join(', ')) + '</p></div>');
+                    $result.html('<div class="notice notice-success inline"><p><strong><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span> Sent.</strong> Recipients: ' + escapeHtml(list.join(', ')) + '</p></div>');
                 } else {
                     const msg = resp && resp.data && resp.data.message ? resp.data.message : 'Failed to send.';
-                    $result.html('<div class="notice notice-error inline"><p><strong>❌</strong> ' + escapeHtml(msg) + '</p></div>');
+                    $result.html('<div class="notice notice-error inline"><p><strong><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></strong> ' + escapeHtml(msg) + '</p></div>');
                 }
             }).fail(function () {
-                $result.html('<div class="notice notice-error inline"><p><strong>❌</strong> Request failed.</p></div>');
+                $result.html('<div class="notice notice-error inline"><p><strong><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></strong> Request failed.</p></div>');
             }).always(function () {
                 $btn.prop('disabled', false).text('Send Test Email');
             });

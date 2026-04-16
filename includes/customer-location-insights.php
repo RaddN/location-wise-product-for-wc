@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.6.11
+ * @since 1.1.6.12
  */
 
 if (!defined('ABSPATH')) {
@@ -534,8 +534,12 @@ class Mulopimfwc_Customer_Location_Insights
     /**
      * Get popular products for a location
      */
-    public function get_popular_products($location_slug, $limit = 10)
+    public function get_popular_products($location_slug, $limit = 10, $date_filter = null)
     {
+        if ($this->is_analytics_date_filter_active($date_filter)) {
+            return $this->get_popular_products_for_range($location_slug, $limit, $date_filter);
+        }
+
         $popularity_data = get_option(self::POPULARITY_OPTION, []);
 
         if (!isset($popularity_data[$location_slug])) {
@@ -552,11 +556,67 @@ class Mulopimfwc_Customer_Location_Insights
         return array_slice($products, 0, $limit, true);
     }
 
+    private function get_popular_products_for_range($location_slug, $limit, array $date_filter): array
+    {
+        $tracking_data = get_option(self::TRACKING_OPTION, []);
+        if (!is_array($tracking_data)) {
+            return [];
+        }
+
+        $products = [];
+        $location_key = sanitize_title(rawurldecode((string) $location_slug));
+
+        foreach ($tracking_data as $entry) {
+            if (!is_array($entry) || !$this->analytics_timestamp_in_range($entry['timestamp'] ?? 0, $date_filter)) {
+                continue;
+            }
+
+            $entry_location = sanitize_title(rawurldecode((string) ($entry['location_slug'] ?? '')));
+            $action_type = isset($entry['action_type']) ? (string) $entry['action_type'] : '';
+            $product_id = isset($entry['product_id']) ? absint($entry['product_id']) : 0;
+
+            if ($entry_location !== $location_key || $product_id <= 0 || !in_array($action_type, ['view', 'purchase'], true)) {
+                continue;
+            }
+
+            if (!isset($products[$product_id])) {
+                $products[$product_id] = [
+                    'product_id' => $product_id,
+                    'view_count' => 0,
+                    'purchase_count' => 0,
+                    'last_viewed' => null,
+                    'last_purchased' => null,
+                    'popularity_score' => 0,
+                ];
+            }
+
+            if ($action_type === 'view') {
+                $products[$product_id]['view_count']++;
+                $products[$product_id]['last_viewed'] = (int) $entry['timestamp'];
+            } else {
+                $products[$product_id]['purchase_count']++;
+                $products[$product_id]['last_purchased'] = (int) $entry['timestamp'];
+            }
+
+            $products[$product_id]['popularity_score'] = ($products[$product_id]['purchase_count'] * 10) + $products[$product_id]['view_count'];
+        }
+
+        uasort($products, function ($a, $b) {
+            return $b['popularity_score'] - $a['popularity_score'];
+        });
+
+        return array_slice($products, 0, $limit, true);
+    }
+
     /**
      * Get location statistics
      */
-    public function get_location_stats($location_slug)
+    public function get_location_stats($location_slug, $date_filter = null)
     {
+        if ($this->is_analytics_date_filter_active($date_filter)) {
+            return $this->get_location_stats_for_range($location_slug, $date_filter);
+        }
+
         $stats = get_option(self::STATS_OPTION, []);
 
         $tracked = isset($stats[$location_slug]) ? $stats[$location_slug] : [
@@ -586,12 +646,74 @@ class Mulopimfwc_Customer_Location_Insights
         ];
     }
 
+    private function get_location_stats_for_range($location_slug, array $date_filter): array
+    {
+        $tracking_data = get_option(self::TRACKING_OPTION, []);
+        if (!is_array($tracking_data)) {
+            $tracking_data = [];
+        }
+
+        $location_key = sanitize_title(rawurldecode((string) $location_slug));
+        $users = [];
+        $sessions = [];
+        $purchase_orders = [];
+        $purchase_without_order = 0;
+        $total_views = 0;
+
+        foreach ($tracking_data as $entry) {
+            if (!is_array($entry) || !$this->analytics_timestamp_in_range($entry['timestamp'] ?? 0, $date_filter)) {
+                continue;
+            }
+
+            $entry_location = sanitize_title(rawurldecode((string) ($entry['location_slug'] ?? '')));
+            $action_type = isset($entry['action_type']) ? (string) $entry['action_type'] : '';
+
+            if ($entry_location !== $location_key || !in_array($action_type, ['view', 'purchase'], true)) {
+                continue;
+            }
+
+            if (!empty($entry['user_id'])) {
+                $users[(string) $entry['user_id']] = true;
+            }
+            if (!empty($entry['session_id'])) {
+                $sessions[(string) $entry['session_id']] = true;
+            }
+
+            if ($action_type === 'view') {
+                $total_views++;
+            } else {
+                if (!empty($entry['order_id'])) {
+                    $purchase_orders[(string) $entry['order_id']] = true;
+                } else {
+                    $purchase_without_order++;
+                }
+            }
+        }
+
+        $total_purchases = count($purchase_orders) + $purchase_without_order;
+        $fallback = $this->get_order_fallback_stats($location_slug, $date_filter);
+        $total_purchases = max($total_purchases, $fallback['purchases']);
+        $unique_users = max(count($users), $fallback['unique_customers']);
+        $unique_sessions = max(count($sessions), $fallback['unique_sessions']);
+
+        if ($total_views < $total_purchases) {
+            $total_views = $total_purchases;
+        }
+
+        return [
+            'unique_users' => $unique_users,
+            'unique_sessions' => $unique_sessions,
+            'total_views' => $total_views,
+            'total_purchases' => $total_purchases
+        ];
+    }
+
     /**
      * Get fallback stats from WooCommerce orders to cover data created before tracking was enabled.
      */
-    private function get_order_fallback_stats($location_slug)
+    private function get_order_fallback_stats($location_slug, $date_filter = null)
     {
-        $order_stats = $this->get_wc_order_stats_cache();
+        $order_stats = $this->get_wc_order_stats_cache($date_filter);
 
         return isset($order_stats[$location_slug]) ? $order_stats[$location_slug] : [
             'purchases' => 0,
@@ -603,16 +725,24 @@ class Mulopimfwc_Customer_Location_Insights
     /**
      * Build (and cache) order-derived stats keyed by location slug.
      */
-    private function get_wc_order_stats_cache()
+    private function get_wc_order_stats_cache($date_filter = null)
     {
-        if ($this->order_stats_cache !== null) {
-            return $this->order_stats_cache;
+        $cache_key = $this->is_analytics_date_filter_active($date_filter)
+            ? md5($date_filter['date_from'] . '|' . $date_filter['date_to'])
+            : 'all';
+
+        if (!is_array($this->order_stats_cache)) {
+            $this->order_stats_cache = [];
         }
 
-        $this->order_stats_cache = [];
+        if (isset($this->order_stats_cache[$cache_key])) {
+            return $this->order_stats_cache[$cache_key];
+        }
+
+        $this->order_stats_cache[$cache_key] = [];
 
         if (!function_exists('wc_get_orders')) {
-            return $this->order_stats_cache;
+            return $this->order_stats_cache[$cache_key];
         }
 
         $all_statuses = function_exists('wc_get_order_statuses') ? array_keys(wc_get_order_statuses()) : ['wc-completed', 'wc-processing', 'wc-on-hold', 'wc-pending'];
@@ -653,6 +783,14 @@ class Mulopimfwc_Customer_Location_Insights
                 continue;
             }
 
+            if ($this->is_analytics_date_filter_active($date_filter)) {
+                $created = is_callable([$order, 'get_date_created']) ? $order->get_date_created() : null;
+                $created_date = $created ? $created->date_i18n('Y-m-d') : '';
+                if ($created_date === '' || $created_date < $date_filter['date_from'] || $created_date > $date_filter['date_to']) {
+                    continue;
+                }
+            }
+
             if (is_callable([$order, 'get_type']) && $order->get_type() === 'shop_order_refund') {
                 continue;
             }
@@ -662,15 +800,15 @@ class Mulopimfwc_Customer_Location_Insights
                 $slug = 'default';
             }
 
-            if (!isset($this->order_stats_cache[$slug])) {
-                $this->order_stats_cache[$slug] = [
+            if (!isset($this->order_stats_cache[$cache_key][$slug])) {
+                $this->order_stats_cache[$cache_key][$slug] = [
                     'purchases' => 0,
                     'unique_customers' => [],
                     'unique_sessions' => []
                 ];
             }
 
-            $this->order_stats_cache[$slug]['purchases']++;
+            $this->order_stats_cache[$cache_key][$slug]['purchases']++;
 
             $customer_id = null;
             if (is_callable([$order, 'get_customer_id'])) {
@@ -679,25 +817,25 @@ class Mulopimfwc_Customer_Location_Insights
                 $customer_id = $order->get_user_id();
             }
             if ($customer_id) {
-                $this->order_stats_cache[$slug]['unique_customers'][$customer_id] = true;
+                $this->order_stats_cache[$cache_key][$slug]['unique_customers'][$customer_id] = true;
             }
 
             // Use order key as a pseudo-session identifier to avoid zero counts.
             $order_key = is_callable([$order, 'get_order_key']) ? $order->get_order_key() : '';
             if ($order_key) {
-                $this->order_stats_cache[$slug]['unique_sessions'][$order_key] = true;
+                $this->order_stats_cache[$cache_key][$slug]['unique_sessions'][$order_key] = true;
             }
         }
 
-        foreach ($this->order_stats_cache as $slug => $row) {
-            $this->order_stats_cache[$slug] = [
+        foreach ($this->order_stats_cache[$cache_key] as $slug => $row) {
+            $this->order_stats_cache[$cache_key][$slug] = [
                 'purchases' => $row['purchases'],
                 'unique_customers' => count($row['unique_customers']),
                 'unique_sessions' => count($row['unique_sessions'])
             ];
         }
 
-        return $this->order_stats_cache;
+        return $this->order_stats_cache[$cache_key];
     }
 
     /**
@@ -789,14 +927,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.6.11'
+                '1.1.6.12'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.6.11',
+                '1.1.6.12',
                 true
             );
 
@@ -930,6 +1068,9 @@ class Mulopimfwc_Customer_Location_Insights
 
                                 <?php if ($popularity_data && $popularity_data['purchase_count'] > 0): ?>
                                     <div class="mulopimfwc-recommendation-stats">
+                                        <svg class="mulopimfwc-recommendation-stats-icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M16 6h3a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3a4 4 0 0 1 8 0Zm-2 0a2 2 0 0 0-4 0h4Zm-6 4a1 1 0 0 0-2 0 6 6 0 0 0 12 0 1 1 0 0 0-2 0 4 4 0 0 1-8 0Z" fill="currentColor" />
+                                        </svg>
                                         <?php echo esc_html(sprintf(/* translators: %d: number of purchases */ _n('%d purchase', '%d purchases', $popularity_data['purchase_count'], 'multi-location-product-and-inventory-management-pro'), $popularity_data['purchase_count'])); ?>
                                     </div>
                                 <?php endif; ?>
@@ -1160,12 +1301,122 @@ class Mulopimfwc_Customer_Location_Insights
     /**
      * Build a reusable analytics snapshot for rendering & AJAX.
      */
-    private function get_analytics_snapshot()
+    private function normalize_analytics_location_filter($location_raw): string
+    {
+        if (is_array($location_raw)) {
+            $location_raw = reset($location_raw);
+        }
+
+        $location_filter = is_string($location_raw) ? sanitize_text_field(wp_unslash($location_raw)) : '';
+        $location_filter = sanitize_title(rawurldecode($location_filter));
+
+        return $location_filter !== '' ? $location_filter : 'all';
+    }
+
+    private function normalize_analytics_date_filter($range_raw = 'all', $date_from_raw = '', $date_to_raw = ''): array
+    {
+        $range = is_string($range_raw) ? sanitize_key(wp_unslash($range_raw)) : 'all';
+        $allowed_ranges = ['all', 'today', 'last_7_days', 'this_month', 'last_month', 'this_year', 'custom'];
+        if (!in_array($range, $allowed_ranges, true)) {
+            $range = 'all';
+        }
+
+        $now = current_time('timestamp');
+        $today = date('Y-m-d', $now);
+        $date_from = '';
+        $date_to = '';
+
+        switch ($range) {
+            case 'today':
+                $date_from = $today;
+                $date_to = $today;
+                break;
+            case 'last_7_days':
+                $date_from = date('Y-m-d', strtotime('-6 days', strtotime($today . ' 00:00:00')));
+                $date_to = $today;
+                break;
+            case 'this_month':
+                $date_from = date('Y-m-01', $now);
+                $date_to = $today;
+                break;
+            case 'last_month':
+                $date_from = date('Y-m-01', strtotime('first day of previous month', $now));
+                $date_to = date('Y-m-t', strtotime('last day of previous month', $now));
+                break;
+            case 'this_year':
+                $date_from = date('Y-01-01', $now);
+                $date_to = $today;
+                break;
+            case 'custom':
+                $date_from = $this->sanitize_analytics_date_value($date_from_raw);
+                $date_to = $this->sanitize_analytics_date_value($date_to_raw);
+                break;
+        }
+
+        if ($range === 'custom' && $date_from === '' && $date_to === '') {
+            $range = 'all';
+        }
+
+        if ($date_from !== '' && $date_to === '') {
+            $date_to = $today;
+        } elseif ($date_from === '' && $date_to !== '') {
+            $date_from = $date_to;
+        }
+
+        if ($date_from !== '' && $date_to !== '' && $date_from > $date_to) {
+            $tmp = $date_from;
+            $date_from = $date_to;
+            $date_to = $tmp;
+        }
+
+        return [
+            'range' => $range,
+            'date_from' => $date_from,
+            'date_to' => $date_to,
+            'start' => $date_from !== '' ? strtotime($date_from . ' 00:00:00') : null,
+            'end' => $date_to !== '' ? strtotime($date_to . ' 23:59:59') : null,
+        ];
+    }
+
+    private function sanitize_analytics_date_value($date_raw): string
+    {
+        if (is_array($date_raw)) {
+            $date_raw = reset($date_raw);
+        }
+
+        $date = is_string($date_raw) ? sanitize_text_field(wp_unslash($date_raw)) : '';
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? $date : '';
+    }
+
+    private function is_analytics_date_filter_active($date_filter): bool
+    {
+        return is_array($date_filter) && !empty($date_filter['start']) && !empty($date_filter['end']);
+    }
+
+    private function analytics_timestamp_in_range($timestamp, array $date_filter): bool
+    {
+        if (!$this->is_analytics_date_filter_active($date_filter)) {
+            return true;
+        }
+
+        $timestamp = (int) $timestamp;
+        return $timestamp >= (int) $date_filter['start'] && $timestamp <= (int) $date_filter['end'];
+    }
+
+    /**
+     * Get analytics locations available to the current admin user.
+     */
+    private function get_analytics_visible_locations(): array
     {
         $locations = get_terms([
             'taxonomy' => 'mulopimfwc_store_location',
             'hide_empty' => false
         ]);
+
+        if (is_wp_error($locations)) {
+            $locations = [];
+        }
+
         // Always include a default bucket for orders without a stored location.
         $locations[] = (object) [
             'slug' => 'default',
@@ -1181,9 +1432,29 @@ class Mulopimfwc_Customer_Location_Insights
                 !MULOPIMFWC_Location_Managers::user_has_capability('all_products')
             ) {
                 $assigned = MULOPIMFWC_Location_Managers::get_user_assigned_locations();
-                $visible_location_slugs = is_array($assigned) ? $assigned : [];
+                $visible_location_slugs = is_array($assigned)
+                    ? array_values(array_unique(array_map(static function ($slug) {
+                        return sanitize_title(rawurldecode((string) $slug));
+                    }, $assigned)))
+                    : [];
             }
         }
+
+        if (is_array($visible_location_slugs)) {
+            $locations = array_values(array_filter($locations, static function ($location) use ($visible_location_slugs) {
+                $location_slug = sanitize_title(rawurldecode((string) $location->slug));
+                return in_array($location_slug, $visible_location_slugs, true);
+            }));
+        }
+
+        return $locations;
+    }
+
+    private function get_analytics_snapshot($location_filter = 'all', $date_range = 'all', $date_from = '', $date_to = '')
+    {
+        $location_filter = $this->normalize_analytics_location_filter($location_filter);
+        $date_filter = $this->normalize_analytics_date_filter($date_range, $date_from, $date_to);
+        $locations = $this->get_analytics_visible_locations();
 
         $global_stats = [
             'total_views' => 0,
@@ -1198,11 +1469,13 @@ class Mulopimfwc_Customer_Location_Insights
 
         foreach ($locations as $location) {
             $location_slug = rawurldecode($location->slug);
-            if (is_array($visible_location_slugs) && !in_array($location_slug, $visible_location_slugs, true)) {
+            $normalized_location_slug = sanitize_title($location_slug);
+
+            if ($location_filter !== 'all' && $normalized_location_slug !== $location_filter) {
                 continue;
             }
 
-            $stats = $this->get_location_stats($location_slug);
+            $stats = $this->get_location_stats($location_slug, $date_filter);
             $global_stats['total_views'] += $stats['total_views'];
             $global_stats['total_purchases'] += $stats['total_purchases'];
             $global_stats['total_users'] += $stats['unique_users'];
@@ -1210,7 +1483,7 @@ class Mulopimfwc_Customer_Location_Insights
 
             $location_score = ($stats['total_purchases'] * 10) + $stats['total_views'];
 
-            $top_products_raw = $this->get_popular_products($location_slug, 5);
+            $top_products_raw = $this->get_popular_products($location_slug, 5, $date_filter);
             $top_products = [];
             foreach ($top_products_raw as $product_id => $product_data) {
                 $product = wc_get_product($product_id);
@@ -1245,7 +1518,7 @@ class Mulopimfwc_Customer_Location_Insights
             ];
 
             // Track products to find global top performer
-            $products = $this->get_popular_products($location_slug, 100);
+            $products = $this->get_popular_products($location_slug, 100, $date_filter);
             foreach ($products as $product_id => $product_data) {
                 if (!isset($all_products[$product_id])) {
                     $all_products[$product_id] = [
@@ -1301,7 +1574,13 @@ class Mulopimfwc_Customer_Location_Insights
             ]),
             'top_location' => $top_location_data,
             'top_product' => $top_product_payload,
-            'processing_count' => $this->get_processing_order_count()
+            'processing_count' => $this->get_processing_order_count(),
+            'filters' => [
+                'location' => $location_filter,
+                'date_range' => $date_filter['range'],
+                'date_from' => $date_filter['date_from'],
+                'date_to' => $date_filter['date_to'],
+            ],
         ];
     }
 
@@ -1366,7 +1645,11 @@ class Mulopimfwc_Customer_Location_Insights
             wp_send_json_error(['message' => __('Permission denied', 'multi-location-product-and-inventory-management-pro')]);
         }
 
-        $analytics = $this->get_analytics_snapshot();
+        $location_filter = isset($_POST['location']) ? wp_unslash($_POST['location']) : 'all';
+        $date_range = isset($_POST['date_range']) ? wp_unslash($_POST['date_range']) : 'all';
+        $date_from = isset($_POST['date_from']) ? wp_unslash($_POST['date_from']) : '';
+        $date_to = isset($_POST['date_to']) ? wp_unslash($_POST['date_to']) : '';
+        $analytics = $this->get_analytics_snapshot($location_filter, $date_range, $date_from, $date_to);
 
         wp_send_json_success($analytics);
     }
@@ -1387,7 +1670,21 @@ class Mulopimfwc_Customer_Location_Insights
             wp_die(esc_html(__('You do not have sufficient permissions to access this page.', 'multi-location-product-and-inventory-management-pro')));
         }
 
-        $analytics = $this->get_analytics_snapshot();
+        $selected_location = $this->normalize_analytics_location_filter(isset($_GET['analytics_location']) ? wp_unslash($_GET['analytics_location']) : 'all');
+        $selected_date_filter = $this->normalize_analytics_date_filter(
+            isset($_GET['analytics_date_range']) ? wp_unslash($_GET['analytics_date_range']) : 'all',
+            isset($_GET['analytics_date_from']) ? wp_unslash($_GET['analytics_date_from']) : '',
+            isset($_GET['analytics_date_to']) ? wp_unslash($_GET['analytics_date_to']) : ''
+        );
+        $quick_date_ranges = [
+            'today' => __('Today', 'multi-location-product-and-inventory-management-pro'),
+            'last_7_days' => __('Last 7 Days', 'multi-location-product-and-inventory-management-pro'),
+            'this_month' => __('This Month', 'multi-location-product-and-inventory-management-pro'),
+            'last_month' => __('Last Month', 'multi-location-product-and-inventory-management-pro'),
+            'this_year' => __('This Year', 'multi-location-product-and-inventory-management-pro'),
+        ];
+        $filter_locations = $this->get_analytics_visible_locations();
+        $analytics = $this->get_analytics_snapshot($selected_location, $selected_date_filter['range'], $selected_date_filter['date_from'], $selected_date_filter['date_to']);
         $global_stats = $analytics['global_stats'];
         $location_scores = $analytics['location_rankings'];
         $locations = $analytics['locations'];
@@ -1401,15 +1698,93 @@ class Mulopimfwc_Customer_Location_Insights
         $conversion_rate = isset($global_stats['conversion_rate']) ? $global_stats['conversion_rate'] : 0;
 
     ?>
+        <?php $has_active_filters = $selected_location !== 'all' || $selected_date_filter['range'] !== 'all'; ?>
         <div class="wrap mulopimfwc-analytics-wrap <?php echo mulopimfwc_premium_feature() ? '' : ' mulopimfwc_pro_only_blur mulopimfwc_pro_only'; ?>">
         <h1 style="display: none !important;"><?php echo esc_html__('Location Analytics Dashboard', 'multi-location-product-and-inventory-management-pro'); ?></h1>
-        <h1>
-                <span class="dashicons dashicons-chart-area"></span>
-                <?php esc_html_e('Location Analytics Dashboard', 'multi-location-product-and-inventory-management-pro'); ?>
-                <span id="mulopimfwc-processing-bubble" class="awaiting-mod update-plugins count-<?php echo esc_attr($processing_count); ?>" title="<?php esc_attr_e('Processing orders', 'multi-location-product-and-inventory-management-pro'); ?>">
-                    <span class="processing-count"><?php echo esc_html($processing_count); ?></span>
-                </span>
-            </h1>
+            <div class="mulopimfwc-analytics-heading">
+                <h1>
+                    <span class="dashicons dashicons-chart-area"></span>
+                    <?php esc_html_e('Location Analytics Dashboard', 'multi-location-product-and-inventory-management-pro'); ?>
+                    <span id="mulopimfwc-processing-bubble" class="awaiting-mod update-plugins count-<?php echo esc_attr($processing_count); ?>" title="<?php esc_attr_e('Processing orders', 'multi-location-product-and-inventory-management-pro'); ?>">
+                        <span class="processing-count"><?php echo esc_html($processing_count); ?></span>
+                    </span>
+                </h1>
+                <button type="button" class="mulopimfwc-btn-secondary filter_toggle_btn mulopimfwc-analytics-filter-toggle <?php echo $has_active_filters ? 'active' : ''; ?>">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <?php esc_html_e('Filters', 'multi-location-product-and-inventory-management-pro'); ?>
+                </button>
+            </div>
+
+            <div class="lwp-dashboard-filters mulopimfwc-analytics-filter-panel <?php echo $has_active_filters ? 'show' : ''; ?>">
+                <form method="get" class="lwp-filters-container mulopimfwc-analytics-filters">
+                    <input type="hidden" name="page" value="mulopimfwc-analytics" />
+                    <input type="hidden" name="analytics_date_range" id="mulopimfwc_analytics_date_range" value="<?php echo esc_attr($selected_date_filter['range']); ?>" />
+                    <h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        <?php esc_html_e('Filter Dashboard', 'multi-location-product-and-inventory-management-pro'); ?>
+                    </h3>
+
+                    <div class="lwp-filters-wrapper">
+                        <div class="lwp-filters-grid">
+                            <div class="lwp-filter-group">
+                                <label for="mulopimfwc_analytics_date_from"><?php esc_html_e('Date From', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                                <input type="date" id="mulopimfwc_analytics_date_from" class="lwp-filter-input" name="analytics_date_from" value="<?php echo esc_attr($selected_date_filter['date_from']); ?>" />
+                            </div>
+
+                            <div class="lwp-filter-group">
+                                <label for="mulopimfwc_analytics_date_to"><?php esc_html_e('Date To', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                                <input type="date" id="mulopimfwc_analytics_date_to" class="lwp-filter-input" name="analytics_date_to" value="<?php echo esc_attr($selected_date_filter['date_to']); ?>" />
+                            </div>
+
+                            <div class="lwp-filter-group">
+                                <label for="mulopimfwc_analytics_location"><?php esc_html_e('Location', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                                <select name="analytics_location" id="mulopimfwc_analytics_location" class="lwp-filter-input">
+                                    <option value="all" <?php selected($selected_location, 'all'); ?>><?php esc_html_e('All Locations', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                    <?php foreach ($filter_locations as $filter_location) : ?>
+                                        <?php $filter_slug = sanitize_title(rawurldecode((string) $filter_location->slug)); ?>
+                                        <option value="<?php echo esc_attr($filter_slug); ?>" <?php selected($selected_location, $filter_slug); ?>>
+                                            <?php echo esc_html($filter_location->name); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="lwp-filter-group lwp-quick-filters">
+                            <label><?php esc_html_e('Quick Select', 'multi-location-product-and-inventory-management-pro'); ?></label>
+                            <div class="lwp-quick-buttons">
+                                <?php foreach ($quick_date_ranges as $range_key => $range_label) : ?>
+                                    <button type="button" class="lwp-quick-btn <?php echo $selected_date_filter['range'] === $range_key ? 'active' : ''; ?>" data-range="<?php echo esc_attr($range_key); ?>">
+                                        <?php echo esc_html($range_label); ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lwp-filter-actions">
+                        <button type="submit" class="mulopimfwc-btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <?php esc_html_e('Apply Filters', 'multi-location-product-and-inventory-management-pro'); ?>
+                        </button>
+                        <a class="lwp-btn-secondary" href="<?php echo esc_url(admin_url('admin.php?page=mulopimfwc-analytics')); ?>">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                                <path d="M21 3v5h-5"></path>
+                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                                <path d="M3 21v-5h5"></path>
+                            </svg>
+                            <?php esc_html_e('Reset', 'multi-location-product-and-inventory-management-pro'); ?>
+                        </a>
+                    </div>
+                </form>
+            </div>
 
             <!-- Global Overview Section -->
             <div class="mulopimfwc-global-overview">
@@ -1559,11 +1934,11 @@ class Mulopimfwc_Customer_Location_Insights
                                 <tr>
                                     <td class="rank-column">
                                         <?php if ($rank === 1): ?>
-                                            <span class="rank-badge gold">🥇 <?php echo esc_html($rank); ?></span>
+                                            <span class="rank-badge gold"><?php echo esc_html($rank); ?></span>
                                         <?php elseif ($rank === 2): ?>
-                                            <span class="rank-badge silver">🥈 <?php echo esc_html($rank); ?></span>
+                                            <span class="rank-badge silver"><?php echo esc_html($rank); ?></span>
                                         <?php elseif ($rank === 3): ?>
-                                            <span class="rank-badge bronze">🥉 <?php echo esc_html($rank); ?></span>
+                                            <span class="rank-badge bronze"><?php echo esc_html($rank); ?></span>
                                         <?php else: ?>
                                             <span class="rank-badge"><?php echo esc_html($rank); ?></span>
                                         <?php endif; ?>
@@ -1714,17 +2089,194 @@ class Mulopimfwc_Customer_Location_Insights
                     margin-right: 20px;
                 }
 
+                .mulopimfwc-analytics-heading {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 16px;
+                    margin-bottom: 20px;
+                }
+
                 .mulopimfwc-analytics-wrap h1 {
                     display: flex;
                     align-items: center;
                     gap: 10px;
-                    margin-bottom: 20px;
+                    margin: 0;
                 }
 
                 .mulopimfwc-analytics-wrap h1 .dashicons {
                     font-size: 32px;
                     width: 32px;
                     height: 32px;
+                }
+
+                .mulopimfwc-analytics-filter-toggle {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #f3f4f6;
+                    border: 1px solid #e5e7eb;
+                    color: #374151;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    padding: 10px 20px !important;
+                    transition: all 0.2s ease;
+                }
+
+                .mulopimfwc-analytics-filter-toggle:hover {
+                    background: #e5e7eb;
+                    border-color: #d1d5db;
+                }
+
+                .mulopimfwc-analytics-filter-toggle.active {
+                    background: #2563eb;
+                    border-color: #2563eb;
+                    color: #fff;
+                }
+
+                .mulopimfwc-analytics-filter-panel {
+                    max-height: 0;
+                    opacity: 0;
+                    overflow: hidden;
+                    transition: all 0.35s ease;
+                    margin-bottom: 0;
+                }
+
+                .mulopimfwc-analytics-filter-panel.show {
+                    max-height: 800px;
+                    opacity: 1;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 12px;
+                    padding: 24px;
+                    margin-bottom: 24px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+
+                .mulopimfwc-analytics-filters h3 {
+                    color: #fff;
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin: 0 0 20px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-filters-wrapper {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 14px;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-filters-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                    gap: 16px;
+                    align-items: end;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-filter-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+
+                .mulopimfwc-analytics-filters label {
+                    color: #fff;
+                    font-size: 13px;
+                    font-weight: 500;
+                    margin: 0;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-filter-input {
+                    min-height: 36px;
+                    padding: 6px 10px;
+                    border: 2px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 8px;
+                    font-size: 14px;
+                    background: rgba(255, 255, 255, 0.95);
+                    color: #334155;
+                    transition: all 0.3s ease;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-filter-input:focus {
+                    outline: none;
+                    border-color: #fff;
+                    background: #fff;
+                    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+                }
+
+                .mulopimfwc-analytics-filters .lwp-quick-buttons {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-quick-btn {
+                    padding: 8px 16px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 6px;
+                    color: #fff;
+                    font-size: 13px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-quick-btn:hover,
+                .mulopimfwc-analytics-filters .lwp-quick-btn.active {
+                    background: #fff;
+                    color: #667eea;
+                    border-color: #fff;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-filter-actions {
+                    display: flex;
+                    gap: 12px;
+                    align-items: center;
+                    margin-top: 20px;
+                }
+
+                .mulopimfwc-analytics-filters .mulopimfwc-btn-primary,
+                .mulopimfwc-analytics-filters .lwp-btn-secondary {
+                    display: inline-flex !important;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 10px 20px !important;
+                    border-radius: 8px !important;
+                    font-size: 14px !important;
+                    font-weight: 600 !important;
+                    text-decoration: none;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .mulopimfwc-analytics-filters .mulopimfwc-btn-primary {
+                    background: #2563eb !important;
+                    border: 1px solid #2563eb !important;
+                    color: #fff !important;
+                }
+
+                .mulopimfwc-analytics-filters .lwp-btn-secondary {
+                    background: rgba(255, 255, 255, 0.2);
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    color: #fff;
+                }
+
+                @media (min-width: 1400px) {
+                    .mulopimfwc-analytics-filters .lwp-filters-wrapper {
+                        align-items: center;
+                        flex-direction: row;
+                    }
+
+                    .mulopimfwc-analytics-filters .lwp-filters-grid {
+                        width: 62%;
+                    }
+
+                    .mulopimfwc-analytics-filters .lwp-quick-filters {
+                        width: 38%;
+                    }
                 }
 
                 /* Global Overview */
@@ -1945,11 +2497,25 @@ class Mulopimfwc_Customer_Location_Insights
                 }
 
                 .rank-badge {
-                    display: inline-block;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
                     padding: 5px 10px;
                     border-radius: 5px;
                     font-weight: bold;
                     font-size: 14px;
+                }
+
+                .rank-badge.gold::before,
+                .rank-badge.silver::before,
+                .rank-badge.bronze::before {
+                    content: "";
+                    width: 14px;
+                    height: 14px;
+                    flex: 0 0 14px;
+                    background: currentColor;
+                    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17 3h3a1 1 0 0 1 1 1v2a5 5 0 0 1-4.3 4.95A6.98 6.98 0 0 1 13 14.93V18h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-3.07a6.98 6.98 0 0 1-3.7-3.98A5 5 0 0 1 3 6V4a1 1 0 0 1 1-1h3V2h10v1Zm0 2v3.83A3 3 0 0 0 19 6V5h-2ZM5 5v1a3 3 0 0 0 2 2.83V5H5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+                    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17 3h3a1 1 0 0 1 1 1v2a5 5 0 0 1-4.3 4.95A6.98 6.98 0 0 1 13 14.93V18h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-3.07a6.98 6.98 0 0 1-3.7-3.98A5 5 0 0 1 3 6V4a1 1 0 0 1 1-1h3V2h10v1Zm0 2v3.83A3 3 0 0 0 19 6V5h-2ZM5 5v1a3 3 0 0 0 2 2.83V5H5Z'/%3E%3C/svg%3E") center / contain no-repeat;
                 }
 
                 .rank-badge.gold {
@@ -2214,6 +2780,10 @@ class Mulopimfwc_Customer_Location_Insights
                     const analyticsConfig = {
                         ajaxurl: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
                         nonce: '<?php echo esc_js(wp_create_nonce('mulopimfwc_analytics_live')); ?>',
+                        location: '<?php echo esc_js($selected_location); ?>',
+                        dateRange: '<?php echo esc_js($selected_date_filter['range']); ?>',
+                        dateFrom: '<?php echo esc_js($selected_date_filter['date_from']); ?>',
+                        dateTo: '<?php echo esc_js($selected_date_filter['date_to']); ?>',
                         pollInterval: <?php echo absint(apply_filters('mulopimfwc_analytics_poll_interval', 30000)); ?>
                     };
 
@@ -2401,7 +2971,11 @@ class Mulopimfwc_Customer_Location_Insights
                     function fetchLiveAnalytics() {
                         $.post(analyticsConfig.ajaxurl, {
                             action: 'mulopimfwc_analytics_live_data',
-                            nonce: analyticsConfig.nonce
+                            nonce: analyticsConfig.nonce,
+                            location: analyticsConfig.location,
+                            date_range: analyticsConfig.dateRange,
+                            date_from: analyticsConfig.dateFrom,
+                            date_to: analyticsConfig.dateTo
                         }).done(function (response) {
                             if (response && response.success) {
                                 applyAnalyticsPayload(response.data);
@@ -2410,6 +2984,55 @@ class Mulopimfwc_Customer_Location_Insights
                     }
 
                     $(document).ready(function () {
+                        const filterPanel = $('.mulopimfwc-analytics-filter-panel');
+                        const filterToggle = $('.mulopimfwc-analytics-filter-toggle');
+                        const dateRangeInput = $('#mulopimfwc_analytics_date_range');
+                        const dateFromInput = $('#mulopimfwc_analytics_date_from');
+                        const dateToInput = $('#mulopimfwc_analytics_date_to');
+
+                        function formatDate(date) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            return year + '-' + month + '-' + day;
+                        }
+
+                        function setQuickRange(range) {
+                            const today = new Date();
+                            let from = new Date(today);
+                            let to = new Date(today);
+
+                            if (range === 'last_7_days') {
+                                from.setDate(today.getDate() - 6);
+                            } else if (range === 'this_month') {
+                                from = new Date(today.getFullYear(), today.getMonth(), 1);
+                            } else if (range === 'last_month') {
+                                from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                                to = new Date(today.getFullYear(), today.getMonth(), 0);
+                            } else if (range === 'this_year') {
+                                from = new Date(today.getFullYear(), 0, 1);
+                            }
+
+                            dateRangeInput.val(range);
+                            dateFromInput.val(formatDate(from));
+                            dateToInput.val(formatDate(to));
+                            $('.mulopimfwc-analytics-filters .lwp-quick-btn').removeClass('active');
+                            $('.mulopimfwc-analytics-filters .lwp-quick-btn[data-range="' + range + '"]').addClass('active');
+                        }
+
+                        filterToggle.on('click', function () {
+                            $(this).toggleClass('active');
+                            filterPanel.toggleClass('show');
+                        });
+
+                        $('.mulopimfwc-analytics-filters .lwp-quick-btn').on('click', function () {
+                            setQuickRange($(this).data('range'));
+                        });
+
+                        $('.mulopimfwc-analytics-filters input[type="date"]').on('change', function () {
+                            dateRangeInput.val('custom');
+                            $('.mulopimfwc-analytics-filters .lwp-quick-btn').removeClass('active');
+                        });
                         fetchLiveAnalytics();
                         setInterval(fetchLiveAnalytics, analyticsConfig.pollInterval);
                     });

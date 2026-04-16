@@ -133,8 +133,13 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 												<?php if ( $rating > 0 ) : ?>
 													<span class="mulopimfwc-neighbour-reviews__rating" aria-label="<?php echo esc_attr( sprintf( /* translators: %d: star rating (1-5) */ _n( '%d star', '%d stars', $rating, 'multi-location-product-and-inventory-management-pro'  ), $rating ) ); ?>">
 														<?php
-														// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-														echo str_repeat( '★', $rating ) . str_repeat( '☆', max( 0, 5 - $rating ) );
+														for ( $star_index = 1; $star_index <= 5; $star_index++ ) :
+															$star_class = $star_index <= $rating ? ' is-filled' : '';
+															?>
+															<svg class="mulopimfwc-review-star<?php echo esc_attr( $star_class ); ?>" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+																<path d="M12 2.75l2.79 5.65 6.23.91-4.51 4.39 1.06 6.2L12 16.97 6.43 19.9l1.06-6.2-4.51-4.39 6.23-.91L12 2.75Z" />
+															</svg>
+														<?php endfor;
 														?>
 													</span>
 												<?php endif; ?>
@@ -202,7 +207,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 
 			if ( ! empty( $location_name ) ) {
 				echo '<p class="mulopimfwc-review-location">';
-				echo '<span class="mulopimfwc-review-location__label">📍 ';
+				echo '<span class="mulopimfwc-review-location__label"><svg class="mulopimfwc-review-location__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z" fill="currentColor"/></svg>';
 				echo esc_html(
 					sprintf(
 						/* translators: %s location name */

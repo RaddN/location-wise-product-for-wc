@@ -64,7 +64,7 @@ msgstr ""
 #. 1: product name, 2: rating number, 3: review excerpt
 #: multi-location-product-and-inventory-management-pro.php:14332
 #, php-format
-msgid "%1$s received a %2$s★ review: \"%3$s\""
+msgid "%1$s received a %2$s-star review: \"%3$s\""
 msgstr ""
 
 #. 1: source location name, 2: destination location name, 3: cost label
@@ -9888,22 +9888,14 @@ msgstr ""
 msgid "| Prices updated based on location pricing"
 msgstr ""
 
-#: admin/dashboard.php:353
-msgid "⚠ Out of Stock"
+#: admin/admin.php:6007
+msgid "This order needs location assignment"
 msgstr ""
 
-#: admin/admin.php:5948
-msgid "⚠️ This order needs location assignment"
+#: admin/license-page.php:865
+msgid "License Expired"
 msgstr ""
 
-#: admin/dashboard.php:353
-msgid "⚡ Low Stock"
-msgstr ""
-
-#: admin/license-page.php:822
-msgid "✗ License Expired"
-msgstr ""
-
-#: admin/license-page.php:932
-msgid "✗ Unlicensed"
+#: admin/license-page.php:975
+msgid "Unlicensed"
 msgstr ""

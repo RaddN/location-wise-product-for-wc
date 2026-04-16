@@ -274,7 +274,9 @@ a.lwp-subtab.lwp-subtab-active {
 
 /* Unassigned Orders Styling */
 .mulopimfwc-unassigned-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 3px 8px;
   background-color: #fff3cd;
   color: #856404;
@@ -284,6 +286,13 @@ a.lwp-subtab.lwp-subtab-active {
   font-weight: 500;
   margin-right: 8px;
   white-space: nowrap;
+}
+
+.mulopimfwc-unassigned-badge .dashicons {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  line-height: 1;
 }
 
 tr.unassigned-order-row,

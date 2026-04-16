@@ -2152,9 +2152,9 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
             $header.find('.accordion-error-message').remove();
             var $toggle = $header.find('.accordion-toggle');
             if ($toggle.length) {
-                $toggle.before('<span class="accordion-error-message">⚠ ' + escapeHtml(message) + '</span>');
+                $toggle.before('<span class="accordion-error-message"><span class="dashicons dashicons-warning" aria-hidden="true"></span>' + escapeHtml(message) + '</span>');
             } else {
-                $header.append('<span class="accordion-error-message">⚠ ' + escapeHtml(message) + '</span>');
+                $header.append('<span class="accordion-error-message"><span class="dashicons dashicons-warning" aria-hidden="true"></span>' + escapeHtml(message) + '</span>');
             }
             
             // Find which tab has the error and highlight it
@@ -2187,7 +2187,7 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
             
             // Show error in tab nav area (only once per accordion)
             if ($tabsNav.find('.tab-nav-error-message').length === 0) {
-                $tabsNav.append('<span class="tab-nav-error-message">⚠ Please fix validation errors below</span>');
+                $tabsNav.append('<span class="tab-nav-error-message"><span class="dashicons dashicons-warning" aria-hidden="true"></span>Please fix validation errors below</span>');
             }
             
             // Expand accordion if collapsed to show errors
@@ -2209,7 +2209,7 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
                     $tabsNav.find('.tab-nav-error-message').remove();
                     var tabName = $tabBtn.clone().find('.tab-error-icon').remove().end().text().trim();
                     if (tabName) {
-                        $tabsNav.append('<span class="tab-nav-error-message">⚠ Validation errors in ' + escapeHtml(tabName) + ' tab</span>');
+                        $tabsNav.append('<span class="tab-nav-error-message"><span class="dashicons dashicons-warning" aria-hidden="true"></span>Validation errors in ' + escapeHtml(tabName) + ' tab</span>');
                     }
                     
                     // Activate the tab to show errors

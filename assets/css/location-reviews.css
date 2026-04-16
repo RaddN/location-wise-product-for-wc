@@ -154,14 +154,23 @@
 
 .mulopimfwc-neighbour-reviews__rating {
   margin-left: .35em;
-  font-size: 1rem;
-  letter-spacing: .08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   white-space: nowrap;
-  background: linear-gradient(135deg, var(--mulopimfwc-accent), var(--mulopimfwc-accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 1px 0 rgba(0,0,0,.05);
+  color: var(--mulopimfwc-accent);
+}
+
+.mulopimfwc-review-star {
+  width: 1rem;
+  height: 1rem;
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.mulopimfwc-review-star.is-filled {
+  fill: currentColor;
 }
 
 /* ---------- Content ---------- */
@@ -203,6 +212,12 @@
   display: inline-flex;
   align-items: center;
   gap: .45ch;
+}
+
+.mulopimfwc-review-location__icon {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 1em;
 }
 
 /* ---------- Subtle focus ring for accessibility ---------- */

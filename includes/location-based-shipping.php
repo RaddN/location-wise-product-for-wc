@@ -5,7 +5,7 @@
  * Handles shipping zone and method filtering based on selected store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.6.11
+ * @since 1.1.6.12
  */
 
 if (!defined('ABSPATH')) {
@@ -566,7 +566,8 @@ class MULOPIMFWC_Location_Based_Shipping
                 $location_text = implode(', ', $location_names);
             }
             
-            $location_html = '<span class="mulopimfwc-shipping-locations" style="color: #666; font-size: 11px;" title="' . esc_attr(implode(', ', $location_names)) . '">📍 ' . esc_html($location_text) . '</span>';
+            $location_icon = '<svg class="mulopimfwc-shipping-locations__icon" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z" fill="currentColor"/></svg>';
+            $location_html = '<span class="mulopimfwc-shipping-locations" style="color: #666; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" title="' . esc_attr(implode(', ', $location_names)) . '">' . $location_icon . esc_html($location_text) . '</span>';
         }
 
         return $html . ' ' . $location_html;
@@ -601,14 +602,14 @@ class MULOPIMFWC_Location_Based_Shipping
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/css/shipping-admin.css',
             array(),
-            '1.1.6.11'
+            '1.1.6.12'
         );
 
         wp_enqueue_script(
             'mulopimfwc-shipping-admin',
             plugin_dir_url(__FILE__) . '../assets/js/shipping-admin.js',
             array('jquery'),
-            '1.1.6.11',
+            '1.1.6.12',
             true
         );
 

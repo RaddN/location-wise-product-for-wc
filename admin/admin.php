@@ -4617,7 +4617,7 @@ JS;
     private function render_quick_assignment_dropdown($order)
     {
         if (!$order || !current_user_can('edit_shop_order', $order->get_id()) || !$this->current_user_can_manage_order_operations()) {
-            return '<span class="mulopimfwc-unassigned-badge">⚠️ ' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management-pro') . '</span>';
+            return '<span class="mulopimfwc-unassigned-badge"><span class="dashicons dashicons-warning" aria-hidden="true"></span>' . esc_html__('Unassigned', 'multi-location-product-and-inventory-management-pro') . '</span>';
         }
 
         if (!$order->is_editable()) {
@@ -4631,7 +4631,7 @@ JS;
         ob_start();
     ?>
         <div class="mulopimfwc-quick-assignment-wrapper">
-            <span class="mulopimfwc-unassigned-badge">🔴 <?php echo esc_html__('Needs Assignment', 'multi-location-product-and-inventory-management-pro'); ?></span>
+            <span class="mulopimfwc-unassigned-badge"><span class="dashicons dashicons-warning" aria-hidden="true"></span><?php echo esc_html__('Needs Assignment', 'multi-location-product-and-inventory-management-pro'); ?></span>
             <?php if (empty($locations)): ?>
                 <?php
                 // Get order edit URL
@@ -6004,7 +6004,7 @@ JS;
 
         if ($is_unassigned && $is_manual_mode) {
             echo '<div class="notice notice-warning inline mulopimfwc-location-alert">';
-            echo '<p><strong>' . esc_html__('⚠️ This order needs location assignment', 'multi-location-product-and-inventory-management-pro') . '</strong></p>';
+            echo '<p><strong><span class="dashicons dashicons-warning" aria-hidden="true"></span> ' . esc_html__('This order needs location assignment', 'multi-location-product-and-inventory-management-pro') . '</strong></p>';
             echo '<p>' . esc_html__('Please select a fulfillment location to continue processing this order.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             echo '</div>';
         }

@@ -862,7 +862,7 @@ class mulopimfwc_License_Manager
                         <?php if ($is_valid): ?>
                             <?php if ($is_expired): ?>
                                 <span class="license-status license-status-invalid">
-                                    <strong><?php echo esc_html__('✗ License Expired', 'multi-location-product-and-inventory-management-pro'); ?></strong> - <?php echo esc_html__('Please renew your license to continue using premium features', 'multi-location-product-and-inventory-management-pro'); ?>
+                                    <strong><span class="dashicons dashicons-no-alt" aria-hidden="true"></span><?php echo esc_html__('License Expired', 'multi-location-product-and-inventory-management-pro'); ?></strong> - <?php echo esc_html__('Please renew your license to continue using premium features', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </span>
                             <?php else: ?>
                                 <span class="license-status license-status-valid" style="display: flex;font-size: 14px;background: #e2fbec;color: green;border-radius: 10px;border: 1px solid #ccfbdf;padding: 20px;align-items: center;gap: 10px;">
@@ -972,7 +972,7 @@ class mulopimfwc_License_Manager
                             <?php endif; ?>
                         <?php else: ?>
                             <span class="license-status license-status-invalid">
-                                <strong><?php echo esc_html__('✗ Unlicensed', 'multi-location-product-and-inventory-management-pro'); ?></strong> - <?php echo esc_html__('Please activate your license to access premium features', 'multi-location-product-and-inventory-management-pro'); ?>
+                                <strong><span class="dashicons dashicons-no-alt" aria-hidden="true"></span><?php echo esc_html__('Unlicensed', 'multi-location-product-and-inventory-management-pro'); ?></strong> - <?php echo esc_html__('Please activate your license to access premium features', 'multi-location-product-and-inventory-management-pro'); ?>
                             </span>
                             <?php if (!empty($license_status) && $license_status !== 'valid'): ?>
                                 <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
@@ -1064,6 +1064,15 @@ class mulopimfwc_License_Manager
                     background-color: #f8d7da;
                     color: #721c24;
                     border: 1px solid #f5c6cb;
+                }
+
+                .license-status .dashicons {
+                    width: 16px;
+                    height: 16px;
+                    font-size: 16px;
+                    line-height: 1;
+                    margin-right: 4px;
+                    vertical-align: text-bottom;
                 }
             </style>
 
