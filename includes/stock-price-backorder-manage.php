@@ -1030,6 +1030,13 @@ if (!function_exists('mulopimfwc_get_frontend_runtime_product_location_slug')) {
             'location_filter',
         ];
 
+        if (function_exists('mulopimfwc_get_location_url_query_var')) {
+            $location_url_query_var = mulopimfwc_get_location_url_query_var();
+            if ($location_url_query_var !== '' && !in_array($location_url_query_var, $request_keys, true)) {
+                array_unshift($request_keys, $location_url_query_var);
+            }
+        }
+
         $candidates = [];
 
         foreach ($request_keys as $request_key) {

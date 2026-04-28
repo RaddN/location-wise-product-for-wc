@@ -579,6 +579,51 @@ div#advance-settings .lwp-settings-section {
   min-width: 300px;
 }
 
+div#extensions .lwp-url-management-settings-section {
+  flex-basis: 100%;
+  min-width: 100%;
+}
+
+.lwp-url-management-settings-section .form-table th {
+  width: 260px;
+}
+
+.lwp-url-management-settings-section select.lwp-location-url-control,
+.lwp-url-management-settings-section input.lwp-location-url-control {
+  width: 100%;
+  max-width: 360px;
+}
+
+.lwp-location-url-note {
+  color: #4a4a4a;
+  display: flex;
+  align-items: center;
+  background: #e0f7fa;
+  border-radius: 5px;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: bold;
+  max-width: 420px;
+  padding: 10px;
+}
+
+.lwp-location-url-note svg {
+  fill: #00796b;
+  flex: 0 0 18px;
+}
+
+@media screen and (max-width: 782px) {
+  .lwp-url-management-settings-section .form-table th {
+    width: 100%;
+  }
+
+  .lwp-url-management-settings-section select.lwp-location-url-control,
+  .lwp-url-management-settings-section input.lwp-location-url-control,
+  .lwp-location-url-note {
+    max-width: 100%;
+  }
+}
+
 .lwp-subtab-wrapper {
   background-color: #2563eb;
   margin-bottom: 20px;

@@ -3468,30 +3468,84 @@ var variationTitle = Object.values(variation.attributes).join(', ') || (_modalI1
 
 jQuery(document).ready(function ($) {
     // Tab functionality
-    $('.lwp-nav-tabs a').click(function (e) {
-        e.preventDefault();
+    const settingsActiveTabStorageKey = 'mulopimfwc_settings_active_tab';
+
+    function rememberActiveSettingsTab(tabHash) {
+        if (!tabHash) {
+            return;
+        }
+
+        try {
+            window.sessionStorage.setItem(settingsActiveTabStorageKey, tabHash);
+        } catch (error) {
+            // Storage can be unavailable in restricted browser contexts.
+        }
+    }
+
+    function getRememberedSettingsTab() {
+        try {
+            return window.sessionStorage.getItem(settingsActiveTabStorageKey) || '';
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function activateSettingsTab($tab, updateHistory) {
+        if (!$tab || !$tab.length) {
+            return;
+        }
 
         // Update active tab
         $('.lwp-nav-tabs a').removeClass('nav-tab-active');
-        $(this).addClass('nav-tab-active');
+        $tab.addClass('nav-tab-active');
 
         // Show target content
         $('.lwp-tab-content,.mulopimfwc_settings').hide();
-        $($(this).attr('href')).show();
-        $($(this).attr('href')).closest('.mulopimfwc_settings').show();
-        // Update URL hash (without page reload)
-        const tabHash = $(this).attr('href');
-        history.replaceState(null, null, tabHash);
+        $($tab.attr('href')).show();
+        $($tab.attr('href')).closest('.mulopimfwc_settings').show();
+
+        const tabHash = $tab.attr('href');
+        rememberActiveSettingsTab(tabHash);
+
+        if (updateHistory && window.history && window.history.replaceState) {
+            history.replaceState(null, null, tabHash);
+        }
+    }
+
+    $('.lwp-nav-tabs a').click(function (e) {
+        e.preventDefault();
+        activateSettingsTab($(this), true);
     });
 
     // On page load, check URL hash and show correct tab
     const currentHash = window.location.hash;
-    if (currentHash && $('.lwp-nav-tabs a[href="' + currentHash + '"]').length) {
-        $('.lwp-nav-tabs a[href="' + currentHash + '"]').trigger('click');
+    const rememberedHash = getRememberedSettingsTab();
+    const initialHash = currentHash || rememberedHash;
+    if (initialHash && $('.lwp-nav-tabs a[href="' + initialHash + '"]').length) {
+        activateSettingsTab($('.lwp-nav-tabs a[href="' + initialHash + '"]'), true);
     } else {
         // Default: show first tab if none specified
-        $('.lwp-nav-tabs a:first').trigger('click');
+        activateSettingsTab($('.lwp-nav-tabs a:first'), true);
     }
+
+    $('.mulopimfwc_settings').on('submit', function () {
+        const activeHash = $('.lwp-nav-tabs a.nav-tab-active').attr('href');
+        rememberActiveSettingsTab(activeHash);
+
+        const $referer = $(this).find('input[name="_wp_http_referer"]');
+        if (!activeHash || !$referer.length) {
+            return;
+        }
+
+        try {
+            const refererUrl = new URL($referer.val() || window.location.href, window.location.origin);
+            refererUrl.hash = activeHash;
+            $referer.val(refererUrl.pathname + refererUrl.search + refererUrl.hash);
+        } catch (error) {
+            const refererValue = ($referer.val() || window.location.pathname + window.location.search).split('#')[0];
+            $referer.val(refererValue + activeHash);
+        }
+    });
 
     // Add toggle functionality for sections if needed
     $('.lwp-settings-box h2').addClass('lwp-section-toggle');
@@ -3627,13 +3681,54 @@ jQuery(document).ready(function ($) {
     });
 
     const $enable_location_urls = $('select[name="mulopimfwc_display_options[enable_location_urls]"]');
-    const $location_urls_related_settings = $enable_location_urls.closest('table').find('input, select, textarea').not($enable_location_urls);
-    // Set initial state
-    mulopimfwc_toggleDisabledClass($enable_location_urls.val() !== 'on', $location_urls_related_settings);
-    // Handle change event
-    $enable_location_urls.on('change', function () {
-        mulopimfwc_toggleDisabledClass($(this).val() !== 'on', $location_urls_related_settings);
-    });
+    const $location_url_format = $('select[name="mulopimfwc_display_options[url_location_format]"]');
+    const $location_url_prefix = $('input[name="mulopimfwc_display_options[location_url_prefix]"]');
+    const $location_urls_related_settings = $location_url_format.add($location_url_prefix);
+
+    function normalizeLocationUrlPrefix(prefix) {
+        const normalized = (prefix || '')
+            .toString()
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9 _-]+/g, '')
+            .replace(/[\s_]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        return normalized || 'store-location';
+    }
+
+    function updateLocationUrlFormatLabels() {
+        if (!$location_url_format.length) {
+            return;
+        }
+
+        const prefix = normalizeLocationUrlPrefix($location_url_prefix.val());
+        $location_url_format.find('option').each(function () {
+            const template = $(this).data('label-template');
+            if (template) {
+                $(this).text(template.replace('%s', prefix));
+            }
+        });
+    }
+
+    function syncLocationUrlSettingsState() {
+        if (!$enable_location_urls.length) {
+            return;
+        }
+
+        const isDisabled = $enable_location_urls.val() !== 'on';
+        $location_urls_related_settings
+            .prop('disabled', isDisabled)
+            .toggleClass('mulopimfwc-setting-disabled', isDisabled)
+            .closest('tr')
+            .toggleClass('mulopimfwc-setting-disabled', isDisabled);
+    }
+
+    updateLocationUrlFormatLabels();
+    syncLocationUrlSettingsState();
+    $enable_location_urls.on('change', syncLocationUrlSettingsState);
+    $location_url_prefix.on('input change', updateLocationUrlFormatLabels);
 
 
 

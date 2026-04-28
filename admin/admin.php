@@ -12,6 +12,7 @@ class MULOPIMFWC_Admin
 
         add_action('init', [$this, 'register_store_location_taxonomy']);
         add_action('init', [$this, 'maybe_flush_rewrite_rules'], 20);
+        add_filter('request', [$this, 'normalize_store_location_hierarchical_request']);
 
         add_action('admin_enqueue_scripts', [$this, 'mulopimfwc_admin_assets']);
 
@@ -6156,12 +6157,20 @@ JS;
     {
         global $mulopimfwc_options;
         $mulopimfwc_options = get_option('mulopimfwc_display_options');
+        $mulopimfwc_options = is_array($mulopimfwc_options) ? $mulopimfwc_options : [];
 
-        $enable_location_urls = isset($mulopimfwc_options['enable_location_urls']) ? $mulopimfwc_options['enable_location_urls'] : 'on';
-        $location_url_prefix = isset($mulopimfwc_options['location_url_prefix']) ? $mulopimfwc_options['location_url_prefix'] : 'store-location';
+        $enable_location_urls = (isset($mulopimfwc_options['enable_location_urls']) && $mulopimfwc_options['enable_location_urls'] === 'on') ? 'on' : 'off';
+        $location_url_prefix = isset($mulopimfwc_options['location_url_prefix']) ? sanitize_title((string) $mulopimfwc_options['location_url_prefix']) : 'store-location';
+        if ($location_url_prefix === '') {
+            $location_url_prefix = 'store-location';
+        }
 
-        // NEW: Get URL format setting
-        $url_format = isset($mulopimfwc_options['url_location_format']) ? $mulopimfwc_options['url_location_format'] : 'query_param';
+        $url_format = isset($mulopimfwc_options['url_location_format']) ? sanitize_key((string) $mulopimfwc_options['url_location_format']) : 'query_param';
+        if (!in_array($url_format, ['query_param', 'path_prefix'], true)) {
+            $url_format = 'query_param';
+        }
+
+        $location_urls_enabled = $enable_location_urls === 'on';
 
         // Configure taxonomy settings based on URL format
         $taxonomy_args = [
@@ -6187,13 +6196,13 @@ JS;
                 'back_to_items' => __('Back to Locations', 'multi-location-product-and-inventory-management-pro'),
             ],
             'description' => __('Manage locations for products and inventory tracking', 'multi-location-product-and-inventory-management-pro'),
-            'public' => true,
-            'publicly_queryable' => $enable_location_urls === 'on' ? true : false,
+            'public' => $location_urls_enabled,
+            'publicly_queryable' => $location_urls_enabled,
             'hierarchical' => true,
             'show_ui' => true,
-            'show_in_menu' => $enable_location_urls === 'on' ? true : false,
-            'show_in_nav_menus' => $enable_location_urls === 'on' ? true : false,
-            'show_in_rest' => $enable_location_urls === 'on' ? true : false,
+            'show_in_menu' => $location_urls_enabled,
+            'show_in_nav_menus' => $location_urls_enabled,
+            'show_in_rest' => $location_urls_enabled,
             'show_tagcloud' => false,
             'show_in_quick_edit' => true,
             'show_admin_column' => true,
@@ -6206,11 +6215,18 @@ JS;
             'sort' => true,
         ];
 
+        if (!$location_urls_enabled) {
+            $taxonomy_args['query_var'] = false;
+            $taxonomy_args['rewrite'] = false;
+            register_taxonomy('mulopimfwc_store_location', 'product', $taxonomy_args);
+            return;
+        }
+
         // Configure based on URL format
         switch ($url_format) {
             case 'path_prefix':
                 // URL format: /location/location-name
-                $taxonomy_args['query_var'] = false;
+                $taxonomy_args['query_var'] = 'mulopimfwc_store_location';
                 $taxonomy_args['rewrite'] = [
                     'slug' => $location_url_prefix,
                     'with_front' => false,
@@ -6220,13 +6236,102 @@ JS;
 
             case 'query_param':
             default:
-                // URL format: ?location=location-name
-                $taxonomy_args['query_var'] = 'location';
+                // URL format: ?{prefix}=location-name
+                $taxonomy_args['query_var'] = $location_url_prefix;
                 $taxonomy_args['rewrite'] = false;
                 break;
         }
 
         register_taxonomy('mulopimfwc_store_location', 'product', $taxonomy_args);
+    }
+
+    private function resolve_store_location_term_path($term_path)
+    {
+        $term_path = trim((string) $term_path, " \t\n\r\0\x0B/");
+        if ($term_path === '') {
+            return false;
+        }
+
+        $slugs = array_values(array_filter(array_map(static function ($path_part) {
+            return sanitize_title(rawurldecode((string) $path_part));
+        }, explode('/', $term_path))));
+
+        if (empty($slugs)) {
+            return false;
+        }
+
+        $term = get_term_by('slug', end($slugs), 'mulopimfwc_store_location');
+        if (!$term || is_wp_error($term)) {
+            return false;
+        }
+
+        if (count($slugs) === 1) {
+            return $term;
+        }
+
+        $expected_ancestors = array_reverse(array_slice($slugs, 0, -1));
+        $parent_id = (int) $term->parent;
+
+        foreach ($expected_ancestors as $expected_slug) {
+            if ($parent_id <= 0) {
+                return false;
+            }
+
+            $parent = get_term($parent_id, 'mulopimfwc_store_location');
+            if (!$parent || is_wp_error($parent)) {
+                return false;
+            }
+
+            if (sanitize_title(rawurldecode((string) $parent->slug)) !== $expected_slug) {
+                return false;
+            }
+
+            $parent_id = (int) $parent->parent;
+        }
+
+        return $term;
+    }
+
+    public function normalize_store_location_hierarchical_request($query_vars)
+    {
+        if (!is_array($query_vars)) {
+            return $query_vars;
+        }
+
+        if (
+            isset($query_vars['taxonomy'], $query_vars['term']) &&
+            $query_vars['taxonomy'] === 'mulopimfwc_store_location' &&
+            is_string($query_vars['term']) &&
+            strpos($query_vars['term'], '/') !== false
+        ) {
+            $term = $this->resolve_store_location_term_path($query_vars['term']);
+            if ($term && !is_wp_error($term)) {
+                $query_vars['term'] = sanitize_title(rawurldecode((string) $term->slug));
+            }
+        }
+
+        $query_var_keys = ['mulopimfwc_store_location'];
+        if (function_exists('mulopimfwc_get_location_url_query_var')) {
+            $location_url_query_var = mulopimfwc_get_location_url_query_var();
+            if ($location_url_query_var !== '' && !in_array($location_url_query_var, $query_var_keys, true)) {
+                $query_var_keys[] = $location_url_query_var;
+            }
+        }
+
+        foreach ($query_var_keys as $query_var_key) {
+            if (
+                isset($query_vars[$query_var_key]) &&
+                is_string($query_vars[$query_var_key]) &&
+                strpos($query_vars[$query_var_key], '/') !== false
+            ) {
+                $term = $this->resolve_store_location_term_path($query_vars[$query_var_key]);
+                if ($term && !is_wp_error($term)) {
+                    $query_vars[$query_var_key] = sanitize_title(rawurldecode((string) $term->slug));
+                }
+            }
+        }
+
+        return $query_vars;
     }
 
     /** ---------- Business Hours Helpers ---------- */

@@ -1947,13 +1947,13 @@ class mulopimfwc_settings
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <select name="mulopimfwc_display_options[enable_location_urls]">
+                <select class="lwp-location-url-control" name="mulopimfwc_display_options[enable_location_urls]">
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 </select>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
-                    <select disabled name="_pro[enable_location_urls]">
+                    <select disabled class="lwp-location-url-control" name="_pro[enable_location_urls]">
                         <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                         <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     </select>
@@ -1980,15 +1980,15 @@ class mulopimfwc_settings
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <select name="mulopimfwc_display_options[url_location_format]">
-                    <option value="query_param" <?php selected($value, 'query_param'); ?>><?php printf( /* translators: %s: URL parameter or path prefix name */ esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) );                                                                                            ?>
+                <select class="lwp-location-url-control lwp-location-url-format-control" name="mulopimfwc_display_options[url_location_format]">
+                    <option value="query_param" data-label-template="<?php echo esc_attr__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'query_param'); ?>><?php printf( /* translators: %s: URL parameter or path prefix name */ esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) );                                                                                            ?>
                     </option>
-                    <option value="path_prefix" <?php selected($value, 'path_prefix'); ?>><?php printf( /* translators: %s: URL path prefix */ esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) ); ?></option>
+                    <option value="path_prefix" data-label-template="<?php echo esc_attr__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'path_prefix'); ?>><?php printf( /* translators: %s: URL path prefix */ esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) ); ?></option>
                 </select>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
-                    <select disabled name="_pro[url_location_format]">
-                        <option value="query_param" <?php selected($value, 'query_param'); ?>><?php
+                    <select disabled class="lwp-location-url-control lwp-location-url-format-control" name="_pro[url_location_format]">
+                        <option value="query_param" data-label-template="<?php echo esc_attr__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'query_param'); ?>><?php
                                                                                                 printf(
                                                                                                     /* translators: %s: URL parameter name */
                                                                                                     esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'),
@@ -1996,7 +1996,7 @@ class mulopimfwc_settings
                                                                                                 );
                                                                                                 ?>
                         </option>
-                        <option value="path_prefix" <?php selected($value, 'path_prefix'); ?>><?php
+                        <option value="path_prefix" data-label-template="<?php echo esc_attr__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'path_prefix'); ?>><?php
                                                                                                 printf(
                                                                                                     /* translators: %s: URL path prefix */
                                                                                                     esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'),
@@ -2027,18 +2027,18 @@ class mulopimfwc_settings
 
                 if (mulopimfwc_premium_feature()) {
             ?>
-                <input type="text" name="mulopimfwc_display_options[location_url_prefix]" value="<?php echo esc_attr($value); ?>" class="regular-text">
+                <input type="text" name="mulopimfwc_display_options[location_url_prefix]" value="<?php echo esc_attr($value); ?>" class="regular-text lwp-location-url-control lwp-location-url-prefix-control">
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
-                    <input disabled type="text" name="_pro[location_url_prefix]" value="<?php echo esc_attr($value); ?>" class="regular-text">
+                    <input disabled type="text" name="_pro[location_url_prefix]" value="<?php echo esc_attr($value); ?>" class="regular-text lwp-location-url-control lwp-location-url-prefix-control">
                 </label>
             <?php } ?>
-            <p class="description"><?php echo esc_html_e('URL Prefix (e.g., "store" for store-name.example.com):', 'multi-location-product-and-inventory-management-pro'); ?></p>
-            <p class="description" style="color: #4a4a4a; display: flex; align-items: center; background: #e0f7fa; border-radius: 5px; gap: 10px; font-size: 12px; font-weight: bold; padding: 10px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" style="fill: #00796b; width: 15%;">
+            <p class="description"><?php echo esc_html_e('URL key used for query parameter mode and path segment used for path prefix mode.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+            <p class="description lwp-location-url-note">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
                     <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm0 18C5.58 18 2 14.42 2 10S5.58 2 10 2s8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
                 </svg>
-                <?php echo esc_html_e('After changes, visit Settings > Permalinks and click "Save Changes" to flush rewrite rules.', 'multi-location-product-and-inventory-management-pro'); ?>
+                <?php echo esc_html_e('Rewrite rules are flushed automatically when these settings are saved.', 'multi-location-product-and-inventory-management-pro'); ?>
             </p>
 
         <?php
@@ -4967,6 +4967,13 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         return in_array($fallback, $allowed_values, true) ? $fallback : $default;
     }
 
+    private function sanitize_location_url_prefix_value($value): string
+    {
+        $prefix = sanitize_title((string) $value);
+
+        return $prefix !== '' ? $prefix : 'store-location';
+    }
+
     public function sanitize_settings($input)
     {
         global $mulopimfwc_options;
@@ -5012,6 +5019,17 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
         $sanitized['enable_location_payment_methods'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_payment_methods', 'off');
         $sanitized['enable_location_taxes'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_taxes', 'off');
         $sanitized['enable_location_pickup'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_pickup', 'on');
+        $sanitized['enable_location_urls'] = $this->sanitize_on_off_select($input, $existing_options, 'enable_location_urls', 'off');
+        $sanitized['url_location_format'] = $this->sanitize_enum_select(
+            $input,
+            $existing_options,
+            'url_location_format',
+            ['query_param', 'path_prefix'],
+            'query_param'
+        );
+        $sanitized['location_url_prefix'] = $this->sanitize_location_url_prefix_value(
+            $input['location_url_prefix'] ?? ($existing_options['location_url_prefix'] ?? 'store-location')
+        );
         $sanitized['shipping_calculation_method'] = $this->sanitize_enum_select(
             $input,
             $existing_options,
@@ -6132,7 +6150,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <?php do_settings_sections('lwp-business-hour-settings'); ?>
                                         </div>
                                     </div>
-                                    <div class="lwp-settings-section">
+                                    <div class="lwp-settings-section lwp-url-management-settings-section">
                                         <div class="lwp-settings-box">
                                             <?php do_settings_sections('lwp-url-management-settings'); ?>
                                         </div>
