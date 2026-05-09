@@ -1633,6 +1633,40 @@ if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
     }, 10, 2);
 }
 
+if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
+    // Keep variation availability aligned with location-specific stock.
+    add_filter('woocommerce_product_variation_get_stock_status', function ($status, $variation) {
+        global $mulopimfwc_options;
+
+        if (!isset($mulopimfwc_options['enable_location_stock']) || (isset($mulopimfwc_options['enable_location_stock']) && $mulopimfwc_options['enable_location_stock'] !== 'on')) {
+            return $status;
+        }
+
+        $location_slug = mulopimfwc_resolve_runtime_item_location($variation->get_parent_id(), $variation->get_id());
+        $location_id = mulopimfwc_get_location_term_id($location_slug);
+
+        if (!$location_id) {
+            return $status;
+        }
+
+        $location_stock = get_post_meta($variation->get_id(), '_location_stock_' . $location_id, true);
+
+        if ($location_stock === '') {
+            return $status;
+        }
+
+        $location_backorders = get_post_meta($variation->get_id(), '_location_backorders_' . $location_id, true);
+        $normalized_location_backorders = mulopimfwc_normalize_backorder_value($location_backorders, 'woocommerce');
+        $effective_backorders = $normalized_location_backorders !== '' ? $normalized_location_backorders : $variation->get_backorders();
+
+        if ((int) $location_stock <= 0) {
+            return mulopimfwc_is_backorder_allowed($effective_backorders) ? 'onbackorder' : 'outofstock';
+        }
+
+        return 'instock';
+    }, 10, 2);
+}
+
 // Handle stock reduction when order is placed
 add_action('woocommerce_reduce_order_stock', function ($order) {
     global $mulopimfwc_options;
