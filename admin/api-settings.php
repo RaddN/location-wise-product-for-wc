@@ -5,7 +5,7 @@
  * Admin interface for managing API keys and webhook settings
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.0.6.16
+ * @since 1.17
  */
 
 if (!defined('ABSPATH')) {

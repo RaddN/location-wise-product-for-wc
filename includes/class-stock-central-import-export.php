@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
  */
 class MULOPIMFWC_Stock_Central_Import_Export_Service
 {
-    const SCHEMA_VERSION = '1.0.0';
+    const SCHEMA_VERSION = '1.1.7';
     const SUPPORTED_SCHEMA_MAJOR = 1;
     const OPTION_JOB_HISTORY = 'mulopimfwc_import_export_job_history';
     const MAX_JOB_HISTORY = 25;

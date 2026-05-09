@@ -6,7 +6,7 @@
  * to push inventory updates in real-time
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.0.6.16
+ * @since 1.17
  */
 
 if (!defined('ABSPATH')) {
