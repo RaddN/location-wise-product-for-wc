@@ -1376,6 +1376,243 @@ if (!function_exists('mulopimfwc_resolve_runtime_item_location')) {
     }
 }
 
+if (!function_exists('mulopimfwc_track_add_to_cart_quantity_context')) {
+    /**
+     * Keep the current add-to-cart quantity available for product-level stock filters.
+     *
+     * WooCommerce calls product backorder checks without passing the requested
+     * cart quantity, but bundle compatibility needs that quantity to avoid
+     * allowing a bundle when a non-backorderable bundled item is short.
+     *
+     * @param mixed $quantity
+     * @param int   $product_id
+     * @return mixed
+     */
+    function mulopimfwc_track_add_to_cart_quantity_context($quantity, $product_id)
+    {
+        $GLOBALS['mulopimfwc_add_to_cart_quantity_context'] = [
+            'product_id' => absint($product_id),
+            'quantity' => is_numeric($quantity) ? (float) $quantity : 1.0,
+            'location' => function_exists('mulopimfwc_get_current_store_location')
+                ? sanitize_title(rawurldecode((string) mulopimfwc_get_current_store_location()))
+                : '',
+        ];
+
+        return $quantity;
+    }
+}
+
+add_filter('woocommerce_add_to_cart_quantity', 'mulopimfwc_track_add_to_cart_quantity_context', 10, 2);
+
+if (!function_exists('mulopimfwc_get_bundle_quantity_required_for_location')) {
+    /**
+     * Resolve the total bundle quantity being checked for the current location.
+     *
+     * @param int    $product_id
+     * @param string $location_slug
+     * @return float
+     */
+    function mulopimfwc_get_bundle_quantity_required_for_location($product_id, $location_slug)
+    {
+        $product_id = absint($product_id);
+        $location_slug = sanitize_title(rawurldecode((string) $location_slug));
+        $quantity = 1.0;
+
+        $context = isset($GLOBALS['mulopimfwc_add_to_cart_quantity_context'])
+            ? (array) $GLOBALS['mulopimfwc_add_to_cart_quantity_context']
+            : [];
+
+        if (
+            isset($context['product_id'], $context['quantity']) &&
+            absint($context['product_id']) === $product_id &&
+            is_numeric($context['quantity'])
+        ) {
+            $quantity = max(0.0, (float) $context['quantity']);
+        } elseif (isset($_REQUEST['quantity']) && is_numeric(wp_unslash($_REQUEST['quantity']))) {
+            $quantity = max(0.0, (float) wp_unslash($_REQUEST['quantity']));
+        }
+
+        if (!function_exists('WC') || !WC()->cart || !method_exists(WC()->cart, 'get_cart')) {
+            return $quantity;
+        }
+
+        foreach (WC()->cart->get_cart() as $cart_item) {
+            $cart_product_id = isset($cart_item['product_id']) ? absint($cart_item['product_id']) : 0;
+            if ($cart_product_id !== $product_id) {
+                continue;
+            }
+
+            $cart_location = isset($cart_item['mulopimfwc_location'])
+                ? sanitize_title(rawurldecode((string) $cart_item['mulopimfwc_location']))
+                : '';
+
+            if ($location_slug !== '' && $cart_location !== '' && $cart_location !== $location_slug) {
+                continue;
+            }
+
+            $quantity += isset($cart_item['quantity']) && is_numeric($cart_item['quantity'])
+                ? (float) $cart_item['quantity']
+                : 0.0;
+        }
+
+        return $quantity;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_location_stock_quantity_for_product')) {
+    /**
+     * Resolve location stock for a product object, falling back to WooCommerce stock.
+     *
+     * @param WC_Product $product
+     * @param int        $location_id
+     * @return float|int|null
+     */
+    function mulopimfwc_get_location_stock_quantity_for_product($product, $location_id)
+    {
+        if (!is_object($product) || !method_exists($product, 'get_id')) {
+            return null;
+        }
+
+        $location_id = absint($location_id);
+        if (!$location_id) {
+            return method_exists($product, 'get_stock_quantity') ? $product->get_stock_quantity() : null;
+        }
+
+        $location_stock = get_post_meta($product->get_id(), '_location_stock_' . $location_id, true);
+        if ($location_stock !== '' && is_numeric($location_stock)) {
+            return (float) $location_stock;
+        }
+
+        return method_exists($product, 'get_stock_quantity') ? $product->get_stock_quantity() : null;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_woosb_bundle_location_backorder_state')) {
+    /**
+     * Check whether a WPC Product Bundle shortage is covered by location backorders.
+     *
+     * Returns:
+     * - allowed: at least one bundled item is short, and every short item allows backorders.
+     * - blocked: at least one bundled item is short and does not allow backorders.
+     * - none: no location-backed bundle shortage was found.
+     *
+     * @param WC_Product $bundle
+     * @param string     $location_slug
+     * @param float      $bundle_quantity
+     * @return string
+     */
+    function mulopimfwc_get_woosb_bundle_location_backorder_state($bundle, $location_slug, $bundle_quantity = 1.0)
+    {
+        if (
+            !is_object($bundle) ||
+            !method_exists($bundle, 'is_type') ||
+            !$bundle->is_type('woosb') ||
+            !method_exists($bundle, 'get_items')
+        ) {
+            return 'none';
+        }
+
+        if (
+            method_exists($bundle, 'has_optional') &&
+            $bundle->has_optional() &&
+            !apply_filters('woosb_manage_stock_optional_items', false)
+        ) {
+            return 'none';
+        }
+
+        global $mulopimfwc_options;
+        if (
+            !isset($mulopimfwc_options['enable_location_stock'], $mulopimfwc_options['enable_location_backorder']) ||
+            $mulopimfwc_options['enable_location_stock'] !== 'on' ||
+            $mulopimfwc_options['enable_location_backorder'] !== 'on'
+        ) {
+            return 'none';
+        }
+
+        $location_slug = sanitize_title(rawurldecode((string) $location_slug));
+        if ($location_slug === '' || $location_slug === 'all-products') {
+            return 'none';
+        }
+
+        $location_id = mulopimfwc_get_location_term_id($location_slug);
+        if (!$location_id) {
+            return 'none';
+        }
+
+        $items = $bundle->get_items();
+        if (!is_array($items) || empty($items)) {
+            return 'none';
+        }
+
+        $has_backorderable_shortage = false;
+        $bundle_quantity = max(0.0, (float) $bundle_quantity);
+
+        foreach ($items as $item) {
+            $item_id = isset($item['id']) ? absint($item['id']) : 0;
+            $item_qty = isset($item['qty']) && is_numeric($item['qty']) ? (float) $item['qty'] : 0.0;
+
+            if (!$item_id || $item_qty <= 0) {
+                continue;
+            }
+
+            $product = wc_get_product($item_id);
+            if (!is_object($product) || (method_exists($product, 'is_type') && $product->is_type('woosb'))) {
+                continue;
+            }
+
+            $manages_stock = method_exists($product, 'get_manage_stock') && $product->get_manage_stock();
+            if (!$manages_stock) {
+                continue;
+            }
+
+            $stock_quantity = mulopimfwc_get_location_stock_quantity_for_product($product, $location_id);
+            if ($stock_quantity === null || !is_numeric($stock_quantity)) {
+                continue;
+            }
+
+            $required_quantity = $item_qty * $bundle_quantity;
+            if ((float) $stock_quantity >= $required_quantity) {
+                continue;
+            }
+
+            $effective_backorders = mulopimfwc_get_effective_location_backorders($product->get_id(), $location_id);
+            if (!mulopimfwc_is_backorder_allowed($effective_backorders)) {
+                return 'blocked';
+            }
+
+            $has_backorderable_shortage = true;
+        }
+
+        return $has_backorderable_shortage ? 'allowed' : 'none';
+    }
+}
+
+if (!function_exists('mulopimfwc_allow_woosb_location_backorders')) {
+    /**
+     * Let WPC Product Bundles pass the parent stock check when child shortages
+     * are covered by location-specific backorders.
+     *
+     * @param bool       $allowed
+     * @param int        $product_id
+     * @param WC_Product $product
+     * @return bool
+     */
+    function mulopimfwc_allow_woosb_location_backorders($allowed, $product_id, $product)
+    {
+        if ($allowed || !is_object($product) || !method_exists($product, 'is_type') || !$product->is_type('woosb')) {
+            return $allowed;
+        }
+
+        $location_slug = mulopimfwc_resolve_runtime_item_location($product_id);
+        $bundle_quantity = mulopimfwc_get_bundle_quantity_required_for_location($product_id, $location_slug);
+        $state = mulopimfwc_get_woosb_bundle_location_backorder_state($product, $location_slug, $bundle_quantity);
+
+        return $state === 'allowed' ? true : $allowed;
+    }
+}
+
+add_filter('woocommerce_product_backorders_allowed', 'mulopimfwc_allow_woosb_location_backorders', 20, 3);
+
 if (!function_exists('mulopimfwc_get_order_item_location_slug')) {
     /**
      * Resolve the store location slug for an order item, with safe fallbacks.
@@ -2263,7 +2500,7 @@ add_action('wp_footer', function () {
 
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.7');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.7.5');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', '.variations_form.cart { display: none; }');
             }
@@ -2284,7 +2521,7 @@ add_action('wp_footer', function () {
             }
             if (is_wp_error($terms) || ! in_array($location_slug, $terms, true)) {
                 // Register a dummy stylesheet to attach inline styles
-                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.7');
+                wp_register_style('mulopimfwc-custom-woocommerce-style', false, array(), '1.1.7.5');
                 wp_enqueue_style('mulopimfwc-custom-woocommerce-style');
                 wp_add_inline_style('mulopimfwc-custom-woocommerce-style', 'form.cart { display: none; }');
             }
