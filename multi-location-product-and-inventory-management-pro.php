@@ -10193,10 +10193,16 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
             $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
-            $selected_location = $this->get_current_location();
-            
-            // Determine if modal should be shown
-            $should_show = $show_modal || ($show_popup_admin === 'on' && empty($selected_location)) || (empty($selected_location) && !$is_admin_or_manager);
+            $selected_location_cookie = mulopimfwc_get_store_location_cookie();
+            $is_shortcode_modal = !empty($instance_id);
+
+            if ($is_shortcode_modal) {
+                // Button-triggered shortcode popups must stay hidden until clicked.
+                $should_show = $show_modal && $selected_location_cookie === '';
+            } else {
+                $selected_location = $selected_location_cookie !== '' ? $selected_location_cookie : $this->get_current_location();
+                $should_show = ($show_popup_admin === 'on' && empty($selected_location)) || (empty($selected_location) && !$is_admin_or_manager);
+            }
             
             // Filter locations for frontend display (active only, ordered by display_order)
             $locations = mulopimfwc_get_frontend_locations();
