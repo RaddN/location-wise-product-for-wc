@@ -941,7 +941,7 @@
                 className: 'mulopimfwc-custom-marker',
                 html: `<div class="mulopimfwc-marker-pin" style="cursor: pointer;">
                         <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16 0C7.163 0 0 7.163 0 16c0 13.125 16 26 16 26s16-12.875 16-26c0-8.837-7.163-16-16-16zm0 21.5c-3.038 0-5.5-2.462-5.5-5.5s2.462-5.5 5.5-5.5 5.5 2.462 5.5 5.5-2.462 5.5-5.5 5.5z" fill="#667eea"/>
+                            <path d="M16 0C7.163 0 0 7.163 0 16c0 13.125 16 26 16 26s16-12.875 16-26c0-8.837-7.163-16-16-16zm0 21.5c-3.038 0-5.5-2.462-5.5-5.5s2.462-5.5 5.5-5.5 5.5 2.462 5.5 5.5-2.462 5.5-5.5 5.5z" fill="currentColor"/>
                         </svg>
                         <div class="mulopimfwc-marker-pulse"></div>
                     </div>`,
@@ -1482,7 +1482,7 @@
                 className: 'mulopimfwc-custom-marker',
                 html: `<div class="mulopimfwc-marker-pin">
                         <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16 0C7.163 0 0 7.163 0 16c0 13.125 16 26 16 26s16-12.875 16-26c0-8.837-7.163-16-16-16zm0 21.5c-3.038 0-5.5-2.462-5.5-5.5s2.462-5.5 5.5-5.5 5.5 2.462 5.5 5.5-2.462 5.5-5.5 5.5z" fill="#667eea"/>
+                            <path d="M16 0C7.163 0 0 7.163 0 16c0 13.125 16 26 16 26s16-12.875 16-26c0-8.837-7.163-16-16-16zm0 21.5c-3.038 0-5.5-2.462-5.5-5.5s2.462-5.5 5.5-5.5 5.5 2.462 5.5 5.5-2.462 5.5-5.5 5.5z" fill="currentColor"/>
                         </svg>
                         <div class="mulopimfwc-marker-pulse"></div>
                     </div>`,

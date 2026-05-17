@@ -227,6 +227,8 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
         $primary_color = !empty($options['branding_primary_color']) ? $options['branding_primary_color'] : '#2a9d8f';
         $secondary_color = !empty($options['branding_secondary_color']) ? $options['branding_secondary_color'] : '#f4a261';
         $border_color = !empty($options['branding_border_color']) ? $options['branding_border_color'] : '#e7e0d6';
+        $button_text_color = !empty($options['branding_button_text']) ? sanitize_hex_color($options['branding_button_text']) : '#ffffff';
+        $button_text_color = $button_text_color ?: '#ffffff';
 
         // Button Colors (using primary/secondary)
         $css .= ".lwp-modern-button { background: {$primary_color} !important; }\n";
@@ -276,7 +278,7 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
         $css .= ".lwp-classic-select { color: {$primary_color} !important; }\n";
         
         // Directions Button (using primary color)
-        $css .= ".mulopimfwc-btn-directions { background: {$primary_color} !important; color: #fff !important; }\n";
+        $css .= ".mulopimfwc-btn-directions { background: {$primary_color} !important; color: {$button_text_color} !important; }\n";
         
         // Overlay Item SVG (using primary color)
         $css .= ".mulopimfwc-overlay-item svg { color: {$primary_color} !important; }\n";
@@ -286,7 +288,7 @@ if (!function_exists('mulopimfwc_get_branding_css')) {
         $css .= ".mulopimfwc-compact-item a { color: {$primary_color} !important; }\n";
         
         // Primary Button (using primary color)
-        $css .= ".mulopimfwc-btn-primary { background: {$primary_color} !important; color: #fff !important; }\n";
+        $css .= ".mulopimfwc-btn-primary { background: {$primary_color} !important; color: {$button_text_color} !important; }\n";
         
         // Status Badge Colors (using secondary color variations)
         if (function_exists('mulopimfwc_hex_to_rgb') && function_exists('mulopimfwc_rgb_to_hex') && function_exists('mulopimfwc_darken_color')) {
