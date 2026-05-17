@@ -9,6 +9,7 @@ jQuery(document).ready(function ($) {
     const selectStoreAlert = i18n.selectStore || 'Please select a store.';
     const selectStoreLocationAlert = i18n.selectStoreLocation || 'Please select a store location.';
     const cartClearError = i18n.cartClearError || 'Failed to clear the cart. Please try again.';
+    let cachedCartHasProducts = parseCartHasProducts(locationSettings.cartHasProducts);
 
     function syncModalScrollLock() {
         var hasVisibleModal = $('[id^="lwp-store-selector-modal"]').filter(':visible').length > 0;
@@ -44,6 +45,45 @@ jQuery(document).ready(function ($) {
             return '';
         }
         return mulopimfwc_locationWiseProducts.ajaxUrl || mulopimfwc_locationWiseProducts.ajax_url || '';
+    }
+
+    function parseCartHasProducts(value) {
+        if (value === true || value === 1) {
+            return true;
+        }
+
+        if (value === false || value === 0) {
+            return false;
+        }
+
+        if (value === null || typeof value === 'undefined') {
+            return null;
+        }
+
+        if (typeof value === 'string') {
+            const normalized = value.toLowerCase().trim();
+
+            if (['1', 'true', 'yes', 'on'].indexOf(normalized) !== -1) {
+                return true;
+            }
+
+            if (['', '0', 'false', 'no', 'off'].indexOf(normalized) !== -1) {
+                return false;
+            }
+        }
+
+        return null;
+    }
+
+    function setCachedCartHasProducts(value) {
+        cachedCartHasProducts = parseCartHasProducts(value);
+
+        if (cachedCartHasProducts === null) {
+            locationSettings.cartHasProducts = null;
+            return;
+        }
+
+        locationSettings.cartHasProducts = cachedCartHasProducts ? '1' : '';
     }
 
     function getCookieOptions() {
@@ -233,9 +273,22 @@ jQuery(document).ready(function ($) {
 
     // Function to check if the cart has products
     function checkCartHasProducts(callback) {
+        const localizedCartState = parseCartHasProducts(locationSettings.cartHasProducts);
+
+        if (localizedCartState !== null) {
+            cachedCartHasProducts = localizedCartState;
+            callback(localizedCartState, 'localized');
+            return;
+        }
+
+        if (cachedCartHasProducts !== null) {
+            callback(cachedCartHasProducts, 'cached');
+            return;
+        }
+
         const ajaxUrl = getAjaxUrl();
         if (!ajaxUrl) {
-            callback(false);
+            callback(null, 'unavailable');
             return;
         }
         $.ajax({
@@ -243,10 +296,14 @@ jQuery(document).ready(function ($) {
             method: 'POST',
             data: { action: 'check_cart_products' },
             success: function (response) {
-                callback(response.success ? response.data.cartHasProducts : false);
+                const hasProducts = response.success ? parseCartHasProducts(response.data.cartHasProducts) : null;
+                if (hasProducts !== null) {
+                    setCachedCartHasProducts(hasProducts);
+                }
+                callback(hasProducts, 'ajax');
             },
             error: function () {
-                callback(false);
+                callback(null, 'error');
             }
         });
     }
@@ -591,8 +648,8 @@ jQuery(document).ready(function ($) {
         }
 
         checkCartHasProducts(function (cartHasProducts) {
-            if (!cartHasProducts) {
-                proceed();
+            if (cartHasProducts === false) {
+                fallbackLocationReload(selectedLocation, config);
                 return;
             }
 
@@ -764,7 +821,19 @@ jQuery(document).ready(function ($) {
 
             // Check if the cart has products before changing the store location
             checkCartHasProducts(function (cartHasProducts) {
-                if (cartHasProducts && locationSettings.location_change_notification) {
+                if (cartHasProducts === false) {
+                    setPluginCookie(storeCookieName, selectedStore);
+                    if (matchedLocationId) {
+                        setPluginCookie('mulopimfwc_user_location', matchedLocationId);
+                    } else if (hasSavedLocationItems()) {
+                        clearPluginCookie('mulopimfwc_user_location');
+                    }
+                    prepareCartContextRefresh(selectedStore);
+                    window.location.href = buildLocationReloadUrl(selectedStore);
+                    return;
+                }
+
+                if ((cartHasProducts === true || cartHasProducts === null) && locationSettings.location_change_notification) {
                     const confirmChange = confirm(locationSettings.location_notification_text || 'Do you want to change the store location? Your cart will be updated.');
                     if (!confirmChange) {
                         var currentLocation = getCookie(storeCookieName);
@@ -949,6 +1018,18 @@ jQuery(document).ready(function ($) {
             $modal.css('display', 'none');
             syncModalScrollLock();
         }
+    });
+
+    $(document.body).on('added_to_cart', function () {
+        setCachedCartHasProducts(true);
+    });
+
+    $(document.body).on('removed_from_cart', function () {
+        setCachedCartHasProducts(null);
+    });
+
+    $(document.body).on('wc_cart_emptied', function () {
+        setCachedCartHasProducts(false);
     });
 });
 

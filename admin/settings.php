@@ -5159,6 +5159,13 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             $sanitized['auto_populate_customer_addresses'] = 'off';
         }
 
+        // Handle location_change_notification option (checkbox)
+        if (isset($input['location_change_notification']) && $input['location_change_notification'] === 'on') {
+            $sanitized['location_change_notification'] = 'on';
+        } else {
+            $sanitized['location_change_notification'] = 'off';
+        }
+
         // Handle split_order_by_location option (checkbox)
         if (
             isset($input['split_order_by_location']) &&

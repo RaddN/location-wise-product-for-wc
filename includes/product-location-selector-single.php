@@ -7,9 +7,9 @@
  * Supports multiple display positions and layouts with secure AJAX handling.
  * 
  * @package Multi_Location_Product_Inventory
- * @version 1.1.7.5
+ * @version 1.1.7.10
  * @author Your Name
- * @since 1.1.7.5
+ * @since 1.1.7.10
  */
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ class MULOPIMFWC_Product_Location_Selector
     /**
      * Plugin version
      */
-    const VERSION = '1.1.7.5';
+    const VERSION = '1.1.7.10';
 
     /**
      * Available display positions
@@ -182,7 +182,7 @@ class MULOPIMFWC_Product_Location_Selector
             'cookieSecure' => is_ssl(),
             'allow_mixed_in_cart' => $allow_mixed_in_cart ? 'on' : 'off',
             'location_switching_behavior' => isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart',
-            'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
+            'location_change_notification' => isset($options['location_change_notification']) && $options['location_change_notification'] === 'on',
             'location_notification_text' => function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
                 ? mulopimfwc_get_text_value('location_notification_text')
                 : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management-pro'),
@@ -920,7 +920,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     /**
      * Plugin version
      */
-    const VERSION = '1.1.7.5';
+    const VERSION = '1.1.7.10';
     
     /**
      * @var array Track displayed shortcodes to prevent duplicates
@@ -1055,7 +1055,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             'cookieSecure' => is_ssl(),
             'allow_mixed_in_cart' => $allow_mixed_in_cart ? 'on' : 'off',
             'location_switching_behavior' => isset($options['location_switching_behavior']) ? $options['location_switching_behavior'] : 'update_cart',
-            'location_change_notification' => isset($options['location_change_notification']) || (isset($options['location_switching_behavior']) && $options['location_switching_behavior'] === 'prompt_user'),
+            'location_change_notification' => isset($options['location_change_notification']) && $options['location_change_notification'] === 'on',
             'location_notification_text' => function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature()
                 ? mulopimfwc_get_text_value('location_notification_text')
                 : __('Do you want to change the store location? Your cart will be updated.', 'multi-location-product-and-inventory-management-pro'),

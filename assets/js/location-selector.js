@@ -15,6 +15,7 @@
             this.isSwitching = false;
             this.settings = window.mulopimfwc_locationWiseProducts || {};
             this.i18n = this.settings.i18n || {};
+            this.cachedCartHasProducts = this.parseCartHasProducts(this.settings.cartHasProducts);
 
             // Read PHP-provided hints for placement
             this.cfg = window.MULOPIMFWC_LOC_SELECTOR || {
@@ -27,6 +28,7 @@
 
         init() {
             this.bindEvents();
+            this.bindCartStateEvents();
             this.placeSelector(); // initial attempt
 
             // Try again after full load (Elementor sometimes injects late)
@@ -63,6 +65,20 @@
                 if (String(newVal || '') === String(current || '')) return;
                 
                 this.handleLocationChange(newVal);
+            });
+        }
+
+        bindCartStateEvents() {
+            $(document.body).on('added_to_cart', () => {
+                this.setCachedCartHasProducts(true);
+            });
+
+            $(document.body).on('removed_from_cart', () => {
+                this.setCachedCartHasProducts(null);
+            });
+
+            $(document.body).on('wc_cart_emptied', () => {
+                this.setCachedCartHasProducts(false);
             });
         }
 
@@ -199,13 +215,13 @@
 
             this.checkCartHasProducts()
                 .then((cartHasProducts) => {
-                    if (!cartHasProducts) {
-                        proceed();
+                    if (cartHasProducts === false) {
+                        this.reloadWithSelectedLocation(location);
                         return;
                     }
 
                     const shouldPrompt = behavior === 'prompt_user' || !!this.settings.location_change_notification;
-                    if (shouldPrompt) {
+                    if ((cartHasProducts === true || cartHasProducts === null) && shouldPrompt) {
                         const message =
                             this.settings.location_notification_text ||
                             'Do you want to change the store location? Your cart will be updated.';
@@ -238,6 +254,20 @@
             $('.mulopimfwc-loader').remove();
         }
 
+        reloadWithSelectedLocation(location) {
+            this.isSwitching = true;
+            this.setLoadingState(true);
+            this.setLocationCookie(location);
+
+            if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.prepareCartContextRefresh === 'function') {
+                window.mulopimfwcLocationSwitch.prepareCartContextRefresh(location);
+            }
+
+            var url = window.location.origin + window.location.pathname;
+            url += '?mulopimfwc_loc=' + encodeURIComponent(location) + '&_t=' + Date.now();
+            window.location.replace(url);
+        }
+
         performLocationSwitch(location, previousLocation) {
             const ajaxUrl = this.settings.ajaxUrl;
             const nonce = this.settings.nonce || '';
@@ -247,18 +277,7 @@
             
 
             const fallbackReload = () => {
-                this.setLocationCookie(location);
-                if (window.mulopimfwcLocationSwitch && typeof window.mulopimfwcLocationSwitch.prepareCartContextRefresh === 'function') {
-                    window.mulopimfwcLocationSwitch.prepareCartContextRefresh(location);
-                }
-                // Perform a hard reload, ensuring any potential form data is not resubmitted
-                if (window.location.href.indexOf('//' + window.location.host + window.location.pathname) !== -1) {
-                    // Remove query and hash for a clean reload to prevent form resubmission prompt
-                    window.location.replace(window.location.origin + window.location.pathname);
-                } else {
-                    // Fallback: full page reload (hard reload)
-                    window.location.reload(true);
-                }
+                this.reloadWithSelectedLocation(location);
             };
 
             if (!ajaxUrl) {
@@ -328,11 +347,22 @@
         }
 
         checkCartHasProducts() {
+            const localizedCartState = this.parseCartHasProducts(this.settings.cartHasProducts);
+
+            if (localizedCartState !== null) {
+                this.cachedCartHasProducts = localizedCartState;
+                return Promise.resolve(localizedCartState);
+            }
+
+            if (this.cachedCartHasProducts !== null) {
+                return Promise.resolve(this.cachedCartHasProducts);
+            }
+
             const ajaxUrl = this.settings.ajaxUrl;
 
             return new Promise((resolve) => {
                 if (!ajaxUrl) {
-                    resolve(false);
+                    resolve(null);
                     return;
                 }
 
@@ -342,13 +372,55 @@
                     data: { action: 'check_cart_products' },
                     success: (response) => {
                         const hasProducts = response && response.success && response.data
-                            ? !!response.data.cartHasProducts
-                            : false;
+                            ? this.parseCartHasProducts(response.data.cartHasProducts)
+                            : null;
+                        if (hasProducts !== null) {
+                            this.setCachedCartHasProducts(hasProducts);
+                        }
                         resolve(hasProducts);
                     },
-                    error: () => resolve(false)
+                    error: () => resolve(null)
                 });
             });
+        }
+
+        parseCartHasProducts(value) {
+            if (value === true || value === 1) {
+                return true;
+            }
+
+            if (value === false || value === 0) {
+                return false;
+            }
+
+            if (value === null || typeof value === 'undefined') {
+                return null;
+            }
+
+            if (typeof value === 'string') {
+                const normalized = value.toLowerCase().trim();
+
+                if (['1', 'true', 'yes', 'on'].indexOf(normalized) !== -1) {
+                    return true;
+                }
+
+                if (['', '0', 'false', 'no', 'off'].indexOf(normalized) !== -1) {
+                    return false;
+                }
+            }
+
+            return null;
+        }
+
+        setCachedCartHasProducts(value) {
+            this.cachedCartHasProducts = this.parseCartHasProducts(value);
+
+            if (this.cachedCartHasProducts === null) {
+                this.settings.cartHasProducts = null;
+                return;
+            }
+
+            this.settings.cartHasProducts = this.cachedCartHasProducts ? '1' : '';
         }
 
         getCurrentStoreLocation() {
@@ -404,29 +476,6 @@
                 cookieString += '; secure';
             }
             document.cookie = cookieString;
-            
-            // FIXED: Validate cookie was set by making AJAX call to server
-            if (this.cfg.ajaxUrl) {
-                fetch(this.cfg.ajaxUrl, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: new URLSearchParams({
-                        action: 'mulopimfwc_validate_location',
-                        location_slug: location,
-                        nonce: this.cfg.nonce || ''
-                    })
-                }).catch(() => {
-                    // If validation fails, remove invalid cookie
-                    let clearCookie = `${cookieName}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=${cookiePath};samesite=${sameSite}`;
-                    if (cookieDomain) {
-                        clearCookie += `;domain=${cookieDomain}`;
-                    }
-                    if (isSecure) {
-                        clearCookie += ';secure';
-                    }
-                    document.cookie = clearCookie;
-                });
-            }
         }
 
         getCookieExpiryMs() {
