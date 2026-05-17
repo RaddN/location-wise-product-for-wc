@@ -21,7 +21,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 		 * Version for cache-busting CSS.
 		 * @var string
 		 */
-		const VERSION = '1.1.7.18';
+		const VERSION = '1.1.7.20';
 
 		public function __construct() {
 			$options = get_option( 'mulopimfwc_display_options', array() );
