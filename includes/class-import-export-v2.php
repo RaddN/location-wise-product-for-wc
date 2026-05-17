@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 class MULOPIMFWC_Import_Export_V2_Service
 {
-    const DB_SCHEMA_VERSION = '1.1.7.12';
+    const DB_SCHEMA_VERSION = '1.1.7.13';
     const OPTION_DB_SCHEMA_VERSION = 'mulopimfwc_ie_v2_schema_version';
     const OPTION_FEATURE_FLAG = 'mulopimfwc_ie_v2_enabled';
 

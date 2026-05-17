@@ -67,6 +67,18 @@
   width: 100%;
 }
 
+.mulopimfwc-location-products .filters-area {
+  clear: both;
+  margin: 0 0 30px;
+}
+
+.mulopimfwc-location-products .filters-inner-area {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px 30px;
+  width: 100%;
+}
+
 /* Hero Section */
 .mulopimfwc-location-hero {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
