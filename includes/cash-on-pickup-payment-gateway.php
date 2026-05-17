@@ -5,7 +5,7 @@
  * Allows customers to pay in cash when picking up their order from the store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.7.11
+ * @since 1.1.7.12
  */
 
 if (!defined('ABSPATH')) {
@@ -625,7 +625,7 @@ if (!function_exists('mulopimfwc_init_cash_on_pickup_gateway')) {
                                     $handle,
                                     MULTI_LOCATION_PLUGIN_URL . 'assets/js/blocks/cash-on-pickup-payment-method.js',
                                     ['wp-element', 'wp-i18n', 'wc-blocks-vendors'],
-                                    mulopimfwc_VERSION,
+                                    MULOPIMFWC_VERSION,
                                     true
                                 );
                             }

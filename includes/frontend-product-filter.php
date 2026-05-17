@@ -89,7 +89,7 @@ class Location_Wise_Products_Filter
             'mulopimfwc-frontend-filter',
             plugin_dir_url(dirname(__FILE__)) . 'assets/js/frontend-filter.js',
             ['jquery'],
-            mulopimfwc_VERSION,
+            MULOPIMFWC_VERSION,
             true
         );
 
@@ -97,7 +97,7 @@ class Location_Wise_Products_Filter
             'mulopimfwc-frontend-filter',
             plugin_dir_url(dirname(__FILE__)) . 'assets/css/frontend-filter.css',
             [],
-            mulopimfwc_VERSION
+            MULOPIMFWC_VERSION
         );
 
         // Localize script

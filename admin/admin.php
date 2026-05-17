@@ -211,13 +211,13 @@ class MULOPIMFWC_Admin
             'mulopimfwc-admin-location-map',
             plugin_dir_url(__FILE__) . '../assets/css/admin-location-map.css',
             ['leaflet'],
-            mulopimfwc_VERSION
+            MULOPIMFWC_VERSION
         );
         wp_enqueue_script(
             'mulopimfwc-admin-location-map',
             plugin_dir_url(__FILE__) . '../assets/js/admin-location-map.js',
             ['jquery', 'leaflet'],
-            mulopimfwc_VERSION,
+            MULOPIMFWC_VERSION,
             true
         );
 
@@ -1129,7 +1129,7 @@ JS;
 
         $request_args = array(
             'timeout' => 12,
-            'user-agent' => 'MULOPIMFWC/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.0'),
+            'user-agent' => 'MULOPIMFWC/' . (defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.0'),
         );
 
         $sources = array(

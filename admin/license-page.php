@@ -8,7 +8,7 @@ class mulopimfwc_License_Manager
     private $item_id = 10817;
     private $cache_key = 'mulopimfwc_license_cache';
     private $status_cache_key = 'mulopimfwc_status_cache';
-    private $version_cache_key = 'mulopimfwc_version_cache';
+    private $version_cache_key = 'MULOPIMFWC_VERSION_cache';
 
     public function __construct()
     {
@@ -127,10 +127,10 @@ class mulopimfwc_License_Manager
             delete_transient('mulopimfwc_license_deactivated_remotely');
             wp_cache_delete('mulopimfwc_license_cache');
             wp_cache_delete('mulopimfwc_status_cache');
-            wp_cache_delete('mulopimfwc_version_cache');
+            wp_cache_delete('MULOPIMFWC_VERSION_cache');
             delete_transient('mulopimfwc_license_cache');
             delete_transient('mulopimfwc_status_cache');
-            delete_transient('mulopimfwc_version_cache');
+            delete_transient('MULOPIMFWC_VERSION_cache');
             wp_send_json_success();
         });
     }
@@ -237,7 +237,7 @@ class mulopimfwc_License_Manager
                 wp_send_json_success(array(
                     'update_available' => true,
                     'new_version' => $update_info->new_version,
-                    'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11'
+                    'current_version' => defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12'
                 ));
             } else {
                 wp_send_json_success(array(
@@ -427,7 +427,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11')
+            'user-agent' => 'DAPF/' . (defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12')
         ));
 
         if (is_wp_error($response)) {
@@ -462,7 +462,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11')
+            'user-agent' => 'DAPF/' . (defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12')
         ));
 
         if (is_wp_error($response)) {
@@ -494,7 +494,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11')
+            'user-agent' => 'DAPF/' . (defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12')
         ));
 
         if (is_wp_error($response)) {
@@ -543,7 +543,7 @@ class mulopimfwc_License_Manager
         $response = wp_remote_get(add_query_arg($api_params, $this->api_url), array(
             'timeout' => 30,
             'sslverify' => true,
-            'user-agent' => 'DAPF/' . (defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11')
+            'user-agent' => 'DAPF/' . (defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12')
         ));
 
         if (is_wp_error($response)) {
@@ -574,7 +574,7 @@ class mulopimfwc_License_Manager
             return false;
         }
 
-        $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11';
+        $current_version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12';
         if (version_compare($current_version, $version_info->new_version, '<')) {
             return $version_info;
         }
@@ -595,7 +595,7 @@ class mulopimfwc_License_Manager
             wp_send_json_success(array(
                 'update_available' => true,
                 'new_version' => $update_info->new_version,
-                'current_version' => defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11'
+                'current_version' => defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12'
             ));
         } else {
             wp_send_json_success(array(
@@ -768,7 +768,7 @@ class mulopimfwc_License_Manager
                         <?php if ($is_valid && !$is_expired): ?>
                             <?php $version_info = $this->get_version_info($license_key); ?>
                             <?php if ($version_info && isset($version_info->new_version)):
-                                $current_version = defined('mulopimfwc_VERSION') ? mulopimfwc_VERSION : '1.1.7.11'; ?>
+                                $current_version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.12'; ?>
                                 <div style="margin-top: 15px;padding: 15px;background: #fbfbfb;border-radius: 6px;">
                                     <strong style="display: flex; align-items: center; gap: 8px;">
                                         <div style="background: #dce6ff;padding: 5px;border-radius: 5px;">

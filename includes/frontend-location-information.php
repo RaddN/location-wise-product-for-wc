@@ -224,7 +224,7 @@ class MULOPIMFWC_Frontend_Location_Information
             'mulopimfwc-location-info',
             MULTI_LOCATION_PLUGIN_URL . 'assets/css/location-info.css',
             [],
-            mulopimfwc_VERSION
+            MULOPIMFWC_VERSION
         );
 
         // Custom scripts
@@ -232,7 +232,7 @@ class MULOPIMFWC_Frontend_Location_Information
             'mulopimfwc-location-info',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/location-info.js',
             ['jquery', 'leaflet'],
-            mulopimfwc_VERSION,
+            MULOPIMFWC_VERSION,
             true
         );
 
