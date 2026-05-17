@@ -1,0 +1,417 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to navigation" [ref=e3] [cursor=pointer]:
+      - /url: "#menu-main-navigation"
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+  - generic [ref=e5]:
+    - banner [ref=e6]:
+      - generic [ref=e14]:
+        - link "Site logo" [ref=e17] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/
+          - img "PuffLab Logo" [ref=e18]
+        - navigation "Main navigation" [ref=e20]:
+          - list [ref=e21]:
+            - listitem [ref=e22]:
+              - link "Shop" [ref=e23] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/
+                - generic [ref=e24]: Shop
+            - listitem [ref=e25]:
+              - link "Blog" [ref=e26] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/blog
+                - generic [ref=e27]: Blog
+            - listitem [ref=e28]:
+              - link "Discounts" [ref=e29] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/members-only-vape-discounts/
+                - generic [ref=e30]: Discounts
+            - listitem [ref=e31]:
+              - link "Delivery Zone" [ref=e32] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/same-day-delivery-map/
+                - generic [ref=e33]: Delivery Zone
+            - listitem [ref=e34]:
+              - link "Contact Us" [ref=e35] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/contact-us/
+                - generic [ref=e36]: Contact Us
+        - generic [ref=e37]:
+          - combobox [ref=e41]:
+            - option "-- Select a Store --"
+            - option "London North"
+            - option "London South" [selected]
+          - link "" [ref=e44] [cursor=pointer]:
+            - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/my-account/
+            - generic [ref=e45]: 
+          - generic "Search" [ref=e46]:
+            - link "Search" [ref=e47] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e48]:  
+          - link "" [ref=e50] [cursor=pointer]:
+            - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/cart/
+            - generic [ref=e51]: 
+        - text:  
+    - main [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e59]:
+            - heading "London North" [level=1] [ref=e60]:
+              - img [ref=e61]
+              - text: London North
+            - generic [ref=e64]: Closed
+          - generic [ref=e65]:
+            - generic [ref=e66]:
+              - generic [ref=e67]:
+                - heading "Contact Information" [level=3] [ref=e68]:
+                  - img [ref=e69]
+                  - text: Contact Information
+                - generic [ref=e72]:
+                  - img [ref=e73]
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: Address
+                    - generic [ref=e77]:
+                      - generic [ref=e78]: 1634 Hyde Park Road
+                      - generic [ref=e79]: London, Ontario, N6H 5L6
+                      - generic [ref=e80]: Canada
+                - link "Get Directions" [ref=e81] [cursor=pointer]:
+                  - /url: https://www.google.com/maps/dir/?api=1&destination=43.000335,-81.332993
+                  - img [ref=e82]
+                  - text: Get Directions
+              - generic [ref=e84]:
+                - heading "Business Hours" [level=3] [ref=e85]:
+                  - img [ref=e86]
+                  - text: Business Hours
+                - generic [ref=e88]:
+                  - generic [ref=e89]:
+                    - img [ref=e90]
+                    - generic [ref=e92]: Closed
+                  - generic [ref=e93]:
+                    - text: Opens at
+                    - strong [ref=e94]: 11:00 AM
+                - generic [ref=e95]:
+                  - generic [ref=e96]:
+                    - generic [ref=e97]: Monday
+                    - generic [ref=e98]: 11:00 AM - 11:00 PM
+                  - generic [ref=e99]:
+                    - generic [ref=e100]: Tuesday
+                    - generic [ref=e101]: 11:00 AM - 11:00 PM
+                  - generic [ref=e102]:
+                    - generic [ref=e103]: Wednesday
+                    - generic [ref=e104]: 11:00 AM - 11:00 PM
+                  - generic [ref=e105]:
+                    - generic [ref=e106]: Thursday
+                    - generic [ref=e107]: 11:00 AM - 11:00 PM
+                  - generic [ref=e108]:
+                    - generic [ref=e109]: Friday
+                    - generic [ref=e110]: 11:00 AM - 11:00 PM
+                  - generic [ref=e111]:
+                    - generic [ref=e112]: Saturday
+                    - generic [ref=e113]: 11:00 AM - 11:00 PM
+                  - generic [ref=e114]:
+                    - generic [ref=e115]:
+                      - text: Sunday
+                      - generic [ref=e116]: Today
+                    - generic [ref=e117]: 11:00 AM - 11:00 PM
+                - generic [ref=e118]:
+                  - img [ref=e119]
+                  - text: America/Toronto
+            - generic [ref=e122]:
+              - heading "Location Map" [level=3] [ref=e123]:
+                - img [ref=e124]
+                - text: Location Map
+              - generic [ref=e127]:
+                - img [ref=e130] [cursor=pointer]
+                - generic:
+                  - generic [ref=e132]:
+                    - button "Zoom in" [ref=e133] [cursor=pointer]: +
+                    - button "Zoom out" [ref=e134] [cursor=pointer]: −
+                  - generic [ref=e135]:
+                    - link "Leaflet" [ref=e136] [cursor=pointer]:
+                      - /url: https://leafletjs.com
+                    - text: "| ©"
+                    - link "OpenStreetMap" [ref=e137] [cursor=pointer]:
+                      - /url: https://www.openstreetmap.org/copyright
+                    - text: contributors
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - navigation "breadcrumbs" [ref=e140]:
+              - paragraph [ref=e141]:
+                - link "Home" [ref=e142] [cursor=pointer]:
+                  - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/south
+                - text: / Locations / London North
+            - alert [ref=e143]: Showing all 5 results
+          - generic [ref=e144]:
+            - text: 
+            - generic [ref=e145]:
+              - link "List view" [ref=e146] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/store/london-north/?shop_view=list
+                - text: 
+              - link "Grid view 2" [ref=e147] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/store/london-north/?shop_view=grid&per_row=2
+                - text: 
+              - link "Grid view 4" [ref=e148]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/store/london-north/?shop_view=grid&per_row=4
+                - text: 
+              - link "Grid view 6" [ref=e149] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/store/london-north/?shop_view=grid&per_row=6
+                - text: 
+            - link " Filters" [ref=e151] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e152]: 
+              - generic [ref=e153]: Filters
+        - text:   
+        - generic [ref=e155]:
+          - generic [ref=e157]:
+            - link "Aeglos H2 – Classic Black" [ref=e159] [cursor=pointer]:
+              - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/accessories/mods/aeglos-h2-classic-black/
+              - generic [ref=e161]: Classic Black
+              - img "Aeglos H2 - Classic Black" [ref=e162]
+            - generic [ref=e163]:
+              - heading "Aeglos H2 – Classic Black" [level=3] [ref=e164]:
+                - link "Aeglos H2 – Classic Black" [ref=e165] [cursor=pointer]:
+                  - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/accessories/mods/aeglos-h2-classic-black/
+              - generic [ref=e169]: $54.99
+              - generic [ref=e170]:
+                - generic [ref=e171]:
+                  - button "Decrease quantity" [ref=e172] [cursor=pointer]: "-"
+                  - generic: Aeglos H2 - Classic Black quantity
+                  - spinbutton "Product quantity" [ref=e173]: "1"
+                  - button "Increase quantity" [ref=e174] [cursor=pointer]: +
+                - 'button "Add to cart: “Aeglos H2 - Classic Black”" [ref=e175] [cursor=pointer]':
+                  - text: 
+                  - generic [ref=e176]: Add to cart
+          - generic [ref=e178]:
+            - link "Aeglos H2 – Dove Blue" [ref=e180] [cursor=pointer]:
+              - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/accessories/mods/aeglos-h2-dove-blue/
+              - generic [ref=e182]: Dove Blue
+              - img "Aeglos H2 - Dove Blue" [ref=e183]
+            - generic [ref=e184]:
+              - heading "Aeglos H2 – Dove Blue" [level=3] [ref=e185]:
+                - link "Aeglos H2 – Dove Blue" [ref=e186] [cursor=pointer]:
+                  - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/accessories/mods/aeglos-h2-dove-blue/
+              - generic [ref=e190]: $54.99
+              - generic [ref=e191]:
+                - generic [ref=e192]:
+                  - button "Decrease quantity" [ref=e193] [cursor=pointer]: "-"
+                  - generic: Aeglos H2 - Dove Blue quantity
+                  - spinbutton "Product quantity" [ref=e194]: "1"
+                  - button "Increase quantity" [ref=e195] [cursor=pointer]: +
+                - 'button "Add to cart: “Aeglos H2 - Dove Blue”" [ref=e196] [cursor=pointer]':
+                  - text: 
+                  - generic [ref=e197]: Add to cart
+          - generic [ref=e199]:
+            - link "Aeglos H2 – Dusky Silver" [ref=e201] [cursor=pointer]:
+              - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/accessories/mods/aeglos-h2-dusky-silver/
+              - generic [ref=e202]:
+                - generic [ref=e203]: Sold out
+                - generic [ref=e204]: Dusky Silver
+              - img "Aeglos H2 - Dusky Silver" [ref=e205]
+            - generic [ref=e206]:
+              - heading "Aeglos H2 – Dusky Silver" [level=3] [ref=e207]:
+                - link "Aeglos H2 – Dusky Silver" [ref=e208] [cursor=pointer]:
+                  - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/accessories/mods/aeglos-h2-dusky-silver/
+              - generic [ref=e212]: $54.99
+              - link "Read more about “Aeglos H2 - Dusky Silver”" [ref=e214] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/accessories/mods/aeglos-h2-dusky-silver/
+                - text: 
+                - generic [ref=e215]: Read more
+          - generic [ref=e217]:
+            - link "Allday Vapor – 10MG/ML – Fresh Burst" [ref=e219] [cursor=pointer]:
+              - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/e-liquid/allday-vapor/allday-vapor-10mg-ml-fresh-burst/
+              - generic [ref=e221]: 30ML
+              - img "Allday Vapor - Fresh Burst" [ref=e222]
+            - generic [ref=e223]:
+              - heading "Allday Vapor – 10MG/ML – Fresh Burst" [level=3] [ref=e224]:
+                - link "Allday Vapor – 10MG/ML – Fresh Burst" [ref=e225] [cursor=pointer]:
+                  - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/e-liquid/allday-vapor/allday-vapor-10mg-ml-fresh-burst/
+              - generic [ref=e226]:
+                - generic [ref=e229]: $27.99
+                - generic [ref=e230]:
+                  - text: "Member Price:"
+                  - generic [ref=e232]: $25.75
+              - generic [ref=e233]:
+                - generic [ref=e234]:
+                  - button "Decrease quantity" [ref=e235] [cursor=pointer]: "-"
+                  - generic: Allday Vapor - 10MG/ML - Fresh Burst quantity
+                  - spinbutton "Product quantity" [ref=e236]: "1"
+                  - button "Increase quantity" [ref=e237] [cursor=pointer]: +
+                - 'button "Add to cart: “Allday Vapor - 10MG/ML - Fresh Burst”" [ref=e238] [cursor=pointer]':
+                  - text: 
+                  - generic [ref=e239]: Add to cart
+          - generic [ref=e241]:
+            - link "Allday Vapor – 10MG/ML – Purp Thang" [ref=e243] [cursor=pointer]:
+              - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/e-liquid/allday-vapor/allday-vapor-10mg-ml-purp-thang/
+              - generic [ref=e245]: 30ML
+              - img "Allday Vapor - Purp Thang" [ref=e246]
+            - generic [ref=e247]:
+              - heading "Allday Vapor – 10MG/ML – Purp Thang" [level=3] [ref=e248]:
+                - link "Allday Vapor – 10MG/ML – Purp Thang" [ref=e249] [cursor=pointer]:
+                  - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/e-liquid/allday-vapor/allday-vapor-10mg-ml-purp-thang/
+              - generic [ref=e250]:
+                - generic [ref=e253]: $27.99
+                - generic [ref=e254]:
+                  - text: "Member Price:"
+                  - generic [ref=e256]: $25.75
+              - generic [ref=e257]:
+                - generic [ref=e258]:
+                  - button "Decrease quantity" [ref=e259] [cursor=pointer]: "-"
+                  - generic: Allday Vapor - 10MG/ML - Purp Thang quantity
+                  - spinbutton "Product quantity" [ref=e260]: "1"
+                  - button "Increase quantity" [ref=e261] [cursor=pointer]: +
+                - 'button "Add to cart: “Allday Vapor - 10MG/ML - Purp Thang”" [ref=e262] [cursor=pointer]':
+                  - text: 
+                  - generic [ref=e263]: Add to cart
+    - contentinfo [ref=e264]:
+      - complementary [ref=e266]:
+        - generic [ref=e269]:
+          - generic [ref=e274]:
+            - heading "VISIT US" [level=4] [ref=e275]:
+              - strong [ref=e276]: VISIT US
+            - paragraph [ref=e277]:
+              - strong [ref=e278]:
+                - link "725 Notre Dame Drive, London, Ontario" [ref=e280] [cursor=pointer]:
+                  - /url: https://maps.app.goo.gl/1XE3fPEq6oAHfosg7?g_st=ic
+              - text: Store Hours 11:00 AM - 11:00 PM.
+            - paragraph [ref=e281]: Same-day delivery in London, Ontario.
+          - generic [ref=e286]:
+            - generic [ref=e289]:
+              - group "1 / 10" [ref=e290]:
+                - generic [ref=e291]:
+                  - link "FLAVOUR BEAST" [ref=e292] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/flavour-beast/
+                  - img "Flavour Beast brand" [ref=e293]
+              - group "2 / 10" [ref=e294]:
+                - generic [ref=e295]:
+                  - link "Berry Drop Ice" [ref=e296] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/berry-drop-ice/
+                  - img "Berry Drop Ice" [ref=e297]
+              - group "3 / 10" [ref=e298]:
+                - generic [ref=e299]:
+                  - link "Naked 100" [ref=e300] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/naked-100/
+                  - img "Naked 100 Brand" [ref=e301]
+              - group "4 / 10" [ref=e302]:
+                - generic [ref=e303]:
+                  - link "Allday Vapor" [ref=e304] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/allday-vapor/
+                  - img "AllDay Vapor Brand" [ref=e305]
+              - group "5 / 10" [ref=e306]:
+                - generic [ref=e307]:
+                  - link "Geek Bar" [ref=e308] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/geek-bar/
+                  - img "Geek bar Logo" [ref=e309]
+              - group "6 / 10" [ref=e310]:
+                - generic [ref=e311]:
+                  - link "Berry Drop" [ref=e312] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/berry-drop/
+                  - img "Berry Drop Salt Logo" [ref=e313]
+              - group "7 / 10" [ref=e314]:
+                - generic [ref=e315]:
+                  - link "Kraze" [ref=e316] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/kraze/
+                  - img "Kraze Logo White" [ref=e317]
+              - group "8 / 10" [ref=e318]:
+                - generic [ref=e319]:
+                  - link "Suavae" [ref=e320] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/suavae/
+                  - img "Suavae Brand" [ref=e321]
+              - group "9 / 10" [ref=e322]:
+                - generic [ref=e323]:
+                  - link "Aspire" [ref=e324] [cursor=pointer]:
+                    - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/aspire/
+                  - img "Aspire Logo" [ref=e325]
+              - group "10 / 10" [ref=e326]:
+                - link "Mr. Fog" [ref=e328] [cursor=pointer]:
+                  - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/brand/mr-fog/
+            - list [ref=e330]:
+              - listitem "Go to slide 1" [ref=e331] [cursor=pointer]
+              - listitem "Go to slide 2" [ref=e333] [cursor=pointer]
+              - listitem "Go to slide 3" [ref=e335] [cursor=pointer]
+              - listitem "Go to slide 4" [ref=e337] [cursor=pointer]
+        - generic [ref=e340]:
+          - heading "Quick Links" [level=3] [ref=e341]
+          - list [ref=e343]:
+            - listitem [ref=e344]:
+              - link "Terms and Conditions" [ref=e345] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/terms-and-conditions/
+            - listitem [ref=e346]:
+              - link "Privacy Policy" [ref=e347] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/privacy-policy/
+            - listitem [ref=e348]:
+              - link "PuffLab Return & Refund Policy" [ref=e349] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/return-refund/
+            - listitem [ref=e350]:
+              - link "Same-Day Delivery" [ref=e351] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/same-day-delivery-map/
+            - listitem [ref=e352]:
+              - link "Order Tracker" [ref=e353] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/order-tracker/
+            - listitem [ref=e354]:
+              - link "Help Desk" [ref=e355] [cursor=pointer]:
+                - /url: https://help.wordpressmu-1376969-6339584.cloudwaysapps.com/en/
+            - listitem [ref=e356]:
+              - link "System Status Page" [ref=e357] [cursor=pointer]:
+                - /url: https://status.wordpressmu-1376969-6339584.cloudwaysapps.com
+            - listitem [ref=e358]:
+              - link "Delivery Driver App" [ref=e359] [cursor=pointer]:
+                - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/driver/
+      - generic [ref=e361]:
+        - paragraph [ref=e363]: © PuffLab Inc
+        - img "payments" [ref=e365]
+  - navigation "Mobile navigation" [ref=e366]:
+    - search [ref=e368]:
+      - textbox "Search" [ref=e369]:
+        - /placeholder: Search for products
+      - text: 
+      - button "Search " [ref=e370] [cursor=pointer]:
+        - generic: Search
+        - text: 
+    - list [ref=e371]:
+      - listitem [ref=e372]:
+        - link "Menu" [ref=e373] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e374]: Menu
+      - listitem [ref=e375]:
+        - link "Categories" [ref=e376] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e377]: Categories
+    - text:    
+    - list [ref=e378]:
+      - listitem [ref=e379]:
+        - link "Shop" [ref=e380] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/
+          - generic [ref=e381]: Shop
+      - listitem [ref=e382]:
+        - link "Blog" [ref=e383] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/blog
+          - generic [ref=e384]: Blog
+      - listitem [ref=e385]:
+        - link "Discounts" [ref=e386] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/members-only-vape-discounts/
+          - generic [ref=e387]: Discounts
+      - listitem [ref=e388]:
+        - link "Delivery Zone" [ref=e389] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/same-day-delivery-map/
+          - generic [ref=e390]: Delivery Zone
+      - listitem [ref=e391]:
+        - link "Contact Us" [ref=e392] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/contact-us/
+          - generic [ref=e393]: Contact Us
+      - listitem [ref=e394]:
+        - link " Compare" [ref=e395] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/compare/
+      - listitem [ref=e396]:
+        - link " Login / Register" [ref=e397] [cursor=pointer]:
+          - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/my-account/
+  - complementary "Shopping cart sidebar" [ref=e398]:
+    - generic [ref=e399]:
+      - generic [ref=e400]: Shopping cart
+      - link " Close" [ref=e402] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e403]: 
+        - generic [ref=e404]: Close
+    - generic [ref=e409]:
+      - text: 
+      - paragraph [ref=e410]: No products in the cart.
+      - link "Return To Shop" [ref=e411] [cursor=pointer]:
+        - /url: https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/shop/
+  - text:   
+  - generic [ref=e413]: desktop
+  - status

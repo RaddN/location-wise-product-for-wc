@@ -102,7 +102,90 @@
             this.initShortcodeMaps();
             this.initSearch();
             this.initGallery();
+            this.initLocationArchiveLoading();
             this.bindEvents();
+        },
+
+        /**
+         * Add a predictable loading state for location archive filtering.
+         */
+        initLocationArchiveLoading: function () {
+            if (!locationInfoConfig.isLocationArchive || this.archiveLoadingInitialized) {
+                return;
+            }
+
+            this.archiveLoadingInitialized = true;
+
+            const self = this;
+            const archiveActionSelectors = [
+                '.filters-area a',
+                '.wd-shop-tools a',
+                '.woocommerce-pagination a',
+                '.woocommerce-widget-layered-nav a',
+                '.woocommerce-widget-layered-nav-list a',
+                '.widget_layered_nav_filters a',
+                '.woodmart-woocommerce-layered-nav a',
+                '.woodmart-price-filter a',
+                '.wd-clear-filters a',
+                '.wd-products-per-page a',
+                '.wd-products-shop-view a'
+            ].join(', ');
+
+            $(document)
+                .off('click.mulopimfwcLocationArchiveLoading')
+                .on('click.mulopimfwcLocationArchiveLoading', archiveActionSelectors, function (event) {
+                    const href = this.getAttribute('href') || '';
+
+                    if (
+                        event.isDefaultPrevented() ||
+                        event.metaKey ||
+                        event.ctrlKey ||
+                        event.shiftKey ||
+                        event.altKey ||
+                        this.target === '_blank' ||
+                        href === '' ||
+                        href.charAt(0) === '#'
+                    ) {
+                        return;
+                    }
+
+                    self.setLocationArchiveLoading(true);
+                })
+                .off('submit.mulopimfwcLocationArchiveLoading')
+                .on('submit.mulopimfwcLocationArchiveLoading', '.widget_price_filter form, .woocommerce-ordering', function () {
+                    self.setLocationArchiveLoading(true);
+                })
+                .off('change.mulopimfwcLocationArchiveLoading')
+                .on('change.mulopimfwcLocationArchiveLoading', '.woocommerce-ordering select', function () {
+                    self.setLocationArchiveLoading(true);
+                });
+
+            $(document)
+                .off('ajaxComplete.mulopimfwcLocationArchiveLoading')
+                .on('ajaxComplete.mulopimfwcLocationArchiveLoading', function () {
+                    setTimeout(function () {
+                        self.setLocationArchiveLoading(false);
+                    }, 150);
+                });
+
+            $(window)
+                .off('pageshow.mulopimfwcLocationArchiveLoading')
+                .on('pageshow.mulopimfwcLocationArchiveLoading', function () {
+                    self.setLocationArchiveLoading(false);
+                });
+        },
+
+        /**
+         * Toggle the loading state around the product archive region.
+         */
+        setLocationArchiveLoading: function (isLoading) {
+            const $archiveRegion = $('.wd-content-area, .site-content, .mulopimfwc-location-products, .wd-products-element, .woocommerce').first();
+
+            $('body').toggleClass('mulopimfwc-location-archive-loading', !!isLoading);
+
+            if ($archiveRegion.length) {
+                $archiveRegion.attr('aria-busy', isLoading ? 'true' : 'false');
+            }
         },
 
         /**

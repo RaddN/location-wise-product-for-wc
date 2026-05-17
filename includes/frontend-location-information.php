@@ -19,6 +19,13 @@ class MULOPIMFWC_Frontend_Location_Information
     private static $instance = null;
 
     /**
+     * Tracks whether the archive location block has already been rendered.
+     *
+     * @var bool
+     */
+    private $location_archive_info_rendered = false;
+
+    /**
      * Validate if coordinates are valid numeric values
      *
      * @param mixed $lat Latitude value
@@ -115,6 +122,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 add_action('mulopimfwc_store_location_description_before_loop', [$this, 'display_location_archive_info'], 5);
                 break;
         }
+        $this->register_woocommerce_location_archive_info_hook($store_locator_archive_position);
 
         // mulopimfwc_display_options[store_locator_single_product_position]
         $store_locator_single_product_position = isset($mulopimfwc_options['store_locator_single_product_position']) && mulopimfwc_premium_feature()
@@ -142,8 +150,185 @@ class MULOPIMFWC_Frontend_Location_Information
         // Shortcode
         add_shortcode('mulopimfwc_location_info', [$this, 'location_info_shortcode']);
 
+        // Product archive compatibility for location taxonomy archives.
+        add_action('parse_query', [$this, 'prepare_location_archive_product_context'], 20);
+        add_action('wp', [$this, 'maybe_remove_default_location_archive_header'], 20);
+        add_action('wp', [$this, 'maybe_disable_location_archive_sidebar'], 25);
+        add_filter('is_woocommerce', [$this, 'mark_location_archive_as_woocommerce']);
+        add_filter('body_class', [$this, 'add_location_archive_body_classes'], 20);
+
         // Template override
         add_filter('template_include', [$this, 'location_archive_template'], 99);
+    }
+
+    /**
+     * Register the location archive block on standard WooCommerce archive hooks.
+     *
+     * This allows the active theme's product taxonomy archive template flow to
+     * render controls, filters, scripts, and sidebars while the plugin keeps
+     * the configured location-information placement.
+     *
+     * @param string $position Configured archive position.
+     * @return void
+     */
+    private function register_woocommerce_location_archive_info_hook($position)
+    {
+        switch ($position) {
+            case 'before_breadcrumbs':
+                add_action('woocommerce_before_main_content', [$this, 'display_location_archive_info'], 15);
+                break;
+            case 'after_breadcrumbs':
+                add_action('woocommerce_before_main_content', [$this, 'display_location_archive_info'], 25);
+                break;
+            case 'after_shop_loop':
+                add_action('woocommerce_after_shop_loop', [$this, 'display_location_archive_info'], 15);
+                break;
+            default:
+                add_action('woocommerce_shop_loop_header', [$this, 'display_location_archive_info'], 20);
+                break;
+        }
+    }
+
+    /**
+     * Determine whether a query is the public store-location taxonomy archive.
+     *
+     * @param WP_Query|null $query Query object, or null for the global query.
+     * @return bool
+     */
+    private function is_location_archive_query($query = null)
+    {
+        if ($query instanceof WP_Query) {
+            return $query->is_main_query()
+                && (
+                    $query->is_tax('mulopimfwc_store_location')
+                    || $query->get('taxonomy') === 'mulopimfwc_store_location'
+                    || (string) $query->get('mulopimfwc_store_location') !== ''
+                );
+        }
+
+        return is_tax('mulopimfwc_store_location');
+    }
+
+    /**
+     * Make the location taxonomy archive query products while preserving the
+     * current taxonomy request. Product categories, tags, attributes, and this
+     * store-location taxonomy should stay taxonomy archives, not shop archives.
+     *
+     * The taxonomy flags are kept intact so the queried object, canonical URL,
+     * and location-specific filtering continue to target the selected location.
+     *
+     * @param WP_Query $query Query object.
+     * @return void
+     */
+    public function prepare_location_archive_product_context($query)
+    {
+        if (is_admin() || !$this->is_location_archive_query($query)) {
+            return;
+        }
+
+        if (!apply_filters('mulopimfwc_location_archive_product_context_enabled', true, $query)) {
+            return;
+        }
+
+        $query->set('post_type', 'product');
+        $query->query_vars['post_type'] = 'product';
+        $query->is_archive = true;
+    }
+
+    /**
+     * Ensure WooCommerce conditional wrappers treat the location archive as a
+     * WooCommerce page.
+     *
+     * @param bool $is_woocommerce Whether the current request is WooCommerce.
+     * @return bool
+     */
+    public function mark_location_archive_as_woocommerce($is_woocommerce)
+    {
+        if ($is_woocommerce || !is_tax('mulopimfwc_store_location')) {
+            return $is_woocommerce;
+        }
+
+        return true;
+    }
+
+    /**
+     * Add a location archive body class without advertising the page as the
+     * main shop archive.
+     *
+     * @param array $classes Body classes.
+     * @return array
+     */
+    public function add_location_archive_body_classes($classes)
+    {
+        if (!is_tax('mulopimfwc_store_location')) {
+            return $classes;
+        }
+
+        $archive_classes = (array) apply_filters(
+            'mulopimfwc_location_archive_body_classes',
+            [
+                'mulopimfwc-store-location-product-archive',
+                'mulopimfwc-product-taxonomy-archive',
+            ]
+        );
+
+        return array_values(array_unique(array_merge((array) $classes, $archive_classes)));
+    }
+
+    /**
+     * Do not force a WooCommerce sidebar on store-location archives.
+     *
+     * Product taxonomy archives are commonly full-width or use theme-specific
+     * filter drawers. Keeping the core WooCommerce sidebar disabled by default
+     * prevents location archives from diverging from category/tag archives.
+     *
+     * @return void
+     */
+    public function maybe_disable_location_archive_sidebar()
+    {
+        if (!is_tax('mulopimfwc_store_location')) {
+            return;
+        }
+
+        $show_sidebar = (bool) apply_filters('mulopimfwc_location_archive_show_sidebar', false, 'woocommerce_archive');
+        $show_sidebar = (bool) apply_filters('mulopimfwc_location_archive_show_woocommerce_sidebar', $show_sidebar);
+
+        if ($show_sidebar) {
+            return;
+        }
+
+        remove_action('woocommerce_sidebar', 'woocommerce_get_sidebar', 10);
+    }
+
+    /**
+     * Prevent duplicate WooCommerce taxonomy headings on location archives.
+     *
+     * @return void
+     */
+    public function maybe_remove_default_location_archive_header()
+    {
+        if (!is_tax('mulopimfwc_store_location')) {
+            return;
+        }
+
+        if (apply_filters('mulopimfwc_location_archive_show_default_woocommerce_header', false)) {
+            return;
+        }
+
+        if (function_exists('woocommerce_product_taxonomy_archive_header')) {
+            $default_header_priority = has_action(
+                'woocommerce_shop_loop_header',
+                'woocommerce_product_taxonomy_archive_header'
+            );
+
+            if ($default_header_priority !== false) {
+                remove_action(
+                    'woocommerce_shop_loop_header',
+                    'woocommerce_product_taxonomy_archive_header',
+                    $default_header_priority
+                );
+            }
+        }
     }
 
     /**
@@ -255,6 +440,7 @@ class MULOPIMFWC_Frontend_Location_Information
             'mapAnimationType' => $map_animation_type,
             'mapAnimationDuration' => $map_animation_duration,
             'useJsOverlayDetailsButtonOnly' => $use_js_overlay_details_button_only,
+            'isLocationArchive' => is_tax('mulopimfwc_store_location'),
             'i18n' => [
                 'getDirections' => mulopimfwc_get_text_value('text_location_button_directions'),
                 'viewDetails' => mulopimfwc_get_text_value('text_location_button_details'),
@@ -281,6 +467,12 @@ class MULOPIMFWC_Frontend_Location_Information
         if (!$term || is_wp_error($term)) {
             return;
         }
+
+        if ($this->location_archive_info_rendered) {
+            return;
+        }
+
+        $this->location_archive_info_rendered = true;
 
         $this->render_full_location_details($term->term_id);
     }
@@ -1467,7 +1659,12 @@ class MULOPIMFWC_Frontend_Location_Information
     }
 
     /**
-     * Override location archive template
+     * Override location archive template.
+     *
+     * WooCommerce uses archive-product.php for product taxonomy archives too.
+     * The query remains a store-location taxonomy archive; this only lets the
+     * active theme provide the same wrapper and filter lifecycle it uses for
+     * product category, tag, brand, and attribute archive pages.
      */
     public function location_archive_template($template)
     {
@@ -1476,6 +1673,17 @@ class MULOPIMFWC_Frontend_Location_Information
 
             if ($custom_template) {
                 return $custom_template;
+            }
+
+            if (
+                apply_filters('mulopimfwc_location_archive_use_woocommerce_template', true)
+                && function_exists('wc_locate_template')
+            ) {
+                $woocommerce_archive_template = wc_locate_template('archive-product.php');
+
+                if ($woocommerce_archive_template) {
+                    return $woocommerce_archive_template;
+                }
             }
 
             $plugin_template = plugin_dir_path(__FILE__) . '../templates/taxonomy-mulopimfwc_store_location.php';

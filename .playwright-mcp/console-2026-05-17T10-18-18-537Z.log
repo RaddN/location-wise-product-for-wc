@@ -1,0 +1,2 @@
+[    4197ms] [LOG] JQMIGRATE: Migrate is installed, version 3.4.1 @ https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1:1
+[    4522ms] [WARNING] Swiper Loop Warning: The number of slides is not even to slidesPerGroup, loop mode may not function properly. You need to add more slides (or make duplicates, or empty slides) @ https://wordpressmu-1376969-6339584.cloudwaysapps.com/london-south/wp-content/themes/woodmart/js/libs/swiper.min.js?ver=8.4.1:0
