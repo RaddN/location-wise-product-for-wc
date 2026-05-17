@@ -83,6 +83,8 @@ if (!defined('mulopimfwc_VERSION')) {
     define("mulopimfwc_VERSION", "1.1.7.10");
 }
 
+require_once plugin_dir_path(__FILE__) . 'includes/release-channel.php';
+
 if (!function_exists('mulopimfwc_get_currency_symbol_from_map')) {
     /**
      * Resolve a WooCommerce currency symbol by code without using the filtered single-symbol helper.
@@ -1946,7 +1948,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 'enable_all_locations' => 'on',
                 'location_change_notification' => 'on',
                 'display_location_single_product' => 'on',
-                'allow_data_share' => 'on',
+                'allow_data_share' => mulopimfwc_is_envato_build() ? 'off' : 'on',
                 'strict_filtering' => 'enabled',
                 'location_require_selection' => 'on',
                 'enable_product_filter' => 'on',
@@ -3012,7 +3014,11 @@ if (!function_exists('mulopimfwc_get_values')) {
     require_once plugin_dir_path(__FILE__) . 'includes/text-management.php';
     require_once plugin_dir_path(__FILE__) . 'admin/settings.php';
     require_once plugin_dir_path(__FILE__) . 'admin/dashboard.php';
-    require_once plugin_dir_path(__FILE__) . 'admin/license-page.php';
+    if (mulopimfwc_is_edd_build()) {
+        require_once plugin_dir_path(__FILE__) . 'admin/license-page.php';
+    } else {
+        require_once plugin_dir_path(__FILE__) . 'admin/envato-support-page.php';
+    }
     require_once plugin_dir_path(__FILE__) . 'admin/stock-central.php';
     require_once plugin_dir_path(__FILE__) . 'admin/admin.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-resolver.php';
@@ -14579,70 +14585,74 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
     }
 
-    require_once plugin_dir_path(__FILE__) . 'includes/analytics.php';
+    // <mulopimfwc-edd-only>
+    if (mulopimfwc_is_edd_build()) {
+        require_once plugin_dir_path(__FILE__) . 'includes/analytics.php';
 
-    class mulopimfwc_analytics_main
-    {
-        private $analytics;
-
-        public function __construct()
+        class mulopimfwc_analytics_main
         {
-            global $mulopimfwc_options;
-            // Initialize analytics with the correct plugin file path
-            $this->analytics = new mulopimfwc_anaylytics(
-                '04',
-                'https://plugincy.com/wp-json/product-analytics/v1',
-                "1.1.7.10",
-                'Multi Location Product & Inventory Management for WooCommerce',
-                __FILE__ // Pass the main plugin file
-            );
+            private $analytics;
 
-            add_action('admin_footer',  array($this->analytics, "add_deactivation_feedback_form"));
+            public function __construct()
+            {
+                global $mulopimfwc_options;
+                // Initialize analytics with the correct plugin file path
+                $this->analytics = new mulopimfwc_anaylytics(
+                    '04',
+                    'https://plugincy.com/wp-json/product-analytics/v1',
+                    "1.1.7.10",
+                    'Multi Location Product & Inventory Management for WooCommerce',
+                    __FILE__ // Pass the main plugin file
+                );
 
-            // Plugin hooks
-            add_action('init', array($this, 'init'));
-            if (!isset($mulopimfwc_options["allow_data_share"]) || (isset($mulopimfwc_options["allow_data_share"])  && $mulopimfwc_options["allow_data_share"] === 'on')) {
-                add_action('admin_init', array($this, 'admin_init'));
+                add_action('admin_footer',  array($this->analytics, "add_deactivation_feedback_form"));
+
+                // Plugin hooks
+                add_action('init', array($this, 'init'));
+                if (!isset($mulopimfwc_options["allow_data_share"]) || (isset($mulopimfwc_options["allow_data_share"])  && $mulopimfwc_options["allow_data_share"] === 'on')) {
+                    add_action('admin_init', array($this, 'admin_init'));
+                }
+
+                // Handle deactivation feedback AJAX
+                add_action('wp_ajax_mulopimfwc_send_deactivation_feedback', array($this, 'handle_deactivation_feedback'));
             }
 
-            // Handle deactivation feedback AJAX
-            add_action('wp_ajax_mulopimfwc_send_deactivation_feedback', array($this, 'handle_deactivation_feedback'));
-        }
+            public function init()
+            {
+                // Any initialization code
+            }
 
-        public function init()
-        {
-            // Any initialization code
-        }
+            public function admin_init()
+            {
+                // Send analytics data on first activation or weekly
+                $this->maybe_send_analytics();
+            }
 
-        public function admin_init()
-        {
-            // Send analytics data on first activation or weekly
-            $this->maybe_send_analytics();
-        }
+            private function maybe_send_analytics()
+            {
+                $last_sent = get_option('onepaquc_analytics_last_sent', 0);
+                $week_ago = strtotime('-1 week');
 
-        private function maybe_send_analytics()
-        {
-            $last_sent = get_option('onepaquc_analytics_last_sent', 0);
-            $week_ago = strtotime('-1 week');
+                if ($last_sent < $week_ago) {
+                    $this->analytics->send_tracking_data();
+                    update_option('onepaquc_analytics_last_sent', time());
+                }
+            }
 
-            if ($last_sent < $week_ago) {
-                $this->analytics->send_tracking_data();
-                update_option('onepaquc_analytics_last_sent', time());
+            public function handle_deactivation_feedback()
+            {
+                check_ajax_referer('deactivation_feedback', 'nonce');
+
+                $reason = sanitize_text_field(wp_unslash($_POST['reason'] ?? ''));
+                $this->analytics->send_deactivation_data($reason);
+
+                wp_die();
             }
         }
 
-        public function handle_deactivation_feedback()
-        {
-            check_ajax_referer('deactivation_feedback', 'nonce');
-
-            $reason = sanitize_text_field(wp_unslash($_POST['reason'] ?? ''));
-            $this->analytics->send_deactivation_data($reason);
-
-            wp_die();
-        }
+        new mulopimfwc_analytics_main();
     }
-
-    new mulopimfwc_analytics_main();
+    // </mulopimfwc-edd-only>
 }
 
 add_action('admin_enqueue_scripts', 'mulopimfwc_enqueue_admin_notifications_assets');
@@ -15261,6 +15271,8 @@ function mulopimfwc_flag_manager_change($user_id)
 
 
 
+// <mulopimfwc-edd-only>
+if (mulopimfwc_is_edd_build()) {
 // Add this after your plugin initialization
 add_action('plugins_loaded', 'mulopimfwc_init_updater');
 
@@ -15463,6 +15475,8 @@ add_action('admin_init', function () {
         exit;
     }
 });
+}
+// </mulopimfwc-edd-only>
 
 function mulopimfwc_svg_icon($icon_name){
     $icons = [

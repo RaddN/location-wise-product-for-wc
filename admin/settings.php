@@ -2651,16 +2651,18 @@ __('Advanced Settings', 'multi-location-product-and-inventory-management-pro'),
 
         // );
 
-        // Add "Contribute to Plugincy" field
-        add_settings_field(
-            'allow_data_share',
-            __('Contribute to Plugincy', 'multi-location-product-and-inventory-management-pro'),
-            function () {
-                $this->render_advance_checkbox("allow_data_share", __("We collect non-sensitive technical details from your website, like the PHP version and features usage, to help us troubleshoot issues faster, make informed development decisions, and build features that truly benefit you.", 'multi-location-product-and-inventory-management-pro'));
-            },
-            'location-advance-settings',
-            'mulopimfwc_advanced_settings_section'
-        );
+        // Add "Contribute to Plugincy" field only for the direct EDD build.
+        if (!function_exists('mulopimfwc_is_envato_build') || !mulopimfwc_is_envato_build()) {
+            add_settings_field(
+                'allow_data_share',
+                __('Contribute to Plugincy', 'multi-location-product-and-inventory-management-pro'),
+                function () {
+                    $this->render_advance_checkbox("allow_data_share", __("We collect non-sensitive technical details from your website, like the PHP version and features usage, to help us troubleshoot issues faster, make informed development decisions, and build features that truly benefit you.", 'multi-location-product-and-inventory-management-pro'));
+                },
+                'location-advance-settings',
+                'mulopimfwc_advanced_settings_section'
+            );
+        }
 
         add_settings_field(
             'mulopimfwc_clear_cache',
@@ -5904,7 +5906,10 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                 echo $this->mls_nav_tabs("#extensions", "nav-tab", '<svg width="16" height="16" viewBox="0 0 0.48 0.48" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M.04.418V.329h.044A.044.044 0 0 0 .128.277.046.046 0 0 0 .082.24H.04V.151A.02.02 0 0 1 .062.129h.089V.084A.044.044 0 0 1 .203.04.046.046 0 0 1 .24.087v.042h.089a.02.02 0 0 1 .022.022V.24h.042a.046.046 0 0 1 .046.037.044.044 0 0 1-.044.052H.351v.089A.02.02 0 0 1 .329.44H.262V.396A.044.044 0 0 0 .21.352a.046.046 0 0 0-.037.046V.44H.062A.02.02 0 0 1 .04.418"/></svg>', esc_html__('Location Info Management', 'multi-location-product-and-inventory-management-pro'));
                                 echo $this->mls_nav_tabs("#text-management-settings", "nav-tab", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" style="margin-right:6px;vertical-align:middle"><path fill="#0ea5e9" d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 5h10v2H4v-2z"/></svg>', esc_html__('Text Management', 'multi-location-product-and-inventory-management-pro'));
                                 echo $this->mls_nav_tabs("#advance-settings", "nav-tab", '<svg class="svg-inline--fa fa-gear" aria-hidden="true" data-prefix="fas" data-icon="gear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill="#6366f1" d="M15.497 5.206c.1.272.016.575-.2.769l-1.353 1.231a6 6 0 0 1 0 1.588l1.353 1.231c.216.194.3.497.2.769a8 8 0 0 1-.494 1.072l-.147.253a8 8 0 0 1-.691.975.71.71 0 0 1-.766.212l-1.741-.553a6 6 0 0 1-1.375.794l-.391 1.784a.71.71 0 0 1-.569.556 8 8 0 0 1-2.656 0 .71.71 0 0 1-.569-.556l-.391-1.784a6 6 0 0 1-1.375-.794l-1.738.556a.72.72 0 0 1-.766-.212 8 8 0 0 1-.691-.975l-.147-.253a8 8 0 0 1-.494-1.072.71.71 0 0 1 .2-.769l1.353-1.231Q1.997 8.403 1.996 8c-.001-.403.019-.534.053-.794L.696 5.975a.71.71 0 0 1-.2-.769A8 8 0 0 1 .99 4.134l.147-.253q.31-.516.691-.975a.71.71 0 0 1 .766-.212l1.741.553a6 6 0 0 1 1.375-.794L6.101.669A.71.71 0 0 1 6.67.113Q7.32 0 8 0c.68 0 .897.037 1.328.109a.71.71 0 0 1 .569.556l.391 1.784c.494.203.956.472 1.375.794l1.741-.553a.72.72 0 0 1 .766.212q.38.459.691.975l.147.253q.287.515.494 1.072zM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 1 0 0 5"/></svg>', esc_html__('Advanced', 'multi-location-product-and-inventory-management-pro'));
-                                echo $this->mls_nav_tabs("#license-settings", "nav-tab", '<svg width="16" height="16" viewBox="-0.026 0 0.943 0.943" xmlns="http://www.w3.org/2000/svg"><path data-name="19" d="M.528.447.571.404.505.338.462.381.393.312A.158.158 0 1 0 .23.062a.126.126 0 1 0-.175.18.158.158 0 1 0 .257.157l.066.066-.037.036.066.066L.444.53l.175.175-.096.096.033.033a.049.049 0 1 1 .068.068l.04.04L.76.846l.047.047.084-.084ZM.355.081a.077.077 0 1 1-.077.077.077.077 0 0 1 .077-.077M.309.309.308.31.307.308ZM.132.081A.062.062 0 1 1 .07.143.06.06 0 0 1 .132.081m.026.357A.077.077 0 1 1 .235.361a.077.077 0 0 1-.077.077" fill="#59bdff"/></svg>', esc_html__('Plugin License', 'multi-location-product-and-inventory-management-pro'));
+                                $release_tab_label = function_exists('mulopimfwc_is_envato_build') && mulopimfwc_is_envato_build()
+                                    ? esc_html__('Updates & Support', 'multi-location-product-and-inventory-management-pro')
+                                    : esc_html__('Plugin License', 'multi-location-product-and-inventory-management-pro');
+                                echo $this->mls_nav_tabs("#license-settings", "nav-tab", '<svg width="16" height="16" viewBox="-0.026 0 0.943 0.943" xmlns="http://www.w3.org/2000/svg"><path data-name="19" d="M.528.447.571.404.505.338.462.381.393.312A.158.158 0 1 0 .23.062a.126.126 0 1 0-.175.18.158.158 0 1 0 .257.157l.066.066-.037.036.066.066L.444.53l.175.175-.096.096.033.033a.049.049 0 1 1 .068.068l.04.04L.76.846l.047.047.084-.084ZM.355.081a.077.077 0 1 1-.077.077.077.077 0 0 1 .077-.077M.309.309.308.31.307.308ZM.132.081A.062.062 0 1 1 .07.143.06.06 0 0 1 .132.081m.026.357A.077.077 0 1 1 .235.361a.077.077 0 0 1-.077.077" fill="#59bdff"/></svg>', $release_tab_label);
                                 ?>
                             </div>
 
@@ -6197,8 +6202,14 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
                             <div id="license-settings" class="lwp-tab-content" style="display:none;">
                                 <?php
-                                global $mulopimfwc_License_Manager;
-                                $mulopimfwc_License_Manager->render_license_form();
+                                if (function_exists('mulopimfwc_is_envato_build') && mulopimfwc_is_envato_build() && function_exists('mulopimfwc_render_envato_updates_support_page')) {
+                                    mulopimfwc_render_envato_updates_support_page();
+                                } else {
+                                    global $mulopimfwc_License_Manager;
+                                    if (isset($mulopimfwc_License_Manager) && method_exists($mulopimfwc_License_Manager, 'render_license_form')) {
+                                        $mulopimfwc_License_Manager->render_license_form();
+                                    }
+                                }
                                 ?></div>
 
                             <!-- Reset Settings Form -->
@@ -6489,15 +6500,22 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 <div class="lwp-tutorial-section">
                     <?php
 
+                    $setup_description = function_exists('mulopimfwc_is_envato_build') && mulopimfwc_is_envato_build()
+                        ? __('Learn how to install the plugin, configure basic settings, and update the CodeCanyon build manually from your Envato downloads.', 'multi-location-product-and-inventory-management-pro')
+                        : __('Learn how to install the plugin, activate your license, and configure basic settings. This tutorial covers the initial setup process and activation.', 'multi-location-product-and-inventory-management-pro');
+                    $setup_topics = function_exists('mulopimfwc_is_envato_build') && mulopimfwc_is_envato_build()
+                        ? ['Installation', 'Initial Setup', 'Manual Updates']
+                        : ['Installation', 'License Activation', 'Initial Setup'];
+
                     $tutorial_videos = [
                         [
                             'number' => 1,
                             'title' => __('Plugin Installation & Setup', 'multi-location-product-and-inventory-management-pro'),
-                            'description' => __('Learn how to install the plugin, activate your license, and configure basic settings. This tutorial covers the initial setup process and activation.', 'multi-location-product-and-inventory-management-pro'),
+                            'description' => $setup_description,
                             'url' => 'https://www.youtube.com/embed/VIDEO_ID_1',
                             'duration' => '4:30',
                             'difficulty' => 'beginner',
-                            'topics' => ['Installation', 'License Activation', 'Initial Setup'],
+                            'topics' => $setup_topics,
                         ],
                         [
                             'number' => 2,
