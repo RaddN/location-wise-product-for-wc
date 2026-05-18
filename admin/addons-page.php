@@ -5,11 +5,13 @@ if (!defined('ABSPATH')) {
 
 class MULOPIMFWC_Addons_Page
 {
-    private const MANIFEST_TRANSIENT = 'mulopimfwc_addons_manifest_cache';
+    private const MANIFEST_TRANSIENT = 'mulopimfwc_addons_manifest_cache_v2';
     private const INSTALLED_STATUS_OPTION = 'mulopimfwc_addons_installed_status';
     private const LAST_ERROR_OPTION = 'mulopimfwc_addons_last_error';
     private const LAST_CHECK_OPTION = 'mulopimfwc_addons_last_update_check';
     private const NOTICE_TRANSIENT = 'mulopimfwc_addons_admin_notice';
+    private const MANIFEST_PRODUCT_SLUG = 'multi-location-product-inventory-management-for-woocommerce-pro';
+    private const DEFAULT_MANIFEST_URL = 'https://plugincy.com/wp-json/plugincy/v1/' . self::MANIFEST_PRODUCT_SLUG . '/addons';
 
     private static $instance = null;
 
@@ -246,7 +248,7 @@ class MULOPIMFWC_Addons_Page
         check_admin_referer('mulopimfwc_addon_' . $action . '_' . $slug);
 
         try {
-            $addons = $this->get_addons_with_manifest($action === 'refresh');
+            $addons = $this->get_addons_with_manifest(in_array($action, ['refresh', 'install', 'update'], true));
             if (!isset($addons[$slug])) {
                 throw new RuntimeException(__('Unknown add-on.', 'multi-location-product-and-inventory-management-pro'));
             }
@@ -313,11 +315,32 @@ class MULOPIMFWC_Addons_Page
 
         foreach ($addons as $slug => $addon) {
             if (isset($manifest[$slug]) && is_array($manifest[$slug])) {
-                $addons[$slug] = array_merge($addon, array_intersect_key($manifest[$slug], $addon + ['package' => '', 'checksum' => '', 'changelog' => '']));
+                $addons[$slug] = $this->merge_manifest_addon($addon, $manifest[$slug]);
             }
         }
 
         return $addons;
+    }
+
+    private function merge_manifest_addon(array $addon, array $manifest): array
+    {
+        foreach (['version', 'package', 'checksum', 'changelog', 'plugin_file'] as $key) {
+            if (array_key_exists($key, $manifest)) {
+                $addon[$key] = $manifest[$key];
+            }
+        }
+
+        foreach (['name', 'description'] as $key) {
+            if (isset($manifest[$key]) && is_scalar($manifest[$key]) && trim((string) $manifest[$key]) !== '') {
+                $addon[$key] = $manifest[$key];
+            }
+        }
+
+        if (isset($manifest['requires_label']) && is_scalar($manifest['requires_label']) && trim((string) $manifest['requires_label']) !== '') {
+            $addon['requires'] = $manifest['requires_label'];
+        }
+
+        return $addon;
     }
 
     private function get_default_addons(): array
@@ -353,7 +376,7 @@ class MULOPIMFWC_Addons_Page
 
         update_option(self::LAST_CHECK_OPTION, time(), false);
 
-        $endpoint = apply_filters('mulopimfwc_addons_manifest_url', 'https://plugincy.com/wp-json/plugincy/v1/mulopimfwc-addons');
+        $endpoint = apply_filters('mulopimfwc_addons_manifest_url', self::DEFAULT_MANIFEST_URL);
         $response = wp_remote_post($endpoint, [
             'timeout' => 30,
             'sslverify' => true,
@@ -364,6 +387,7 @@ class MULOPIMFWC_Addons_Page
                 'license' => get_option('mulopimfwc_license_key', ''),
                 'site_url' => home_url(),
                 'plugin_version' => defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '',
+                'product_slug' => self::MANIFEST_PRODUCT_SLUG,
                 'addons' => implode(',', array_keys($this->get_default_addons())),
             ],
         ]);
@@ -373,10 +397,28 @@ class MULOPIMFWC_Addons_Page
             return [];
         }
 
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $response_code = (int) wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        $body = json_decode($response_body, true);
         if (!is_array($body)) {
             update_option(self::LAST_ERROR_OPTION, __('The Plugincy add-on manifest response was invalid.', 'multi-location-product-and-inventory-management-pro'), false);
             return [];
+        }
+
+        if ($response_code < 200 || $response_code >= 300) {
+            $message = isset($body['message']) && is_scalar($body['message'])
+                ? sanitize_text_field((string) $body['message'])
+                : __('The Plugincy add-on manifest request failed.', 'multi-location-product-and-inventory-management-pro');
+            update_option(self::LAST_ERROR_OPTION, $message, false);
+            return [];
+        }
+
+        $server_license = isset($body['license']) && is_array($body['license']) ? $body['license'] : [];
+        if (isset($body['success']) && !$body['success'] && !empty($server_license)) {
+            $server_message = isset($server_license['message']) && is_scalar($server_license['message'])
+                ? sanitize_text_field((string) $server_license['message'])
+                : __('The Plugincy license server did not return signed add-on downloads for this license.', 'multi-location-product-and-inventory-management-pro');
+            update_option(self::LAST_ERROR_OPTION, $server_message, false);
         }
 
         $addons = isset($body['addons']) && is_array($body['addons']) ? $body['addons'] : $body;
@@ -401,10 +443,40 @@ class MULOPIMFWC_Addons_Page
             ];
         }
 
-        delete_option(self::LAST_ERROR_OPTION);
-        set_transient(self::MANIFEST_TRANSIENT, $normalized, 6 * HOUR_IN_SECONDS);
+        if (isset($body['success']) && $body['success']) {
+            delete_option(self::LAST_ERROR_OPTION);
+        }
+
+        $cache_ttl = $this->get_manifest_cache_ttl($body, $normalized);
+        if ($cache_ttl > 0) {
+            set_transient(self::MANIFEST_TRANSIENT, $normalized, $cache_ttl);
+        } else {
+            delete_transient(self::MANIFEST_TRANSIENT);
+        }
 
         return $normalized;
+    }
+
+    private function get_manifest_cache_ttl(array $body, array $addons): int
+    {
+        $has_package = false;
+        foreach ($addons as $addon) {
+            if (!empty($addon['package'])) {
+                $has_package = true;
+                break;
+            }
+        }
+
+        if (!$has_package) {
+            return 6 * HOUR_IN_SECONDS;
+        }
+
+        $token_ttl = isset($body['token_ttl']) ? absint($body['token_ttl']) : 0;
+        if ($token_ttl <= 0) {
+            return 2 * MINUTE_IN_SECONDS;
+        }
+
+        return max(30, min(5 * MINUTE_IN_SECONDS, $token_ttl - 30));
     }
 
     private function get_addon_status(array $addon): array
@@ -479,12 +551,41 @@ class MULOPIMFWC_Addons_Page
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
         $plugins = get_plugins();
-        if (isset($plugins[$addon['plugin_file']])) {
-            return $addon['plugin_file'];
+        $expected_file = isset($addon['plugin_file']) && is_scalar($addon['plugin_file'])
+            ? wp_normalize_path((string) $addon['plugin_file'])
+            : '';
+        $addon_slug = isset($addon['slug']) && is_scalar($addon['slug'])
+            ? sanitize_key((string) $addon['slug'])
+            : '';
+
+        if ($expected_file !== '' && isset($plugins[$expected_file])) {
+            return $expected_file;
         }
 
+        $expected_basename = $expected_file !== '' ? basename($expected_file) : '';
+        $expected_name = isset($addon['name']) && is_scalar($addon['name'])
+            ? strtolower(trim((string) $addon['name']))
+            : '';
+
         foreach ($plugins as $plugin_file => $data) {
-            if (dirname($plugin_file) === $addon['slug']) {
+            $plugin_file = wp_normalize_path((string) $plugin_file);
+            $plugin_dir = sanitize_key(basename(dirname($plugin_file)));
+
+            if ($addon_slug !== '' && ($plugin_dir === $addon_slug || strpos($plugin_dir, $addon_slug . '-') === 0)) {
+                return $plugin_file;
+            }
+
+            if ($expected_basename !== '' && basename($plugin_file) === $expected_basename) {
+                return $plugin_file;
+            }
+
+            $text_domain = isset($data['TextDomain']) ? sanitize_key((string) $data['TextDomain']) : '';
+            if ($addon_slug !== '' && $text_domain === $addon_slug) {
+                return $plugin_file;
+            }
+
+            $plugin_name = isset($data['Name']) ? strtolower(trim((string) $data['Name'])) : '';
+            if ($expected_name !== '' && $plugin_name === $expected_name) {
                 return $plugin_file;
             }
         }
@@ -526,6 +627,8 @@ class MULOPIMFWC_Addons_Page
                 throw new RuntimeException(__('WordPress could not install the add-on package.', 'multi-location-product-and-inventory-management-pro'));
             }
 
+            wp_clean_plugins_cache(true);
+            $this->persist_addon_status($addon);
             delete_transient(self::MANIFEST_TRANSIENT);
         } finally {
             if (is_string($package) && file_exists($package)) {
@@ -547,6 +650,9 @@ class MULOPIMFWC_Addons_Page
         if (is_wp_error($result)) {
             throw new RuntimeException($result->get_error_message());
         }
+
+        wp_clean_plugins_cache(true);
+        $this->persist_addon_status($addon);
     }
 
     private function deactivate(array $addon): void
@@ -556,6 +662,8 @@ class MULOPIMFWC_Addons_Page
         $plugin_file = $this->resolve_plugin_file($addon);
         if ($plugin_file !== '') {
             deactivate_plugins($plugin_file);
+            wp_clean_plugins_cache(true);
+            $this->persist_addon_status($addon);
         }
     }
 
@@ -577,6 +685,35 @@ class MULOPIMFWC_Addons_Page
         if (is_wp_error($result)) {
             throw new RuntimeException($result->get_error_message());
         }
+
+        wp_clean_plugins_cache(true);
+        $this->persist_addon_status($addon);
+    }
+
+    private function persist_addon_status(array $addon): void
+    {
+        $slug = isset($addon['slug']) ? sanitize_key((string) $addon['slug']) : '';
+        if ($slug === '') {
+            return;
+        }
+
+        $statuses = get_option(self::INSTALLED_STATUS_OPTION, []);
+        if (!is_array($statuses)) {
+            $statuses = [];
+        }
+
+        $status = $this->get_addon_status($addon);
+        $statuses[$slug] = [
+            'installed' => (bool) $status['installed'],
+            'active' => (bool) $status['active'],
+            'installed_version' => (string) $status['installed_version'],
+            'update_available' => (bool) $status['update_available'],
+            'state' => (string) $status['state'],
+            'plugin_file' => (string) $status['plugin_file'],
+            'checked_at' => time(),
+        ];
+
+        update_option(self::INSTALLED_STATUS_OPTION, $statuses, false);
     }
 
     private function has_valid_license(): bool
