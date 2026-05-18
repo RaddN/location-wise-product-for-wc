@@ -4247,6 +4247,15 @@ JS;
             array($MULOPIMFWC_Location_Managers, 'admin_page')
         );
 
+        add_submenu_page(
+            'multi-location-product-and-inventory-management-pro',
+            __('Addons', 'multi-location-product-and-inventory-management-pro'),
+            __('Addons', 'multi-location-product-and-inventory-management-pro'),
+            'install_plugins',
+            'mulopimfwc-addons',
+            class_exists('MULOPIMFWC_Addons_Page') ? [MULOPIMFWC_Addons_Page::instance(), 'render_page'] : '__return_null'
+        );
+
         // Add Settings submenu
         add_submenu_page(
             'multi-location-product-and-inventory-management-pro',

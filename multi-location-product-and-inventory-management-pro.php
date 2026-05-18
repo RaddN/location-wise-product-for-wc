@@ -3294,6 +3294,7 @@ if (!function_exists('mulopimfwc_get_values')) {
     } else {
         require_once plugin_dir_path(__FILE__) . 'admin/envato-support-page.php';
     }
+    require_once plugin_dir_path(__FILE__) . 'admin/addons-page.php';
     require_once plugin_dir_path(__FILE__) . 'admin/stock-central.php';
     require_once plugin_dir_path(__FILE__) . 'admin/admin.php';
     require_once plugin_dir_path(__FILE__) . 'includes/location-resolver.php';
