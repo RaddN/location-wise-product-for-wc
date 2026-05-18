@@ -1526,6 +1526,279 @@ if (!function_exists('mulopimfwc_get_location_url_query_var')) {
     }
 }
 
+if (!function_exists('mulopimfwc_resolve_location_term_from_path')) {
+    /**
+     * Resolve a store-location term from a slug or hierarchical slug path.
+     *
+     * @param string $location_path Location slug or parent/child path.
+     * @return WP_Term|false
+     */
+    function mulopimfwc_resolve_location_term_from_path($location_path)
+    {
+        $location_path = trim(rawurldecode((string) $location_path), " \t\n\r\0\x0B/");
+        if ($location_path === '') {
+            return false;
+        }
+
+        if (strpos($location_path, '/') === false) {
+            $location_slug = sanitize_title($location_path);
+            if ($location_slug === '') {
+                return false;
+            }
+
+            return function_exists('mulopimfwc_validate_location_slug')
+                ? mulopimfwc_validate_location_slug($location_slug, false)
+                : get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
+        }
+
+        $slugs = array_values(array_filter(array_map(static function ($path_part) {
+            return sanitize_title(rawurldecode((string) $path_part));
+        }, explode('/', $location_path))));
+
+        if (empty($slugs)) {
+            return false;
+        }
+
+        $term = get_term_by('slug', end($slugs), 'mulopimfwc_store_location');
+        if (!$term || is_wp_error($term)) {
+            return false;
+        }
+
+        $expected_ancestors = array_reverse(array_slice($slugs, 0, -1));
+        $parent_id = (int) $term->parent;
+
+        foreach ($expected_ancestors as $expected_slug) {
+            if ($parent_id <= 0) {
+                return false;
+            }
+
+            $parent = get_term($parent_id, 'mulopimfwc_store_location');
+            if (!$parent || is_wp_error($parent)) {
+                return false;
+            }
+
+            if (sanitize_title(rawurldecode((string) $parent->slug)) !== $expected_slug) {
+                return false;
+            }
+
+            $parent_id = (int) $parent->parent;
+        }
+
+        return $term;
+    }
+}
+
+if (!function_exists('mulopimfwc_is_location_term_active_for_frontend')) {
+    /**
+     * Check whether a location term is active for frontend archive rendering.
+     *
+     * @param WP_Term $term Location term.
+     * @return bool
+     */
+    function mulopimfwc_is_location_term_active_for_frontend($term): bool
+    {
+        if (!$term || is_wp_error($term) || !isset($term->term_id)) {
+            return false;
+        }
+
+        $is_active = get_term_meta((int) $term->term_id, 'is_active', true);
+
+        return $is_active === ''
+            || $is_active === 'on'
+            || $is_active === '1'
+            || $is_active === true
+            || $is_active === 'yes';
+    }
+}
+
+if (!function_exists('mulopimfwc_resolve_location_term')) {
+    /**
+     * Resolve the location term for native and custom location archive contexts.
+     *
+     * Supported args: id, slug, location, allow_native, allow_request,
+     * allow_cookie, active_only.
+     *
+     * @param array|string|int $args Resolution arguments, slug, or term ID.
+     * @return WP_Term|false
+     */
+    function mulopimfwc_resolve_location_term($args = [])
+    {
+        if (!is_array($args)) {
+            $args = is_numeric($args)
+                ? ['id' => absint($args)]
+                : ['slug' => (string) $args];
+        }
+
+        $defaults = [
+            'id' => 0,
+            'slug' => '',
+            'location' => '',
+            'allow_native' => true,
+            'allow_request' => true,
+            'allow_cookie' => false,
+            'active_only' => false,
+        ];
+
+        $args = array_merge($defaults, $args);
+
+        $finalize = static function ($term, $source) use ($args) {
+            if (!$term || is_wp_error($term) || !isset($term->taxonomy) || $term->taxonomy !== 'mulopimfwc_store_location') {
+                return false;
+            }
+
+            if (!empty($args['active_only']) && !mulopimfwc_is_location_term_active_for_frontend($term)) {
+                return false;
+            }
+
+            if (!empty($args['active_only']) && function_exists('mulopimfwc_get_location_manager_frontend_assigned_locations')) {
+                $manager_locations = mulopimfwc_get_location_manager_frontend_assigned_locations();
+                if (is_array($manager_locations)) {
+                    $term_slug = sanitize_title(rawurldecode((string) $term->slug));
+                    if ($term_slug === '' || !in_array($term_slug, $manager_locations, true)) {
+                        return false;
+                    }
+                }
+            }
+
+            return apply_filters('mulopimfwc_resolved_location_archive_term', $term, $args, $source);
+        };
+
+        if (!empty($args['allow_native']) && function_exists('is_tax') && is_tax('mulopimfwc_store_location')) {
+            $term = get_queried_object();
+            $term = $finalize($term, 'native_archive');
+            if ($term) {
+                return $term;
+            }
+        }
+
+        $id = is_scalar($args['id']) ? trim((string) $args['id']) : '';
+        if ($id !== '' && strtolower($id) !== 'current' && strtolower($id) !== 'selected') {
+            $term = get_term(absint($id), 'mulopimfwc_store_location');
+            $term = $finalize($term, 'explicit_id');
+            if ($term) {
+                return $term;
+            }
+        }
+
+        $slug = is_scalar($args['slug']) ? trim((string) $args['slug']) : '';
+        if ($slug !== '' && strtolower($slug) !== 'current' && strtolower($slug) !== 'selected') {
+            $term = mulopimfwc_resolve_location_term_from_path($slug);
+            $term = $finalize($term, 'explicit_slug');
+            if ($term) {
+                return $term;
+            }
+        }
+
+        $location = is_scalar($args['location']) ? trim((string) $args['location']) : '';
+        if ($location !== '' && strtolower($location) !== 'current' && strtolower($location) !== 'selected') {
+            if (is_numeric($location)) {
+                $term = get_term(absint($location), 'mulopimfwc_store_location');
+                $term = $finalize($term, 'explicit_location_id');
+            } else {
+                $term = mulopimfwc_resolve_location_term_from_path($location);
+                $term = $finalize($term, 'explicit_location_slug');
+            }
+
+            if ($term) {
+                return $term;
+            }
+        }
+
+        if (!empty($args['allow_request'])) {
+            $request_id = '';
+            if (isset($_REQUEST['mulopimfwc_location_id'])) {
+                $request_id_value = wp_unslash($_REQUEST['mulopimfwc_location_id']);
+                $request_id = is_scalar($request_id_value) ? (string) $request_id_value : '';
+            } else {
+                $query_id = get_query_var('mulopimfwc_location_id');
+                if ($query_id !== '') {
+                    $request_id = is_scalar($query_id) ? (string) $query_id : '';
+                }
+            }
+
+            if ($request_id !== '') {
+                $term = get_term(absint($request_id), 'mulopimfwc_store_location');
+                $term = $finalize($term, 'request_id');
+                if ($term) {
+                    return $term;
+                }
+            }
+
+            $request_slug_keys = ['mulopimfwc_location_slug'];
+            $location_url_query_var = function_exists('mulopimfwc_get_location_url_query_var')
+                ? mulopimfwc_get_location_url_query_var()
+                : '';
+            if ($location_url_query_var !== '' && !in_array($location_url_query_var, $request_slug_keys, true)) {
+                $request_slug_keys[] = $location_url_query_var;
+            }
+
+            foreach ($request_slug_keys as $request_slug_key) {
+                $request_slug = '';
+                if (isset($_REQUEST[$request_slug_key])) {
+                    $request_slug_value = wp_unslash($_REQUEST[$request_slug_key]);
+                    $request_slug = is_scalar($request_slug_value) ? (string) $request_slug_value : '';
+                } else {
+                    $query_slug = get_query_var($request_slug_key);
+                    if ($query_slug !== '') {
+                        $request_slug = is_scalar($query_slug) ? (string) $query_slug : '';
+                    }
+                }
+
+                if ($request_slug === '') {
+                    continue;
+                }
+
+                $term = mulopimfwc_resolve_location_term_from_path((string) $request_slug);
+                $term = $finalize($term, 'request_slug');
+                if ($term) {
+                    return $term;
+                }
+            }
+        }
+
+        if (!empty($args['allow_cookie']) && function_exists('mulopimfwc_get_store_location_cookie')) {
+            $cookie_slug = mulopimfwc_get_store_location_cookie();
+            if ($cookie_slug !== '' && $cookie_slug !== 'all-products') {
+                $term = mulopimfwc_resolve_location_term_from_path($cookie_slug);
+                $term = $finalize($term, 'selected_location_cookie');
+                if ($term) {
+                    return $term;
+                }
+            }
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('mulopimfwc_get_current_location_archive_term')) {
+    /**
+     * Return the current location archive term for native or custom URL contexts.
+     *
+     * @param array $args Optional resolution arguments.
+     * @return WP_Term|false
+     */
+    function mulopimfwc_get_current_location_archive_term($args = [])
+    {
+        return mulopimfwc_resolve_location_term($args);
+    }
+}
+
+if (!function_exists('mulopimfwc_get_current_location_archive_id')) {
+    /**
+     * Return the current location archive term ID.
+     *
+     * @param array $args Optional resolution arguments.
+     * @return int
+     */
+    function mulopimfwc_get_current_location_archive_id($args = []): int
+    {
+        $term = mulopimfwc_get_current_location_archive_term($args);
+
+        return ($term && !is_wp_error($term) && isset($term->term_id)) ? (int) $term->term_id : 0;
+    }
+}
+
 if (!function_exists('mulopimfwc_set_location_cookie')) {
     /**
      * Set location cookie with standardized, filterable arguments.

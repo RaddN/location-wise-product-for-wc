@@ -60,7 +60,7 @@ Apollo should follow these rules when this page is published:
 | Social notification channels | Slack/Teams/Discord/custom webhook and Telegram channel support exists. |
 | Location metadata management | Locations support address, contact info, coordinates, logo, gallery, ordering, and active/inactive status. |
 | Location aliases | Alias metadata exists for location resolution/search behavior. |
-| Location archive / URL capability | Location URLs and archive behavior exist when enabled. |
+| Location archive / URL capability | Location URLs, native taxonomy archives, and custom archive shortcodes exist when enabled. See `docs/location-archive-template-guide.md`. |
 | Location SEO support | SEO/title/meta/schema integration exists for location-aware pages. |
 
 ---

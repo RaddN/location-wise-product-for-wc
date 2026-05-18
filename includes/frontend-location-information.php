@@ -149,6 +149,8 @@ class MULOPIMFWC_Frontend_Location_Information
 
         // Shortcode
         add_shortcode('mulopimfwc_location_info', [$this, 'location_info_shortcode']);
+        add_shortcode('mulopimfwc_location_products', [$this, 'location_products_shortcode']);
+        add_shortcode('mulopimfwc_location_archive', [$this, 'location_archive_shortcode']);
 
         // Product archive compatibility for location taxonomy archives.
         add_action('parse_query', [$this, 'prepare_location_archive_product_context'], 20);
@@ -1254,13 +1256,317 @@ class MULOPIMFWC_Frontend_Location_Information
     }
 
     /**
+     * Normalize shortcode boolean attributes.
+     *
+     * @param mixed $value Attribute value.
+     * @param bool  $default Default when the value is empty or unknown.
+     * @return bool
+     */
+    private function shortcode_bool($value, $default = true)
+    {
+        $value = strtolower(trim((string) $value));
+
+        if ($value === '') {
+            return (bool) $default;
+        }
+
+        if (in_array($value, ['1', 'yes', 'true', 'on'], true)) {
+            return true;
+        }
+
+        if (in_array($value, ['0', 'no', 'false', 'off'], true)) {
+            return false;
+        }
+
+        return (bool) $default;
+    }
+
+    /**
+     * Resolve a location term for archive-oriented shortcodes.
+     *
+     * @param array $atts Shortcode attributes.
+     * @param bool  $active_only Whether inactive terms should be rejected.
+     * @return WP_Term|false
+     */
+    private function resolve_location_shortcode_term(array $atts, $active_only = true)
+    {
+        if (!function_exists('mulopimfwc_resolve_location_term')) {
+            return false;
+        }
+
+        $location = isset($atts['location']) ? trim((string) $atts['location']) : 'current';
+        $id = isset($atts['id']) ? trim((string) $atts['id']) : '';
+        $slug = isset($atts['slug']) ? trim((string) $atts['slug']) : '';
+        $location_mode = strtolower($location);
+
+        if ($location_mode === 'selected' || strtolower($id) === 'selected' || strtolower($slug) === 'selected') {
+            return mulopimfwc_resolve_location_term([
+                'allow_native' => false,
+                'allow_request' => false,
+                'allow_cookie' => true,
+                'active_only' => $active_only,
+            ]);
+        }
+
+        return mulopimfwc_resolve_location_term([
+            'id' => $id,
+            'slug' => $slug,
+            'location' => $location !== '' ? $location : 'current',
+            'allow_native' => true,
+            'allow_request' => true,
+            'allow_cookie' => false,
+            'active_only' => $active_only,
+        ]);
+    }
+
+    /**
+     * Run product rendering under a temporary location context without setting a browser cookie.
+     *
+     * @param WP_Term  $term Location term.
+     * @param callable $callback Callback to execute.
+     * @return mixed
+     */
+    private function with_location_render_context($term, callable $callback)
+    {
+        $cookie_name = function_exists('mulopimfwc_get_location_cookie_name')
+            ? mulopimfwc_get_location_cookie_name()
+            : 'mulopimfwc_store_location';
+
+        $had_cookie = isset($_COOKIE[$cookie_name]);
+        $previous_cookie = $had_cookie ? $_COOKIE[$cookie_name] : null;
+
+        $_COOKIE[$cookie_name] = rawurlencode((string) $term->slug);
+
+        try {
+            return call_user_func($callback);
+        } finally {
+            if ($had_cookie) {
+                $_COOKIE[$cookie_name] = $previous_cookie;
+            } else {
+                unset($_COOKIE[$cookie_name]);
+            }
+        }
+    }
+
+    /**
+     * Render a WooCommerce product loop for a specific store-location term.
+     *
+     * @param WP_Term $term Location term.
+     * @param array   $atts Shortcode attributes.
+     * @return string
+     */
+    private function render_location_products_for_term($term, array $atts)
+    {
+        if (
+            !$term ||
+            is_wp_error($term) ||
+            !function_exists('wc_get_template_part') ||
+            !function_exists('woocommerce_product_loop_start') ||
+            !function_exists('woocommerce_product_loop_end')
+        ) {
+            return '';
+        }
+
+        $columns = isset($atts['columns']) ? absint($atts['columns']) : 4;
+        $columns = max(1, min(6, $columns));
+
+        $per_page = isset($atts['per_page']) ? absint($atts['per_page']) : 12;
+        $per_page = max(1, min(48, $per_page));
+
+        $paginate = $this->shortcode_bool($atts['paginate'] ?? 'yes', true);
+        $page_from_query = isset($_GET['mulopimfwc_location_products_page'])
+            ? absint(wp_unslash($_GET['mulopimfwc_location_products_page']))
+            : 0;
+        $paged = max(1, $page_from_query, absint(get_query_var('paged')), absint(get_query_var('page')));
+
+        $order = strtoupper((string) ($atts['order'] ?? 'ASC'));
+        $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'ASC';
+
+        $orderby = sanitize_key((string) ($atts['orderby'] ?? 'menu_order'));
+        $allowed_orderby = ['date', 'title', 'menu_order', 'rand', 'id'];
+        if (!in_array($orderby, $allowed_orderby, true)) {
+            $orderby = 'menu_order';
+        }
+        if ($orderby === 'id') {
+            $orderby = 'ID';
+        }
+
+        $pagination_base = add_query_arg('mulopimfwc_location_products_page', '%#%');
+        $pagination_base = str_replace('%25%23%25', '%#%', esc_url_raw($pagination_base));
+
+        $classes = array_filter([
+            'mulopimfwc-location-products-shortcode',
+            'woocommerce',
+            'columns-' . $columns,
+            isset($atts['class']) ? sanitize_html_class((string) $atts['class']) : '',
+        ]);
+
+        return $this->with_location_render_context($term, function () use ($term, $columns, $per_page, $paginate, $paged, $order, $orderby, $pagination_base, $classes) {
+            $query = new WP_Query([
+                'post_type' => 'product',
+                'post_status' => 'publish',
+                'posts_per_page' => $per_page,
+                'paged' => $paged,
+                'orderby' => $orderby,
+                'order' => $order,
+                'ignore_sticky_posts' => true,
+                'tax_query' => [
+                    [
+                        'taxonomy' => 'mulopimfwc_store_location',
+                        'field' => 'term_id',
+                        'terms' => [(int) $term->term_id],
+                        'operator' => 'IN',
+                    ],
+                ],
+            ]);
+
+            ob_start();
+
+            if (function_exists('wc_set_loop_prop')) {
+                wc_set_loop_prop('name', 'mulopimfwc_location_products');
+                wc_set_loop_prop('columns', $columns);
+                wc_set_loop_prop('total', (int) $query->found_posts);
+                wc_set_loop_prop('per_page', $per_page);
+                wc_set_loop_prop('current_page', $paged);
+                wc_set_loop_prop('total_pages', (int) $query->max_num_pages);
+            }
+            ?>
+            <div class="<?php echo esc_attr(implode(' ', $classes)); ?>"
+                data-location-id="<?php echo esc_attr((int) $term->term_id); ?>"
+                data-location-slug="<?php echo esc_attr(rawurldecode((string) $term->slug)); ?>">
+                <?php if ($query->have_posts()) : ?>
+                    <?php woocommerce_product_loop_start(); ?>
+
+                    <?php while ($query->have_posts()) : ?>
+                        <?php
+                        $query->the_post();
+                        wc_get_template_part('content', 'product');
+                        ?>
+                    <?php endwhile; ?>
+
+                    <?php woocommerce_product_loop_end(); ?>
+
+                    <?php if ($paginate && $query->max_num_pages > 1) : ?>
+                        <nav class="woocommerce-pagination mulopimfwc-location-products-pagination">
+                            <?php
+                            echo paginate_links([
+                                'base' => $pagination_base,
+                                'format' => '',
+                                'current' => $paged,
+                                'total' => (int) $query->max_num_pages,
+                                'prev_text' => '&larr;',
+                                'next_text' => '&rarr;',
+                                'type' => 'list',
+                            ]);
+                            ?>
+                        </nav>
+                    <?php endif; ?>
+                <?php else : ?>
+                    <?php do_action('woocommerce_no_products_found'); ?>
+                <?php endif; ?>
+            </div>
+            <?php
+
+            wp_reset_postdata();
+
+            if (function_exists('woocommerce_reset_loop')) {
+                woocommerce_reset_loop();
+            }
+
+            return ob_get_clean();
+        });
+    }
+
+    /**
+     * [mulopimfwc_location_products] - Render products for a fixed location context.
+     */
+    public function location_products_shortcode($atts)
+    {
+        $atts = shortcode_atts([
+            'id' => '',
+            'slug' => '',
+            'location' => 'current',
+            'columns' => 4,
+            'per_page' => 12,
+            'paginate' => 'yes',
+            'orderby' => 'menu_order',
+            'order' => 'ASC',
+            'class' => '',
+        ], $atts, 'mulopimfwc_location_products');
+
+        $term = $this->resolve_location_shortcode_term($atts, true);
+        if (!$term || is_wp_error($term)) {
+            return '<p class="mulopimfwc-no-locations">' .
+                esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_locations')) .
+                '</p>';
+        }
+
+        return $this->render_location_products_for_term($term, $atts);
+    }
+
+    /**
+     * [mulopimfwc_location_archive] - Render location details and products for custom pages.
+     */
+    public function location_archive_shortcode($atts)
+    {
+        $atts = shortcode_atts([
+            'id' => '',
+            'slug' => '',
+            'location' => 'current',
+            'show_info' => 'yes',
+            'show_products' => 'yes',
+            'show_filter' => 'no',
+            'columns' => 4,
+            'per_page' => 12,
+            'paginate' => 'yes',
+            'orderby' => 'menu_order',
+            'order' => 'ASC',
+            'class' => '',
+        ], $atts, 'mulopimfwc_location_archive');
+
+        $term = $this->resolve_location_shortcode_term($atts, true);
+        if (!$term || is_wp_error($term)) {
+            return '<p class="mulopimfwc-no-locations">' .
+                esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_locations')) .
+                '</p>';
+        }
+
+        ob_start();
+        ?>
+        <div class="mulopimfwc-custom-location-archive <?php echo esc_attr(sanitize_html_class((string) $atts['class'])); ?>"
+            data-location-id="<?php echo esc_attr((int) $term->term_id); ?>"
+            data-location-slug="<?php echo esc_attr(rawurldecode((string) $term->slug)); ?>">
+            <?php
+            if ($this->shortcode_bool($atts['show_info'], true)) {
+                $this->with_location_render_context($term, function () use ($term) {
+                    $this->render_full_location_details((int) $term->term_id);
+                });
+            }
+
+            if ($this->shortcode_bool($atts['show_filter'], false) && shortcode_exists('mulopimfwc_product_filter')) {
+                echo do_shortcode('[mulopimfwc_product_filter location="no"]');
+            }
+
+            if ($this->shortcode_bool($atts['show_products'], true)) {
+                echo $this->render_location_products_for_term($term, $atts);
+            }
+            ?>
+        </div>
+        <?php
+
+        return ob_get_clean();
+    }
+
+    /**
      * Location info shortcode - Enhanced version
      * 
      * Usage:
      * [mulopimfwc_location_info] - Show all locations in tabs
      * [mulopimfwc_location_info id="123"] - Single location
+     * [mulopimfwc_location_info id="current"] - Current archive/request location
      * [mulopimfwc_location_info id="123,456,789"] - Multiple locations in tabs
      * [mulopimfwc_location_info slug="location-1,location-2"] - Multiple by slug
+     * [mulopimfwc_location_info slug="current"] - Current archive/request location
      * [mulopimfwc_location_info layout="tabs"] - Force tab layout
      * [mulopimfwc_location_info search="yes"] - Enable search
      * [mulopimfwc_location_info compact="yes"] - Compact single location view
@@ -1279,6 +1585,7 @@ class MULOPIMFWC_Frontend_Location_Information
         $atts = shortcode_atts([
             'id' => '',
             'slug' => '',
+            'location' => '',
             'layout' => 'auto', // auto, tabs, compact, grid
             'search' => 'no',
             'compact' => 'no',
@@ -1294,7 +1601,16 @@ class MULOPIMFWC_Frontend_Location_Information
             // Multiple IDs separated by comma
             $ids = array_map('trim', explode(',', $atts['id']));
             foreach ($ids as $id) {
-                $term = get_term($id, 'mulopimfwc_store_location');
+                if (in_array(strtolower($id), ['current', 'selected'], true)) {
+                    $term = $this->resolve_location_shortcode_term([
+                        'id' => $id,
+                        'slug' => '',
+                        'location' => $id,
+                    ], false);
+                } else {
+                    $term = get_term($id, 'mulopimfwc_store_location');
+                }
+
                 if ($term && !is_wp_error($term)) {
                     $locations[] = $term;
                 }
@@ -1303,10 +1619,26 @@ class MULOPIMFWC_Frontend_Location_Information
             // Multiple slugs separated by comma
             $slugs = array_map('trim', explode(',', $atts['slug']));
             foreach ($slugs as $slug) {
-                $term = get_term_by('slug', $slug, 'mulopimfwc_store_location');
+                if (in_array(strtolower($slug), ['current', 'selected'], true)) {
+                    $term = $this->resolve_location_shortcode_term([
+                        'id' => '',
+                        'slug' => $slug,
+                        'location' => $slug,
+                    ], false);
+                } elseif (function_exists('mulopimfwc_resolve_location_term_from_path')) {
+                    $term = mulopimfwc_resolve_location_term_from_path($slug);
+                } else {
+                    $term = get_term_by('slug', $slug, 'mulopimfwc_store_location');
+                }
+
                 if ($term && !is_wp_error($term)) {
                     $locations[] = $term;
                 }
+            }
+        } elseif (!empty($atts['location'])) {
+            $term = $this->resolve_location_shortcode_term($atts, false);
+            if ($term && !is_wp_error($term)) {
+                $locations[] = $term;
             }
         } else {
 

@@ -51,7 +51,7 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
         }
 
         private function is_supported_seo_context() {
-            return is_singular('product') || is_tax('mulopimfwc_store_location');
+            return is_singular('product') || (bool) $this->get_current_location_archive_term();
         }
 
         private function is_enabled($option_key) {
@@ -61,6 +61,17 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
         }
 
         private function get_current_location_archive_term() {
+            if (function_exists('mulopimfwc_get_current_location_archive_term')) {
+                $term = mulopimfwc_get_current_location_archive_term([
+                    'allow_native' => true,
+                    'allow_request' => true,
+                    'allow_cookie' => false,
+                ]);
+                if ($term && !is_wp_error($term) && isset($term->taxonomy) && $term->taxonomy === 'mulopimfwc_store_location') {
+                    return $term;
+                }
+            }
+
             if (!is_tax('mulopimfwc_store_location')) return null;
             $term = get_queried_object();
             if (!$term || is_wp_error($term)) return null;
@@ -240,7 +251,6 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
          */
         public function seo_output_location_archive_structured_data() {
             if (!$this->is_enabled('location_structured_data') || !mulopimfwc_premium_feature()) return;
-            if (!is_tax('mulopimfwc_store_location')) return;
 
             $term = $this->get_current_location_archive_term();
             if (!$term) return;
@@ -297,7 +307,7 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
             $schema = [
                 '@context'   => 'https://schema.org',
                 '@type'      => 'CollectionPage',
-                'name'       => single_term_title('', false),
+                'name'       => is_tax('mulopimfwc_store_location') ? single_term_title('', false) : $term->name,
                 'mainEntity' => $place,
             ];
 

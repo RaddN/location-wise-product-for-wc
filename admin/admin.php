@@ -148,13 +148,33 @@ class MULOPIMFWC_Admin
         ], $atts, 'mulopimfwc_location_status');
 
         $taxonomy = sanitize_key($atts['taxonomy']);
-        $term_id  = absint($atts['id']);
-        $slug     = sanitize_title($atts['slug']);
+        $raw_id   = trim((string) $atts['id']);
+        $raw_slug = trim((string) $atts['slug']);
+        $term_id  = absint($raw_id);
+        $slug     = sanitize_title($raw_slug);
 
         $term = null;
 
+        if (
+            $taxonomy === 'mulopimfwc_store_location' &&
+            (in_array(strtolower($raw_id), ['current', 'selected'], true) || in_array(strtolower($raw_slug), ['current', 'selected'], true)) &&
+            function_exists('mulopimfwc_resolve_location_term')
+        ) {
+            $selected_mode = in_array(strtolower($raw_id), ['selected'], true) || in_array(strtolower($raw_slug), ['selected'], true);
+            $term = mulopimfwc_resolve_location_term([
+                'allow_native' => !$selected_mode,
+                'allow_request' => !$selected_mode,
+                'allow_cookie' => $selected_mode,
+            ]);
+
+            if (!$term || is_wp_error($term)) {
+                return '';
+            }
+
+            $term_id = (int) $term->term_id;
+        }
         // 1) Prefer ID if provided
-        if ($term_id > 0) {
+        elseif ($term_id > 0) {
             $term = get_term($term_id, $taxonomy);
             if (!$term || is_wp_error($term)) {
                 return '';

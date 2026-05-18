@@ -480,7 +480,7 @@ class mulopimfwc_settings
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('template_selection', $current_template);
                     }
-                    echo '<select id="template_selection" name="mulopimfwc_display_options[template_selection]"' . disabled( $is_manual_mode, true, false ) . '>';
+                    echo '<select id="template_selection" name="mulopimfwc_display_options[template_selection]"' . disabled($is_manual_mode, true, false) . '>';
                     $template_options = [
                         "default" => __("Default", 'multi-location-product-and-inventory-management-pro'),
                         "modern" => __("Modern", 'multi-location-product-and-inventory-management-pro'),
@@ -491,7 +491,7 @@ class mulopimfwc_settings
                         "grid" => __("Grid", 'multi-location-product-and-inventory-management-pro'),
                     ];
                     foreach ($template_options as $value => $label) {
-                        echo "<option value='" . esc_attr($value) . "' " . selected( $current_template, $value, false ) . ">" . esc_html($label) . "</option>";
+                        echo "<option value='" . esc_attr($value) . "' " . selected($current_template, $value, false) . ">" . esc_html($label) . "</option>";
                     }
                     echo '</select>';
                     $description = $this->append_manual_disabled_note(__("Select the template for location selector.", 'multi-location-product-and-inventory-management-pro'));
@@ -522,7 +522,7 @@ class mulopimfwc_settings
                 $is_default = ($current_template === 'default');
                 $style_attr = $is_default ? '' : 'display: none;';
                 if (mulopimfwc_premium_feature()) {
-                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
+                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . ($style_attr ? ' style="' . esc_attr($style_attr) . '"' : '') . '>';
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('use_select2', $options['use_select2'] ?? 'off');
                     }
@@ -530,7 +530,7 @@ class mulopimfwc_settings
                     $this->render_advance_checkbox("use_select2", $message, $is_manual_mode);
                     echo '</div>';
                 } else {
-                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
+                    echo '<div data-field="use_select2" class="mulopimfwc-default-template-only"' . ($style_attr ? ' style="' . esc_attr($style_attr) . '"' : '') . '>';
                     $this->render_advance_checkbox('pro', __("Use select2 instead of normal select", 'multi-location-product-and-inventory-management-pro'), true, false);
                     echo '</div>';
                 }
@@ -570,13 +570,13 @@ class mulopimfwc_settings
                 $is_default = ($current_template === 'default');
                 $style_attr = $is_default ? '' : 'display: none;';
                 $value = isset($options['herichical']) ? $options['herichical'] : 'off';
-                echo '<div data-field="herichical" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
+                echo '<div data-field="herichical" class="mulopimfwc-default-template-only"' . ($style_attr ? ' style="' . esc_attr($style_attr) . '"' : '') . '>';
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('herichical', $value);
                     }
             ?>
-                <select id="herichical" name="mulopimfwc_display_options[herichical]" <?php disabled( $is_manual_mode ); ?>>
+                <select id="herichical" name="mulopimfwc_display_options[herichical]" <?php disabled($is_manual_mode); ?>>
                     <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="seperately" <?php selected($value, 'seperately'); ?>><?php echo esc_html__('Seperately', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -608,7 +608,7 @@ class mulopimfwc_settings
                 $current_template = isset($options['template_selection']) ? $options['template_selection'] : 'default';
                 $is_default = ($current_template === 'default');
                 $style_attr = $is_default ? '' : 'display: none;';
-                echo '<div data-field="show_count" class="mulopimfwc-default-template-only"' . ( $style_attr ? ' style="' . esc_attr( $style_attr ) . '"' : '' ) . '>';
+                echo '<div data-field="show_count" class="mulopimfwc-default-template-only"' . ($style_attr ? ' style="' . esc_attr($style_attr) . '"' : '') . '>';
                 if (mulopimfwc_premium_feature()) {
                     if ($is_manual_mode) {
                         $this->render_manual_hidden_input('show_count', $options['show_count'] ?? 'off');
@@ -657,7 +657,7 @@ class mulopimfwc_settings
                         $this->render_manual_hidden_input('mulopimfwc_popup_custom_css', trim($mulopimfwc_popup_custom_css ?? ''));
                     }
             ?>
-                <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}" <?php disabled( $is_manual_mode ); ?>><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
+                <textarea style="height: 10rem;" name="mulopimfwc_display_options[mulopimfwc_popup_custom_css]" class="regular-text" placeholder="div#lwp-store-selector-modal{}" <?php disabled($is_manual_mode); ?>><?php echo esc_attr(trim($mulopimfwc_popup_custom_css ?? '')); ?>
             </textarea>
                 <?php if ($is_manual_mode) : ?>
                     <p class="description"><?php echo esc_html__('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro'); ?></p>
@@ -976,7 +976,7 @@ class mulopimfwc_settings
                                                             step="0.01"
                                                             placeholder="0.00"
                                                             style="width: 100%; padding: 6px 8px 6px 24px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;"
-                                                            title="<?php echo esc_attr(sprintf(/* translators: 1: source location name, 2: destination location name */ __('Cost from %1$s to %2$s', 'multi-location-product-and-inventory-management-pro'), $from_location->name, $to_location->name)); ?>">
+                                                            title="<?php echo esc_attr(sprintf(/* translators: 1: source location name, 2: destination location name */__('Cost from %1$s to %2$s', 'multi-location-product-and-inventory-management-pro'), $from_location->name, $to_location->name)); ?>">
                                                     </div>
                                                 <?php endif; ?>
                                             </td>
@@ -1981,28 +1981,28 @@ class mulopimfwc_settings
                 if (mulopimfwc_premium_feature()) {
             ?>
                 <select class="lwp-location-url-control lwp-location-url-format-control" name="mulopimfwc_display_options[url_location_format]">
-                    <option value="query_param" data-label-template="<?php echo esc_attr__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'query_param'); ?>><?php printf( /* translators: %s: URL parameter or path prefix name */ esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) );                                                                                            ?>
+                    <option value="query_param" data-label-template="<?php echo esc_attr__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'query_param'); ?>><?php printf( /* translators: %s: URL parameter or path prefix name */esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix));                                                                                            ?>
                     </option>
-                    <option value="path_prefix" data-label-template="<?php echo esc_attr__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'path_prefix'); ?>><?php printf( /* translators: %s: URL path prefix */ esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix) ); ?></option>
+                    <option value="path_prefix" data-label-template="<?php echo esc_attr__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'path_prefix'); ?>><?php printf( /* translators: %s: URL path prefix */esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'), esc_html($location_url_prefix)); ?></option>
                 </select>
             <?php } else { ?>
                 <label class="mulopimfwc_pro_only">
                     <select disabled class="lwp-location-url-control lwp-location-url-format-control" name="_pro[url_location_format]">
                         <option value="query_param" data-label-template="<?php echo esc_attr__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'query_param'); ?>><?php
-                                                                                                printf(
-                                                                                                    /* translators: %s: URL parameter name */
-                                                                                                    esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'),
-                                                                                                    esc_html($location_url_prefix)
-                                                                                                );
-                                                                                                ?>
+                                                                                                                                                                                                                                            printf(
+                                                                                                                                                                                                                                                /* translators: %s: URL parameter name */
+                                                                                                                                                                                                                                                esc_html__('Query Parameter (?%s=location-name)', 'multi-location-product-and-inventory-management-pro'),
+                                                                                                                                                                                                                                                esc_html($location_url_prefix)
+                                                                                                                                                                                                                                            );
+                                                                                                                                                                                                                                            ?>
                         </option>
                         <option value="path_prefix" data-label-template="<?php echo esc_attr__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'); ?>" <?php selected($value, 'path_prefix'); ?>><?php
-                                                                                                printf(
-                                                                                                    /* translators: %s: URL path prefix */
-                                                                                                    esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'),
-                                                                                                    esc_html($location_url_prefix)
-                                                                                                );
-                                                                                                ?>
+                                                                                                                                                                                                                                        printf(
+                                                                                                                                                                                                                                            /* translators: %s: URL path prefix */
+                                                                                                                                                                                                                                            esc_html__('Path Prefix (/%s/location-name)', 'multi-location-product-and-inventory-management-pro'),
+                                                                                                                                                                                                                                            esc_html($location_url_prefix)
+                                                                                                                                                                                                                                        );
+                                                                                                                                                                                                                                        ?>
                         </option>
                     </select>
                 </label>
@@ -2055,8 +2055,10 @@ class mulopimfwc_settings
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
   <path fill="#2563eb" fill-rule="evenodd" d="M3.055 13H1v-2h2.055A9.004 9.004 0 0 1 11 3.055V1h2v2.055A9.004 9.004 0 0 1 20.945 11H23v2h-2.055A9.004 9.004 0 0 1 13 20.945V23h-2v-2.055A9.004 9.004 0 0 1 3.055 13M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14m0 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8m0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
-</svg> %s', __('Location Selection Display', 'multi-location-product-and-inventory-management-pro'),
-),            function () {
+</svg> %s',
+                __('Location Selection Display', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure how the location selector appears to customers.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-location-selection-settings'
@@ -2094,7 +2096,7 @@ class mulopimfwc_settings
                     $this->render_manual_hidden_input('location_display_position', $value);
                 }
         ?>
-            <select name="mulopimfwc_display_options[location_display_position]" <?php disabled( $is_manual_mode ); ?>>
+            <select name="mulopimfwc_display_options[location_display_position]" <?php disabled($is_manual_mode); ?>>
                 <option value="after_title" <?php selected($value, 'after_title'); ?>><?php echo esc_html_e('After Product Title', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <option value="after_price" <?php selected($value, 'after_price'); ?>><?php echo esc_html_e('After Product Price', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <option value="before_add_to_cart" <?php selected($value, 'before_add_to_cart'); ?>><?php echo esc_html_e('Before Add to Cart Button', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -2125,7 +2127,7 @@ class mulopimfwc_settings
                 $label_class = $is_manual_mode ? ' mulopimfwc-setting-disabled' : '';
         ?>
             <label class="<?php echo esc_attr(mulopimfwc_get_pro_class(false) . $label_class); ?>">
-                <select <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', ' disabled ')); ?> name="mulopimfwc_display_options[location_selector_layout]" <?php disabled( $is_manual_mode ); ?>>
+                <select <?php echo esc_attr(mulopimfwc_get_pro_class(false, '', ' disabled ')); ?> name="mulopimfwc_display_options[location_selector_layout]" <?php disabled($is_manual_mode); ?>>
                     <option value="list" <?php selected($value, 'list'); ?>><?php echo esc_html_e('List View', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="buttons" <?php selected($value, 'buttons'); ?>><?php echo esc_html_e('Button Style', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="select" <?php selected($value, 'select'); ?>><?php echo esc_html_e('Select Dropdown', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -2158,15 +2160,15 @@ class mulopimfwc_settings
         // Add Product Filter section
         add_settings_section(
             'mulopimfwc_product_filter_section',
-sprintf(
-        '<svg xmlns="http://www.w3.org/2000/svg" 
+            sprintf(
+                '<svg xmlns="http://www.w3.org/2000/svg" 
      viewBox="0 0 24 24" 
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#e0f2fe;padding:10px;border-radius:6px">
   <path fill="#0284c7" d="M3 4h18l-7 8v6l-4 2v-8z"/>
 </svg> %s',
-        __('Product Filter', 'multi-location-product-and-inventory-management-pro')
-    ),
+                __('Product Filter', 'multi-location-product-and-inventory-management-pro')
+            ),
             function () {
                 echo '<p>' . esc_html__('Control the location-based product filter display on shop and archive pages.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
@@ -2237,14 +2239,14 @@ sprintf(
         add_settings_section(
             'mulopimfwc_default_location_section',
             sprintf(
-        '<svg viewBox="0 0 24 24" 
+                '<svg viewBox="0 0 24 24" 
             xmlns="http://www.w3.org/2000/svg"
             width="20" height="20" 
             style="margin-right:6px;vertical-align:middle;background-color:#fef3c7;padding:10px;border-radius:6px">
             <path fill="#f59e0b" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
         </svg> %s',
-        __('Default Location/Warehouse', 'multi-location-product-and-inventory-management-pro')
-    ),
+                __('Default Location/Warehouse', 'multi-location-product-and-inventory-management-pro')
+            ),
             function () {
                 echo '<p>' . esc_html__('Set a default location/warehouse that will be used when popup is not enabled and no location is selected.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
@@ -2277,12 +2279,12 @@ sprintf(
                     $locations = [];
                 }
         ?>
-            <select name="mulopimfwc_display_options[default_location]" id="default_location_select" <?php disabled( $is_manual_mode ); ?>>
+            <select name="mulopimfwc_display_options[default_location]" id="default_location_select" <?php disabled($is_manual_mode); ?>>
                 <option value=""><?php echo esc_html__('None', 'multi-location-product-and-inventory-management-pro'); ?></option>
                 <?php
                 if (!empty($locations)) {
                     foreach ($locations as $location) {
-                        echo '<option value="' . esc_attr($location->slug) . '" ' . selected( $default_location, $location->slug, false ) . '>' . esc_html($location->name) . '</option>';
+                        echo '<option value="' . esc_attr($location->slug) . '" ' . selected($default_location, $location->slug, false) . '>' . esc_html($location->name) . '</option>';
                     }
                 }
                 ?>
@@ -2310,8 +2312,8 @@ sprintf(
         // Add "Store Locator Integration" section
         add_settings_section(
             'mulopimfwc_store_locator_section',
-sprintf(
-        '<svg viewBox="0 0 48 48" 
+            sprintf(
+                '<svg viewBox="0 0 48 48" 
      xmlns="http://www.w3.org/2000/svg"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#dcfce7;padding:10px;border-radius:6px">
@@ -2322,8 +2324,8 @@ sprintf(
     </g>
   </g>
 </svg> %s',
-        __('Store Locator', 'multi-location-product-and-inventory-management-pro')
-    ),
+                __('Store Locator', 'multi-location-product-and-inventory-management-pro')
+            ),
             function () {
                 echo '<p>' . esc_html__('Configure store locator functionality and integration.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
@@ -2525,8 +2527,9 @@ sprintf(
          style="margin-right:6px;vertical-align:middle;background-color:#fef3c7;padding:10px;border-radius:6px">
       <path fill="#d97706" d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/>
     </svg> %s',
-    __('Store Locator Display Position', 'multi-location-product-and-inventory-management-pro'),
-        ),    function () {
+                __('Store Locator Display Position', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure where to display the store locator on different pages.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-store-locator-display-settings'
@@ -2619,8 +2622,9 @@ sprintf(
   <path fill="#2563eb" d="m495.633 334.175.302-.216-207.727-208.827-.324-98.255L187.365 0l-10.699 10.721 53.452 53.323-52.072 52.18-53.409-53.366-10.742 10.656 26.963 100.412 95.602.324-.626.518L444.92 384.952l.28-.259c13.935 13.633 36.411 13.633 50.13-.237 13.914-13.827 13.936-36.196.303-50.281M482.13 371.19c-6.212 6.191-16.243 6.212-22.412 0-6.148-6.191-6.212-16.157-.065-22.369 6.234-6.169 16.264-6.169 22.477-.022 6.147 6.148 6.212 16.157 0 22.391"/>
   <g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/>
 </svg> %s',
-__('Advanced Settings', 'multi-location-product-and-inventory-management-pro'),
-    ),        function () {
+                __('Advanced Settings', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Advanced configuration options for location management.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'location-advance-settings'
@@ -2693,8 +2697,9 @@ __('Advanced Settings', 'multi-location-product-and-inventory-management-pro'),
   <path fill="#16a34a" d="M175 252.501c-8.285 0-15-6.716-15-15s6.716-15 15-15l65 .001h30V158.5H145c-8.283 0-15-6.716-15-15v-125H15c-8.283 0-15 6.716-15 15v300c0 8.284 6.717 15 15 15h240c8.285 0 15-6.716 15-15v-80.998h-30zm191.925-16.478c-.022-.225-.064-.442-.096-.664-.038-.263-.068-.526-.12-.786-.051-.254-.119-.499-.182-.747-.058-.226-.107-.453-.175-.677-.073-.242-.164-.477-.249-.713-.081-.225-.155-.452-.246-.674-.092-.221-.199-.432-.301-.646-.107-.23-.209-.46-.329-.684-.11-.205-.235-.4-.355-.6-.132-.221-.257-.443-.4-.658-.146-.219-.31-.425-.467-.635-.136-.182-.262-.368-.406-.544q-.45-.547-.948-1.049c-.016-.016-.028-.033-.045-.05l-37.499-37.501c-5.857-5.857-15.355-5.857-21.213 0s-5.858 15.355-.001 21.213l11.893 11.895H270v30h45.787l-11.893 11.893c-5.858 5.858-5.858 15.355 0 21.213a14.95 14.95 0 0 0 10.606 4.394c3.84 0 7.678-1.464 10.607-4.394l37.498-37.499q.011-.013.022-.023.512-.514.972-1.075c.146-.177.272-.364.409-.547.156-.209.318-.414.465-.632.145-.216.27-.441.402-.662.117-.198.242-.392.352-.596.121-.225.223-.458.332-.688.101-.213.207-.423.298-.643.093-.223.167-.451.248-.678.085-.234.175-.467.247-.708.068-.225.119-.454.176-.683.063-.246.132-.49.182-.741.052-.261.082-.524.12-.788.032-.221.073-.438.096-.663q.072-.729.073-1.46l.002-.02-.002-.025a15 15 0 0 0-.074-1.455"/>
   <path fill="#16a34a" d="M261.214 128.5 160 27.287V128.5h58.787z"/>
 </svg> %s',
-__('Import & Export Settings', 'multi-location-product-and-inventory-management-pro'),
-    ),        function () {
+                __('Import & Export Settings', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure options for importing and exporting location-based product data.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-import-export-settings'
@@ -2739,8 +2744,10 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
         add_settings_section(
             'mulopimfwc_api_webhooks_section',
             sprintf(
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0e7ff;padding:10px;border-radius:6px"><path fill="#6366f1" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> %s',__('API & Webhooks', 'multi-location-product-and-inventory-management-pro'),
-          ),  function () {
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0e7ff;padding:10px;border-radius:6px"><path fill="#6366f1" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> %s',
+                __('API & Webhooks', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure REST API endpoints and webhooks for syncing inventory data from external systems like WMS or POS.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-api-webhooks-settings'
@@ -2762,7 +2769,8 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
         add_settings_section(
             'mulopimfwc_admin_notifications_section',
             sprintf(
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#f0f9ff;padding:10px;border-radius:6px"><path fill="#1d4ed8" d="M12 3a5 5 0 0 0-5 5v3.586L5.293 13.293a1 1 0 0 0 1.414 1.414L9 12.414V12a3 3 0 1 1 6 0v.414l2.293 2.293a1 1 0 1 0 1.414-1.414L17 11.586V8a5 5 0 0 0-5-5zm0 17a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3z"/></svg> %s', __('Admin Notifications', 'multi-location-product-and-inventory-management-pro'),
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#f0f9ff;padding:10px;border-radius:6px"><path fill="#1d4ed8" d="M12 3a5 5 0 0 0-5 5v3.586L5.293 13.293a1 1 0 0 0 1.414 1.414L9 12.414V12a3 3 0 1 1 6 0v.414l2.293 2.293a1 1 0 1 0 1.414-1.414L17 11.586V8a5 5 0 0 0-5-5zm0 17a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3z"/></svg> %s',
+                __('Admin Notifications', 'multi-location-product-and-inventory-management-pro'),
             ),
             function () {
                 echo '<p>' . esc_html__('Keep admins and browsers in sync with live status alerts, PWA notices, and floating summaries.', 'multi-location-product-and-inventory-management-pro') . '</p>';
@@ -2974,7 +2982,7 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                         <label class="mulopimfwc-size-card <?php echo $value === $size_key ? 'selected' : ''; ?> <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?>">
                             <input <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="radio" name="mulopimfwc_display_options[notification_settings][floating_size]" value="<?php echo esc_attr($size_key); ?>" <?php checked($value, $size_key); ?>>
                             <div class="mulopimfwc-size-visual">
-                                <div class="mulopimfwc-size-preview <?php echo esc_attr( $size_key ); ?>">
+                                <div class="mulopimfwc-size-preview <?php echo esc_attr($size_key); ?>">
                                     <div class="mulopimfwc-size-icon"></div>
                                     <div class="mulopimfwc-size-lines">
                                         <div class="mulopimfwc-size-line line-1"></div>
@@ -3341,7 +3349,7 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                     <input <?php echo $disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[notification_settings][sound_enabled]" value="on" <?php checked($value, 'on'); ?>>
                     <span class="mulopimfwc_slider round"></span>
                     <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                    <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 </label>
                 <p class="description"><?php echo esc_html__('Play a sound when new notifications arrive.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             <?php
@@ -3354,8 +3362,8 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
         add_settings_section(
             'mulopimfwc_social_notifications_section',
             sprintf(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#0284c7" style="margin-right:6px;vertical-align:middle;background-color:#def4ff;padding:10px;border-radius:6px" viewBox="0 0 20 20" xml:space="preserve"><path d="M14 11.4c-.96 0-1.78.68-1.96 1.6H9.4c-.12 0-.2.1-.2.22v.18c0 .2-.02.38-.06.56-.02.12.08.24.2.24h2.82c.3.7 1.02 1.2 1.84 1.2 1.1 0 2-.9 2-2s-.9-2-2-2M8.66 9.1C8.42 9 8.2 8.86 8 8.7c-.1-.08-.24-.04-.3.06l-1.42 2.66c-.08-.02-.18-.02-.28-.02-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2c0-.58-.24-1.08-.62-1.46l1.38-2.56c.04-.1 0-.22-.1-.28M10 8.2c.2 0 .38-.02.56-.08l1.38 2.54c.06.1.18.14.28.08.22-.14.44-.26.68-.34a.19.19 0 0 0 .1-.28l-1.44-2.68c.26-.34.44-.78.44-1.24 0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2"/></svg> %s', 
-             __('Social Notifications', 'multi-location-product-and-inventory-management-pro'),
+                '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#0284c7" style="margin-right:6px;vertical-align:middle;background-color:#def4ff;padding:10px;border-radius:6px" viewBox="0 0 20 20" xml:space="preserve"><path d="M14 11.4c-.96 0-1.78.68-1.96 1.6H9.4c-.12 0-.2.1-.2.22v.18c0 .2-.02.38-.06.56-.02.12.08.24.2.24h2.82c.3.7 1.02 1.2 1.84 1.2 1.1 0 2-.9 2-2s-.9-2-2-2M8.66 9.1C8.42 9 8.2 8.86 8 8.7c-.1-.08-.24-.04-.3.06l-1.42 2.66c-.08-.02-.18-.02-.28-.02-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2c0-.58-.24-1.08-.62-1.46l1.38-2.56c.04-.1 0-.22-.1-.28M10 8.2c.2 0 .38-.02.56-.08l1.38 2.54c.06.1.18.14.28.08.22-.14.44-.26.68-.34a.19.19 0 0 0 .1-.28l-1.44-2.68c.26-.34.44-.78.44-1.24 0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2"/></svg> %s',
+                __('Social Notifications', 'multi-location-product-and-inventory-management-pro'),
             ),
             function () {
                 echo '<p>' . esc_html__('Manage social/webhook alerts per platform. Add multiple destinations and test instantly.', 'multi-location-product-and-inventory-management-pro') . '</p>';
@@ -3400,7 +3408,7 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
                             <input <?php echo $social_disabled ? 'disabled' : ''; ?> type="checkbox" name="mulopimfwc_display_options[social_notifications][enabled]" value="on" <?php checked($social['enabled'], 'on'); ?>>
                             <span class="mulopimfwc_slider round"></span>
                             <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                            <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
                         </label>
                     </div>
 
@@ -3920,8 +3928,9 @@ __('Import & Export Settings', 'multi-location-product-and-inventory-management-
      style="margin-right:6px;vertical-align:middle;background-color:#cffafe;padding:10px;border-radius:6px">
   <path fill="#0891b2" d="m324.386 198.993-68.385-68.385-68.344 68.344c-18.293 18.272-28.367 42.571-28.368 68.426.001 53.326 43.386 96.711 96.711 96.711 53.326 0 96.711-43.385 96.711-96.711 0-25.829-10.059-50.115-28.325-68.385M256 329.956c-34.504 0-62.577-28.072-62.578-62.576.001-16.73 6.519-32.455 18.364-44.283l44.216-44.216 44.248 44.248c11.818 11.823 18.327 27.536 18.327 44.249.001 34.505-28.072 62.578-62.577 62.578M102.4 34.133V0H0v102.4h34.133v17.067h34.133V102.4H102.4V68.267h17.067V34.133zM68.267 68.267H34.133V34.133h34.133zM409.6 0v34.133h-17.067v34.133H409.6V102.4h34.133v17.067h34.133V102.4H512V0zm68.267 68.267h-34.133V34.133h34.133zM307.2 34.133V0H204.8v34.133h-17.067v34.133H204.8V102.4h102.4V68.267h17.067V34.133zm-34.133 34.134h-34.133V34.133h34.133zM307.2 443.733V409.6H204.8v34.133h-17.067v34.133H204.8V512h102.4v-34.133h17.067v-34.133H307.2zm-34.133 34.134h-34.133v-34.133h34.133zM102.4 443.733V409.6H68.267v-17.067H34.133V409.6H0V512h102.4v-34.133h17.067v-34.133H102.4zm-34.133 34.134H34.133v-34.133h34.133zm68.266-443.734h34.133v34.133h-34.133zm204.8 0h34.133v34.133h-34.133zm-204.8 409.6h34.133v34.133h-34.133zm204.8 0h34.133v34.133h-34.133zM68.267 204.8v-17.067H34.133V204.8H0v102.4h34.133v17.067h34.133V307.2H102.4V204.8zm0 68.267H34.133v-34.133h34.133zm-34.134 68.266h34.133v34.133H34.133zm0-204.8h34.133v34.133H34.133zm409.6 204.8h34.133v34.133h-34.133zm34.134 68.267v-17.067h-34.133V409.6H409.6v34.133h-17.067v34.133H409.6V512H512V409.6zm0 68.267h-34.133v-34.133h34.133zm-34.134-341.334h34.133v34.133h-34.133zm34.134 68.267v-17.067h-34.133V204.8H409.6v102.4h34.133v17.067h34.133V307.2H512V204.8zm0 68.267h-34.133v-34.133h34.133z"/>
 </svg> %s',
-__('Product Allocation Settings', 'multi-location-product-and-inventory-management-pro'),
-    ),        function () {
+                __('Product Allocation Settings', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure how products are allocated to different locations.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-location-allocation-settings'
@@ -3974,16 +3983,16 @@ __('Product Allocation Settings', 'multi-location-product-and-inventory-manageme
         // Add Product Visibility section
         add_settings_section(
             'mulopimfwc_product_visibility_section',
-sprintf(
-        '<svg xmlns="http://www.w3.org/2000/svg" 
+            sprintf(
+                '<svg xmlns="http://www.w3.org/2000/svg" 
      viewBox="0 0 32 32" 
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
   <path fill="#2563eb" d="M14.5 11h13L23 4.7V1c0-.6-.4-1-1-1H10c-.6 0-1 .4-1 1v2.7zM13 13H4v14h9zm2 14h13V13H15zm-3-16L8.2 5.9 4.5 11zm3 18v3h12c.6 0 1-.4 1-1v-2zm-2 0H4v2c0 .6.4 1 1 1h8z"/>
 </svg> %s',
-        __('Product Visibility Rules', 'multi-location-product-and-inventory-management-pro')
-    ),
+                __('Product Visibility Rules', 'multi-location-product-and-inventory-management-pro')
+            ),
             function () {
                 echo '<p>' . esc_html__('Configure advanced rules for product visibility based on locations.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
@@ -4093,7 +4102,7 @@ sprintf(
      style="margin-right:6px;vertical-align:middle;background-color:#dcfce7;padding:10px;border-radius:6px">
   <path fill="#16a34a" d="M486.4 0c-14.114 0-25.6 11.486-25.6 25.6v93.867h-25.6V53.504c0-10.684-8.695-19.371-19.371-19.371H352.17c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V53.504c0-10.684-8.695-19.371-19.371-19.371h-63.659c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V53.504c0-10.684-8.695-19.371-19.371-19.371H96.171c-10.675 0-19.371 8.687-19.371 19.371v65.963H51.2V25.6C51.2 11.486 39.714 0 25.6 0S0 11.486 0 25.6V512h51.2v-51.2h409.6V512H512V25.6C512 11.486 500.514 0 486.4 0m-25.6 443.733h-25.6V377.77c0-10.684-8.695-19.371-19.371-19.371H352.17c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V377.77c0-10.684-8.695-19.371-19.371-19.371h-63.659c-10.675 0-19.371 8.687-19.371 19.371v65.963h-25.6V377.77c0-10.684-8.695-19.371-19.371-19.371H96.171c-10.675 0-19.371 8.687-19.371 19.371v65.963H51.2V298.667h409.6zm0-162.133h-25.6v-65.963c0-10.684-8.695-19.371-19.371-19.371H352.17c-10.675 0-19.371 8.687-19.371 19.371V281.6h-25.6v-65.963c0-10.684-8.695-19.371-19.371-19.371h-63.659c-10.675 0-19.371 8.687-19.371 19.371V281.6h-25.6v-65.963c0-10.684-8.695-19.371-19.371-19.371H96.171c-10.675 0-19.371 8.687-19.371 19.371V281.6H51.2V136.533h409.6z"/>
 </svg> %s',
-__('Out of Stock Product Display', 'multi-location-product-and-inventory-management-pro'),
+                __('Out of Stock Product Display', 'multi-location-product-and-inventory-management-pro'),
             ),
             function () {
                 echo '<p>' . esc_html__('Configure how products are displayed based on location availability and stock.', 'multi-location-product-and-inventory-management-pro') . '</p>';
@@ -4153,15 +4162,15 @@ __('Out of Stock Product Display', 'multi-location-product-and-inventory-managem
         add_settings_section(
             'mulopimfwc_admin_visibility_section',
             sprintf(
-'<svg xmlns="http://www.w3.org/2000/svg" 
+                '<svg xmlns="http://www.w3.org/2000/svg" 
      viewBox="0 0 52 52" 
      xml:space="preserve"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#f3e8ff;padding:10px;border-radius:6px">
   <path fill="#9333ea" d="M50 43v2.2c0 2.6-2.2 4.8-4.8 4.8H6.8C4.2 50 2 47.8 2 45.2V43c0-5.8 6.8-9.4 13.2-12.2l.6-.3c.5-.2 1-.2 1.5.1 2.6 1.7 5.5 2.6 8.6 2.6s6.1-1 8.6-2.6c.5-.3 1-.3 1.5-.1l.6.3C43.2 33.6 50 37.1 50 43M26 2c6.6 0 11.9 5.9 11.9 13.2S32.6 28.4 26 28.4s-11.9-5.9-11.9-13.2S19.4 2 26 2"/>
 </svg> %s',
-__('Admin Visibility Controls', 'multi-location-product-and-inventory-management-pro'),
-),
+                __('Admin Visibility Controls', 'multi-location-product-and-inventory-management-pro'),
+            ),
             function () {
                 echo '<p>' . esc_html__('Configure admin-specific visibility and management options.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
@@ -4195,8 +4204,8 @@ __('Admin Visibility Controls', 'multi-location-product-and-inventory-management
      style="margin-right:6px;vertical-align:middle;background-color:#cffafe;padding:10px;border-radius:6px">
   <path fill="#0891b2" d="M47 12a2 2 0 0 0-2-2H24a2 2 0 0 0 0 4h21a2 2 0 0 0 2-2M3 14h5.35a6 6 0 1 0 0-4H3a2 2 0 0 0 0 4m11-4a2 2 0 1 1-2 2 2 2 0 0 1 2-2m31 12h-7.35a6 6 0 1 0 0 4H45a2 2 0 0 0 0-4m-13 4a2 2 0 1 1 2-2 2 2 0 0 1-2 2m-10-4H3a2 2 0 0 0 0 4h19a2 2 0 0 0 0-4m23 12H28a2 2 0 0 0 0 4h17a2 2 0 0 0 0-4m-27-4a6 6 0 0 0-5.65 4H3a2 2 0 0 0 0 4h9.35A6 6 0 1 0 18 30m0 8a2 2 0 1 1 2-2 2 2 0 0 1-2 2"/>
 </svg> %s',
-__('Location Filtering Settings', 'multi-location-product-and-inventory-management-pro'),
-),
+                __('Location Filtering Settings', 'multi-location-product-and-inventory-management-pro'),
+            ),
             [$this, 'filter_settings_section_callback'],
             'lwp-product-filtering-settings'
         );
@@ -4228,8 +4237,9 @@ __('Location Filtering Settings', 'multi-location-product-and-inventory-manageme
      style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
   <path fill="#2563eb" fill-rule="evenodd" clip-rule="evenodd" d="M0 4.6A2.6 2.6 0 0 1 2.6 2h18.8A2.6 2.6 0 0 1 24 4.6v.8A2.6 2.6 0 0 1 21.4 8H21v10.6c0 1.33-1.07 2.4-2.4 2.4H5.4C4.07 21 3 19.93 3 18.6V8h-.4A2.6 2.6 0 0 1 0 5.4zM2.6 4a.6.6 0 0 0-.6.6v.8a.6.6 0 0 0 .6.6h18.8a.6.6 0 0 0 .6-.6v-.8a.6.6 0 0 0-.6-.6zM8 10a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2z" fill="#000"/>
 </svg> %s',
-__('Order Fulfillment', 'multi-location-product-and-inventory-management-pro'),
-    ),        function () {
+                __('Order Fulfillment', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure how orders are processed and fulfilled from different locations.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-order-fullfill-settings'
@@ -4332,9 +4342,9 @@ __('Order Fulfillment', 'multi-location-product-and-inventory-management-pro'),
   <path fill="#16a34a" d="m112.632 185.074 6.88-3.972a5.864 5.864 0 0 0 2.146-8.01l-13.036-22.579a5.86 5.86 0 0 0-8.009-2.146l-6.88 3.972a5.8 5.8 0 0 1-2.923.794c-3.063 0-5.872-2.449-5.872-5.872v-7.944a5.864 5.864 0 0 0-5.864-5.864H53.001a5.864 5.864 0 0 0-5.864 5.864v7.944c0 3.423-2.81 5.872-5.872 5.872a5.8 5.8 0 0 1-2.923-.794l-6.88-3.972a5.86 5.86 0 0 0-8.009 2.146l-13.036 22.579a5.864 5.864 0 0 0 2.146 8.01l6.88 3.972c3.909 2.257 3.909 7.899 0 10.156l-6.88 3.972a5.863 5.863 0 0 0-2.146 8.01l13.036 22.579a5.86 5.86 0 0 0 8.009 2.146l6.88-3.972a5.8 5.8 0 0 1 2.923-.794c3.063 0 5.872 2.449 5.872 5.872v7.944a5.864 5.864 0 0 0 5.864 5.864h26.072a5.864 5.864 0 0 0 5.864-5.864v-7.944c0-3.423 2.81-5.872 5.872-5.872.976 0 1.978.249 2.923.794l6.88 3.972a5.86 5.86 0 0 0 8.009-2.146l13.036-22.579a5.864 5.864 0 0 0-2.146-8.01l-6.88-3.972c-3.908-2.257-3.908-7.9.001-10.156m-46.594 22.474c-9.608 0-17.396-7.789-17.396-17.396s7.789-17.396 17.396-17.396 17.396 7.789 17.396 17.396-7.789 17.396-17.396 17.396m42.071-183.889A8.053 8.053 0 1 0 96.72 35.048l14.39 14.389c-52.889 2.619-95.701 44.162-100.334 96.506l1.19-2.062a19.18 19.18 0 0 1 16.57-9.564c.144 0 .287.013.431.017 9.074-37.721 41.965-66.251 81.815-68.729L96.72 79.666a8.053 8.053 0 0 0 11.388 11.389l28.004-28.004a8.055 8.055 0 0 0 0-11.388zm101.759 41.198c17.881 0 32.428-14.547 32.428-32.428C242.296 14.547 227.749 0 209.868 0S177.44 14.547 177.44 32.428s14.547 32.429 32.428 32.429m63.171 87.419v-44.58c0-12.34-7.93-23.283-19.657-27.124l-.054-.018-17.152-2.84a2.875 2.875 0 0 0-3.545 1.764l-19.462 53.399c-1.123 3.081-5.48 3.081-6.602 0l-19.462-53.399a2.875 2.875 0 0 0-2.698-1.892c-.279 0-17.999 2.964-17.999 2.964-11.823 3.94-19.723 14.9-19.723 27.294v44.432c0 6.659 5.398 12.056 12.056 12.056h102.241c6.66 0 12.057-5.398 12.057-12.056m14.331 10.657c-.673 9.215-8.233 14.858-17.45 15.526-7.062 40.425-41.207 71.64-82.979 74.237l14.061-14.061a8.053 8.053 0 1 0-11.389-11.389L161.61 255.25a8.053 8.053 0 0 0 0 11.389l28.003 28.003c1.573 1.572 3.633 2.358 5.694 2.358s4.122-.786 5.694-2.358a8.053 8.053 0 0 0 0-11.389l-14.389-14.389c56.028-2.774 100.758-49.227 100.758-105.931"/>
   <path fill="#16a34a" d="M216.936 77.105c-.747-.814-1.84-1.224-2.946-1.224h-8.245c-1.105 0-2.198.41-2.946 1.224a3.825 3.825 0 0 0-.504 4.505l4.407 6.644-2.063 17.405 4.063 10.808c.396 1.087 1.933 1.087 2.33 0l4.063-10.808-2.063-17.405 4.407-6.644a3.82 3.82 0 0 0-.503-4.505"/>
 </svg> %s',
-__('Cross-Location Order Management', 'multi-location-product-and-inventory-management-pro'),
-    ),       
-     function () {
+                __('Cross-Location Order Management', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure how orders containing products from multiple locations are handled.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'location-cross-order-settings'
@@ -4417,15 +4427,16 @@ __('Cross-Location Order Management', 'multi-location-product-and-inventory-mana
         // Cart Settings
         add_settings_section(
             'mulopimfwc_cart_settings_section',
-           sprintf(
-            '<svg xmlns="http://www.w3.org/2000/svg" 
+            sprintf(
+                '<svg xmlns="http://www.w3.org/2000/svg" 
      viewBox="0 0 24 24" 
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#ffedd5;padding:10px;border-radius:6px">
   <path fill="#ea580c" d="M7 4H3V2h5.2l1.3 4H21a1 1 0 0 1 .96 1.274l-2.5 8.5A1 1 0 0 1 18.5 17H8a1 1 0 0 1-.96-.726L4 4zm3 15a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm8 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
 </svg> %s',
-__('Cart Settings', 'multi-location-product-and-inventory-management-pro'),
-    ),        function () {
+                __('Cart Settings', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure cart behavior for location-based shopping.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-cart-settings'
@@ -4459,12 +4470,13 @@ __('Cart Settings', 'multi-location-product-and-inventory-management-pro'),
         // Checkout Settings
         add_settings_section(
             'mulopimfwc_checkout_settings_section',
-           sprintf(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0f2fe;padding:10px;border-radius:6px">
+            sprintf(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right:6px;vertical-align:middle;background-color:#e0f2fe;padding:10px;border-radius:6px">
   <path fill="#0284c7" d="M7 4h10a2 2 0 0 1 2 2v3h-2V6H7v12h10v-3h2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 6h7v2h-7v-2zm0 4h5v2h-5v-2z"/>
 </svg> %s',
-__('Checkout Settings', 'multi-location-product-and-inventory-management-pro'),
-    ),        function () {
+                __('Checkout Settings', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure checkout address behavior for location-based shopping.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-checkout-settings'
@@ -4569,15 +4581,15 @@ __('Checkout Settings', 'multi-location-product-and-inventory-management-pro'),
         // Add User Experience Section
         add_settings_section(
             'mulopimfwc_customer_experience_section',
-sprintf(
-        '<svg viewBox="-0.5 0 33 33" 
+            sprintf(
+                '<svg viewBox="-0.5 0 33 33" 
      xmlns="http://www.w3.org/2000/svg"
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#dbeafe;padding:10px;border-radius:6px">
   <path fill="#2563eb" d="M16.5 0a9.5 9.5 0 0 1 4.581 17.825C27.427 19.947 32 25.94 32 33H0c0-7.3 4.888-13.458 11.57-15.379A9.5 9.5 0 0 1 16.5 0" fill="#1C1C1F"/>
 </svg> %s',
-        __('User Experience Settings', 'multi-location-product-and-inventory-management-pro')
-    ),
+                __('User Experience Settings', 'multi-location-product-and-inventory-management-pro')
+            ),
             function () {
                 echo '<p>' . esc_html__('Configure how customers interact with location-based features.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
@@ -4636,7 +4648,7 @@ sprintf(
                 }
 
             ?>
-                <select name="mulopimfwc_display_options[location_switching_behavior]" <?php disabled( $disabled ); ?>>
+                <select name="mulopimfwc_display_options[location_switching_behavior]" <?php disabled($disabled); ?>>
                     <option value="preserve_cart" <?php selected($value, 'preserve_cart'); ?>><?php echo esc_html_e('Preserve Cart (Keep all products regardless of availability)', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="update_cart" <?php selected($value, 'update_cart'); ?>><?php echo esc_html_e('Update Cart (Remove unavailable products)', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="prompt_user" <?php selected($value, 'prompt_user'); ?>><?php echo esc_html_e('Prompt User (Ask before updating cart)', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -4732,8 +4744,9 @@ sprintf(
      style="margin-right:6px;vertical-align:middle;background-color:#ffedd5;padding:10px;border-radius:6px">
   <path fill="#ea580c" d="M128.896 736H96a32 32 0 0 1-32-32V224a32 32 0 0 1 32-32h576a32 32 0 0 1 32 32v96h164.544a32 32 0 0 1 31.616 27.136l54.144 352A32 32 0 0 1 922.688 736h-91.52a144 144 0 1 1-286.272 0H415.104a144 144 0 1 1-286.272 0zm23.36-64a143.872 143.872 0 0 1 239.488 0H568.32c17.088-25.6 42.24-45.376 71.744-55.808V256H128v416zm655.488 0h77.632l-19.648-128H704v64.896A144 144 0 0 1 807.744 672m48.128-192-14.72-96H704v96zM688 832a80 80 0 1 0 0-160 80 80 0 0 0 0 160m-416 0a80 80 0 1 0 0-160 80 80 0 0 0 0 160"/>
 </svg> %s',
-__('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-management-pro'),
-    ),        function () {
+                __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-management-pro'),
+            ),
+            function () {
                 echo '<p>' . esc_html__('Configure advanced settings for in-store pickup functionality.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
             'lwp-location-pickup-settings'
@@ -4816,8 +4829,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
      width="20" height="20" 
      style="margin-right:6px;vertical-align:middle;background-color:#dcfce7;padding:10px;border-radius:6px">
   <path fill="#16a34a" fill-rule="evenodd" clip-rule="evenodd" d="M4 3a1 1 0 0 0-2 0v17.2A1.8 1.8 0 0 0 3.8 22H21a1 1 0 1 0 0-2H4zm17.707 4.707a1 1 0 0 0-1.414-1.414L14 12.586l-3.293-3.293a1 1 0 0 0-1.414 0l-4 4a1 1 0 1 0 1.414 1.414L10 11.414l3.293 3.293a1 1 0 0 0 1.414 0z" fill="#000"/>
-</svg> %s',__('Location-based Customer Insights', 'multi-location-product-and-inventory-management-pro'),
-),
+</svg> %s',
+                __('Location-based Customer Insights', 'multi-location-product-and-inventory-management-pro'),
+            ),
             function () {
                 echo '<p>' . esc_html__('Configure customer analytics and insights based on location data.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             },
@@ -4840,7 +4854,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 }
                 if (mulopimfwc_premium_feature()) {
                 ?>
-                    <select name="mulopimfwc_display_options[enable_customer_location_tracking]" <?php disabled( $is_manual_mode ); ?>>
+                    <select name="mulopimfwc_display_options[enable_customer_location_tracking]" <?php disabled($is_manual_mode); ?>>
                         <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                         <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     </select>
@@ -4874,7 +4888,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                     $this->render_manual_hidden_input('customer_location_history', $value);
                 }
             ?>
-                <select name="mulopimfwc_display_options[customer_location_history]" <?php disabled( $is_manual_mode ); ?>>
+                <select name="mulopimfwc_display_options[customer_location_history]" <?php disabled($is_manual_mode); ?>>
                     <option value="latest" <?php selected($value, 'latest'); ?>><?php echo esc_html_e('Store Latest Only', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="all" <?php selected($value, 'all'); ?>><?php echo esc_html_e('Store Full History', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     <option value="none" <?php selected($value, 'none'); ?>><?php echo esc_html_e('Do Not Store', 'multi-location-product-and-inventory-management-pro'); ?></option>
@@ -4902,7 +4916,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 }
                 if (mulopimfwc_premium_feature()) {
                 ?>
-                    <select name="mulopimfwc_display_options[location_based_recommendations]" <?php disabled( $is_manual_mode ); ?>>
+                    <select name="mulopimfwc_display_options[location_based_recommendations]" <?php disabled($is_manual_mode); ?>>
                         <option value="on" <?php selected($value, 'on'); ?>><?php echo esc_html_e('On', 'multi-location-product-and-inventory-management-pro'); ?></option>
                         <option value="off" <?php selected($value, 'off'); ?>><?php echo esc_html_e('Off', 'multi-location-product-and-inventory-management-pro'); ?></option>
                     </select>
@@ -6299,7 +6313,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                                 <line x1="12" y1="16" x2="12" y2="12"></line>
                                                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
                                             </svg>
-                                        <?php echo esc_html_e('Available Parameters', 'multi-location-product-and-inventory-management-pro'); ?>
+                                            <?php echo esc_html_e('Available Parameters', 'multi-location-product-and-inventory-management-pro'); ?>
                                         </h4>
                                         <div class="params-grid">
                                             <div class="param-item">
@@ -6365,8 +6379,8 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                             <div class="param-item">
                                                 <div class="param-content">
                                                     <div class="param-name">enable_user_locations
-                                                        <?php if ( ! mulopimfwc_premium_feature() ) : ?>
-                                                            <span style="background: #ff5a36;color: #fff;padding: 3px 6px;border-radius: 4px;"><?php echo esc_html__( 'Paid', 'multi-location-product-and-inventory-management-pro' ); ?></span>
+                                                        <?php if (! mulopimfwc_premium_feature()) : ?>
+                                                            <span style="background: #ff5a36;color: #fff;padding: 3px 6px;border-radius: 4px;"><?php echo esc_html__('Paid', 'multi-location-product-and-inventory-management-pro'); ?></span>
                                                         <?php endif; ?>
                                                     </div>
                                                     <div class="param-value">on / off <?php echo esc_html_e('- User locations', 'multi-location-product-and-inventory-management-pro'); ?></div>
@@ -6415,6 +6429,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
                         <script>
                             var copyCopiedLabel = <?php echo wp_json_encode(__('Copied!', 'multi-location-product-and-inventory-management-pro')); ?>;
+
                             function copyToClipboard(event, shortcode) {
                                 const shortcodeText = shortcode;
                                 const button = event.currentTarget;
@@ -6582,52 +6597,210 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         ],
                         [
                             'number' => 9,
-                            'title' => __('Location Information Display & Maps', 'multi-location-product-and-inventory-management-pro'),
+                            'title' => __('Location Information, Archives & Maps', 'multi-location-product-and-inventory-management-pro'),
+                            'description' => __('Display location details, native archive context, or custom location archive pages. Use location="current" when the URL supplies the location; use id or slug for fixed page-builder templates.', 'multi-location-product-and-inventory-management-pro'),
                             'url' => 'https://www.youtube.com/embed/VIDEO_ID_8',
                             'duration' => '7:45',
                             'difficulty' => 'advanced',
-                            'shortcode' => '[mulopimfwc_location_info layout="tabs" search="yes"]',
+                            'shortcode' => '[mulopimfwc_location_archive location="current"]',
+                            'topics' => ['Location Archives', 'Custom Templates', 'Current Location Context', 'Shortcodes'],
+                        ],
+                        [
+                            'title' => __('Full Custom Location Archive', 'multi-location-product-and-inventory-management-pro'),
+                            'description' => __('Use this on Gutenberg, Elementor, page-builder, or custom pages to show location details and products together.', 'multi-location-product-and-inventory-management-pro'),
+                            'shortcode' => '[mulopimfwc_location_archive location="current" show_info="yes" show_products="yes" columns="4" per_page="12" paginate="yes"]',
                             'parameters' => [
                                 [
                                     'key' => 'id',
-                                    'desc' => __('Specific location ID(s)', 'multi-location-product-and-inventory-management-pro'),
-                                    'value' => 'id="123" or id="123,456,789"'
+                                    'desc' => __('Fixed location term ID. Use id="current" to resolve the native archive or URL request location.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'id="123" or id="current"'
                                 ],
                                 [
                                     'key' => 'slug',
-                                    'desc' => __('Location slug(s)', 'multi-location-product-and-inventory-management-pro'),
-                                    'value' => 'slug="downtown,uptown"'
+                                    'desc' => __('Fixed location slug. Hierarchical paths are supported for child locations.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'slug="new-york" or slug="usa/new-york"'
+                                ],
+                                [
+                                    'key' => 'location',
+                                    'desc' => __('Location source. Current uses archive/request context; selected intentionally uses the customer selected-location cookie.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'current | selected | 123 | new-york'
+                                ],
+                                [
+                                    'key' => 'show_info',
+                                    'desc' => __('Show location details above the product grid.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'yes | no'
+                                ],
+                                [
+                                    'key' => 'show_products',
+                                    'desc' => __('Show the location product grid.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'yes | no'
+                                ],
+                                [
+                                    'key' => 'show_filter',
+                                    'desc' => __('Show the optional stock filter area when the filter shortcode is available.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'yes | no'
+                                ],
+                                [
+                                    'key' => 'columns',
+                                    'desc' => __('Product grid columns.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'columns="4"'
+                                ],
+                                [
+                                    'key' => 'per_page',
+                                    'desc' => __('Products per page.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'per_page="12"'
+                                ],
+                                [
+                                    'key' => 'paginate',
+                                    'desc' => __('Show pagination for the custom product loop.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'yes | no'
+                                ],
+                                [
+                                    'key' => 'orderby',
+                                    'desc' => __('Product sorting field.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'menu_order | date | title | rand | id'
+                                ],
+                                [
+                                    'key' => 'order',
+                                    'desc' => __('Product sorting direction.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'ASC | DESC'
+                                ],
+                                [
+                                    'key' => 'class',
+                                    'desc' => __('Optional wrapper CSS class.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'class="my-location-archive"'
+                                ],
+                            ],
+                        ],
+                        [
+                            'title' => __('Location Products Only', 'multi-location-product-and-inventory-management-pro'),
+                            'description' => __('Use this when the page already has its own heading/content and only needs the location-aware product grid.', 'multi-location-product-and-inventory-management-pro'),
+                            'shortcode' => '[mulopimfwc_location_products location="current" columns="4" per_page="12" paginate="yes"]',
+                            'parameters' => [
+                                [
+                                    'key' => 'id',
+                                    'desc' => __('Fixed location term ID or current archive/request location.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'id="123" or id="current"'
+                                ],
+                                [
+                                    'key' => 'slug',
+                                    'desc' => __('Fixed location slug or hierarchical slug path.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'slug="new-york"'
+                                ],
+                                [
+                                    'key' => 'location',
+                                    'desc' => __('Location source for the product query.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'current | selected | 123 | new-york'
+                                ],
+                                [
+                                    'key' => 'columns',
+                                    'desc' => __('Product grid columns.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'columns="4"'
+                                ],
+                                [
+                                    'key' => 'per_page',
+                                    'desc' => __('Products per page.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'per_page="12"'
+                                ],
+                                [
+                                    'key' => 'paginate',
+                                    'desc' => __('Show product pagination.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'yes | no'
+                                ],
+                                [
+                                    'key' => 'orderby',
+                                    'desc' => __('Product sorting field.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'menu_order | date | title | rand | id'
+                                ],
+                                [
+                                    'key' => 'order',
+                                    'desc' => __('Product sorting direction.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'ASC | DESC'
+                                ],
+                                [
+                                    'key' => 'class',
+                                    'desc' => __('Optional wrapper CSS class.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'class="my-product-grid"'
+                                ],
+                            ],
+                        ],
+                        [
+                            'title' => __('Location Details Only', 'multi-location-product-and-inventory-management-pro'),
+                            'description' => __('Use this when you need only the location information panel without a product grid.', 'multi-location-product-and-inventory-management-pro'),
+                            'shortcode' => '[mulopimfwc_location_info id="current"]',
+                            'parameters' => [
+                                [
+                                    'key' => 'id',
+                                    'desc' => __('Location ID, comma-separated IDs, current archive/request location, or selected-location cookie.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'id="123" | id="123,456" | id="current" | id="selected"'
+                                ],
+                                [
+                                    'key' => 'slug',
+                                    'desc' => __('Location slug, comma-separated slugs, current archive/request location, or selected-location cookie.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'slug="new-york" | slug="current" | slug="selected"'
+                                ],
+                                [
+                                    'key' => 'location',
+                                    'desc' => __('Single location source when id and slug are not provided.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'current | selected | 123 | new-york'
                                 ],
                                 [
                                     'key' => 'layout',
-                                    'desc' => __('Display layout style', 'multi-location-product-and-inventory-management-pro'),
+                                    'desc' => __('Display layout for one or many locations.', 'multi-location-product-and-inventory-management-pro'),
                                     'value' => 'auto | tabs | compact | grid'
                                 ],
                                 [
                                     'key' => 'search',
-                                    'desc' => __('Enable location search', 'multi-location-product-and-inventory-management-pro'),
+                                    'desc' => __('Show location search in tabbed/grid output.', 'multi-location-product-and-inventory-management-pro'),
                                     'value' => 'yes | no'
                                 ],
                                 [
                                     'key' => 'compact',
-                                    'desc' => __('Compact view for single location', 'multi-location-product-and-inventory-management-pro'),
+                                    'desc' => __('Force compact single-location output.', 'multi-location-product-and-inventory-management-pro'),
                                     'value' => 'yes | no'
                                 ],
                                 [
                                     'key' => 'limit',
-                                    'desc' => __('Limit number of locations', 'multi-location-product-and-inventory-management-pro'),
+                                    'desc' => __('Limit the number of locations when showing all locations.', 'multi-location-product-and-inventory-management-pro'),
                                     'value' => 'limit="5"'
                                 ],
                                 [
                                     'key' => 'orderby',
-                                    'desc' => __('Sort locations by', 'multi-location-product-and-inventory-management-pro'),
+                                    'desc' => __('Sort locations when showing all locations.', 'multi-location-product-and-inventory-management-pro'),
                                     'value' => 'name | id | count'
                                 ],
                                 [
                                     'key' => 'order',
-                                    'desc' => __('Sort order', 'multi-location-product-and-inventory-management-pro'),
+                                    'desc' => __('Location sorting direction.', 'multi-location-product-and-inventory-management-pro'),
                                     'value' => 'ASC | DESC'
-                                ]
+                                ],
+                            ],
+                        ],
+                        [
+                            'title' => __('Location Status Badge', 'multi-location-product-and-inventory-management-pro'),
+                            'description' => __('Use this for a compact open/closed badge in headers, sidebars, archive templates, or builder pages.', 'multi-location-product-and-inventory-management-pro'),
+                            'shortcode' => '[mulopimfwc_location_status id="current"]',
+                            'parameters' => [
+                                [
+                                    'key' => 'id',
+                                    'desc' => __('Location term ID, current archive/request location, or selected-location cookie.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'id="123" | id="current" | id="selected"'
+                                ],
+                                [
+                                    'key' => 'slug',
+                                    'desc' => __('Location slug, current archive/request location, or selected-location cookie.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'slug="new-york" | slug="current" | slug="selected"'
+                                ],
+                                [
+                                    'key' => 'taxonomy',
+                                    'desc' => __('Taxonomy to resolve. Keep the default for location status.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'taxonomy="mulopimfwc_store_location"'
+                                ],
+                                [
+                                    'key' => 'class',
+                                    'desc' => __('Optional wrapper CSS class.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'class="header-location-status"'
+                                ],
                             ],
                         ],
                         [
@@ -6937,13 +7110,23 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                             'parameters' => [
                                 [
                                     'key' => 'id',
-                                    'desc' => __('Location term ID', 'multi-location-product-and-inventory-management-pro'),
-                                    'value' => 'id="123"'
+                                    'desc' => __('Location term ID, current archive/request location, or selected-location cookie.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'id="123" | id="current" | id="selected"'
                                 ],
                                 [
                                     'key' => 'slug',
-                                    'desc' => __('Location term slug', 'multi-location-product-and-inventory-management-pro'),
-                                    'value' => 'slug="new-york"'
+                                    'desc' => __('Location term slug, current archive/request location, or selected-location cookie.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'slug="new-york" | slug="current" | slug="selected"'
+                                ],
+                                [
+                                    'key' => 'taxonomy',
+                                    'desc' => __('Taxonomy to resolve. Keep the default for location status.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'taxonomy="mulopimfwc_store_location"'
+                                ],
+                                [
+                                    'key' => 'class',
+                                    'desc' => __('Optional wrapper CSS class.', 'multi-location-product-and-inventory-management-pro'),
+                                    'value' => 'class="header-location-status"'
                                 ],
                             ],
                         ],
@@ -7079,16 +7262,79 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                                         </div>
                                     <?php endif; ?>
 
+                                    <!-- Shortcode Reference Section -->
+                                    <?php if (isset($tutorial['shortcode_references']) && !empty($tutorial['shortcode_references'])) { ?>
+                                        <div class="lwp-tutorial-shortcode-reference-section">
+                                            <div class="lwp-tutorial-section-label">
+                                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                                                    <path d="M9.4 16.6L4.8 12l4.6-4.6M14.6 16.6l4.6-4.6-4.6-4.6" fill="none" stroke="currentColor" stroke-width="2" />
+                                                </svg>
+                                                <?php echo esc_html__('Shortcode Reference', 'multi-location-product-and-inventory-management-pro'); ?>
+                                            </div>
+                                            <div class="lwp-shortcode-reference-list">
+                                                <?php foreach ($tutorial['shortcode_references'] as $reference) { ?>
+                                                    <div class="lwp-shortcode-reference-item">
+                                                        <div class="lwp-shortcode-reference-header">
+                                                            <strong><?php echo esc_html($reference['title'] ?? ''); ?></strong>
+                                                            <?php if (!empty($reference['description'])) { ?>
+                                                                <span><?php echo esc_html($reference['description']); ?></span>
+                                                            <?php } ?>
+                                                        </div>
+                                                        <?php if (!empty($reference['shortcode'])) { ?>
+                                                            <div class="lwp-shortcode-block">
+                                                                <code><?php echo esc_html($reference['shortcode']); ?></code>
+                                                                <button class="copy-btn" onclick="copyToClipboard(event, <?php echo esc_attr(wp_json_encode($reference['shortcode'])); ?>)" title="<?php echo esc_attr__('Copy shortcode', 'multi-location-product-and-inventory-management-pro'); ?>">
+                                                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                                                                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        <?php } ?>
+                                                        <?php if (!empty($reference['parameters'])) { ?>
+                                                            <div class="lwp-tutorial-params-section lwp-reference-params-section is-collapsed">
+                                                                <button type="button" class="lwp-tutorial-section-label lwp-params-toggle" onclick="toggleTutorialParams(this)" aria-expanded="false">
+                                                                    <span class="lwp-params-toggle-label">
+                                                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h3.02l4.25-5.7h-3.02l2.75-3.54h-3.02l-4.25 5.7h3.02z" />
+                                                                        </svg>
+                                                                        <?php echo esc_html__('Parameters', 'multi-location-product-and-inventory-management-pro'); ?>
+                                                                    </span>
+                                                                    <svg class="lwp-params-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                                                    </svg>
+                                                                </button>
+                                                                <div class="lwp-params-list" hidden>
+                                                                    <?php foreach ($reference['parameters'] as $param) { ?>
+                                                                        <div class="lwp-param-item">
+                                                                            <div class="lwp-param-key"><?php echo esc_html($param['key'] ?? ''); ?></div>
+                                                                            <div class="lwp-param-desc"><?php echo esc_html($param['desc'] ?? ''); ?></div>
+                                                                            <div class="lwp-param-value"><?php echo esc_html($param['value'] ?? ''); ?></div>
+                                                                        </div>
+                                                                    <?php } ?>
+                                                                </div>
+                                                            </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
+
                                     <!-- Parameters Section -->
                                     <?php if (isset($tutorial['parameters']) && !empty($tutorial['parameters'])) { ?>
-                                        <div class="lwp-tutorial-params-section">
-                                            <div class="lwp-tutorial-section-label">
-                                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h3.02l4.25-5.7h-3.02l2.75-3.54h-3.02l-4.25 5.7h3.02z" />
+                                        <div class="lwp-tutorial-params-section is-collapsed">
+                                            <button type="button" class="lwp-tutorial-section-label lwp-params-toggle" onclick="toggleTutorialParams(this)" aria-expanded="false">
+                                                <span class="lwp-params-toggle-label">
+                                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h3.02l4.25-5.7h-3.02l2.75-3.54h-3.02l-4.25 5.7h3.02z" />
+                                                    </svg>
+                                                    <?php echo esc_html__('Parameters', 'multi-location-product-and-inventory-management-pro'); ?>
+                                                </span>
+                                                <svg class="lwp-params-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="6 9 12 15 18 9"></polyline>
                                                 </svg>
-                                                <?php echo esc_html__('Parameters', 'multi-location-product-and-inventory-management-pro'); ?>
-                                            </div>
-                                            <div class="lwp-params-list">
+                                            </button>
+                                            <div class="lwp-params-list" hidden>
                                                 <?php foreach ($tutorial['parameters'] as $param) { ?>
                                                     <div class="lwp-param-item">
                                                         <div class="lwp-param-key"><?php echo esc_html($param['key']); ?></div>
@@ -7102,74 +7348,79 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
                                     <!-- Usage Examples Section -->
                                     <?php if (isset($tutorial['example_requests']) && !empty($tutorial['example_requests'])) { ?>
-                                        <div class="lwp-tutorial-examples-section">
-                                            <div class="lwp-tutorial-section-label">
-                                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
-                                                    <path d="M9.4 16.6L4.8 12l4.6-4.6M14.6 16.6l4.6-4.6-4.6-4.6" fill="none" stroke="currentColor" stroke-width="2" />
+                                        <div class="lwp-tutorial-examples-section is-collapsed">
+                                            <button type="button" class="lwp-tutorial-section-label lwp-examples-toggle" onclick="toggleTutorialExamples(this)" aria-expanded="false">
+                                                <span class="lwp-examples-toggle-label">
+                                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                                                        <path d="M9.4 16.6L4.8 12l4.6-4.6M14.6 16.6l4.6-4.6-4.6-4.6" fill="none" stroke="currentColor" stroke-width="2" />
+                                                    </svg>
+                                                    <?php echo esc_html__('Usage Examples', 'multi-location-product-and-inventory-management-pro'); ?>
+                                                </span>
+                                                <svg class="lwp-examples-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="6 9 12 15 18 9"></polyline>
                                                 </svg>
-                                                <?php echo esc_html__('Usage Examples', 'multi-location-product-and-inventory-management-pro'); ?>
+                                            </button>
+                                            <div class="lwp-examples-list" hidden>
+                                                <?php foreach ($tutorial['example_requests'] as $example_key => $example) { ?>
+                                                    <div class="lwp-example-item">
+                                                        <div class="lwp-example-header" onclick="toggleExample(this)">
+                                                            <div class="lwp-example-title">
+                                                                <strong><?php echo esc_html($example['title'] ?? ''); ?></strong>
+                                                                <span class="lwp-example-method"><?php echo esc_html($example['method'] ?? 'POST'); ?></span>
+                                                            </div>
+                                                            <div class="lwp-example-toggle">
+                                                                <svg class="lwp-example-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="lwp-example-content">
+                                                            <div class="lwp-example-url">
+                                                                <span class="lwp-example-label"><?php echo esc_html__('Endpoint:', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                                                <code><?php echo esc_html($example['url'] ?? ''); ?></code>
+                                                            </div>
+                                                            <?php if (!empty($example['headers'])) { ?>
+                                                                <div class="lwp-example-headers">
+                                                                    <span class="lwp-example-label"><?php echo esc_html__('Headers:', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                                                    <pre><code><?php echo esc_html(implode("\n", $example['headers'])); ?></code></pre>
+                                                                </div>
+                                                            <?php } ?>
+                                                            <?php if (!empty($example['body'])) { ?>
+                                                                <div class="lwp-example-body">
+                                                                    <span class="lwp-example-label"><?php echo esc_html__('Request Body:', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                                                    <?php
+                                                                    // Special handling for step-by-step instructions
+                                                                    if (isset($example['body']['step_1'])) { ?>
+                                                                        <div class="lwp-example-steps">
+                                                                            <?php foreach ($example['body'] as $step_key => $step_value) { ?>
+                                                                                <div class="lwp-example-step-item">
+                                                                                    <strong><?php echo esc_html(ucwords(str_replace('_', ' ', $step_key))); ?>:</strong>
+                                                                                    <span><?php echo esc_html($step_value); ?></span>
+                                                                                </div>
+                                                                            <?php } ?>
+                                                                        </div>
+                                                                    <?php } else { ?>
+                                                                        <pre><code><?php echo esc_html(wp_json_encode($example['body'], JSON_PRETTY_PRINT)); ?></code></pre>
+                                                                    <?php } ?>
+                                                                </div>
+                                                            <?php } ?>
+                                                            <?php if (!empty($example['response'])) { ?>
+                                                                <div class="lwp-example-response">
+                                                                    <span class="lwp-example-label"><?php echo esc_html__('Response:', 'multi-location-product-and-inventory-management-pro'); ?></span>
+                                                                    <pre><code><?php echo esc_html(wp_json_encode($example['response'], JSON_PRETTY_PRINT)); ?></code></pre>
+                                                                </div>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
                                             </div>
-                                            <?php foreach ($tutorial['example_requests'] as $example_key => $example) { ?>
-                                                <div class="lwp-example-item">
-                                                    <div class="lwp-example-header" onclick="toggleExample(this)">
-                                                        <div class="lwp-example-title">
-                                                            <strong><?php echo esc_html($example['title'] ?? ''); ?></strong>
-                                                            <span class="lwp-example-method"><?php echo esc_html($example['method'] ?? 'POST'); ?></span>
-                                                        </div>
-                                                        <div class="lwp-example-toggle">
-                                                            <svg class="lwp-example-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                                <polyline points="6 9 12 15 18 9"></polyline>
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                    <div class="lwp-example-content">
-                                                        <div class="lwp-example-url">
-                                                            <span class="lwp-example-label"><?php echo esc_html__('Endpoint:', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                                            <code><?php echo esc_html($example['url'] ?? ''); ?></code>
-                                                        </div>
-                                                        <?php if (isset($example['headers']) && !empty($example['headers'])) { ?>
-                                                            <div class="lwp-example-headers">
-                                                                <span class="lwp-example-label"><?php echo esc_html__('Headers:', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                                                <pre><code><?php echo esc_html(implode("\n", $example['headers'])); ?></code></pre>
-                                                            </div>
-                                                        <?php } ?>
-                                                        <?php if (isset($example['body']) && !empty($example['body']) && $example['body'] !== null) { ?>
-                                                            <div class="lwp-example-body">
-                                                                <span class="lwp-example-label"><?php echo esc_html__('Steps / Request Body:', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                                                <?php
-                                                                if (is_array($example['body']) && isset($example['body']['step_1'])) {
-                                                                    echo '<div class="lwp-example-steps">';
-                                                                    foreach ($example['body'] as $key => $value) {
-                                                                        if (strpos($key, 'step_') === 0 || strpos($key, 'important_') === 0) {
-                                                                            echo '<div class="lwp-example-step-item">';
-                                                                            echo '<strong>' . esc_html(ucfirst(str_replace('_', ' ', $key))) . ':</strong>';
-                                                                            echo '<span>' . esc_html($value) . '</span>';
-                                                                            echo '</div>';
-                                                                        }
-                                                                    }
-                                                                    echo '</div>';
-                                                                } else {
-                                                                    echo '<pre><code>' . esc_html(json_encode($example['body'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</code></pre>';
-                                                                }
-                                                                ?>
-                                                            </div>
-                                                        <?php } ?>
-                                                        <?php if (isset($example['response']) && !empty($example['response'])) { ?>
-                                                            <div class="lwp-example-response">
-                                                                <span class="lwp-example-label"><?php echo esc_html__('Response:', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                                                <pre><code><?php echo esc_html(json_encode($example['response'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)); ?></code></pre>
-                                                            </div>
-                                                        <?php } ?>
-                                                    </div>
-                                                </div>
-                                            <?php } ?>
                                         </div>
                                     <?php } ?>
                                 </div>
                             </div>
-                        <?php } ?>
+                        <?php
+                        } ?>
                     </div>
-
                     <!-- CTA Section -->
                     <div class="lwp-tutorial-cta">
                         <div class="lwp-tutorial-cta-content">
@@ -7502,6 +7753,46 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         gap: 8px;
                     }
 
+                    .lwp-tutorial-shortcode-reference-section {
+                        margin-top: 12px;
+                    }
+
+                    .lwp-shortcode-reference-list {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                    }
+
+                    .lwp-shortcode-reference-item {
+                        background: #fff;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 12px;
+                    }
+
+                    .lwp-shortcode-reference-header {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        margin-bottom: 8px;
+                    }
+
+                    .lwp-shortcode-reference-header strong {
+                        color: #0f172a;
+                        font-size: 13px;
+                    }
+
+                    .lwp-shortcode-reference-header span {
+                        color: #64748b;
+                        font-size: 12px;
+                        line-height: 1.5;
+                    }
+
+                    .lwp-shortcode-reference-item .lwp-params-list {
+                        grid-template-columns: 1fr;
+                        margin-top: 10px;
+                    }
+
 
 
                     /* Parameters */
@@ -7509,9 +7800,62 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         margin-top: auto;
                     }
 
+                    .lwp-reference-params-section {
+                        margin-top: 10px;
+                    }
+
+                    .lwp-params-toggle,
+                    .lwp-examples-toggle {
+                        width: 100%;
+                        background: transparent;
+                        border: 0;
+                        padding: 0;
+                        cursor: pointer;
+                        font-family: inherit;
+                        justify-content: space-between;
+                        text-align: left;
+                    }
+
+                    .lwp-params-toggle:focus,
+                    .lwp-examples-toggle:focus {
+                        outline: 2px solid #2563eb;
+                        outline-offset: 3px;
+                        border-radius: 4px;
+                    }
+
+                    .lwp-params-toggle-label,
+                    .lwp-examples-toggle-label {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    }
+
+                    .lwp-params-toggle-icon,
+                    .lwp-examples-toggle-icon {
+                        width: 16px;
+                        height: 16px;
+                        color: #64748b;
+                        flex: 0 0 auto;
+                        transition: transform 0.2s ease;
+                    }
+
+                    .lwp-tutorial-params-section.is-open .lwp-params-toggle-icon,
+                    .lwp-tutorial-examples-section.is-open .lwp-examples-toggle-icon {
+                        transform: rotate(180deg);
+                    }
+
+                    .lwp-tutorial-params-section .lwp-params-list[hidden] {
+                        display: none;
+                    }
+
+                    .lwp-tutorial-params-section.is-open .lwp-params-list {
+                        margin-top: 8px;
+                    }
+
                     .lwp-params-list {
                         display: grid;
-                        grid-template-columns: 1fr 1fr;
+                        align-items: start;
+                        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
                         gap: 8px;
                     }
 
@@ -7520,6 +7864,8 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         border-left: 3px solid #2563eb;
                         padding: 8px 10px;
                         border-radius: 4px;
+                        box-sizing: border-box;
+                        min-width: 0;
                     }
 
                     .lwp-param-key {
@@ -7527,12 +7873,14 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         color: #0f172a;
                         font-family: 'Monaco', 'Courier New', monospace;
                         font-size: 11px;
+                        overflow-wrap: anywhere;
                     }
 
                     .lwp-param-desc {
                         font-size: 12px;
                         color: #64748b;
                         margin-top: 2px;
+                        overflow-wrap: anywhere;
                     }
 
                     .lwp-param-value {
@@ -7543,7 +7891,11 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         background: white;
                         padding: 2px 4px;
                         border-radius: 3px;
-                        display: inline-block;
+                        box-sizing: border-box;
+                        display: block;
+                        max-width: 100%;
+                        overflow-wrap: anywhere;
+                        white-space: pre-wrap;
                     }
 
                     /* CTA Section */
@@ -7664,6 +8016,14 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                         margin-top: 20px;
                         border-top: 1px solid #e2e8f0;
                         padding-top: 20px;
+                    }
+
+                    .lwp-tutorial-examples-section .lwp-examples-list[hidden] {
+                        display: none;
+                    }
+
+                    .lwp-tutorial-examples-section.is-open .lwp-examples-list {
+                        margin-top: 12px;
                     }
 
                     .lwp-example-item {
@@ -7827,6 +8187,36 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
                 </style>
 
                 <script>
+                    function toggleTutorialParams(button) {
+                        const section = button.closest('.lwp-tutorial-params-section');
+                        const list = section ? section.querySelector('.lwp-params-list') : null;
+                        const shouldOpen = section ? !section.classList.contains('is-open') : false;
+
+                        if (!section || !list) {
+                            return;
+                        }
+
+                        section.classList.toggle('is-open', shouldOpen);
+                        section.classList.toggle('is-collapsed', !shouldOpen);
+                        button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                        list.hidden = !shouldOpen;
+                    }
+
+                    function toggleTutorialExamples(button) {
+                        const section = button.closest('.lwp-tutorial-examples-section');
+                        const list = section ? section.querySelector('.lwp-examples-list') : null;
+                        const shouldOpen = section ? !section.classList.contains('is-open') : false;
+
+                        if (!section || !list) {
+                            return;
+                        }
+
+                        section.classList.toggle('is-open', shouldOpen);
+                        section.classList.toggle('is-collapsed', !shouldOpen);
+                        button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                        list.hidden = !shouldOpen;
+                    }
+
                     function toggleExample(header) {
                         const item = header.closest('.lwp-example-item');
                         const content = item.querySelector('.lwp-example-content');
@@ -8524,13 +8914,13 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
         $tags = [];
         if (!empty($template_only)) {
-            $tags[] = sprintf(/* translators: %s: template name */ __('Template: %s', 'multi-location-product-and-inventory-management-pro'), ucfirst(str_replace('-', ' ', $template_only)));
+            $tags[] = sprintf(/* translators: %s: template name */__('Template: %s', 'multi-location-product-and-inventory-management-pro'), ucfirst(str_replace('-', ' ', $template_only)));
         }
         if ($pro_only) {
             $tags[] = __('Pro', 'multi-location-product-and-inventory-management-pro');
         }
 
-        echo '<div class="' . esc_attr($wrapper_class) . '"' . ( $wrapper_style ? ' style="' . esc_attr( $wrapper_style ) . '"' : '' ) . '>';
+        echo '<div class="' . esc_attr($wrapper_class) . '"' . ($wrapper_style ? ' style="' . esc_attr($wrapper_style) . '"' : '') . '>';
         echo '<div class="mulopimfwc-text-field__header">';
         echo '<label for="' . esc_attr($key) . '">' . esc_html($label) . '</label>';
         if (!empty($tags)) {
@@ -8546,9 +8936,9 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
 
         if ($type === 'textarea') {
             $rows = $rows > 0 ? $rows : 2;
-            echo '<textarea class="mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . disabled( ($base_disabled || $text_management_locked), true, false ) . ' placeholder="' . esc_attr($default) . '">' . esc_textarea($value) . '</textarea>';
+            echo '<textarea class="mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" rows="' . esc_attr($rows) . '"' . disabled(($base_disabled || $text_management_locked), true, false) . ' placeholder="' . esc_attr($default) . '">' . esc_textarea($value) . '</textarea>';
         } else {
-            echo '<input type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '"' . disabled( ($base_disabled || $text_management_locked), true, false ) . ' placeholder="' . esc_attr($default) . '">';
+            echo '<input type="text" id="' . esc_attr($key) . '" name="mulopimfwc_display_options[' . esc_attr($key) . ']" value="' . esc_attr($value) . '" class="regular-text mulopimfwc-text-management-toggle-target' . esc_attr($toggle_disabled_class) . '" data-text-base-disabled="' . esc_attr($base_disabled_flag) . '"' . disabled(($base_disabled || $text_management_locked), true, false) . ' placeholder="' . esc_attr($default) . '">';
         }
 
         if ($pro_locked) {
@@ -8580,8 +8970,8 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             $this->render_checkbox_unchecked_input('mulopimfwc_display_options[' . $key . ']', $disabled);
         }
         ?>
-            <label class="<?php echo esc_attr( $label_classes ); ?>">
-                <input <?php disabled( $disabled ); ?><?php if ( $disabled_class ) : ?> class="<?php echo esc_attr( $disabled_class ); ?>"<?php endif; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' value='on' <?php checked($is_checked); ?>>
+            <label class="<?php echo esc_attr($label_classes); ?>">
+                <input <?php disabled($disabled); ?><?php if ($disabled_class) : ?> class="<?php echo esc_attr($disabled_class); ?>" <?php endif; ?> type='checkbox' name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]' value='on' <?php checked($is_checked); ?>>
                 <span class="mulopimfwc_slider round"></span>
                 <span class="mulopimfwc_switch-on"><?php echo esc_html__('On', 'multi-location-product-and-inventory-management-pro'); ?></span>
                 <span class="mulopimfwc_switch-off"><?php echo esc_html__('Off', 'multi-location-product-and-inventory-management-pro'); ?></span>
@@ -8598,7 +8988,7 @@ __('Advanced Location Pickup Settings', 'multi-location-product-and-inventory-ma
             ?> <select <?php echo $disabled ? 'disabled' : ''; ?> name='mulopimfwc_display_options[<?php echo esc_attr($key); ?>]'>
                 <?php
                 foreach ($options as $value => $label) {
-                    echo "<option value='" . esc_attr($value) . "' " . selected( $mulopimfwc_options[$key] ?? '', $value, false ) . ">" . esc_html($label) . "</option>";
+                    echo "<option value='" . esc_attr($value) . "' " . selected($mulopimfwc_options[$key] ?? '', $value, false) . ">" . esc_html($label) . "</option>";
                 }
                 ?>
             </select>
