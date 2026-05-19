@@ -85,6 +85,7 @@ class MULOPIMFWC_Addons_Page
                 </div>
             </div>
         </div>
+        <?php $this->render_details_modal(); ?>
         <style>
             .mulopimfwc-addons-hero {
                 align-items: center;
@@ -244,20 +245,191 @@ class MULOPIMFWC_Addons_Page
                 font-weight: 600;
             }
 
-            .mulopimfwc-addon-changelog {
-                background: #f6f7f7;
-                border-top: 1px solid #f0f0f1;
-                margin: auto 0 0;
-                padding: 12px 18px;
-            }
-
             .mulopimfwc-addon-actions {
                 gap: 8px;
                 align-items: center;
                 background: #f9f9f9;
                 display: flex;
+                flex-wrap: wrap;
+                margin-top: auto;
                 padding: 1em 2em;
                 border-top: 1px solid #dcdcde;
+            }
+
+            .mulopimfwc-addon-details-modal[hidden] {
+                display: none;
+            }
+
+            .mulopimfwc-addon-details-modal {
+                align-items: center;
+                bottom: 0;
+                display: flex;
+                justify-content: center;
+                left: 0;
+                padding: 24px;
+                position: fixed;
+                right: 0;
+                top: 0;
+                z-index: 100000;
+            }
+
+            .mulopimfwc-addon-details-modal__backdrop {
+                background: rgba(0, 0, 0, 0.55);
+                bottom: 0;
+                left: 0;
+                position: absolute;
+                right: 0;
+                top: 0;
+            }
+
+            .mulopimfwc-addon-details-modal__dialog {
+                background: #fff;
+                box-shadow: 0 24px 90px rgba(0, 0, 0, 0.32);
+                box-sizing: border-box;
+                max-height: calc(100vh - 48px);
+                max-width: 840px;
+                overflow: auto;
+                position: relative;
+                width: min(840px, 100%);
+            }
+
+            .mulopimfwc-addon-details-modal__banner {
+                align-items: flex-end;
+                background: #f0f0f1;
+                display: flex;
+                min-height: 180px;
+                overflow: hidden;
+            }
+
+            .mulopimfwc-addon-details-modal__banner img {
+                display: block;
+                height: 100%;
+                max-height: 260px;
+                object-fit: cover;
+                width: 100%;
+            }
+
+            .mulopimfwc-addon-details-modal__banner.is-empty {
+                display: none;
+            }
+
+            .mulopimfwc-addon-details-modal__header {
+                align-items: center;
+                border-bottom: 1px solid #dcdcde;
+                display: flex;
+                justify-content: space-between;
+                padding: 16px 20px;
+            }
+
+            .mulopimfwc-addon-details-modal__header h2 {
+                font-size: 22px;
+                line-height: 1.3;
+                margin: 0;
+            }
+
+            .mulopimfwc-addon-details-modal__close {
+                align-items: center;
+                background: #f6f7f7;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                color: #1d2327;
+                cursor: pointer;
+                display: inline-flex;
+                font-size: 22px;
+                height: 32px;
+                justify-content: center;
+                line-height: 1;
+                padding: 0;
+                width: 32px;
+            }
+
+            .mulopimfwc-addon-details-modal__tabs {
+                background: #f6f7f7;
+                border-bottom: 1px solid #dcdcde;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0;
+                padding: 0 12px;
+            }
+
+            .mulopimfwc-addon-details-modal__tab {
+                background: transparent;
+                border: 0;
+                border-left: 1px solid transparent;
+                border-right: 1px solid transparent;
+                color: #2271b1;
+                cursor: pointer;
+                font-size: 14px;
+                margin: 0;
+                padding: 12px 14px;
+            }
+
+            .mulopimfwc-addon-details-modal__tab.is-active {
+                background: #fff;
+                border-color: #dcdcde;
+                color: #1d2327;
+                margin-bottom: -1px;
+            }
+
+            .mulopimfwc-addon-details-modal__body {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 250px;
+                min-height: 280px;
+            }
+
+            .mulopimfwc-addon-details-modal__content {
+                color: #1d2327;
+                font-size: 14px;
+                line-height: 1.7;
+                min-width: 0;
+                padding: 26px;
+            }
+
+            .mulopimfwc-addon-details-modal__content img {
+                height: auto;
+                max-width: 100%;
+            }
+
+            .mulopimfwc-addon-details-modal__sidebar {
+                background: #f9f9f9;
+                border-left: 1px solid #dcdcde;
+                padding: 22px 18px;
+            }
+
+            .mulopimfwc-addon-details-modal__sidebar dl {
+                display: grid;
+                gap: 8px;
+                margin: 0;
+            }
+
+            .mulopimfwc-addon-details-modal__sidebar dt {
+                color: #50575e;
+                font-weight: 700;
+                margin: 8px 0 0;
+            }
+
+            .mulopimfwc-addon-details-modal__sidebar dd {
+                margin: 0;
+            }
+
+            .mulopimfwc-addon-details-modal__links {
+                display: grid;
+                gap: 7px;
+                margin-top: 18px;
+            }
+
+            .mulopimfwc-addon-details-modal__footer {
+                align-items: center;
+                background: #f6f7f7;
+                border-top: 1px solid #dcdcde;
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+                padding: 14px 18px;
+            }
+
+            body.mulopimfwc-addon-details-open {
+                overflow: hidden;
             }
 
             @media (max-width: 782px) {
@@ -273,6 +445,19 @@ class MULOPIMFWC_Addons_Page
                 .mulopimfwc-addon-card__header {
                     flex-direction: column;
                 }
+
+                .mulopimfwc-addon-details-modal {
+                    padding: 12px;
+                }
+
+                .mulopimfwc-addon-details-modal__body {
+                    grid-template-columns: 1fr;
+                }
+
+                .mulopimfwc-addon-details-modal__sidebar {
+                    border-left: 0;
+                    border-top: 1px solid #dcdcde;
+                }
             }
         </style>
         <script>
@@ -286,6 +471,7 @@ class MULOPIMFWC_Addons_Page
                                     'error' => __('Add-ons could not be loaded from Plugincy. Please reload or check the license connection.', 'multi-location-product-and-inventory-management-pro'),
                                     'reloading' => __('Reloading...', 'multi-location-product-and-inventory-management-pro'),
                                     'reload' => __('Reload add-ons', 'multi-location-product-and-inventory-management-pro'),
+                                    'detailsFallback' => __('No details were provided for this add-on yet.', 'multi-location-product-and-inventory-management-pro'),
                                 ]); ?>;
 
                 function setLoading(isLoading) {
@@ -311,6 +497,126 @@ class MULOPIMFWC_Addons_Page
                     }
 
                     $('#mulopimfwc-addons-notices').html(notices);
+                }
+
+                function renderDetailsTab(modal, tabs, index) {
+                    var tab = tabs[index] || {};
+                    modal.find('.mulopimfwc-addon-details-modal__tab').removeClass('is-active').attr('aria-selected', 'false');
+                    modal.find('.mulopimfwc-addon-details-modal__tab[data-tab-index="' + index + '"]').addClass('is-active').attr('aria-selected', 'true');
+                    modal.find('.mulopimfwc-addon-details-modal__content').html(tab.content || '<p>' + config.detailsFallback + '</p>');
+                }
+
+                function renderDetailsSidebar(modal, details) {
+                    var sidebar = modal.find('.mulopimfwc-addon-details-modal__sidebar').empty();
+                    var list = $('<dl>');
+                    var meta = $.isArray(details.meta) ? details.meta : [];
+
+                    meta.forEach(function(item) {
+                        if (!item || !item.value) {
+                            return;
+                        }
+
+                        list.append($('<dt>').text(item.label || ''));
+                        list.append($('<dd>').text(item.value || ''));
+                    });
+
+                    sidebar.append(list);
+
+                    if ($.isArray(details.quick_links) && details.quick_links.length) {
+                        var links = $('<div>', {
+                            class: 'mulopimfwc-addon-details-modal__links'
+                        });
+
+                        details.quick_links.forEach(function(link) {
+                            if (!link || !link.url) {
+                                return;
+                            }
+
+                            links.append($('<a>', {
+                                href: link.url,
+                                target: '_blank',
+                                rel: 'noopener noreferrer',
+                                text: link.label || link.url
+                            }));
+                        });
+
+                        sidebar.append(links);
+                    }
+                }
+
+                function renderDetailsFooter(modal, details) {
+                    var footer = modal.find('.mulopimfwc-addon-details-modal__footer').empty();
+                    var action = details.action || {};
+
+                    if (!action.label) {
+                        footer.hide();
+                        return;
+                    }
+
+                    footer.show();
+
+                    if (action.disabled || !action.url) {
+                        footer.append($('<button>', {
+                            type: 'button',
+                            class: 'button button-primary disabled',
+                            disabled: true,
+                            text: action.label
+                        }));
+                    } else {
+                        footer.append($('<a>', {
+                            class: action.className || 'button button-primary',
+                            href: action.url,
+                            text: action.label
+                        }));
+                    }
+                }
+
+                function openDetails(details) {
+                    var modal = $('#mulopimfwc-addon-details-modal');
+                    var tabs = $.isArray(details.tabs) && details.tabs.length ? details.tabs : [{
+                        slug: 'description',
+                        title: <?php echo wp_json_encode(__('Description', 'multi-location-product-and-inventory-management-pro')); ?>,
+                        content: '<p>' + config.detailsFallback + '</p>'
+                    }];
+                    var tabsNav = modal.find('.mulopimfwc-addon-details-modal__tabs').empty();
+                    var banner = modal.find('[data-addon-banner]').empty();
+
+                    modal.find('#mulopimfwc-addon-details-title').text(details.name || '');
+
+                    if (details.banner_url) {
+                        banner.removeClass('is-empty').append($('<img>', {
+                            src: details.banner_url,
+                            alt: ''
+                        }));
+                    } else {
+                        banner.addClass('is-empty');
+                    }
+
+                    tabs.forEach(function(tab, index) {
+                        tabsNav.append($('<button>', {
+                            type: 'button',
+                            role: 'tab',
+                            class: 'mulopimfwc-addon-details-modal__tab',
+                            'data-tab-index': index,
+                            'aria-selected': index === 0 ? 'true' : 'false',
+                            text: tab.title || tab.slug || ''
+                        }));
+                    });
+
+                    renderDetailsTab(modal, tabs, 0);
+                    renderDetailsSidebar(modal, details);
+                    renderDetailsFooter(modal, details);
+
+                    modal.data('tabs', tabs);
+                    modal.removeAttr('hidden').attr('aria-hidden', 'false');
+                    $('body').addClass('mulopimfwc-addon-details-open');
+                    modal.find('.mulopimfwc-addon-details-modal__close').trigger('focus');
+                }
+
+                function closeDetails() {
+                    var modal = $('#mulopimfwc-addon-details-modal');
+                    modal.attr('hidden', 'hidden').attr('aria-hidden', 'true');
+                    $('body').removeClass('mulopimfwc-addon-details-open');
                 }
 
                 function loadAddons(force) {
@@ -342,11 +648,61 @@ class MULOPIMFWC_Addons_Page
                     loadAddons(true);
                 });
 
+                $(document).on('click', '.mulopimfwc-addon-view-details', function(event) {
+                    event.preventDefault();
+
+                    try {
+                        openDetails(JSON.parse($(this).attr('data-addon-details') || '{}'));
+                    } catch (error) {
+                        openDetails({});
+                    }
+                });
+
+                $(document).on('click', '.mulopimfwc-addon-details-modal__tab', function() {
+                    var modal = $('#mulopimfwc-addon-details-modal');
+                    renderDetailsTab(modal, modal.data('tabs') || [], parseInt($(this).attr('data-tab-index'), 10) || 0);
+                });
+
+                $(document).on('click', '[data-mulopimfwc-addon-details-close]', function(event) {
+                    event.preventDefault();
+                    closeDetails();
+                });
+
+                $(document).on('keydown', function(event) {
+                    if (event.key === 'Escape' && !$('#mulopimfwc-addon-details-modal').is('[hidden]')) {
+                        closeDetails();
+                    }
+                });
+
                 $(function() {
                     loadAddons(false);
                 });
             })(jQuery);
         </script>
+        <?php
+    }
+
+    private function render_details_modal(): void
+    {
+        ?>
+        <div id="mulopimfwc-addon-details-modal" class="mulopimfwc-addon-details-modal" hidden aria-hidden="true">
+            <div class="mulopimfwc-addon-details-modal__backdrop" data-mulopimfwc-addon-details-close></div>
+            <div class="mulopimfwc-addon-details-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="mulopimfwc-addon-details-title">
+                <div class="mulopimfwc-addon-details-modal__banner" data-addon-banner></div>
+                <div class="mulopimfwc-addon-details-modal__header">
+                    <h2 id="mulopimfwc-addon-details-title"></h2>
+                    <button type="button" class="mulopimfwc-addon-details-modal__close" data-mulopimfwc-addon-details-close aria-label="<?php esc_attr_e('Close add-on details', 'multi-location-product-and-inventory-management-pro'); ?>">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="mulopimfwc-addon-details-modal__tabs" role="tablist"></div>
+                <div class="mulopimfwc-addon-details-modal__body">
+                    <div class="mulopimfwc-addon-details-modal__content"></div>
+                    <aside class="mulopimfwc-addon-details-modal__sidebar"></aside>
+                </div>
+                <div class="mulopimfwc-addon-details-modal__footer"></div>
+            </div>
+        </div>
         <?php
     }
 
@@ -411,6 +767,7 @@ class MULOPIMFWC_Addons_Page
         $requires = isset($addon['requires']) && is_scalar($addon['requires']) && trim((string) $addon['requires']) !== ''
             ? (string) $addon['requires']
             : __('Not specified', 'multi-location-product-and-inventory-management-pro');
+        $details_payload = $this->get_addon_details_payload($addon, $status, $license_valid);
         ?>
         <div class="mulopimfwc-addon-card">
             <div class="mulopimfwc-addon-card__header">
@@ -443,15 +800,266 @@ class MULOPIMFWC_Addons_Page
                 <dd><?php echo esc_html($requires); ?></dd>
             </dl>
 
-            <?php if (!empty($addon['changelog'])) : ?>
-                <div class="mulopimfwc-addon-changelog"><?php echo wp_kses_post((string) $addon['changelog']); ?></div>
-            <?php endif; ?>
-
             <div class="mulopimfwc-addon-actions">
+                <button type="button" class="button mulopimfwc-addon-view-details" data-addon-details="<?php echo esc_attr(wp_json_encode($details_payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); ?>">
+                    <?php echo esc_html__('View details', 'multi-location-product-and-inventory-management-pro'); ?>
+                </button>
+                <?php $this->render_quick_links($addon); ?>
                 <?php $this->render_actions($addon, $status, $license_valid); ?>
             </div>
         </div>
 <?php
+    }
+
+    private function render_quick_links(array $addon): void
+    {
+        foreach ($this->get_quick_links($addon) as $link) {
+            printf(
+                '<a class="button" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+                esc_url($link['url']),
+                esc_html($link['label'])
+            );
+        }
+    }
+
+    private function get_addon_details_payload(array $addon, array $status, bool $license_valid): array
+    {
+        $name = isset($addon['name']) && is_scalar($addon['name']) ? (string) $addon['name'] : __('Plugincy add-on', 'multi-location-product-and-inventory-management-pro');
+        $requires = isset($addon['requires']) && is_scalar($addon['requires']) && trim((string) $addon['requires']) !== ''
+            ? (string) $addon['requires']
+            : '';
+
+        $meta = [
+            [
+                'label' => __('Status', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($status['label']) ? (string) $status['label'] : '',
+            ],
+            [
+                'label' => __('Current Version', 'multi-location-product-and-inventory-management-pro'),
+                'value' => !empty($status['installed_version']) ? (string) $status['installed_version'] : __('Not installed', 'multi-location-product-and-inventory-management-pro'),
+            ],
+            [
+                'label' => __('Latest Version', 'multi-location-product-and-inventory-management-pro'),
+                'value' => !empty($addon['version']) ? (string) $addon['version'] : __('Unknown', 'multi-location-product-and-inventory-management-pro'),
+            ],
+            [
+                'label' => __('Requires', 'multi-location-product-and-inventory-management-pro'),
+                'value' => $requires !== '' ? $requires : __('Not specified', 'multi-location-product-and-inventory-management-pro'),
+            ],
+            [
+                'label' => __('Requires WordPress', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['requires_wp']) && is_scalar($addon['requires_wp']) ? (string) $addon['requires_wp'] : '',
+            ],
+            [
+                'label' => __('Requires PHP', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['requires_php']) && is_scalar($addon['requires_php']) ? (string) $addon['requires_php'] : '',
+            ],
+            [
+                'label' => __('Tested up to', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['tested']) && is_scalar($addon['tested']) ? (string) $addon['tested'] : '',
+            ],
+            [
+                'label' => __('Tested WooCommerce', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['tested_wc']) && is_scalar($addon['tested_wc']) ? (string) $addon['tested_wc'] : '',
+            ],
+        ];
+
+        return [
+            'slug' => isset($addon['slug']) && is_scalar($addon['slug']) ? sanitize_key((string) $addon['slug']) : '',
+            'name' => $name,
+            'banner_url' => $this->get_banner_url($addon),
+            'tabs' => $this->get_detail_tabs($addon),
+            'quick_links' => $this->get_quick_links($addon),
+            'meta' => $meta,
+            'action' => $this->get_primary_action($addon, $status, $license_valid),
+        ];
+    }
+
+    private function get_primary_action(array $addon, array $status, bool $license_valid): array
+    {
+        $slug = isset($addon['slug']) && is_scalar($addon['slug']) ? sanitize_key((string) $addon['slug']) : '';
+        if ($slug === '') {
+            return [];
+        }
+
+        if (empty($status['installed'])) {
+            return [
+                'label' => __('Install', 'multi-location-product-and-inventory-management-pro'),
+                'url' => $license_valid && !empty($addon['package']) ? $this->action_url('install', $slug) : '',
+                'className' => 'button button-primary',
+                'disabled' => !$license_valid || empty($addon['package']),
+            ];
+        }
+
+        if (!empty($status['update_available']) && $license_valid && !empty($addon['package'])) {
+            return [
+                'label' => __('Update Now', 'multi-location-product-and-inventory-management-pro'),
+                'url' => $this->action_url('update', $slug),
+                'className' => 'button button-primary',
+                'disabled' => false,
+            ];
+        }
+
+        if (empty($status['active'])) {
+            return [
+                'label' => __('Activate', 'multi-location-product-and-inventory-management-pro'),
+                'url' => $this->action_url('activate', $slug),
+                'className' => 'button button-primary',
+                'disabled' => false,
+            ];
+        }
+
+        return [
+            'label' => __('Deactivate', 'multi-location-product-and-inventory-management-pro'),
+            'url' => $this->action_url('deactivate', $slug),
+            'className' => 'button',
+            'disabled' => false,
+        ];
+    }
+
+    private function get_banner_url(array $addon): string
+    {
+        foreach (['banner_url', 'banner'] as $key) {
+            if (!empty($addon[$key]) && is_scalar($addon[$key])) {
+                return esc_url_raw((string) $addon[$key]);
+            }
+        }
+
+        if (!empty($addon['banners']) && is_array($addon['banners'])) {
+            foreach (['high', 'low', 'default'] as $key) {
+                if (!empty($addon['banners'][$key]) && is_scalar($addon['banners'][$key])) {
+                    return esc_url_raw((string) $addon['banners'][$key]);
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private function get_quick_links(array $addon): array
+    {
+        if (empty($addon['quick_links']) || !is_array($addon['quick_links'])) {
+            return [];
+        }
+
+        $links = [];
+        foreach ($addon['quick_links'] as $link) {
+            if (!is_array($link)) {
+                continue;
+            }
+
+            $url = isset($link['url']) && is_scalar($link['url']) ? esc_url_raw((string) $link['url']) : '';
+            if ($url === '') {
+                continue;
+            }
+
+            $label = isset($link['label']) && is_scalar($link['label']) && trim((string) $link['label']) !== ''
+                ? sanitize_text_field((string) $link['label'])
+                : $url;
+
+            $links[] = [
+                'label' => $label,
+                'url' => $url,
+            ];
+        }
+
+        return $links;
+    }
+
+    private function get_detail_tabs(array $addon): array
+    {
+        $tabs = [];
+
+        if (!empty($addon['tabs']) && is_array($addon['tabs'])) {
+            foreach ($addon['tabs'] as $tab) {
+                if (!is_array($tab)) {
+                    continue;
+                }
+
+                $slug = isset($tab['slug']) && is_scalar($tab['slug']) ? sanitize_key((string) $tab['slug']) : '';
+                $title = isset($tab['title']) && is_scalar($tab['title']) ? sanitize_text_field((string) $tab['title']) : '';
+                $content = isset($tab['content']) && is_scalar($tab['content']) ? wp_kses_post((string) $tab['content']) : '';
+
+                if ($slug === '' && $title !== '') {
+                    $slug = sanitize_key($title);
+                }
+
+                if ($title === '' && $slug !== '') {
+                    $title = ucwords(str_replace(['-', '_'], ' ', $slug));
+                }
+
+                if ($slug === '' || $title === '' || trim($content) === '') {
+                    continue;
+                }
+
+                $tabs[$slug] = [
+                    'slug' => $slug,
+                    'title' => $title,
+                    'content' => $content,
+                ];
+            }
+        }
+
+        if (!empty($addon['sections']) && is_array($addon['sections'])) {
+            $labels = !empty($addon['section_labels']) && is_array($addon['section_labels']) ? $addon['section_labels'] : [];
+            foreach ($addon['sections'] as $slug => $content) {
+                $slug = sanitize_key((string) $slug);
+                $content = is_scalar($content) ? wp_kses_post((string) $content) : '';
+                if ($slug === '' || trim($content) === '' || isset($tabs[$slug])) {
+                    continue;
+                }
+
+                $title = isset($labels[$slug]) && is_scalar($labels[$slug]) && trim((string) $labels[$slug]) !== ''
+                    ? sanitize_text_field((string) $labels[$slug])
+                    : ucwords(str_replace(['-', '_'], ' ', $slug));
+
+                $tabs[$slug] = [
+                    'slug' => $slug,
+                    'title' => $title,
+                    'content' => $content,
+                ];
+            }
+        }
+
+        if (!isset($tabs['description']) && !empty($addon['description']) && is_scalar($addon['description'])) {
+            $tabs = ['description' => [
+                'slug' => 'description',
+                'title' => __('Description', 'multi-location-product-and-inventory-management-pro'),
+                'content' => wp_kses_post((string) $addon['description']),
+            ]] + $tabs;
+        }
+
+        $changelog = '';
+        if (!empty($addon['changelog']) && is_scalar($addon['changelog'])) {
+            $changelog = (string) $addon['changelog'];
+        } elseif (!empty($addon['changeslog']) && is_scalar($addon['changeslog'])) {
+            $changelog = (string) $addon['changeslog'];
+        }
+
+        if (!isset($tabs['changelog']) && trim($changelog) !== '') {
+            $tabs['changelog'] = [
+                'slug' => 'changelog',
+                'title' => __('Changelog', 'multi-location-product-and-inventory-management-pro'),
+                'content' => wp_kses_post($changelog),
+            ];
+        }
+
+        $preferred_order = [
+            'description' => 10,
+            'installation' => 20,
+            'changelog' => 30,
+            'screenshots' => 40,
+            'reviews' => 50,
+        ];
+
+        uasort($tabs, static function ($a, $b) use ($preferred_order) {
+            $a_rank = $preferred_order[$a['slug']] ?? 1000;
+            $b_rank = $preferred_order[$b['slug']] ?? 1000;
+
+            return $a_rank <=> $b_rank;
+        });
+
+        return array_values($tabs);
     }
 
     private function get_addon_initials(string $name): string
@@ -628,7 +1236,7 @@ class MULOPIMFWC_Addons_Page
 
     private function merge_manifest_addon(array $addon, array $manifest): array
     {
-        foreach (['version', 'package', 'checksum', 'changelog', 'plugin_file', 'requires_wp', 'requires_php', 'requires_plugin_version'] as $key) {
+        foreach (['version', 'package', 'checksum', 'changelog', 'changeslog', 'plugin_file', 'requires_wp', 'requires_php', 'requires_plugin_version', 'banner_url', 'banner'] as $key) {
             if (array_key_exists($key, $manifest)) {
                 $addon[$key] = $manifest[$key];
             }
@@ -636,6 +1244,12 @@ class MULOPIMFWC_Addons_Page
 
         foreach (['name', 'description', 'logo_url'] as $key) {
             if (isset($manifest[$key]) && is_scalar($manifest[$key]) && trim((string) $manifest[$key]) !== '') {
+                $addon[$key] = $manifest[$key];
+            }
+        }
+
+        foreach (['quick_links', 'tabs', 'sections', 'section_labels', 'banners'] as $key) {
+            if (isset($manifest[$key]) && is_array($manifest[$key])) {
                 $addon[$key] = $manifest[$key];
             }
         }
@@ -714,7 +1328,14 @@ class MULOPIMFWC_Addons_Page
             'package' => '',
             'checksum' => '',
             'changelog' => '',
+            'changeslog' => '',
             'logo_url' => '',
+            'banner_url' => '',
+            'quick_links' => [],
+            'tabs' => [],
+            'sections' => [],
+            'section_labels' => [],
+            'banners' => [],
         ];
     }
 
@@ -732,6 +1353,12 @@ class MULOPIMFWC_Addons_Page
                 'checksum' => '',
                 'changelog' => '',
                 'logo_url' => '',
+                'banner_url' => '',
+                'quick_links' => [],
+                'tabs' => [],
+                'sections' => [],
+                'section_labels' => [],
+                'banners' => [],
             ],
         ]);
     }
@@ -812,21 +1439,8 @@ class MULOPIMFWC_Addons_Page
                 continue;
             }
 
-            $logo_url = '';
-            if (isset($data['logo_url']) && is_scalar($data['logo_url'])) {
-                $logo_url = esc_url_raw((string) $data['logo_url']);
-            } elseif (isset($data['logo']) && is_scalar($data['logo'])) {
-                $logo_url = esc_url_raw((string) $data['logo']);
-            } elseif (isset($data['icon']) && is_scalar($data['icon'])) {
-                $logo_url = esc_url_raw((string) $data['icon']);
-            } elseif (isset($data['icons']) && is_array($data['icons'])) {
-                foreach (['2x', '1x', 'default', 'svg'] as $icon_key) {
-                    if (!empty($data['icons'][$icon_key]) && is_scalar($data['icons'][$icon_key])) {
-                        $logo_url = esc_url_raw((string) $data['icons'][$icon_key]);
-                        break;
-                    }
-                }
-            }
+            $logo_url = $this->extract_manifest_image_url($data, ['logo_url', 'logo', 'icon'], 'icons', ['2x', '1x', 'default', 'svg']);
+            $banner_url = $this->extract_manifest_image_url($data, ['banner_url', 'banner'], 'banners', ['high', 'low', 'default']);
 
             $requires_label = '';
             if (isset($data['requires_label']) && is_scalar($data['requires_label'])) {
@@ -844,7 +1458,14 @@ class MULOPIMFWC_Addons_Page
                 'package' => isset($data['download_url']) && is_scalar($data['download_url']) ? esc_url_raw((string) $data['download_url']) : (isset($data['package']) && is_scalar($data['package']) ? esc_url_raw((string) $data['package']) : ''),
                 'checksum' => isset($data['checksum']) && is_scalar($data['checksum']) ? sanitize_text_field((string) $data['checksum']) : '',
                 'changelog' => isset($data['changelog']) && is_scalar($data['changelog']) ? wp_kses_post((string) $data['changelog']) : '',
+                'changeslog' => isset($data['changeslog']) && is_scalar($data['changeslog']) ? wp_kses_post((string) $data['changeslog']) : '',
                 'logo_url' => $logo_url,
+                'banner_url' => $banner_url,
+                'quick_links' => $this->normalize_manifest_quick_links($data['quick_links'] ?? []),
+                'tabs' => $this->normalize_manifest_tabs($data['tabs'] ?? []),
+                'sections' => $this->normalize_manifest_sections($data['sections'] ?? []),
+                'section_labels' => $this->normalize_manifest_section_labels($data['section_labels'] ?? []),
+                'banners' => isset($data['banners']) && is_array($data['banners']) ? $data['banners'] : [],
                 'requires_label' => $requires_label,
                 'requires' => isset($data['requires']) && is_scalar($data['requires']) ? sanitize_text_field((string) $data['requires']) : '',
                 'requires_wp' => isset($data['requires_wp']) && is_scalar($data['requires_wp']) ? sanitize_text_field((string) $data['requires_wp']) : '',
@@ -867,6 +1488,133 @@ class MULOPIMFWC_Addons_Page
         }
 
         return $normalized;
+    }
+
+    private function extract_manifest_image_url(array $data, array $scalar_keys, string $map_key, array $map_order): string
+    {
+        foreach ($scalar_keys as $key) {
+            if (!empty($data[$key]) && is_scalar($data[$key])) {
+                return esc_url_raw((string) $data[$key]);
+            }
+        }
+
+        if (!empty($data[$map_key]) && is_array($data[$map_key])) {
+            foreach ($map_order as $key) {
+                if (!empty($data[$map_key][$key]) && is_scalar($data[$map_key][$key])) {
+                    return esc_url_raw((string) $data[$map_key][$key]);
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private function normalize_manifest_quick_links($raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $links = [];
+        foreach ($raw as $link) {
+            if (!is_array($link)) {
+                continue;
+            }
+
+            $url = isset($link['url']) && is_scalar($link['url']) ? esc_url_raw((string) $link['url']) : '';
+            if ($url === '') {
+                continue;
+            }
+
+            $label = isset($link['label']) && is_scalar($link['label']) && trim((string) $link['label']) !== ''
+                ? sanitize_text_field((string) $link['label'])
+                : $url;
+
+            $links[] = [
+                'label' => $label,
+                'url' => $url,
+            ];
+        }
+
+        return $links;
+    }
+
+    private function normalize_manifest_tabs($raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $tabs = [];
+        foreach ($raw as $tab) {
+            if (!is_array($tab)) {
+                continue;
+            }
+
+            $slug = isset($tab['slug']) && is_scalar($tab['slug']) ? sanitize_key((string) $tab['slug']) : '';
+            $title = isset($tab['title']) && is_scalar($tab['title']) ? sanitize_text_field((string) $tab['title']) : '';
+            $content = isset($tab['content']) && is_scalar($tab['content']) ? wp_kses_post((string) $tab['content']) : '';
+
+            if ($slug === '' && $title !== '') {
+                $slug = sanitize_key($title);
+            }
+
+            if ($title === '' && $slug !== '') {
+                $title = ucwords(str_replace(['-', '_'], ' ', $slug));
+            }
+
+            if ($slug === '' || $title === '' || trim($content) === '') {
+                continue;
+            }
+
+            $tabs[] = [
+                'slug' => $slug,
+                'title' => $title,
+                'content' => $content,
+            ];
+        }
+
+        return $tabs;
+    }
+
+    private function normalize_manifest_sections($raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $sections = [];
+        foreach ($raw as $slug => $content) {
+            $slug = sanitize_key((string) $slug);
+            $content = is_scalar($content) ? wp_kses_post((string) $content) : '';
+
+            if ($slug === '' || trim($content) === '') {
+                continue;
+            }
+
+            $sections[$slug] = $content;
+        }
+
+        return $sections;
+    }
+
+    private function normalize_manifest_section_labels($raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $labels = [];
+        foreach ($raw as $slug => $label) {
+            $slug = sanitize_key((string) $slug);
+            if ($slug === '' || !is_scalar($label) || trim((string) $label) === '') {
+                continue;
+            }
+
+            $labels[$slug] = sanitize_text_field((string) $label);
+        }
+
+        return $labels;
     }
 
     private function get_manifest_cache_ttl(array $body, array $addons): int
