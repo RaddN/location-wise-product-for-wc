@@ -161,14 +161,14 @@ class MULOPIMFWC_Product_Location_Selector
 
         // Get options for localized script
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
 
         $allow_mixed_in_cart = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
             ? mulopimfwc_is_mixed_location_cart_enabled($options)
             : (isset($options['allow_mixed_location_cart']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature());
-        
+
         $selector_config = [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -247,9 +247,9 @@ class MULOPIMFWC_Product_Location_Selector
         }
 
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         return isset($options['display_location_single_product']) &&
             $options['display_location_single_product'] === 'on';
     }
@@ -482,14 +482,14 @@ class MULOPIMFWC_Product_Location_Selector
 
         $locations = $this->get_available_locations($this->current_product);
 
-        
+
 
         if (empty($locations)) {
             return;
         }
 
         $display_position = !empty($position) ? $position : $this->position;
-        
+
         $this->render_selector_wrapper($locations, $display_position, $atts);
 
         $location_selector_added[$product_id_key] = true;
@@ -677,7 +677,7 @@ class MULOPIMFWC_Product_Location_Selector
     {
         $label = $this->get_selector_label();
         $product_id = $this->current_product->get_id();
-        
+
 ?>
         <div class="mulopimfwc-location-list">
             <div class="mulopimfwc-location-label">
@@ -760,7 +760,7 @@ class MULOPIMFWC_Product_Location_Selector
                 <?php endforeach; ?>
             </select>
         </div>
-<?php
+    <?php
     }
 
     /**
@@ -849,7 +849,7 @@ class MULOPIMFWC_Product_Location_Selector
     {
         // Sanitize location slug
         $location = sanitize_title($location);
-        
+
         if (empty($location)) {
             return;
         }
@@ -921,7 +921,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      * Plugin version
      */
     const VERSION = '1.1.7.20';
-    
+
     /**
      * @var array Track displayed shortcodes to prevent duplicates
      */
@@ -939,11 +939,11 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     {
         $this->selector = $GLOBALS['mulopimfwc_location_selector'];
         add_shortcode('mulopimfwc_location_selector', [$this, 'render_shortcode']);
-        
+
         // Ensure scripts are enqueued when shortcode is present
         add_action('wp_enqueue_scripts', [$this, 'maybe_enqueue_shortcode_scripts'], 20);
     }
-    
+
     /**
      * Enqueue scripts if shortcode might be present
      */
@@ -954,16 +954,16 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
         }
 
         global $post;
-        
+
         // Check if shortcode is in post content
         $has_shortcode = false;
-        
+
         if ($post && is_a($post, 'WP_Post')) {
             // Check main post content
             if (has_shortcode($post->post_content, 'mulopimfwc_location_selector')) {
                 $has_shortcode = true;
             }
-            
+
             // Check if using page builders (Elementor, Beaver Builder, etc.)
             if (!$has_shortcode && function_exists('get_post_meta')) {
                 $elementor_data = get_post_meta($post->ID, '_elementor_data', true);
@@ -975,7 +975,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                 }
             }
         }
-        
+
         // Also check widgets (for sidebar/widget areas)
         if (!$has_shortcode) {
             $widget_areas = wp_get_sidebars_widgets();
@@ -986,8 +986,10 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                         if (strpos($widget_id, 'text-') === 0) {
                             $widget_num = (int) str_replace('text-', '', $widget_id);
                             $widget_data = get_option('widget_text');
-                            if (isset($widget_data[$widget_num]['text']) && 
-                                has_shortcode($widget_data[$widget_num]['text'], 'mulopimfwc_location_selector')) {
+                            if (
+                                isset($widget_data[$widget_num]['text']) &&
+                                has_shortcode($widget_data[$widget_num]['text'], 'mulopimfwc_location_selector')
+                            ) {
                                 $has_shortcode = true;
                                 break 2;
                             }
@@ -996,8 +998,10 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                         if (strpos($widget_id, 'custom_html-') === 0) {
                             $widget_num = (int) str_replace('custom_html-', '', $widget_id);
                             $widget_data = get_option('widget_custom_html');
-                            if (isset($widget_data[$widget_num]['content']) && 
-                                has_shortcode($widget_data[$widget_num]['content'], 'mulopimfwc_location_selector')) {
+                            if (
+                                isset($widget_data[$widget_num]['content']) &&
+                                has_shortcode($widget_data[$widget_num]['content'], 'mulopimfwc_location_selector')
+                            ) {
                                 $has_shortcode = true;
                                 break 2;
                             }
@@ -1006,12 +1010,12 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                 }
             }
         }
-        
+
         if ($has_shortcode) {
             $this->enqueue_shortcode_scripts();
         }
     }
-    
+
     /**
      * Enqueue scripts for shortcode usage
      */
@@ -1021,7 +1025,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
         if (wp_script_is('mulopimfwc-location-selector', 'enqueued')) {
             return;
         }
-        
+
         wp_enqueue_script(
             'mulopimfwc-location-selector',
             plugins_url('../assets/js/location-selector.js', __FILE__),
@@ -1029,17 +1033,17 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             self::VERSION,
             true
         );
-        
+
         // Get options for localized script
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
 
         $allow_mixed_in_cart = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
             ? mulopimfwc_is_mixed_location_cart_enabled($options)
             : (isset($options['allow_mixed_location_cart']) && function_exists('mulopimfwc_premium_feature') && mulopimfwc_premium_feature());
-        
+
         // Inline merge to avoid overwriting existing frontend config.
         // Note: Using 'multi-location-product-and-inventory-management-pro' nonce to match ajax_switch_location handler
         $selector_config = [
@@ -1066,7 +1070,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             'window.mulopimfwc_locationWiseProducts = window.mulopimfwc_locationWiseProducts || {}; Object.assign(window.mulopimfwc_locationWiseProducts, ' . wp_json_encode($selector_config) . ');',
             'before'
         );
-        
+
         wp_add_inline_script(
             'mulopimfwc-location-selector',
             'window.MULOPIMFWC_LOC_SELECTOR = ' . wp_json_encode([
@@ -1090,8 +1094,12 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
     {
         if (function_exists('mulopimfwc_is_manual_assignment_strict_mode') && mulopimfwc_is_manual_assignment_strict_mode()) {
             if (is_user_logged_in() && current_user_can('administrator')) {
-                return '<p>When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).</p>';
+                return '<p>' . esc_html__(
+                    'When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).',
+                    'multi-location-product-and-inventory-management-pro'
+                ) . '</p>';
             }
+
             return '';
         }
 
@@ -1101,7 +1109,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
 
         // Check if product_id was explicitly provided BEFORE shortcode_atts merges defaults
         $product_id_provided = isset($atts['product_id']) && !empty($atts['product_id']) && $atts['product_id'] != '0';
-        
+
         $atts = shortcode_atts([
             'product_id' => 0,
             'layout' => 'list',
@@ -1120,10 +1128,10 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
             $product_id = $this->get_product_id(0);
             $show_all_locations = $product_id <= 0;
         }
-        
+
         // Create a unique key for tracking displayed shortcodes
         $display_key = $show_all_locations ? 'all_locations_' . md5(serialize($atts)) : $product_id;
-        
+
         if (isset(self::$shortcode_displayed[$display_key])) {
             return '';
         }
@@ -1459,7 +1467,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     private function render_all_locations_list($locations, $current_location, $label)
     {
-        ?>
+    ?>
         <div class="mulopimfwc-location-list">
             <div class="mulopimfwc-location-label">
                 <?php echo esc_html($label); ?>
@@ -1482,7 +1490,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                 <?php endforeach; ?>
             </div>
         </div>
-        <?php
+    <?php
     }
 
     /**
@@ -1495,7 +1503,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     private function render_all_locations_buttons($locations, $current_location, $label)
     {
-        ?>
+    ?>
         <div class="mulopimfwc-location-buttons">
             <div class="mulopimfwc-location-label">
                 <?php echo esc_html($label); ?>
@@ -1513,7 +1521,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                 <?php endforeach; ?>
             </div>
         </div>
-        <?php
+    <?php
     }
 
     /**
@@ -1526,7 +1534,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
      */
     private function render_all_locations_select($locations, $current_location, $label)
     {
-        ?>
+    ?>
         <div class="mulopimfwc-location-select">
             <div class="mulopimfwc-location-label">
                 <?php echo esc_html($label); ?>
@@ -1543,7 +1551,7 @@ class MULOPIMFWC_Product_Location_Selector_Shortcode
                 <?php endforeach; ?>
             </select>
         </div>
-        <?php
+<?php
     }
 }
 

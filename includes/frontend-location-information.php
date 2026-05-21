@@ -433,21 +433,41 @@ class MULOPIMFWC_Frontend_Location_Information
         $use_js_overlay_details_button_only = $this->should_use_js_overlay_details_button_only();
 
         // Localize script
-        wp_localize_script('mulopimfwc-location-info', 'mulopimfwcLocationInfo', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('mulopimfwc_location_info'),
-            'mapTileUrl' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            'mapAttribution' => '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            'defaultMapZoom' => $default_map_zoom,
-            'mapAnimationType' => $map_animation_type,
-            'mapAnimationDuration' => $map_animation_duration,
-            'useJsOverlayDetailsButtonOnly' => $use_js_overlay_details_button_only,
-            'isLocationArchive' => is_tax('mulopimfwc_store_location'),
-            'i18n' => [
-                'getDirections' => mulopimfwc_get_text_value('text_location_button_directions'),
-                'viewDetails' => mulopimfwc_get_text_value('text_location_button_details'),
-            ],
-        ]);
+        wp_localize_script(
+            'mulopimfwc-location-info',
+            'mulopimfwcLocationInfo',
+            array(
+                'ajaxUrl'                         => admin_url('admin-ajax.php'),
+                'nonce'                           => wp_create_nonce('mulopimfwc_location_info'),
+                'mapTileUrl'                      => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'mapAttribution'                  => wp_kses(
+                    sprintf(
+                        /* translators: %s: OpenStreetMap copyright URL. */
+                        __(
+                            '&copy; <a href="%s" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+                            'multi-location-product-and-inventory-management-pro'
+                        ),
+                        esc_url('https://www.openstreetmap.org/copyright')
+                    ),
+                    array(
+                        'a' => array(
+                            'href'   => true,
+                            'target' => true,
+                            'rel'    => true,
+                        ),
+                    )
+                ),
+                'defaultMapZoom'                  => $default_map_zoom,
+                'mapAnimationType'                => $map_animation_type,
+                'mapAnimationDuration'            => $map_animation_duration,
+                'useJsOverlayDetailsButtonOnly'   => $use_js_overlay_details_button_only,
+                'isLocationArchive'               => is_tax('mulopimfwc_store_location'),
+                'i18n'                            => array(
+                    'getDirections' => mulopimfwc_get_text_value('text_location_button_directions'),
+                    'viewDetails'   => mulopimfwc_get_text_value('text_location_button_details'),
+                ),
+            )
+        );
     }
 
     /**
@@ -1212,8 +1232,8 @@ class MULOPIMFWC_Frontend_Location_Information
             <?php
             global $mulopimfwc_options;
             $enable_locator = isset($mulopimfwc_options['enable_store_locator']) && mulopimfwc_premium_feature()
-            ? $mulopimfwc_options['enable_store_locator']
-            : 'off';
+                ? $mulopimfwc_options['enable_store_locator']
+                : 'off';
 
             if ($this->are_valid_coordinates($latitude, $longitude) && $enable_locator === 'on'): ?>
                 <div class="mulopimfwc-map-wrapper">
@@ -1227,7 +1247,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 </div>
             <?php endif; ?>
         </div>
-<?php
+    <?php
     }
 
     /**
@@ -1242,16 +1262,16 @@ class MULOPIMFWC_Frontend_Location_Information
         $class = 'mulopimfwc-status-badge mulopimfwc-status-' . ($status['open'] ? 'open' : 'closed');
 
         ob_start();
-?>
-    <span class="<?php echo esc_attr($class); ?>">
-        <?php if ($with_icon): ?>
-            <svg class="mulopimfwc-status-icon" width="8" height="8" viewBox="0 0 8 8" fill="none">
-                <circle cx="4" cy="4" r="4" fill="currentColor" />
-            </svg>
-        <?php endif; ?>
-        <span class="mulopimfwc-status-text"><?php echo esc_html($label); ?></span>
-    </span>
-<?php
+    ?>
+        <span class="<?php echo esc_attr($class); ?>">
+            <?php if ($with_icon): ?>
+                <svg class="mulopimfwc-status-icon" width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <circle cx="4" cy="4" r="4" fill="currentColor" />
+                </svg>
+            <?php endif; ?>
+            <span class="mulopimfwc-status-text"><?php echo esc_html($label); ?></span>
+        </span>
+        <?php
         return ob_get_clean();
     }
 
@@ -1430,7 +1450,7 @@ class MULOPIMFWC_Frontend_Location_Information
                 wc_set_loop_prop('current_page', $paged);
                 wc_set_loop_prop('total_pages', (int) $query->max_num_pages);
             }
-            ?>
+        ?>
             <div class="<?php echo esc_attr(implode(' ', $classes)); ?>"
                 data-location-id="<?php echo esc_attr((int) $term->term_id); ?>"
                 data-location-slug="<?php echo esc_attr(rawurldecode((string) $term->slug)); ?>">
@@ -1465,7 +1485,7 @@ class MULOPIMFWC_Frontend_Location_Information
                     <?php do_action('woocommerce_no_products_found'); ?>
                 <?php endif; ?>
             </div>
-            <?php
+        <?php
 
             wp_reset_postdata();
 
@@ -1552,7 +1572,7 @@ class MULOPIMFWC_Frontend_Location_Information
             }
             ?>
         </div>
-        <?php
+    <?php
 
         return ob_get_clean();
     }
@@ -1575,10 +1595,14 @@ class MULOPIMFWC_Frontend_Location_Information
     {
         global $mulopimfwc_options;
 
-        if(mulopimfwc_is_manual_assignment_strict_mode()) {
+        if (mulopimfwc_is_manual_assignment_strict_mode()) {
             if (is_user_logged_in() && current_user_can('administrator')) {
-                return '<p>When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).</p>';
+                return '<p>' . esc_html__(
+                    'When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).',
+                    'multi-location-product-and-inventory-management-pro'
+                ) . '</p>';
             }
+
             return '';
         }
 
@@ -1739,158 +1763,158 @@ class MULOPIMFWC_Frontend_Location_Information
         global $MULOPIMFWC_Admin;
         $unique_id = 'shortcode-' . uniqid();
 
-?>
-    <div class="mulopimfwc-shortcode-locations-wrapper mulopimfwc-tabbed-locations-wrapper">
-        <div class="mulopimfwc-shortcode-header">
-            <h3 class="mulopimfwc-locations-heading">
-                <?php
-                printf(
-                    esc_html(mulopimfwc_get_text_value('text_location_shortcode_heading')),
-                    count($locations)
-                );
-                ?>
-            </h3>
-        </div>
+    ?>
+        <div class="mulopimfwc-shortcode-locations-wrapper mulopimfwc-tabbed-locations-wrapper">
+            <div class="mulopimfwc-shortcode-header">
+                <h3 class="mulopimfwc-locations-heading">
+                    <?php
+                    printf(
+                        esc_html(mulopimfwc_get_text_value('text_location_shortcode_heading')),
+                        count($locations)
+                    );
+                    ?>
+                </h3>
+            </div>
 
-        <div class="mulopimfwc-locations-tabs-container" id="<?php echo esc_attr($unique_id); ?>">
+            <div class="mulopimfwc-locations-tabs-container" id="<?php echo esc_attr($unique_id); ?>">
 
-            <!-- Tabs Sidebar -->
-            <div class="mulopimfwc-tabs-sidebar">
-                <?php if ($enable_search): ?>
-                    <div class="mulopimfwc-search-wrapper">
+                <!-- Tabs Sidebar -->
+                <div class="mulopimfwc-tabs-sidebar">
+                    <?php if ($enable_search): ?>
+                        <div class="mulopimfwc-search-wrapper">
                             <input type="text"
-                            class="mulopimfwc-location-search"
-                            placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_location_shortcode_search')); ?>"
-                            data-target="<?php echo esc_attr($unique_id); ?>">
-                        <svg class="mulopimfwc-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                class="mulopimfwc-location-search"
+                                placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_location_shortcode_search')); ?>"
+                                data-target="<?php echo esc_attr($unique_id); ?>">
+                            <svg class="mulopimfwc-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
+                            </svg>
+                        </div>
+                    <?php endif; ?>
+                    <div class="mulopimfwc-tabs-list">
+                        <?php foreach ($locations as $index => $location):
+                            $term_id = $location->term_id;
+                            $logo_id = get_term_meta($term_id, 'logo_id', true);
+                            $street_address = get_term_meta($term_id, 'street_address', true);
+                            $city = get_term_meta($term_id, 'city', true);
+                            $state = get_term_meta($term_id, 'state', true);
+                            $phone = get_term_meta($term_id, 'phone', true);
+                            $email = get_term_meta($term_id, 'email', true);
+                            $latitude = get_term_meta($term_id, 'latitude', true);
+                            $longitude = get_term_meta($term_id, 'longitude', true);
+                            $status = $MULOPIMFWC_Admin->is_location_open_now($term_id);
+                            $is_active = $index === 0 ? 'active' : '';
+                            $search_data = strtolower($location->name . ' ' . $street_address . ' ' . $city . ' ' . $state);
+                        ?>
+                            <div class="mulopimfwc-tab-item <?php echo esc_attr($is_active); ?>"
+                                data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
+                                data-tab="location-<?php echo esc_attr($term_id); ?>"
+                                <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
+                                data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
+                                data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
+                                <?php endif; ?>
+                                data-name="<?php echo esc_attr($location->name); ?>"
+                                data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>"
+                                data-url="<?php echo esc_url(get_term_link($location)); ?>"
+                                data-search="<?php echo esc_attr($search_data); ?>">
+
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <?php if ($logo_id): ?>
+                                        <div class="mulopimfwc-tab-logo">
+                                            <?php echo wp_get_attachment_image($logo_id, 'thumbnail', false, ['alt' => $location->name]); ?>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <div class="mulopimfwc-tab-header" style="width: calc(100% - <?php echo $logo_id ? '80px' : '0px'; ?>);">
+                                        <h4 class="mulopimfwc-tab-title">
+                                            <?php if ($use_anchor): ?>
+                                                <a href="<?php echo esc_url(rawurldecode(get_term_link($location))); ?>" target="_blank">
+                                                <?php endif; ?>
+                                                <span>
+                                                    <?php echo esc_html($location->name); ?>
+                                                </span>
+                                                <?php if ($use_anchor): ?>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor" />
+                                                    </svg>
+                                                </a>
+                                            <?php endif; ?>
+                                        </h4>
+                                        <?php echo $this->render_status_badge($status, true); ?>
+                                    </div>
+                                </div>
+
+                                <div class="mulopimfwc-tab-info">
+                                    <div class="mulopimfwc-tab-details">
+                                        <?php if ($street_address || $city): ?>
+                                            <div class="mulopimfwc-tab-detail">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" />
+                                                </svg>
+                                                <span><?php echo esc_html($street_address . ', ' . $city); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if ($phone): ?>
+                                            <div class="mulopimfwc-tab-detail">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" fill="currentColor" />
+                                                </svg>
+                                                <a href="tel:<?php echo esc_attr($phone); ?>"><?php echo esc_html($phone); ?></a>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if ($email): ?>
+                                            <div class="mulopimfwc-tab-detail">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
+                                                </svg>
+                                                <a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <?php if ($latitude && $longitude): ?>
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination=<?php echo esc_attr($latitude); ?>,<?php echo esc_attr($longitude); ?>"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-directions">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor" />
+                                            </svg>
+                                            <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="mulopimfwc-no-results" style="display: none;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                             <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
                         </svg>
+                        <p><?php echo esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_results')); ?></p>
                     </div>
-                <?php endif; ?>
-                <div class="mulopimfwc-tabs-list">
-                    <?php foreach ($locations as $index => $location):
-                        $term_id = $location->term_id;
-                        $logo_id = get_term_meta($term_id, 'logo_id', true);
-                        $street_address = get_term_meta($term_id, 'street_address', true);
-                        $city = get_term_meta($term_id, 'city', true);
-                        $state = get_term_meta($term_id, 'state', true);
-                        $phone = get_term_meta($term_id, 'phone', true);
-                        $email = get_term_meta($term_id, 'email', true);
-                        $latitude = get_term_meta($term_id, 'latitude', true);
-                        $longitude = get_term_meta($term_id, 'longitude', true);
-                        $status = $MULOPIMFWC_Admin->is_location_open_now($term_id);
-                        $is_active = $index === 0 ? 'active' : '';
-                        $search_data = strtolower($location->name . ' ' . $street_address . ' ' . $city . ' ' . $state);
-                    ?>
-                        <div class="mulopimfwc-tab-item <?php echo esc_attr($is_active); ?>"
-                            data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
-                            data-tab="location-<?php echo esc_attr($term_id); ?>"
-                            <?php if ($this->are_valid_coordinates($latitude, $longitude)): ?>
-                            data-lat="<?php echo esc_attr(floatval($latitude)); ?>"
-                            data-lng="<?php echo esc_attr(floatval($longitude)); ?>"
-                            <?php endif; ?>
-                            data-name="<?php echo esc_attr($location->name); ?>"
-                            data-address="<?php echo esc_attr($street_address . ', ' . $city); ?>"
-                            data-url="<?php echo esc_url(get_term_link($location)); ?>"
-                            data-search="<?php echo esc_attr($search_data); ?>">
-
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <?php if ($logo_id): ?>
-                                    <div class="mulopimfwc-tab-logo">
-                                        <?php echo wp_get_attachment_image($logo_id, 'thumbnail', false, ['alt' => $location->name]); ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <div class="mulopimfwc-tab-header" style="width: calc(100% - <?php echo $logo_id ? '80px' : '0px'; ?>);">
-                                    <h4 class="mulopimfwc-tab-title">
-                                        <?php if ($use_anchor): ?>
-                                            <a href="<?php echo esc_url(rawurldecode(get_term_link($location))); ?>" target="_blank">
-                                            <?php endif; ?>
-                                            <span>
-                                                <?php echo esc_html($location->name); ?>
-                                            </span>
-                                            <?php if ($use_anchor): ?>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor" />
-                                                </svg>
-                                            </a>
-                                        <?php endif; ?>
-                                    </h4>
-                                    <?php echo $this->render_status_badge($status, true); ?>
-                                </div>
-                            </div>
-
-                            <div class="mulopimfwc-tab-info">
-                                <div class="mulopimfwc-tab-details">
-                                    <?php if ($street_address || $city): ?>
-                                        <div class="mulopimfwc-tab-detail">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" />
-                                            </svg>
-                                            <span><?php echo esc_html($street_address . ', ' . $city); ?></span>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if ($phone): ?>
-                                        <div class="mulopimfwc-tab-detail">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" fill="currentColor" />
-                                            </svg>
-                                            <a href="tel:<?php echo esc_attr($phone); ?>"><?php echo esc_html($phone); ?></a>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if ($email): ?>
-                                        <div class="mulopimfwc-tab-detail">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
-                                            </svg>
-                                            <a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-
-                                <?php if ($latitude && $longitude): ?>
-                                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?php echo esc_attr($latitude); ?>,<?php echo esc_attr($longitude); ?>"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="mulopimfwc-btn mulopimfwc-btn-sm mulopimfwc-btn-directions">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                            <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v2H8v-4c0-.55.45-1 1-1h5V6.5l3.5 3.5-3.5 3.5z" fill="currentColor" />
-                                        </svg>
-                                        <?php echo esc_html(mulopimfwc_get_text_value('text_location_button_directions')); ?>
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
                 </div>
 
-                <div class="mulopimfwc-no-results" style="display: none;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
-                    </svg>
-                    <p><?php echo esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_results')); ?></p>
+                <!-- Map Panel -->
+                <div class="mulopimfwc-tabs-content">
+                    <div id="mulopimfwc-tabbed-map-<?php echo esc_attr($unique_id); ?>"
+                        class="mulopimfwc-location-map mulopimfwc-map-interactive"></div>
+
+                    <div class="mulopimfwc-map-info-overlay">
+                        <?php
+                        // Render initial content for first location
+                        $first_location = $locations[0];
+                        $this->render_map_overlay_content($first_location->term_id);
+                        ?>
+                    </div>
                 </div>
+
             </div>
-
-            <!-- Map Panel -->
-            <div class="mulopimfwc-tabs-content">
-                <div id="mulopimfwc-tabbed-map-<?php echo esc_attr($unique_id); ?>"
-                    class="mulopimfwc-location-map mulopimfwc-map-interactive"></div>
-
-                <div class="mulopimfwc-map-info-overlay">
-                    <?php
-                    // Render initial content for first location
-                    $first_location = $locations[0];
-                    $this->render_map_overlay_content($first_location->term_id);
-                    ?>
-                </div>
-            </div>
-
         </div>
-    </div>
-<?php
+    <?php
     }
 
     /**
@@ -1899,54 +1923,54 @@ class MULOPIMFWC_Frontend_Location_Information
     private function render_shortcode_grid_locations($locations, $enable_search = false)
     {
         $unique_id = 'grid-' . uniqid();
-?>
-    <div class="mulopimfwc-shortcode-locations-wrapper mulopimfwc-grid-locations-wrapper" id="<?php echo esc_attr($unique_id); ?>">
-        <div class="mulopimfwc-shortcode-header">
-            <h3 class="mulopimfwc-locations-heading">
-                <?php
-                printf(
-                    esc_html(mulopimfwc_get_text_value('text_location_shortcode_heading')),
-                    count($locations)
-                );
+    ?>
+        <div class="mulopimfwc-shortcode-locations-wrapper mulopimfwc-grid-locations-wrapper" id="<?php echo esc_attr($unique_id); ?>">
+            <div class="mulopimfwc-shortcode-header">
+                <h3 class="mulopimfwc-locations-heading">
+                    <?php
+                    printf(
+                        esc_html(mulopimfwc_get_text_value('text_location_shortcode_heading')),
+                        count($locations)
+                    );
+                    ?>
+                </h3>
+
+                <?php if ($enable_search): ?>
+                    <div class="mulopimfwc-search-wrapper">
+                        <input type="text"
+                            class="mulopimfwc-location-search"
+                            placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_location_shortcode_search')); ?>"
+                            data-target="<?php echo esc_attr($unique_id); ?>">
+                        <svg class="mulopimfwc-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
+                        </svg>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="mulopimfwc-locations-grid">
+                <?php foreach ($locations as $location):
+                    $term_id = $location->term_id;
+                    $search_data = strtolower($location->name . ' ' .
+                        get_term_meta($term_id, 'street_address', true) . ' ' .
+                        get_term_meta($term_id, 'city', true) . ' ' .
+                        get_term_meta($term_id, 'state', true));
                 ?>
-            </h3>
+                    <div class="mulopimfwc-grid-location-item"
+                        data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
+                        data-search="<?php echo esc_attr($search_data); ?>">
+                        <?php $this->render_location_details($term_id, 'grid', true, $unique_id); ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
 
-            <?php if ($enable_search): ?>
-                <div class="mulopimfwc-search-wrapper">
-                    <input type="text"
-                        class="mulopimfwc-location-search"
-                        placeholder="<?php echo esc_attr(mulopimfwc_get_text_value('text_location_shortcode_search')); ?>"
-                        data-target="<?php echo esc_attr($unique_id); ?>">
-                    <svg class="mulopimfwc-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
-                    </svg>
-                </div>
-            <?php endif; ?>
+            <div class="mulopimfwc-no-results" style="display: none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
+                </svg>
+                <p><?php echo esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_results')); ?></p>
+            </div>
         </div>
-
-        <div class="mulopimfwc-locations-grid">
-            <?php foreach ($locations as $location):
-                $term_id = $location->term_id;
-                $search_data = strtolower($location->name . ' ' .
-                    get_term_meta($term_id, 'street_address', true) . ' ' .
-                    get_term_meta($term_id, 'city', true) . ' ' .
-                    get_term_meta($term_id, 'state', true));
-            ?>
-                <div class="mulopimfwc-grid-location-item"
-                    data-location-slug="<?php echo esc_attr(rawurldecode($location->slug)); ?>"
-                    data-search="<?php echo esc_attr($search_data); ?>">
-                    <?php $this->render_location_details($term_id, 'grid', true, $unique_id); ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
-
-        <div class="mulopimfwc-no-results" style="display: none;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor" />
-            </svg>
-            <p><?php echo esc_html(mulopimfwc_get_text_value('text_location_shortcode_no_results')); ?></p>
-        </div>
-    </div>
 <?php
     }
 

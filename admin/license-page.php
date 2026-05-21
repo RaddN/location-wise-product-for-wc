@@ -95,7 +95,7 @@ class mulopimfwc_License_Manager
                 wp_enqueue_script('jquery');
             ?>
                 <script type="text/javascript">
-                    var ajaxurl = "<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>";
+                    var ajaxurl = "<?php echo esc_url(admin_url('admin-ajax.php')); ?>";
                 </script>
         <?php
             }
@@ -120,7 +120,7 @@ class mulopimfwc_License_Manager
                 wp_send_json_error(array('message' => __('You do not have permission to perform this action.', 'multi-location-product-and-inventory-management-pro')));
                 return;
             }
-            
+
             check_ajax_referer('mulopimfwc_remove_license_nonce', 'nonce');
             delete_option('mulopimfwc_license_key');
             delete_option('mulopimfwc_license_status');
@@ -158,7 +158,7 @@ class mulopimfwc_License_Manager
         if (isset($license_data->license) && $license_data->license === 'valid') {
             update_option('mulopimfwc_license_status', 'valid');
             delete_transient('mulopimfwc_license_deactivated_remotely');
-            
+
             // Cache the valid license data
             if ($license_data) {
                 wp_cache_set($this->cache_key, $license_data, '', 3600);
@@ -171,7 +171,7 @@ class mulopimfwc_License_Manager
         // Don't treat 'site_inactive' as a permanent deactivation - it might be temporary
         if (isset($license_data->license)) {
             $invalid_statuses = array('disabled', 'revoked', 'no_activations_left');
-            
+
             // Handle expired separately
             if ($license_data->license === 'expired') {
                 update_option('mulopimfwc_license_status', 'expired');
@@ -182,7 +182,7 @@ class mulopimfwc_License_Manager
                 }
                 return;
             }
-            
+
             // Only set remote deactivation for truly invalid states
             if (in_array($license_data->license, $invalid_statuses)) {
                 $this->handle_remote_deactivation($license_data);
@@ -192,7 +192,7 @@ class mulopimfwc_License_Manager
                 update_option('mulopimfwc_license_status', 'site_inactive');
                 // Clear the remote deactivation transient if it exists - might be a false positive
                 delete_transient('mulopimfwc_license_deactivated_remotely');
-                
+
                 if ($license_data) {
                     wp_cache_set($this->cache_key, $license_data, '', 3600);
                     set_transient($this->cache_key, $license_data, 7200);
@@ -216,7 +216,7 @@ class mulopimfwc_License_Manager
                     // Status was already not valid, just update it
                     update_option('mulopimfwc_license_status', $license_data->license);
                 }
-                
+
                 if ($license_data) {
                     wp_cache_set($this->cache_key, $license_data, '', 3600);
                     set_transient($this->cache_key, $license_data, 7200);
@@ -252,7 +252,7 @@ class mulopimfwc_License_Manager
         // Only set remote deactivation transient for statuses that indicate actual deactivation
         // Don't set it for expired (handled separately) or site_inactive (might be temporary)
         $deactivation_statuses = array('disabled', 'revoked', 'no_activations_left');
-        
+
         if (isset($license_data->license) && in_array($license_data->license, $deactivation_statuses)) {
             update_option('mulopimfwc_license_status', $license_data->license);
             set_transient('mulopimfwc_license_deactivated_remotely', $license_data->license, WEEK_IN_SECONDS);
@@ -632,21 +632,22 @@ class mulopimfwc_License_Manager
         if ($remote_deactivation_status) {
             // Verify the license is still actually invalid before showing persistent alert
             $current_status = get_option('mulopimfwc_license_status', '');
-            
+
             // If license status is now valid, clear the transient and don't show alert
             if ($current_status === 'valid') {
                 delete_transient('mulopimfwc_license_deactivated_remotely');
                 return;
             }
-            
+
             // Only show alert for statuses that warrant a persistent notification
             $alert_statuses = array('disabled', 'revoked', 'no_activations_left');
-            if (in_array($remote_deactivation_status, $alert_statuses) || in_array($current_status, $alert_statuses)) {
+            if (in_array($remote_deactivation_status, $alert_statuses, true) || in_array($current_status, $alert_statuses, true)) {
                 $message = $this->get_remote_deactivation_message($remote_deactivation_status);
+
                 echo '<div class="notice notice-error is-dismissible">';
-                echo '<p><strong>License Alert:</strong> ' . esc_html($message) . '</p>';
-                echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=multi-location-product-and-inventory-management-settings#license-settings' ) ) . '">Manage License</a> | ';
-                echo '<a href="https://plugincy.com/support" target="_blank">Contact Support</a></p>';
+                echo '<p><strong>' . esc_html__('License Alert:', 'multi-location-product-and-inventory-management-pro') . '</strong> ' . esc_html($message) . '</p>';
+                echo '<p><a href="' . esc_url(admin_url('admin.php?page=multi-location-product-and-inventory-management-settings#license-settings')) . '">' . esc_html__('Manage License', 'multi-location-product-and-inventory-management-pro') . '</a> | ';
+                echo '<a href="' . esc_url('https://plugincy.com/support') . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Contact Support', 'multi-location-product-and-inventory-management-pro') . '</a></p>';
                 echo '</div>';
             }
         }
@@ -657,9 +658,28 @@ class mulopimfwc_License_Manager
             $update_info = $this->check_for_updates();
             if ($update_info) {
                 echo '<div class="notice notice-info is-dismissible">';
-                echo '<p><strong>Multi Location Product & Inventory Management for WooCommerce Pro Update Available!</strong></p>';
-                echo '<p>Version ' . esc_html($update_info->new_version) . ' is now available. ';
-                echo '<a href="' . esc_url( add_query_arg( 'force_check_updates', '1', admin_url( 'plugins.php' ) ) ) . '">Update now</a> to get the latest features and improvements.</p>';
+
+                echo '<p><strong>' . esc_html__(
+                    'Multi Location Product & Inventory Management for WooCommerce Pro Update Available!',
+                    'multi-location-product-and-inventory-management-pro'
+                ) . '</strong></p>';
+
+                echo '<p>' . sprintf(
+                    /* translators: %s: New plugin version. */
+                    esc_html__('Version %s is now available.', 'multi-location-product-and-inventory-management-pro'),
+                    esc_html($update_info->new_version)
+                ) . ' ';
+
+                echo '<a href="' . esc_url(add_query_arg('force_check_updates', '1', admin_url('plugins.php'))) . '">' . esc_html__(
+                    'Update now',
+                    'multi-location-product-and-inventory-management-pro'
+                ) . '</a> ';
+
+                echo esc_html__(
+                    'to get the latest features and improvements.',
+                    'multi-location-product-and-inventory-management-pro'
+                ) . '</p>';
+
                 echo '</div>';
             }
         }
@@ -690,16 +710,66 @@ class mulopimfwc_License_Manager
 
         if ($is_expired) {
             echo '<div class="notice notice-error is-dismissible">';
-            echo '<p><strong>License Expired:</strong> Your Multi Location Product & Inventory Management for WooCommerce Pro license expired on ' . esc_html($expires_date->format('M j, Y')) . '.</p>';
-            echo '<p><a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank" class="button button-primary">Renew License</a> ';
-            echo '<a href="https://plugincy.com/support" target="_blank">Contact Support</a></p>';
+
+            echo '<p><strong>' . esc_html__(
+                'License Expired:',
+                'multi-location-product-and-inventory-management-pro'
+            ) . '</strong> ' . sprintf(
+                /* translators: %s: License expiration date. */
+                esc_html__(
+                    'Your Multi Location Product & Inventory Management for WooCommerce Pro license expired on %s.',
+                    'multi-location-product-and-inventory-management-pro'
+                ),
+                esc_html($expires_date->format('M j, Y'))
+            ) . '</p>';
+
+            echo '<p><a href="' . esc_url(add_query_arg(
+                'edd_license_key',
+                rawurlencode($license_key),
+                'https://plugincy.com/checkout/'
+            )) . '" target="_blank" rel="noopener noreferrer" class="button button-primary">' . esc_html__(
+                'Renew License',
+                'multi-location-product-and-inventory-management-pro'
+            ) . '</a> ';
+
+            echo '<a href="' . esc_url('https://plugincy.com/support') . '" target="_blank" rel="noopener noreferrer">' . esc_html__(
+                'Contact Support',
+                'multi-location-product-and-inventory-management-pro'
+            ) . '</a></p>';
+
             echo '</div>';
         } elseif ($days_until_expiry <= 30) {
             $notice_class = $days_until_expiry <= 7 ? 'notice-error' : 'notice-warning';
-            echo '<div class="notice ' . esc_attr( $notice_class ) . ' is-dismissible">';
-            echo '<p><strong>License Expiring Soon:</strong> Your license will expire in ' . esc_html( $days_until_expiry ) . ' days (' . esc_html($expires_date->format('M j, Y')) . ').</p>';
-            echo '<p><a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank" class="button button-primary">Renew Now</a> ';
-            echo '<a href="https://plugincy.com/my-account" target="_blank">Manage License</a></p>';
+
+            echo '<div class="notice ' . esc_attr($notice_class) . ' is-dismissible">';
+
+            echo '<p><strong>' . esc_html__(
+                'License Expiring Soon:',
+                'multi-location-product-and-inventory-management-pro'
+            ) . '</strong> ' . sprintf(
+                /* translators: 1: Number of days until license expiry, 2: License expiration date. */
+                esc_html__(
+                    'Your license will expire in %1$s days (%2$s).',
+                    'multi-location-product-and-inventory-management-pro'
+                ),
+                esc_html($days_until_expiry),
+                esc_html($expires_date->format('M j, Y'))
+            ) . '</p>';
+
+            echo '<p><a href="' . esc_url(add_query_arg(
+                'edd_license_key',
+                rawurlencode($license_key),
+                'https://plugincy.com/checkout/'
+            )) . '" target="_blank" rel="noopener noreferrer" class="button button-primary">' . esc_html__(
+                'Renew Now',
+                'multi-location-product-and-inventory-management-pro'
+            ) . '</a> ';
+
+            echo '<a href="' . esc_url('https://plugincy.com/my-account') . '" target="_blank" rel="noopener noreferrer">' . esc_html__(
+                'Manage License',
+                'multi-location-product-and-inventory-management-pro'
+            ) . '</a></p>';
+
             echo '</div>';
         }
     }
@@ -797,7 +867,7 @@ class mulopimfwc_License_Manager
                                             <br>
                                             <span style="color: #d63384; font-weight: bold; display: flex; align-items: center; gap: 6px; justify-content: space-between;">
                                                 <div><span class="dashicons dashicons-warning" style="color: #d63384; font-size: 16px;"></span>
-                                                    <?php echo esc_html__('Update Available!', 'multi-location-product-and-inventory-management-pro'); ?></div> <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>" class="button button-primary"><?php echo esc_html__('Update Now', 'multi-location-product-and-inventory-management-pro'); ?></a>
+                                                    <?php echo esc_html__('Update Available!', 'multi-location-product-and-inventory-management-pro'); ?></div> <a href="<?php echo esc_url(admin_url('plugins.php')); ?>" class="button button-primary"><?php echo esc_html__('Update Now', 'multi-location-product-and-inventory-management-pro'); ?></a>
                                             </span>
                                         <?php else: ?>
                                             <br>
@@ -818,8 +888,18 @@ class mulopimfwc_License_Manager
                                 </div>
                             <?php endif; ?>
                             <input type="hidden" name="mulopimfwc_license_action" value="deactivate" />
-                            <?php if ($is_expired): echo '<a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank" class="button button-primary">Renew License</a>';
-                            endif; ?>
+                            <?php
+                            if ( $is_expired ) :
+                                echo '<a href="' . esc_url( add_query_arg(
+                                    'edd_license_key',
+                                    rawurlencode( $license_key ),
+                                    'https://plugincy.com/checkout/'
+                                ) ) . '" target="_blank" rel="noopener noreferrer" class="button button-primary">' . esc_html__(
+                                    'Renew License',
+                                    'multi-location-product-and-inventory-management-pro'
+                                ) . '</a>';
+                            endif;
+                            ?>
                             <button type="submit" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to deactivate your license?', 'multi-location-product-and-inventory-management-pro')); ?>')" class="button button-primary" style="background: #eef1f6;color:#24262a;display: inline-flex;align-items: center;gap: 8px;margin-top: 15px;padding: 6px 20px;border: 1px solid #e3e3e3;">
                                 <svg width="20" height="20" viewBox="0 0 0.8 0.8" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M.564.135a.031.031 0 0 0-.03.055.281.281 0 1 1-.27.001L.265.19A.031.031 0 0 0 .25.131a.02.02 0 0 0-.015.004.344.344 0 1 0 .331.001zM.399.382A.03.03 0 0 0 .43.351V.05a.031.031 0 0 0-.063 0v.301c0 .017.014.031.031.031" />
@@ -924,9 +1004,29 @@ class mulopimfwc_License_Manager
                                                 <?php elseif ($days_until_expiry <= 30): ?>
                                                     <span style="color: #fd7e14; font-weight: bold;">
                                                         <span class="dashicons dashicons-warning" style="font-size: 16px; vertical-align: middle;"></span>
-                                                        <?php echo esc_html($expires_date->format('M j, Y')); ?>
-                                                        <small>(<?php echo esc_html( $days_until_expiry ); ?> days left)</small>
-                                                        <?php echo '<a href="https://plugincy.com/checkout/?edd_license_key=' . esc_attr($license_key) . '" target="_blank">Renew License</a>'; ?>
+
+                                                        <?php echo esc_html( $expires_date->format( 'M j, Y' ) ); ?>
+
+                                                        <small>
+                                                            <?php
+                                                            echo sprintf(
+                                                                /* translators: %s: Number of days until license expiry. */
+                                                                esc_html__( '(%s days left)', 'multi-location-product-and-inventory-management-pro' ),
+                                                                esc_html( $days_until_expiry )
+                                                            );
+                                                            ?>
+                                                        </small>
+
+                                                        <?php
+                                                        echo '<a href="' . esc_url( add_query_arg(
+                                                            'edd_license_key',
+                                                            rawurlencode( $license_key ),
+                                                            'https://plugincy.com/checkout/'
+                                                        ) ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__(
+                                                            'Renew License',
+                                                            'multi-location-product-and-inventory-management-pro'
+                                                        ) . '</a>';
+                                                        ?>
                                                     </span>
                                                 <?php else: ?>
                                                     <span style="color: #198754;">
@@ -947,7 +1047,18 @@ class mulopimfwc_License_Manager
                                             </span>
                                             <div>
                                                 <span style="color: #495057;">
-                                                    <?php echo esc_html($license_details->site_count); ?> of <?php echo $license_details->license_limit == 0 ? "Unlimited" : esc_html($license_details->license_limit); ?> sites used
+                                                    <?php
+                                                    $license_limit = 0 === (int) $license_details->license_limit
+                                                        ? esc_html__( 'Unlimited', 'multi-location-product-and-inventory-management-pro' )
+                                                        : esc_html( $license_details->license_limit );
+
+                                                    echo sprintf(
+                                                        /* translators: 1: Used site count, 2: License site limit. */
+                                                        esc_html__( '%1$s of %2$s sites used', 'multi-location-product-and-inventory-management-pro' ),
+                                                        esc_html( $license_details->site_count ),
+                                                        $license_limit
+                                                    );
+                                                    ?>
                                                 </span>
                                                 <?php
                                                 if ($license_details->license_limit == 0): ?>
@@ -1079,6 +1190,7 @@ class mulopimfwc_License_Manager
             <script>
                 var checkUpdatesCheckingLabel = <?php echo wp_json_encode(__('Checking...', 'multi-location-product-and-inventory-management-pro')); ?>;
                 var checkUpdatesLatestLabel = <?php echo wp_json_encode(__('You have the latest version installed.', 'multi-location-product-and-inventory-management-pro')); ?>;
+
                 function checkForUpdates() {
                     var btn = document.getElementById('check-updates-btn');
                     var originalText = btn.textContent;

@@ -483,7 +483,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
     {
         $variation_id = isset($variation['id']) ? (int) $variation['id'] : 0;
         if (empty($variation['attributes']) || !is_array($variation['attributes'])) {
-            return sprintf(/* translators: %d: variation ID */ __('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
+            return sprintf(/* translators: %d: variation ID */__('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
         }
 
         $parts = [];
@@ -498,7 +498,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         return !empty($parts)
             ? implode(', ', $parts)
-            : sprintf(/* translators: %d: variation ID */ __('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
+            : sprintf(/* translators: %d: variation ID */__('Variation #%d', 'multi-location-product-and-inventory-management-pro'), $variation_id);
     }
 
     private function classic_number_input($field, $value, $step = '1', $min = '0', $disabled = false, $extra_class = '')
@@ -775,11 +775,32 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         }
 
         if (empty($context['global_manage_stock_enabled'])) {
-            $settings_url = 'admin.php?page=wc-settings&tab=products&section=inventory';
+            $settings_url = admin_url('admin.php?page=wc-settings&tab=products&section=inventory');
 
-            $output = '<div class="mulopimfwc-classic-manage-stock-disabled">';
-            $output .= '<p>Disabled in <a href="' . esc_url($settings_url) . '" aria-label="stock management store settings">store settings</a></p>';
-            $output .= '<p class="description">' . esc_html__('Enable WooCommerce Manage stock to edit stock quantity and backorders.', 'multi-location-product-and-inventory-management-pro') . '</p>';
+            $output  = '<div class="mulopimfwc-classic-manage-stock-disabled">';
+
+            $output .= '<p>' . wp_kses(
+                sprintf(
+                    /* translators: %s: URL to WooCommerce inventory settings. */
+                    __(
+                        'Disabled in <a href="%s" aria-label="stock management store settings">store settings</a>',
+                        'multi-location-product-and-inventory-management-pro'
+                    ),
+                    esc_url($settings_url)
+                ),
+                array(
+                    'a' => array(
+                        'href'       => true,
+                        'aria-label' => true,
+                    ),
+                )
+            ) . '</p>';
+
+            $output .= '<p class="description">' . esc_html__(
+                'Enable WooCommerce Manage stock to edit stock quantity and backorders.',
+                'multi-location-product-and-inventory-management-pro'
+            ) . '</p>';
+
             $output .= '</div>';
 
             return $output;
@@ -1168,12 +1189,12 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                 $output .= '<span class="accordion-icon">' . ($is_first ? '-' : '+') . '</span>';
                 $output .= '</div>';
                 $output .= '<div class="accordion-content' . ($is_first ? ' accordion-open' : '') . '" id="' . esc_attr($accordion_id) . '">';
-                
+
                 // Get variation product to check stock management setting
                 $variation_product = wc_get_product($variation['id']);
                 $manage_stock = $variation_product ? $variation_product->get_manage_stock() : false;
                 $backorders = $variation_product ? $variation_product->get_backorders() : 'off';
-                
+
                 if ($show_default) {
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . __('Default', 'multi-location-product-and-inventory-management-pro') . ':</span> ';
@@ -1200,13 +1221,13 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     }
                     $output .= '</div>';
                 }
-                
+
                 if (!empty($location_terms)) {
                     foreach ($location_terms as $location) {
                         $location_stock = get_post_meta($variation['id'], '_location_stock_' . $location->term_id, true);
                         $output .= '<div class="location-stock-item">';
                         $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                        
+
                         // For location stock, check if stock is set (empty string means not set)
                         if ($location_stock !== '') {
                             $stock_data = function_exists('mulopimfwc_build_stock_display_label')
@@ -1259,7 +1280,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             $product = wc_get_product($item['id']);
             $manage_stock = $product ? $product->get_manage_stock() : false;
             $backorders = $product ? $product->get_backorders() : 'off';
-            
+
             if ($show_default) {
                 if ($manage_stock) {
                     $default_stock = get_post_meta($item['id'], "_stock", true);
@@ -1298,7 +1319,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     $location_stock = get_post_meta($item['id'], '_location_stock_' . $location->term_id, true);
                     $output .= '<div class="location-stock-item">';
                     $output .= '<span class="location-name">' . esc_html($location->name) . ':</span> ';
-                    
+
                     // For location stock, check if stock is set (empty string means not set)
                     if ($location_stock !== '') {
                         $stock_data = function_exists('mulopimfwc_build_stock_display_label')
@@ -1871,7 +1892,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             return '<span class="gross-profit-value no-data">' . __('N/A', 'multi-location-product-and-inventory-management-pro') . '</span>';
         }
 
-        $output = '<div class="gross-profit-container '.esc_attr(mulopimfwc_get_pro_class()).'">';
+        $output = '<div class="gross-profit-container ' . esc_attr(mulopimfwc_get_pro_class()) . '">';
 
         if ($item['type'] === 'variable' && !empty($item['variations'])) {
             $variation_index = 0;
@@ -2070,10 +2091,10 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
             return;
         }
 
-        $action = isset($_REQUEST['action']) && $_REQUEST['action'] != '-1' 
-            ? sanitize_text_field(wp_unslash($_REQUEST['action'])) 
-            : (isset($_REQUEST['action2']) && $_REQUEST['action2'] != '-1' 
-                ? sanitize_text_field(wp_unslash($_REQUEST['action2'])) 
+        $action = isset($_REQUEST['action']) && $_REQUEST['action'] != '-1'
+            ? sanitize_text_field(wp_unslash($_REQUEST['action']))
+            : (isset($_REQUEST['action2']) && $_REQUEST['action2'] != '-1'
+                ? sanitize_text_field(wp_unslash($_REQUEST['action2']))
                 : '');
 
         if (empty($action)) {
@@ -2104,7 +2125,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                             $count++;
                         }
                     }
-                    add_action('admin_notices', function() use ($count) {
+                    add_action('admin_notices', function () use ($count) {
                         echo '<div class="notice notice-success is-dismissible"><p>';
                         printf(
                             /* translators: %d: number of products */
@@ -2126,7 +2147,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                         wp_remove_object_terms($product_id, $location_id, 'mulopimfwc_store_location');
                         $count++;
                     }
-                    add_action('admin_notices', function() use ($count) {
+                    add_action('admin_notices', function () use ($count) {
                         echo '<div class="notice notice-success is-dismissible"><p>';
                         printf(
                             /* translators: %d: number of products */
@@ -2149,7 +2170,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
                     }
                 }
                 if ($count > 0) {
-                    add_action('admin_notices', function() use ($count) {
+                    add_action('admin_notices', function () use ($count) {
                         echo '<div class="notice notice-success is-dismissible"><p>';
                         printf(
                             /* translators: %d: number of products */
@@ -2633,7 +2654,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
         if ($which == 'top') {
             // Filters section
             echo '<div class="alignleft actions filters-section">';
-            
+
             // Location filter
             if (!empty($available_locations)) {
                 $selected_location = isset($_REQUEST['filter-by-location']) ? sanitize_text_field(wp_unslash($_REQUEST['filter-by-location'])) : '';
@@ -2765,7 +2786,7 @@ class mulopimfwc_Product_Location_Table extends WP_List_Table
 
         // Modify ORDER BY to sort by location count (DESC) then by post title (ASC)
         $orderby = "COALESCE(location_counts.location_count, 0) DESC, {$wpdb->posts}.post_title ASC";
-        
+
         if (!empty($clauses['orderby'])) {
             $clauses['orderby'] = $orderby . ', ' . $clauses['orderby'];
         } else {

@@ -10323,7 +10323,10 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             if (mulopimfwc_is_manual_assignment_strict_mode()) {
                 if (is_user_logged_in() && current_user_can('administrator')) {
-                    return '<p>When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).</p>';
+                    return '<p>' . esc_html__(
+            'When manual assignment strict mode is enabled, the location selector shortcode will not be displayed (Admin Only).',
+            'multi-location-product-and-inventory-management-pro'
+        ) . '</p>';
                 }
                 return '';
             }
@@ -10373,8 +10376,12 @@ if (!function_exists('mulopimfwc_get_values')) {
         {
             if (mulopimfwc_is_manual_assignment_strict_mode()) {
                 if (is_user_logged_in() && current_user_can('administrator')) {
-                    return '<p>When manual assignment strict mode is enabled, the popup shortcode will not be displayed (Admin Only).</p>';
+                    return '<p>' . esc_html__(
+                        'When manual assignment strict mode is enabled, the popup shortcode will not be displayed (Admin Only).',
+                        'multi-location-product-and-inventory-management-pro'
+                    ) . '</p>';
                 }
+
                 return '';
             }
 

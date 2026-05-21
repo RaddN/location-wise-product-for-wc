@@ -3476,13 +3476,13 @@ class mulopimfwc_settings
                                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
                                             <div>
                                                 <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                                                <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
-                                                    <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management-pro'); ?></option>
-                                                    <option value="slack" <?php selected($type, 'slack'); ?>>Slack</option>
-                                                    <option value="teams" <?php selected($type, 'teams'); ?>>Microsoft Teams</option>
-                                                    <option value="discord" <?php selected($type, 'discord'); ?>>Discord</option>
-                                                    <option value="telegram" <?php selected($type, 'telegram'); ?>>Telegram</option>
-                                                    <option value="custom" <?php selected($type, 'custom'); ?>>Custom Webhook</option>
+                                                <select <?php echo ! mulopimfwc_premium_feature() ? 'disabled' : ''; ?> name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr( $index ); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
+                                                    <option value=""><?php echo esc_html__( 'Select...', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                                    <option value="slack" <?php selected( $type, 'slack' ); ?>><?php echo esc_html__( 'Slack', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                                    <option value="teams" <?php selected( $type, 'teams' ); ?>><?php echo esc_html__( 'Microsoft Teams', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                                    <option value="discord" <?php selected( $type, 'discord' ); ?>><?php echo esc_html__( 'Discord', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                                    <option value="telegram" <?php selected( $type, 'telegram' ); ?>><?php echo esc_html__( 'Telegram', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                                    <option value="custom" <?php selected( $type, 'custom' ); ?>><?php echo esc_html__( 'Custom Webhook', 'multi-location-product-and-inventory-management-pro' ); ?></option>
                                                 </select>
                                             </div>
                                             <div>
@@ -3516,12 +3516,12 @@ class mulopimfwc_settings
                                     <div>
                                         <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management-pro'); ?></label>
                                         <select name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][type]" class="mulopimfwc-channel-type" style="width:100%;">
-                                            <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management-pro'); ?></option>
-                                            <option value="slack">Slack</option>
-                                            <option value="teams">Microsoft Teams</option>
-                                            <option value="discord">Discord</option>
-                                            <option value="telegram">Telegram</option>
-                                            <option value="custom">Custom Webhook</option>
+                                            <option value=""><?php echo esc_html__( 'Select...', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                            <option value="slack"><?php echo esc_html__( 'Slack', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                            <option value="teams"><?php echo esc_html__( 'Microsoft Teams', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                            <option value="discord"><?php echo esc_html__( 'Discord', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                            <option value="telegram"><?php echo esc_html__( 'Telegram', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                            <option value="custom"><?php echo esc_html__( 'Custom Webhook', 'multi-location-product-and-inventory-management-pro' ); ?></option>
                                         </select>
                                     </div>
                                     <div>

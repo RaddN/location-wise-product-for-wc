@@ -134,7 +134,10 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
         // Include
         echo '<div class="options_group">';
-        echo '<div class="hr-section hr-section-coupon_restrictions">And</div>';
+        echo '<div class="hr-section hr-section-coupon_restrictions">' . esc_html__(
+            'And',
+            'multi-location-product-and-inventory-management-pro'
+        ) . '</div>';
         woocommerce_wp_select([
             'id'                => self::META_INCLUDE,
             'name'              => self::META_INCLUDE . '[]',
