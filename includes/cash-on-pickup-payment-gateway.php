@@ -702,11 +702,11 @@ if (!function_exists('mulopimfwc_cop_should_show_badge')) {
     }
 }
 
-if (!function_exists('mulopimfwc_render_cop_badge')) {
+if (!function_exists('mulopimfwc_enqueue_cop_badge_assets')) {
     /**
-     * Inject badge markup for the Cash on Pickup gateway row.
+     * Enqueue badge assets for the Cash on Pickup gateway row.
      */
-    function mulopimfwc_render_cop_badge()
+    function mulopimfwc_enqueue_cop_badge_assets()
     {
         if (!mulopimfwc_cop_should_show_badge()) {
             return;
@@ -723,91 +723,29 @@ if (!function_exists('mulopimfwc_render_cop_badge')) {
             esc_attr__('Plugincy cash on pickup add-on', 'multi-location-product-and-inventory-management-pro')
         );
 
-        ?>
-        <script>
-            (function () {
-                var badgeHtml = <?php echo wp_json_encode($badge_html); ?>;
-                var tooltipId = <?php echo wp_json_encode($tooltip_id); ?>;
+        $script_path = plugin_dir_path(__FILE__) . '../assets/js/cash-on-pickup-admin.js';
+        $style_path = plugin_dir_path(__FILE__) . '../assets/css/cash-on-pickup-admin.css';
 
-                function insertBadge() {
-                    var row = document.getElementById('cash_on_pickup');
-                    if (!row) {
-                        return;
-                    }
-                    var title = row.querySelector('.woocommerce-list__item-title');
-                    if (!title || title.querySelector('.mulopimfwc-cop-badge')) {
-                        return;
-                    }
-                    title.insertAdjacentHTML('beforeend', badgeHtml);
-                    attachTooltip(title.querySelector('.mulopimfwc-cop-badge .woocommerce-official-extension-badge__container'));
-                }
+        wp_enqueue_style(
+            'mulopimfwc-cash-on-pickup-admin',
+            plugin_dir_url(__FILE__) . '../assets/css/cash-on-pickup-admin.css',
+            array(),
+            file_exists($style_path) ? (string) filemtime($style_path) : '1.1.7.20'
+        );
 
-                function ensureTooltipStyles() {
-                    if (document.getElementById(tooltipId + '-style')) {
-                        return;
-                    }
-                    var style = document.createElement('style');
-                    style.id = tooltipId + '-style';
-                    style.textContent = ''
-                        + '.mulopimfwc-cop-tooltip{position:absolute;z-index:1000;background:#1e1e1e;color:#fff;padding:8px 10px;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,0.18);font-size:12px;line-height:1.4;max-width:240px;}'
-                        + '.mulopimfwc-cop-tooltip:after{content:\"\";position:absolute;top:-6px;left:12px;border:6px solid transparent;border-bottom-color:#1e1e1e;}';
-                    document.head.appendChild(style);
-                }
+        wp_enqueue_script(
+            'mulopimfwc-cash-on-pickup-admin',
+            plugin_dir_url(__FILE__) . '../assets/js/cash-on-pickup-admin.js',
+            array(),
+            file_exists($script_path) ? (string) filemtime($script_path) : '1.1.7.20',
+            true
+        );
 
-                function attachTooltip(target) {
-                    if (!target || target.dataset.mulopimfwcTooltipReady) {
-                        return;
-                    }
-                    ensureTooltipStyles();
-
-                    var tooltip;
-                    var text = target.getAttribute('data-tooltip');
-
-                    function showTooltip() {
-                        if (!text) {
-                            return;
-                        }
-                        if (!tooltip) {
-                            tooltip = document.createElement('div');
-                            tooltip.id = tooltipId;
-                            tooltip.className = 'mulopimfwc-cop-tooltip';
-                            tooltip.textContent = text;
-                            document.body.appendChild(tooltip);
-                        }
-                        var rect = target.getBoundingClientRect();
-                        tooltip.style.top = (window.scrollY + rect.top - tooltip.offsetHeight - 8) + 'px';
-                        tooltip.style.left = (window.scrollX + rect.left) + 'px';
-                        tooltip.style.display = 'block';
-                    }
-
-                    function hideTooltip() {
-                        if (tooltip) {
-                            tooltip.style.display = 'none';
-                        }
-                    }
-
-                    target.addEventListener('mouseenter', showTooltip);
-                    target.addEventListener('focus', showTooltip);
-                    target.addEventListener('mouseleave', hideTooltip);
-                    target.addEventListener('blur', hideTooltip);
-
-                    target.dataset.mulopimfwcTooltipReady = '1';
-                }
-
-                if (typeof MutationObserver !== 'undefined') {
-                    var observer = new MutationObserver(insertBadge);
-                    observer.observe(document.body, {childList: true, subtree: true});
-                    window.addEventListener('beforeunload', function () {
-                        observer.disconnect();
-                    });
-                }
-
-                insertBadge();
-                document.addEventListener('DOMContentLoaded', insertBadge);
-            })();
-        </script>
-        <?php
+        wp_localize_script('mulopimfwc-cash-on-pickup-admin', 'mulopimfwcCashOnPickupAdmin', array(
+            'badgeHtml' => $badge_html,
+            'tooltipId' => $tooltip_id,
+        ));
     }
 }
 
-add_action('admin_footer', 'mulopimfwc_render_cop_badge');
+add_action('admin_enqueue_scripts', 'mulopimfwc_enqueue_cop_badge_assets');

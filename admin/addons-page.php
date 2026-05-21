@@ -28,6 +28,47 @@ class MULOPIMFWC_Addons_Page
     {
         add_action('admin_post_mulopimfwc_addon_action', [$this, 'handle_action']);
         add_action('wp_ajax_mulopimfwc_load_addons', [$this, 'ajax_load_addons']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
+    }
+
+    public function enqueue_assets($hook)
+    {
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if ($page !== 'mulopimfwc-addons') {
+            return;
+        }
+
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+
+        wp_enqueue_style(
+            'mulopimfwc-addons-page',
+            plugin_dir_url(__FILE__) . '../assets/css/addons-page.css',
+            array(),
+            $version
+        );
+
+        wp_enqueue_script(
+            'mulopimfwc-addons-page',
+            plugin_dir_url(__FILE__) . '../assets/js/addons-page.js',
+            array('jquery'),
+            $version,
+            true
+        );
+
+        wp_localize_script(
+            'mulopimfwc-addons-page',
+            'mulopimfwcAddonsPage',
+            array(
+                'ajaxUrl'          => admin_url('admin-ajax.php'),
+                'nonce'            => wp_create_nonce('mulopimfwc_addons_ajax'),
+                'loading'          => __('Loading add-ons from Plugincy...', 'multi-location-product-and-inventory-management-pro'),
+                'error'            => __('Add-ons could not be loaded from Plugincy. Please reload or check the license connection.', 'multi-location-product-and-inventory-management-pro'),
+                'reloading'        => __('Reloading...', 'multi-location-product-and-inventory-management-pro'),
+                'reload'           => __('Reload add-ons', 'multi-location-product-and-inventory-management-pro'),
+                'detailsFallback'  => __('No details were provided for this add-on yet.', 'multi-location-product-and-inventory-management-pro'),
+                'descriptionTitle' => __('Description', 'multi-location-product-and-inventory-management-pro'),
+            )
+        );
     }
 
     public function render_page()
@@ -38,7 +79,6 @@ class MULOPIMFWC_Addons_Page
 
         $last_error = get_option(self::LAST_ERROR_OPTION, '');
         $last_check = (int) get_option(self::LAST_CHECK_OPTION, 0);
-        $ajax_nonce = wp_create_nonce('mulopimfwc_addons_ajax');
         $notice = get_transient(self::NOTICE_TRANSIENT);
         if (is_array($notice)) {
             delete_transient(self::NOTICE_TRANSIENT);
@@ -86,600 +126,7 @@ class MULOPIMFWC_Addons_Page
             </div>
         </div>
         <?php $this->render_details_modal(); ?>
-        <style>
-            .mulopimfwc-addons-hero {
-                align-items: center;
-                background: #fff;
-                border: 1px solid #dcdcde;
-                border-left: 4px solid #2271b1;
-                border-radius: 6px;
-                display: flex;
-                gap: 16px;
-                justify-content: space-between;
-                margin: 18px 0;
-                padding: 18px 20px;
-            }
-
-            .mulopimfwc-addons-hero p {
-                color: #50575e;
-                margin: 0;
-                max-width: 720px;
-            }
-
-            .mulopimfwc-addons-toolbar {
-                align-items: center;
-                display: flex;
-                justify-content: space-between;
-                margin: 12px 0;
-            }
-
-            .mulopimfwc-addons-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-                gap: 18px;
-                margin-top: 18px;
-            }
-
-            .mulopimfwc-addons-loading,
-            .mulopimfwc-addons-empty {
-                align-items: center;
-                background: #fff;
-                border: 1px solid #dcdcde;
-                border-radius: 6px;
-                color: #50575e;
-                display: flex;
-                gap: 10px;
-                grid-column: 1 / -1;
-                padding: 22px;
-            }
-
-            .mulopimfwc-addon-card {
-                background: #fff;
-                border: 1px solid #dcdcde;
-                border-radius: 6px;
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-                display: flex;
-                flex-direction: column;
-                min-height: 100%;
-                overflow: hidden;
-                max-width: 430px;
-            }
-
-            .mulopimfwc-addon-card__header {
-                align-items: flex-start;
-                display: flex;
-                gap: 16px;
-                justify-content: space-between;
-                padding: 18px 18px 0;
-            }
-
-            .mulopimfwc-addon-card__identity {
-                align-items: center;
-                display: flex;
-                gap: 14px;
-                min-width: 0;
-            }
-
-            .mulopimfwc-addon-card__logo {
-                align-items: center;
-                background: #f6f7f7;
-                border: 1px solid #dcdcde;
-                border-radius: 6px;
-                color: #646970;
-                display: flex;
-                flex: 0 0 56px;
-                font-weight: 700;
-                height: 56px;
-                justify-content: center;
-                overflow: hidden;
-                text-transform: uppercase;
-                width: 56px;
-            }
-
-            .mulopimfwc-addon-card__logo img {
-                display: block;
-                height: 100%;
-                object-fit: contain;
-                width: 100%;
-            }
-
-            .mulopimfwc-addon-card h2 {
-                font-size: 17px;
-                line-height: 1.3;
-                margin: 0 0 8px;
-            }
-
-            .mulopimfwc-addon-card p {
-                margin-top: 0;
-            }
-
-            .mulopimfwc-addon-card__description {
-                color: #50575e;
-                margin-bottom: 0;
-            }
-
-            .mulopimfwc-addon-status {
-                border-radius: 999px;
-                display: inline-block;
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 1;
-                padding: 7px 10px;
-                white-space: nowrap;
-            }
-
-            .mulopimfwc-addon-status--active {
-                background: #edfaef;
-                color: #0a6b21;
-            }
-
-            .mulopimfwc-addon-status--inactive {
-                background: #fff8e5;
-                color: #8a5a00;
-            }
-
-            .mulopimfwc-addon-status--missing {
-                background: #f0f0f1;
-                color: #50575e;
-            }
-
-            .mulopimfwc-addon-status--update {
-                background: #e7f5ff;
-                color: #005c99;
-            }
-
-            .mulopimfwc-addon-meta {
-                display: grid;
-                grid-template-columns: 130px minmax(0, 1fr);
-                margin: 16px 18px;
-            }
-
-            .mulopimfwc-addon-meta dt,
-            .mulopimfwc-addon-meta dd {
-                margin: 0;
-                padding: 8px 0;
-            }
-
-            .mulopimfwc-addon-meta dt {
-                color: #646970;
-                font-weight: 600;
-            }
-
-            .mulopimfwc-addon-actions {
-                gap: 8px;
-                align-items: center;
-                background: #f9f9f9;
-                display: flex;
-                flex-wrap: wrap;
-                margin-top: auto;
-                padding: 1em 2em;
-                border-top: 1px solid #dcdcde;
-            }
-
-            .mulopimfwc-addon-details-modal[hidden] {
-                display: none;
-            }
-
-            .mulopimfwc-addon-details-modal {
-                align-items: center;
-                bottom: 0;
-                display: flex;
-                justify-content: center;
-                left: 0;
-                padding: 24px;
-                position: fixed;
-                right: 0;
-                top: 0;
-                z-index: 100000;
-            }
-
-            .mulopimfwc-addon-details-modal__backdrop {
-                background: rgba(0, 0, 0, 0.55);
-                bottom: 0;
-                left: 0;
-                position: absolute;
-                right: 0;
-                top: 0;
-            }
-
-            .mulopimfwc-addon-details-modal__dialog {
-                background: #fff;
-                box-shadow: 0 24px 90px rgba(0, 0, 0, 0.32);
-                box-sizing: border-box;
-                max-height: calc(100vh - 48px);
-                max-width: 840px;
-                overflow: auto;
-                position: relative;
-                width: min(840px, 100%);
-            }
-
-            .mulopimfwc-addon-details-modal__banner {
-                align-items: flex-end;
-                background: #f0f0f1;
-                display: flex;
-                min-height: 180px;
-                overflow: hidden;
-            }
-
-            .mulopimfwc-addon-details-modal__banner img {
-                display: block;
-                height: 100%;
-                max-height: 260px;
-                object-fit: cover;
-                width: 100%;
-            }
-
-            .mulopimfwc-addon-details-modal__banner.is-empty {
-                display: none;
-            }
-
-            .mulopimfwc-addon-details-modal__header {
-                align-items: center;
-                border-bottom: 1px solid #dcdcde;
-                display: flex;
-                justify-content: space-between;
-                padding: 16px 20px;
-            }
-
-            .mulopimfwc-addon-details-modal__header h2 {
-                font-size: 22px;
-                line-height: 1.3;
-                margin: 0;
-            }
-
-            .mulopimfwc-addon-details-modal__close {
-                align-items: center;
-                background: #f6f7f7;
-                border: 1px solid #c3c4c7;
-                border-radius: 4px;
-                color: #1d2327;
-                cursor: pointer;
-                display: inline-flex;
-                font-size: 22px;
-                height: 32px;
-                justify-content: center;
-                line-height: 1;
-                padding: 0;
-                width: 32px;
-            }
-
-            .mulopimfwc-addon-details-modal__tabs {
-                background: #f6f7f7;
-                border-bottom: 1px solid #dcdcde;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0;
-                padding: 0 12px;
-            }
-
-            .mulopimfwc-addon-details-modal__tab {
-                background: transparent;
-                border: 0;
-                border-left: 1px solid transparent;
-                border-right: 1px solid transparent;
-                color: #2271b1;
-                cursor: pointer;
-                font-size: 14px;
-                margin: 0;
-                padding: 12px 14px;
-            }
-
-            .mulopimfwc-addon-details-modal__tab.is-active {
-                background: #fff;
-                border-color: #dcdcde;
-                color: #1d2327;
-                margin-bottom: -1px;
-            }
-
-            .mulopimfwc-addon-details-modal__body {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) 250px;
-                min-height: 280px;
-            }
-
-            .mulopimfwc-addon-details-modal__content {
-                color: #1d2327;
-                font-size: 14px;
-                line-height: 1.7;
-                min-width: 0;
-                padding: 26px;
-            }
-
-            .mulopimfwc-addon-details-modal__content img {
-                height: auto;
-                max-width: 100%;
-            }
-
-            .mulopimfwc-addon-details-modal__sidebar {
-                background: #f9f9f9;
-                border-left: 1px solid #dcdcde;
-                padding: 22px 18px;
-            }
-
-            .mulopimfwc-addon-details-modal__sidebar dl {
-                display: grid;
-                gap: 8px;
-                margin: 0;
-            }
-
-            .mulopimfwc-addon-details-modal__sidebar dt {
-                color: #50575e;
-                font-weight: 700;
-                margin: 8px 0 0;
-            }
-
-            .mulopimfwc-addon-details-modal__sidebar dd {
-                margin: 0;
-            }
-
-            .mulopimfwc-addon-details-modal__links {
-                display: grid;
-                gap: 7px;
-                margin-top: 18px;
-            }
-
-            .mulopimfwc-addon-details-modal__footer {
-                align-items: center;
-                background: #f6f7f7;
-                border-top: 1px solid #dcdcde;
-                display: flex;
-                gap: 8px;
-                justify-content: flex-end;
-                padding: 14px 18px;
-            }
-
-            body.mulopimfwc-addon-details-open {
-                overflow: hidden;
-            }
-
-            @media (max-width: 782px) {
-                .mulopimfwc-addons-hero {
-                    align-items: stretch;
-                    flex-direction: column;
-                }
-
-                .mulopimfwc-addons-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .mulopimfwc-addon-card__header {
-                    flex-direction: column;
-                }
-
-                .mulopimfwc-addon-details-modal {
-                    padding: 12px;
-                }
-
-                .mulopimfwc-addon-details-modal__body {
-                    grid-template-columns: 1fr;
-                }
-
-                .mulopimfwc-addon-details-modal__sidebar {
-                    border-left: 0;
-                    border-top: 1px solid #dcdcde;
-                }
-            }
-        </style>
-        <script>
-            (function($) {
-                'use strict';
-
-                var config = <?php echo wp_json_encode([
-                                    'ajaxUrl' => admin_url('admin-ajax.php'),
-                                    'nonce' => $ajax_nonce,
-                                    'loading' => __('Loading add-ons from Plugincy...', 'multi-location-product-and-inventory-management-pro'),
-                                    'error' => __('Add-ons could not be loaded from Plugincy. Please reload or check the license connection.', 'multi-location-product-and-inventory-management-pro'),
-                                    'reloading' => __('Reloading...', 'multi-location-product-and-inventory-management-pro'),
-                                    'reload' => __('Reload add-ons', 'multi-location-product-and-inventory-management-pro'),
-                                    'detailsFallback' => __('No details were provided for this add-on yet.', 'multi-location-product-and-inventory-management-pro'),
-                                ]); ?>;
-
-                function setLoading(isLoading) {
-                    var button = $('#mulopimfwc-addons-reload');
-                    button.prop('disabled', isLoading).text(isLoading ? config.reloading : config.reload);
-
-                    if (isLoading) {
-                        $('#mulopimfwc-addons-content').html(
-                            '<div class="mulopimfwc-addons-loading"><span class="spinner is-active"></span><span>' + config.loading + '</span></div>'
-                        );
-                    }
-                }
-
-                function renderNotices(data) {
-                    var notices = '';
-
-                    if (data && data.license_valid === false) {
-                        notices += '<div class="notice notice-warning"><p>' + $('<div>').text(data.license_message || '').html() + '</p></div>';
-                    }
-
-                    if (data && data.error) {
-                        notices += '<div class="notice notice-error"><p>' + $('<div>').text(data.error).html() + '</p></div>';
-                    }
-
-                    $('#mulopimfwc-addons-notices').html(notices);
-                }
-
-                function renderDetailsTab(modal, tabs, index) {
-                    var tab = tabs[index] || {};
-                    modal.find('.mulopimfwc-addon-details-modal__tab').removeClass('is-active').attr('aria-selected', 'false');
-                    modal.find('.mulopimfwc-addon-details-modal__tab[data-tab-index="' + index + '"]').addClass('is-active').attr('aria-selected', 'true');
-                    modal.find('.mulopimfwc-addon-details-modal__content').html(tab.content || '<p>' + config.detailsFallback + '</p>');
-                }
-
-                function renderDetailsSidebar(modal, details) {
-                    var sidebar = modal.find('.mulopimfwc-addon-details-modal__sidebar').empty();
-                    var list = $('<dl>');
-                    var meta = $.isArray(details.meta) ? details.meta : [];
-
-                    meta.forEach(function(item) {
-                        if (!item || !item.value) {
-                            return;
-                        }
-
-                        list.append($('<dt>').text(item.label || ''));
-                        list.append($('<dd>').text(item.value || ''));
-                    });
-
-                    sidebar.append(list);
-
-                    if ($.isArray(details.quick_links) && details.quick_links.length) {
-                        var links = $('<div>', {
-                            class: 'mulopimfwc-addon-details-modal__links'
-                        });
-
-                        details.quick_links.forEach(function(link) {
-                            if (!link || !link.url) {
-                                return;
-                            }
-
-                            links.append($('<a>', {
-                                href: link.url,
-                                target: '_blank',
-                                rel: 'noopener noreferrer',
-                                text: link.label || link.url
-                            }));
-                        });
-
-                        sidebar.append(links);
-                    }
-                }
-
-                function renderDetailsFooter(modal, details) {
-                    var footer = modal.find('.mulopimfwc-addon-details-modal__footer').empty();
-                    var action = details.action || {};
-
-                    if (!action.label) {
-                        footer.hide();
-                        return;
-                    }
-
-                    footer.show();
-
-                    if (action.disabled || !action.url) {
-                        footer.append($('<button>', {
-                            type: 'button',
-                            class: 'button button-primary disabled',
-                            disabled: true,
-                            text: action.label
-                        }));
-                    } else {
-                        footer.append($('<a>', {
-                            class: action.className || 'button button-primary',
-                            href: action.url,
-                            text: action.label
-                        }));
-                    }
-                }
-
-                function openDetails(details) {
-                    var modal = $('#mulopimfwc-addon-details-modal');
-                    var tabs = $.isArray(details.tabs) && details.tabs.length ? details.tabs : [{
-                        slug: 'description',
-                        title: <?php echo wp_json_encode(__('Description', 'multi-location-product-and-inventory-management-pro')); ?>,
-                        content: '<p>' + config.detailsFallback + '</p>'
-                    }];
-                    var tabsNav = modal.find('.mulopimfwc-addon-details-modal__tabs').empty();
-                    var banner = modal.find('[data-addon-banner]').empty();
-
-                    modal.find('#mulopimfwc-addon-details-title').text(details.name || '');
-
-                    if (details.banner_url) {
-                        banner.removeClass('is-empty').append($('<img>', {
-                            src: details.banner_url,
-                            alt: ''
-                        }));
-                    } else {
-                        banner.addClass('is-empty');
-                    }
-
-                    tabs.forEach(function(tab, index) {
-                        tabsNav.append($('<button>', {
-                            type: 'button',
-                            role: 'tab',
-                            class: 'mulopimfwc-addon-details-modal__tab',
-                            'data-tab-index': index,
-                            'aria-selected': index === 0 ? 'true' : 'false',
-                            text: tab.title || tab.slug || ''
-                        }));
-                    });
-
-                    renderDetailsTab(modal, tabs, 0);
-                    renderDetailsSidebar(modal, details);
-                    renderDetailsFooter(modal, details);
-
-                    modal.data('tabs', tabs);
-                    modal.removeAttr('hidden').attr('aria-hidden', 'false');
-                    $('body').addClass('mulopimfwc-addon-details-open');
-                    modal.find('.mulopimfwc-addon-details-modal__close').trigger('focus');
-                }
-
-                function closeDetails() {
-                    var modal = $('#mulopimfwc-addon-details-modal');
-                    modal.attr('hidden', 'hidden').attr('aria-hidden', 'true');
-                    $('body').removeClass('mulopimfwc-addon-details-open');
-                }
-
-                function loadAddons(force) {
-                    setLoading(true);
-
-                    $.post(config.ajaxUrl, {
-                        action: 'mulopimfwc_load_addons',
-                        nonce: config.nonce,
-                        force: force ? 1 : 0
-                    }).done(function(response) {
-                        if (!response || !response.success || !response.data) {
-                            $('#mulopimfwc-addons-content').html('<div class="mulopimfwc-addons-empty">' + config.error + '</div>');
-                            return;
-                        }
-
-                        $('#mulopimfwc-addons-content').html(response.data.html);
-                        $('#mulopimfwc-addons-last-check').text(response.data.last_check || '');
-                        renderNotices(response.data);
-                    }).fail(function(xhr) {
-                        var response = xhr.responseJSON || {};
-                        var message = response.data && response.data.message ? response.data.message : config.error;
-                        $('#mulopimfwc-addons-content').html('<div class="mulopimfwc-addons-empty">' + $('<div>').text(message).html() + '</div>');
-                    }).always(function() {
-                        setLoading(false);
-                    });
-                }
-
-                $(document).on('click', '#mulopimfwc-addons-reload', function() {
-                    loadAddons(true);
-                });
-
-                $(document).on('click', '.mulopimfwc-addon-view-details', function(event) {
-                    event.preventDefault();
-
-                    try {
-                        openDetails(JSON.parse($(this).attr('data-addon-details') || '{}'));
-                    } catch (error) {
-                        openDetails({});
-                    }
-                });
-
-                $(document).on('click', '.mulopimfwc-addon-details-modal__tab', function() {
-                    var modal = $('#mulopimfwc-addon-details-modal');
-                    renderDetailsTab(modal, modal.data('tabs') || [], parseInt($(this).attr('data-tab-index'), 10) || 0);
-                });
-
-                $(document).on('click', '[data-mulopimfwc-addon-details-close]', function(event) {
-                    event.preventDefault();
-                    closeDetails();
-                });
-
-                $(document).on('keydown', function(event) {
-                    if (event.key === 'Escape' && !$('#mulopimfwc-addon-details-modal').is('[hidden]')) {
-                        closeDetails();
-                    }
-                });
-
-                $(function() {
-                    loadAddons(false);
-                });
-            })(jQuery);
-        </script>
-        <?php
+<?php
     }
 
     private function render_details_modal(): void
@@ -1128,9 +575,9 @@ class MULOPIMFWC_Addons_Page
         }
 
         printf(
-            '<a class="button" href="%1$s" onclick="return confirm(%2$s);">%3$s</a>',
+            '<a class="button mulopimfwc-addon-delete-link" href="%1$s" data-mulopimfwc-confirm="%2$s">%3$s</a>',
             esc_url($this->action_url('delete', $addon['slug'])),
-            esc_attr(wp_json_encode(__('Delete this add-on plugin?', 'multi-location-product-and-inventory-management-pro'))),
+            esc_attr__('Delete this add-on plugin?', 'multi-location-product-and-inventory-management-pro'),
             esc_html__('Delete', 'multi-location-product-and-inventory-management-pro')
         );
     }

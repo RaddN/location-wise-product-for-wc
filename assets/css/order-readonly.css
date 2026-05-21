@@ -1,0 +1,8 @@
+.mulopimfwc-order-readonly-field {
+    cursor: not-allowed !important;
+}
+
+.mulopimfwc-order-readonly-link {
+    pointer-events: none !important;
+    opacity: 0.55 !important;
+}

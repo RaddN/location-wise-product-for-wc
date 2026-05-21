@@ -1,4 +1,6 @@
 // Service Worker for PWA Notifications
+'use strict';
+
 const CACHE_NAME = 'mulopimfwc-notifications-v1';
 
 // Get site favicon for notifications (fallback to default favicon)
@@ -119,5 +121,4 @@ self.addEventListener('message', (event) => {
         event.ports[0].postMessage({ success: true });
     }
 });
-
 

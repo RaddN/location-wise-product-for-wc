@@ -18,6 +18,7 @@ class MULOPIMFWC_Location_Managers
         add_action('wp_ajax_mulopimfwc_update_manager_permissions', [$this, 'update_manager_permissions']);
         add_action('wp_ajax_mulopimfwc_delete_location_manager', [$this, 'delete_location_manager']);
         add_action('wp_ajax_mulopimfwc_search_users', [$this, 'search_users']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_page_assets']);
 
         // Create location manager role on plugin activation
         add_action('init', [$this, 'create_location_manager_role']);
@@ -38,8 +39,78 @@ class MULOPIMFWC_Location_Managers
         add_action('wp_login', [$this, 'redirect_location_manager_after_login'], 10, 2);
 
         // Keep order details read-only when manager can view orders but cannot manage them.
-        add_action('admin_head', [$this, 'disable_order_details_editing_for_view_only_managers']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_order_readonly_assets']);
         add_filter('woocommerce_order_is_editable', [$this, 'make_order_details_readonly_for_view_only_managers'], 20, 2);
+    }
+
+    public function enqueue_admin_page_assets($hook)
+    {
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if ($page !== 'location-managers') {
+            return;
+        }
+
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+
+        wp_enqueue_style(
+            'mulopimfwc-location-managers',
+            plugin_dir_url(__FILE__) . '../assets/css/location-managers.css',
+            array(),
+            $version
+        );
+
+        wp_enqueue_script(
+            'mulopimfwc-location-managers',
+            plugin_dir_url(__FILE__) . '../assets/js/location-managers.js',
+            array('jquery'),
+            $version,
+            true
+        );
+
+        wp_localize_script(
+            'mulopimfwc-location-managers',
+            'mulopimfwcLocationManagers',
+            array(
+                'ajaxUrl'                => admin_url('admin-ajax.php'),
+                'addTitle'               => __('Add New Location Manager', 'multi-location-product-and-inventory-management-pro'),
+                'editTitle'              => __('Edit Location Manager', 'multi-location-product-and-inventory-management-pro'),
+                'deleteConfirm'          => __('Are you sure you want to delete this location manager?', 'multi-location-product-and-inventory-management-pro'),
+                'createNewUserText'      => __('Create New User Instead', 'multi-location-product-and-inventory-management-pro'),
+                'selectExistingUserText' => __('Select Existing User Instead', 'multi-location-product-and-inventory-management-pro'),
+                'defaultLocationFallback'=> __('Use first assigned location', 'multi-location-product-and-inventory-management-pro'),
+                'noUsersFound'           => __('No users found', 'multi-location-product-and-inventory-management-pro'),
+                'errorSaving'            => __('Error saving manager', 'multi-location-product-and-inventory-management-pro'),
+                'errorDeleting'          => __('Error deleting manager', 'multi-location-product-and-inventory-management-pro'),
+            )
+        );
+    }
+
+    public function enqueue_order_readonly_assets($hook = '')
+    {
+        if (!self::current_user_is_view_only_order_manager()) {
+            return;
+        }
+
+        if (!$this->is_order_details_screen()) {
+            return;
+        }
+
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+
+        wp_enqueue_style(
+            'mulopimfwc-order-readonly',
+            plugin_dir_url(__FILE__) . '../assets/css/order-readonly.css',
+            array(),
+            $version
+        );
+
+        wp_enqueue_script(
+            'mulopimfwc-order-readonly',
+            plugin_dir_url(__FILE__) . '../assets/js/order-readonly.js',
+            array(),
+            $version,
+            true
+        );
     }
 
     public function redirect_location_manager_after_login($user_login, $user)
@@ -708,578 +779,7 @@ class MULOPIMFWC_Location_Managers
         </div>
 
         <?php wp_nonce_field('mulopimfwc_location_managers_nonce', 'mulopimfwc_location_managers_nonce'); ?>
-
-        <style>
-            /* New start*/
-            .wrap.mulopimfwc-location-managers-main {
-                border: 2px solid #d1d1d4;
-                border-radius: 8px;
-                background-color: #f9fafb;
-                margin: 20px 20px 0px 0px;
-            }
-
-            h1.mlm-settings-heading {
-                display: flex;
-                gap: 10px;
-                align-items: center;
-            }
-
-            .mlm-settings-icon {
-                color: #ffffff;
-                background: #3b82f6;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 10px;
-                border-radius: 7px;
-            }
-
-            .mulopimfwc-manager-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;
-                padding: 20px;
-            }
-
-            .mulopimfwc-manager-header button {
-                background: #2563eb !important;
-                border-color: #2563eb !important;
-                padding: 5px 15px !important;
-                border-radius: 6px !important;
-                font-size: 15px !important;
-                font-weight: 600;
-                display: flex !important;
-                justify-content: center;
-                align-items: center;
-            }
-
-            .mulopimfwc-manager-header button svg {
-                width: 15px;
-                height: 15px;
-                margin-right: 6px;
-            }
-
-            .mulopimfwc-social-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-                gap: 16px;
-            }
-
-            .mulopimfwc-social-field input {
-                width: 100%;
-            }
-
-            .mulopimfwc-social-field .description {
-                margin-top: 6px;
-                color: #475569;
-            }
-
-            .mulopimfwc-managers-list {
-                padding: 10px 25px;
-            }
-
-            .manager-info img {
-                border-radius: 50%;
-            }
-
-
-            .manager-actions .mulopimfwc-delete-manager,
-            .mulopimfwc-delete-btn {
-                background: #ffffff !important;
-                border-color: #dc2626 !important;
-                padding: 0px 30px !important;
-                border-radius: 6px !important;
-                font-size: 15px !important;
-                color: #dc2626 !important;
-                font-weight: 600;
-                display: flex !important;
-                justify-content: center;
-                align-items: center;
-                transition: all 0.25s ease !important;
-            }
-
-            .manager-actions .mulopimfwc-delete-manager:hover,
-            .mulopimfwc-delete-btn:hover {
-                box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4) !important;
-                transform: translateY(-2px);
-            }
-
-
-
-            /* New End */
-
-            .mulopimfwc-managers-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-                gap: 20px;
-            }
-
-            .mulopimfwc-manager-card {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                padding: 25px;
-                border-radius: 8px;
-                box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            }
-
-            .manager-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 15px;
-            }
-
-            .manager-info {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .manager-details h3 {
-                margin: 0;
-                font-size: 18px;
-                font-weight: 600;
-            }
-
-            .manager-email {
-                margin: 0px 0 0;
-                color: #666;
-                font-size: 14px;
-            }
-
-            .manager-actions {
-                display: flex;
-                gap: 5px;
-            }
-
-            .manager-locations,
-            .manager-capabilities {
-                margin-bottom: 15px;
-            }
-
-            .manager-locations h4,
-            .manager-capabilities h4 {
-                margin: 0 0 10px;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-            }
-
-            .manager-locations h4 svg,
-            .manager-capabilities h4 svg {
-                width: auto;
-                height: 14px;
-                margin-right: 6px;
-            }
-
-            .location-list,
-            .capability-list {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 5px;
-            }
-
-            .location-tag,
-            .capability-tag {
-                background: #f3f4f6;
-                padding: 4px 8px;
-                border-radius: 30px;
-                font-size: 12px;
-            }
-
-            .capability-tag {
-                background: #2563eb1a;
-                color: #2563eb;
-            }
-
-            .no-locations,
-            .no-capabilities {
-                color: #666;
-                font-style: italic;
-                margin: 0;
-            }
-
-            .mulopimfwc-no-managers {
-                text-align: center;
-                padding: 40px;
-                background: #f9f9f9;
-                border-radius: 8px;
-            }
-
-            /* Modal Styles */
-            .mulopimfwc-modal {
-                position: fixed;
-                z-index: 100000;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-            }
-
-            .mulopimfwc-modal-content {
-                background-color: #fff;
-                margin: 1.5% auto;
-                padding: 0;
-                border-radius: 8px;
-                width: 90%;
-                max-width: 600px;
-                max-height: 90vh;
-                overflow-y: auto;
-            }
-
-            .mulopimfwc-modal-header {
-                padding: 20px;
-                border-bottom: 1px solid #ddd;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .mulopimfwc-modal-header h2 {
-                margin: 0;
-            }
-
-            .mulopimfwc-modal-close {
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                padding: 0;
-            }
-
-            .mulopimfwc-modal form {
-                padding: 20px;
-            }
-
-            .mulopimfwc-form-row {
-                margin-bottom: 20px;
-            }
-
-            .mulopimfwc-form-row label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: 600;
-            }
-
-            .mulopimfwc-form-row input[type="text"],
-            .mulopimfwc-form-row input[type="password"],
-            .mulopimfwc-form-row input[type="email"] {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-
-            .location-checkboxes,
-            .capability-checkboxes {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 10px;
-            }
-
-            .checkbox-label {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-            .checkbox-label:hover {
-                background: #f9f9f9;
-            }
-
-            .global-default {
-                font-size: 11px;
-                color: #666;
-                font-style: italic;
-            }
-
-            .mulopimfwc-modal-footer {
-                padding: 20px;
-                border-top: 1px solid #ddd;
-                display: flex;
-                justify-content: flex-end;
-                gap: 10px;
-            }
-
-            /* User Search */
-            .user-search-container {
-                position: relative;
-            }
-
-            .search-results {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: #fff;
-                border: 1px solid #ddd;
-                border-top: none;
-                max-height: 200px;
-                overflow-y: auto;
-                z-index: 1000;
-            }
-
-            .search-result-item {
-                padding: 10px;
-                cursor: pointer;
-                border-bottom: 1px solid #eee;
-            }
-
-            .search-result-item:hover {
-                background: #f9f9f9;
-            }
-
-            .search-result-item:last-child {
-                border-bottom: none;
-            }
-        </style>
-
-        <script>
-            jQuery(document).ready(function($) {
-                let searchTimeout;
-                let isEditMode = false;
-
-                // Add manager button
-                $('#mulopimfwc-add-manager-btn').on('click', function() {
-                    isEditMode = false;
-                    resetForm();
-                    $('#mulopimfwc-modal-title').text('<?php echo esc_js(esc_html_e('Add New Location Manager', 'multi-location-product-and-inventory-management-pro')); ?>');
-                    $('#action-type').val('create');
-                    $('#mulopimfwc-manager-modal').show();
-                    $('#search_or_add_manager').show();
-                });
-
-                // Edit manager button
-                $(document).on('click', '.mulopimfwc-edit-manager', function() {
-                    isEditMode = true;
-                    const managerId = $(this).data('manager-id');
-                    const assign_locations = $(this).data('assign-locations');
-                    const assign_capabilities = $(this).data('assign-capabilities');
-                    const default_location = $(this).data('default-location') || '';
-                    const social_channels = $(this).data('social-channels') || {};
-                    loadManagerData(managerId, assign_locations, assign_capabilities, default_location, social_channels);
-                });
-
-                // Delete manager button
-                $(document).on('click', '.mulopimfwc-delete-manager', function() {
-                    if (confirm('<?php echo esc_js(esc_html_e('Are you sure you want to delete this location manager?', 'multi-location-product-and-inventory-management-pro')); ?>')) {
-                        const managerId = $(this).data('manager-id');
-                        deleteManager(managerId);
-                    }
-                });
-
-                // Close modal
-                $(document).on('click', '.mulopimfwc-modal-close', function() {
-                    $('#mulopimfwc-manager-modal').hide();
-                });
-
-                // Toggle create new user
-                $('#toggle-create-user').on('click', function() {
-                    $('#create-new-user').toggle();
-                    const isVisible = $('#create-new-user').is(':visible');
-                    $(this).text(isVisible ? '<?php echo esc_js(esc_html_e('Select Existing User Instead', 'multi-location-product-and-inventory-management-pro')); ?>' : '<?php echo esc_js(esc_html_e('Create New User Instead', 'multi-location-product-and-inventory-management-pro')); ?>');
-                });
-
-                // User search
-                $('#user-search').on('input', function() {
-                    const query = $(this).val();
-                    clearTimeout(searchTimeout);
-
-                    if (query.length < 2) {
-                        $('#user-search-results').empty().hide();
-                        return;
-                    }
-
-                    searchTimeout = setTimeout(() => {
-                        searchUsers(query);
-                    }, 300);
-                });
-
-                // Form submission
-                $('#mulopimfwc-manager-form').on('submit', function(e) {
-                    e.preventDefault();
-                    saveManager();
-                });
-
-                $(document).on('change', 'input[name="assigned_locations[]"]', function() {
-                    refreshDefaultLocationOptions();
-                });
-
-                // Functions
-                function resetForm() {
-                    $('#mulopimfwc-manager-form')[0].reset();
-                    $('#manager-id').val('');
-                    $('#selected-user-id').val('');
-                    $('#user-search-results').empty().hide();
-                    $('#create-new-user').hide();
-                    $('#social_slack_webhook, #social_custom_webhook, #social_telegram_chat').val('');
-                    $('#toggle-create-user').text('<?php echo esc_js(esc_html_e('Create New User Instead', 'multi-location-product-and-inventory-management-pro')); ?>');
-                    refreshDefaultLocationOptions('');
-                }
-
-                function refreshDefaultLocationOptions(preferredLocation) {
-                    const $defaultLocation = $('#manager-default-location');
-                    const fallbackLabel = '<?php echo esc_js(__('Use first assigned location', 'multi-location-product-and-inventory-management-pro')); ?>';
-                    const explicitPreferred = typeof preferredLocation === 'string' ? preferredLocation : null;
-                    const currentValue = explicitPreferred !== null ? explicitPreferred : ($defaultLocation.val() || '');
-                    const assignedLocations = [];
-
-                    $('input[name="assigned_locations[]"]:checked').each(function() {
-                        assignedLocations.push({
-                            value: $(this).val(),
-                            label: $.trim($(this).parent().text())
-                        });
-                    });
-
-                    $defaultLocation.empty();
-                    $defaultLocation.append($('<option></option>').val('').text(fallbackLabel));
-
-                    assignedLocations.forEach(function(locationData) {
-                        $defaultLocation.append(
-                            $('<option></option>').val(locationData.value).text(locationData.label)
-                        );
-                    });
-
-                    const hasCurrent = currentValue !== '' && assignedLocations.some(function(locationData) {
-                        return locationData.value === currentValue;
-                    });
-                    $defaultLocation.val(hasCurrent ? currentValue : '');
-                }
-
-                function loadManagerData(managerId, assign_locations, assign_capabilities, default_location, social_channels) {
-                    // Update modal title and form fields
-                    $('#mulopimfwc-modal-title').text('<?php echo esc_js(esc_html_e('Edit Location Manager', 'multi-location-product-and-inventory-management-pro')); ?>');
-                    $('#manager-id').val(managerId);
-                    $('#action-type').val('edit');
-                    $('#search_or_add_manager').hide();
-
-                    // Reset all checkboxes first
-                    $('input[name="assigned_locations[]"]').prop('checked', false);
-                    $('input[name="manager_capabilities[]"]').prop('checked', false);
-
-                    // Check assigned locations
-                    if (assign_locations && assign_locations.length > 0) {
-                        assign_locations.forEach(function(location) {
-                            $('input[name="assigned_locations[]"][value="' + location + '"]').prop('checked', true);
-                        });
-                    }
-                    refreshDefaultLocationOptions(default_location || '');
-
-                    // Check assigned capabilities
-                    if (assign_capabilities && assign_capabilities.length > 0) {
-                        assign_capabilities.forEach(function(capability) {
-                            $('input[name="manager_capabilities[]"][value="' + capability + '"]').prop('checked', true);
-                        });
-                    }
-
-                    // Social channels
-                    const social = social_channels || {};
-                    $('#social_slack_webhook').val(social.slack_webhook || '');
-                    $('#social_custom_webhook').val(social.custom_webhook || '');
-                    $('#social_telegram_chat').val(social.telegram_chat_id || '');
-
-                    // Show the modal
-                    $('#mulopimfwc-manager-modal').show();
-                }
-
-                function searchUsers(query) {
-                    $.ajax({
-                        url: ajaxurl,
-                        type: 'POST',
-                        data: {
-                            action: 'mulopimfwc_search_users',
-                            query: query,
-                            nonce: $('#mulopimfwc_location_managers_nonce').val()
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                displaySearchResults(response.data.users);
-                            }
-                        }
-                    });
-                }
-
-                function displaySearchResults(users) {
-                    const resultsContainer = $('#user-search-results');
-                    resultsContainer.empty();
-
-                    if (users.length === 0) {
-                        resultsContainer.html('<div class="search-result-item"><?php echo esc_js(esc_html_e('No users found', 'multi-location-product-and-inventory-management-pro')); ?></div>');
-                    } else {
-                        users.forEach(user => {
-                            const item = $(`<div class="search-result-item" data-user-id="${user.ID}">
-                            <strong>${user.display_name}</strong> (${user.user_email})
-                        </div>`);
-
-                            item.on('click', function() {
-                                $('#selected-user-id').val(user.ID);
-                                $('#user-search').val(user.display_name);
-                                resultsContainer.empty().hide();
-                            });
-
-                            resultsContainer.append(item);
-                        });
-                    }
-
-                    resultsContainer.show();
-                }
-
-                function saveManager() {
-                    const formData = new FormData($('#mulopimfwc-manager-form')[0]);
-                    formData.append('action', 'mulopimfwc_create_location_manager');
-                    formData.append('nonce', $('#mulopimfwc_location_managers_nonce').val());
-
-                    $.ajax({
-                        url: ajaxurl,
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            if (response.success) {
-                                location.reload();
-                            } else {
-                                alert(response.data.message || '<?php echo esc_js(esc_html_e('Error saving manager', 'multi-location-product-and-inventory-management-pro')); ?>');
-                            }
-                        }
-                    });
-
-                    // reload after 1s 
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1000);
-                }
-
-                function deleteManager(managerId) {
-                    $.ajax({
-                        url: ajaxurl,
-                        type: 'POST',
-                        data: {
-                            action: 'mulopimfwc_delete_location_manager',
-                            manager_id: managerId,
-                            nonce: $('#mulopimfwc_location_managers_nonce').val()
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                location.reload();
-                            } else {
-                                alert(response.data.message || '<?php echo esc_js(esc_html_e('Error deleting manager', 'multi-location-product-and-inventory-management-pro')); ?>');
-                            }
-                        }
-                    });
-                }
-            });
-        </script>
-    <?php
+<?php
     }
 
     /**
@@ -2127,83 +1627,6 @@ class MULOPIMFWC_Location_Managers
             return;
         }
 ?>
-        <style id="mulopimfwc-order-readonly-style">
-            .mulopimfwc-order-readonly-field {
-                cursor: not-allowed !important;
-            }
-
-            .mulopimfwc-order-readonly-link {
-                pointer-events: none !important;
-                opacity: 0.55 !important;
-            }
-        </style>
-        <script id="mulopimfwc-order-readonly-script">
-            (function () {
-                function shouldSkip(node) {
-                    if (!node) {
-                        return true;
-                    }
-
-                    if (node.matches('.notice-dismiss, .handlediv, .postbox-header button, .hndle button, .toggle-indicator')) {
-                        return true;
-                    }
-
-                    if (node.closest('#screen-options-wrap, #contextual-help-wrap, #wpadminbar, #adminmenuwrap, #adminmenuback')) {
-                        return true;
-                    }
-
-                    return false;
-                }
-
-                function lockOrderEditing() {
-                    var roots = document.querySelectorAll('#post, .woocommerce-layout__main, .woocommerce-order');
-                    if (!roots.length) {
-                        roots = [document];
-                    }
-
-                    roots.forEach(function (root) {
-                        var controls = root.querySelectorAll('input:not([type="hidden"]), select, textarea, button');
-                        controls.forEach(function (control) {
-                            if (shouldSkip(control)) {
-                                return;
-                            }
-
-                            control.disabled = true;
-                            if (control.tagName === 'INPUT' || control.tagName === 'TEXTAREA') {
-                                control.readOnly = true;
-                            }
-                            control.classList.add('mulopimfwc-order-readonly-field');
-                        });
-
-                        var actionLinks = root.querySelectorAll('a.button, a.button-primary, a.button-secondary');
-                        actionLinks.forEach(function (link) {
-                            if (shouldSkip(link)) {
-                                return;
-                            }
-
-                            link.classList.add('mulopimfwc-order-readonly-link');
-                            link.setAttribute('aria-disabled', 'true');
-                            link.setAttribute('tabindex', '-1');
-                        });
-                    });
-                }
-
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', lockOrderEditing);
-                } else {
-                    lockOrderEditing();
-                }
-
-                var observer = new MutationObserver(function () {
-                    lockOrderEditing();
-                });
-
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
-            })();
-        </script>
 <?php
     }
 

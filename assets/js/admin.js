@@ -3512,7 +3512,7 @@ jQuery(document).ready(function ($) {
         }
     }
 
-    $('.lwp-nav-tabs a').click(function (e) {
+    $('.lwp-nav-tabs a').on('click', function (e) {
         e.preventDefault();
         activateSettingsTab($(this), true);
     });
@@ -3549,7 +3549,7 @@ jQuery(document).ready(function ($) {
 
     // Add toggle functionality for sections if needed
     $('.lwp-settings-box h2').addClass('lwp-section-toggle');
-    $('.lwp-section-toggle').click(function () {
+    $('.lwp-section-toggle').on('click', function () {
         $(this).next('.form-table').slideToggle();
         $(this).toggleClass('closed');
     });
@@ -4706,7 +4706,7 @@ jQuery(document).ready(function ($) {
     $('#store_location_filter').on('change', function() {
         var $form = $(this).closest('form');
         if ($form.length) {
-            $form.submit();
+            $form.trigger('submit');
         } else {
             // If not in a form, navigate with the filter parameter
             var filterValue = $(this).val();

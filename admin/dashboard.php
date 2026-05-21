@@ -13,6 +13,29 @@ class MULOPIMFWC_Dashboard
         add_action('wp_ajax_mulopimfwc_dashboard_profitability', array($this, 'handle_profitability_panel_request'));
         add_action('wp_ajax_mulopimfwc_dashboard_deferred_data', array($this, 'handle_deferred_dashboard_data'));
         add_action('wp_ajax_mulopimfwc_dashboard_investment_data', array($this, 'handle_deferred_dashboard_investment_data'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_dashboard_assets'));
+    }
+
+    /**
+     * Enqueue dashboard assets before the admin head is printed.
+     *
+     * @param string $hook Current admin page hook.
+     */
+    public function enqueue_dashboard_assets($hook = '')
+    {
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if ($page !== 'multi-location-product-and-inventory-management-pro') {
+            return;
+        }
+
+        $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
+        $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
+        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.7.20';
+        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.7.20';
+
+        wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
+        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
+        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), $dashboard_css_version);
     }
 
     /**
@@ -577,7 +600,8 @@ class MULOPIMFWC_Dashboard
 
             <head>
                 <meta charset="UTF-8">
-                <style>
+                <?php
+                $export_report_css = '
                     body {
                         font-family: Arial, sans-serif;
                         font-size: 11pt;
@@ -648,7 +672,11 @@ class MULOPIMFWC_Dashboard
                         background-color: #fee2e2;
                         color: #991b1b;
                     }
-                </style>
+                ';
+                if (function_exists('wp_print_inline_style_tag')) {
+                    wp_print_inline_style_tag($export_report_css);
+                }
+                ?>
             </head>
 
             <body>
@@ -1185,16 +1213,6 @@ class MULOPIMFWC_Dashboard
         // Set max execution time
         set_time_limit(300);
 
-        // Enqueue necessary scripts and styles
-        $dashboard_js_path = plugin_dir_path(__FILE__) . '../assets/js/dashboard.js';
-        $dashboard_css_path = plugin_dir_path(__FILE__) . '../assets/css/dashboard.css';
-        $dashboard_js_version = file_exists($dashboard_js_path) ? (string) filemtime($dashboard_js_path) : '1.1.7.20';
-        $dashboard_css_version = file_exists($dashboard_css_path) ? (string) filemtime($dashboard_css_path) : '1.1.7.20';
-
-        wp_enqueue_script('chart-js', plugin_dir_url(__FILE__) . '../assets/js/chart.min.js', array(), '3.9.1', true);
-        wp_enqueue_script('lwp-dashboard-js', plugin_dir_url(__FILE__) . '../assets/js/dashboard.js', array('jquery', 'chart-js'), $dashboard_js_version, true);
-        wp_enqueue_style('lwp-dashboard-css', plugin_dir_url(__FILE__) . '../assets/css/dashboard.css', array(), $dashboard_css_version);
-
         $payload = $this->get_lightweight_dashboard_payload();
 
         $dummydata = [];
@@ -1324,91 +1342,6 @@ class MULOPIMFWC_Dashboard
                             </div>
                         <?php endif; ?>
                     </div>
-
-                    <style>
-                        .export_report_dropdown {
-                            position: relative;
-                            display: inline-block;
-                        }
-
-                        .dropdown_icon {
-                            font-size: 12px;
-                            margin-left: 5px;
-                            transition: transform 0.2s ease;
-                        }
-
-                        .export_report_dropdown.active .dropdown_icon {
-                            transform: rotate(180deg);
-                        }
-
-                        .dropdown_menu {
-                            position: absolute;
-                            top: calc(100% + 8px);
-                            right: 0;
-                            background: #fff;
-                            border: 1px solid #e2e8f0;
-                            border-radius: 8px;
-                            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-                            display: none;
-                            min-width: 220px;
-                            overflow: hidden;
-                            z-index: 9999;
-                            animation: fadeIn 0.2s ease;
-                        }
-
-                        .dropdown_menu button {
-                            width: 100%;
-                            padding: 12px 20px;
-                            background: transparent;
-                            border: none;
-                            text-align: left;
-                            font-size: 14px;
-                            color: #334155;
-                            cursor: pointer;
-                            transition: all 0.2s ease;
-                        }
-
-                        .dropdown_menu button:hover {
-                            background-color: #f3f4f6;
-                            color: #1e40af;
-                        }
-
-                        @keyframes fadeIn {
-                            from {
-                                opacity: 0;
-                                transform: translateY(-5px);
-                            }
-
-                            to {
-                                opacity: 1;
-                                transform: translateY(0);
-                            }
-                        }
-                    </style>
-
-                    <script>
-                        jQuery(document).ready(function($) {
-                            const dropdown = $('.export_report_dropdown');
-                            const toggleBtn = dropdown.find('.export_toggle_btn');
-                            const menu = dropdown.find('.dropdown_menu');
-
-                            // Toggle dropdown
-                            toggleBtn.on('click', function(e) {
-                                e.stopPropagation();
-                                dropdown.toggleClass('active');
-                                menu.slideToggle(150);
-                            });
-
-                            // Close dropdown when clicking outside
-                            $(document).on('click', function(e) {
-                                if (!dropdown.is(e.target) && dropdown.has(e.target).length === 0) {
-                                    dropdown.removeClass('active');
-                                    menu.slideUp(150);
-                                }
-                            });
-                        });
-                    </script>
-
 
                 </div>
                 <div class="lwp-dashboard-filters">

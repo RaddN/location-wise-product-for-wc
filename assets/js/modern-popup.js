@@ -1,4 +1,6 @@
 jQuery(function ($) {
+    'use strict';
+
     const locationI18n = (window.mulopimfwc_locationWiseProducts && mulopimfwc_locationWiseProducts.i18n) || {};
     const selectStoreLocationAlert = locationI18n.selectStoreLocation || 'Please select a store location.';
 

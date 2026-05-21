@@ -9,6 +9,18 @@
             mulopimfwcImportExport.ajax_url.trim() !== ''
         ) ? mulopimfwcImportExport.ajax_url : (window.ajaxurl || '');
 
+        function triggerNativeClick(element) {
+            if (!element) {
+                return;
+            }
+
+            element.dispatchEvent(new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            }));
+        }
+
         // Export Settings
         $('#mulopimfwc_export_settings').on('click', function (e) {
             e.preventDefault();
@@ -37,7 +49,7 @@
                         downloadAnchor.setAttribute('href', dataStr);
                         downloadAnchor.setAttribute('download', response.data.filename);
                         document.body.appendChild(downloadAnchor);
-                        downloadAnchor.click();
+                        triggerNativeClick(downloadAnchor);
                         downloadAnchor.remove();
 
                         // Show success message
@@ -59,7 +71,7 @@
         // Import Settings - Trigger file input
         $('#mulopimfwc_import_settings_btn').on('click', function (e) {
             e.preventDefault();
-            $('#mulopimfwc_import_settings').click();
+            $('#mulopimfwc_import_settings').trigger('click');
         });
 
         // Clear Plugin Cache
@@ -530,7 +542,7 @@ jQuery(document).ready(function ($) {
         link.setAttribute('download', filename);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
-        link.click();
+        triggerNativeClick(link);
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
@@ -1081,7 +1093,7 @@ jQuery(document).ready(function ($) {
         link.href = url;
         link.style.display = 'none';
         document.body.appendChild(link);
-        link.click();
+        triggerNativeClick(link);
         link.remove();
     }
 

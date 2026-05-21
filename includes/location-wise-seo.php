@@ -320,7 +320,10 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
                 $schema['description'] = $term_desc;
             }
 
-            echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "\n";
+            wp_print_inline_script_tag(
+                wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                array('type' => 'application/ld+json')
+            );
         }
     }
 }

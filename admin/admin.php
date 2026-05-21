@@ -69,7 +69,7 @@ class MULOPIMFWC_Admin
         add_filter('get_terms', array($this, 'order_locations_by_display_order'), 10, 4);
         add_filter('tag_row_actions', array($this, 'add_quick_edit_link'), 10, 2);
         add_filter('term_id_list_table_column', array($this, 'add_term_id_to_row'), 10, 2);
-        add_action('admin_footer-edit-tags.php', array($this, 'add_location_table_scripts'));
+        add_action('admin_enqueue_scripts', array($this, 'add_location_table_scripts'));
         add_action('wp_ajax_mulopimfwc_update_location_order', array($this, 'ajax_update_location_order'));
         add_action('wp_ajax_mulopimfwc_toggle_location_status', array($this, 'ajax_toggle_location_status'));
         add_action('wp_ajax_mulopimfwc_save_quick_edit', array($this, 'ajax_save_quick_edit'));
@@ -78,7 +78,7 @@ class MULOPIMFWC_Admin
         add_action('wp_ajax_mulopimfwc_sync_currency_rate', array($this, 'ajax_sync_currency_rate'));
         add_action('quick_edit_custom_box', array($this, 'add_quick_edit_fields'), 10, 3);
         add_action('edited_mulopimfwc_store_location', array($this, 'save_quick_edit_fields'), 10, 2);
-        add_action('admin_footer-edit-tags.php', array($this, 'save_quick_edit_on_submit'));
+        add_action('admin_enqueue_scripts', array($this, 'save_quick_edit_on_submit'));
 
         // Add AJAX actions for export and live data
         $dashboard_instance = new MULOPIMFWC_Dashboard();
@@ -222,6 +222,19 @@ class MULOPIMFWC_Admin
         // Enqueue Select2
         wp_enqueue_style('select2', plugin_dir_url(__FILE__) . '../assets/css/select2.min.css', array(), '4.0.13');
         wp_enqueue_script('select2', plugin_dir_url(__FILE__) . '../assets/js/select2.min.js', array('jquery'), '4.0.13', true);
+        wp_enqueue_style(
+            'mulopimfwc-location-taxonomy-table',
+            plugin_dir_url(__FILE__) . '../assets/css/location-taxonomy-table.css',
+            array(),
+            MULOPIMFWC_VERSION
+        );
+        wp_enqueue_script(
+            'mulopimfwc-business-hours',
+            plugin_dir_url(__FILE__) . '../assets/js/business-hours.js',
+            array('jquery'),
+            MULOPIMFWC_VERSION,
+            true
+        );
 
         // Leaflet for location map picker
         wp_enqueue_style('leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', [], '1.9.4');
@@ -240,6 +253,15 @@ class MULOPIMFWC_Admin
             MULOPIMFWC_VERSION,
             true
         );
+
+        wp_register_script(
+            'mulopimfwc-location-taxonomy-inline',
+            false,
+            array('jquery', 'jquery-ui-sortable'),
+            MULOPIMFWC_VERSION,
+            true
+        );
+        wp_enqueue_script('mulopimfwc-location-taxonomy-inline');
 
         $display_options = get_option('mulopimfwc_display_options', []);
         $default_map_zoom = isset($display_options['default_map_zoom']) ? intval($display_options['default_map_zoom']) : 15;
@@ -1507,26 +1529,6 @@ JS;
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-                <script type="text/javascript">
-                    (function($) {
-                        $(document).ready(function() {
-                            $('.mulopimfwc-bh-mode').on('change', function() {
-                                var day = $(this).data('day');
-                                var mode = $(this).val();
-                                var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
-
-                                if (mode === 'custom') {
-                                    $times.show();
-                                } else {
-                                    $times.hide();
-                                }
-                            });
-
-                            // Trigger on page load to set initial state
-                            $('.mulopimfwc-bh-mode:checked').trigger('change');
-                        });
-                    })(jQuery);
-                </script>
             </div>
         </div>
 
@@ -1951,26 +1953,6 @@ JS;
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <script type="text/javascript">
-                        (function($) {
-                            $(document).ready(function() {
-                                $('.mulopimfwc-bh-mode').on('change', function() {
-                                    var day = $(this).data('day');
-                                    var mode = $(this).val();
-                                    var $times = $('.mulopimfwc-bh-times[data-day="' + day + '"]');
-
-                                    if (mode === 'custom') {
-                                        $times.show();
-                                    } else {
-                                        $times.hide();
-                                    }
-                                });
-
-                                // Trigger on page load to set initial state
-                                $('.mulopimfwc-bh-mode:checked').trigger('change');
-                            });
-                        })(jQuery);
-                    </script>
                 </div>
             </td>
         </tr>
@@ -2671,10 +2653,10 @@ JS;
     /**
      * Add scripts and styles for drag & drop and quick edit
      */
-    public function add_location_table_scripts()
+    public function add_location_table_scripts($hook = '')
     {
-        global $taxonomy;
-        if ($taxonomy !== 'mulopimfwc_store_location') {
+        $screen = get_current_screen();
+        if (empty($screen) || $screen->taxonomy !== 'mulopimfwc_store_location') {
             return;
         }
 
@@ -2683,146 +2665,18 @@ JS;
 
         // Add inline CSS
     ?>
-        <style>
-            .mulopimfwc-drag-handle {
-                cursor: move !important;
-                color: #646970;
-                font-size: 18px;
-                line-height: 1;
-                vertical-align: middle;
-            }
-
-            .mulopimfwc-drag-handle:hover {
-                color: #1d4ed8;
-            }
-
-            .mulopimfwc-action-btn {
-                min-width: 32px;
-                height: 32px;
-                padding: 0;
-                display: inline-flex !important;
-                align-items: center;
-                justify-content: center;
-                border-color: #c3c4c7 !important;
-                box-shadow: none !important;
-                transition: all 0.18s ease;
-            }
-
-            .mulopimfwc-action-btn .dashicons {
-                width: 16px;
-                height: 16px;
-                font-size: 16px;
-                line-height: 16px;
-            }
-
-            .mulopimfwc-action-btn:hover,
-            .mulopimfwc-action-btn:focus {
-                border-color: #2271b1 !important;
-                color: #2271b1 !important;
-            }
-
-            .mulopimfwc-visibility-toggle.is-active {
-                color: #2271b1 !important;
-                background: #f0f6fc !important;
-            }
-
-            .mulopimfwc-visibility-toggle.is-inactive {
-                color: #8c8f94 !important;
-                background: #f6f7f7 !important;
-            }
-
-            .mulopimfwc-visibility-toggle.is-loading {
-                opacity: 0.6;
-                pointer-events: none;
-            }
-
-            .mulopimfwc-name-open-badge {
-                display: inline-flex;
-                align-items: center;
-                margin-left: 8px;
-                padding: 2px 9px;
-                border-radius: 999px;
-                font-size: 11px;
-                font-weight: 600;
-                line-height: 1.5;
-                vertical-align: middle;
-            }
-
-            .mulopimfwc-name-open-badge.is-open {
-                color: #166534;
-                background: #dcfce7;
-            }
-
-            .mulopimfwc-name-open-badge.is-closed {
-                color: #b91c1c;
-                background: #fee2e2;
-            }
-
-            #the-list.ui-sortable tr {
-                cursor: move;
-            }
-
-            #the-list.ui-sortable tr.ui-sortable-helper {
-                background: #fff;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                border: 1px solid #c3c4c7;
-            }
-
-            #the-list.ui-sortable tr.ui-sortable-placeholder {
-                height: 40px;
-                background: #f0f0f1;
-                border: 2px dashed #c3c4c7;
-                visibility: visible !important;
-            }
-
-            #the-list tr.mulopimfwc-location-inactive>th,
-            #the-list tr.mulopimfwc-location-inactive>td {
-                opacity: 0.55;
-            }
-
-            #the-list tr.mulopimfwc-location-inactive>td.column-drag_handle {
-                opacity: 1;
-            }
-
-            .inline-edit-col-right .inline-edit-col {
-                margin-bottom: 10px;
-            }
-
-            .inline-edit-col-right .inline-edit-col label {
-                display: block;
-                margin-bottom: 5px;
-            }
-
-            .inline-edit-col-right .inline-edit-col .title {
-                font-weight: 600;
-                display: block;
-                margin-bottom: 5px;
-            }
-
-            .inline-edit-col-right #inline-edit-is-active,
-            .inline-edit-col-right #inline-edit-display-order {
-                width: 100%;
-                max-width: 200px;
-            }
-
-            .mulopimfwc-location-id {
-                color: #646970;
-                font-weight: normal;
-                display: none;
-            }
-
-            .taxonomy-mulopimfwc_store_location table.wp-list-table tr:hover .mulopimfwc-location-id {
-                display: inline;
-            }
-        </style>
-        <?php
+<?php
 
         // Add inline JavaScript
         $ajax_nonce = wp_create_nonce('mulopimfwc_location_ajax');
         ?>
-        <script type="text/javascript">
-            (function($) {
-                $(document).ready(function() {
+        <?php
+        ob_start();
+        ?>
+(function($) {
+
+                'use strict';
+$(document).ready(function() {
                     var $tbody = $("#the-list");
                     var openLabel = "<?php echo esc_js(__('Open', 'multi-location-product-and-inventory-management-pro')); ?>";
                     var closedLabel = "<?php echo esc_js(__('Closed', 'multi-location-product-and-inventory-management-pro')); ?>";
@@ -3134,214 +2988,11 @@ JS;
                     });
                 });
             })(jQuery);
-        </script>
-        <style>
-            .column-drag_handle {
-                min-width: 100px;
-                width: 100px;
-            }
-
-            .column-rate {
-                min-width: 160px;
-                width: 160px;
-                overflow: visible !important;
-            }
-
-            .mulopimfwc-actions-cell {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .mulopimfwc-rate-cell.is-saving {
-                opacity: 0.78;
-            }
-
-            .mulopimfwc-rate-cell {
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                min-width: 280px;
-            }
-
-            .mulopimfwc-rate-cell.is-currency-open {
-                z-index: 100000;
-            }
-
-            .mulopimfwc-rate-controls {
-                display: flex;
-                align-items: center;
-                gap: 0px;
-            }
-
-            .mulopimfwc-rate-currency-trigger {
-                min-width: 35px !important;
-                max-width: 35px;
-                height: 34px !important;
-                padding: 0 8px !important;
-                display: inline-flex !important;
-                align-items: center;
-                justify-content: center;
-                gap: 0px !important;
-                border-color: #d0d7de !important;
-                border-radius: 8px 0 0 8px !important;
-                background: #fff !important;
-                box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05) !important;
-            }
-
-            .mulopimfwc-rate-currency-trigger:hover,
-            .mulopimfwc-rate-currency-trigger:focus {
-                border-color: #2271b1;
-                color: #2271b1;
-            }
-
-            .mulopimfwc-rate-currency-trigger.is-disabled {
-                opacity: 0.65;
-                pointer-events: none;
-            }
-
-            .mulopimfwc-rate-currency-trigger .dashicons {
-                width: 12px;
-                height: 12px;
-                font-size: 12px;
-                line-height: 12px;
-                color: #646970;
-            }
-
-            .mulopimfwc-rate-symbol {
-                color: #1d2327;
-                font-weight: 700;
-                font-size: 14px;
-                min-width: 14px;
-                text-align: center;
-            }
-
-            .mulopimfwc-rate-input {
-                width: 70px;
-                height: 34px;
-                border-radius: 0 !important;
-                border-color: #d0d7de !important;
-                border-left: 0 !important;
-                border-right: 0 !important;
-                margin: 0 !important;
-                padding-right: 0 !important;
-            }
-
-            .mulopimfwc-rate-currency {
-                width: 100%;
-                max-width: 260px;
-                min-height: 34px;
-                border-radius: 8px;
-            }
-
-            .mulopimfwc-rate-currency-popover {
-                position: absolute;
-                top: calc(100% + 6px);
-                left: 0;
-                display: none;
-                min-width: 230px;
-                max-width: 280px;
-                padding: 8px;
-                border: 1px solid #c3c4c7;
-                border-radius: 10px;
-                background: #fff;
-                box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
-                z-index: 100001;
-            }
-
-            .mulopimfwc-rate-cell.is-currency-open .mulopimfwc-rate-currency-popover {
-                display: block;
-            }
-
-            .mulopimfwc-rate-currency-popover .select2-container {
-                width: 100% !important;
-            }
-
-            .mulopimfwc-rate-currency-popover .select2-container .select2-selection--single {
-                min-height: 34px;
-                border-radius: 8px;
-                border-color: #d0d7de;
-            }
-
-            .mulopimfwc-rate-currency-popover .select2-container .select2-selection--single .select2-selection__rendered {
-                line-height: 32px;
-            }
-
-            .mulopimfwc-rate-currency-popover .select2-container .select2-selection--single .select2-selection__arrow {
-                height: 32px;
-            }
-
-            .mulopimfwc-rate-mode {
-                min-width: 66px;
-                max-width: 66px !important;
-                height: 34px;
-                border-color: #d0d7de !important;
-                border-radius: 0 8px 8px 0 !important;
-                margin: 0 !important;
-            }
-
-            .mulopimfwc-rate-row-sync {
-                min-width: 32px;
-                padding: 0;
-            }
-
-            .mulopimfwc-rate-row-sync .dashicons {
-                margin: 0;
-            }
-
-            .mulopimfwc-rate-row-sync.is-loading .dashicons {
-                animation: mulopimfwc-rate-spin 0.9s linear infinite;
-            }
-
-            .mulopimfwc-rate-row-sync.is-disabled {
-                opacity: 0.55;
-            }
-
-            .mulopimfwc-rate-sync-all {
-                margin-left: 8px !important;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 22px;
-                height: 22px;
-                color: #2271b1 !important;
-                text-decoration: none !important;
-                float: right;
-            }
-
-            .mulopimfwc-rate-sync-all .dashicons {
-                width: 16px;
-                height: 16px;
-                font-size: 16px;
-                line-height: 16px;
-            }
-
-            .mulopimfwc-rate-sync-all.is-loading .dashicons {
-                animation: mulopimfwc-rate-spin 0.9s linear infinite;
-            }
-
-            .mulopimfwc-rate-inline-status {
-                min-height: 16px;
-                font-size: 11px;
-                color: #646970;
-            }
-
-            .mulopimfwc-rate-inline-status.is-error {
-                color: #b32d2e;
-            }
-
-            @keyframes mulopimfwc-rate-spin {
-                from {
-                    transform: rotate(0deg);
-                }
-
-                to {
-                    transform: rotate(360deg);
-                }
-            }
-        </style>
         <?php
+        $mulopimfwc_admin_inline_script = ob_get_clean();
+        wp_add_inline_script('mulopimfwc-location-taxonomy-inline', $mulopimfwc_admin_inline_script, 'after');
+        ?>
+<?php
 
         $rate_js_config = array(
             'nonce' => $ajax_nonce,
@@ -3365,9 +3016,13 @@ JS;
         }
 
         ?>
-        <script type="text/javascript">
-            (function($) {
-                var config = <?php
+        <?php
+        ob_start();
+        ?>
+(function($) {
+
+                'use strict';
+var config = <?php
                                 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON_HEX_* encoded for inline JavaScript.
                                 echo $rate_js_config_json;
                                 ?>;
@@ -3905,7 +3560,10 @@ JS;
                     initRateCells();
                 });
             })(jQuery);
-        </script>
+        <?php
+        $mulopimfwc_admin_inline_script = ob_get_clean();
+        wp_add_inline_script('mulopimfwc-location-taxonomy-inline', $mulopimfwc_admin_inline_script, 'after');
+        ?>
     <?php
     }
 
@@ -4137,18 +3795,22 @@ JS;
     /**
      * Save quick edit fields when WordPress quick edit form is submitted
      */
-    public function save_quick_edit_on_submit()
+    public function save_quick_edit_on_submit($hook = '')
     {
-        global $taxonomy;
-        if ($taxonomy !== 'mulopimfwc_store_location') {
+        $screen = get_current_screen();
+        if (empty($screen) || $screen->taxonomy !== 'mulopimfwc_store_location') {
             return;
         }
 
         $ajax_nonce = wp_create_nonce('mulopimfwc_location_ajax');
     ?>
-        <script type="text/javascript">
-            (function($) {
-                // Override WordPress quick edit save function
+        <?php
+        ob_start();
+        ?>
+(function($) {
+
+                'use strict';
+// Override WordPress quick edit save function
                 var inlineEditTax = inlineEditTax || {};
                 var originalSave = inlineEditTax.save;
 
@@ -4207,7 +3869,10 @@ JS;
                     return result;
                 };
             })(jQuery);
-        </script>
+        <?php
+        $mulopimfwc_admin_inline_script = ob_get_clean();
+        wp_add_inline_script('mulopimfwc-location-taxonomy-inline', $mulopimfwc_admin_inline_script, 'after');
+        ?>
     <?php
     }
 

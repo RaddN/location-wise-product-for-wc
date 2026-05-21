@@ -12186,9 +12186,13 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return;
             }
 
-            // Enqueue inline script for order location updates
+            wp_enqueue_script('jquery');
+
+            // Enqueue inline script for order location updates.
             $script = "
             jQuery(document).ready(function($) {
+                'use strict';
+
                 $(document).on('change', '.mulopimfwc-order-item-location-select', function() {
                     var \$select = $(this);
                     var \$container = \$select.closest('.mulopimfwc-order-item-location-selector');
@@ -14982,6 +14986,17 @@ function mulopimfwc_enqueue_admin_notifications_assets()
     $admin_notifications_version = file_exists($admin_notifications_js)
         ? (string) filemtime($admin_notifications_js)
         : MULOPIMFWC_VERSION;
+    $admin_notifications_css = plugin_dir_path(__FILE__) . 'assets/css/admin-notifications.css';
+    $admin_notifications_css_version = file_exists($admin_notifications_css)
+        ? (string) filemtime($admin_notifications_css)
+        : MULOPIMFWC_VERSION;
+
+    wp_enqueue_style(
+        'mulopimfwc-admin-notifications',
+        plugin_dir_url(__FILE__) . 'assets/css/admin-notifications.css',
+        [],
+        $admin_notifications_css_version
+    );
 
     wp_enqueue_script(
         'mulopimfwc-admin-notifications',
@@ -15041,6 +15056,18 @@ function mulopimfwc_enqueue_admin_notifications_assets()
         'notification_style' => isset($notification_settings['notification_style']) ? $notification_settings['notification_style'] : 'modern',
         'sound_enabled' => isset($notification_settings['sound_enabled']) ? $notification_settings['sound_enabled'] : 'off',
     ]);
+
+    if (isset($notification_settings['pwa_enabled']) && $notification_settings['pwa_enabled'] === 'on') {
+        $sw_config_script = '(function() {
+            "use strict";
+            if ("serviceWorker" in navigator && window.mulopimfwcNotificationConfig) {
+            window.mulopimfwcNotificationConfig.pwa_sw_url = ' . wp_json_encode(rest_url('mulopimfwc/v1/sw.js')) . ';
+            window.mulopimfwcNotificationConfig.pwa_sw_url_fallback = ' . wp_json_encode(home_url('/mulopimfwc-sw.js')) . ';
+            window.mulopimfwcNotificationConfig.manifest_url = ' . wp_json_encode(home_url('/mulopimfwc-manifest.json')) . ';
+            }
+        })();';
+        wp_add_inline_script('mulopimfwc-admin-notifications', $sw_config_script, 'after');
+    }
 }
 
 /**
@@ -15518,46 +15545,6 @@ function mulopimfwc_serve_sw()
         echo '// Service worker file not found';
     }
     exit;
-}
-
-/**
- * Register service worker with proper scope
- */
-add_action('admin_footer', 'mulopimfwc_add_sw_registration_script');
-function mulopimfwc_add_sw_registration_script()
-{
-    if (!current_user_can('manage_woocommerce')) {
-        return;
-    }
-
-    global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
-    $notification_settings = isset($options['notification_settings']) && is_array($options['notification_settings'])
-        ? $options['notification_settings']
-        : [];
-
-    if (!isset($notification_settings['pwa_enabled']) || $notification_settings['pwa_enabled'] !== 'on') {
-        return;
-    }
-
-    // Use REST API endpoint for service worker (more reliable, no redirects)
-    // Fallback to rewrite endpoint if REST API fails
-    $sw_url_rest = rest_url('mulopimfwc/v1/sw.js');
-    $sw_url_rewrite = home_url('/mulopimfwc-sw.js');
-    $manifest_url = home_url('/mulopimfwc-manifest.json');
-
-?>
-    <script>
-        if ('serviceWorker' in navigator && window.mulopimfwcNotificationConfig) {
-            // Try REST API endpoint first (more reliable), fallback to rewrite endpoint
-            window.mulopimfwcNotificationConfig.pwa_sw_url = <?php echo json_encode($sw_url_rest); ?>;
-            window.mulopimfwcNotificationConfig.pwa_sw_url_fallback = <?php echo json_encode($sw_url_rewrite); ?>;
-            window.mulopimfwcNotificationConfig.manifest_url = <?php echo json_encode($manifest_url); ?>;
-        }
-    </script>
-<?php
 }
 
 add_action('user_register', 'mulopimfwc_flag_manager_change');

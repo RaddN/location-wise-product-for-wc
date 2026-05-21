@@ -1,4 +1,6 @@
 (function () {
+    'use strict';
+
     const TABLE_SEL = '.wc-block-cart-items';
     const ROW_SEL = 'tbody > tr.wc-block-cart-items__row';
     const LOC_VALUE_SEL = '.wc-block-components-product-details__location .wc-block-components-product-details__value';

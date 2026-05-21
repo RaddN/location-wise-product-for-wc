@@ -431,36 +431,6 @@
      */
     $(document).ready(function() {
         RecommendationsManager.init();
-
-        // Add CSS for added message
-        $('<style>')
-            .text(`
-                .mulopimfwc-added-message {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(40, 167, 69, 0.95);
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 4px;
-                    font-weight: 600;
-                    z-index: 999;
-                    animation: slideInUp 0.3s ease;
-                }
-                
-                @keyframes slideInUp {
-                    from {
-                        opacity: 0;
-                        transform: translate(-50%, -40%);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translate(-50%, -50%);
-                    }
-                }
-            `)
-            .appendTo('head');
     });
 
     /**

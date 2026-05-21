@@ -49,7 +49,7 @@ class MULOPIMFWC_Location_Based_Shipping
         add_action('wp_ajax_mulopimfwc_save_shipping_method_locations', array($this, 'ajax_save_method_locations'));
         
         // Refresh shipping methods when location changes
-        add_action('wp_footer', array($this, 'add_location_change_shipping_refresh'));
+        add_action('wp_enqueue_scripts', array($this, 'add_location_change_shipping_refresh'));
         
         // Add bulk location assignment for shipping zones
         add_action('woocommerce_shipping_zones_after_zones_list', array($this, 'add_bulk_location_settings'));
@@ -336,6 +336,8 @@ class MULOPIMFWC_Location_Based_Shipping
                         <input type="checkbox" 
                                name="mulopimfwc_shipping_locations_all" 
                                id="mulopimfwc_shipping_locations_all_<?php echo esc_attr($instance_id); ?>"
+                               class="mulopimfwc-shipping-locations-all"
+                               data-locations-list="mulopimfwc_shipping_locations_list_<?php echo esc_attr($instance_id); ?>"
                                value="1"
                                <?php checked(empty($selected_locations)); ?>>
                         <strong><?php esc_html_e('All Locations', 'multi-location-product-and-inventory-management-pro'); ?></strong>
@@ -353,19 +355,6 @@ class MULOPIMFWC_Location_Based_Shipping
                 </fieldset>
             </td>
         </tr>
-
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            $('#mulopimfwc_shipping_locations_all_<?php echo esc_js($instance_id); ?>').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('#mulopimfwc_shipping_locations_list_<?php echo esc_js($instance_id); ?>').slideUp();
-                    $('#mulopimfwc_shipping_locations_list_<?php echo esc_js($instance_id); ?> input[type="checkbox"]').prop('checked', false);
-                } else {
-                    $('#mulopimfwc_shipping_locations_list_<?php echo esc_js($instance_id); ?>').slideDown();
-                }
-            });
-        });
-        </script>
         <?php
     }
 
@@ -622,6 +611,8 @@ class MULOPIMFWC_Location_Based_Shipping
                 'noLocations' => __('No locations assigned', 'multi-location-product-and-inventory-management-pro'),
                 'saveSuccess' => __('Locations saved successfully', 'multi-location-product-and-inventory-management-pro'),
                 'saveError' => __('Error saving locations', 'multi-location-product-and-inventory-management-pro'),
+                'pleaseSelectZone' => __('Please select a zone', 'multi-location-product-and-inventory-management-pro'),
+                'genericError' => __('An error occurred', 'multi-location-product-and-inventory-management-pro'),
             )
         ));
     }
@@ -661,29 +652,23 @@ class MULOPIMFWC_Location_Based_Shipping
             return;
         }
 
-        ?>
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            // Listen for location changes
-            $(document.body).on('mulopimfwc_location_changed', function(e, newLocation) {
-                // Trigger shipping calculation update
-                $('body').trigger('update_checkout');
-                
-                // Show notice
-                var notice = '<div class="woocommerce-message">' +
-                    '<?php esc_html_e('Shipping methods updated based on your location selection.', 'multi-location-product-and-inventory-management-pro'); ?>' +
-                    '</div>';
-                
-                $('.woocommerce-notices-wrapper').first().html(notice);
-                
-                // Scroll to shipping methods
-                $('html, body').animate({
-                    scrollTop: $('#shipping_method').offset().top - 100
-                }, 500);
+        wp_enqueue_script('jquery');
+        $message = __('Shipping methods updated based on your location selection.', 'multi-location-product-and-inventory-management-pro');
+        $script = 'jQuery(function($) {
+            "use strict";
+            $(document.body).on("mulopimfwc_location_changed", function() {
+                $("body").trigger("update_checkout");
+                var notice = "<div class=\"woocommerce-message\">" + ' . wp_json_encode($message) . ' + "</div>";
+                $(".woocommerce-notices-wrapper").first().html(notice);
+                var $shippingMethod = $("#shipping_method");
+                if ($shippingMethod.length) {
+                    $("html, body").animate({
+                        scrollTop: $shippingMethod.offset().top - 100
+                    }, 500);
+                }
             });
-        });
-        </script>
-        <?php
+        });';
+        wp_add_inline_script('jquery', $script);
     }
 
     /**
@@ -756,62 +741,6 @@ class MULOPIMFWC_Location_Based_Shipping
             </table>
         </div>
 
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            $('#mulopimfwc_bulk_zone_select').on('change', function() {
-                if ($(this).val()) {
-                    $('#mulopimfwc_bulk_locations_row, #mulopimfwc_bulk_apply_row').show();
-                } else {
-                    $('#mulopimfwc_bulk_locations_row, #mulopimfwc_bulk_apply_row').hide();
-                }
-            });
-
-            $('#mulopimfwc_bulk_apply_btn').on('click', function() {
-                var $btn = $(this);
-                var $spinner = $btn.next('.spinner');
-                var zoneId = $('#mulopimfwc_bulk_zone_select').val();
-                var locations = [];
-                
-                $('input[name="mulopimfwc_bulk_locations[]"]:checked').each(function() {
-                    locations.push($(this).val());
-                });
-
-                if (!zoneId) {
-                    alert('<?php esc_html_e('Please select a zone', 'multi-location-product-and-inventory-management-pro'); ?>');
-                    return;
-                }
-
-                $btn.prop('disabled', true);
-                $spinner.addClass('is-active');
-
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'mulopimfwc_bulk_assign_locations',
-                        nonce: '<?php echo esc_js(wp_create_nonce('mulopimfwc_shipping_nonce')); ?>',
-                        zone_id: zoneId,
-                        locations: locations
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            alert(response.data.message);
-                            location.reload();
-                        } else {
-                            alert(response.data.message);
-                        }
-                    },
-                    error: function() {
-                        alert('<?php esc_html_e('An error occurred', 'multi-location-product-and-inventory-management-pro'); ?>');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false);
-                        $spinner.removeClass('is-active');
-                    }
-                });
-            });
-        });
-        </script>
         <?php
     }
 }

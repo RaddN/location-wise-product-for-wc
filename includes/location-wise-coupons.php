@@ -25,6 +25,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
         }
 
         // Admin UI fields
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('woocommerce_coupon_options_usage_restriction', [$this, 'add_usage_restriction_fields'], 20, 1);
         add_action('woocommerce_coupon_options_save', [$this, 'save_usage_restriction_fields'], 10, 2);
 
@@ -97,6 +98,26 @@ class MULOPIMFWC_Coupon_Location_Restrictions
     /** -------------------------
      * Admin: render fields
      * ------------------------*/
+    public function enqueue_admin_assets($hook)
+    {
+        if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+            return;
+        }
+
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen || $screen->post_type !== 'shop_coupon') {
+            return;
+        }
+
+        wp_enqueue_script(
+            'mulopimfwc-coupon-location-restrictions',
+            plugin_dir_url(__FILE__) . '../assets/js/coupon-location-restrictions.js',
+            ['jquery'],
+            '1.1.7.20',
+            true
+        );
+    }
+
     public function add_usage_restriction_fields($coupon_id)
     {
         $include_selected = (array) get_post_meta($coupon_id, self::META_INCLUDE, true);
@@ -171,101 +192,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
             'style'             => 'width:50%;',
         ]);
 
-        $this->render_include_exclude_sync_script();
         echo '</div>';
-    }
-
-    private function render_include_exclude_sync_script()
-    {
-        $include_id = self::META_INCLUDE;
-        $exclude_id = self::META_EXCLUDE;
-?>
-        <script type="text/javascript">
-            jQuery(function($) {
-                var $include = $('#<?php echo esc_js($include_id); ?>');
-                var $exclude = $('#<?php echo esc_js($exclude_id); ?>');
-                var syncing = false;
-
-                if (!$include.length || !$exclude.length) {
-                    return;
-                }
-
-                function asArray(values) {
-                    if (!values) {
-                        return [];
-                    }
-
-                    return Array.isArray(values) ? values : [values];
-                }
-
-                function removeOverlap(primaryValues, secondaryValues) {
-                    var blocked = {};
-
-                    $.each(primaryValues, function(_, value) {
-                        blocked[String(value)] = true;
-                    });
-
-                    return $.grep(secondaryValues, function(value) {
-                        return !blocked[String(value)];
-                    });
-                }
-
-                function syncOneWay($source, $target) {
-                    var sourceValues = asArray($source.val());
-                    var targetValues = asArray($target.val());
-                    var cleanTargetValues = removeOverlap(sourceValues, targetValues);
-                    var blocked = {};
-
-                    $.each(sourceValues, function(_, value) {
-                        blocked[String(value)] = true;
-                    });
-
-                    if (cleanTargetValues.length !== targetValues.length) {
-                        $target.val(cleanTargetValues);
-                    }
-
-                    $target.find('option').each(function() {
-                        var value = String($(this).val());
-                        var shouldDisable = !!blocked[value] && !$(this).prop('selected');
-                        $(this).prop('disabled', shouldDisable);
-                    });
-                }
-
-                function syncBoth(preferred) {
-                    if (syncing) {
-                        return;
-                    }
-
-                    syncing = true;
-
-                    if (preferred === 'exclude') {
-                        syncOneWay($exclude, $include);
-                        syncOneWay($include, $exclude);
-                    } else {
-                        syncOneWay($include, $exclude);
-                        syncOneWay($exclude, $include);
-                    }
-
-                    // Refresh Select2 UI after changing selected/disabled options.
-                    $include.trigger('change.select2');
-                    $exclude.trigger('change.select2');
-
-                    syncing = false;
-                }
-
-                $include.on('change select2:select select2:unselect', function() {
-                    syncBoth('include');
-                });
-
-                $exclude.on('change select2:select select2:unselect', function() {
-                    syncBoth('exclude');
-                });
-
-                // Initial load: if overlap already exists, keep include values and clean exclude.
-                syncBoth('include');
-            });
-        </script>
-<?php
     }
 
     private function get_term_breadcrumb(WP_Term $term)

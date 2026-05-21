@@ -1,4 +1,6 @@
 (function () {
+     'use strict';
+
      if (!window.wc || !window.wc.wcBlocksRegistry || !window.wp || !window.wp.element) {
          return;
      }

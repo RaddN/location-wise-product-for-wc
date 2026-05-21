@@ -505,7 +505,7 @@
             );
 
             $('body').append($form);
-            $form.submit();
+            $form.trigger('submit');
 
             // Re-enable button after delay
             setTimeout(function () {
@@ -1066,7 +1066,7 @@
                 $container.append(
                     '<div class="mulopimfwc-deferred-error">' +
                     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
-                    ' Could not load data. <a href="" onclick="location.reload();return false;">Retry</a>' +
+                    ' Could not load data. <a href="#" class="mulopimfwc-dashboard-retry-link">Retry</a>' +
                     '</div>'
                 );
             }
@@ -1079,7 +1079,7 @@
             $container.append(
                 '<div class="mulopimfwc-deferred-error">' +
                 '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
-                ' Could not load investment data. <a href="" onclick="location.reload();return false;">Retry</a>' +
+                ' Could not load investment data. <a href="#" class="mulopimfwc-dashboard-retry-link">Retry</a>' +
                 '</div>'
             );
         }
@@ -1087,10 +1087,15 @@
         var $lowStockTbody = $('.lwp-low-stock-table tbody');
         if ($lowStockTbody.length) {
             $lowStockTbody.html(
-                '<tr><td colspan="4" class="mulopimfwc-deferred-loading-cell">Could not load stock alerts. <a href="" onclick="location.reload();return false;">Retry</a></td></tr>'
+                '<tr><td colspan="4" class="mulopimfwc-deferred-loading-cell">Could not load stock alerts. <a href="#" class="mulopimfwc-dashboard-retry-link">Retry</a></td></tr>'
             );
         }
     }
+
+    $(document).on('click', '.mulopimfwc-dashboard-retry-link', function (event) {
+        event.preventDefault();
+        window.location.reload();
+    });
 
     function getCurrentDashboardFilters() {
         return {

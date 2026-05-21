@@ -1,0 +1,331 @@
+/* New start*/
+.wrap.mulopimfwc-location-managers-main {
+    border: 2px solid #d1d1d4;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    margin: 20px 20px 0px 0px;
+}
+
+h1.mlm-settings-heading {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.mlm-settings-icon {
+    color: #ffffff;
+    background: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 7px;
+}
+
+.mulopimfwc-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;
+    padding: 20px;
+}
+
+.mulopimfwc-manager-header button {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    padding: 5px 15px !important;
+    border-radius: 6px !important;
+    font-size: 15px !important;
+    font-weight: 600;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+}
+
+.mulopimfwc-manager-header button svg {
+    width: 15px;
+    height: 15px;
+    margin-right: 6px;
+}
+
+.mulopimfwc-social-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.mulopimfwc-social-field input {
+    width: 100%;
+}
+
+.mulopimfwc-social-field .description {
+    margin-top: 6px;
+    color: #475569;
+}
+
+.mulopimfwc-managers-list {
+    padding: 10px 25px;
+}
+
+.manager-info img {
+    border-radius: 50%;
+}
+
+
+.manager-actions .mulopimfwc-delete-manager,
+.mulopimfwc-delete-btn {
+    background: #ffffff !important;
+    border-color: #dc2626 !important;
+    padding: 0px 30px !important;
+    border-radius: 6px !important;
+    font-size: 15px !important;
+    color: #dc2626 !important;
+    font-weight: 600;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.25s ease !important;
+}
+
+.manager-actions .mulopimfwc-delete-manager:hover,
+.mulopimfwc-delete-btn:hover {
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4) !important;
+    transform: translateY(-2px);
+}
+
+
+
+/* New End */
+
+.mulopimfwc-managers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.mulopimfwc-manager-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.manager-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.manager-details h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.manager-email {
+    margin: 0px 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.manager-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.manager-locations,
+.manager-capabilities {
+    margin-bottom: 15px;
+}
+
+.manager-locations h4,
+.manager-capabilities h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.manager-locations h4 svg,
+.manager-capabilities h4 svg {
+    width: auto;
+    height: 14px;
+    margin-right: 6px;
+}
+
+.location-list,
+.capability-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.location-tag,
+.capability-tag {
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 30px;
+    font-size: 12px;
+}
+
+.capability-tag {
+    background: #2563eb1a;
+    color: #2563eb;
+}
+
+.no-locations,
+.no-capabilities {
+    color: #666;
+    font-style: italic;
+    margin: 0;
+}
+
+.mulopimfwc-no-managers {
+    text-align: center;
+    padding: 40px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+/* Modal Styles */
+.mulopimfwc-modal {
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.mulopimfwc-modal-content {
+    background-color: #fff;
+    margin: 1.5% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.mulopimfwc-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mulopimfwc-modal-header h2 {
+    margin: 0;
+}
+
+.mulopimfwc-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.mulopimfwc-modal form {
+    padding: 20px;
+}
+
+.mulopimfwc-form-row {
+    margin-bottom: 20px;
+}
+
+.mulopimfwc-form-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.mulopimfwc-form-row input[type="text"],
+.mulopimfwc-form-row input[type="password"],
+.mulopimfwc-form-row input[type="email"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.location-checkboxes,
+.capability-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.checkbox-label:hover {
+    background: #f9f9f9;
+}
+
+.global-default {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+}
+
+.mulopimfwc-modal-footer {
+    padding: 20px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* User Search */
+.user-search-container {
+    position: relative;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.search-result-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.search-result-item:hover {
+    background: #f9f9f9;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}

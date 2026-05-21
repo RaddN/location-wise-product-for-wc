@@ -11,6 +11,70 @@ class mulopimfwc_settings
         add_action('admin_init', [$this, 'handle_reset_settings']);
         add_action('admin_init', [$this, 'handle_reset_text_management']);
         add_action('admin_init', [$this, 'maybe_flush_rewrite_rules_on_settings_save'], 30);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_settings_assets']);
+    }
+
+    public function enqueue_settings_assets($hook)
+    {
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if ($page !== 'multi-location-product-and-inventory-management-settings') {
+            return;
+        }
+
+        $settings_css_path = plugin_dir_path(__FILE__) . '../assets/css/settings-page.css';
+        $settings_js_path = plugin_dir_path(__FILE__) . '../assets/js/settings-page.js';
+        $settings_css_version = file_exists($settings_css_path) ? (string) filemtime($settings_css_path) : '1.1.7.20';
+        $settings_js_version = file_exists($settings_js_path) ? (string) filemtime($settings_js_path) : '1.1.7.20';
+
+        wp_enqueue_style(
+            'mulopimfwc-settings-page',
+            plugin_dir_url(__FILE__) . '../assets/css/settings-page.css',
+            array(),
+            $settings_css_version
+        );
+
+        wp_enqueue_script(
+            'mulopimfwc-settings-page',
+            plugin_dir_url(__FILE__) . '../assets/js/settings-page.js',
+            array('jquery'),
+            $settings_js_version,
+            true
+        );
+
+        $translation_data = array();
+        $translation_file = plugin_dir_path(__DIR__) . 'assets/i18n/text-management.json';
+        if (file_exists($translation_file)) {
+            $raw_translation = file_get_contents($translation_file);
+            $decoded_translation = json_decode($raw_translation, true);
+            if (is_array($decoded_translation)) {
+                $translation_data = $decoded_translation;
+            }
+        }
+
+        wp_localize_script(
+            'mulopimfwc-settings-page',
+            'mulopimfwcSettingsPage',
+            array(
+                'isManualMode' => $this->is_manual_assignment_strict_mode(),
+                'textTranslations' => $translation_data,
+                'strings' => array(
+                    'fillDefaultPrompt' => __('Enter default transfer cost for all locations:', 'multi-location-product-and-inventory-management-pro'),
+                    'clearAllConfirm' => __('Are you sure you want to clear all transfer costs?', 'multi-location-product-and-inventory-management-pro'),
+                    'chooseLanguage' => __('Please choose a language first.', 'multi-location-product-and-inventory-management-pro'),
+                    'translationConfirmFallback' => __('Apply %s translations to all Text Management fields? This will overwrite your current values.', 'multi-location-product-and-inventory-management-pro'),
+                    'copyFailed' => __('Failed to copy. Please select and copy manually.', 'multi-location-product-and-inventory-management-pro'),
+                    'copied' => __('Copied!', 'multi-location-product-and-inventory-management-pro'),
+                    'testing' => __('Testing...', 'multi-location-product-and-inventory-management-pro'),
+                    'test' => __('Test', 'multi-location-product-and-inventory-management-pro'),
+                    'testSent' => __('Test sent! Check your channel.', 'multi-location-product-and-inventory-management-pro'),
+                    'testFailed' => __('Test failed. Check the details and try again.', 'multi-location-product-and-inventory-management-pro'),
+                    'testingDigest' => __('Testing digest...', 'multi-location-product-and-inventory-management-pro'),
+                    'testDigest' => __('Test Digest', 'multi-location-product-and-inventory-management-pro'),
+                    'digestSent' => __('Digest test sent! Check your channel.', 'multi-location-product-and-inventory-management-pro'),
+                    'digestFailed' => __('Digest test failed. Check the details and try again.', 'multi-location-product-and-inventory-management-pro'),
+                ),
+            )
+        );
     }
 
     /**
@@ -237,35 +301,7 @@ class mulopimfwc_settings
                 $message = $this->append_manual_disabled_note($message);
                 $this->render_advance_checkbox("location_wise_currency", $message, $disabled);
 ?>
-            <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    const locationPriceInput = document.querySelector('input[name="mulopimfwc_display_options[enable_location_price]"]');
-                    const locationCurrencyInput = document.querySelector('input[name="mulopimfwc_display_options[location_wise_currency]"]');
-                    if (!locationPriceInput || !locationCurrencyInput) {
-                        return;
-                    }
-
-                    const isManualMode = <?php echo $is_manual_mode ? 'true' : 'false'; ?>;
-                    const currencySwitch = locationCurrencyInput.closest('.mulopimfwc_switch');
-
-                    function syncLocationCurrencyState() {
-                        const shouldDisable = isManualMode || !locationPriceInput.checked;
-                        locationCurrencyInput.disabled = shouldDisable;
-                        if (shouldDisable) {
-                            locationCurrencyInput.checked = false;
-                        }
-                        locationCurrencyInput.classList.toggle('mulopimfwc-setting-disabled', shouldDisable);
-
-                        if (currencySwitch) {
-                            currencySwitch.classList.toggle('mulopimfwc-setting-disabled', shouldDisable);
-                        }
-                    }
-
-                    syncLocationCurrencyState();
-                    locationPriceInput.addEventListener('change', syncLocationCurrencyState);
-                });
-            </script>
-        <?php
+<?php
             },
             'lwp-general-settings',
             'location_stock_general_section'
@@ -930,7 +966,7 @@ class mulopimfwc_settings
                             <thead>
                                 <tr style="background: #f8fafc;">
                                     <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #475569; min-width: 70px;">
-                                        <?php echo esc_html__('From → To', 'multi-location-product-and-inventory-management-pro'); ?>
+                                        <?php echo esc_html__('From Ã¢â€ â€™ To', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </th>
                                     <?php foreach ($locations as $to_location): ?>
                                         <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #475569; min-width: 120px;">
@@ -999,7 +1035,7 @@ class mulopimfwc_settings
                             </p>
                             <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 13px; line-height: 1.6;">
                                 <li><?php echo esc_html__('Each cell represents the cost to transfer products FROM one location TO another', 'multi-location-product-and-inventory-management-pro'); ?></li>
-                                <li><?php echo esc_html__('Costs can be different in each direction (e.g., Location A → B may differ from B → A)', 'multi-location-product-and-inventory-management-pro'); ?></li>
+                                <li><?php echo esc_html__('Costs can be different in each direction (e.g., Location A Ã¢â€ â€™ B may differ from B Ã¢â€ â€™ A)', 'multi-location-product-and-inventory-management-pro'); ?></li>
                                 <li><?php echo esc_html__('Leave empty or set to 0 for no transfer cost between specific locations', 'multi-location-product-and-inventory-management-pro'); ?></li>
                                 <li><?php echo esc_html__('These costs are added to shipping when products need to be transferred between locations', 'multi-location-product-and-inventory-management-pro'); ?></li>
                             </ul>
@@ -1019,72 +1055,7 @@ class mulopimfwc_settings
                 </div>
             </div>
 
-            <style>
-                .mulopimfwc-transfer-cost-matrix input[type="number"]:focus {
-                    outline: none;
-                    border-color: #3b82f6;
-                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-                }
-
-                .mulopimfwc-cost-table tbody tr:hover {
-                    background: #f8fafc;
-                }
-
-                @media (max-width: 768px) {
-                    .mulopimfwc-matrix-container {
-                        font-size: 12px;
-                    }
-
-                    .mulopimfwc-cost-table th,
-                    .mulopimfwc-cost-table td {
-                        padding: 8px 4px !important;
-                        min-width: 100px !important;
-                    }
-                }
-            </style>
-
-            <script>
-                jQuery(document).ready(function($) {
-                    // Helper: Enable or disable cost inputs based on shipping calculation method
-                    function toggleTransferCostInputs() {
-                        var $select = $('#mulopimfwc_shipping_calculation_method');
-                        var $inputs = $('.mulopimfwc-cost-table input[type="number"]');
-                        if ($select.length && $select.val() !== 'nearest_with_transfer') {
-                            $inputs.prop('disabled', true);
-                        } else {
-                            $inputs.prop('disabled', false);
-                        }
-                    }
-
-                    // Initial check on page load
-                    toggleTransferCostInputs();
-
-                    // Watch for changes to the calculation method dropdown
-                    $(document).on('change', '#mulopimfwc_shipping_calculation_method', function() {
-                        toggleTransferCostInputs();
-                    });
-
-                    // Fill default cost for all empty and enabled fields only
-                    $('.mulopimfwc-fill-default').on('click', function() {
-                        const defaultCost = prompt('<?php echo esc_js(__('Enter default transfer cost for all locations:', 'multi-location-product-and-inventory-management-pro')); ?>', '0');
-                        if (defaultCost !== null && !isNaN(defaultCost)) {
-                            $('.mulopimfwc-cost-table input[type="number"]:enabled').each(function() {
-                                if (!$(this).val() || $(this).val() === '0') {
-                                    $(this).val(parseFloat(defaultCost).toFixed(2));
-                                }
-                            });
-                        }
-                    });
-
-                    // Clear all costs (on enabled fields only)
-                    $('.mulopimfwc-clear-all').on('click', function() {
-                        if (confirm('<?php echo esc_js(__('Are you sure you want to clear all transfer costs?', 'multi-location-product-and-inventory-management-pro')); ?>')) {
-                            $('.mulopimfwc-cost-table input[type="number"]:enabled').val('');
-                        }
-                    });
-                });
-            </script>
-            <?php
+<?php
             },
             'lwp-location-shipping-settings',
             'mulopimfwc_shipping_section'
@@ -1751,7 +1722,7 @@ class mulopimfwc_settings
                     </svg>
                 </div>
                 <div style="flex:1;">
-                    <h4 style="margin:0 0 8px 0;color:#0f172a;font-weight:700;font-size:15px;"><?php echo esc_html__('Email Notification — Important Notes', 'multi-location-product-and-inventory-management-pro'); ?></h4>
+                    <h4 style="margin:0 0 8px 0;color:#0f172a;font-weight:700;font-size:15px;"><?php echo esc_html__('Email Notification Ã¢â‚¬â€ Important Notes', 'multi-location-product-and-inventory-management-pro'); ?></h4>
 
                     <p style="margin:0 0 10px 0;color:#475569;line-height:1.5;">
                         <?php echo esc_html__('When enabled, order and pickup notifications will be sent to the location manager (if assigned) and the location contact email. Admin recipients depend on your notification settings.', 'multi-location-product-and-inventory-management-pro'); ?>
@@ -2863,102 +2834,8 @@ class mulopimfwc_settings
                 </div>
                 <p class="description"><?php echo esc_html__('Choose where floating alerts should appear.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </div>
-            <style>
-                .mulopimfwc-position-selector {
-                    margin: 15px 0;
-                }
 
-                .mulopimfwc-position-grid {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 15px;
-                    margin-bottom: 15px;
-                }
-
-                .mulopimfwc-position-card {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    padding: 15px;
-                    border: 2px solid #ddd;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    background: #fff;
-                    position: relative;
-                }
-
-                .mulopimfwc-position-card:hover {
-                    border-color: #2271b1;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                }
-
-                .mulopimfwc-position-card.selected {
-                    border-color: #2271b1;
-                    background: #f0f6ff;
-                }
-
-                .mulopimfwc-position-card input[type="radio"] {
-                    position: absolute;
-                    opacity: 0;
-                    pointer-events: none;
-                }
-
-                .mulopimfwc-position-visual {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
-
-                .mulopimfwc-screen-preview {
-                    width: 100%;
-                    height: 80px;
-                    background: #f5f5f5;
-                    border-radius: 4px;
-                    position: relative;
-                    border: 1px solid #ddd;
-                }
-
-                .mulopimfwc-notification-preview {
-                    width: 30px;
-                    height: 20px;
-                    background: <?php echo $value === 'bottom-right' ? '#2271b1' : '#999'; ?>;
-                    border-radius: 3px;
-                    position: absolute;
-                    transition: background 0.2s;
-                }
-
-                .mulopimfwc-position-card.selected .mulopimfwc-notification-preview {
-                    background: #2271b1;
-                }
-
-                .mulopimfwc-position-label {
-                    font-size: 13px;
-                    font-weight: 500;
-                    color: #1d2327;
-                    text-align: center;
-                }
-
-                .mulopimfwc-position-card.selected .mulopimfwc-position-label {
-                    color: #2271b1;
-                    font-weight: 600;
-                }
-            </style>
-            <script>
-                jQuery(document).ready(function($) {
-                    $('.mulopimfwc-position-card').on('click', function() {
-                        if ($(this).hasClass('disabled')) {
-                            return;
-                        }
-                        $('.mulopimfwc-position-card').removeClass('selected');
-                        $(this).addClass('selected');
-                        $(this).find('input[type="radio"]').prop('checked', true);
-                        // Update preview colors
-                        $('.mulopimfwc-notification-preview').css('background', '#999');
-                        $('.mulopimfwc-position-card.selected .mulopimfwc-notification-preview').css('background', '#2271b1');
-                    });
-                });
-            </script>
-        <?php
+<?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -2999,164 +2876,8 @@ class mulopimfwc_settings
                 </div>
                 <p class="description"><?php echo esc_html__('Choose the size of floating notifications.', 'multi-location-product-and-inventory-management-pro'); ?></p>
             </div>
-            <style>
-                .mulopimfwc-size-selector {
-                    margin: 15px 0;
-                }
 
-                .mulopimfwc-size-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 15px;
-                    margin-bottom: 15px;
-                    max-width: 400px;
-                }
-
-                .mulopimfwc-size-card {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    padding: 15px;
-                    border: 2px solid #ddd;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    background: #fff;
-                    position: relative;
-                }
-
-                .mulopimfwc-size-card:hover {
-                    border-color: #2271b1;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                }
-
-                .mulopimfwc-size-card.selected {
-                    border-color: #2271b1;
-                    background: #f0f6ff;
-                }
-
-                .mulopimfwc-size-card input[type="radio"] {
-                    position: absolute;
-                    opacity: 0;
-                    pointer-events: none;
-                }
-
-                .mulopimfwc-size-visual {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
-
-                .mulopimfwc-size-preview {
-                    width: 100%;
-                    height: 60px;
-                    background: <?php echo $value === 'comfy' ? '#e8f0fe' : '#f5f5f5'; ?>;
-                    border-radius: 4px;
-                    display: flex;
-                    align-items: center;
-                    padding: 10px;
-                    gap: 10px;
-                    transition: all 0.2s;
-                    box-sizing: border-box;
-                }
-
-                .mulopimfwc-size-card.selected .mulopimfwc-size-preview {
-                    background: #e8f0fe;
-                }
-
-                .mulopimfwc-size-icon {
-                    width: <?php echo $value === 'comfy' ? '24px' : '16px'; ?>;
-                    height: <?php echo $value === 'comfy' ? '24px' : '16px'; ?>;
-                    background: <?php echo $value === 'comfy' ? '#2271b1' : '#999'; ?>;
-                    border-radius: 50%;
-                    flex-shrink: 0;
-                    transition: all 0.2s;
-                }
-
-                .mulopimfwc-size-card.selected .mulopimfwc-size-icon {
-                    background: #2271b1;
-                }
-
-                .mulopimfwc-size-lines {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 4px;
-                }
-
-                .mulopimfwc-size-line {
-                    height: <?php echo $value === 'comfy' ? '6px' : '4px'; ?>;
-                    background: <?php echo $value === 'comfy' ? '#a0c4ff' : '#ccc'; ?>;
-                    border-radius: 2px;
-                    transition: all 0.2s;
-                }
-
-                .mulopimfwc-size-card.selected .mulopimfwc-size-line {
-                    background: #a0c4ff;
-                }
-
-                .mulopimfwc-size-preview.comfy .mulopimfwc-size-line.line-1 {
-                    width: 90%;
-                }
-
-                .mulopimfwc-size-preview.comfy .mulopimfwc-size-line.line-2 {
-                    width: 70%;
-                }
-
-                .mulopimfwc-size-preview.comfy .mulopimfwc-size-line.line-3 {
-                    width: 50%;
-                }
-
-                .mulopimfwc-size-preview.compact .mulopimfwc-size-line.line-1 {
-                    width: 80%;
-                }
-
-                .mulopimfwc-size-preview.compact .mulopimfwc-size-line.line-2 {
-                    width: 60%;
-                }
-
-                .mulopimfwc-size-preview.compact .mulopimfwc-size-line.line-3 {
-                    width: 40%;
-                }
-
-                .mulopimfwc-size-label {
-                    font-size: 13px;
-                    font-weight: 500;
-                    color: #1d2327;
-                    text-align: center;
-                }
-
-                .mulopimfwc-size-card.selected .mulopimfwc-size-label {
-                    color: #2271b1;
-                    font-weight: 600;
-                }
-            </style>
-            <script>
-                jQuery(document).ready(function($) {
-                    $('.mulopimfwc-size-card').on('click', function() {
-                        if ($(this).hasClass('disabled')) {
-                            return;
-                        }
-                        $('.mulopimfwc-size-card').removeClass('selected');
-                        $(this).addClass('selected');
-                        $(this).find('input[type="radio"]').prop('checked', true);
-                        // Update preview colors
-                        const isComfy = $(this).find('input').val() === 'comfy';
-                        $('.mulopimfwc-size-preview').css('background', '#f5f5f5');
-                        $('.mulopimfwc-size-icon').css('background', '#999');
-                        $('.mulopimfwc-size-line').css('background', '#ccc');
-                        if (isComfy) {
-                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-preview').css('background', '#e8f0fe');
-                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-icon').css('background', '#2271b1');
-                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-line').css('background', '#a0c4ff');
-                        } else {
-                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-preview').css('background', '#f5f5f5');
-                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-icon').css('background', '#999');
-                            $('.mulopimfwc-size-card.selected .mulopimfwc-size-line').css('background', '#ccc');
-                        }
-                    });
-                });
-            </script>
-        <?php
+<?php
             },
             'lwp-admin-notification-settings',
             'mulopimfwc_admin_notifications_section'
@@ -3266,7 +2987,7 @@ class mulopimfwc_settings
 
                         <label for="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location-label" style="font-weight:600;"><?php echo esc_html__('Location', 'multi-location-product-and-inventory-management-pro'); ?></label>
                         <select <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> id="mulopimfwc-test-email-location" class="mulopimfwc-test-email-location">
-                            <option value=""><?php echo esc_html__('Select a location…', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                            <option value=""><?php echo esc_html__('Select a locationÃ¢â‚¬Â¦', 'multi-location-product-and-inventory-management-pro'); ?></option>
                             <?php foreach ($locations as $loc) : ?>
                                 <option value="<?php echo esc_attr(rawurldecode($loc->slug)); ?>"><?php echo esc_html($loc->name); ?></option>
                             <?php endforeach; ?>
@@ -3460,7 +3181,7 @@ class mulopimfwc_settings
                                 <button <?php echo !mulopimfwc_premium_feature() ? 'disabled' : ''; ?> type="button" class="button button-primary" id="mulopimfwc-add-social-channel"><?php echo esc_html__('Add Social Media', 'multi-location-product-and-inventory-management-pro'); ?></button>
                             </div>
                             <div id="mulopimfwc-social-empty" class="description" style="margin-top:10px;<?php echo empty($social['channels']) ? '' : 'display:none;'; ?>">
-                                <?php echo esc_html__('No social media added yet. Click “Add Social Media” to create one.', 'multi-location-product-and-inventory-management-pro'); ?>
+                                <?php echo esc_html__('No social media added yet. Click Ã¢â‚¬Å“Add Social MediaÃ¢â‚¬Â to create one.', 'multi-location-product-and-inventory-management-pro'); ?>
                             </div>
                             <div id="mulopimfwc-social-channels" style="margin-top:10px;">
                                 <?php
@@ -3510,7 +3231,7 @@ class mulopimfwc_settings
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                            <script type="text/template" id="mulopimfwc-social-channel-template">
+                            <template id="mulopimfwc-social-channel-template">
                                 <div class="mulopimfwc-social-channel-row" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px;background:#fff;">
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
                                     <div>
@@ -3547,125 +3268,8 @@ class mulopimfwc_settings
                                     </div>
                                 </div>
                             </div>
-                        </script>
-                            <script>
-                                jQuery(function($) {
-                                    const container = $('#mulopimfwc-social-channels');
-                                    const tmpl = $('#mulopimfwc-social-channel-template').html();
-                                    const emptyRow = $('#mulopimfwc-social-empty');
-                                    const ajaxAction = 'mulopimfwc_test_social_channel';
-                                    const digestAjaxAction = 'mulopimfwc_test_social_digest_channel';
-                                    const digestClock = $('#mulopimfwc-digest-clock');
-                                    if (digestClock.length) {
-                                        const startUtcMs = parseInt(digestClock.data('start-utc'), 10) * 1000;
-                                        const offsetHours = parseFloat(digestClock.data('gmt-offset')) || 0;
-                                        const offsetMs = offsetHours * 3600 * 1000;
-                                        const startClient = Date.now();
-                                        const tzLabel = digestClock.data('tz-label') || 'UTC';
-
-                                        const pad = (n) => (n < 10 ? '0' + n : n);
-                                        const tick = () => {
-                                            const nowMs = startUtcMs + offsetMs + (Date.now() - startClient);
-                                            const d = new Date(nowMs);
-                                            const label = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' ' + tzLabel;
-                                            digestClock.text(label);
-                                        };
-                                        tick();
-                                        setInterval(tick, 1000);
-                                    }
-
-                                    function toggleChannelFields(row) {
-                                        const type = row.find('.mulopimfwc-channel-type').val();
-                                        const isTelegram = type === 'telegram';
-                                        row.find('.mulopimfwc-field-webhook')[isTelegram ? 'hide' : 'show']();
-                                        row.find('.mulopimfwc-field-telegram')[isTelegram ? 'show' : 'hide']();
-                                    }
-
-                                    function refreshEmptyState() {
-                                        if (container.children('.mulopimfwc-social-channel-row').length === 0) {
-                                            emptyRow.show();
-                                        } else {
-                                            emptyRow.hide();
-                                        }
-                                    }
-
-                                    $('#mulopimfwc-add-social-channel').on('click', function(e) {
-                                        e.preventDefault();
-                                        const index = container.children('.mulopimfwc-social-channel-row').length;
-                                        container.append(tmpl.replace(/__INDEX__/g, index));
-                                        const row = container.children('.mulopimfwc-social-channel-row').last();
-                                        toggleChannelFields(row);
-                                        refreshEmptyState();
-                                    });
-
-                                    container.on('click', '.remove-social-channel', function(e) {
-                                        e.preventDefault();
-                                        $(this).closest('.mulopimfwc-social-channel-row').remove();
-                                        refreshEmptyState();
-                                    });
-
-                                    container.on('change', '.mulopimfwc-channel-type', function() {
-                                        const row = $(this).closest('.mulopimfwc-social-channel-row');
-                                        toggleChannelFields(row);
-                                    });
-
-                                    container.on('click', '.test-social-channel', function(e) {
-                                        e.preventDefault();
-                                        const row = $(this).closest('.mulopimfwc-social-channel-row');
-                                        const data = {
-                                            action: ajaxAction,
-                                            nonce: $(this).data('nonce'),
-                                            type: row.find('.mulopimfwc-channel-type').val(),
-                                            label: row.find('input[name*=\"[label]\"]').val(),
-                                            webhook: row.find('input[name*=\"[webhook]\"]').val(),
-                                            chat_id: row.find('input[name*=\"[chat_id]\"]').val(),
-                                            bot_token: row.find('input[name*=\"[bot_token]\"]').val()
-                                        };
-                                        const btn = $(this);
-                                        btn.prop('disabled', true).text('<?php echo esc_js(__('Testing...', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                        $.post(ajaxurl, data, function(res) {
-                                            const ok = res && res.success;
-                                            alert(ok ? '<?php echo esc_js(__('Test sent! Check your channel.', 'multi-location-product-and-inventory-management-pro')); ?>' : (res?.data?.message || '<?php echo esc_js(__('Test failed. Check the details and try again.', 'multi-location-product-and-inventory-management-pro')); ?>'));
-                                        }).fail(function() {
-                                            alert('<?php echo esc_js(__('Test failed. Check the details and try again.', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                        }).always(function() {
-                                            btn.prop('disabled', false).text('<?php echo esc_js(__('Test', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                        });
-                                    });
-
-                                    container.on('click', '.test-social-digest-channel', function(e) {
-                                        e.preventDefault();
-                                        const row = $(this).closest('.mulopimfwc-social-channel-row');
-                                        const data = {
-                                            action: digestAjaxAction,
-                                            nonce: $(this).data('nonce'),
-                                            type: row.find('.mulopimfwc-channel-type').val(),
-                                            label: row.find('input[name*=\"[label]\"]').val(),
-                                            webhook: row.find('input[name*=\"[webhook]\"]').val(),
-                                            chat_id: row.find('input[name*=\"[chat_id]\"]').val(),
-                                            bot_token: row.find('input[name*=\"[bot_token]\"]').val()
-                                        };
-                                        const btn = $(this);
-                                        btn.prop('disabled', true).text('<?php echo esc_js(__('Testing digest...', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                        $.post(ajaxurl, data, function(res) {
-                                            const ok = res && res.success;
-                                            alert(ok ? '<?php echo esc_js(__('Digest test sent! Check your channel.', 'multi-location-product-and-inventory-management-pro')); ?>' : (res?.data?.message || '<?php echo esc_js(__('Digest test failed. Check the details and try again.', 'multi-location-product-and-inventory-management-pro')); ?>'));
-                                        }).fail(function() {
-                                            alert('<?php echo esc_js(__('Digest test failed. Check the details and try again.', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                        }).always(function() {
-                                            btn.prop('disabled', false).text('<?php echo esc_js(__('Test Digest', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                        });
-                                    });
-
-                                    // Initial toggle for existing rows
-                                    container.find('.mulopimfwc-social-channel-row').each(function() {
-                                        toggleChannelFields($(this));
-                                    });
-
-                                    refreshEmptyState();
-                                });
-                            </script>
-                        </div>
+                        </template>
+</div>
                     </div>
                 </div>
 
@@ -3677,8 +3281,8 @@ class mulopimfwc_settings
                                 'teams' => [
                                     'title' => __('How to connect Microsoft Teams', 'multi-location-product-and-inventory-management-pro'),
                                     'steps' => [
-                                        __('In Teams, open the channel → More options (...) → Connectors/Apps → search “Incoming Webhook”.', 'multi-location-product-and-inventory-management-pro'),
-                                        __('Click Add/Create, name it (e.g., “Store Alerts”), optionally upload an icon, then click Create.', 'multi-location-product-and-inventory-management-pro'),
+                                        __('In Teams, open the channel Ã¢â€ â€™ More options (...) Ã¢â€ â€™ Connectors/Apps Ã¢â€ â€™ search Ã¢â‚¬Å“Incoming WebhookÃ¢â‚¬Â.', 'multi-location-product-and-inventory-management-pro'),
+                                        __('Click Add/Create, name it (e.g., Ã¢â‚¬Å“Store AlertsÃ¢â‚¬Â), optionally upload an icon, then click Create.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Copy the webhook URL, paste it into the Webhook URL field above, and save settings.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Enable the events you want (orders, stock alerts, digest, site monitor), then click Test.', 'multi-location-product-and-inventory-management-pro'),
                                     ],
@@ -3690,7 +3294,7 @@ class mulopimfwc_settings
                                 'slack' => [
                                     'title' => __('How to connect Slack', 'multi-location-product-and-inventory-management-pro'),
                                     'steps' => [
-                                        __('In Slack, go to Settings & administration → Manage apps → search “Incoming WebHooks” and click Add.', 'multi-location-product-and-inventory-management-pro'),
+                                        __('In Slack, go to Settings & administration Ã¢â€ â€™ Manage apps Ã¢â€ â€™ search Ã¢â‚¬Å“Incoming WebHooksÃ¢â‚¬Â and click Add.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Choose the channel for alerts and click Add Incoming Webhook Integration (or Add Configuration).', 'multi-location-product-and-inventory-management-pro'),
                                         __('Copy the webhook URL, paste it into the Webhook URL field above, and save.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Enable desired events and click Test.', 'multi-location-product-and-inventory-management-pro'),
@@ -3702,7 +3306,7 @@ class mulopimfwc_settings
                                 'discord' => [
                                     'title' => __('How to connect Discord', 'multi-location-product-and-inventory-management-pro'),
                                     'steps' => [
-                                        __('In Discord, Server Settings → Integrations → Webhooks → New Webhook.', 'multi-location-product-and-inventory-management-pro'),
+                                        __('In Discord, Server Settings Ã¢â€ â€™ Integrations Ã¢â€ â€™ Webhooks Ã¢â€ â€™ New Webhook.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Select the target channel and copy the webhook URL.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Paste the URL into the Webhook field above and save settings.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Enable events and click Test.', 'multi-location-product-and-inventory-management-pro'),
@@ -3724,7 +3328,7 @@ class mulopimfwc_settings
                                 'custom' => [
                                     'title' => __('How to connect a Custom Webhook', 'multi-location-product-and-inventory-management-pro'),
                                     'steps' => [
-                                        __('Use any HTTPS endpoint that accepts a JSON POST payload with a “text” field.', 'multi-location-product-and-inventory-management-pro'),
+                                        __('Use any HTTPS endpoint that accepts a JSON POST payload with a Ã¢â‚¬Å“textÃ¢â‚¬Â field.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Paste the endpoint URL above and save.', 'multi-location-product-and-inventory-management-pro'),
                                         __('Enable events and click Test.', 'multi-location-product-and-inventory-management-pro'),
                                     ],
@@ -3756,28 +3360,7 @@ class mulopimfwc_settings
                                     <?php endif; ?>
                                 </details>
                             <?php endforeach; ?>
-                            <script>
-                                jQuery(function($) {
-                                    function openGuideFor(type) {
-                                        $('.mulopimfwc-guide').each(function() {
-                                            const isMatch = $(this).data('platform') === type;
-                                            $(this).attr('open', isMatch ? 'open' : null);
-                                        });
-                                    }
-                                    $('#mulopimfwc-social-channels').on('change', '.mulopimfwc-channel-type', function() {
-                                        const type = $(this).val();
-                                        if (type) {
-                                            openGuideFor(type);
-                                        }
-                                    });
-                                    // Open guide for first existing selection
-                                    const firstType = $('#mulopimfwc-social-channels .mulopimfwc-channel-type').first().val();
-                                    if (firstType) {
-                                        openGuideFor(firstType);
-                                    }
-                                });
-                            </script>
-                        </div>
+</div>
                     </div>
                 </div>
             <?php
@@ -5636,305 +5219,7 @@ class mulopimfwc_settings
                         </div>
                     </div>
                 </div>
-
-                <style>
-                    .plugincy-filter-welcome-container {
-                        margin: 20px auto;
-                        background: #fff;
-                        border-radius: 12px;
-                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 20px rgba(0, 0, 0, 0.1);
-                        overflow: hidden;
-                        animation: slideIn 0.6s ease-out;
-                    }
-
-                    @keyframes slideIn {
-                        from {
-                            opacity: 0;
-                            transform: translateY(20px);
-                        }
-
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-
-                    .plugincy-filter-welcome-container .welcome-header {
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white;
-                        padding: 25px 20px;
-                        display: flex;
-                        align-items: center;
-                        position: relative;
-                        overflow: hidden;
-                    }
-
-                    .plugincy-filter-welcome-container .welcome-header::before {
-                        content: '';
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-                        opacity: 0.3;
-                    }
-
-                    .plugincy-filter-welcome-container .plugincy-plugin-icon {
-                        font-size: 48px;
-                        margin-right: 20px;
-                        opacity: 0.9;
-                        position: relative;
-                        z-index: 2;
-                    }
-
-                    .plugincy-filter-welcome-container .plugincy-plugin-icon .dashicons {
-                        font-size: 48px;
-                        width: 48px;
-                        height: 48px;
-                    }
-
-                    .plugincy-filter-welcome-container .header-content {
-                        flex: 1;
-                        position: relative;
-                        z-index: 2;
-                    }
-
-                    .plugincy-filter-welcome-container .header-content div {
-                        font-size: 28px;
-                        font-weight: 700;
-                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                        color: #fff;
-                        padding: 0 0 10px;
-                        line-height: 1.2;
-                    }
-
-                    .plugincy-filter-welcome-container .tagline {
-                        font-size: 16px;
-                        opacity: 0.9;
-                        font-weight: 400;
-                        margin: 0;
-                    }
-
-                    .plugincy-filter-welcome-container .version-badge {
-                        position: relative;
-                        z-index: 2;
-                    }
-
-                    .plugincy-filter-welcome-container .version-badge span {
-                        background: rgba(255, 255, 255, 0.2);
-                        padding: 6px 16px;
-                        border-radius: 20px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        backdrop-filter: blur(10px);
-                        border: 1px solid rgba(255, 255, 255, 0.3);
-                    }
-
-                    .plugincy-filter-welcome-container .welcome-content {
-                        padding: 20px;
-                    }
-
-                    .plugincy-filter-welcome-container .quick-actions {
-                        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-                        padding: 20px;
-                        border-radius: 10px;
-                        margin-bottom: 20px;
-                    }
-
-                    .plugincy-filter-welcome-container .quick-actions h3 {
-                        color: #2d3748;
-                        margin-bottom: 20px;
-                        font-size: 20px;
-                        margin-top: 0;
-                    }
-
-                    .plugincy-filter-welcome-container .quick-actions h3 .dashicons {
-                        color: #667eea;
-                        font-size: 20px;
-                        width: 20px;
-                        height: 20px;
-                    }
-
-                    .plugincy-filter-welcome-container .action-steps {
-                        display: flex;
-                        gap: 20px;
-                        flex-wrap: wrap;
-                    }
-
-                    .plugincy-filter-welcome-container .step {
-                        flex: 1;
-                        min-width: 200px;
-                        display: flex;
-                        align-items: flex-start;
-                        gap: 15px;
-                    }
-
-                    .plugincy-filter-welcome-container .step-number {
-                        background: #667eea;
-                        color: white;
-                        width: 30px;
-                        height: 30px;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-weight: 600;
-                        font-size: 14px;
-                        flex-shrink: 0;
-                    }
-
-                    .plugincy-filter-welcome-container .step-content h4 {
-                        color: #2d3748;
-                        margin-bottom: 4px;
-                        font-size: 16px;
-                        margin: 0;
-                    }
-
-                    .plugincy-filter-welcome-container .step-content p {
-                        color: #718096;
-                        font-size: 14px;
-                    }
-
-                    .plugincy-filter-welcome-container .cta-section {
-                        text-align: center;
-                        border-top: 1px solid #e2e8f0;
-                        padding-top: 20px;
-                    }
-
-                    .plugincy-filter-welcome-container .cta-buttons {
-                        display: flex;
-                        gap: 15px;
-                        justify-content: center;
-                        flex-wrap: wrap;
-                        margin-bottom: 20px;
-                    }
-
-                    .plugincy-filter-welcome-container .btn {
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 8px;
-                        padding: 12px 24px;
-                        border-radius: 6px;
-                        text-decoration: none;
-                        font-weight: 600;
-                        font-size: 14px;
-                        transition: all 0.3s ease;
-                        cursor: pointer;
-                        border: none;
-                        box-sizing: border-box;
-                    }
-
-                    .plugincy-filter-welcome-container .btn-primary {
-                        background: #667eea;
-                        color: white;
-                    }
-
-                    .plugincy-filter-welcome-container .btn-primary:hover {
-                        background: #5a67d8;
-                        transform: translateY(-1px);
-                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-                    }
-
-                    .plugincy-filter-welcome-container .btn-secondary {
-                        background: #48bb78;
-                        color: white;
-                    }
-
-                    .plugincy-filter-welcome-container .btn-secondary:hover {
-                        background: #38a169;
-                        transform: translateY(-1px);
-                        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-                    }
-
-                    .plugincy-filter-welcome-container .btn-accent {
-                        background: #ed8936;
-                        color: white;
-                    }
-
-                    .plugincy-filter-welcome-container .btn-accent:hover {
-                        background: #dd6b20;
-                        transform: translateY(-1px);
-                        box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
-                    }
-
-                    .plugincy-filter-welcome-container .btn .dashicons {
-                        font-size: 16px;
-                        width: 16px;
-                        height: 16px;
-                    }
-
-                    .plugincy-filter-welcome-container .support-info {
-                        display: flex;
-                        justify-content: center;
-                        gap: 30px;
-                        flex-wrap: wrap;
-                    }
-
-                    .plugincy-filter-welcome-container .support-item {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        color: #718096;
-                        font-size: 14px;
-                    }
-
-                    .plugincy-filter-welcome-container .support-item .dashicons {
-                        color: #48bb78;
-                        font-size: 16px;
-                        width: 16px;
-                        height: 16px;
-                    }
-
-                    @media (max-width: 768px) {
-                        .plugincy-filter-welcome-container .welcome-header {
-                            flex-direction: column;
-                            text-align: center;
-                            padding: 20px;
-                        }
-
-                        .plugincy-filter-welcome-container .plugincy-plugin-icon {
-                            margin-right: 0;
-                            margin-bottom: 15px;
-                        }
-
-                        .plugincy-filter-welcome-container .header-content div {
-                            font-size: 24px;
-                        }
-
-                        .plugincy-filter-welcome-container .welcome-content {
-                            padding: 20px;
-                        }
-
-                        .plugincy-filter-welcome-container .action-steps {
-                            flex-direction: column;
-                        }
-
-                        .plugincy-filter-welcome-container .cta-buttons {
-                            flex-direction: column;
-                            align-items: center;
-                        }
-
-                        .plugincy-filter-welcome-container .btn {
-                            width: 100%;
-                            max-width: 300px;
-                            justify-content: center;
-                        }
-
-                        .plugincy-filter-welcome-container .support-info {
-                            flex-direction: column;
-                            align-items: center;
-                            gap: 15px;
-                        }
-
-                        .version-badge {
-                            margin-top: 15px;
-                        }
-                    }
-                </style>
-                <div class="lwp-settings-main-container">
+<div class="lwp-settings-main-container">
                     <h1 class="wrap lwp-settings-heading">
 
                         <div class="lwp-settings-icon">
@@ -6009,46 +5294,7 @@ class mulopimfwc_settings
                                     </div>
                                     <div class="lwp-settings-section">
                                         <div class="lwp-settings-box">
-                                            <style>
-                                                .mulopimfwc-color-picker {
-                                                    width: 80px;
-                                                    height: 40px;
-                                                    border: 1px solid #ddd;
-                                                    border-radius: 4px;
-                                                    cursor: pointer;
-                                                    padding: 2px;
-                                                }
-
-                                                .mulopimfwc-branding-preview {
-                                                    background: #f9fafb;
-                                                    border: 1px solid #e5e7eb;
-                                                    border-radius: 8px;
-                                                    padding: 20px;
-                                                    margin-top: 20px;
-                                                }
-
-                                                .mulopimfwc-branding-preview h3 {
-                                                    margin-top: 0;
-                                                    color: #1f2937;
-                                                }
-
-                                                .mulopimfwc-preview-box {
-                                                    background: #fff;
-                                                    border-radius: 12px;
-                                                    padding: 20px;
-                                                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                                                    margin-top: 15px;
-                                                }
-
-                                                .mulopimfwc-preview-button {
-                                                    display: inline-block;
-                                                    padding: 10px 20px;
-                                                    border-radius: 6px;
-                                                    margin-top: 10px;
-                                                    cursor: default;
-                                                }
-                                            </style>
-                                            <?php
+<?php
                                             $options = $this->get_display_options();
                                             ?>
                                             <div class="mulopimfwc-branding-preview">
@@ -6310,38 +5556,13 @@ class mulopimfwc_settings
                                     <p class="description" style="margin: 0 0 15px 0; max-width: 800px;">
                                         <?php echo esc_html__('This will reset all plugin settings to their default values. This action cannot be undone. Please make sure you have exported your settings if you want to restore them later.', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </p>
-                                    <button type="submit" class="button button-secondary lwp-reset-button" style="background: #dc2626; color: white; border-color: #b91c1c;" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to reset all settings to their default values? This action cannot be undone!', 'multi-location-product-and-inventory-management-pro')); ?>');">
+                                    <button type="submit" class="button button-secondary lwp-reset-button" style="background: #dc2626; color: white; border-color: #b91c1c;" data-mulopimfwc-confirm="<?php echo esc_attr__('Are you sure you want to reset all settings to their default values? This action cannot be undone!', 'multi-location-product-and-inventory-management-pro'); ?>">
                                         <span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
                                         <?php echo esc_html__('Reset All Settings', 'multi-location-product-and-inventory-management-pro'); ?>
                                     </button>
                                 </div>
                             </form>
-
-                            <style>
-                                .lwp-reset-settings-form {
-                                    margin: 0 20px 20px;
-                                }
-
-                                .lwp-reset-button:hover {
-                                    background: #b91c1c !important;
-                                    border-color: #991b1b !important;
-                                    color: white !important;
-                                }
-
-                                .lwp-reset-button:focus {
-                                    background: #dc2626 !important;
-                                    border-color: #b91c1c !important;
-                                    box-shadow: 0 0 0 1px #dc2626 !important;
-                                }
-
-                                @media (max-width: 600px) {
-                                    .lwp-reset-settings-form {
-                                        margin: 0;
-                                    }
-                                }
-                            </style>
-
-                        </div>
+</div>
 
                         <div class="lwp-settings-right">
 
@@ -6362,7 +5583,7 @@ class mulopimfwc_settings
                                     <div class="shortcode-section">
                                         <div class="shortcode-header">
                                             <span class="shortcode-label"><?php echo esc_html_e('Shortcode', 'multi-location-product-and-inventory-management-pro'); ?></span>
-                                            <button class="copy-btn" onclick="copyToClipboard(event, '[mulopimfwc_store_location_selector<?php echo esc_attr(mulopimfwc_get_pro_class(false, ' enable_user_locations="on"', '')); ?>]')">
+                                            <button type="button" class="copy-btn" data-mulopimfwc-copy-shortcode="<?php echo esc_attr('[mulopimfwc_store_location_selector' . mulopimfwc_get_pro_class(false, ' enable_user_locations="on"', '') . ']'); ?>">
                                                 <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -6495,79 +5716,7 @@ class mulopimfwc_settings
                             </div>
 
                         </div>
-
-                        <script>
-                            var copyCopiedLabel = <?php echo wp_json_encode(__('Copied!', 'multi-location-product-and-inventory-management-pro')); ?>;
-
-                            function copyToClipboard(event, shortcode) {
-                                const shortcodeText = shortcode;
-                                const button = event.currentTarget;
-                                const buttonText = (button && typeof button.querySelector === 'function') ? button.querySelector('.btn-text') : null;
-                                const originalText = buttonText ? buttonText.textContent : '';
-
-                                // Fallback function for older browsers
-                                function fallbackCopy(text) {
-                                    const textArea = document.createElement('textarea');
-                                    textArea.value = text;
-                                    textArea.style.position = 'fixed';
-                                    textArea.style.left = '-999999px';
-                                    textArea.style.top = '-999999px';
-                                    document.body.appendChild(textArea);
-                                    textArea.focus();
-                                    textArea.select();
-
-                                    try {
-                                        document.execCommand('copy');
-                                        textArea.remove();
-                                        return true;
-                                    } catch (err) {
-                                        console.error('Fallback: Could not copy text', err);
-                                        textArea.remove();
-                                        return false;
-                                    }
-                                }
-
-                                // Try modern clipboard API first, fallback to execCommand
-                                const copyPromise = navigator.clipboard && navigator.clipboard.writeText ?
-                                    navigator.clipboard.writeText(shortcodeText) :
-                                    Promise.resolve(fallbackCopy(shortcodeText));
-
-                                copyPromise.then(() => {
-                                    button.classList.add('copied');
-                                    if (originalText) {
-                                        button.innerHTML = `
-                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span class="btn-text">${copyCopiedLabel}</span>
-                `;
-                                    } else {
-                                        button.innerHTML = `
-                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                `;
-                                    }
-
-                                    setTimeout(() => {
-                                        button.classList.remove('copied');
-                                        button.innerHTML = `
-                        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                        <span class="btn-text">${originalText}</span>
-                    `;
-                                    }, 2000);
-                                }).catch(err => {
-                                    console.error('Failed to copy:', err);
-                                    alert('Failed to copy. Please select and copy manually.');
-                                });
-                            }
-                        </script>
-
-
-                    </div>
+</div>
 
 
 
@@ -6984,11 +6133,11 @@ class mulopimfwc_settings
                                 'get_api_keys' => [
                                     'title' => __('How to Get API Key & Webhook Secret', 'multi-location-product-and-inventory-management-pro'),
                                     'method' => 'GET',
-                                    'url' => 'WordPress Admin → Multi Location Products → API & Webhooks',
+                                    'url' => 'WordPress Admin Ã¢â€ â€™ Multi Location Products Ã¢â€ â€™ API & Webhooks',
                                     'headers' => null,
                                     'body' => [
                                         'step_1' => __('Navigate to WordPress Admin Dashboard', 'multi-location-product-and-inventory-management-pro'),
-                                        'step_2' => __('Go to: Multi Location Products → API & Webhooks', 'multi-location-product-and-inventory-management-pro'),
+                                        'step_2' => __('Go to: Multi Location Products Ã¢â€ â€™ API & Webhooks', 'multi-location-product-and-inventory-management-pro'),
                                         'step_3' => __('Scroll to "API Authentication" section', 'multi-location-product-and-inventory-management-pro'),
                                         'step_4' => __('Click "Generate API Key" button (if no key exists)', 'multi-location-product-and-inventory-management-pro'),
                                         'step_5' => __('Copy the generated API key immediately', 'multi-location-product-and-inventory-management-pro'),
@@ -7322,7 +6471,7 @@ class mulopimfwc_settings
                                             </div>
                                             <div class="lwp-shortcode-block">
                                                 <code><?php echo esc_html($tutorial['shortcode']); ?></code>
-                                                <button class="copy-btn" onclick="copyToClipboard (event, '<?php echo esc_attr($tutorial['shortcode']); ?>')" title="<?php echo esc_attr__('Copy shortcode', 'multi-location-product-and-inventory-management-pro'); ?>">
+                                                <button type="button" class="copy-btn" data-mulopimfwc-copy-shortcode="<?php echo esc_attr($tutorial['shortcode']); ?>" title="<?php echo esc_attr__('Copy shortcode', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
                                                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor" />
                                                     </svg>
@@ -7352,7 +6501,7 @@ class mulopimfwc_settings
                                                         <?php if (!empty($reference['shortcode'])) { ?>
                                                             <div class="lwp-shortcode-block">
                                                                 <code><?php echo esc_html($reference['shortcode']); ?></code>
-                                                                <button class="copy-btn" onclick="copyToClipboard(event, <?php echo esc_attr(wp_json_encode($reference['shortcode'])); ?>)" title="<?php echo esc_attr__('Copy shortcode', 'multi-location-product-and-inventory-management-pro'); ?>">
+                                                                <button type="button" class="copy-btn" data-mulopimfwc-copy-shortcode="<?php echo esc_attr($reference['shortcode']); ?>" title="<?php echo esc_attr__('Copy shortcode', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
                                                                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor" />
                                                                     </svg>
@@ -7361,7 +6510,7 @@ class mulopimfwc_settings
                                                         <?php } ?>
                                                         <?php if (!empty($reference['parameters'])) { ?>
                                                             <div class="lwp-tutorial-params-section lwp-reference-params-section is-collapsed">
-                                                                <button type="button" class="lwp-tutorial-section-label lwp-params-toggle" onclick="toggleTutorialParams(this)" aria-expanded="false">
+                                                                <button type="button" class="lwp-tutorial-section-label lwp-params-toggle" data-mulopimfwc-toggle-params aria-expanded="false">
                                                                     <span class="lwp-params-toggle-label">
                                                                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h3.02l4.25-5.7h-3.02l2.75-3.54h-3.02l-4.25 5.7h3.02z" />
@@ -7392,7 +6541,7 @@ class mulopimfwc_settings
                                     <!-- Parameters Section -->
                                     <?php if (isset($tutorial['parameters']) && !empty($tutorial['parameters'])) { ?>
                                         <div class="lwp-tutorial-params-section is-collapsed">
-                                            <button type="button" class="lwp-tutorial-section-label lwp-params-toggle" onclick="toggleTutorialParams(this)" aria-expanded="false">
+                                            <button type="button" class="lwp-tutorial-section-label lwp-params-toggle" data-mulopimfwc-toggle-params aria-expanded="false">
                                                 <span class="lwp-params-toggle-label">
                                                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h3.02l4.25-5.7h-3.02l2.75-3.54h-3.02l-4.25 5.7h3.02z" />
@@ -7418,7 +6567,7 @@ class mulopimfwc_settings
                                     <!-- Usage Examples Section -->
                                     <?php if (isset($tutorial['example_requests']) && !empty($tutorial['example_requests'])) { ?>
                                         <div class="lwp-tutorial-examples-section is-collapsed">
-                                            <button type="button" class="lwp-tutorial-section-label lwp-examples-toggle" onclick="toggleTutorialExamples(this)" aria-expanded="false">
+                                            <button type="button" class="lwp-tutorial-section-label lwp-examples-toggle" data-mulopimfwc-toggle-examples aria-expanded="false">
                                                 <span class="lwp-examples-toggle-label">
                                                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
                                                         <path d="M9.4 16.6L4.8 12l4.6-4.6M14.6 16.6l4.6-4.6-4.6-4.6" fill="none" stroke="currentColor" stroke-width="2" />
@@ -7432,7 +6581,7 @@ class mulopimfwc_settings
                                             <div class="lwp-examples-list" hidden>
                                                 <?php foreach ($tutorial['example_requests'] as $example_key => $example) { ?>
                                                     <div class="lwp-example-item">
-                                                        <div class="lwp-example-header" onclick="toggleExample(this)">
+                                                        <div class="lwp-example-header" data-mulopimfwc-toggle-example>
                                                             <div class="lwp-example-title">
                                                                 <strong><?php echo esc_html($example['title'] ?? ''); ?></strong>
                                                                 <span class="lwp-example-method"><?php echo esc_html($example['method'] ?? 'POST'); ?></span>
@@ -7547,804 +6696,8 @@ class mulopimfwc_settings
                 </div>
 
                 <!-- Enhanced Styles -->
-                <style>
-                    /* Tutorial Section */
-                    .lwp-tutorial-section {
-                        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-                        padding: 40px 20px;
-                        border-radius: 12px;
-                        margin-top: 40px;
-                    }
 
-                    /* Header */
-                    .lwp-tutorial-header {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
-                        margin-bottom: 32px;
-                        gap: 20px;
-                        flex-wrap: wrap;
-                    }
-
-                    .lwp-tutorial-header-content {
-                        display: flex;
-                        align-items: center;
-                        gap: 16px;
-                        flex: 1;
-                        min-width: 300px;
-                    }
-
-                    .lwp-tutorial-icon {
-                        width: 48px;
-                        height: 48px;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        padding: 8px;
-                        fill: white;
-                        border-radius: 8px;
-                        color: white;
-                        flex-shrink: 0;
-                    }
-
-                    .lwp-tutorial-title {
-                        font-size: 24px;
-                        font-weight: 700;
-                        color: #0f172a;
-                        margin: 0;
-                        line-height: 1.2;
-                    }
-
-                    .lwp-tutorial-subtitle {
-                        font-size: 14px;
-                        color: #64748b;
-                        margin: 4px 0 0 0;
-                    }
-
-                    /* Stats */
-                    .lwp-tutorial-stats {
-                        display: flex;
-                        gap: 24px;
-                    }
-
-                    .lwp-stat-item {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 4px;
-                        padding: 12px 20px;
-                        background: white;
-                        border-radius: 8px;
-                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-                    }
-
-                    .lwp-stat-number {
-                        font-size: 24px;
-                        font-weight: 700;
-                        color: #667eea;
-                        line-height: 1;
-                    }
-
-                    .lwp-stat-label {
-                        font-size: 12px;
-                        color: #64748b;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                    }
-
-                    /* Container */
-                    .lwp-tutorials-container {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-                        gap: 24px;
-                        margin-bottom: 32px;
-                    }
-
-                    /* Card */
-                    .lwp-tutorial-card {
-                        background: white;
-                        border-radius: 10px;
-                        overflow: hidden;
-                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-                        border: 1px solid #e2e8f0;
-                        transition: all 0.3s ease;
-                        display: flex;
-                        flex-direction: column;
-                        height: 100%;
-                    }
-
-                    .lwp-tutorial-card:hover {
-                        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-                        border-color: #cbd5e1;
-                        transform: translateY(-4px);
-                    }
-
-                    /* Video Wrapper */
-                    .lwp-tutorial-video-wrapper {
-                        position: relative;
-                        width: 100%;
-                        padding-bottom: 56.25%;
-                        background: #1a1a1a;
-                        overflow: hidden;
-                        display: none;
-                    }
-
-                    .lwp-tutorial-iframe {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        border: none;
-                    }
-
-                    .lwp-tutorial-badge {
-                        position: absolute;
-                        top: 12px;
-                        left: 12px;
-                        background: #2563eb;
-                        color: white;
-                        width: 36px;
-                        height: 36px;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-weight: 700;
-                        font-size: 14px;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                    }
-
-                    .lwp-tutorial-duration {
-                        position: absolute;
-                        bottom: 12px;
-                        right: 12px;
-                        background: rgba(0, 0, 0, 0.8);
-                        color: white;
-                        padding: 4px 8px;
-                        border-radius: 4px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        display: flex;
-                        align-items: center;
-                        gap: 4px;
-                    }
-
-                    .lwp-tutorial-difficulty {
-                        position: absolute;
-                        top: 12px;
-                        right: 12px;
-                        padding: 4px 12px;
-                        border-radius: 12px;
-                        font-size: 11px;
-                        font-weight: 600;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                    }
-
-                    .lwp-difficulty-beginner {
-                        background: rgba(16, 185, 129, 0.9);
-                        color: white;
-                    }
-
-                    .lwp-difficulty-intermediate {
-                        background: rgba(59, 130, 246, 0.9);
-                        color: white;
-                    }
-
-                    .lwp-difficulty-advanced {
-                        background: rgba(245, 158, 11, 0.9);
-                        color: white;
-                    }
-
-                    /* Content */
-                    .lwp-tutorial-content {
-                        padding: 20px;
-                        flex: 1;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 12px;
-                    }
-
-                    .lwp-tutorial-card-title {
-                        font-size: 16px;
-                        font-weight: 600;
-                        color: #0f172a;
-                        margin: 0;
-                        line-height: 1.4;
-                    }
-
-                    .lwp-tutorial-description {
-                        font-size: 13px;
-                        color: #64748b;
-                        line-height: 1.6;
-                        margin: 0;
-                    }
-
-                    /* Section Label */
-                    .lwp-tutorial-section-label {
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                        font-size: 11px;
-                        font-weight: 600;
-                        color: #64748b;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        margin-bottom: 8px;
-                    }
-
-                    .lwp-tutorial-section-label svg {
-                        fill: #64748b;
-                        width: 16px;
-                        height: 16px;
-                    }
-
-                    /* Topics */
-                    .lwp-tutorial-topics-section {
-                        margin-top: auto;
-                    }
-
-                    .lwp-topics-tags {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 6px;
-                    }
-
-                    .lwp-topic-tag {
-                        display: inline-block;
-                        background: #f1f5f9;
-                        color: #475569;
-                        padding: 4px 10px;
-                        border-radius: 4px;
-                        font-size: 11px;
-                        font-weight: 500;
-                        border: 1px solid #e2e8f0;
-                    }
-
-                    /* Shortcode */
-                    .lwp-tutorial-shortcode-section {
-                        margin-top: auto;
-                    }
-
-                    .lwp-shortcode-block {
-                        background: #f1f5f9;
-                        border: 1px solid #e2e8f0;
-                        border-radius: 6px;
-                        padding: 10px 12px;
-                        font-family: 'Monaco', 'Courier New', monospace;
-                        font-size: 11px;
-                        color: #0f172a;
-                        position: relative;
-                        word-break: break-all;
-                        line-height: 1.4;
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        gap: 8px;
-                    }
-
-                    .lwp-tutorial-shortcode-reference-section {
-                        margin-top: 12px;
-                    }
-
-                    .lwp-shortcode-reference-list {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 12px;
-                    }
-
-                    .lwp-shortcode-reference-item {
-                        background: #fff;
-                        border: 1px solid #e2e8f0;
-                        border-radius: 8px;
-                        padding: 12px;
-                    }
-
-                    .lwp-shortcode-reference-header {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 4px;
-                        margin-bottom: 8px;
-                    }
-
-                    .lwp-shortcode-reference-header strong {
-                        color: #0f172a;
-                        font-size: 13px;
-                    }
-
-                    .lwp-shortcode-reference-header span {
-                        color: #64748b;
-                        font-size: 12px;
-                        line-height: 1.5;
-                    }
-
-                    .lwp-shortcode-reference-item .lwp-params-list {
-                        grid-template-columns: 1fr;
-                        margin-top: 10px;
-                    }
-
-
-
-                    /* Parameters */
-                    .lwp-tutorial-params-section {
-                        margin-top: auto;
-                    }
-
-                    .lwp-reference-params-section {
-                        margin-top: 10px;
-                    }
-
-                    .lwp-params-toggle,
-                    .lwp-examples-toggle {
-                        width: 100%;
-                        background: transparent;
-                        border: 0;
-                        padding: 0;
-                        cursor: pointer;
-                        font-family: inherit;
-                        justify-content: space-between;
-                        text-align: left;
-                    }
-
-                    .lwp-params-toggle:focus,
-                    .lwp-examples-toggle:focus {
-                        outline: 2px solid #2563eb;
-                        outline-offset: 3px;
-                        border-radius: 4px;
-                    }
-
-                    .lwp-params-toggle-label,
-                    .lwp-examples-toggle-label {
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                    }
-
-                    .lwp-params-toggle-icon,
-                    .lwp-examples-toggle-icon {
-                        width: 16px;
-                        height: 16px;
-                        color: #64748b;
-                        flex: 0 0 auto;
-                        transition: transform 0.2s ease;
-                    }
-
-                    .lwp-tutorial-params-section.is-open .lwp-params-toggle-icon,
-                    .lwp-tutorial-examples-section.is-open .lwp-examples-toggle-icon {
-                        transform: rotate(180deg);
-                    }
-
-                    .lwp-tutorial-params-section .lwp-params-list[hidden] {
-                        display: none;
-                    }
-
-                    .lwp-tutorial-params-section.is-open .lwp-params-list {
-                        margin-top: 8px;
-                    }
-
-                    .lwp-params-list {
-                        display: grid;
-                        align-items: start;
-                        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                        gap: 8px;
-                    }
-
-                    .lwp-param-item {
-                        background: #f8fafc;
-                        border-left: 3px solid #2563eb;
-                        padding: 8px 10px;
-                        border-radius: 4px;
-                        box-sizing: border-box;
-                        min-width: 0;
-                    }
-
-                    .lwp-param-key {
-                        font-weight: 600;
-                        color: #0f172a;
-                        font-family: 'Monaco', 'Courier New', monospace;
-                        font-size: 11px;
-                        overflow-wrap: anywhere;
-                    }
-
-                    .lwp-param-desc {
-                        font-size: 12px;
-                        color: #64748b;
-                        margin-top: 2px;
-                        overflow-wrap: anywhere;
-                    }
-
-                    .lwp-param-value {
-                        font-size: 11px;
-                        color: #475569;
-                        font-family: 'Monaco', 'Courier New', monospace;
-                        margin-top: 2px;
-                        background: white;
-                        padding: 2px 4px;
-                        border-radius: 3px;
-                        box-sizing: border-box;
-                        display: block;
-                        max-width: 100%;
-                        overflow-wrap: anywhere;
-                        white-space: pre-wrap;
-                    }
-
-                    /* CTA Section */
-                    .lwp-tutorial-cta {
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        border-radius: 10px;
-                        padding: 32px;
-                        color: white;
-                    }
-
-                    .lwp-tutorial-cta-content {
-                        display: flex;
-                        align-items: center;
-                        gap: 20px;
-                        margin-bottom: 24px;
-                    }
-
-                    .lwp-cta-icon {
-                        width: 64px;
-                        height: 64px;
-                        background: rgba(255, 255, 255, 0.2);
-                        border-radius: 12px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        flex-shrink: 0;
-                    }
-
-                    .lwp-cta-icon svg {
-                        fill: white;
-                    }
-
-                    .lwp-tutorial-cta-content h3 {
-                        font-size: 22px;
-                        font-weight: 700;
-                        margin: 0 0 8px 0;
-                    }
-
-                    .lwp-tutorial-cta-content p {
-                        font-size: 14px;
-                        opacity: 0.95;
-                        margin: 0;
-                    }
-
-                    .lwp-tutorial-cta-buttons {
-                        display: flex;
-                        gap: 12px;
-                        flex-wrap: wrap;
-                        margin-bottom: 24px;
-                    }
-
-                    .lwp-btn {
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 8px;
-                        padding: 12px 24px;
-                        border-radius: 6px;
-                        font-weight: 600;
-                        font-size: 14px;
-                        text-decoration: none;
-                        border: none;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    }
-
-                    .lwp-btn-primary {
-                        background: white;
-                        color: #667eea;
-                    }
-
-                    .lwp-btn-primary:hover {
-                        background: #f8fafc;
-                        transform: translateY(-1px);
-                    }
-
-                    .lwp-btn-secondary {
-                        background: rgba(255, 255, 255, 0.2);
-                        color: white;
-                        border: 1px solid rgba(255, 255, 255, 0.3);
-                    }
-
-                    .lwp-btn-secondary:hover {
-                        background: rgba(255, 255, 255, 0.3);
-                        border-color: rgba(255, 255, 255, 0.5);
-                        transform: translateY(-1px);
-                    }
-
-                    .lwp-btn-accent {
-                        background: #f59e0b;
-                        color: white;
-                    }
-
-                    .lwp-btn-accent:hover {
-                        background: #d97706;
-                        transform: translateY(-1px);
-                    }
-
-                    /* Support Features */
-                    .lwp-support-features {
-                        display: flex;
-                        gap: 24px;
-                        flex-wrap: wrap;
-                    }
-
-                    .lwp-support-item {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        font-size: 14px;
-                    }
-
-                    .lwp-support-item svg {
-                        flex-shrink: 0;
-                    }
-
-                    /* Usage Examples Section */
-                    .lwp-tutorial-examples-section {
-                        margin-top: 20px;
-                        border-top: 1px solid #e2e8f0;
-                        padding-top: 20px;
-                    }
-
-                    .lwp-tutorial-examples-section .lwp-examples-list[hidden] {
-                        display: none;
-                    }
-
-                    .lwp-tutorial-examples-section.is-open .lwp-examples-list {
-                        margin-top: 12px;
-                    }
-
-                    .lwp-example-item {
-                        margin-bottom: 16px;
-                        border: 1px solid #e2e8f0;
-                        border-radius: 8px;
-                        overflow: hidden;
-                        background: #fff;
-                        transition: all 0.3s ease;
-                    }
-
-                    .lwp-example-item:hover {
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                    }
-
-                    .lwp-example-header {
-                        padding: 14px 16px;
-                        cursor: pointer;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        background: #f8fafc;
-                        transition: background 0.2s ease;
-                    }
-
-                    .lwp-example-header:hover {
-                        background: #f1f5f9;
-                    }
-
-                    .lwp-example-header.active {
-                        background: #e0f2fe;
-                    }
-
-                    .lwp-example-title {
-                        display: flex;
-                        align-items: center;
-                        gap: 12px;
-                        flex: 1;
-                    }
-
-                    .lwp-example-method {
-                        padding: 4px 8px;
-                        background: #3b82f6;
-                        color: #fff;
-                        border-radius: 4px;
-                        font-size: 11px;
-                        font-weight: 600;
-                        text-transform: uppercase;
-                    }
-
-                    .lwp-example-toggle {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        color: #64748b;
-                        font-size: 13px;
-                    }
-
-                    .lwp-example-preview {
-                        font-family: monospace;
-                        color: #64748b;
-                    }
-
-                    .lwp-example-arrow {
-                        width: 16px;
-                        height: 16px;
-                        transition: transform 0.3s ease;
-                    }
-
-                    .lwp-example-header.active .lwp-example-arrow {
-                        transform: rotate(180deg);
-                    }
-
-                    .lwp-example-content {
-                        max-height: 0;
-                        overflow: hidden;
-                        transition: max-height 0.3s ease;
-                        background: #fff;
-                    }
-
-                    .lwp-example-header.active+.lwp-example-content {
-                        max-height: 2000px;
-                    }
-
-                    .lwp-example-content>div {
-                        padding: 16px;
-                        border-top: 1px solid #e2e8f0;
-                    }
-
-                    .lwp-example-content>div:first-child {
-                        border-top: none;
-                    }
-
-                    .lwp-example-label {
-                        display: block;
-                        font-weight: 600;
-                        color: #334155;
-                        margin-bottom: 8px;
-                        font-size: 13px;
-                    }
-
-                    .lwp-example-url code {
-                        display: block;
-                        padding: 10px;
-                        background: #f1f5f9;
-                        border-radius: 6px;
-                        color: #1e293b;
-                        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-                        font-size: 13px;
-                        word-break: break-all;
-                    }
-
-                    .lwp-example-headers pre,
-                    .lwp-example-body pre,
-                    .lwp-example-response pre {
-                        margin: 0;
-                        padding: 12px;
-                        background: #1e293b;
-                        border-radius: 6px;
-                        overflow-x: auto;
-                    }
-
-                    .lwp-example-headers code,
-                    .lwp-example-body code,
-                    .lwp-example-response code {
-                        color: #e2e8f0;
-                        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-                        font-size: 12px;
-                        line-height: 1.6;
-                    }
-
-                    .lwp-example-steps {
-                        padding: 12px;
-                        background: #f8fafc;
-                        border-radius: 6px;
-                        border-left: 3px solid #3b82f6;
-                    }
-
-                    .lwp-example-step-item {
-                        padding: 8px 0;
-                        border-bottom: 1px solid #e2e8f0;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 4px;
-                    }
-
-                    .lwp-example-step-item:last-child {
-                        border-bottom: none;
-                    }
-
-                    .lwp-example-step-item strong {
-                        color: #1e293b;
-                        font-size: 13px;
-                    }
-
-                    .lwp-example-step-item span {
-                        color: #64748b;
-                        font-size: 13px;
-                        padding-left: 12px;
-                    }
-                </style>
-
-                <script>
-                    function toggleTutorialParams(button) {
-                        const section = button.closest('.lwp-tutorial-params-section');
-                        const list = section ? section.querySelector('.lwp-params-list') : null;
-                        const shouldOpen = section ? !section.classList.contains('is-open') : false;
-
-                        if (!section || !list) {
-                            return;
-                        }
-
-                        section.classList.toggle('is-open', shouldOpen);
-                        section.classList.toggle('is-collapsed', !shouldOpen);
-                        button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-                        list.hidden = !shouldOpen;
-                    }
-
-                    function toggleTutorialExamples(button) {
-                        const section = button.closest('.lwp-tutorial-examples-section');
-                        const list = section ? section.querySelector('.lwp-examples-list') : null;
-                        const shouldOpen = section ? !section.classList.contains('is-open') : false;
-
-                        if (!section || !list) {
-                            return;
-                        }
-
-                        section.classList.toggle('is-open', shouldOpen);
-                        section.classList.toggle('is-collapsed', !shouldOpen);
-                        button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-                        list.hidden = !shouldOpen;
-                    }
-
-                    function toggleExample(header) {
-                        const item = header.closest('.lwp-example-item');
-                        const content = item.querySelector('.lwp-example-content');
-                        const isActive = header.classList.contains('active');
-
-                        // Close all other examples in the same section
-                        const section = item.closest('.lwp-tutorial-examples-section');
-                        if (section) {
-                            const allItems = section.querySelectorAll('.lwp-example-item');
-                            allItems.forEach(otherItem => {
-                                if (otherItem !== item) {
-                                    otherItem.querySelector('.lwp-example-header').classList.remove('active');
-                                }
-                            });
-                        }
-
-                        // Toggle current example
-                        if (isActive) {
-                            header.classList.remove('active');
-                        } else {
-                            header.classList.add('active');
-                        }
-                    }
-                </script>
-
-                <script>
-                    jQuery(document).ready(function($) {
-                        // Function to toggle visibility of default template only fields
-                        function toggleDefaultTemplateFields() {
-                            var templateSelection = $('#template_selection').val();
-                            var isDefault = (templateSelection === 'default');
-
-                            // Find all fields that should only show for default template
-                            $('.mulopimfwc-default-template-only').each(function() {
-                                var $field = $(this);
-                                var $row = $field.closest('tr');
-
-                                if (isDefault) {
-                                    $row.show();
-                                    $field.show();
-                                } else {
-                                    $row.hide();
-                                    $field.hide();
-                                }
-                            });
-                        }
-
-                        // Run on page load
-                        setTimeout(function() {
-                            toggleDefaultTemplateFields();
-                        }, 2000);
-
-                        // Run when template selection changes
-                        $('#template_selection').on('change', function() {
-                            toggleDefaultTemplateFields();
-                        });
-                    });
-                </script>
-            </div>
+</div>
 
         <?php
     }
@@ -8499,214 +6852,6 @@ class mulopimfwc_settings
         $text_toggle_disabled_class = !$is_text_management_enabled ? ' mulopimfwc-setting-disabled' : '';
         $text_management_base_disabled = $is_premium ? '0' : '1';
 
-        echo '<style>
-            .mulopimfwc-text-management-intro {
-                background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-                border: 1px solid #e2e8f0;
-                border-radius: 16px;
-                padding: 22px 24px;
-                margin-bottom: 22px;
-                box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-            }
-            .mulopimfwc-text-management-intro__header {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                max-width: 720px;
-            }
-            .mulopimfwc-text-management-intro__eyebrow {
-                font-size: 12px;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                font-weight: 700;
-                color: #6366f1;
-            }
-            .mulopimfwc-text-management-intro h2 {
-                margin: 0;
-                font-size: 20px;
-                font-weight: 700;
-                color: #0f172a;
-            }
-            .mulopimfwc-text-management-intro p {
-                margin: 0;
-                color: #475569;
-                line-height: 1.6;
-            }
-            .mulopimfwc-text-management-toggle {
-                margin-top: 16px;
-                padding: 14px 16px;
-                border: 1px dashed #cbd5e1;
-                border-radius: 12px;
-                background: #ffffff;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 14px;
-            }
-            .mulopimfwc-text-management-toggle__title {
-                margin: 0;
-                font-size: 14px;
-                font-weight: 700;
-                color: #0f172a;
-            }
-            .mulopimfwc-text-management-toggle__desc {
-                margin: 2px 0 0;
-                color: #64748b;
-                font-size: 12px;
-            }
-            .mulopimfwc-text-management-intro__actions {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-                gap: 16px;
-                margin-top: 16px;
-            }
-            .mulopimfwc-text-action-card {
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 14px;
-                padding: 16px;
-                box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
-            .mulopimfwc-text-action-card__header {
-                display: flex;
-                gap: 12px;
-                align-items: center;
-            }
-            .mulopimfwc-text-action-card__icon {
-                width: 38px;
-                height: 38px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #e0f2fe;
-                color: #0284c7;
-                flex-shrink: 0;
-            }
-            .mulopimfwc-text-action-card--reset .mulopimfwc-text-action-card__icon {
-                background: #fee2e2;
-                color: #dc2626;
-            }
-            .mulopimfwc-text-action-title {
-                margin: 0;
-                font-size: 14px;
-                font-weight: 700;
-                color: #0f172a;
-            }
-            .mulopimfwc-text-action-subtitle {
-                margin: 2px 0 0 0;
-                font-size: 12px;
-                color: #64748b;
-            }
-            .mulopimfwc-text-action-row {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-            .mulopimfwc-text-translate-select {
-                flex: 1;
-                min-width: 180px;
-            }
-            .mulopimfwc-text-management-intro__note {
-                margin: 0;
-                font-size: 12px;
-                color: #64748b;
-            }
-            .mulopimfwc-text-reset-button {
-                background: #fef2f2;
-                color: #b91c1c;
-                border-color: #fecaca;
-            }
-            .mulopimfwc-text-reset-button:hover {
-                background: #fee2e2;
-                border-color: #fca5a5;
-                color: #991b1b;
-            }
-            .mulopimfwc-text-reset-button:focus {
-                box-shadow: 0 0 0 1px #fecaca;
-            }
-            @media (max-width: 900px) {
-                .mulopimfwc-text-action-row {
-                    flex-direction: column;
-                    align-items: stretch;
-                }
-            }
-            .mulopimfwc-text-group + .mulopimfwc-text-group {
-                margin-top: 20px;
-            }
-            .mulopimfwc-text-group__header {
-                display: flex;
-                gap: 12px;
-                align-items: center;
-                margin-bottom: 16px;
-            }
-            .mulopimfwc-text-group__title {
-                margin: 0;
-                font-size: 16px;
-                font-weight: 700;
-                color: #0f172a;
-            }
-            .mulopimfwc-text-group__desc {
-                margin: 4px 0 0 0;
-                color: #64748b;
-            }
-            .mulopimfwc-text-fields {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-                gap: 16px;
-            }
-            .mulopimfwc-text-field {
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                padding: 12px 14px;
-            }
-            .mulopimfwc-text-field__header {
-                display: flex;
-                justify-content: space-between;
-                gap: 8px;
-                margin-bottom: 8px;
-            }
-            .mulopimfwc-text-field label {
-                font-weight: 600;
-                color: #111827;
-            }
-            .mulopimfwc-text-field__tags {
-                display: flex;
-                gap: 6px;
-                flex-wrap: wrap;
-            }
-            .mulopimfwc-text-field__tag {
-                font-size: 11px;
-                padding: 2px 6px;
-                border-radius: 999px;
-                background: #e2e8f0;
-                color: #475569;
-            }
-            .mulopimfwc-text-field__tag--pro {
-                background: #fee2e2;
-                color: #b91c1c;
-            }
-            .mulopimfwc-text-field input[type="text"],
-            .mulopimfwc-text-field textarea {
-                width: 100%;
-                max-width: 100%;
-            }
-            .mulopimfwc-text-field__default {
-                margin: 6px 0 0;
-                font-size: 12px;
-                color: #6b7280;
-                line-height: 1.5;
-            }
-            .mulopimfwc-text-field__default strong {
-                color: #374151;
-                font-weight: 600;
-            }
-        </style>';
 
         echo '<div class="mulopimfwc-text-management-intro">
                 <div class="mulopimfwc-text-management-intro__header">
@@ -8774,7 +6919,7 @@ class mulopimfwc_settings
                     </div>
                 </div>';
         wp_nonce_field('mulopimfwc_reset_text_management_action', 'mulopimfwc_reset_text_management_nonce');
-        echo '<button ' . (!$is_premium || !$is_text_management_enabled ? 'disabled' : '') . ' data-text-base-disabled="' . esc_attr($text_management_base_disabled) . '" type="submit" name="mulopimfwc_reset_text_management" value="1" class="button mulopimfwc-text-reset-button mulopimfwc-text-management-toggle-target' . esc_attr($text_toggle_disabled_class) . '" formaction="' . esc_url(menu_page_url('multi-location-product-and-inventory-management-settings', false)) . '" onclick="return confirm(\'' . esc_js(__('Reset all text fields to their default values? This action cannot be undone.', 'multi-location-product-and-inventory-management-pro')) . '\');">
+        echo '<button ' . (!$is_premium || !$is_text_management_enabled ? 'disabled' : '') . ' data-text-base-disabled="' . esc_attr($text_management_base_disabled) . '" data-mulopimfwc-confirm="' . esc_attr__('Reset all text fields to their default values? This action cannot be undone.', 'multi-location-product-and-inventory-management-pro') . '" type="submit" name="mulopimfwc_reset_text_management" value="1" class="button mulopimfwc-text-reset-button mulopimfwc-text-management-toggle-target' . esc_attr($text_toggle_disabled_class) . '" formaction="' . esc_url(menu_page_url('multi-location-product-and-inventory-management-settings', false)) . '">
                     ' . esc_html__('Reset Text to Defaults', 'multi-location-product-and-inventory-management-pro') . '
                 </button>
                 <p class="mulopimfwc-text-management-intro__note">' . esc_html__('Reset only the Text Management fields to their defaults.', 'multi-location-product-and-inventory-management-pro') . '</p>
@@ -8783,125 +6928,9 @@ class mulopimfwc_settings
     </div>';
 
         if (!empty($translation_data)) {
-            echo '<script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    const translations = ' . wp_json_encode($translation_data) . ';
-                    window.mulopimfwcTextTranslations = translations;
-                    const locales = translations.locales || {};
-                    const select = document.getElementById("mulopimfwc-text-translate-select");
-                    const apply = document.getElementById("mulopimfwc-text-translate-apply");
-                    if (!select || !apply || !Object.keys(locales).length) {
-                        return;
-                    }
 
-                    function applyTranslation() {
-                        const localeCode = select.value;
-                        if (!localeCode || !locales[localeCode] || !locales[localeCode].values) {
-                            window.alert("' . esc_js(__('Please choose a language first.', 'multi-location-product-and-inventory-management-pro')) . '");
-                            return;
-                        }
-                        const locale = locales[localeCode];
-                        const label = locale.nativeLabel || locale.label || localeCode;
-                        const template = translations.meta && translations.meta.applyConfirm
-                            ? translations.meta.applyConfirm
-                            : "Apply %s translations to all Text Management fields? This will overwrite your current values.";
-                        const message = template.replace("%s", label);
-                        if (!window.confirm(message)) {
-                            return;
-                        }
-
-                        Object.keys(locale.values).forEach(function(key) {
-                            const value = locale.values[key];
-                            const field = document.getElementById(key);
-                            if (field) {
-                                field.value = value;
-                            }
-                            const hidden = document.querySelector(\'[data-manual-hidden=\"true\"][data-manual-for=\"mulopimfwc_display_options[\' + key + \']\"]\');
-                            if (hidden) {
-                                hidden.value = value;
-                            }
-                        });
-
-                        select.value = "";
-                    }
-
-                    apply.addEventListener("click", applyTranslation);
-                    select.addEventListener("change", applyTranslation);
-                });
-            </script>';
         }
 
-        echo '<script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const tab = document.getElementById("text-management-settings");
-                const toggle = document.getElementById("mulopimfwc-enable-text-management");
-                if (!tab || !toggle) {
-                    return;
-                }
-
-                const targets = tab.querySelectorAll(".mulopimfwc-text-management-toggle-target");
-                function syncHiddenMirror(field, shouldMirror) {
-                    const tagName = field.tagName ? field.tagName.toUpperCase() : "";
-                    const inputType = typeof field.type === "string" ? field.type.toLowerCase() : "";
-                    if (
-                        tagName === "BUTTON" ||
-                        (tagName === "INPUT" && ["submit", "button", "reset", "file"].includes(inputType))
-                    ) {
-                        return;
-                    }
-
-                    const name = field.getAttribute("name");
-                    if (!name) {
-                        return;
-                    }
-
-                    function findHiddenMirror(selector, attributeName, attributeValue) {
-                        const candidates = tab.querySelectorAll(selector);
-                        for (let index = 0; index < candidates.length; index++) {
-                            if (candidates[index].getAttribute(attributeName) === attributeValue) {
-                                return candidates[index];
-                            }
-                        }
-
-                        return null;
-                    }
-
-                    if (findHiddenMirror(\'input[type="hidden"][data-manual-hidden="true"]\', "data-manual-for", name)) {
-                        return;
-                    }
-
-                    let hidden = findHiddenMirror(\'input[type="hidden"][data-text-toggle-hidden="true"]\', "data-text-toggle-for", name);
-
-                    if (shouldMirror) {
-                        if (!hidden) {
-                            hidden = document.createElement("input");
-                            hidden.type = "hidden";
-                            hidden.name = name;
-                            hidden.setAttribute("data-text-toggle-hidden", "true");
-                            hidden.setAttribute("data-text-toggle-for", name);
-                            field.insertAdjacentElement("afterend", hidden);
-                        }
-                        hidden.value = field.value || "";
-                    } else if (hidden) {
-                        hidden.remove();
-                    }
-                }
-
-                function syncTextManagementState() {
-                    const isEnabled = !!toggle.checked;
-                    targets.forEach(function(field) {
-                        const baseDisabled = field.getAttribute("data-text-base-disabled") === "1";
-                        const shouldDisable = !isEnabled || baseDisabled;
-                        field.disabled = shouldDisable;
-                        field.classList.toggle("mulopimfwc-setting-disabled", !isEnabled);
-                        syncHiddenMirror(field, !isEnabled);
-                    });
-                }
-
-                syncTextManagementState();
-                toggle.addEventListener("change", syncTextManagementState);
-            });
-        </script>';
 
         foreach ($groups as $group) {
             $title = $group['title'] ?? '';
@@ -9102,72 +7131,7 @@ class mulopimfwc_settings
                     <?php endforeach; ?>
                 </div>
             </div>
-            <script>
-                (function() {
-                    var wrapper = document.querySelector('[data-field-id="<?php echo esc_js($field_id); ?>"]');
-                    if (!wrapper) return;
-
-                    var colorInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_color');
-                    var hexInput = wrapper.querySelector('#<?php echo esc_js($field_id); ?>_hex');
-                    var preview = wrapper.querySelector('.mulopimfwc-color-preview');
-                    var resetBtn = wrapper.querySelector('.mulopimfwc-color-reset');
-                    var swatches = wrapper.querySelectorAll('.mulopimfwc-color-swatch:not(.disabled)');
-
-                    // Update preview and hex input when color input changes
-                    colorInput.addEventListener('change', function() {
-                        preview.style.background = this.value;
-                        hexInput.value = this.value;
-                        updateSwatchBorders();
-                    });
-
-                    // Update color input and preview when hex input changes
-                    hexInput.addEventListener('change', function() {
-                        var val = this.value.trim();
-                        if (/^#[0-9A-F]{6}$/i.test(val)) {
-                            colorInput.value = val;
-                            preview.style.background = val;
-                            updateSwatchBorders();
-                        }
-                    });
-
-                    // Click preview to open color picker
-                    preview.addEventListener('click', function() {
-                        colorInput.click();
-                    });
-
-                    // Reset button
-                    if (resetBtn) {
-                        resetBtn.addEventListener('click', function() {
-                            var defaultVal = this.getAttribute('data-default');
-                            colorInput.value = defaultVal;
-                            hexInput.value = defaultVal;
-                            preview.style.background = defaultVal;
-                            updateSwatchBorders();
-                        });
-                    }
-
-                    // Swatch selection
-                    swatches.forEach(function(swatch) {
-                        swatch.addEventListener('click', function() {
-                            var color = this.getAttribute('data-color');
-                            colorInput.value = color;
-                            hexInput.value = color;
-                            preview.style.background = color;
-                            updateSwatchBorders();
-                        });
-                    });
-
-                    // Update swatch borders based on current value
-                    function updateSwatchBorders() {
-                        var currentVal = colorInput.value.toLowerCase();
-                        swatches.forEach(function(swatch) {
-                            var swatchColor = swatch.getAttribute('data-color').toLowerCase();
-                            swatch.style.borderColor = (swatchColor === currentVal) ? '#6366f1' : '#d1d5db';
-                        });
-                    }
-                })();
-            </script>
-        <?php
+<?php
         }
 
         /**

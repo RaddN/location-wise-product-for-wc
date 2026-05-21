@@ -1,0 +1,21 @@
+.mulopimfwc-cop-tooltip {
+    position: absolute;
+    z-index: 1000;
+    background: #1e1e1e;
+    color: #fff;
+    padding: 8px 10px;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    font-size: 12px;
+    line-height: 1.4;
+    max-width: 240px;
+}
+
+.mulopimfwc-cop-tooltip::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 12px;
+    border: 6px solid transparent;
+    border-bottom-color: #1e1e1e;
+}

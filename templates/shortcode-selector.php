@@ -88,8 +88,15 @@ $mulopimfwc_shortcode_svg_allowed_html = array(
 );
 
 $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
+$selector_classes     = array_filter(
+    array(
+        'lwp-shortcode-store-selector',
+        isset($atts['class']) ? (string) $atts['class'] : '',
+        (!isset($atts['multi_line']) || $atts['multi_line'] !== 'on') ? 'lwp-single-line-address' : 'lwp-multi-line-address',
+    )
+);
 ?>
-<div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" data-selector-instance="<?php echo esc_attr($selector_instance_id); ?>" style="max-width: <?php echo esc_attr($max_width); ?>;">
+<div class="<?php echo esc_attr(implode(' ', $selector_classes)); ?>" data-selector-instance="<?php echo esc_attr($selector_instance_id); ?>" style="max-width: <?php echo esc_attr($max_width); ?>;">
     <?php if ($atts['show_title'] === 'on'): ?>
         <h3 class="lwp-shortcode-title"><?php echo esc_html($atts['title']); ?></h3>
     <?php endif; ?>
@@ -250,324 +257,7 @@ $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
                 </div>
             </div>
         </div>
-        <!-- CSS Styles -->
-        <style>
-            .lwp-user-location-features {
-                position: relative;
-                margin-bottom: 0px;
-            }
 
-            .address-content {
-                display: flex;
-                align-items: center;
-                padding: 12px 16px;
-                background: var(--lwp-background, #ffffff);
-                border: 1px solid var(--lwp-border, #e9ecef);
-                border-radius: 8px;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                font-size: 14px;
-            }
-
-            .address-content:hover {
-                background: color-mix(in srgb,
-                        var(--lwp-primary, #e9ecef) 30%,
-                        transparent);
-                border-color: var(--lwp-primary, #dee2e6);
-            }
-
-            .address-label-icon {
-                margin-right: 8px;
-                font-size: 16px;
-            }
-
-            .address-text {
-                color: var(--lwp-ink, #212529);
-                font-weight: 500;
-                <?php if (!isset($atts['multi_line']) || (isset($atts['multi_line']) && $atts['multi_line'] !== "on")) { ?>width: calc(<?php echo esc_attr($max_width); ?> - (<?php echo esc_attr($max_width); ?> / 3));
-                /* Set a fixed width */
-                white-space: nowrap;
-                /* Prevent text from wrapping */
-                overflow: hidden;
-                /* Hide the overflowed text */
-                text-overflow: ellipsis;
-                <?php } ?>
-            }
-
-            .address-content:hover .address-text {
-                color: var(--lwp-primary, #0071a1);
-            }
-
-            .tooltip_popup {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: var(--lwp-background, #ffffff);
-                border: 1px solid var(--lwp-border, #dee2e6);
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                z-index: 1000;
-                margin-top: 4px;
-                padding: 20px;
-                max-height: 400px;
-                overflow: hidden;
-                min-width: 400px;
-            }
-
-            .search-input-container {
-                position: relative;
-                margin-bottom: 20px;
-            }
-
-            .search-input-container input {
-                width: 100%;
-                padding: 12px 40px 12px 16px;
-                border: 1px solid #ced4da;
-                border-radius: 6px;
-                font-size: 14px;
-                transition: border-color 0.2s ease;
-            }
-
-            .search-input-container input:focus {
-                outline: none;
-                border-color: #80bdff;
-                box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-            }
-
-            .search-input-container input[readonly] {
-                background-color: #f8f9fa;
-                color: #6c757d;
-            }
-
-            .search-input-container label {
-                position: absolute;
-                left: 16px;
-                top: -8px;
-                background: white;
-                padding: 0 4px;
-                font-size: 12px;
-                color: var(--lwp-ink, #6c757d);
-                font-weight: 500;
-            }
-
-            .search-input-container button {
-                position: absolute;
-                right: 12px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: none;
-                border: none;
-                font-size: 18px;
-                color: #6c757d;
-                cursor: pointer;
-                padding: 2px;
-            }
-
-            .search-input-container button:hover {
-                color: #495057;
-            }
-
-            .status-text {
-                color: #6c757d;
-            }
-
-            .status-text.detecting {
-                color: #0d6efd;
-            }
-
-            .status-text.success {
-                color: #198754;
-            }
-
-            .status-text.error {
-                color: #dc3545;
-            }
-
-            .saved_locations {
-                margin-bottom: 20px;
-            }
-
-            .saved_locations .title {
-                margin: 0 0 12px 0;
-                font-size: 16px;
-                font-weight: 600;
-                color: var(--lwp-ink, #495057);
-            }
-
-            .saved-locations-list {
-                max-height: 200px;
-                overflow-y: auto;
-                scrollbar-width: thin;
-            }
-
-            .saved-location-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px;
-                border: 1px solid var(--lwp-border, #e9ecef);
-                border-radius: 6px;
-                margin-bottom: 8px;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-            .saved-location-item .location-actions svg {
-                width: 20px;
-                height: 20px;
-                flex-shrink: 0;
-                fill: var(--lwp-ink, #495057);
-            }
-
-            .saved-location-item:hover {
-                background: color-mix(in srgb,
-                        var(--lwp-primary, #e9ecef) 30%,
-                        transparent);
-                border-color: var(--lwp-primary, #dee2e6)
-            }
-
-            .saved-location-item.selected {
-                background:
-                    color-mix(in srgb, var(--lwp-primary, #e9ecef) 30%, transparent);
-                border-color: var(--lwp-primary, #dee2e6);
-            }
-
-            .location-info {
-                display: flex;
-                flex-direction: column;
-                flex: 1;
-            }
-
-            .location-label {
-                font-weight: 600;
-                color: var(--lwp-ink, #495057);
-                font-size: 14px;
-            }
-
-            .location-badge {
-                display: inline-block;
-                margin-left: 6px;
-                padding: 2px 6px;
-                border-radius: 999px;
-                font-size: 10px;
-                font-weight: 600;
-                letter-spacing: 0.3px;
-                text-transform: uppercase;
-                vertical-align: middle;
-            }
-
-            .admin-only-badge {
-                background: #fff3cd;
-                border: 1px solid #ffe2a1;
-                color: #8a6d3b;
-            }
-
-            .location-address {
-                color: #6c757d;
-                font-size: 13px;
-                margin-top: 2px;
-            }
-
-            .location-actions {
-                display: flex;
-                gap: 8px;
-            }
-
-            .edit-location-btn,
-            .delete-location-btn {
-                background: none;
-                border: none;
-                padding: 4px;
-                cursor: pointer;
-                border-radius: 4px;
-                transition: background-color 0.2s ease;
-            }
-
-            .edit-location-btn:hover {
-                background: #e3f2fd;
-            }
-
-            .edit-location-btn:hover svg {
-                fill: var(--lwp-primary, #667eea);
-            }
-
-            .delete-location-btn:hover {
-                background: #ffebee;
-            }
-
-            .delete-location-btn:hover svg {
-                fill: #d32f2f;
-            }
-
-            .no-saved-locations {
-                text-align: center;
-                color: #6c757d;
-                font-style: italic;
-                margin: 20px 0;
-            }
-
-            .location-actions-container {
-                display: flex;
-                gap: 12px;
-                flex-wrap: wrap;
-            }
-
-            .location-actions-container .button {
-                flex: 1;
-                min-width: 120px;
-                text-align: center;
-            }
-
-            .search-results {
-                margin-top: 10px;
-                border: 1px solid #e9ecef;
-                border-radius: 6px;
-                background: white;
-                max-height: 200px;
-                overflow-y: auto;
-                z-index: 1000;
-                position: relative;
-            }
-
-            .search-result-item {
-                padding: 12px 16px;
-                cursor: pointer;
-                border-bottom: 1px solid #f1f3f4;
-                transition: background-color 0.2s ease;
-            }
-
-            .search-result-item:last-child {
-                border-bottom: none;
-            }
-
-            .search-result-item:hover {
-                background: #f8f9fa;
-            }
-
-            .result-address {
-                font-size: 14px;
-                color: #495057;
-                display: block;
-                word-wrap: break-word;
-            }
-
-            /* Responsive styles */
-            @media (max-width: 768px) {
-                .tooltip_popup {
-                    left: -10px;
-                    right: -10px;
-                }
-
-                .location-actions-container {
-                    flex-direction: column;
-                }
-
-                .location-actions-container .button {
-                    flex: none;
-                }
-            }
-        </style>
     <?php endif; ?>
     <form id="lwp-shortcode-selector-form" class="lwp-selector-form" data-selector-instance="<?php echo esc_attr($selector_instance_id); ?>">
         <?php wp_nonce_field('mulopimfwc_shortcode_selector', 'mulopimfwc_shortcode_selector_nonce'); ?>
@@ -927,17 +617,17 @@ endif;
 // Location-Wise Products - User Location Features
 // Consolidated JavaScript for location functionality
 if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 'on'):
-?>
-    <script>
+    $user_location_features_js = <<<'JS'
         jQuery(document).ready(function($) {
+            'use strict';
 
             // ========================================
             // CONFIGURATION & GLOBAL VARIABLES
             // ========================================
 
-            const userLocationCookieExpiryDays = <?php echo esc_js(mulopimfwc_get_location_cookie_expiry_days()); ?>;
+            const userLocationCookieExpiryDays = __MULOPIMFWC_USER_LOCATION_COOKIE_EXPIRY_DAYS__;
             const userLocationCookieExpiryMs = userLocationCookieExpiryDays * 24 * 60 * 60 * 1000;
-            const deleteLocationConfirmMessage = <?php echo wp_json_encode(__('Are you sure you want to delete this location?', 'multi-location-product-and-inventory-management-pro')); ?>;
+            const deleteLocationConfirmMessage = __MULOPIMFWC_DELETE_LOCATION_CONFIRM__;
 
             const LocationFeatures = {
                 map: null,
@@ -1985,7 +1675,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                         }
 
                         if ($('.saved-location-item[data-location-id="' + locationId + '"]').hasClass('selected')) {
-                            $('.address-text').text('<?php echo esc_js($shortcode_texts['set_your_location']); ?>');
+                            $('.address-text').text(__MULOPIMFWC_SET_YOUR_LOCATION_TEXT__);
                             this.clearUserLocation();
                         }
                     } else {
@@ -2473,44 +2163,7 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 },
 
                 injectStyles: function() {
-                    if ($('#lwp-search-results-styles').length) return;
-                    const css = `
-                <style>
-                .search-results {
-                    margin-top: 10px;
-                    border: 1px solid #e9ecef;
-                    border-radius: 6px;
-                    background: white;
-                    max-height: 200px;
-                    overflow-y: auto;
-                    z-index: 1000;
-                    position: relative;
-                }
-                
-                .search-result-item {
-                    padding: 12px 16px;
-                    cursor: pointer;
-                    border-bottom: 1px solid #f1f3f4;
-                    transition: background-color 0.2s ease;
-                }
-                
-                .search-result-item:last-child {
-                    border-bottom: none;
-                }
-                
-                .search-result-item:hover {
-                    background: #f8f9fa;
-                }
-                
-                .result-address {
-                    font-size: 14px;
-                    color: #495057;
-                    display: block;
-                    word-wrap: break-word;
-                }
-                </style>
-            `;
-                    $('head').append(css);
+                    return;
                 }
             };
 
@@ -2526,5 +2179,19 @@ if (isset($atts['enable_user_locations']) && $atts['enable_user_locations'] === 
                 window.LocationFeatures = LocationFeatures;
             }
         });
-    </script>
-<?php endif; ?>
+JS;
+    $user_location_features_js = str_replace(
+        array(
+            '__MULOPIMFWC_USER_LOCATION_COOKIE_EXPIRY_DAYS__',
+            '__MULOPIMFWC_DELETE_LOCATION_CONFIRM__',
+            '__MULOPIMFWC_SET_YOUR_LOCATION_TEXT__',
+        ),
+        array(
+            (string) mulopimfwc_get_location_cookie_expiry_days(),
+            wp_json_encode(__('Are you sure you want to delete this location?', 'multi-location-product-and-inventory-management-pro')),
+            wp_json_encode($shortcode_texts['set_your_location']),
+        ),
+        $user_location_features_js
+    );
+    wp_add_inline_script('mulopimfwc_script', $user_location_features_js);
+endif; ?>

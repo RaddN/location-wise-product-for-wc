@@ -1,4 +1,6 @@
 jQuery(document).ready(function ($) {
+    'use strict';
+
     const modal = document.getElementById('lwp-store-selector-modal');
     const modalSubmit = document.getElementById('lwp-store-selector-submit');
     const COOKIE_MS_PER_DAY = 24 * 60 * 60 * 1000;

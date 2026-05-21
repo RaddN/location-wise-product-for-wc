@@ -42,6 +42,7 @@ class mulopimfwc_anaylytics
         }
 
         // Add deactivation feedback form
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_deactivation_feedback_assets'));
         add_action('admin_footer', array($this, 'add_deactivation_feedback_form'));
     }
 
@@ -227,6 +228,48 @@ class mulopimfwc_anaylytics
     }
 
     /**
+     * Enqueue deactivation feedback assets only on the plugins screen.
+     */
+    public function enqueue_deactivation_feedback_assets($hook)
+    {
+        if ($hook !== 'plugins.php' || empty($this->plugin_file)) {
+            return;
+        }
+
+        $plugin_basename = plugin_basename($this->plugin_file);
+        $plugin_slug = dirname($plugin_basename);
+        $plugin_url = plugin_dir_url($this->plugin_file);
+        $version = $this->plugin_version ?: '1.0.0';
+
+        wp_enqueue_style(
+            'mulopimfwc-deactivation-feedback',
+            $plugin_url . 'assets/css/deactivation-feedback.css',
+            array(),
+            $version
+        );
+
+        wp_enqueue_script(
+            'mulopimfwc-deactivation-feedback',
+            $plugin_url . 'assets/js/deactivation-feedback.js',
+            array('jquery'),
+            $version,
+            true
+        );
+
+        wp_localize_script(
+            'mulopimfwc-deactivation-feedback',
+            'mulopimfwcDeactivationFeedback',
+            array(
+                'ajaxUrl'          => admin_url('admin-ajax.php'),
+                'nonce'            => wp_create_nonce('deactivation_feedback'),
+                'pluginBasename'   => $plugin_basename,
+                'pluginSlug'       => $plugin_slug,
+                'deactivatingText' => __('Deactivating...', 'multi-location-product-and-inventory-management-pro'),
+            )
+        );
+    }
+
+    /**
      * Add deactivation feedback form
      */
     public function add_deactivation_feedback_form()
@@ -309,323 +352,6 @@ class mulopimfwc_anaylytics
                     </div>
                 </div>
             </div>
-
-            <style>
-                .feedback-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.5);
-                    z-index: 999999;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .feedback-modal {
-                    background: #ffffff;
-                    border-radius: 8px;
-                    max-width: 500px;
-                    width: 90%;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                }
-
-                .modal-header {
-                    padding: 24px 24px 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-
-                .modal-header h3 {
-                    margin: 0;
-                    font-size: 18px;
-                    font-weight: 600;
-                    color: #1a1a1a;
-                }
-
-                .close-button {
-                    background: none;
-                    border: none;
-                    font-size: 20px;
-                    color: #666;
-                    cursor: pointer;
-                    padding: 4px;
-                    border-radius: 4px;
-                    transition: background-color 0.2s ease;
-                }
-
-                .close-button:hover {
-                    background: #f5f5f5;
-                }
-
-                .modal-body {
-                    padding: 16px 24px 24px;
-                }
-
-                .modal-body p {
-                    margin: 0 0 20px;
-                    color: #555;
-                    font-size: 14px;
-                    line-height: 1.5;
-                }
-
-                .feedback-options {
-                    margin-bottom: 16px;
-                }
-
-                .feedback-option {
-                    display: flex;
-                    align-items: center;
-                    margin: 0 0 12px;
-                    padding: 0;
-                    cursor: pointer;
-                    font-size: 14px;
-                    color: #333;
-                    line-height: 1.4;
-                }
-
-                .feedback-option:hover {
-                    color: #432fb8;
-                }
-
-                .feedback-option input[type="radio"] {
-                    position: absolute;
-                    opacity: 0;
-                    cursor: pointer;
-                    height: 0;
-                    width: 0;
-                }
-
-                .radio-button {
-                    height: 16px;
-                    width: 16px;
-                    background: #ffffff;
-                    border: 2px solid #ddd;
-                    border-radius: 50%;
-                    margin-right: 12px;
-                    flex-shrink: 0;
-                    position: relative;
-                    transition: all 0.2s ease;
-                }
-
-                .feedback-option input[type="radio"]:checked+.radio-button {
-                    border-color: #432fb8;
-                    background: #432fb8;
-                }
-
-                .feedback-option input[type="radio"]:checked+.radio-button:after {
-                    content: "";
-                    position: absolute;
-                    display: block;
-                    left: 50%;
-                    top: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 6px;
-                    height: 6px;
-                    border-radius: 50%;
-                    background: white;
-                }
-
-                .other-reason-container {
-                    margin-top: 16px;
-                    animation: slideDown 0.3s ease-out;
-                }
-
-                @keyframes slideDown {
-                    from {
-                        opacity: 0;
-                        max-height: 0;
-                        transform: translateY(-10px);
-                    }
-
-                    to {
-                        opacity: 1;
-                        max-height: 100px;
-                        transform: translateY(0);
-                    }
-                }
-
-                .other-reason-container textarea {
-                    width: 100%;
-                    padding: 8px 12px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    resize: vertical;
-                    font-family: inherit;
-                    font-size: 14px;
-                    line-height: 1.4;
-                    transition: border-color 0.2s ease;
-                    box-sizing: border-box;
-                }
-
-                .other-reason-container textarea:focus {
-                    outline: none;
-                    border-color: #432fb8;
-                    box-shadow: 0 0 0 1px #432fb8;
-                }
-
-                .modal-footer {
-                    display: flex;
-                    justify-content: flex-end;
-                    margin-top: 20px;
-                    padding-top: 16px;
-                    border-top: 1px solid #eee;
-                }
-
-                .btn {
-                    padding: 8px 16px;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    font-weight: 500;
-                    transition: all 0.2s ease;
-                    text-decoration: none;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    min-width: 120px;
-                }
-
-                .btn-primary {
-                    background: #432fb8;
-                    color: white;
-                }
-
-                .btn-primary:hover {
-                    background: #005a87;
-                }
-
-                /* Responsive design */
-                @media (max-width: 640px) {
-                    .feedback-modal {
-                        margin: 20px;
-                        width: calc(100% - 40px);
-                    }
-
-                    .modal-header {
-                        padding: 20px 20px 8px;
-                    }
-
-                    .modal-body {
-                        padding: 16px 20px 20px;
-                    }
-
-                    .btn {
-                        width: 100%;
-                    }
-                }
-            </style>
-
-            <script>
-                jQuery(document).ready(function($) {
-                    var pluginBasename = '<?php echo esc_js($plugin_basename); ?>';
-                    var pluginSlug = '<?php echo esc_js($plugin_slug); ?>';
-                    var deactivateUrl = '';
-
-                    // Multiple selectors to catch the deactivation link
-                    var selectors = [
-                        'tr[data-slug="' + pluginSlug + '"] .deactivate a',
-                        'tr[data-plugin="' + pluginBasename + '"] .deactivate a',
-                        '.wp-list-table.plugins tr[data-slug="' + pluginSlug + '"] .row-actions .deactivate a'
-                    ];
-
-                    // Try each selector
-                    selectors.forEach(function(selector) {
-                        $(selector).on('click', function(e) {
-                            e.preventDefault();
-                            deactivateUrl = $(this).attr('href');
-                            $('#mulopimfwc_plugin-deactivation-feedback').show();
-                        });
-                    });
-
-                    // Fallback: Find deactivation link by searching for plugin basename in the URL
-                    $('a[href*="action=deactivate"]').each(function() {
-                        var href = $(this).attr('href');
-                        if (href.indexOf(encodeURIComponent(pluginBasename)) > -1) {
-                            $(this).on('click', function(e) {
-                                e.preventDefault();
-                                deactivateUrl = $(this).attr('href');
-                                $('#mulopimfwc_plugin-deactivation-feedback').show();
-                            });
-                        }
-                    });
-
-                    // Handle feedback form submission
-                    $('#mulopimfwc_deactivation-feedback-form').on('submit', function(e) {
-                        e.preventDefault();
-
-                        var reason = $('input[name="reason"]:checked').val();
-                        var otherReason = $('textarea[name="other_reason"]').val();
-
-                        if (reason === 'other' && otherReason) {
-                            reason = otherReason;
-                        }
-
-                        $(this).find("button.btn.btn-primary").text("Deactivating...");
-
-                        // Send deactivation data
-                        $.ajax({
-                            url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
-                            type: 'POST',
-                            data: {
-                                action: 'mulopimfwc_send_deactivation_feedback',
-                                reason: reason || 'no-reason-provided',
-                                nonce: '<?php echo esc_js(wp_create_nonce('deactivation_feedback')); ?>'
-                            },
-                            success: function(response) {
-                                // Wait a moment to ensure the request completed
-                                setTimeout(function() {
-                                    window.location.href = deactivateUrl;
-                                }, 500);
-                            },
-                            error: function(xhr, status, error) {
-                                console.error('Feedback send failed:', status, error);
-                                console.error('Response:', xhr.responseText);
-
-                                // Even if feedback fails, proceed with deactivation
-                                setTimeout(function() {
-                                    window.location.href = deactivateUrl;
-                                }, 500);
-                            }
-                        });
-                    });
-
-                    // Handle other reason text area
-                    $('input[name="reason"]').change(function() {
-                        if ($(this).val() === 'other') {
-                            $('.other-reason-container').slideDown(300);
-                        } else {
-                            $('.other-reason-container').slideUp(300);
-                        }
-                    });
-
-                    // Handle close button
-                    $('.close-button').click(function() {
-                        $('#mulopimfwc_plugin-deactivation-feedback').hide();
-                    });
-
-                    // Handle overlay click to close
-                    $('.feedback-overlay').click(function(e) {
-                        if (e.target === this) {
-                            $('#mulopimfwc_plugin-deactivation-feedback').hide();
-                        }
-                    });
-
-                    // Handle escape key
-                    $(document).keyup(function(e) {
-                        if (e.keyCode === 27) { // ESC key
-                            $('#mulopimfwc_plugin-deactivation-feedback').hide();
-                        }
-                    });
-                });
-            </script>
 <?php
         }
     }

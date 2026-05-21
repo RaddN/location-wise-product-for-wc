@@ -39,67 +39,47 @@ class mulopimfwc_License_Manager
             }
 
             $is_enqueued = true; // Mark as enqueued
-?>
-            <script type="text/javascript">
-                (function() {
-                    if (typeof ajaxurl === 'undefined') {
-                        return;
-                    }
+            $script_path = plugin_dir_path(__FILE__) . '../assets/js/license-page.js';
+            wp_enqueue_script(
+                'mulopimfwc-license-page',
+                plugin_dir_url(__FILE__) . '../assets/js/license-page.js',
+                array(),
+                file_exists($script_path) ? (string) filemtime($script_path) : '1.1.7.20',
+                true
+            );
 
-                    var hasQueuedRequest = false;
+            if (is_admin()) {
+                $style_path = plugin_dir_path(__FILE__) . '../assets/css/license-page.css';
+                wp_enqueue_style(
+                    'mulopimfwc-license-page',
+                    plugin_dir_url(__FILE__) . '../assets/css/license-page.css',
+                    array(),
+                    file_exists($style_path) ? (string) filemtime($style_path) : '1.1.7.20'
+                );
+            }
 
-                    var sendBackgroundLicenseCheck = function() {
-                        if (hasQueuedRequest) {
-                            return;
-                        }
-
-                        hasQueuedRequest = true;
-                        var xhr = new XMLHttpRequest();
-                        var params = new URLSearchParams();
-                        params.append('action', 'mulopimfwc_background_license_check');
-                        params.append('nonce', '<?php echo esc_js(wp_create_nonce('mulopimfwc_background_check')); ?>');
-                        xhr.open('POST', ajaxurl, true);
-                        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                        xhr.send(params.toString());
-                    };
-
-                    var scheduleBackgroundLicenseCheck = function() {
-                        if (typeof window.requestIdleCallback === 'function') {
-                            window.requestIdleCallback(sendBackgroundLicenseCheck, {
-                                timeout: 4000
-                            });
-                            return;
-                        }
-
-                        window.setTimeout(sendBackgroundLicenseCheck, 1500);
-                    };
-
-                    if (document.readyState === 'complete') {
-                        scheduleBackgroundLicenseCheck();
-                        return;
-                    }
-
-                    window.addEventListener('load', scheduleBackgroundLicenseCheck, {
-                        once: true
-                    });
-                })();
-            </script>
-            <?php
+            wp_localize_script('mulopimfwc-license-page', 'mulopimfwcLicensePage', array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'backgroundCheck' => true,
+                'backgroundNonce' => wp_create_nonce('mulopimfwc_background_check'),
+                'removeLicenseNonce' => wp_create_nonce('mulopimfwc_remove_license_nonce'),
+                'checkUpdatesNonce' => wp_create_nonce('mulopimfwc_check_updates'),
+                'strings' => array(
+                    'removeConfirm' => __('Are you sure you want to remove the license from this site?', 'multi-location-product-and-inventory-management-pro'),
+                    'removing' => __('Removing...', 'multi-location-product-and-inventory-management-pro'),
+                    'success' => __('Success', 'multi-location-product-and-inventory-management-pro'),
+                    'removeLicense' => __('Remove License', 'multi-location-product-and-inventory-management-pro'),
+                    'removeFailed' => __('Failed to remove license. Please try again.', 'multi-location-product-and-inventory-management-pro'),
+                    'checking' => __('Checking...', 'multi-location-product-and-inventory-management-pro'),
+                    'latest' => __('You have the latest version installed.', 'multi-location-product-and-inventory-management-pro'),
+                    'updateAvailable' => __('Update available! Version %s is ready to install.', 'multi-location-product-and-inventory-management-pro'),
+                    'checkErrorPrefix' => __('Error checking for updates:', 'multi-location-product-and-inventory-management-pro'),
+                    'checkError' => __('Error checking for updates. Please try again.', 'multi-location-product-and-inventory-management-pro'),
+                ),
+            ));
         };
         add_action('admin_enqueue_scripts', $enqueue_bg_check);
-        add_action('wp_footer', $enqueue_bg_check);
-
-        // Make ajaxurl available on frontend for non-logged-in users
-        add_action('wp_enqueue_scripts', function () {
-            if (!is_admin()) {
-                wp_enqueue_script('jquery');
-            ?>
-                <script type="text/javascript">
-                    var ajaxurl = "<?php echo esc_url(admin_url('admin-ajax.php')); ?>";
-                </script>
-        <?php
-            }
-        });
+        add_action('wp_enqueue_scripts', $enqueue_bg_check);
 
         add_action('wp_ajax_mulopimfwc_background_license_check', function () {
             check_ajax_referer('mulopimfwc_background_check', 'nonce');
@@ -900,13 +880,13 @@ class mulopimfwc_License_Manager
                                 ) . '</a>';
                             endif;
                             ?>
-                            <button type="submit" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to deactivate your license?', 'multi-location-product-and-inventory-management-pro')); ?>')" class="button button-primary" style="background: #eef1f6;color:#24262a;display: inline-flex;align-items: center;gap: 8px;margin-top: 15px;padding: 6px 20px;border: 1px solid #e3e3e3;">
+                            <button type="submit" data-mulopimfwc-license-confirm="<?php echo esc_attr__('Are you sure you want to deactivate your license?', 'multi-location-product-and-inventory-management-pro'); ?>" class="button button-primary" style="background: #eef1f6;color:#24262a;display: inline-flex;align-items: center;gap: 8px;margin-top: 15px;padding: 6px 20px;border: 1px solid #e3e3e3;">
                                 <svg width="20" height="20" viewBox="0 0 0.8 0.8" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M.564.135a.031.031 0 0 0-.03.055.281.281 0 1 1-.27.001L.265.19A.031.031 0 0 0 .25.131a.02.02 0 0 0-.015.004.344.344 0 1 0 .331.001zM.399.382A.03.03 0 0 0 .43.351V.05a.031.031 0 0 0-.063 0v.301c0 .017.014.031.031.031" />
                                 </svg>
                                 <?php echo esc_html__('Deactivate License', 'multi-location-product-and-inventory-management-pro'); ?>
                             </button>
-                            <button type="submit" onclick="checkForUpdates()" id="check-updates-btn" class="button button-primary" style="background: #2560e8; display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; padding: 6px 20px;">
+                            <button type="submit" id="check-updates-btn" class="button button-primary" style="background: #2560e8; display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; padding: 6px 20px;">
                                 <svg fill="#fff" height="20" width="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12.8 12.8" xml:space="preserve">
                                     <path d="M8.145 0A4.656 4.656 0 0 0 3.49 4.655c0 .838.225 1.62.61 2.3l-4.1 4.1.583 1.163 1.162.582 4.1-4.1c.678.388 1.463.61 2.3.61a4.656 4.656 0 0 0 0-9.31m0 7.855a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4" />
                                 </svg>
@@ -1094,48 +1074,6 @@ class mulopimfwc_License_Manager
                                 <button type="button" class="button button-secondary" id="mulopimfwc-remove-license-btn" style="margin-left:10px;">
                                     <?php echo esc_html__('Remove License', 'multi-location-product-and-inventory-management-pro'); ?>
                                 </button>
-                                <script>
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        var removeBtn = document.getElementById('mulopimfwc-remove-license-btn');
-                                        if (removeBtn) {
-                                            removeBtn.addEventListener('click', function(e) {
-                                                e.preventDefault();
-                                                if (confirm('Are you sure you want to remove the license from this site?')) {
-                                                    removeBtn.textContent = 'Removing...';
-                                                    removeBtn.disabled = true;
-                                                    var xhr = new XMLHttpRequest();
-                                                    xhr.open('POST', ajaxurl, true);
-                                                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                                                    xhr.onreadystatechange = function() {
-                                                        if (xhr.readyState === 4) {
-                                                            if (xhr.status === 200) {
-                                                                removeBtn.textContent = 'Success';
-                                                                removeBtn.style.backgroundColor = '#28a745';
-                                                                removeBtn.style.borderColor = '#28a745';
-                                                                setTimeout(function() {
-                                                                    removeBtn.style.transition = 'opacity 0.5s';
-                                                                    removeBtn.style.opacity = '0';
-                                                                    setTimeout(function() {
-                                                                        removeBtn.style.display = 'none';
-                                                                    }, 500);
-                                                                }, 800);
-                                                                var licenseInput = document.getElementById('mulopimfwc_license_key');
-                                                                if (licenseInput) {
-                                                                    licenseInput.value = '';
-                                                                }
-                                                            } else {
-                                                                removeBtn.textContent = 'Remove License';
-                                                                removeBtn.disabled = false;
-                                                                alert('Failed to remove license. Please try again.');
-                                                            }
-                                                        }
-                                                    };
-                                                    xhr.send('action=mulopimfwc_remove_license&nonce=<?php echo esc_js( wp_create_nonce( 'mulopimfwc_remove_license_nonce' ) ); ?>');
-                                                }
-                                            });
-                                        }
-                                    });
-                                </script>
                             <?php endif; ?>
 
                         <?php endif; ?>
@@ -1157,75 +1095,6 @@ class mulopimfwc_License_Manager
                 </span>
             </p>
 
-            <style>
-                .license-status {
-                    padding: 8px 12px;
-                    border-radius: 4px;
-                    display: inline-block;
-                    font-size: 14px;
-                }
-
-                .license-status-valid {
-                    background-color: #d4edda;
-                    color: #155724;
-                    border: 1px solid #c3e6cb;
-                }
-
-                .license-status-invalid {
-                    background-color: #f8d7da;
-                    color: #721c24;
-                    border: 1px solid #f5c6cb;
-                }
-
-                .license-status .dashicons {
-                    width: 16px;
-                    height: 16px;
-                    font-size: 16px;
-                    line-height: 1;
-                    margin-right: 4px;
-                    vertical-align: text-bottom;
-                }
-            </style>
-
-            <script>
-                var checkUpdatesCheckingLabel = <?php echo wp_json_encode(__('Checking...', 'multi-location-product-and-inventory-management-pro')); ?>;
-                var checkUpdatesLatestLabel = <?php echo wp_json_encode(__('You have the latest version installed.', 'multi-location-product-and-inventory-management-pro')); ?>;
-
-                function checkForUpdates() {
-                    var btn = document.getElementById('check-updates-btn');
-                    var originalText = btn.textContent;
-                    btn.textContent = checkUpdatesCheckingLabel;
-                    btn.disabled = true;
-
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('POST', ajaxurl, true);
-                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                    xhr.onreadystatechange = function() {
-                        if (xhr.readyState === 4) {
-                            btn.textContent = originalText;
-                            btn.disabled = false;
-
-                            if (xhr.status === 200) {
-                                var response = JSON.parse(xhr.responseText);
-                                if (response.success) {
-                                    if (response.data.update_available) {
-                                        alert('Update available! Version ' + response.data.new_version + ' is ready to install.');
-                                        location.reload();
-                                    } else {
-                                        alert(checkUpdatesLatestLabel);
-                                    }
-                                } else {
-                                    alert('Error checking for updates: ' + response.data);
-                                }
-                            } else {
-                                alert('Error checking for updates. Please try again.');
-                            }
-                        }
-                    };
-
-                    xhr.send('action=mulopimfwc_check_updates&nonce=' + '<?php echo esc_js( wp_create_nonce( 'mulopimfwc_check_updates' ) ); ?>');
-                }
-            </script>
         </div>
 <?php
     }
