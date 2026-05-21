@@ -4218,14 +4218,6 @@ class mulopimfwc_settings
             'mulopimfwc_filter_settings_section'
         );
 
-        // add_settings_field(
-        //     'mulopimfwc_filtered_sections',
-        //     __('Apply Location Filtering To', 'multi-location-product-and-inventory-management-pro'),
-        //     [$this, 'filtered_sections_field_callback'],
-        //     'lwp-product-filtering-settings',
-        //     'mulopimfwc_filter_settings_section'
-        // );
-
         // Add Order Fulfillment section
         add_settings_section(
             'mulopimfwc_order_fulfillment_section',

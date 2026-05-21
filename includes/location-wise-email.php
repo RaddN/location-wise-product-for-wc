@@ -23,9 +23,6 @@ class MULOPIMFWC_Location_Wise_Email {
         add_filter('woocommerce_email_recipient_cancelled_order', [$this, 'maybe_location_recipient'], 10, 2);
         add_filter('woocommerce_email_recipient_failed_order',    [$this, 'maybe_location_recipient'], 10, 2);
         add_filter('woocommerce_email_recipient_on_hold_order',   [$this, 'maybe_location_recipient'], 10, 2);
-        // Add more email IDs here if you also want routing for them:
-        // add_filter('woocommerce_email_recipient_on_hold_order',  [$this, 'maybe_location_recipient'], 10, 2);
-        // add_filter('woocommerce_email_recipient_completed_order',[$this, 'maybe_location_recipient'], 10, 2);
     }
 
     /* -------------------------

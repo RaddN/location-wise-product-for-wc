@@ -2431,51 +2431,6 @@ add_action('woocommerce_single_product_summary', function () {
     }
 }, 5); // Priority 5 to show it near the top
 
-// disable purchase
-
-// Also prevent adding to cart through direct URLs or AJAX
-// add_filter('woocommerce_add_to_cart_validation', function($valid, $product_id, $quantity) {
-//     $location_slug = mulopimfwc_get_current_store_location();
-
-//     // If no location is selected or "all products" is selected, keep default validation
-//     if (!$location_slug || $location_slug === 'all-products') {
-//         return $valid;
-//     }
-
-//     // Check if the product belongs to the current location
-// $terms = array_map('rawurldecode',wp_get_object_terms($product_id, 'mulopimfwc_store_location', ['fields' => 'slugs']));
-
-
-//     if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
-//         // Product is not available in the current location
-//         wc_add_notice(__('This product isn\'t available for your current location and cannot be purchased.', 'multi-location-product-and-inventory-management-pro'), 'error');
-//         return false;
-//     }
-
-//     return $valid;
-// }, 10, 3);
-
-// Hide add to cart button on shop/archive pages for unavailable products
-// add_filter('woocommerce_loop_add_to_cart_link', function($html, $product) {
-//     $location_slug = mulopimfwc_get_current_store_location();
-
-//     // If no location is selected or "all products" is selected, show normal button
-//     if (!$location_slug || $location_slug === 'all-products') {
-//         return $html;
-//     }
-
-//     // Check if the product belongs to the current location
-// $terms = array_map('rawurldecode',wp_get_object_terms($product->get_id(), 'mulopimfwc_store_location', ['fields' => 'slugs']));
-
-
-//     if (is_wp_error($terms) || !in_array($location_slug, $terms)) {
-//         // Replace add to cart button with unavailable text
-//         return '<span class="button unavailable-product">' . __('Unavailable at your location', 'multi-location-product-and-inventory-management-pro') . '</span>';
-//     }
-
-//     return $html;
-// }, 10, 2);
-
 // if variation product & product is not available in current location hide add to cart button form.variations_form.cart { display: none; }
 add_action('wp_footer', function () {
     if (is_product()) {

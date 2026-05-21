@@ -9288,7 +9288,6 @@ if (!function_exists('mulopimfwc_get_values')) {
             return $query_args;
         }
 
-        // add_settings_link
         public function add_settings_link($links)
         {
             if (!is_array($links)) {

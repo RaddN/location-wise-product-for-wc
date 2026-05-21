@@ -3299,57 +3299,6 @@ function mulopimfwc_add_export_button_script()
     }
 }
 
-// Add data size info to settings page
-// add_action('mulopimfwc_after_customer_insights_settings', 'mulopimfwc_display_data_size_info');
-
-function mulopimfwc_display_data_size_info()
-{
-    $instance = Mulopimfwc_Customer_Location_Insights::get_instance();
-    $info = $instance->get_data_size_info();
-    ?>
-    <div class="mulopimfwc-data-info" style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-left: 4px solid var(--lwp-primary, #667eea); border-radius: 4px;">
-        <h3 style="margin-top: 0;"><?php esc_html_e('Analytics Data Summary', 'multi-location-product-and-inventory-management-pro'); ?></h3>
-        <ul style="margin: 0; list-style: none; padding: 0;">
-            <li><strong><?php esc_html_e('Tracking Entries:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($info['tracking_entries']); ?> / <?php echo esc_html(Mulopimfwc_Customer_Location_Insights::MAX_TRACKING_ENTRIES); ?></li>
-            <li><strong><?php esc_html_e('Locations Tracked:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($info['total_locations']); ?></li>
-            <li><strong><?php esc_html_e('Products with Data:', 'multi-location-product-and-inventory-management-pro'); ?></strong> <?php echo esc_html($info['total_products']); ?></li>
-            <li style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
-                <em><?php esc_html_e('Data is automatically cleaned every 24 hours. Old entries (90+ days) are removed.', 'multi-location-product-and-inventory-management-pro'); ?></em>
-            </li>
-        </ul>
-
-        <button type="button" class="button button-secondary" id="mulopimfwc-clear-analytics" style="margin-top: 15px;">
-            <?php esc_html_e('Clear All Analytics Data', 'multi-location-product-and-inventory-management-pro'); ?>
-        </button>
-
-        <script type="text/javascript">
-            jQuery(document).ready(function($) {
-                $('#mulopimfwc-clear-analytics').on('click', function() {
-                    if (confirm('<?php echo esc_js(__('Are you sure you want to clear all analytics data? This action cannot be undone.', 'multi-location-product-and-inventory-management-pro')); ?>')) {
-                        $.ajax({
-                            url: ajaxurl,
-                            type: 'POST',
-                            data: {
-                                action: 'mulopimfwc_clear_analytics_data',
-                                nonce: '<?php echo esc_js(wp_create_nonce('mulopimfwc_clear_analytics')); ?>'
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    alert('<?php echo esc_js(__('Analytics data cleared successfully.', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                    location.reload();
-                                } else {
-                                    alert('<?php echo esc_js(__('Failed to clear analytics data.', 'multi-location-product-and-inventory-management-pro')); ?>');
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-        </script>
-    </div>
-<?php
-}
-
 // AJAX handler for clearing analytics data
 add_action('wp_ajax_mulopimfwc_clear_analytics_data', 'mulopimfwc_ajax_clear_analytics_data');
 
