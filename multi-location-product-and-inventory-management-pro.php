@@ -4211,12 +4211,12 @@ if (!function_exists('mulopimfwc_get_values')) {
                             <tr>
                                 <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><?php echo esc_html($transfer['from']); ?></td>
                                 <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><?php echo esc_html($transfer['to']); ?></td>
-                                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;"><?php echo wc_price($transfer['cost']); ?></td>
+                                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;"><?php echo wp_kses_post(wc_price($transfer['cost'])); ?></td>
                             </tr>
                         <?php endforeach; ?>
                         <tr>
                             <td colspan="2" style="padding: 8px; font-weight: bold; background: #f8fafc;"><?php esc_html_e('Total Transfer Cost', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                            <td style="padding: 8px; font-weight: bold; text-align: right; background: #f8fafc;"><?php echo wc_price($total); ?></td>
+                            <td style="padding: 8px; font-weight: bold; text-align: right; background: #f8fafc;"><?php echo wp_kses_post(wc_price($total)); ?></td>
                         </tr>
                     </tbody>
                 </table>
@@ -5212,8 +5212,6 @@ if (!function_exists('mulopimfwc_get_values')) {
                 echo '>' . esc_html__('No location assigned', 'multi-location-product-and-inventory-management-pro') . '</option>';
                 foreach ($available_locations as $location) {
                     $location_slug = rawurldecode($location->slug);
-                    $selected = ($current_location === $location_slug) ? 'selected' : '';
-                    
                     // Get stock for this location
                     $location_stock = get_post_meta($target_id, '_location_stock_' . $location->term_id, true);
                     $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location->term_id, true);
@@ -5249,12 +5247,9 @@ if (!function_exists('mulopimfwc_get_values')) {
                     }
                     
                     // Disable option if insufficient stock and backorders not allowed
-                    $disabled = '';
-                    if ($location_stock !== '' && (int) $location_stock < $current_quantity && $location_backorders === 'off') {
-                        $disabled = 'disabled';
-                    }
+                    $is_disabled = $location_stock !== '' && (int) $location_stock < $current_quantity && $location_backorders === 'off';
                     
-                    echo '<option value="' . esc_attr($location_slug) . '" ' . $selected . ' ' . $disabled . '>' . esc_html($location->name) . $stock_display . '</option>';
+                    echo '<option value="' . esc_attr($location_slug) . '"' . selected($current_location, $location_slug, false) . disabled($is_disabled, true, false) . '>' . esc_html($location->name) . esc_html($stock_display) . '</option>';
                 }
                 echo '</select>';
                 echo '<span class="mulopimfwc-location-updating" style="display:none; margin-left: 10px; color: #2271b1;">' . esc_html__('Updating...', 'multi-location-product-and-inventory-management-pro') . '</span>';
@@ -5972,12 +5967,12 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                 foreach ($items_by_location as $location => $data) {
                     $item_count = count($data['items']);
-                    echo sprintf(
-                        /* translators: 1: location name (may include HTML), 2: item count */
-                        esc_html__('%1$s: %2$d item(s)', 'multi-location-product-and-inventory-management-pro'),
+                    echo wp_kses_post(sprintf(
+                        /* translators: 1: location name, 2: item count */
+                        __('%1$s: %2$d item(s)', 'multi-location-product-and-inventory-management-pro'),
                         '<strong>' . esc_html($data['location_name']) . '</strong>',
-                        $item_count
-                    ) . '<br>';
+                        absint($item_count)
+                    )) . '<br>';
                 }
 
                 echo '</div>';
@@ -6367,6 +6362,43 @@ if (!function_exists('mulopimfwc_get_values')) {
         }
 
         /**
+         * Allow the WooCommerce cart HTML fragments this class renders.
+         *
+         * @return array<string, array<string, bool>>
+         */
+        private function get_cart_fragment_allowed_html(): array
+        {
+            $allowed = wp_kses_allowed_html('post');
+
+            $allowed['a']['data-product_id'] = true;
+            $allowed['a']['data-product_sku'] = true;
+            $allowed['a']['data-cart_item_key'] = true;
+            $allowed['a']['aria-label'] = true;
+
+            $allowed['input'] = [
+                'type'         => true,
+                'name'         => true,
+                'value'        => true,
+                'class'        => true,
+                'id'           => true,
+                'min'          => true,
+                'max'          => true,
+                'step'         => true,
+                'size'         => true,
+                'title'        => true,
+                'placeholder'  => true,
+                'inputmode'    => true,
+                'autocomplete' => true,
+                'pattern'      => true,
+                'readonly'     => true,
+                'disabled'     => true,
+                'aria-label'   => true,
+            ];
+
+            return $allowed;
+        }
+
+        /**
          * Display grouped mini cart
          */
         public function display_grouped_mini_cart()
@@ -6413,22 +6445,22 @@ if (!function_exists('mulopimfwc_get_values')) {
                                 ?>
                                 <div class="woocommerce-mini-cart-item mini_cart_item">
                                     <?php
-                                    echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
+                                    echo wp_kses(apply_filters('woocommerce_cart_item_remove_link', sprintf(
                                         '<a href="%s" class="remove remove_from_cart_button" aria-label="%s" data-product_id="%s" data-cart_item_key="%s" data-product_sku="%s">&times;</a>',
                                         esc_url(wc_get_cart_remove_url($cart_item_key)),
                                         esc_html__('Remove this item', 'multi-location-product-and-inventory-management-pro'),
-                                        $product_id,
-                                        $cart_item_key,
-                                        $product->get_sku()
-                                    ), $cart_item_key);
+                                        esc_attr($product_id),
+                                        esc_attr($cart_item_key),
+                                        esc_attr($product->get_sku())
+                                    ), $cart_item_key), $this->get_cart_fragment_allowed_html());
                                     ?>
 
                                     <?php
                                     $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $product->get_image(), $cart_item, $cart_item_key);
                                     if (!$product->is_visible()) {
-                                        echo $thumbnail;
+                                        echo wp_kses($thumbnail, $this->get_cart_fragment_allowed_html());
                                     } else {
-                                        printf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $thumbnail);
+                                        echo '<a href="' . esc_url($product->get_permalink($cart_item)) . '">' . wp_kses($thumbnail, $this->get_cart_fragment_allowed_html()) . '</a>';
                                     }
                                     ?>
 
@@ -6443,7 +6475,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                         do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
 
                                         // Meta data
-                                        echo wc_get_formatted_cart_item_data($cart_item);
+                                        echo wp_kses(wc_get_formatted_cart_item_data($cart_item), $this->get_cart_fragment_allowed_html());
 
                                         // Backorder notification
                                         if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
@@ -6452,7 +6484,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                         ?>
 
                                         <div class="mini_cart_item_quantity">
-                                            <?php echo apply_filters('woocommerce_widget_cart_item_quantity', '<span class="quantity">' . sprintf('%s &times; %s', $cart_item['quantity'], $product->get_price_html()) . '</span>', $cart_item, $cart_item_key); ?>
+                                            <?php echo wp_kses(apply_filters('woocommerce_widget_cart_item_quantity', '<span class="quantity">' . sprintf('%s &times; %s', esc_html($cart_item['quantity']), $product->get_price_html()) . '</span>', $cart_item, $cart_item_key), $this->get_cart_fragment_allowed_html()); ?>
                                         </div>
                                     </div>
                                 </div>
@@ -6576,18 +6608,18 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                 do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
 
                                                 // Meta data
-                                                echo wc_get_formatted_cart_item_data($cart_item);
+                                                echo wp_kses(wc_get_formatted_cart_item_data($cart_item), $this->get_cart_fragment_allowed_html());
 
                                                 // Backorder notification
                                                 if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
                                                     echo wp_kses_post(apply_filters('woocommerce_cart_item_backorder_notification', '<p class="backorder_notification">' . mulopimfwc_get_text_value('text_variation_backorder') . '</p>', $product_id));
                                                 }
                                                 ?>
-                                                <strong class="product-quantity"><?php echo apply_filters('woocommerce_checkout_cart_item_quantity', '&nbsp;&times;&nbsp;' . $cart_item['quantity'], $cart_item, $cart_item_key); ?></strong>
+                                                <strong class="product-quantity"><?php echo wp_kses(apply_filters('woocommerce_checkout_cart_item_quantity', '&nbsp;&times;&nbsp;' . esc_html($cart_item['quantity']), $cart_item, $cart_item_key), $this->get_cart_fragment_allowed_html()); ?></strong>
                                             </td>
                                             <td class="product-total">
                                                 <?php
-                                                echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key);
+                                                echo wp_kses(apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key), $this->get_cart_fragment_allowed_html());
                                                 ?>
                                             </td>
                                         </tr>
@@ -6662,22 +6694,22 @@ if (!function_exists('mulopimfwc_get_values')) {
                                             <tr class="woocommerce-cart-form__cart-item cart_item">
                                                 <td class="product-remove">
                                                     <?php
-                                                    echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
+                                                    echo wp_kses(apply_filters('woocommerce_cart_item_remove_link', sprintf(
                                                         '<a href="%s" class="remove" aria-label="%s" data-product_id="%s" data-product_sku="%s">&times;</a>',
                                                         esc_url(wc_get_cart_remove_url($cart_item_key)),
                                                         esc_html__('Remove this item', 'multi-location-product-and-inventory-management-pro'),
-                                                        $product_id,
-                                                        $product->get_sku()
-                                                    ), $cart_item_key);
+                                                        esc_attr($product_id),
+                                                        esc_attr($product->get_sku())
+                                                    ), $cart_item_key), $this->get_cart_fragment_allowed_html());
                                                     ?>
                                                 </td>
                                                 <td class="product-thumbnail">
                                                     <?php
                                                     $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $product->get_image(), $cart_item, $cart_item_key);
                                                     if (!$product->is_visible()) {
-                                                        echo $thumbnail;
+                                                        echo wp_kses($thumbnail, $this->get_cart_fragment_allowed_html());
                                                     } else {
-                                                        printf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $thumbnail);
+                                                        echo '<a href="' . esc_url($product->get_permalink($cart_item)) . '">' . wp_kses($thumbnail, $this->get_cart_fragment_allowed_html()) . '</a>';
                                                     }
                                                     ?>
                                                 </td>
@@ -6692,7 +6724,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                     do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
 
                                                     // Meta data
-                                                    echo wc_get_formatted_cart_item_data($cart_item);
+                                                    echo wp_kses(wc_get_formatted_cart_item_data($cart_item), $this->get_cart_fragment_allowed_html());
 
                                                     // Backorder notification
                                                     if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
@@ -6702,13 +6734,13 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                 </td>
                                                 <td class="product-price" data-title="<?php esc_attr_e('Price', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <?php
-                                                    echo apply_filters('woocommerce_cart_item_price', WC()->cart->get_product_price($product), $cart_item, $cart_item_key);
+                                                    echo wp_kses(apply_filters('woocommerce_cart_item_price', WC()->cart->get_product_price($product), $cart_item, $cart_item_key), $this->get_cart_fragment_allowed_html());
                                                     ?>
                                                 </td>
                                                 <td class="product-quantity" data-title="<?php esc_attr_e('Quantity', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <?php
                                                     if ($product->is_sold_individually()) {
-                                                        $product_quantity = sprintf('1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key);
+                                                        $product_quantity = sprintf('1 <input type="hidden" name="cart[%s][qty]" value="1" />', esc_attr($cart_item_key));
                                                     } else {
                                                         $product_quantity = woocommerce_quantity_input(
                                                             array(
@@ -6723,12 +6755,12 @@ if (!function_exists('mulopimfwc_get_values')) {
                                                         );
                                                     }
 
-                                                    echo apply_filters('woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item);
+                                                    echo wp_kses(apply_filters('woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item), $this->get_cart_fragment_allowed_html());
                                                     ?>
                                                 </td>
                                                 <td class="product-subtotal" data-title="<?php esc_attr_e('Subtotal', 'multi-location-product-and-inventory-management-pro'); ?>">
                                                     <?php
-                                                    echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key);
+                                                    echo wp_kses(apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key), $this->get_cart_fragment_allowed_html());
                                                     ?>
                                                 </td>
                                             </tr>
@@ -6791,22 +6823,22 @@ if (!function_exists('mulopimfwc_get_values')) {
                                 <div class="woocommerce-cart-form__cart-item cart_item">
                                     <div class="product-remove">
                                         <?php
-                                        echo apply_filters('woocommerce_cart_item_remove_link', sprintf(
+                                        echo wp_kses(apply_filters('woocommerce_cart_item_remove_link', sprintf(
                                             '<a href="%s" class="remove" aria-label="%s" data-product_id="%s" data-product_sku="%s">&times;</a>',
                                             esc_url(wc_get_cart_remove_url($cart_item_key)),
                                             esc_html__('Remove this item', 'multi-location-product-and-inventory-management-pro'),
-                                            $product_id,
-                                            $product->get_sku()
-                                        ), $cart_item_key);
+                                            esc_attr($product_id),
+                                            esc_attr($product->get_sku())
+                                        ), $cart_item_key), $this->get_cart_fragment_allowed_html());
                                         ?>
                                     </div>
                                     <div class="product-thumbnail">
                                         <?php
                                         $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $product->get_image(), $cart_item, $cart_item_key);
                                         if (!$product->is_visible()) {
-                                            echo $thumbnail;
+                                            echo wp_kses($thumbnail, $this->get_cart_fragment_allowed_html());
                                         } else {
-                                            printf('<a href="%s">%s</a>', esc_url($product->get_permalink($cart_item)), $thumbnail);
+                                            echo '<a href="' . esc_url($product->get_permalink($cart_item)) . '">' . wp_kses($thumbnail, $this->get_cart_fragment_allowed_html()) . '</a>';
                                         }
                                         ?>
                                     </div>
@@ -6821,7 +6853,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                                         do_action('woocommerce_after_cart_item_name', $cart_item, $cart_item_key);
 
                                         // Meta data
-                                        echo wc_get_formatted_cart_item_data($cart_item);
+                                        echo wp_kses(wc_get_formatted_cart_item_data($cart_item), $this->get_cart_fragment_allowed_html());
 
                                         // Backorder notification
                                         if ($product->backorders_require_notification() && $product->is_on_backorder($cart_item['quantity'])) {
@@ -6831,13 +6863,13 @@ if (!function_exists('mulopimfwc_get_values')) {
                                     </div>
                                     <div class="product-price">
                                         <?php
-                                        echo apply_filters('woocommerce_cart_item_price', WC()->cart->get_product_price($product), $cart_item, $cart_item_key);
+                                        echo wp_kses(apply_filters('woocommerce_cart_item_price', WC()->cart->get_product_price($product), $cart_item, $cart_item_key), $this->get_cart_fragment_allowed_html());
                                         ?>
                                     </div>
                                     <div class="product-quantity">
                                         <?php
                                         if ($product->is_sold_individually()) {
-                                            $product_quantity = sprintf('1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key);
+                                            $product_quantity = sprintf('1 <input type="hidden" name="cart[%s][qty]" value="1" />', esc_attr($cart_item_key));
                                         } else {
                                             $product_quantity = woocommerce_quantity_input(
                                                 array(
@@ -6852,12 +6884,12 @@ if (!function_exists('mulopimfwc_get_values')) {
                                             );
                                         }
 
-                                        echo apply_filters('woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item);
+                                        echo wp_kses(apply_filters('woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item), $this->get_cart_fragment_allowed_html());
                                         ?>
                                     </div>
                                     <div class="product-subtotal">
                                         <?php
-                                        echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key);
+                                        echo wp_kses(apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($product, $cart_item['quantity']), $cart_item, $cart_item_key), $this->get_cart_fragment_allowed_html());
                                         ?>
                                     </div>
                                 </div>

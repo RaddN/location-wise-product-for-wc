@@ -121,7 +121,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 										$rating = (int) get_comment_meta( $c->comment_ID, 'rating', true );
 										$author = get_comment_author( $c );
 										$date   = get_comment_date( wc_date_format(), $c );
-										$text   = wpautop( wp_kses_post( $c->comment_content ) );
+										$text   = wpautop( $c->comment_content );
 										?>
 										<li class="mulopimfwc-neighbour-reviews__item">
 											<div class="mulopimfwc-neighbour-reviews__meta">
@@ -145,7 +145,7 @@ if ( ! class_exists( 'MULOPIMFWC_Location_Wise_Reviews' ) ) {
 												<?php endif; ?>
 											</div>
 											<div class="mulopimfwc-neighbour-reviews__content">
-												<?php echo $text; // already escaped via wpautop/wp_kses_post ?>
+												<?php echo wp_kses_post( $text ); ?>
 											</div>
 										</li>
 									<?php endforeach; ?>

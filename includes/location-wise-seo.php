@@ -205,9 +205,9 @@ if (!class_exists('MULOPIMFWC_Location_Wise_SEO')) {
 
             $product_id = is_singular('product') ? get_the_ID() : 0;
             $desc = $this->build_description_with_location('', $product_id);
-            $desc = esc_attr(mb_substr(trim($desc), 0, 160));
+            $desc = mb_substr(trim($desc), 0, 160);
             if ($desc !== '') {
-                echo '<meta name="description" content="' . $desc . '">' . "\n";
+                echo '<meta name="description" content="' . esc_attr($desc) . '">' . "\n";
             }
         }
 

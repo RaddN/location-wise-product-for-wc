@@ -591,7 +591,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                 </svg>
                                 <?php echo esc_html($location->name); ?>
                             </h1>
-                            <?php echo $this->render_status_badge($status); ?>
+                            <?php echo wp_kses($this->render_status_badge($status), $this->get_status_badge_allowed_html()); ?>
                         </div>
 
                         <?php if ($location->description): ?>
@@ -814,7 +814,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                                 </svg>
                                             </a>
                                         </h4>
-                                        <?php echo $this->render_status_badge($status, true); ?>
+                                        <?php echo wp_kses($this->render_status_badge($status, true), $this->get_status_badge_allowed_html()); ?>
                                     </div>
                                 </div>
 
@@ -914,7 +914,7 @@ class MULOPIMFWC_Frontend_Location_Information
 
             <div class="mulopimfwc-overlay-header">
                 <h4><?php echo esc_html($location->name); ?></h4>
-                <?php echo $this->render_status_badge($status, true); ?>
+                <?php echo wp_kses($this->render_status_badge($status, true), $this->get_status_badge_allowed_html()); ?>
             </div>
 
             <?php if ($location->description): ?>
@@ -1064,7 +1064,7 @@ class MULOPIMFWC_Frontend_Location_Information
             </h3>
 
             <div class="mulopimfwc-hours-status">
-                <?php echo $this->render_status_badge($status, true); ?>
+                <?php echo wp_kses($this->render_status_badge($status, true), $this->get_status_badge_allowed_html()); ?>
 
                 <?php if ($status['open'] && $status['next_change']): ?>
                     <div class="mulopimfwc-next-change">
@@ -1181,7 +1181,7 @@ class MULOPIMFWC_Frontend_Location_Information
                         <h4 class="mulopimfwc-compact-title">
                             <?php echo esc_html($location->name); ?>
                         </h4>
-                        <?php echo $this->render_status_badge($status, true); ?>
+                        <?php echo wp_kses($this->render_status_badge($status, true), $this->get_status_badge_allowed_html()); ?>
                     </div>
                 </div>
 
@@ -1273,6 +1273,33 @@ class MULOPIMFWC_Frontend_Location_Information
         </span>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Get allowed HTML for location status badges.
+     *
+     * @return array
+     */
+    private function get_status_badge_allowed_html()
+    {
+        return [
+            'span'   => [
+                'class' => true,
+            ],
+            'svg'    => [
+                'class'   => true,
+                'fill'    => true,
+                'height'  => true,
+                'viewbox' => true,
+                'width'   => true,
+            ],
+            'circle' => [
+                'cx'   => true,
+                'cy'   => true,
+                'fill' => true,
+                'r'    => true,
+            ],
+        ];
     }
 
     /**
@@ -1469,15 +1496,17 @@ class MULOPIMFWC_Frontend_Location_Information
                     <?php if ($paginate && $query->max_num_pages > 1) : ?>
                         <nav class="woocommerce-pagination mulopimfwc-location-products-pagination">
                             <?php
-                            echo paginate_links([
-                                'base' => $pagination_base,
-                                'format' => '',
-                                'current' => $paged,
-                                'total' => (int) $query->max_num_pages,
-                                'prev_text' => '&larr;',
-                                'next_text' => '&rarr;',
-                                'type' => 'list',
-                            ]);
+                            echo wp_kses_post(
+                                paginate_links([
+                                    'base' => $pagination_base,
+                                    'format' => '',
+                                    'current' => $paged,
+                                    'total' => (int) $query->max_num_pages,
+                                    'prev_text' => '&larr;',
+                                    'next_text' => '&rarr;',
+                                    'type' => 'list',
+                                ])
+                            );
                             ?>
                         </nav>
                     <?php endif; ?>
@@ -1568,7 +1597,7 @@ class MULOPIMFWC_Frontend_Location_Information
             }
 
             if ($this->shortcode_bool($atts['show_products'], true)) {
-                echo $this->render_location_products_for_term($term, $atts);
+                echo wp_kses_post($this->render_location_products_for_term($term, $atts));
             }
             ?>
         </div>
@@ -1840,7 +1869,7 @@ class MULOPIMFWC_Frontend_Location_Information
                                                 </a>
                                             <?php endif; ?>
                                         </h4>
-                                        <?php echo $this->render_status_badge($status, true); ?>
+                                        <?php echo wp_kses($this->render_status_badge($status, true), $this->get_status_badge_allowed_html()); ?>
                                     </div>
                                 </div>
 

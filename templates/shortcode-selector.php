@@ -54,6 +54,39 @@ $translate_saved_location_label = function ($label) use ($saved_location_label_m
     return $raw_label;
 };
 
+$mulopimfwc_shortcode_svg_allowed_html = array(
+    'svg'    => array(
+        'aria-hidden' => true,
+        'class'       => true,
+        'focusable'   => true,
+        'height'      => true,
+        'style'       => true,
+        'viewbox'     => true,
+        'viewBox'     => true,
+        'width'       => true,
+        'xmlns'       => true,
+    ),
+    'path'   => array(
+        'clip-rule' => true,
+        'd'         => true,
+        'fill'      => true,
+        'fill-rule' => true,
+    ),
+    'circle' => array(
+        'cx'   => true,
+        'cy'   => true,
+        'fill' => true,
+        'r'    => true,
+    ),
+    'rect'   => array(
+        'fill'   => true,
+        'height' => true,
+        'width'  => true,
+        'x'      => true,
+        'y'      => true,
+    ),
+);
+
 $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
 ?>
 <div class="lwp-shortcode-store-selector <?php echo esc_attr($atts['class']); ?>" data-selector-instance="<?php echo esc_attr($selector_instance_id); ?>" style="max-width: <?php echo esc_attr($max_width); ?>;">
@@ -193,8 +226,8 @@ $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
                                             <span class="location-address"><?php echo esc_html($location['address']); ?></span>
                                         </div>
                                         <div class="location-actions">
-                                            <button type="button" class="edit-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Edit location', 'multi-location-product-and-inventory-management-pro'); ?>"><?php echo mulopimfwc_svg_icon('pencil'); ?></button>
-                                            <button type="button" class="delete-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Delete location', 'multi-location-product-and-inventory-management-pro'); ?>"><?php echo mulopimfwc_svg_icon('trash'); ?></button>
+                                            <button type="button" class="edit-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Edit location', 'multi-location-product-and-inventory-management-pro'); ?>"><?php echo wp_kses(mulopimfwc_svg_icon('pencil'), $mulopimfwc_shortcode_svg_allowed_html); ?></button>
+                                            <button type="button" class="delete-location-btn" data-location-id="<?php echo esc_attr($location['id']); ?>" aria-label="<?php esc_attr_e('Delete location', 'multi-location-product-and-inventory-management-pro'); ?>"><?php echo wp_kses(mulopimfwc_svg_icon('trash'), $mulopimfwc_shortcode_svg_allowed_html); ?></button>
                                         </div>
                                     </div>
                                 <?php
@@ -664,12 +697,11 @@ $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
                         // Display parent locations and their children
                         foreach ($parent_locations as $parent) {
                             $child_count = isset($child_counts[$parent->term_id]) ? $child_counts[$parent->term_id] : 0;
-                            $display_name = esc_html($parent->name);
+                            $display_name = $parent->name;
                             if ($show_count && $child_count > 0) {
-                                $display_name .= ' (' . $child_count . ')';
+                                $display_name .= ' (' . absint($child_count) . ')';
                             }
-                            $selected = ($parent->slug === $selected_location) ? 'selected' : '';
-                            echo '<option value="' . esc_attr($parent->slug) . '" ' . esc_html($selected) . '>' . $display_name . '</option>';
+                            echo '<option value="' . esc_attr($parent->slug) . '"' . selected($parent->slug, $selected_location, false) . '>' . esc_html($display_name) . '</option>';
                             // Check if this parent has children
                             if (isset($child_locations[$parent->term_id])) {
                                 foreach ($child_locations[$parent->term_id] as $child) {
@@ -710,7 +742,7 @@ $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
                 <div id="lwp-location-map" class="lwp-location-map"></div>
                 <div class="lwp-map-controls">
                     <button type="button" class="button button-primary lwp-continue-btn"><?php echo esc_html($shortcode_texts['continue']);
-                                                                                            echo mulopimfwc_svg_icon('right_arrow'); ?></button>
+                                                                                            echo wp_kses(mulopimfwc_svg_icon('right_arrow'), $mulopimfwc_shortcode_svg_allowed_html); ?></button>
                 </div>
             </div>
         </div>
@@ -720,7 +752,7 @@ $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
                 <div class="lwp-details-header">
                     <h4><?php echo esc_html($shortcode_texts['location_details']); ?></h4>
                     <p class="lwp-address-preview"></p>
-                    <span class="edit_location_map" style="cursor: pointer;"><?php echo mulopimfwc_svg_icon('pencil'); ?></span>
+                    <span class="edit_location_map" style="cursor: pointer;"><?php echo wp_kses(mulopimfwc_svg_icon('pencil'), $mulopimfwc_shortcode_svg_allowed_html); ?></span>
                 </div>
                 <form id="lwp-location-form">
                     <?php wp_nonce_field('mulopimfwc_save_user_location', 'mulopimfwc_save_user_location_nonce'); ?>
@@ -753,9 +785,9 @@ $selector_instance_id = wp_unique_id('lwp-shortcode-selector-');
                     <input type="hidden" id="lwp-location-postal" name="postal">
                     <input type="hidden" id="lwp-location-country" name="country">
                     <div class="lwp-form-actions">
-                        <button type="button" class="button lwp-back-btn"><?php echo mulopimfwc_svg_icon('left_arrow');
+                        <button type="button" class="button lwp-back-btn"><?php echo wp_kses(mulopimfwc_svg_icon('left_arrow'), $mulopimfwc_shortcode_svg_allowed_html);
                                                                             echo esc_html($shortcode_texts['back']); ?></button>
-                        <button type="submit" class="button button-primary"><?php echo mulopimfwc_svg_icon('save');
+                        <button type="submit" class="button button-primary"><?php echo wp_kses(mulopimfwc_svg_icon('save'), $mulopimfwc_shortcode_svg_allowed_html);
                                                                             echo esc_html($shortcode_texts['save_location']); ?></button>
                     </div>
                 </form>

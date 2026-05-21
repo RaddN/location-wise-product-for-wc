@@ -4665,6 +4665,81 @@ JS;
 
         return $output;
     }
+
+    /**
+     * Get allowed HTML for generated order location cell markup.
+     *
+     * @return array
+     */
+    private function get_order_location_cell_allowed_html(): array
+    {
+        return array(
+            'a'      => array(
+                'class' => true,
+                'href'  => true,
+            ),
+            'br'     => array(),
+            'div'    => array(
+                'class' => true,
+                'style' => true,
+            ),
+            'select' => array(
+                'class'         => true,
+                'data-order-id' => true,
+                'data-nonce'    => true,
+            ),
+            'span'   => array(
+                'aria-hidden' => true,
+                'class'       => true,
+                'style'       => true,
+            ),
+            'strong' => array(),
+            'option' => array(
+                'disabled' => true,
+                'selected' => true,
+                'value'    => true,
+            ),
+        );
+    }
+
+    /**
+     * Get allowed SVG markup for admin icons.
+     *
+     * @return array
+     */
+    private function get_svg_icon_allowed_html(): array
+    {
+        return array(
+            'svg'    => array(
+                'aria-hidden' => true,
+                'class'       => true,
+                'height'      => true,
+                'style'       => true,
+                'viewbox'     => true,
+                'width'       => true,
+                'xmlns'       => true,
+            ),
+            'circle' => array(
+                'cx'   => true,
+                'cy'   => true,
+                'fill' => true,
+                'r'    => true,
+            ),
+            'path'   => array(
+                'clip-rule' => true,
+                'd'         => true,
+                'fill-rule' => true,
+            ),
+            'rect'   => array(
+                'fill'   => true,
+                'height' => true,
+                'width'  => true,
+                'x'      => true,
+                'y'      => true,
+            ),
+        );
+    }
+
     /**
      * Display location in orders table column
      *
@@ -4693,18 +4768,27 @@ JS;
         $show_parent_link = !$this->is_current_user_location_manager();
 
         if ($is_split_parent) {
-            echo $this->render_split_parent_location_cell($order_obj);
+            echo wp_kses(
+                $this->render_split_parent_location_cell($order_obj),
+                $this->get_order_location_cell_allowed_html()
+            );
             return;
         }
 
         if ($is_split_child) {
-            echo $this->render_split_child_location_cell($order_obj, $is_manual_mode, $show_parent_link);
+            echo wp_kses(
+                $this->render_split_child_location_cell($order_obj, $is_manual_mode, $show_parent_link),
+                $this->get_order_location_cell_allowed_html()
+            );
             return;
         }
 
         if (empty($location_slug) && $is_manual_mode) {
             // Show quick assignment dropdown for unassigned orders
-            echo $this->render_quick_assignment_dropdown($order_obj);
+            echo wp_kses(
+                $this->render_quick_assignment_dropdown($order_obj),
+                $this->get_order_location_cell_allowed_html()
+            );
         } else {
             $location_label = $this->get_location_label($location_slug);
             echo esc_html($location_label !== '' ? $location_label : '—');
@@ -6094,10 +6178,10 @@ JS;
                     ) . ' ' . wp_kses_post(implode(', ', $links)) . '</div>';
                 } else {
                     $empty_message = is_array($allowed_slugs)
-                        ? esc_html__('No child orders for your locations.', 'multi-location-product-and-inventory-management-pro')
-                        : esc_html__('No child orders yet.', 'multi-location-product-and-inventory-management-pro');
+                        ? __('No child orders for your locations.', 'multi-location-product-and-inventory-management-pro')
+                        : __('No child orders yet.', 'multi-location-product-and-inventory-management-pro');
 
-                    echo '<div style="margin-top:6px;">' . $empty_message . '</div>';
+                    echo '<div style="margin-top:6px;">' . esc_html($empty_message) . '</div>';
                 }
             }
 
@@ -6178,9 +6262,13 @@ JS;
             echo '</div>';
             echo '<p class="description">' . esc_html__('Update user selected store location for this order.', 'multi-location-product-and-inventory-management-pro') . '</p>';
             // Display a styled info note with svg icon, improved UI
+            $info_icon = function_exists('mulopimfwc_svg_icon')
+                ? mulopimfwc_svg_icon('info')
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="fill: #3498db;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3498db"/><rect x="11" y="10" width="2" height="7" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>';
+
             echo '<div class="mulopimfwc-info-note" style="display: flex; align-items: flex-start; gap: 8px; background: #f1f5fb; border-left: 4px solid #63b3ed; padding: 10px 12px; margin: 10px 0 0 0; border-radius: 4px;">'
                 . '<span style="display: flex; align-items: center; margin-top:2px;">'
-                . (function_exists('mulopimfwc_svg_icon') ? mulopimfwc_svg_icon('info') : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="fill: #3498db;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3498db"/><rect x="11" y="10" width="2" height="7" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>')
+                . wp_kses($info_icon, $this->get_svg_icon_allowed_html())
                 . '</span>'
                 . '<span style="font-size:13px; line-height:1.5;color:#223;">'
                 . esc_html__('You can only change the store location if the order is editable (pending or on-hold).', 'multi-location-product-and-inventory-management-pro')

@@ -554,7 +554,7 @@ class Location_Wise_Products_Filter
             ];
 
             echo '<nav class="woocommerce-pagination">';
-            echo paginate_links($pagination_args);
+            echo wp_kses_post(paginate_links($pagination_args));
             echo '</nav>';
         }
         $pagination_html = ob_get_clean();

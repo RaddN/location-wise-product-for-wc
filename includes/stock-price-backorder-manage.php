@@ -2563,7 +2563,7 @@ function mulopimfwc_display_location_specific_stock_info()
     $location_backorders = get_post_meta($target_id, '_location_backorders_' . $location->term_id, true);
 
     echo '<div class="location-specific-info">';
-    echo '<h4>' . sprintf(mulopimfwc_get_text_value('text_variation_info_heading'), esc_attr($location->name)) . '</h4>';
+    echo '<h4>' . esc_html(sprintf(mulopimfwc_get_text_value('text_variation_info_heading'), $location->name)) . '</h4>';
 
     // Display stock status
     if ($location_stock !== '') {
@@ -2581,7 +2581,7 @@ function mulopimfwc_display_location_specific_stock_info()
             $status_class = ($stock_data['status'] === 'outofstock') ? 'out-of-stock' : (($stock_data['status'] === 'onbackorder') ? 'on-backorder' : 'in-stock');
             $level_class = !empty($stock_data['level']) ? ' stock-level-' . $stock_data['level'] : '';
             echo '<p class="location-stock">';
-            echo '<strong>' . mulopimfwc_get_text_value('text_variation_stock_label') . '</strong> ';
+            echo '<strong>' . esc_html(mulopimfwc_get_text_value('text_variation_stock_label')) . '</strong> ';
             echo '<span class="' . esc_attr($status_class . $level_class) . '">' . esc_html($stock_data['label']) . '</span>';
             echo '</p>';
         }
@@ -2592,7 +2592,7 @@ function mulopimfwc_display_location_specific_stock_info()
     $normalized_sale = mulopimfwc_normalize_price_amount($display_sale_price);
     if ($normalized_regular !== null || $normalized_sale !== null) {
         echo '<p class="location-price">';
-        echo '<strong>' . mulopimfwc_get_text_value('text_variation_price_label') . '</strong> ';
+        echo '<strong>' . esc_html(mulopimfwc_get_text_value('text_variation_price_label')) . '</strong> ';
 
         if ($normalized_sale !== null && $normalized_regular !== null && abs((float) $normalized_regular - (float) $normalized_sale) > 0.0001) {
             echo '<del>' . wp_kses_post(wc_price($display_regular_price)) . '</del> <ins>' . wp_kses_post(wc_price($display_sale_price)) . '</ins>';

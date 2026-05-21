@@ -332,6 +332,7 @@ class MULOPIMFWC_Product_Location_Selector
     {
         if (!$this->is_displayed && ob_get_level()) {
             $content = ob_get_clean();
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Buffered WooCommerce/theme markup is already rendered HTML; escaping here would corrupt product page output.
             echo $this->inject_selector_in_content($content);
             $this->is_displayed = true;
         } elseif (ob_get_level()) {
@@ -800,7 +801,7 @@ class MULOPIMFWC_Product_Location_Selector
     private function validate_location_change_request(): void
     {
         if (!wp_verify_nonce($_POST['nonce'] ?? '', self::NONCE_ACTION)) {
-            throw new Exception(mulopimfwc_get_text_value('text_selector_error_security'));
+            throw new Exception(esc_html(mulopimfwc_get_text_value('text_selector_error_security')));
         }
     }
 
@@ -815,7 +816,7 @@ class MULOPIMFWC_Product_Location_Selector
         $location = isset($_POST['location']) ? sanitize_text_field(rawurldecode($_POST['location'])) : '';
 
         if (empty($location)) {
-            throw new Exception(mulopimfwc_get_text_value('text_selector_error_invalid'));
+            throw new Exception(esc_html(mulopimfwc_get_text_value('text_selector_error_invalid')));
         }
 
         return $location;
@@ -836,7 +837,7 @@ class MULOPIMFWC_Product_Location_Selector
         // OPTIMIZED: Use cached method instead of direct get_term_by
         $term = get_term_by('slug', $location, 'mulopimfwc_store_location');
         if (!$term) {
-            throw new Exception(mulopimfwc_get_text_value('text_selector_error_not_found'));
+            throw new Exception(esc_html(mulopimfwc_get_text_value('text_selector_error_not_found')));
         }
     }
 

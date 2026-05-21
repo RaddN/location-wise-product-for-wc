@@ -177,13 +177,13 @@ class MULOPIMFWC_Coupon_Location_Restrictions
 
     private function render_include_exclude_sync_script()
     {
-        $include_id = esc_js(self::META_INCLUDE);
-        $exclude_id = esc_js(self::META_EXCLUDE);
+        $include_id = self::META_INCLUDE;
+        $exclude_id = self::META_EXCLUDE;
 ?>
         <script type="text/javascript">
             jQuery(function($) {
-                var $include = $('#<?php echo $include_id; ?>');
-                var $exclude = $('#<?php echo $exclude_id; ?>');
+                var $include = $('#<?php echo esc_js($include_id); ?>');
+                var $exclude = $('#<?php echo esc_js($exclude_id); ?>');
                 var syncing = false;
 
                 if (!$include.length || !$exclude.length) {

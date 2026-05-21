@@ -1049,14 +1049,14 @@ class mulopimfwc_License_Manager
                                                 <span style="color: #495057;">
                                                     <?php
                                                     $license_limit = 0 === (int) $license_details->license_limit
-                                                        ? esc_html__( 'Unlimited', 'multi-location-product-and-inventory-management-pro' )
-                                                        : esc_html( $license_details->license_limit );
+                                                        ? __( 'Unlimited', 'multi-location-product-and-inventory-management-pro' )
+                                                        : $license_details->license_limit;
 
                                                     echo sprintf(
                                                         /* translators: 1: Used site count, 2: License site limit. */
                                                         esc_html__( '%1$s of %2$s sites used', 'multi-location-product-and-inventory-management-pro' ),
                                                         esc_html( $license_details->site_count ),
-                                                        $license_limit
+                                                        esc_html( $license_limit )
                                                     );
                                                     ?>
                                                 </span>
@@ -1130,7 +1130,7 @@ class mulopimfwc_License_Manager
                                                             }
                                                         }
                                                     };
-                                                    xhr.send('action=mulopimfwc_remove_license&nonce=<?php echo wp_create_nonce('mulopimfwc_remove_license_nonce'); ?>');
+                                                    xhr.send('action=mulopimfwc_remove_license&nonce=<?php echo esc_js( wp_create_nonce( 'mulopimfwc_remove_license_nonce' ) ); ?>');
                                                 }
                                             });
                                         }
@@ -1223,7 +1223,7 @@ class mulopimfwc_License_Manager
                         }
                     };
 
-                    xhr.send('action=mulopimfwc_check_updates&nonce=' + '<?php echo wp_create_nonce("mulopimfwc_check_updates"); ?>');
+                    xhr.send('action=mulopimfwc_check_updates&nonce=' + '<?php echo esc_js( wp_create_nonce( 'mulopimfwc_check_updates' ) ); ?>');
                 }
             </script>
         </div>
