@@ -2144,8 +2144,15 @@ class MULOPIMFWC_Import_Export_V2_Service
             throw new Exception('manifest.json is invalid JSON.');
         }
         $schema_version = isset($manifest['package_schema_version']) ? (int) $manifest['package_schema_version'] : 0;
-        if ($schema_version !== self::PACKAGE_SCHEMA_VERSION) {
-            throw new Exception('Unsupported package schema version: ' . $schema_version);
+
+        if (self::PACKAGE_SCHEMA_VERSION !== $schema_version) {
+            throw new Exception(
+                sprintf(
+                    /* translators: %s: Package schema version. */
+                    esc_html__('Unsupported package schema version: %s', 'multi-location-product-and-inventory-management-pro'),
+                    esc_html((string) $schema_version)
+                )
+            );
         }
         $parts = isset($manifest['parts']) && is_array($manifest['parts']) ? $manifest['parts'] : array();
         if (empty($parts)) {
@@ -2723,11 +2730,28 @@ class MULOPIMFWC_Import_Export_V2_Service
                 'expires_at_gmt' => $expires,
             ),
             array(
-                '%s', '%s', '%s', '%s', '%d',
-                '%s', '%s', '%s', '%s',
-                '%s', '%s', '%s',
-                '%f', '%d', '%d', '%d', '%d',
-                '%s', '%s', '%s', '%s', '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%d',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%f',
+                '%d',
+                '%d',
+                '%d',
+                '%d',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
             )
         );
 

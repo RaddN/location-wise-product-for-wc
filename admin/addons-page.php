@@ -1756,23 +1756,26 @@ class MULOPIMFWC_Addons_Page
     private function install_or_update(array $addon): void
     {
         if (empty($addon['package'])) {
-            throw new RuntimeException(__('No signed download URL was returned for this add-on.', 'multi-location-product-and-inventory-management-pro'));
+            throw new RuntimeException(esc_html__('No signed download URL was returned for this add-on.', 'multi-location-product-and-inventory-management-pro'));
         }
 
         require_once ABSPATH . 'wp-admin/includes/file.php';
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 
-        $package = download_url($addon['package'], 30);
-        if (is_wp_error($package)) {
-            throw new RuntimeException($package->get_error_message());
+        $package = download_url( esc_url_raw( $addon['package'] ), 30 );
+
+        if ( is_wp_error( $package ) ) {
+            throw new RuntimeException(
+                esc_html( $package->get_error_message() )
+            );
         }
 
         try {
             if (!empty($addon['checksum'])) {
                 $actual = hash_file('sha256', $package);
                 if (!hash_equals(strtolower((string) $addon['checksum']), strtolower($actual))) {
-                    throw new RuntimeException(__('The downloaded add-on package failed checksum verification.', 'multi-location-product-and-inventory-management-pro'));
+                    throw new RuntimeException(esc_html__('The downloaded add-on package failed checksum verification.', 'multi-location-product-and-inventory-management-pro'));
                 }
             }
 
@@ -1780,11 +1783,11 @@ class MULOPIMFWC_Addons_Page
             $result = $upgrader->install($package, ['overwrite_package' => true]);
 
             if (is_wp_error($result)) {
-                throw new RuntimeException($result->get_error_message());
+                throw new RuntimeException(esc_html($result->get_error_message()));
             }
 
             if (!$result) {
-                throw new RuntimeException(__('WordPress could not install the add-on package.', 'multi-location-product-and-inventory-management-pro'));
+                throw new RuntimeException(esc_html__('WordPress could not install the add-on package.', 'multi-location-product-and-inventory-management-pro'));
             }
 
             wp_clean_plugins_cache(true);
@@ -1803,12 +1806,12 @@ class MULOPIMFWC_Addons_Page
 
         $plugin_file = $this->resolve_plugin_file($addon);
         if ($plugin_file === '') {
-            throw new RuntimeException(__('The add-on is not installed.', 'multi-location-product-and-inventory-management-pro'));
+            throw new RuntimeException(esc_html__('The add-on is not installed.', 'multi-location-product-and-inventory-management-pro'));
         }
 
         $result = activate_plugin($plugin_file, '', false, true);
         if (is_wp_error($result)) {
-            throw new RuntimeException($result->get_error_message());
+            throw new RuntimeException(esc_html($result->get_error_message()));
         }
 
         wp_clean_plugins_cache(true);
@@ -1843,7 +1846,7 @@ class MULOPIMFWC_Addons_Page
 
         $result = delete_plugins([$plugin_file]);
         if (is_wp_error($result)) {
-            throw new RuntimeException($result->get_error_message());
+            throw new RuntimeException(esc_html($result->get_error_message()));
         }
 
         wp_clean_plugins_cache(true);

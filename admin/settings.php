@@ -3476,13 +3476,13 @@ class mulopimfwc_settings
                                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:center;">
                                             <div>
                                                 <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management-pro'); ?></label>
-                                                <select <?php echo ! mulopimfwc_premium_feature() ? 'disabled' : ''; ?> name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr( $index ); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
-                                                    <option value=""><?php echo esc_html__( 'Select...', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                                    <option value="slack" <?php selected( $type, 'slack' ); ?>><?php echo esc_html__( 'Slack', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                                    <option value="teams" <?php selected( $type, 'teams' ); ?>><?php echo esc_html__( 'Microsoft Teams', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                                    <option value="discord" <?php selected( $type, 'discord' ); ?>><?php echo esc_html__( 'Discord', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                                    <option value="telegram" <?php selected( $type, 'telegram' ); ?>><?php echo esc_html__( 'Telegram', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                                    <option value="custom" <?php selected( $type, 'custom' ); ?>><?php echo esc_html__( 'Custom Webhook', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                                <select <?php echo ! mulopimfwc_premium_feature() ? 'disabled' : ''; ?> name="mulopimfwc_display_options[social_notifications][channels][<?php echo esc_attr($index); ?>][type]" class="mulopimfwc-channel-type" style="width:100%;">
+                                                    <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                                    <option value="slack" <?php selected($type, 'slack'); ?>><?php echo esc_html__('Slack', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                                    <option value="teams" <?php selected($type, 'teams'); ?>><?php echo esc_html__('Microsoft Teams', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                                    <option value="discord" <?php selected($type, 'discord'); ?>><?php echo esc_html__('Discord', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                                    <option value="telegram" <?php selected($type, 'telegram'); ?>><?php echo esc_html__('Telegram', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                                    <option value="custom" <?php selected($type, 'custom'); ?>><?php echo esc_html__('Custom Webhook', 'multi-location-product-and-inventory-management-pro'); ?></option>
                                                 </select>
                                             </div>
                                             <div>
@@ -3516,12 +3516,12 @@ class mulopimfwc_settings
                                     <div>
                                         <label style="font-weight:600;"><?php echo esc_html__('Platform', 'multi-location-product-and-inventory-management-pro'); ?></label>
                                         <select name="mulopimfwc_display_options[social_notifications][channels][__INDEX__][type]" class="mulopimfwc-channel-type" style="width:100%;">
-                                            <option value=""><?php echo esc_html__( 'Select...', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                            <option value="slack"><?php echo esc_html__( 'Slack', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                            <option value="teams"><?php echo esc_html__( 'Microsoft Teams', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                            <option value="discord"><?php echo esc_html__( 'Discord', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                            <option value="telegram"><?php echo esc_html__( 'Telegram', 'multi-location-product-and-inventory-management-pro' ); ?></option>
-                                            <option value="custom"><?php echo esc_html__( 'Custom Webhook', 'multi-location-product-and-inventory-management-pro' ); ?></option>
+                                            <option value=""><?php echo esc_html__('Select...', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                            <option value="slack"><?php echo esc_html__('Slack', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                            <option value="teams"><?php echo esc_html__('Microsoft Teams', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                            <option value="discord"><?php echo esc_html__('Discord', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                            <option value="telegram"><?php echo esc_html__('Telegram', 'multi-location-product-and-inventory-management-pro'); ?></option>
+                                            <option value="custom"><?php echo esc_html__('Custom Webhook', 'multi-location-product-and-inventory-management-pro'); ?></option>
                                         </select>
                                     </div>
                                     <div>
@@ -5915,8 +5915,32 @@ class mulopimfwc_settings
                                 $release_tab_label = function_exists('mulopimfwc_is_envato_build') && mulopimfwc_is_envato_build()
                                     ? esc_html__('Updates & Support', 'multi-location-product-and-inventory-management-pro')
                                     : esc_html__('Plugin License', 'multi-location-product-and-inventory-management-pro');
-                                echo $this->mls_nav_tabs("#license-settings", "nav-tab", '<svg width="16" height="16" viewBox="-0.026 0 0.943 0.943" xmlns="http://www.w3.org/2000/svg"><path data-name="19" d="M.528.447.571.404.505.338.462.381.393.312A.158.158 0 1 0 .23.062a.126.126 0 1 0-.175.18.158.158 0 1 0 .257.157l.066.066-.037.036.066.066L.444.53l.175.175-.096.096.033.033a.049.049 0 1 1 .068.068l.04.04L.76.846l.047.047.084-.084ZM.355.081a.077.077 0 1 1-.077.077.077.077 0 0 1 .077-.077M.309.309.308.31.307.308ZM.132.081A.062.062 0 1 1 .07.143.06.06 0 0 1 .132.081m.026.357A.077.077 0 1 1 .235.361a.077.077 0 0 1-.077.077" fill="#59bdff"/></svg>', $release_tab_label);
-                                ?>
+
+                                echo wp_kses(
+                                    $this->mls_nav_tabs(
+                                        '#license-settings',
+                                        'nav-tab',
+                                        '<svg width="16" height="16" viewBox="-0.026 0 0.943 0.943" xmlns="http://www.w3.org/2000/svg"><path data-name="19" d="M.528.447.571.404.505.338.462.381.393.312A.158.158 0 1 0 .23.062a.126.126 0 1 0-.175.18.158.158 0 1 0 .257.157l.066.066-.037.036.066.066L.444.53l.175.175-.096.096.033.033a.049.049 0 1 1 .068.068l.04.04L.76.846l.047.047.084-.084ZM.355.081a.077.077 0 1 1-.077.077.077.077 0 0 1 .077-.077M.309.309.308.31.307.308ZM.132.081A.062.062 0 1 1 .07.143.06.06 0 0 1 .132.081m.026.357A.077.077 0 1 1 .235.361a.077.077 0 0 1-.077.077" fill="#59bdff"/></svg>',
+                                        $release_tab_label
+                                    ),
+                                    array(
+                                        'a'    => array(
+                                            'href'  => true,
+                                            'class' => true,
+                                        ),
+                                        'svg'  => array(
+                                            'width'   => true,
+                                            'height'  => true,
+                                            'viewBox' => true,
+                                            'xmlns'   => true,
+                                        ),
+                                        'path' => array(
+                                            'data-name' => true,
+                                            'd'         => true,
+                                            'fill'      => true,
+                                        ),
+                                    )
+                                ); ?>
                             </div>
 
                             <form method="post" action="options.php" class="mulopimfwc_settings">

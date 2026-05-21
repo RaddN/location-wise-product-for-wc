@@ -139,9 +139,9 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         return isset($options['enable_customer_location_tracking']) &&
             $options['enable_customer_location_tracking'] === 'on' && mulopimfwc_premium_feature();
     }
@@ -165,7 +165,7 @@ class Mulopimfwc_Customer_Location_Insights
                 $location_slug = trim($decoded);
             }
         }
-        
+
         // If no cookie, check if there's a default location set
         if (empty($location_slug) || $location_slug === 'all-products') {
             global $mulopimfwc_options;
@@ -173,7 +173,7 @@ class Mulopimfwc_Customer_Location_Insights
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
             $enable_popup = isset($options['enable_popup']) ? $options['enable_popup'] : 'off';
-            
+
             // If popup is disabled, use default location
             if ($enable_popup === 'off') {
                 $default_location = mulopimfwc_get_default_location_value($options);
@@ -182,7 +182,7 @@ class Mulopimfwc_Customer_Location_Insights
                 }
             }
         }
-        
+
         // Still empty or 'all-products', return null
         if (empty($location_slug) || $location_slug === 'all-products') {
             return null;
@@ -190,18 +190,18 @@ class Mulopimfwc_Customer_Location_Insights
 
         // Try multiple methods to find the location term
         $location = null;
-        
+
         // Normalize the slug for comparison
         $location_slug_normalized = strtolower(trim($location_slug));
-        
+
         // Method 1: Try exact slug match (case-sensitive first, as WordPress stores them)
         $location = get_term_by('slug', $location_slug, 'mulopimfwc_store_location');
-        
+
         // Method 2: If not found, try with normalized (lowercase) version
         if (!$location || is_wp_error($location)) {
             $location = get_term_by('slug', $location_slug_normalized, 'mulopimfwc_store_location');
         }
-        
+
         // Method 3: If still not found, try by term ID (in case slug is actually an ID)
         if ((!$location || is_wp_error($location)) && is_numeric($location_slug)) {
             $term = get_term(absint($location_slug), 'mulopimfwc_store_location');
@@ -210,7 +210,7 @@ class Mulopimfwc_Customer_Location_Insights
                 $location = $term;
             }
         }
-        
+
         // Method 4: Get all terms and search manually (most reliable - handles all edge cases)
         if (!$location || is_wp_error($location)) {
             $terms = get_terms([
@@ -218,35 +218,39 @@ class Mulopimfwc_Customer_Location_Insights
                 'hide_empty' => false,
                 'number' => 0, // Get all terms
             ]);
-            
+
             if (!is_wp_error($terms) && !empty($terms)) {
                 foreach ($terms as $term) {
                     // Normalize term slug for comparison
                     $term_slug_normalized = strtolower(trim($term->slug));
-                    
+
                     // Exact match (case-insensitive)
                     if ($term_slug_normalized === $location_slug_normalized) {
                         $location = $term;
                         break;
                     }
-                    
+
                     // Try URL-decoded versions
                     $decoded_term_slug = strtolower(trim(rawurldecode($term->slug)));
                     $decoded_location_slug = strtolower(trim(rawurldecode($location_slug)));
-                    
-                    if ($decoded_term_slug === $decoded_location_slug || 
+
+                    if (
+                        $decoded_term_slug === $decoded_location_slug ||
                         $decoded_term_slug === $location_slug_normalized ||
-                        $term_slug_normalized === $decoded_location_slug) {
+                        $term_slug_normalized === $decoded_location_slug
+                    ) {
                         $location = $term;
                         break;
                     }
-                    
+
                     // Match 3: Try matching slug with name (in case cookie has name instead of slug)
                     $term_name_normalized = strtolower(trim($term->name));
                     // Convert name to slug-like format for comparison
                     $term_name_as_slug = sanitize_title($term_name_normalized);
-                    if ($term_name_as_slug === $location_slug_normalized || 
-                        $term_name_normalized === $location_slug_normalized) {
+                    if (
+                        $term_name_as_slug === $location_slug_normalized ||
+                        $term_name_normalized === $location_slug_normalized
+                    ) {
                         $location = $term;
                         break;
                     }
@@ -391,9 +395,9 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         $history_setting = isset($options['customer_location_history']) ?
             $options['customer_location_history'] : 'latest';
 
@@ -752,7 +756,7 @@ class Mulopimfwc_Customer_Location_Insights
         $batch_size = 1000;
         $page = 1;
         $all_order_ids = [];
-        
+
         do {
             $order_ids = wc_get_orders([
                 'limit' => $batch_size,
@@ -761,20 +765,19 @@ class Mulopimfwc_Customer_Location_Insights
                 'type' => ['shop_order'],
                 'return' => 'ids'
             ]);
-            
+
             if (empty($order_ids)) {
                 break;
             }
-            
+
             $all_order_ids = array_merge($all_order_ids, $order_ids);
-            
+
             // Safety check: limit total batches
             if ($page > 100) { // Max 100,000 orders
                 break;
             }
-            
+
             $page++;
-            
         } while (count($order_ids) === $batch_size);
 
         foreach ($all_order_ids as $order_id) {
@@ -915,9 +918,9 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         $recommendations_enabled = !$this->is_disabled() &&
             isset($options['location_based_recommendations']) &&
             $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
@@ -962,9 +965,9 @@ class Mulopimfwc_Customer_Location_Insights
         }
 
         global $mulopimfwc_options;
-            $options = is_array($mulopimfwc_options ?? null)
-                ? $mulopimfwc_options
-                : get_option('mulopimfwc_display_options', []);
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
         $recommendations_enabled = isset($options['location_based_recommendations']) &&
             $options['location_based_recommendations'] === 'on' && mulopimfwc_premium_feature();
 
@@ -1071,7 +1074,7 @@ class Mulopimfwc_Customer_Location_Insights
                                         <svg class="mulopimfwc-recommendation-stats-icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M16 6h3a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3a4 4 0 0 1 8 0Zm-2 0a2 2 0 0 0-4 0h4Zm-6 4a1 1 0 0 0-2 0 6 6 0 0 0 12 0 1 1 0 0 0-2 0 4 4 0 0 1-8 0Z" fill="currentColor" />
                                         </svg>
-                                        <?php echo esc_html(sprintf(/* translators: %d: number of purchases */ _n('%d purchase', '%d purchases', $popularity_data['purchase_count'], 'multi-location-product-and-inventory-management-pro'), $popularity_data['purchase_count'])); ?>
+                                        <?php echo esc_html(sprintf(/* translators: %d: number of purchases */_n('%d purchase', '%d purchases', $popularity_data['purchase_count'], 'multi-location-product-and-inventory-management-pro'), $popularity_data['purchase_count'])); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -1154,7 +1157,6 @@ class Mulopimfwc_Customer_Location_Insights
             'plugincy-plugins',
             array($this, 'render_plugincy_plugins_page')
         );
-
     }
 
     public function render_plugincy_plugins_page()
@@ -1256,7 +1258,7 @@ class Mulopimfwc_Customer_Location_Insights
             $slug = !empty($plugin_obj->slug) ? sanitize_title($plugin_obj->slug) : sanitize_title($name);
             $details_url = $slug ? self_admin_url('plugin-install.php?tab=plugin-information&plugin=' . $slug . '&TB_iframe=true&width=600&height=550') : '';
 
-            if ($action_url && !$action_disabled) {
+            if ($action_url && ! $action_disabled) {
                 $action_html = '<a class="' . esc_attr($action_class) . '" href="' . esc_url($action_url) . '" data-slug="' . esc_attr($slug) . '" data-name="' . esc_attr($name) . '">' . esc_html($action_text) . '</a>';
             } else {
                 $action_html = '<span class="' . esc_attr($action_class) . '" aria-disabled="true">' . esc_html($action_text) . '</span>';
@@ -1265,28 +1267,59 @@ class Mulopimfwc_Customer_Location_Insights
             echo '<div class="plugin-card plugin-card-' . esc_attr($slug) . '">';
             echo '<div class="plugin-card-top">';
             echo '<div class="name column-name">';
+
             if ($icon) {
-                echo '<img class="plugin-icon" src="' . $icon . '" alt="" />';
+                echo '<img class="plugin-icon" src="' . esc_url($icon) . '" alt="" />';
             }
+
             if ($details_url) {
-                echo '<h3><a class="thickbox open-plugin-details-modal" href="' . esc_url($details_url) . '" aria-label="' . esc_attr(sprintf(/* translators: %s: plugin name */ __('More details about %s', 'multi-location-product-and-inventory-management-pro'), $name)) . '">' . esc_html($name) . '</a></h3>';
+                echo '<h3><a class="thickbox open-plugin-details-modal" href="' . esc_url($details_url) . '" aria-label="' . esc_attr(
+                    sprintf(
+                        /* translators: %s: Plugin name. */
+                        __('More details about %s', 'multi-location-product-and-inventory-management-pro'),
+                        esc_html($name)
+                    )
+                ) . '">' . esc_html($name) . '</a></h3>';
             } else {
                 echo '<h3>' . esc_html($name) . '</h3>';
             }
-            if (!empty($author)) {
-                echo '<p class="author">' . sprintf(/* translators: %s: author name */ esc_html__('By %s', 'multi-location-product-and-inventory-management-pro'), wp_kses_post($author)) . '</p>';
+
+            if (! empty($author)) {
+                echo '<p class="author">' . wp_kses_post(
+                    sprintf(
+                        /* translators: %s: Author name. */
+                        __('By %s', 'multi-location-product-and-inventory-management-pro'),
+                        wp_kses_post($author)
+                    )
+                ) . '</p>';
             }
+
             echo '</div>';
-            echo '<div class="action-links"><ul class="plugin-action-buttons"><li>' . $action_html . '</li></ul></div>';
+
+            echo '<div class="action-links"><ul class="plugin-action-buttons"><li>' . wp_kses(
+                $action_html,
+                array(
+                    'a'    => array(
+                        'class'     => true,
+                        'href'      => true,
+                        'data-slug' => true,
+                        'data-name' => true,
+                    ),
+                    'span' => array(
+                        'class'         => true,
+                        'aria-disabled' => true,
+                    ),
+                )
+            ) . '</li></ul></div>';
             echo '<div class="desc column-description"><p>' . wp_kses_post($short_description) . '</p></div>';
             echo '</div>';
 
             echo '<div class="plugin-card-bottom">';
             echo '<div class="vers column-rating">';
-            echo '<span>' . sprintf(/* translators: %s: version number */ esc_html__('Version %s', 'multi-location-product-and-inventory-management-pro'), esc_html($version)) . '</span>';
+            echo '<span>' . sprintf(/* translators: %s: version number */esc_html__('Version %s', 'multi-location-product-and-inventory-management-pro'), esc_html($version)) . '</span>';
             if ($active_installs !== null) {
                 $installs = number_format_i18n((int) $active_installs);
-                echo '<span style="margin-left:10px;">' . sprintf(/* translators: %s: number of active installs */ esc_html__('%s+ active installs', 'multi-location-product-and-inventory-management-pro'), esc_html($installs)) . '</span>';
+                echo '<span style="margin-left:10px;">' . sprintf(/* translators: %s: number of active installs */esc_html__('%s+ active installs', 'multi-location-product-and-inventory-management-pro'), esc_html($installs)) . '</span>';
             }
             echo '</div>';
             echo '<div class="column-compatibility"><span class="compatibility-compatible">' . esc_html__('Compatible with your version of WordPress', 'multi-location-product-and-inventory-management-pro') . '</span></div>';
@@ -1600,12 +1633,12 @@ class Mulopimfwc_Customer_Location_Insights
             'status' => ['processing'],
             'return' => 'ids'
         ]);
-        
+
         // Get total count using a more efficient method
         $count = 0;
         $page = 1;
         $batch_size = 1000;
-        
+
         do {
             $batch = wc_get_orders([
                 'limit' => $batch_size,
@@ -1613,14 +1646,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'status' => ['processing'],
                 'return' => 'ids'
             ]);
-            
+
             if (empty($batch)) {
                 break;
             }
-            
+
             $count += count($batch);
             $page++;
-            
+
             // Safety limit
             if ($page > 100) {
                 break;
@@ -1700,7 +1733,7 @@ class Mulopimfwc_Customer_Location_Insights
     ?>
         <?php $has_active_filters = $selected_location !== 'all' || $selected_date_filter['range'] !== 'all'; ?>
         <div class="wrap mulopimfwc-analytics-wrap <?php echo mulopimfwc_premium_feature() ? '' : ' mulopimfwc_pro_only_blur mulopimfwc_pro_only'; ?>">
-        <h1 style="display: none !important;"><?php echo esc_html__('Location Analytics Dashboard', 'multi-location-product-and-inventory-management-pro'); ?></h1>
+            <h1 style="display: none !important;"><?php echo esc_html__('Location Analytics Dashboard', 'multi-location-product-and-inventory-management-pro'); ?></h1>
             <div class="mulopimfwc-analytics-heading">
                 <h1>
                     <span class="dashicons dashicons-chart-area"></span>
@@ -2070,10 +2103,10 @@ class Mulopimfwc_Customer_Location_Insights
                                             endforeach;
                                         } else {
                                             ?>
-                                                <tr>
-                                                    <td colspan="5" style="text-align:center;"><?php esc_html_e('No product data available yet for this location.', 'multi-location-product-and-inventory-management-pro'); ?></td>
-                                                </tr>
-                                            <?php
+                                            <tr>
+                                                <td colspan="5" style="text-align:center;"><?php esc_html_e('No product data available yet for this location.', 'multi-location-product-and-inventory-management-pro'); ?></td>
+                                            </tr>
+                                        <?php
                                         }
                                         ?>
                                     </tbody>
@@ -2776,7 +2809,7 @@ class Mulopimfwc_Customer_Location_Insights
                 }
             </style>
             <script type="text/javascript">
-                (function ($) {
+                (function($) {
                     const analyticsConfig = {
                         ajaxurl: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
                         nonce: '<?php echo esc_js(wp_create_nonce('mulopimfwc_analytics_live')); ?>',
@@ -2789,7 +2822,10 @@ class Mulopimfwc_Customer_Location_Insights
 
                     function formatNumber(value, decimals = 0) {
                         const num = Number(value || 0);
-                        return num.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+                        return num.toLocaleString(undefined, {
+                            minimumFractionDigits: decimals,
+                            maximumFractionDigits: decimals
+                        });
                     }
 
                     function updateProcessingBubble(count) {
@@ -2976,14 +3012,14 @@ class Mulopimfwc_Customer_Location_Insights
                             date_range: analyticsConfig.dateRange,
                             date_from: analyticsConfig.dateFrom,
                             date_to: analyticsConfig.dateTo
-                        }).done(function (response) {
+                        }).done(function(response) {
                             if (response && response.success) {
                                 applyAnalyticsPayload(response.data);
                             }
                         });
                     }
 
-                    $(document).ready(function () {
+                    $(document).ready(function() {
                         const filterPanel = $('.mulopimfwc-analytics-filter-panel');
                         const filterToggle = $('.mulopimfwc-analytics-filter-toggle');
                         const dateRangeInput = $('#mulopimfwc_analytics_date_range');
@@ -3020,16 +3056,16 @@ class Mulopimfwc_Customer_Location_Insights
                             $('.mulopimfwc-analytics-filters .lwp-quick-btn[data-range="' + range + '"]').addClass('active');
                         }
 
-                        filterToggle.on('click', function () {
+                        filterToggle.on('click', function() {
                             $(this).toggleClass('active');
                             filterPanel.toggleClass('show');
                         });
 
-                        $('.mulopimfwc-analytics-filters .lwp-quick-btn').on('click', function () {
+                        $('.mulopimfwc-analytics-filters .lwp-quick-btn').on('click', function() {
                             setQuickRange($(this).data('range'));
                         });
 
-                        $('.mulopimfwc-analytics-filters input[type="date"]').on('change', function () {
+                        $('.mulopimfwc-analytics-filters input[type="date"]').on('change', function() {
                             dateRangeInput.val('custom');
                             $('.mulopimfwc-analytics-filters .lwp-quick-btn').removeClass('active');
                         });
@@ -3154,12 +3190,12 @@ function mulopimfwc_ajax_track_location_selection()
     $rate_limit_count = get_transient($rate_limit_key);
     $rate_limit_max = apply_filters('mulopimfwc_track_rate_limit', 60); // 60 requests per minute
     $rate_limit_window = 60; // 1 minute
-    
+
     if ($rate_limit_count !== false && $rate_limit_count >= $rate_limit_max) {
         wp_send_json_error(['message' => __('Rate limit exceeded. Please try again later.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
-    
+
     // Increment rate limit counter
     if ($rate_limit_count === false) {
         set_transient($rate_limit_key, 1, $rate_limit_window);
@@ -3181,10 +3217,10 @@ function mulopimfwc_ajax_track_location_selection()
         wp_send_json_error(['message' => __('Invalid location. Location does not exist.', 'multi-location-product-and-inventory-management-pro')]);
         return;
     }
-    
+
     // Use validated location name
     $location_name = $location_term->name;
-    
+
     $instance = Mulopimfwc_Customer_Location_Insights::get_instance();
 
     // FIXED: No longer need Reflection - method is now protected
@@ -3265,19 +3301,37 @@ function mulopimfwc_add_export_button_script()
                 const exportNonce = '<?php echo esc_js(wp_create_nonce('mulopimfwc_analytics_export')); ?>';
 
                 function submitExport(locationSlug) {
-                    const form = $('<form>', { method: 'POST', action: ajaxurl, style: 'display:none;' });
-                    form.append($('<input>', { type: 'hidden', name: 'action', value: 'mulopimfwc_export_analytics' }));
-                    form.append($('<input>', { type: 'hidden', name: 'nonce', value: exportNonce }));
+                    const form = $('<form>', {
+                        method: 'POST',
+                        action: ajaxurl,
+                        style: 'display:none;'
+                    });
+                    form.append($('<input>', {
+                        type: 'hidden',
+                        name: 'action',
+                        value: 'mulopimfwc_export_analytics'
+                    }));
+                    form.append($('<input>', {
+                        type: 'hidden',
+                        name: 'nonce',
+                        value: exportNonce
+                    }));
                     if (locationSlug) {
-                        form.append($('<input>', { type: 'hidden', name: 'location', value: locationSlug }));
+                        form.append($('<input>', {
+                            type: 'hidden',
+                            name: 'location',
+                            value: locationSlug
+                        }));
                     }
                     $('body').append(form);
                     form.trigger('submit');
-                    setTimeout(function () { form.remove(); }, 1000);
+                    setTimeout(function() {
+                        form.remove();
+                    }, 1000);
                 }
 
                 // Wire per-location export buttons
-                $(document).on('click', '.export-location-btn', function (e) {
+                $(document).on('click', '.export-location-btn', function(e) {
                     e.preventDefault();
                     const slug = $(this).data('location');
                     submitExport(slug);
@@ -3289,13 +3343,13 @@ function mulopimfwc_add_export_button_script()
                     $('.wrap h1').append($btn);
                 }
 
-                $(document).on('click', '.mulopimfwc-export-all', function (e) {
+                $(document).on('click', '.mulopimfwc-export-all', function(e) {
                     e.preventDefault();
                     submitExport('');
                 });
             });
         </script>
-    <?php
+<?php
     }
 }
 
