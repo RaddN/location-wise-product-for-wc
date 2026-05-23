@@ -50,10 +50,24 @@
             }
 
             list.append($('<dt>').text(item.label || ''));
-            list.append($('<dd>').text(item.value || ''));
+            if (item.url) {
+                list.append($('<dd>').append($('<a>', {
+                    href: item.url,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                    text: item.value || item.url
+                })));
+            } else {
+                list.append($('<dd>').text(item.value || ''));
+            }
         });
 
-        sidebar.append(list);
+        if (list.children().length) {
+            sidebar.append(list);
+        }
+
+        renderRatingSidebar(sidebar, details);
+        renderContributorsSidebar(sidebar, details);
 
         if ($.isArray(details.quick_links) && details.quick_links.length) {
             var links = $('<div>', {
@@ -75,6 +89,111 @@
 
             sidebar.append(links);
         }
+    }
+
+    function ratingCount(value) {
+        var parsed = parseFloat(String(value || '').replace(/[^0-9.]/g, ''));
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function renderRatingSidebar(sidebar, details) {
+        var rating = details.rating || {};
+        var breakdown = rating.breakdown || {};
+        var hasBreakdown = false;
+        var max = 0;
+        var section;
+        var stars;
+        var reviewsUrl = details.reviews && details.reviews.url ? details.reviews.url : '';
+
+        [5, 4, 3, 2, 1].forEach(function(star) {
+            var count = ratingCount(breakdown[String(star)]);
+            max = Math.max(max, count);
+            hasBreakdown = hasBreakdown || count > 0;
+        });
+
+        if (!rating.average && !rating.count && !hasBreakdown && !reviewsUrl) {
+            return;
+        }
+
+        section = $('<div>', {
+            class: 'mulopimfwc-addon-details-modal__rating'
+        });
+
+        if (rating.average || rating.count) {
+            section.append($('<h3>').text(config.averageRatingTitle || 'Average Rating'));
+            stars = $('<div>', {
+                class: 'mulopimfwc-addon-details-modal__stars',
+                'aria-label': rating.average ? rating.average + ' out of 5' : ''
+            }).html('&#9733;&#9733;&#9733;&#9733;&#9733;');
+            section.append(stars);
+
+            if (rating.count) {
+                section.append($('<p>').text('(' + rating.count + ')'));
+            }
+        }
+
+        if (reviewsUrl || hasBreakdown) {
+            section.append($('<h3>').text(config.reviewsTitle || 'Reviews'));
+        }
+
+        if (reviewsUrl) {
+            section.append($('<p>').append($('<a>', {
+                href: reviewsUrl,
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                text: config.readReviews || 'Read all reviews'
+            })));
+        }
+
+        if (hasBreakdown) {
+            [5, 4, 3, 2, 1].forEach(function(star) {
+                var raw = breakdown[String(star)] || '';
+                var count = ratingCount(raw);
+                var width = max > 0 ? Math.max(2, Math.round((count / max) * 100)) : 0;
+
+                section.append($('<div>', {
+                    class: 'mulopimfwc-addon-details-modal__rating-row'
+                }).append(
+                    $('<span>').text(star + ' stars'),
+                    $('<b>').append($('<i>').css('width', width + '%')),
+                    $('<em>').text(raw)
+                ));
+            });
+        }
+
+        sidebar.append(section);
+    }
+
+    function renderContributorsSidebar(sidebar, details) {
+        var contributors = $.isArray(details.contributors) ? details.contributors : [];
+        var section;
+
+        contributors = contributors.filter(function(contributor) {
+            return contributor && contributor.name;
+        });
+
+        if (!contributors.length) {
+            return;
+        }
+
+        section = $('<div>', {
+            class: 'mulopimfwc-addon-details-modal__contributors'
+        }).append($('<h3>').text(config.contributorsTitle || 'Contributors'));
+
+        contributors.forEach(function(contributor) {
+            if (contributor.url) {
+                section.append($('<a>', {
+                    href: contributor.url,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                    text: contributor.name
+                }));
+            } else {
+                section.append($('<span>').text(contributor.name));
+            }
+        });
+
+        sidebar.append(section);
     }
 
     function renderDetailsFooter(modal, details) {

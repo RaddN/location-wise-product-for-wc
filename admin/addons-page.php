@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 
 class MULOPIMFWC_Addons_Page
 {
-    private const MANIFEST_TRANSIENT = 'mulopimfwc_addons_manifest_cache_v2';
+    private const MANIFEST_TRANSIENT = 'mulopimfwc_addons_manifest_cache_v4';
     private const INSTALLED_STATUS_OPTION = 'mulopimfwc_addons_installed_status';
     private const LAST_ERROR_OPTION = 'mulopimfwc_addons_last_error';
     private const LAST_CHECK_OPTION = 'mulopimfwc_addons_last_update_check';
@@ -38,7 +38,8 @@ class MULOPIMFWC_Addons_Page
             return;
         }
 
-        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.22';
+        $is_envato_build = $this->is_envato_build();
 
         wp_enqueue_style(
             'mulopimfwc-addons-page',
@@ -62,11 +63,17 @@ class MULOPIMFWC_Addons_Page
                 'ajaxUrl'          => admin_url('admin-ajax.php'),
                 'nonce'            => wp_create_nonce('mulopimfwc_addons_ajax'),
                 'loading'          => __('Loading add-ons from Plugincy...', 'multi-location-product-and-inventory-management-pro'),
-                'error'            => __('Add-ons could not be loaded from Plugincy. Please reload or check the license connection.', 'multi-location-product-and-inventory-management-pro'),
+                'error'            => $is_envato_build
+                    ? __('Add-ons could not be loaded from Plugincy. Please reload or check your connection.', 'multi-location-product-and-inventory-management-pro')
+                    : __('Add-ons could not be loaded from Plugincy. Please reload or check the license connection.', 'multi-location-product-and-inventory-management-pro'),
                 'reloading'        => __('Reloading...', 'multi-location-product-and-inventory-management-pro'),
                 'reload'           => __('Reload add-ons', 'multi-location-product-and-inventory-management-pro'),
                 'detailsFallback'  => __('No details were provided for this add-on yet.', 'multi-location-product-and-inventory-management-pro'),
                 'descriptionTitle' => __('Description', 'multi-location-product-and-inventory-management-pro'),
+                'averageRatingTitle' => __('Average Rating', 'multi-location-product-and-inventory-management-pro'),
+                'reviewsTitle'     => __('Reviews', 'multi-location-product-and-inventory-management-pro'),
+                'readReviews'      => __('Read all reviews', 'multi-location-product-and-inventory-management-pro'),
+                'contributorsTitle' => __('Contributors', 'multi-location-product-and-inventory-management-pro'),
             )
         );
     }
@@ -80,6 +87,7 @@ class MULOPIMFWC_Addons_Page
         $last_error = get_option(self::LAST_ERROR_OPTION, '');
         $last_check = (int) get_option(self::LAST_CHECK_OPTION, 0);
         $notice = get_transient(self::NOTICE_TRANSIENT);
+        $is_envato_build = $this->is_envato_build();
         if (is_array($notice)) {
             delete_transient(self::NOTICE_TRANSIENT);
         }
@@ -89,7 +97,15 @@ class MULOPIMFWC_Addons_Page
 
             <div class="mulopimfwc-addons-hero">
                 <div>
-                    <p><?php echo esc_html__('Install and manage private Plugincy add-ons delivered from your licensed Plugincy account.', 'multi-location-product-and-inventory-management-pro'); ?></p>
+                    <p>
+                        <?php
+                        echo esc_html(
+                            $is_envato_build
+                                ? __('Install and manage Plugincy add-ons included with the CodeCanyon build.', 'multi-location-product-and-inventory-management-pro')
+                                : __('Install and manage private Plugincy add-ons delivered from your licensed Plugincy account.', 'multi-location-product-and-inventory-management-pro')
+                        );
+                        ?>
+                    </p>
                 </div>
                 <button type="button" class="button button-primary" id="mulopimfwc-addons-reload">
                     <?php echo esc_html__('Reload add-ons', 'multi-location-product-and-inventory-management-pro'); ?>
@@ -176,7 +192,9 @@ class MULOPIMFWC_Addons_Page
             'last_check' => $last_check > 0 ? $this->format_last_check($last_check) : '',
             'error' => is_scalar($last_error) ? (string) $last_error : '',
             'license_valid' => $license_valid,
-            'license_message' => __('Activate a valid Plugincy license to install or update private add-ons.', 'multi-location-product-and-inventory-management-pro'),
+            'license_message' => $this->is_envato_build()
+                ? __('Add-on downloads are available for this CodeCanyon build.', 'multi-location-product-and-inventory-management-pro')
+                : __('Activate a valid Plugincy license to install or update private add-ons.', 'multi-location-product-and-inventory-management-pro'),
         ]);
     }
 
@@ -187,7 +205,13 @@ class MULOPIMFWC_Addons_Page
         if (empty($addons)) {
         ?>
             <div class="mulopimfwc-addons-empty">
-                <?php echo esc_html__('No add-ons were returned from Plugincy for this license.', 'multi-location-product-and-inventory-management-pro'); ?>
+                <?php
+                echo esc_html(
+                    $this->is_envato_build()
+                        ? __('No add-ons were returned from Plugincy for this build.', 'multi-location-product-and-inventory-management-pro')
+                        : __('No add-ons were returned from Plugincy for this license.', 'multi-location-product-and-inventory-management-pro')
+                );
+                ?>
             </div>
         <?php
             return (string) ob_get_clean();
@@ -209,7 +233,7 @@ class MULOPIMFWC_Addons_Page
     private function render_addon_card(array $addon, array $status, bool $license_valid): void
     {
         $name = isset($addon['name']) && is_scalar($addon['name']) ? (string) $addon['name'] : __('Plugincy add-on', 'multi-location-product-and-inventory-management-pro');
-        $description = isset($addon['description']) && is_scalar($addon['description']) ? (string) $addon['description'] : '';
+        $description = $this->get_card_description($addon);
         $logo_url = isset($addon['logo_url']) && is_scalar($addon['logo_url']) ? esc_url((string) $addon['logo_url']) : '';
         $requires = isset($addon['requires']) && is_scalar($addon['requires']) && trim((string) $addon['requires']) !== ''
             ? (string) $addon['requires']
@@ -269,6 +293,17 @@ class MULOPIMFWC_Addons_Page
         }
     }
 
+    private function get_card_description(array $addon): string
+    {
+        foreach (['short_description', 'description'] as $key) {
+            if (isset($addon[$key]) && is_scalar($addon[$key]) && trim((string) $addon[$key]) !== '') {
+                return (string) $addon[$key];
+            }
+        }
+
+        return '';
+    }
+
     private function get_addon_details_payload(array $addon, array $status, bool $license_valid): array
     {
         $name = isset($addon['name']) && is_scalar($addon['name']) ? (string) $addon['name'] : __('Plugincy add-on', 'multi-location-product-and-inventory-management-pro');
@@ -277,10 +312,6 @@ class MULOPIMFWC_Addons_Page
             : '';
 
         $meta = [
-            [
-                'label' => __('Status', 'multi-location-product-and-inventory-management-pro'),
-                'value' => isset($status['label']) ? (string) $status['label'] : '',
-            ],
             [
                 'label' => __('Current Version', 'multi-location-product-and-inventory-management-pro'),
                 'value' => !empty($status['installed_version']) ? (string) $status['installed_version'] : __('Not installed', 'multi-location-product-and-inventory-management-pro'),
@@ -309,6 +340,29 @@ class MULOPIMFWC_Addons_Page
                 'label' => __('Tested WooCommerce', 'multi-location-product-and-inventory-management-pro'),
                 'value' => isset($addon['tested_wc']) && is_scalar($addon['tested_wc']) ? (string) $addon['tested_wc'] : '',
             ],
+            [
+                'label' => __('Author', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['author']) && is_scalar($addon['author']) ? (string) $addon['author'] : '',
+                'url' => isset($addon['author_url']) && is_scalar($addon['author_url']) ? esc_url_raw((string) $addon['author_url']) : '',
+            ],
+            [
+                'label' => __('Last Updated', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['last_updated']) && is_scalar($addon['last_updated']) ? (string) $addon['last_updated'] : '',
+            ],
+            [
+                'label' => __('Active Installations', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['active_installs']) && is_scalar($addon['active_installs']) ? (string) $addon['active_installs'] : '',
+            ],
+            [
+                'label' => __('WordPress.org Plugin Page', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['wordpress_org_url']) && is_scalar($addon['wordpress_org_url']) && trim((string) $addon['wordpress_org_url']) !== '' ? __('WordPress.org Plugin Page »', 'multi-location-product-and-inventory-management-pro') : '',
+                'url' => isset($addon['wordpress_org_url']) && is_scalar($addon['wordpress_org_url']) ? esc_url_raw((string) $addon['wordpress_org_url']) : '',
+            ],
+            [
+                'label' => __('Plugin Homepage', 'multi-location-product-and-inventory-management-pro'),
+                'value' => isset($addon['homepage_url']) && is_scalar($addon['homepage_url']) && trim((string) $addon['homepage_url']) !== '' ? __('Plugin Homepage »', 'multi-location-product-and-inventory-management-pro') : '',
+                'url' => isset($addon['homepage_url']) && is_scalar($addon['homepage_url']) ? esc_url_raw((string) $addon['homepage_url']) : '',
+            ],
         ];
 
         return [
@@ -318,6 +372,11 @@ class MULOPIMFWC_Addons_Page
             'tabs' => $this->get_detail_tabs($addon),
             'quick_links' => $this->get_quick_links($addon),
             'meta' => $meta,
+            'rating' => $this->get_rating_payload($addon),
+            'reviews' => [
+                'url' => isset($addon['reviews_url']) && is_scalar($addon['reviews_url']) ? esc_url_raw((string) $addon['reviews_url']) : '',
+            ],
+            'contributors' => $this->get_contributors($addon),
             'action' => $this->get_primary_action($addon, $status, $license_valid),
         ];
     }
@@ -362,6 +421,64 @@ class MULOPIMFWC_Addons_Page
             'className' => 'button',
             'disabled' => false,
         ];
+    }
+
+    private function get_rating_payload(array $addon): array
+    {
+        $average = isset($addon['average_rating']) && is_scalar($addon['average_rating']) ? sanitize_text_field((string) $addon['average_rating']) : '';
+        $count = isset($addon['rating_count']) && is_scalar($addon['rating_count']) ? sanitize_text_field((string) $addon['rating_count']) : '';
+        $rating_source = isset($addon['ratings']) && is_array($addon['ratings']) ? $addon['ratings'] : [];
+        $breakdown = [];
+
+        foreach ([5, 4, 3, 2, 1] as $star) {
+            $key = (string) $star;
+            $fallback_key = 'rating_' . $star . '_count';
+            $value = '';
+
+            if (isset($rating_source[$key]) && is_scalar($rating_source[$key])) {
+                $value = sanitize_text_field((string) $rating_source[$key]);
+            } elseif (isset($addon[$fallback_key]) && is_scalar($addon[$fallback_key])) {
+                $value = sanitize_text_field((string) $addon[$fallback_key]);
+            }
+
+            $breakdown[$key] = $value;
+        }
+
+        if ($average === '' && $count === '' && !array_filter($breakdown)) {
+            return [];
+        }
+
+        return [
+            'average' => $average,
+            'count' => $count,
+            'breakdown' => $breakdown,
+        ];
+    }
+
+    private function get_contributors(array $addon): array
+    {
+        if (empty($addon['contributors']) || !is_array($addon['contributors'])) {
+            return [];
+        }
+
+        $contributors = [];
+        foreach ($addon['contributors'] as $contributor) {
+            if (!is_array($contributor)) {
+                continue;
+            }
+
+            $name = isset($contributor['name']) && is_scalar($contributor['name']) ? sanitize_text_field((string) $contributor['name']) : '';
+            if ($name === '') {
+                continue;
+            }
+
+            $contributors[] = [
+                'name' => $name,
+                'url' => isset($contributor['url']) && is_scalar($contributor['url']) ? esc_url_raw((string) $contributor['url']) : '',
+            ];
+        }
+
+        return $contributors;
     }
 
     private function get_banner_url(array $addon): string
@@ -683,19 +800,19 @@ class MULOPIMFWC_Addons_Page
 
     private function merge_manifest_addon(array $addon, array $manifest): array
     {
-        foreach (['version', 'package', 'checksum', 'changelog', 'changeslog', 'plugin_file', 'requires_wp', 'requires_php', 'requires_plugin_version', 'banner_url', 'banner'] as $key) {
+        foreach (['version', 'package', 'checksum', 'changelog', 'changeslog', 'plugin_file', 'requires_wp', 'requires_php', 'requires_plugin_version', 'banner_url', 'banner', 'author', 'author_url', 'last_updated', 'active_installs', 'wordpress_org_url', 'homepage_url', 'average_rating', 'rating_count', 'rating_5_count', 'rating_4_count', 'rating_3_count', 'rating_2_count', 'rating_1_count', 'reviews_url'] as $key) {
             if (array_key_exists($key, $manifest)) {
                 $addon[$key] = $manifest[$key];
             }
         }
 
-        foreach (['name', 'description', 'logo_url'] as $key) {
+        foreach (['name', 'short_description', 'description', 'logo_url'] as $key) {
             if (isset($manifest[$key]) && is_scalar($manifest[$key]) && trim((string) $manifest[$key]) !== '') {
                 $addon[$key] = $manifest[$key];
             }
         }
 
-        foreach (['quick_links', 'tabs', 'sections', 'section_labels', 'banners'] as $key) {
+        foreach (['quick_links', 'tabs', 'sections', 'section_labels', 'banners', 'ratings', 'contributors'] as $key) {
             if (isset($manifest[$key]) && is_array($manifest[$key])) {
                 $addon[$key] = $manifest[$key];
             }
@@ -765,6 +882,7 @@ class MULOPIMFWC_Addons_Page
         return [
             'slug' => sanitize_key($slug),
             'name' => ucwords(str_replace(['-', '_'], ' ', sanitize_key($slug))),
+            'short_description' => '',
             'description' => '',
             'version' => '',
             'requires' => '',
@@ -772,6 +890,22 @@ class MULOPIMFWC_Addons_Page
             'requires_php' => '',
             'requires_plugin_version' => '',
             'plugin_file' => '',
+            'author' => '',
+            'author_url' => '',
+            'last_updated' => '',
+            'active_installs' => '',
+            'wordpress_org_url' => '',
+            'homepage_url' => '',
+            'average_rating' => '',
+            'rating_count' => '',
+            'rating_5_count' => '',
+            'rating_4_count' => '',
+            'rating_3_count' => '',
+            'rating_2_count' => '',
+            'rating_1_count' => '',
+            'reviews_url' => '',
+            'ratings' => [],
+            'contributors' => [],
             'package' => '',
             'checksum' => '',
             'changelog' => '',
@@ -792,10 +926,27 @@ class MULOPIMFWC_Addons_Page
             'mulopimfwc-pos-connector' => [
                 'slug' => 'mulopimfwc-pos-connector',
                 'name' => __('Multi Location POS Connector', 'multi-location-product-and-inventory-management-pro'),
+                'short_description' => __('Connect Multi Location stock and pricing with supported POS systems. OpenPOS is supported in v1.', 'multi-location-product-and-inventory-management-pro'),
                 'description' => __('Connect Multi Location stock and pricing with supported POS systems. OpenPOS is supported in v1.', 'multi-location-product-and-inventory-management-pro'),
                 'version' => '1.0.0',
                 'requires' => __('WooCommerce, OpenPOS, Multi Location Pro', 'multi-location-product-and-inventory-management-pro'),
                 'plugin_file' => 'mulopimfwc-pos-connector/mulopimfwc-pos-connector.php',
+                'author' => '',
+                'author_url' => '',
+                'last_updated' => '',
+                'active_installs' => '',
+                'wordpress_org_url' => '',
+                'homepage_url' => '',
+                'average_rating' => '',
+                'rating_count' => '',
+                'rating_5_count' => '',
+                'rating_4_count' => '',
+                'rating_3_count' => '',
+                'rating_2_count' => '',
+                'rating_1_count' => '',
+                'reviews_url' => '',
+                'ratings' => [],
+                'contributors' => [],
                 'package' => '',
                 'checksum' => '',
                 'changelog' => '',
@@ -836,6 +987,7 @@ class MULOPIMFWC_Addons_Page
             'body' => [
                 'license' => get_option('mulopimfwc_license_key', ''),
                 'site_url' => home_url(),
+                'release_channel' => $this->get_release_channel(),
                 'plugin_version' => defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '',
                 'product_slug' => self::MANIFEST_PRODUCT_SLUG,
                 'wp_version' => get_bloginfo('version'),
@@ -899,6 +1051,7 @@ class MULOPIMFWC_Addons_Page
             $normalized[$slug] = [
                 'slug' => $slug,
                 'name' => isset($data['name']) && is_scalar($data['name']) ? sanitize_text_field((string) $data['name']) : '',
+                'short_description' => isset($data['short_description']) && is_scalar($data['short_description']) ? wp_kses_post((string) $data['short_description']) : '',
                 'description' => isset($data['description']) && is_scalar($data['description']) ? wp_kses_post((string) $data['description']) : '',
                 'plugin_file' => isset($data['plugin_file']) && is_scalar($data['plugin_file']) ? sanitize_text_field((string) $data['plugin_file']) : '',
                 'version' => isset($data['version']) && is_scalar($data['version']) ? sanitize_text_field((string) $data['version']) : '1.0.0',
@@ -920,6 +1073,22 @@ class MULOPIMFWC_Addons_Page
                 'requires_plugin_version' => isset($data['requires_plugin_version']) && is_scalar($data['requires_plugin_version']) ? sanitize_text_field((string) $data['requires_plugin_version']) : (isset($data['requires_plugin']) && is_scalar($data['requires_plugin']) ? sanitize_text_field((string) $data['requires_plugin']) : ''),
                 'tested' => isset($data['tested']) && is_scalar($data['tested']) ? sanitize_text_field((string) $data['tested']) : '',
                 'tested_wc' => isset($data['tested_wc']) && is_scalar($data['tested_wc']) ? sanitize_text_field((string) $data['tested_wc']) : '',
+                'author' => isset($data['author']) && is_scalar($data['author']) ? sanitize_text_field((string) $data['author']) : '',
+                'author_url' => isset($data['author_url']) && is_scalar($data['author_url']) ? esc_url_raw((string) $data['author_url']) : '',
+                'last_updated' => isset($data['last_updated']) && is_scalar($data['last_updated']) ? sanitize_text_field((string) $data['last_updated']) : '',
+                'active_installs' => isset($data['active_installs']) && is_scalar($data['active_installs']) ? sanitize_text_field((string) $data['active_installs']) : '',
+                'wordpress_org_url' => isset($data['wordpress_org_url']) && is_scalar($data['wordpress_org_url']) ? esc_url_raw((string) $data['wordpress_org_url']) : '',
+                'homepage_url' => isset($data['homepage_url']) && is_scalar($data['homepage_url']) ? esc_url_raw((string) $data['homepage_url']) : '',
+                'average_rating' => isset($data['average_rating']) && is_scalar($data['average_rating']) ? sanitize_text_field((string) $data['average_rating']) : '',
+                'rating_count' => isset($data['rating_count']) && is_scalar($data['rating_count']) ? sanitize_text_field((string) $data['rating_count']) : '',
+                'rating_5_count' => isset($data['rating_5_count']) && is_scalar($data['rating_5_count']) ? sanitize_text_field((string) $data['rating_5_count']) : '',
+                'rating_4_count' => isset($data['rating_4_count']) && is_scalar($data['rating_4_count']) ? sanitize_text_field((string) $data['rating_4_count']) : '',
+                'rating_3_count' => isset($data['rating_3_count']) && is_scalar($data['rating_3_count']) ? sanitize_text_field((string) $data['rating_3_count']) : '',
+                'rating_2_count' => isset($data['rating_2_count']) && is_scalar($data['rating_2_count']) ? sanitize_text_field((string) $data['rating_2_count']) : '',
+                'rating_1_count' => isset($data['rating_1_count']) && is_scalar($data['rating_1_count']) ? sanitize_text_field((string) $data['rating_1_count']) : '',
+                'ratings' => isset($data['ratings']) && is_array($data['ratings']) ? $this->normalize_manifest_ratings($data['ratings']) : [],
+                'reviews_url' => isset($data['reviews_url']) && is_scalar($data['reviews_url']) ? esc_url_raw((string) $data['reviews_url']) : '',
+                'contributors' => isset($data['contributors']) && is_array($data['contributors']) ? $this->normalize_manifest_contributors($data['contributors']) : [],
             ];
         }
 
@@ -984,6 +1153,47 @@ class MULOPIMFWC_Addons_Page
         }
 
         return $links;
+    }
+
+    private function normalize_manifest_ratings($raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $ratings = [];
+        foreach ([5, 4, 3, 2, 1] as $star) {
+            $key = (string) $star;
+            $ratings[$key] = isset($raw[$key]) && is_scalar($raw[$key]) ? sanitize_text_field((string) $raw[$key]) : '';
+        }
+
+        return $ratings;
+    }
+
+    private function normalize_manifest_contributors($raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $contributors = [];
+        foreach ($raw as $contributor) {
+            if (!is_array($contributor)) {
+                continue;
+            }
+
+            $name = isset($contributor['name']) && is_scalar($contributor['name']) ? sanitize_text_field((string) $contributor['name']) : '';
+            if ($name === '') {
+                continue;
+            }
+
+            $contributors[] = [
+                'name' => $name,
+                'url' => isset($contributor['url']) && is_scalar($contributor['url']) ? esc_url_raw((string) $contributor['url']) : '',
+            ];
+        }
+
+        return $contributors;
     }
 
     private function normalize_manifest_tabs($raw): array
@@ -1329,6 +1539,20 @@ class MULOPIMFWC_Addons_Page
     private function has_valid_license(): bool
     {
         return function_exists('mulopimfwc_is_license_valid') && mulopimfwc_is_license_valid();
+    }
+
+    private function get_release_channel(): string
+    {
+        if (function_exists('mulopimfwc_get_release_channel')) {
+            return sanitize_key((string) mulopimfwc_get_release_channel());
+        }
+
+        return $this->is_envato_build() ? 'envato' : 'edd';
+    }
+
+    private function is_envato_build(): bool
+    {
+        return function_exists('mulopimfwc_is_envato_build') && mulopimfwc_is_envato_build();
     }
 }
 

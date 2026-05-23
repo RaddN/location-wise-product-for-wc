@@ -113,7 +113,7 @@ class MULOPIMFWC_Coupon_Location_Restrictions
             'mulopimfwc-coupon-location-restrictions',
             plugin_dir_url(__FILE__) . '../assets/js/coupon-location-restrictions.js',
             ['jquery'],
-            '1.1.7.20',
+            '1.1.7.22',
             true
         );
     }

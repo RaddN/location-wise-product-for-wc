@@ -7,7 +7,7 @@
  * Much faster and simpler than database tables
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.7.20
+ * @since 1.1.7.22
  */
 
 if (!defined('ABSPATH')) {
@@ -888,7 +888,7 @@ class Mulopimfwc_Customer_Location_Insights
             'mulopimfwc-location-tracking',
             MULTI_LOCATION_PLUGIN_URL . 'assets/js/customer-location-tracking.js',
             ['jquery'],
-            '1.1.7.20',
+            '1.1.7.22',
             true
         );
 
@@ -910,14 +910,14 @@ class Mulopimfwc_Customer_Location_Insights
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/css/recommendations.css',
                 [],
-                '1.1.7.20'
+                '1.1.7.22'
             );
 
             wp_enqueue_script(
                 'mulopimfwc-recommendations',
                 MULTI_LOCATION_PLUGIN_URL . 'assets/js/recommendations.js',
                 ['jquery'],
-                '1.1.7.20',
+                '1.1.7.22',
                 true
             );
 
@@ -952,7 +952,7 @@ class Mulopimfwc_Customer_Location_Insights
             isset($_GET['analytics_date_from']) ? wp_unslash($_GET['analytics_date_from']) : '',
             isset($_GET['analytics_date_to']) ? wp_unslash($_GET['analytics_date_to']) : ''
         );
-        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.22';
 
         wp_enqueue_style(
             'mulopimfwc-customer-location-insights-admin',

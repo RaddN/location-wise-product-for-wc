@@ -5,7 +5,7 @@
  * Allows customers to pay in cash when picking up their order from the store location
  * 
  * @package Multi Location Product & Inventory Management for WooCommerce
- * @since 1.1.7.20
+ * @since 1.1.7.22
  */
 
 if (!defined('ABSPATH')) {
@@ -730,14 +730,14 @@ if (!function_exists('mulopimfwc_enqueue_cop_badge_assets')) {
             'mulopimfwc-cash-on-pickup-admin',
             plugin_dir_url(__FILE__) . '../assets/css/cash-on-pickup-admin.css',
             array(),
-            file_exists($style_path) ? (string) filemtime($style_path) : '1.1.7.20'
+            file_exists($style_path) ? (string) filemtime($style_path) : '1.1.7.22'
         );
 
         wp_enqueue_script(
             'mulopimfwc-cash-on-pickup-admin',
             plugin_dir_url(__FILE__) . '../assets/js/cash-on-pickup-admin.js',
             array(),
-            file_exists($script_path) ? (string) filemtime($script_path) : '1.1.7.20',
+            file_exists($script_path) ? (string) filemtime($script_path) : '1.1.7.22',
             true
         );
 

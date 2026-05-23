@@ -23,8 +23,8 @@ class mulopimfwc_settings
 
         $settings_css_path = plugin_dir_path(__FILE__) . '../assets/css/settings-page.css';
         $settings_js_path = plugin_dir_path(__FILE__) . '../assets/js/settings-page.js';
-        $settings_css_version = file_exists($settings_css_path) ? (string) filemtime($settings_css_path) : '1.1.7.20';
-        $settings_js_version = file_exists($settings_js_path) ? (string) filemtime($settings_js_path) : '1.1.7.20';
+        $settings_css_version = file_exists($settings_css_path) ? (string) filemtime($settings_css_path) : '1.1.7.22';
+        $settings_js_version = file_exists($settings_js_path) ? (string) filemtime($settings_js_path) : '1.1.7.22';
 
         wp_enqueue_style(
             'mulopimfwc-settings-page',

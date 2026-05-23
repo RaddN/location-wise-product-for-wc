@@ -19,7 +19,7 @@ class mulopimfwc_Stock_Central
             return;
         }
 
-        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.22';
 
         wp_enqueue_style(
             'mulopimfwc-stock-central',

@@ -4,7 +4,7 @@
  * Location Managers Admin Page
  * 
  * @package Multi Location Product & Inventory Management
- * @since 1.1.7.20
+ * @since 1.1.7.22
  */
 
 if (!defined('ABSPATH')) exit;
@@ -50,7 +50,7 @@ class MULOPIMFWC_Location_Managers
             return;
         }
 
-        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.22';
 
         wp_enqueue_style(
             'mulopimfwc-location-managers',
@@ -95,7 +95,7 @@ class MULOPIMFWC_Location_Managers
             return;
         }
 
-        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.20';
+        $version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.22';
 
         wp_enqueue_style(
             'mulopimfwc-order-readonly',
