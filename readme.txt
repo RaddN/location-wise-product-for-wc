@@ -5,7 +5,7 @@ Tags: inventory management, woocommerce inventory, location based pricing, multi
 Requires at least: 5.0
 Requires PHP: 7.2
 Tested up to: 7.0
-Stable tag: 1.1.7.22
+Stable tag: 1.1.7.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -437,6 +437,9 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 
 == Changelog ==
 
+= 1.1.7.23 =
+* Fixed: cart items with no selected/default storefront location now fall back to a single assigned product or variation location for per-location shipping package splitting.
+
 = 1.1.7.22 =
 * Updated: readme documentation restored to the previous symbol-rich arrangement while matching the current Pro codebase.
 * Added: shortcodes, REST endpoints, import/export flows, third-party services, and compatibility notes to the readme.
@@ -535,8 +538,8 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 
 == Upgrade Notice ==
 
-= 1.1.7.22 =
-Review the updated readme, especially third-party services, import/export formats, and compatibility notes for mixed cart, split orders, and location-wise currency.
+= 1.1.7.23 =
+Per-location shipping now recognizes fixed-location products in carts where no storefront location has been selected.
 
 == Support ==
 

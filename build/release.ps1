@@ -72,6 +72,7 @@ $excludeDirs = @(
     '.github',
     '.vscode',
     '.cursor',
+    '.playwright-mcp',
     'build',
     'docs'
 )
