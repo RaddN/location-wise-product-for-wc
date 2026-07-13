@@ -1,0 +1,807 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to content" [ref=e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - link [ref=e16] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/
+              - img "Wet Wall Works logo" [ref=e17]
+            - paragraph [ref=e21]:
+              - link [ref=e22] [cursor=pointer]:
+                - /url: javascript:void(0)
+                - img "Girl in a jacket" [ref=e23]
+          - generic [ref=e24]:
+            - button "View Search Form" [ref=e27] [cursor=pointer]
+            - link "Shopping Cart" [ref=e35] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/cart/
+              - img "Shopping Cart" [ref=e37]
+              - generic [ref=e39]: "0"
+            - button "Open menu" [ref=e42] [cursor=pointer]
+        - 'link "Call Now Call Now: 1800 668 453" [ref=e55] [cursor=pointer]':
+          - /url: tel:1800668453
+          - img "Call Now" [ref=e56]
+          - generic [ref=e57]: "Call Now: 1800 668 453"
+    - main [ref=e59]:
+      - article [ref=e64]:
+        - generic [ref=e66]:
+          - generic [ref=e70]:
+            - generic [ref=e72]:
+              - heading "Wave Goodbye to Grout Forever!" [level=2] [ref=e73]
+              - heading [level=3] [ref=e74]:
+                - text: Make a lasting change with our
+                - strong [ref=e75]: DIY-Install Wet Wall panels
+                - text: ", Australia’s number 1 tile alternative."
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e80]: BUY NOW from just
+                - generic [ref=e82]: $149
+                - generic [ref=e83]: per wall panel
+              - link "Buy Now!" [ref=e84] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/product-category/bathroom-wall-panels-wet-wall-works/
+          - generic [ref=e88]:
+            - link "100% Mould Resistant" [ref=e92] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/mould-resistant-wall-panels/
+              - img "mould resistant" [ref=e98]
+              - heading "100% Mould Resistant" [level=3] [ref=e100]
+            - link "Australian-Wide Delivery" [ref=e104] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/shipping/
+              - img "australia wide delivery" [ref=e110]
+              - heading "Delivery Australia Wide" [level=3] [ref=e112]: DeliveryAustralia Wide
+            - link "100% Waterproof" [ref=e116] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/waterproof-wall-panels/
+              - img "100% waterproof" [ref=e122]
+              - heading "100% Waterproof" [level=3] [ref=e124]
+            - link "Grout Free" [ref=e128] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/grout-free-wet-wall-panels/
+              - img "grout free" [ref=e134]
+              - heading "Grout-Free Tile Alternative" [level=3] [ref=e136]
+            - link "Easy-To-Install" [ref=e140] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/easy-to-install-bathroom-wall-panels/
+              - img "easy to install" [ref=e146]
+              - heading "Easy-To-Install" [level=3] [ref=e148]
+            - link "15 Year Warranty" [ref=e152] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/warranty/
+              - img "10-yr warranty" [ref=e158]
+              - heading "15 Year Warranty" [level=3] [ref=e160]
+          - generic [ref=e164]:
+            - heading [level=2] [ref=e165]:
+              - mark [ref=e166]: Top Selling
+              - text: Wet Wall Panels
+            - list [ref=e168]:
+              - listitem [ref=e169]:
+                - generic [ref=e173]:
+                  - link [ref=e175] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/concrete-wet-wall-panel-from-149-wet-wall-works/
+                    - img "Concrete wall cladding panels" [ref=e176]
+                    - img "Concrete bathroom wall panelling" [ref=e177]
+                  - link [ref=e178] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/concrete-wet-wall-panel-from-149-wet-wall-works/
+                    - heading "Concrete Wet Wall Panel" [level=2] [ref=e179]
+                  - generic [ref=e180]:
+                    - generic [ref=e181]: $149.00
+                    - text: –
+                    - generic [ref=e183]: $179.00
+                    - generic [ref=e185]: "Price range: $149.00 through $179.00"
+                  - list [ref=e187]:
+                    - listitem [ref=e188]:
+                      - generic [ref=e193]: Available in-store and online
+                    - listitem [ref=e194]:
+                      - link "Free Shipping*" [ref=e201] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - generic [ref=e202]:
+                    - link "Select options for “Concrete Wet Wall Panel”" [ref=e203] [cursor=pointer]:
+                      - /url: https://wetwallworks.com.au/product/concrete-wet-wall-panel-from-149-wet-wall-works/
+                      - text: Select options
+                    - generic [ref=e204]: This product has multiple variants. The options may be chosen on the product page
+              - listitem [ref=e205]:
+                - generic [ref=e209]:
+                  - link [ref=e211] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/carrara-wet-wall-panel-179-wet-wall-works/
+                    - img "Carrara Wet Wall Panels" [ref=e212]
+                    - img "Carrara Bathroom Panels" [ref=e213]
+                  - link [ref=e214] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/carrara-wet-wall-panel-179-wet-wall-works/
+                    - heading "Carrara Wet Wall Panel" [level=2] [ref=e215]
+                  - generic [ref=e216]: $179.00
+                  - list [ref=e220]:
+                    - listitem [ref=e221]:
+                      - generic [ref=e226]: Available in-store and online
+                    - listitem [ref=e227]:
+                      - link "Free Shipping*" [ref=e234] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - 'link "Add to cart: “Carrara Wet Wall Panel”" [ref=e236] [cursor=pointer]':
+                    - /url: /?add-to-cart=679
+                    - text: Add to cart
+              - listitem [ref=e238]:
+                - generic [ref=e242]:
+                  - link [ref=e244] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/blanco-wet-wall-panel-from-149-wet-wall-works/
+                    - img "Blanco Wet Wall Panels" [ref=e245]
+                    - img "Blanco Bathroom Wall Panel Installation" [ref=e246]
+                  - link [ref=e247] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/blanco-wet-wall-panel-from-149-wet-wall-works/
+                    - heading "Blanco Wet Wall Panel" [level=2] [ref=e248]
+                  - generic [ref=e249]:
+                    - generic [ref=e250]: $149.00
+                    - text: –
+                    - generic [ref=e252]: $179.00
+                    - generic [ref=e254]: "Price range: $149.00 through $179.00"
+                  - list [ref=e256]:
+                    - listitem [ref=e257]:
+                      - generic [ref=e262]: Available in-store and online
+                    - listitem [ref=e263]:
+                      - link "Free Shipping*" [ref=e270] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - generic [ref=e271]:
+                    - link "Select options for “Blanco Wet Wall Panel”" [ref=e272] [cursor=pointer]:
+                      - /url: https://wetwallworks.com.au/product/blanco-wet-wall-panel-from-149-wet-wall-works/
+                      - text: Select options
+                    - generic [ref=e273]: This product has multiple variants. The options may be chosen on the product page
+              - listitem [ref=e274]:
+                - generic [ref=e278]:
+                  - link [ref=e280] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/white-concrete-wet-wall-panel/
+                    - img "White Concrete Wet Wall Panels" [ref=e281]
+                    - img "White Concrete Bath Wall Panels" [ref=e282]
+                  - link [ref=e283] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/white-concrete-wet-wall-panel/
+                    - heading "White Concrete Wet Wall Panel" [level=2] [ref=e284]
+                  - generic [ref=e285]: $179.00
+                  - list [ref=e289]:
+                    - listitem [ref=e290]:
+                      - generic [ref=e295]: Available in-store and online
+                    - listitem [ref=e296]:
+                      - link "Free Shipping*" [ref=e303] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - 'link "Add to cart: “White Concrete Wet Wall Panel”" [ref=e305] [cursor=pointer]':
+                    - /url: /?add-to-cart=5618
+                    - text: Add to cart
+              - listitem [ref=e307]:
+                - generic [ref=e311]:
+                  - link [ref=e313] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/calacatta-wet-wall-panel-179-wet-wall-works/
+                    - img "Calacatta Bathroom Wall Panel" [ref=e314]
+                    - img "calacatta black trim" [ref=e315]
+                  - link [ref=e316] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/calacatta-wet-wall-panel-179-wet-wall-works/
+                    - heading "Calacatta Wet Wall Panel" [level=2] [ref=e317]
+                  - generic [ref=e318]: $179.00
+                  - list [ref=e322]:
+                    - listitem [ref=e323]:
+                      - generic [ref=e328]: Available in-store and online
+                    - listitem [ref=e329]:
+                      - link "Free Shipping*" [ref=e336] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - 'link "Add to cart: “Calacatta Wet Wall Panel”" [ref=e338] [cursor=pointer]':
+                    - /url: /?add-to-cart=3230
+                    - text: Add to cart
+              - listitem [ref=e340]:
+                - generic [ref=e344]:
+                  - link [ref=e346] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/black-sensation-wet-wall-panel-179-wet-wall-works/
+                    - img "Black Sensation waterproof wall panels" [ref=e347]
+                    - img "Black Sensation Wet Wall Panels" [ref=e348]
+                  - link [ref=e349] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/black-sensation-wet-wall-panel-179-wet-wall-works/
+                    - heading "Black Sensation Wet Wall Panel" [level=2] [ref=e350]
+                  - generic [ref=e351]: $179.00
+                  - list [ref=e355]:
+                    - listitem [ref=e356]:
+                      - generic [ref=e361]: Available in-store and online
+                    - listitem [ref=e362]:
+                      - link "Free Shipping*" [ref=e369] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - 'link "Add to cart: “Black Sensation Wet Wall Panel”" [ref=e371] [cursor=pointer]':
+                    - /url: /?add-to-cart=178
+                    - text: Add to cart
+              - listitem [ref=e373]:
+                - generic [ref=e377]:
+                  - link [ref=e379] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/graphite-wet-wall-panel-179-wet-wall-works/
+                    - img "Graphite wall cladding panels" [ref=e380]
+                    - img "Graphite bathroom wall panels" [ref=e381]
+                  - link [ref=e382] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/graphite-wet-wall-panel-179-wet-wall-works/
+                    - heading "Graphite Wet Wall Panel" [level=2] [ref=e383]
+                  - generic [ref=e384]: $179.00
+                  - list [ref=e388]:
+                    - listitem [ref=e389]:
+                      - generic [ref=e394]: Available in-store and online
+                    - listitem [ref=e395]:
+                      - link "Free Shipping*" [ref=e402] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - 'link "Add to cart: “Graphite Wet Wall Panel”" [ref=e404] [cursor=pointer]':
+                    - /url: /?add-to-cart=677
+                    - text: Add to cart
+              - listitem [ref=e406]:
+                - generic [ref=e410]:
+                  - link [ref=e412] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/sahara-gold-wet-wall-panel-179-wet-wall-works/
+                    - img "Sahara Gold Bathroom Wall Panels" [ref=e413]
+                    - img "Sahara Gold Wall Panelling in Bathroom" [ref=e414]
+                  - link [ref=e415] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/product/sahara-gold-wet-wall-panel-179-wet-wall-works/
+                    - heading "Sahara Gold Wet Wall Panel" [level=2] [ref=e416]
+                  - generic [ref=e417]: $179.00
+                  - list [ref=e421]:
+                    - listitem [ref=e422]:
+                      - generic [ref=e427]: Available in-store and online
+                    - listitem [ref=e428]:
+                      - link "Free Shipping*" [ref=e435] [cursor=pointer]:
+                        - /url: javascript:void(0)
+                  - 'link "Add to cart: “Sahara Gold Wet Wall Panel”" [ref=e437] [cursor=pointer]':
+                    - /url: /?add-to-cart=674
+                    - text: Add to cart
+          - generic [ref=e440]:
+            - figure [ref=e443]:
+              - img "bathroom wall panels" [ref=e445]
+            - generic [ref=e447]:
+              - heading "Why Bathroom Wall Panels?" [level=1] [ref=e448]
+              - paragraph [ref=e449]:
+                - link "Waterproof bathroom wall panels" [ref=e450] [cursor=pointer]:
+                  - /url: https://wetwallworks.com.au/waterproof-bathroom-wall-panels/
+                - text: and
+                - link "shower wall panels" [ref=e451] [cursor=pointer]:
+                  - /url: https://wetwallworks.com.au/product-category/shower-wall-panels/
+                - text: ", otherwise known as wet wall panels, are the most popular wall panelling for bathrooms. Not only are they 100% waterproof and mould resistant, but they are also quicker and easier to install, more affordable, and easier to clean!"
+              - paragraph [ref=e452]:
+                - text: Wet Wall Works is a manufacturer of waterproof wet wall panels, supplying the trade and the public. As such, this allows us to provide our customers with a quality product at a low price all year round. With showrooms for
+                - link "bathroom wall panels in Brisbane" [ref=e453] [cursor=pointer]:
+                  - /url: https://wetwallworks.com.au/bathroom-wall-panels-brisbane/
+                - text: ","
+                - link "Gold Coast" [ref=e454] [cursor=pointer]:
+                  - /url: https://wetwallworks.com.au/bathroom-wall-panels-gold-coast/
+                - text: ","
+                - link "Melbourne" [ref=e455] [cursor=pointer]:
+                  - /url: https://wetwallworks.com.au/bathroom-wall-panels-melbourne/
+                - text: ", &"
+                - link "Perth" [ref=e456] [cursor=pointer]:
+                  - /url: https://wetwallworks.com.au/bathroom-wall-panels-perth/
+                - text: ", we have you covered Australia-wide."
+              - link "Shop Wet Wall Panels" [ref=e458] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/shop/
+            - generic [ref=e460]:
+              - heading "What are Wet Wall Panels?" [level=2] [ref=e461]
+              - paragraph [ref=e462]:
+                - link "Wet wall panels" [ref=e463] [cursor=pointer]:
+                  - /url: https://wetwallworks.com.au/shop/
+                - text: in Australia are an excellent tile alternative for bathrooms, showers, and other spaces. Made of cost-effective PVC, our bathroom wall and shower panels are strong and durable, with a vertical cuboid construction that makes them lightweight and easy to handle.
+              - paragraph [ref=e464]: Weighing in at only 11kg per panel, our wet area wall panels can be installed by a single person. Despite their affordability, bathroom wall panels offer the same benefits as premium products, bringing high-end style to any budget.
+              - link "Learn More" [ref=e466] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/our-story/
+          - generic [ref=e468]:
+            - generic [ref=e472]:
+              - img "easy to clean" [ref=e478]
+              - generic [ref=e479]:
+                - heading "Easy to Clean" [level=2] [ref=e480]
+                - paragraph [ref=e481]: Cleaning bathroom and shower walls has never been easier. Our waterproof bathroom wall panels are designed to be low maintenance and easy to clean. With a smooth surface and no grout lines, you can spend less time scrubbing and more time enjoying your space.
+            - generic [ref=e485]:
+              - img "tile alternative" [ref=e491]
+              - generic [ref=e492]:
+                - heading "Versatile Tile Alternative" [level=2] [ref=e493]
+                - paragraph [ref=e494]:
+                  - text: Our bathroom wall panels are a versatile tile alternative that can be used in bathrooms, showers,
+                  - link "kitchens" [ref=e495] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/wet-wall-panels-for-kitchen-the-affordable-splashback-alternative/
+                  - text: ", and laundry rooms. With various designs, styles and finishes, they’re perfect for any space renovation."
+            - generic [ref=e499]:
+              - img "lowest prices" [ref=e505]
+              - generic [ref=e506]:
+                - heading "Lowest Prices Guaranteed" [level=2] [ref=e507]
+                - paragraph [ref=e508]:
+                  - text: We believe high-quality products should be accessible to everyone, which is why we offer the
+                  - link "cheapest bathroom wall panels" [ref=e509] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/cheapest-bathroom-wall-panels-a-budget-buyers-guide/
+                  - text: without compromising on quality. If you happen to find bathroom wall panels at a lower price elsewhere, we’ll match it.
+            - generic [ref=e513]:
+              - img "fire retardant" [ref=e519]
+              - generic [ref=e520]:
+                - heading "Fire Retardant" [level=2] [ref=e521]
+                - paragraph [ref=e522]: Safety is our top priority, which is why our waterproof wall panel and shower wall panel options are also fire-retardant. They are designed to withstand high temperatures, making them a safe choice for your home or business.
+          - generic [ref=e524]:
+            - generic [ref=e528]:
+              - heading "How do they work?" [level=2] [ref=e529]
+              - paragraph [ref=e530]: With their clever tongue-and-groove interlocking system, our bathroom wall panels simply interlock, making them quick and easy to install and the number one alternative to tiles.
+              - link "Learn More" [ref=e532] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/our-story/
+            - generic [ref=e540]:
+              - heading "Want to be an Installer?" [level=2] [ref=e541]
+              - paragraph [ref=e542]: Attention tilers, chippies, and plumbers! We’re looking for self-employed tradespeople to join our network as authorised bathroom wall panel installers across Australia. As an authorised installer, you’ll receive genuine leads in your local area and be featured on our website. Call us now on 1800 668 453 for more details.
+              - link "Become an installer" [ref=e544] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/become-an-installer/
+            - generic [ref=e552]:
+              - heading "Need an Installer?" [level=2] [ref=e553]
+              - paragraph [ref=e554]: Looking to install shower wall panels but don’t want to do the work yourself? No problem! We have a list of recommended professionals in each state. Contact them directly for a FREE measure and quote, you have nothing to lose by enquiring about their service. Let them make your project easy and enjoyable.
+              - link "Learn More" [ref=e556] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/installers/
+          - generic [ref=e564]:
+            - heading "Latest Blog Posts" [level=2] [ref=e565]
+            - generic "Post Carousel" [ref=e567]:
+              - article [ref=e568]:
+                - generic [ref=e569]:
+                  - link [ref=e573] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/bathroom-wall-sheets-calculator/
+                  - generic [ref=e576]:
+                    - heading [level=2] [ref=e577]:
+                      - 'link "Bathroom Wall Sheets Calculator: Get Accurate Quotes in Minutes" [ref=e578] [cursor=pointer]':
+                        - /url: https://wetwallworks.com.au/bathroom-wall-sheets-calculator/
+                    - generic [ref=e580]:
+                      - text: Posted on
+                      - time [ref=e581]: July 8, 2026
+              - article [ref=e582]:
+                - generic [ref=e583]:
+                  - link [ref=e587] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/wood-slat-wall-panels-bathrooms/
+                  - generic [ref=e590]:
+                    - heading [level=2] [ref=e591]:
+                      - 'link "Wood Slat Wall Panels: How to Get the Look in Bathrooms and Wet Areas" [ref=e592] [cursor=pointer]':
+                        - /url: https://wetwallworks.com.au/wood-slat-wall-panels-bathrooms/
+                    - generic [ref=e594]:
+                      - text: Posted on
+                      - time [ref=e595]: July 6, 2026
+              - article [ref=e596]:
+                - generic [ref=e597]:
+                  - link [ref=e601] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/high-quality-bathroom-wall-panels/
+                  - generic [ref=e604]:
+                    - heading [level=2] [ref=e605]:
+                      - link "What Makes a Bathroom Wall Panel High Quality? (Australian Buyer’s Guide)" [ref=e606] [cursor=pointer]:
+                        - /url: https://wetwallworks.com.au/high-quality-bathroom-wall-panels/
+                    - generic [ref=e608]:
+                      - text: Posted on
+                      - time [ref=e609]: July 1, 2026
+              - article [ref=e610]:
+                - generic [ref=e611]:
+                  - link [ref=e615] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/renovate-bathroom-wont-date/
+                  - generic [ref=e618]:
+                    - heading [level=2] [ref=e619]:
+                      - link "How to Renovate a Bathroom That Won’t Date in 10 Years" [ref=e620] [cursor=pointer]:
+                        - /url: https://wetwallworks.com.au/renovate-bathroom-wont-date/
+                    - generic [ref=e622]:
+                      - text: Posted on
+                      - time [ref=e623]: June 24, 2026
+          - generic [ref=e627]:
+            - generic [ref=e631]:
+              - heading "See What Customers Say About Our Products" [level=2] [ref=e634]
+              - link "Add your Review" [ref=e638] [cursor=pointer]:
+                - /url: https://g.page/r/CZUT396kVRUEEBM/review
+            - generic [ref=e642]:
+              - generic [ref=e643]: "4.9"
+              - generic [ref=e652]:
+                - button "Previous reviews" [ref=e653] [cursor=pointer]
+                - generic [ref=e654]:
+                  - generic [ref=e656]:
+                    - generic [ref=e658]:
+                      - generic [ref=e659]: Graeme S.
+                      - generic [ref=e660]: 1 month ago
+                    - generic [ref=e661]: Great service and information. Thanks .
+                  - generic [ref=e665]:
+                    - generic [ref=e667]:
+                      - generic [ref=e668]: Colleen H.
+                      - generic [ref=e669]: 1 month ago
+                    - generic [ref=e670]: I found Wet Walls Works online because my shower recess had been leaking for years into the bedroom wall. I hate tiles and grout and wanted an alternative that is easy to clean. Unfortunately there was no installer in our area so I had to do it myself. I am a 71 year old woman so was terrified about doing all the measurements for fitting the tap and shower head part. Grandson to the rescue for that part. We made a few mistakes and didn’t end up putting the corner piece in because my waterproofing was a bit messy so it threw out the measurements but that was ok we just used silicone sealer instead. These panels are meant to go straight over the tiles which would have been very simple but because I wanted to change the taps to a mixer and the shower head to a post and rail it meant the tiles had to come off which made things a little more difficult. I am very happy with the finished product and ended up buying another panel so I could put it around the basin area and the sides of the cupboards which makes it all look so much nicer. I still have some panel left so today I am going to put it inside my cupboards because the chipboard in there is all rubbish and crumbling. Overall I highly recommend this product because it makes the bathroom look so much better but I would recommend just putting straight over the tiles if you can.
+                  - generic [ref=e674]:
+                    - generic [ref=e676]:
+                      - generic [ref=e677]: Darren R.
+                      - generic [ref=e678]: 1 month ago
+                    - generic [ref=e679]: Great products and service. Highly recommend.
+                  - generic [ref=e683]:
+                    - generic [ref=e685]:
+                      - generic [ref=e686]: John D.
+                      - generic [ref=e687]: 2 months ago
+                    - generic [ref=e688]: It's only a small Factory outlet and supplies are very well priced customer service fantastic
+                  - generic [ref=e692]:
+                    - generic [ref=e694]:
+                      - generic [ref=e695]: Mark N.
+                      - generic [ref=e696]: 2 months ago
+                    - generic [ref=e697]: Purchasing experience was simple, delivery 🚚 was on time and very professional, including the installation guide and invoice package!!
+                  - generic [ref=e701]:
+                    - generic [ref=e703]:
+                      - generic [ref=e704]: D K.
+                      - generic [ref=e705]: 2 months ago
+                    - generic [ref=e706]: Excellent experience with this company, and the super helpful and cheerful Jamie. Quick delivery too. Thank you. :)
+                  - generic [ref=e710]:
+                    - generic [ref=e712]:
+                      - generic [ref=e713]: Doug B.
+                      - generic [ref=e714]: 2 months ago
+                    - generic [ref=e715]: Right from my first phone call with Andrew I felt I was on the right track. I popped in to see him as soon as I could. He knew the products and politely talked me through how they work and what I needed. He was quick to respond with the pricing. I purchased the package of panels, edging, corners, adhesive and sealant and picked them up from the warehouse. I’m not a building tradie by any means and was quite nervous to get started! Measuring, cutting and then gluing and sealing….. well, it was actually pretty easy! All went together pretty well and I felt more confident each step. The wet wall product is great 👍 Thank you. Doug
+                  - generic [ref=e719]:
+                    - generic [ref=e721]:
+                      - generic [ref=e722]: Graham S.
+                      - generic [ref=e723]: 2 months ago
+                    - generic [ref=e724]: Excellent service and free delivery is a bonus especially when we live 300kms away from their office . The bathroom makeover looks stunning and I will post photos in the future. Couldn’t be happier.
+                  - generic [ref=e728]:
+                    - generic [ref=e730]:
+                      - generic [ref=e731]: Steve M.
+                      - generic [ref=e732]: 3 months ago
+                    - generic [ref=e733]: Easy to deal with, good product. Happy with the service.
+                  - generic [ref=e737]:
+                    - generic [ref=e739]:
+                      - generic [ref=e740]: Tony B.
+                      - generic [ref=e741]: 3 months ago
+                    - generic [ref=e742]: Great products and very helpful staff member. Will be using this product.
+                  - generic [ref=e746]:
+                    - generic [ref=e748]:
+                      - generic [ref=e749]: Gail M.
+                      - generic [ref=e750]: 4 months ago
+                    - generic [ref=e751]: The owner Jamie was outstanding. Talked us through the whole process.
+                  - generic [ref=e755]:
+                    - generic [ref=e757]:
+                      - generic [ref=e758]: Geoffrey B.
+                      - generic [ref=e759]: 4 months ago
+                    - generic [ref=e760]: Fantastic experience helped out with everything & when some of package was lost replaced without any trouble. Everything arrived in a timely manner.
+                  - generic [ref=e764]:
+                    - generic [ref=e766]:
+                      - generic [ref=e767]: Lisa M.
+                      - generic [ref=e768]: 5 months ago
+                    - generic [ref=e769]: I am so glad I found this product. It was so easy to DIY install and cheaper than tiling. The team at Wet Wall where all super helpful and willing to offer advice. I will definitely be returning when it's time for the second bathroom upgrade. Thanks Team 😁
+                  - generic [ref=e773]:
+                    - generic [ref=e775]:
+                      - generic [ref=e776]: Craig Van Der L.
+                      - generic [ref=e777]: 5 months ago
+                    - generic [ref=e778]: Wet Wall panels are a fantastic way to renovate a wet area without the massive expense of retiling. If you can read a tape measure and use a hand saw then Wet Wall panels are an easy DIY option. I was so happy after installing Wet Wall panels in my ensuite I ordered more panels to renovate the family bathroom. Very helpful staff, from ordering to delivery. If you are considering a bathroom renovation I would highly recommend looking at Wet Wall panels.
+                  - generic [ref=e782]:
+                    - generic [ref=e784]:
+                      - generic [ref=e785]: Cristal J.
+                      - generic [ref=e786]: 5 months ago
+                    - generic [ref=e787]: What a variety of Wet Walls to choose from at this Shop! The staff are so friendly, knowledgable and go out of their way to help the customers! Their showroom is so clean, and many designs to view. Its ideal, to get the sheets delivered for an additional cost, with delivery an absolute breeze, transparent and customer service from the driver at an all time high in service!
+                  - generic [ref=e791]:
+                    - generic [ref=e793]:
+                      - generic [ref=e794]: Kristy W.
+                      - generic [ref=e795]: 6 months ago
+                    - generic [ref=e796]: Great product! Used as a feature wall in the bedroom. Staff very pleasant and when I went to pick it up, they carried and loaded into the Ute for me :-) Would definitely use this company again!
+                  - generic [ref=e800]:
+                    - generic [ref=e802]:
+                      - generic [ref=e803]: David L.
+                      - generic [ref=e804]: 6 months ago
+                    - generic [ref=e805]: Great product, easy to work with. Everyone who looks in my bathroom comments on how good the walls look! We used Carrara Marble with chrome trim.
+                  - generic [ref=e809]:
+                    - generic [ref=e811]:
+                      - generic [ref=e812]: r J.
+                      - generic [ref=e813]: 8 months ago
+                    - generic [ref=e814]: Just did my bathroom with the product these guys sell and it’s awesome. Customer service is also great, super helpful and lots of support. Thanks guys.
+                  - generic [ref=e818]:
+                    - generic [ref=e820]:
+                      - generic [ref=e821]: Della H.
+                      - generic [ref=e822]: 9 months ago
+                    - generic [ref=e823]: Brilliant product. Great service. Well priced. Highly recommend
+                  - generic [ref=e827]:
+                    - generic [ref=e829]:
+                      - generic [ref=e830]: Paul E.
+                      - generic [ref=e831]: 9 months ago
+                    - generic [ref=e832]: Great products and so easy to install. The installation videos were a great help and the overall costs and service were absolutely fantastic. Both my bathrooms have been transformed using Wet Wall products. Thanks guys.
+                  - generic [ref=e836]:
+                    - generic [ref=e838]:
+                      - generic [ref=e839]: Jan O.
+                      - generic [ref=e840]: 9 months ago
+                    - generic [ref=e841]: Can't praise this Company enough. Sharon went above and beyond to help me decide which was best for our needs. We recently bought a holiday home in Perth and weren't sure where to start. From ordering to delivery and completion of the work everything was perfect. Excellent customer service. I would recommend Wet Wall Works and look forward to their expertise when we start our next project. Happy customer.
+                  - generic [ref=e845]:
+                    - generic [ref=e847]:
+                      - generic [ref=e848]: Anita H.
+                      - generic [ref=e849]: 10 months ago
+                    - generic [ref=e850]: Great company to deal with, friendly and very helpful. Product looks amazing. I have done 2 bathrooms with it. Love it.
+                  - generic [ref=e854]:
+                    - generic [ref=e856]:
+                      - generic [ref=e857]: Jo B.
+                      - generic [ref=e858]: 10 months ago
+                    - generic [ref=e859]: Panels arrived so quick and were packaged incredibly well. Could not have asked for better service. We are yet to install them but so far so very very good!👌
+                  - generic [ref=e863]:
+                    - generic [ref=e865]:
+                      - generic [ref=e866]: Michelle H.
+                      - generic [ref=e867]: 11 months ago
+                    - generic [ref=e868]: Very easy to order wet walls from and they were delivered earlier than expected. Delivery guy was polite and friendly and put them in a safe place til I could get them inside.thanks again. Will be ordering again soon when we start our other bathroom
+                  - generic [ref=e872]:
+                    - generic [ref=e874]:
+                      - generic [ref=e875]: Eddie F.
+                      - generic [ref=e876]: 11 months ago
+                    - generic [ref=e877]: Easy to work with. Looks great, like a brand new shower now
+                - button "Next reviews" [ref=e880] [cursor=pointer]
+          - generic [ref=e884]:
+            - heading "Get Started with Australia’s Best Bathroom Wall Panels Today!" [level=2] [ref=e885]
+            - paragraph [ref=e886]:
+              - text: Wet Wall Works is Australia’s trusted supplier of premium bathroom wall panels, delivering nationwide from our warehouses in
+              - strong [ref=e887]: Western Australia
+              - text: ","
+              - strong [ref=e888]: Queensland
+              - text: ", and"
+              - strong [ref=e889]: Victoria
+              - text: . Whether you’re renovating in Perth, Brisbane, Sydney, Adelaide, Melbourne — or anywhere in between — we make it easy to upgrade your bathroom with our stylish, waterproof wall panels.
+            - link "View Our Range" [ref=e891] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/product-category/bathroom-wall-panels-wet-wall-works/
+          - generic [ref=e897]:
+            - heading "Our Locations" [level=2] [ref=e898]
+            - generic [ref=e900]:
+              - generic [ref=e904]:
+                - figure [ref=e905]:
+                  - img "wet wall works perth headquarters" [ref=e907]
+                - generic [ref=e909]:
+                  - heading "PERTH" [level=4] [ref=e910]
+                  - paragraph [ref=e911]: 1/23 Mandurah Rd, Kwinana Beach WA 6167
+                  - link "View Details" [ref=e913] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/bathroom-wall-panels-perth/
+              - generic [ref=e917]:
+                - figure [ref=e918]:
+                  - link "Bathroom Wall Panels Brisbane" [ref=e919] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/bathroom-wall-panels-brisbane/
+                    - img "Wet Wall Works Brisbane QLD showroom and distribution warehouse" [ref=e921]
+                - generic [ref=e923]:
+                  - heading "BRISBANE" [level=4] [ref=e924]
+                  - paragraph [ref=e925]: 6/30 Octal Street,Yatala QLD 4207
+                  - link "View Details" [ref=e927] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/bathroom-wall-panels-brisbane/
+              - generic [ref=e931]:
+                - figure [ref=e932]:
+                  - link "Bathroom Wall Panels Melbourne" [ref=e933] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/bathroom-wall-panels-melbourne/
+                    - img "Wet Wall Works Melbourne VIC warehouse and customer pickup location" [ref=e935]
+                - generic [ref=e937]:
+                  - heading "MELBOURNE" [level=4] [ref=e938]
+                  - paragraph [ref=e939]: 6/16-18 Tennyson St,Williamstown North VIC 3016
+                  - link "View Details" [ref=e941] [cursor=pointer]:
+                    - /url: https://wetwallworks.com.au/bathroom-wall-panels-melbourne/
+    - generic [ref=e942]:
+      - generic [ref=e944]:
+        - heading "Upgrade your space with ease and affordability!" [level=2] [ref=e945]
+        - paragraph [ref=e946]: Say goodbye to the hassle of tiles, mould and grout and hello to a sleek, waterproof, and mould-resistant solution. Shop for bathroom wall panels now and transform your space today!
+        - navigation "Locations" [ref=e947]:
+          - list [ref=e948]:
+            - listitem [ref=e949]:
+              - link "Perth" [ref=e950] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/bathroom-wall-panels-perth/
+              - text: •
+            - listitem [ref=e951]:
+              - link "Melbourne" [ref=e952] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/bathroom-wall-panels-melbourne/
+              - text: •
+            - listitem [ref=e953]:
+              - link "Brisbane" [ref=e954] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/bathroom-wall-panels-brisbane/
+              - text: •
+            - listitem [ref=e955]:
+              - link "Gold Coast" [ref=e956] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/bathroom-wall-panels-gold-coast/
+              - text: •
+            - listitem [ref=e957]:
+              - link "Sydney" [ref=e958] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/bathroom-wall-panels-sydney/
+              - text: •
+            - listitem [ref=e959]:
+              - link "Adelaide" [ref=e960] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/bathroom-wall-panels-adelaide/
+              - text: •
+            - listitem [ref=e961]:
+              - link "Sunshine Coast" [ref=e962] [cursor=pointer]:
+                - /url: https://wetwallworks.com.au/bathroom-wall-panels-sunshine-coast/
+      - figure [ref=e966]:
+        - img "SSL" [ref=e967]
+      - link "Shop Now" [ref=e971] [cursor=pointer]:
+        - /url: https://wetwallworks.com.au/shop/
+    - generic [ref=e974]:
+      - link [ref=e976] [cursor=pointer]:
+        - /url: https://wetwallworks.com.au/
+        - img "Wet Wall Works logo" [ref=e977]
+      - generic [ref=e979]:
+        - link "Contact Us" [ref=e981] [cursor=pointer]:
+          - /url: https://wetwallworks.com.au/contact-us/
+        - list [ref=e982]:
+          - listitem [ref=e983]:
+            - link "Facebook" [ref=e984] [cursor=pointer]:
+              - /url: https://www.facebook.com/wetwallworksau
+          - listitem [ref=e988]:
+            - link "Instagram" [ref=e989] [cursor=pointer]:
+              - /url: https://www.instagram.com/wetwallworksau/
+          - listitem [ref=e993]:
+            - link "YouTube" [ref=e994] [cursor=pointer]:
+              - /url: https://www.youtube.com/@WetWallWorksAU
+          - listitem [ref=e998]:
+            - link "LinkedIn" [ref=e999] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/wetwallworks/
+    - contentinfo [ref=e1003]:
+      - paragraph [ref=e1014]:
+        - text: © 2026 Wet Wall Works. All Rights Reserved. Website by
+        - link "Ignition Media" [ref=e1015] [cursor=pointer]:
+          - /url: https://ignitionmedia.com.au/
+        - text: .
+  - link [ref=e1016] [cursor=pointer]:
+    - /url: "#wrapper"
+  - button "Scroll to top" [ref=e1017] [cursor=pointer]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - paragraph:
+            - strong: Terms and Conditions for Wet Wall Works Tool Kit Redemption Offer
+          - paragraph:
+            - strong: 1. Promotion Overview
+          - paragraph: This promotional offer ("Offer") is available exclusively through WetWallWorks.com.au ("Website"). Customers who purchase 10 or more full-priced 2.4m Wet Wall panels ("Eligible Purchase") will qualify for a free tool kit ("Free Tool Kit") valued at over $130, subject to these Terms and Conditions.
+          - paragraph:
+            - strong: 2. Eligibility
+          - paragraph: "To be eligible for this Offer, customers must meet the following requirements:"
+          - list:
+            - listitem: The customer must purchase a minimum of 10 full-priced 2.4m Wet Wall panels in a single transaction from WetWallWorks.com.au.
+            - listitem: The customer must complete the purchase during the promotional period (as defined below).
+            - listitem: The customer must complete the purchase via WetWallWorks.com.au (orders made via third-party sites or retailers do not qualify).
+            - listitem: The Free Tool Kit is available while stocks last and subject to availability.
+          - paragraph:
+            - strong: 3. Promotional Period
+          - paragraph: This Offer is valid from 01/04/2025 00:00 to 01/05/2025 00:00, or until stocks of the Free Tool Kit are exhausted, whichever comes first. Wet Wall Works reserves the right to modify or cancel the promotion at any time without prior notice.
+          - paragraph:
+            - strong: 4. Free Tool Kit
+          - paragraph:
+            - text: The Free Tool Kit will be provided to eligible customers upon successful completion of their Eligible Purchase and completion of the redemption form that can be found
+            - link "here":
+              - /url: https://wetwallworks.com.au/promotions/
+            - text: . The tool kit will be delivered via Australia Post separately to the purchased Wet Wall panels. Wet Wall Works will not be responsible for any issues related to the delivery of the Free Tool Kit.
+          - paragraph:
+            - strong: 5. Non-Transferable
+          - paragraph: This Offer is non-transferable and may only be redeemed by the customer who made the Eligible Purchase. It is not valid in conjunction with any other promotions, discounts, or offers unless specifically stated by Wet Wall Works.
+          - paragraph:
+            - strong: 6. Returns and Cancellations
+          - list:
+            - listitem: If the customer returns any items from their Eligible Purchase (i.e. 1 Wet Wall panel), the customer will forfeit the Free Tool Kit and must return the Free Tool Kit at their own expense.
+            - listitem: If the entire order is cancelled or returned, the Offer will be void, and the customer will not receive the Free Tool Kit or return the Free Tool Kit at their own expense if already dispatched.
+          - paragraph:
+            - strong: 7. Limitation of Liability
+          - paragraph: Wet Wall Works is not responsible for any issues, damages, or losses that arise from the use of the Free Tool Kit. Customers should follow all manufacturer instructions for the tool kit and use it at their own risk.
+          - paragraph:
+            - strong: 8. Privacy and Data Collection
+          - paragraph:
+            - text: By participating in this Offer, customers agree to the collection and use of their personal information by Wet Wall Works for the purposes of processing the Offer. All personal data will be handled in accordance with Wet Wall Works's
+            - link "Privacy Policy":
+              - /url: https://wetwallworks.com.au/privacy-policy/
+            - text: .
+          - paragraph:
+            - strong: 9. General Terms
+          - list:
+            - listitem: Wet Wall Works reserves the right to amend, extend, or cancel this Offer at any time without prior notice.
+            - listitem: Wet Wall Works may, at its discretion, substitute the Free Tool Kit with another item of equal or greater value.
+            - listitem: Any misuse of this Offer or violation of these Terms and Conditions may result in disqualification from the promotion.
+          - paragraph:
+            - strong: 10. Contact
+          - paragraph:
+            - text: For any inquiries or questions related to this Offer, customers can contact Wet Wall Works’s customer support team at
+            - link "info@wetwallworks.com.au":
+              - /url: mailto:info@wetwallworks.com.au
+            - text: or 1800 NO TILE (1800 668 453).
+          - paragraph:
+            - strong: 11. Governing Law
+          - paragraph: These Terms and Conditions are governed by the laws of Australia. Any disputes arising from this Offer will be subject to the exclusive jurisdiction of the courts of Australia.
+          - paragraph:
+            - strong: By participating in this Offer, you agree to be bound by these Terms and Conditions.
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - paragraph
+          - generic:
+            - generic:
+              - group "Tool Kit Redemption":
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: First Name
+                        - generic:
+                          - textbox "First Name":
+                            - /placeholder: Enter Your First Name
+                    - generic:
+                      - generic:
+                        - generic: Last Name
+                        - generic:
+                          - textbox "Last Name":
+                            - /placeholder: Enter Your Last Name
+                - generic:
+                  - generic: Email
+                  - generic:
+                    - textbox "Email":
+                      - /placeholder: Email Address
+                - generic:
+                  - generic: Phone Number
+                  - generic:
+                    - spinbutton "Phone Number"
+                - generic:
+                  - generic: Address
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Address Line 1
+                          - generic:
+                            - textbox "Address Line 1"
+                      - generic:
+                        - generic:
+                          - generic: Address Line 2
+                          - generic:
+                            - textbox "Address Line 2"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: City
+                          - generic:
+                            - textbox "City"
+                      - generic:
+                        - generic:
+                          - generic: State
+                          - generic:
+                            - textbox "State"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Postcode
+                          - generic:
+                            - textbox "Postcode"
+                - generic:
+                  - generic: Invoice Number
+                  - generic:
+                    - textbox "Invoice Number"
+                - generic:
+                  - generic: Invoice Date
+                  - generic:
+                    - textbox "Invoice Date":
+                      - /placeholder: DD/MM/YYYY
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - 'generic "Terms and Conditions: I have read and agree to the Terms and Conditions and Privacy Policy Contains 2 links. Use tab navigation to review."':
+                          - generic:
+                            - 'checkbox "Terms and Conditions: I have read and agree to the Terms and Conditions and Privacy Policy Contains 2 links. Use tab navigation to review."'
+                          - generic:
+                            - paragraph:
+                              - text: I have read and agree to the
+                              - generic: Terms and Conditions
+                              - text: and
+                              - link "Privacy Policy":
+                                - /url: https://wetwallworks.com.au/privacy-policy/
+                - generic:
+                  - button "Submit"
+          - paragraph
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - group "Notify Me":
+                - generic:
+                  - heading [level=3]
+                  - generic:
+                    - heading "Stock Notification" [level=3]
+                    - paragraph: Receive an email when this item is back in stock.
+                  - separator
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: First Name
+                        - generic:
+                          - textbox "First Name"
+                    - generic:
+                      - generic:
+                        - generic: Last Name
+                        - generic:
+                          - textbox "Last Name"
+                - generic:
+                  - generic: Email
+                  - generic:
+                    - textbox "Email"
+                - generic:
+                  - button "Notify Me"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - iframe
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - iframe
+  - generic:
+    - generic:
+      - generic:
+        - img "Website Shipping"

@@ -1,0 +1,325 @@
+- generic [active] [ref=f7e1]:
+  - generic [ref=f7e2]:
+    - link "Skip to content" [ref=f7e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f7e4]:
+      - generic [ref=f7e6]:
+        - generic [ref=f7e12]:
+          - generic [ref=f7e13]:
+            - link [ref=f7e16] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/
+              - img "Wet Wall Works logo" [ref=f7e17]
+            - paragraph [ref=f7e21]:
+              - link [ref=f7e22] [cursor=pointer]:
+                - /url: javascript:void(0)
+                - img "Girl in a jacket" [ref=f7e23]
+          - generic [ref=f7e24]:
+            - button "View Search Form" [ref=f7e27] [cursor=pointer]
+            - link "Shopping Cart" [ref=f7e35] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/cart/
+              - img "Shopping Cart" [ref=f7e37]
+              - generic [ref=f7e39]: "1"
+            - button "Open menu" [ref=f7e42] [cursor=pointer]
+        - 'link "Call Now Call Now: 1800 668 453" [ref=f7e55] [cursor=pointer]':
+          - /url: tel:1800668453
+          - img "Call Now" [ref=f7e56]
+          - generic [ref=f7e57]: "Call Now: 1800 668 453"
+    - main [ref=f7e59]:
+      - article [ref=f7e64]:
+        - generic [ref=f7e72]:
+          - generic [ref=f7e73]:
+            - paragraph [ref=f7e74]: Do you have enough Trims, Adhesive and Silicone for your project?Please note that Trims, Adhesive and Silicone are pick up only unless ordered with Wet Wall Panels.
+            - paragraph [ref=f7e75]: Shipping will be calculated at checkout based on your delivery address.
+            - heading "Cart Summary" [level=2] [ref=f7e77]
+            - table [ref=f7e78]:
+              - rowgroup [ref=f7e79]:
+                - row [ref=f7e80]:
+                  - columnheader "Remove item" [ref=f7e81]
+                  - columnheader "Thumbnail image" [ref=f7e83]
+                  - columnheader "Product" [ref=f7e85]
+                  - columnheader "Price" [ref=f7e86]
+                  - columnheader "Quantity" [ref=f7e87]
+                  - columnheader "Subtotal" [ref=f7e88]
+              - rowgroup [ref=f7e89]:
+                - row [ref=f7e90]:
+                  - cell [ref=f7e91]:
+                    - button "Remove Lava Wet Wall Panel from cart" [ref=f7e92] [cursor=pointer]: ×
+                  - cell [ref=f7e93]:
+                    - link [ref=f7e94] [cursor=pointer]:
+                      - /url: https://wetwallworks.com.au/product/lava-wet-wall-panel-179-wet-wall-works/
+                      - img "Lava Bathroom Wall Panels" [ref=f7e95]
+                  - rowheader [ref=f7e96]:
+                    - link "Lava Wet Wall Panel" [ref=f7e97] [cursor=pointer]:
+                      - /url: https://wetwallworks.com.au/product/lava-wet-wall-panel-179-wet-wall-works/
+                    - generic [ref=f7e98]:
+                      - term [ref=f7e99]: "Location:"
+                      - definition [ref=f7e100]:
+                        - paragraph [ref=f7e101]: QLD
+                  - cell "$179.00" [ref=f7e102]
+                  - cell "- Lava Wet Wall Panel quantity 1 +" [ref=f7e105]:
+                    - generic [ref=f7e106]:
+                      - button "-" [ref=f7e107] [cursor=pointer]
+                      - generic [ref=f7e108]: Lava Wet Wall Panel quantity
+                      - spinbutton "Product quantity" [ref=f7e109]: "1"
+                      - button "+" [ref=f7e110] [cursor=pointer]
+                  - cell "$179.00" [ref=f7e111]
+                - row [ref=f7e114]:
+                  - cell [ref=f7e115]:
+                    - generic [ref=f7e116]:
+                      - textbox "Coupon:" [ref=f7e117]:
+                        - /placeholder: Coupon code
+                      - button "Apply coupon" [ref=f7e118] [cursor=pointer]
+                    - button "Update cart" [disabled] [ref=f7e119]
+          - generic [ref=f7e122]:
+            - heading "Cart totals" [level=2] [ref=f7e123]
+            - table [ref=f7e124]:
+              - rowgroup [ref=f7e125]:
+                - row [ref=f7e126]:
+                  - rowheader "Subtotal" [ref=f7e127]
+                  - cell "$179.00" [ref=f7e128]
+                - row [ref=f7e131]:
+                  - rowheader "Total" [ref=f7e132]
+                  - cell "$179.00" [ref=f7e133]:
+                    - strong [ref=f7e134]:
+                      - generic [ref=f7e135]: $179.00
+                - row [ref=f7e137]:
+                  - cell [ref=f7e138]
+            - link "Proceed to checkout" [ref=f7e140] [cursor=pointer]:
+              - /url: https://wetwallworks.com.au/checkout/
+    - generic [ref=f7e145]:
+      - link [ref=f7e147] [cursor=pointer]:
+        - /url: https://wetwallworks.com.au/
+        - img "Wet Wall Works logo" [ref=f7e148]
+      - generic [ref=f7e150]:
+        - link "Contact Us" [ref=f7e152] [cursor=pointer]:
+          - /url: https://wetwallworks.com.au/contact-us/
+        - list [ref=f7e153]:
+          - listitem [ref=f7e154]:
+            - link "Facebook" [ref=f7e155] [cursor=pointer]:
+              - /url: https://www.facebook.com/wetwallworksau
+          - listitem [ref=f7e159]:
+            - link "Instagram" [ref=f7e160] [cursor=pointer]:
+              - /url: https://www.instagram.com/wetwallworksau/
+          - listitem [ref=f7e164]:
+            - link "YouTube" [ref=f7e165] [cursor=pointer]:
+              - /url: https://www.youtube.com/@WetWallWorksAU
+          - listitem [ref=f7e169]:
+            - link "LinkedIn" [ref=f7e170] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/wetwallworks/
+    - contentinfo [ref=f7e174]:
+      - paragraph [ref=f7e185]:
+        - text: © 2026 Wet Wall Works. All Rights Reserved. Website by
+        - link "Ignition Media" [ref=f7e186] [cursor=pointer]:
+          - /url: https://ignitionmedia.com.au/
+        - text: .
+  - link [ref=f7e187] [cursor=pointer]:
+    - /url: "#wrapper"
+  - button "Scroll to top" [ref=f7e188] [cursor=pointer]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - paragraph:
+            - strong: Terms and Conditions for Wet Wall Works Tool Kit Redemption Offer
+          - paragraph:
+            - strong: 1. Promotion Overview
+          - paragraph: This promotional offer ("Offer") is available exclusively through WetWallWorks.com.au ("Website"). Customers who purchase 10 or more full-priced 2.4m Wet Wall panels ("Eligible Purchase") will qualify for a free tool kit ("Free Tool Kit") valued at over $130, subject to these Terms and Conditions.
+          - paragraph:
+            - strong: 2. Eligibility
+          - paragraph: "To be eligible for this Offer, customers must meet the following requirements:"
+          - list:
+            - listitem: The customer must purchase a minimum of 10 full-priced 2.4m Wet Wall panels in a single transaction from WetWallWorks.com.au.
+            - listitem: The customer must complete the purchase during the promotional period (as defined below).
+            - listitem: The customer must complete the purchase via WetWallWorks.com.au (orders made via third-party sites or retailers do not qualify).
+            - listitem: The Free Tool Kit is available while stocks last and subject to availability.
+          - paragraph:
+            - strong: 3. Promotional Period
+          - paragraph: This Offer is valid from 01/04/2025 00:00 to 01/05/2025 00:00, or until stocks of the Free Tool Kit are exhausted, whichever comes first. Wet Wall Works reserves the right to modify or cancel the promotion at any time without prior notice.
+          - paragraph:
+            - strong: 4. Free Tool Kit
+          - paragraph:
+            - text: The Free Tool Kit will be provided to eligible customers upon successful completion of their Eligible Purchase and completion of the redemption form that can be found
+            - link "here":
+              - /url: https://wetwallworks.com.au/promotions/
+            - text: . The tool kit will be delivered via Australia Post separately to the purchased Wet Wall panels. Wet Wall Works will not be responsible for any issues related to the delivery of the Free Tool Kit.
+          - paragraph:
+            - strong: 5. Non-Transferable
+          - paragraph: This Offer is non-transferable and may only be redeemed by the customer who made the Eligible Purchase. It is not valid in conjunction with any other promotions, discounts, or offers unless specifically stated by Wet Wall Works.
+          - paragraph:
+            - strong: 6. Returns and Cancellations
+          - list:
+            - listitem: If the customer returns any items from their Eligible Purchase (i.e. 1 Wet Wall panel), the customer will forfeit the Free Tool Kit and must return the Free Tool Kit at their own expense.
+            - listitem: If the entire order is cancelled or returned, the Offer will be void, and the customer will not receive the Free Tool Kit or return the Free Tool Kit at their own expense if already dispatched.
+          - paragraph:
+            - strong: 7. Limitation of Liability
+          - paragraph: Wet Wall Works is not responsible for any issues, damages, or losses that arise from the use of the Free Tool Kit. Customers should follow all manufacturer instructions for the tool kit and use it at their own risk.
+          - paragraph:
+            - strong: 8. Privacy and Data Collection
+          - paragraph:
+            - text: By participating in this Offer, customers agree to the collection and use of their personal information by Wet Wall Works for the purposes of processing the Offer. All personal data will be handled in accordance with Wet Wall Works's
+            - link "Privacy Policy":
+              - /url: https://wetwallworks.com.au/privacy-policy/
+            - text: .
+          - paragraph:
+            - strong: 9. General Terms
+          - list:
+            - listitem: Wet Wall Works reserves the right to amend, extend, or cancel this Offer at any time without prior notice.
+            - listitem: Wet Wall Works may, at its discretion, substitute the Free Tool Kit with another item of equal or greater value.
+            - listitem: Any misuse of this Offer or violation of these Terms and Conditions may result in disqualification from the promotion.
+          - paragraph:
+            - strong: 10. Contact
+          - paragraph:
+            - text: For any inquiries or questions related to this Offer, customers can contact Wet Wall Works’s customer support team at
+            - link "info@wetwallworks.com.au":
+              - /url: mailto:info@wetwallworks.com.au
+            - text: or 1800 NO TILE (1800 668 453).
+          - paragraph:
+            - strong: 11. Governing Law
+          - paragraph: These Terms and Conditions are governed by the laws of Australia. Any disputes arising from this Offer will be subject to the exclusive jurisdiction of the courts of Australia.
+          - paragraph:
+            - strong: By participating in this Offer, you agree to be bound by these Terms and Conditions.
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - paragraph
+          - generic:
+            - generic:
+              - group "Tool Kit Redemption":
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: First Name *
+                        - generic:
+                          - textbox "First Name *":
+                            - /placeholder: Enter Your First Name
+                    - generic:
+                      - generic:
+                        - generic: Last Name *
+                        - generic:
+                          - textbox "Last Name *":
+                            - /placeholder: Enter Your Last Name
+                - generic:
+                  - generic:
+                    - generic "Email": Email *
+                  - generic:
+                    - textbox "Email":
+                      - /placeholder: Email Address
+                - generic:
+                  - generic:
+                    - generic "Phone Number": Phone Number *
+                  - generic:
+                    - spinbutton "Phone Number"
+                - generic:
+                  - generic:
+                    - generic "Address"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic "Address Line 1": Address Line 1 *
+                          - generic:
+                            - textbox "Address Line 1"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic "Address Line 2"
+                          - generic:
+                            - textbox "Address Line 2"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic "City": City *
+                          - generic:
+                            - textbox "City"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic "State": State *
+                          - generic:
+                            - textbox "State"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic "Postcode": Postcode *
+                          - generic:
+                            - textbox "Postcode"
+                - generic:
+                  - generic:
+                    - generic "Invoice Number": Invoice Number *
+                  - generic:
+                    - textbox "Invoice Number"
+                - generic:
+                  - generic:
+                    - generic "Invoice Date": Invoice Date *
+                  - generic:
+                    - textbox "Invoice Date":
+                      - /placeholder: DD/MM/YYYY
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - 'generic "Terms and Conditions: I have read and agree to the Terms and Conditions and Privacy Policy Contains 2 links. Use tab navigation to review."':
+                          - generic:
+                            - 'checkbox "Terms and Conditions: I have read and agree to the Terms and Conditions and Privacy Policy Contains 2 links. Use tab navigation to review."'
+                          - generic:
+                            - paragraph:
+                              - text: I have read and agree to the
+                              - generic: Terms and Conditions
+                              - text: and
+                              - link "Privacy Policy":
+                                - /url: https://wetwallworks.com.au/privacy-policy/
+                - generic:
+                  - button "Submit"
+          - paragraph
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - group "Notify Me":
+                - generic:
+                  - heading [level=3]
+                  - generic:
+                    - heading "Stock Notification" [level=3]
+                    - paragraph: Receive an email when this item is back in stock.
+                  - separator
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: First Name *
+                        - generic:
+                          - textbox "First Name *"
+                    - generic:
+                      - generic:
+                        - generic: Last Name *
+                        - generic:
+                          - textbox "Last Name *"
+                - generic:
+                  - generic:
+                    - generic "Email": Email *
+                  - generic:
+                    - textbox "Email"
+                - generic:
+                  - button "Notify Me"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - iframe
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - iframe
+  - generic:
+    - generic:
+      - generic:
+        - img "Website Shipping"
+  - status [ref=f7e189]

@@ -82,7 +82,7 @@ Envato build:
 
 Both builds exclude repo/dev/internal artifacts:
 
-- `.git`, `.github`, `.vscode`, `.cursor`, `.playwright-mcp`
+- `.git`, `.github`, `.vscode`, `.cursor`, `.playwright-mcp`, `.playwright-cli`, `output`
 - `build`
 - `docs`
 - nested ZIP files

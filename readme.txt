@@ -5,7 +5,7 @@ Tags: inventory management, woocommerce inventory, location based pricing, multi
 Requires at least: 5.0
 Requires PHP: 7.2
 Tested up to: 7.0
-Stable tag: 1.1.7.23
+Stable tag: 1.1.7.24
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -437,6 +437,10 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 
 == Changelog ==
 
+= 1.1.7.24 =
+* Fixed: disabling mixed-location carts now rejects products from a second inventory location and blocks checkout for existing mixed-location sessions.
+* Fixed: WPML product translations now share location assignments, stock, prices, backorders, and availability with the original product during cart and checkout validation.
+
 = 1.1.7.23 =
 * Fixed: cart items with no selected/default storefront location now fall back to a single assigned product or variation location for per-location shipping package splitting.
 
@@ -538,8 +542,8 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 
 == Upgrade Notice ==
 
-= 1.1.7.23 =
-Per-location shipping now recognizes fixed-location products in carts where no storefront location has been selected.
+= 1.1.7.24 =
+Mixed-location cart restrictions are now enforced during add-to-cart and checkout, and WPML product translations now use shared location inventory.
 
 == Support ==
 

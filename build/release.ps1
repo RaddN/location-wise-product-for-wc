@@ -73,6 +73,8 @@ $excludeDirs = @(
     '.vscode',
     '.cursor',
     '.playwright-mcp',
+    '.playwright-cli',
+    'output',
     'build',
     'docs'
 )

@@ -1,0 +1,22 @@
+[    3921ms] TypeError: jQuery is not a function
+    at https://wetwallworks.com.au/wp-content/cache/min/1/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/script.js?ver=1783556478:1:1
+[    3922ms] TypeError: $ is not a function
+    at mulopimfwc_script-js-after:5:3
+    at mulopimfwc_script-js-after:39:3
+[    4302ms] ReferenceError: $ is not defined
+    at https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:2703
+    at r (https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:1768)
+    at x (https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:81571)
+    at r (https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:1600)
+    at x (https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:81571)
+    at Object.o [as require] (https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:2006)
+    at https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:81835
+    at https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:280
+    at https://wetwallworks.com.au/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/select2.min.js:2:291
+[    4303ms] TypeError: Cannot read properties of undefined (reading 'fn')
+    at mulopimfwc_select2-js-after:2:8
+[    4304ms] TypeError: $ is not a function
+    at https://wetwallworks.com.au/wp-content/cache/min/1/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/location-info.js?ver=1783556479:205:302
+    at https://wetwallworks.com.au/wp-content/cache/min/1/wp-content/plugins/multi-location-product-and-inventory-management-pro/assets/js/location-info.js?ver=1783556479:205:501
+[   15534ms] [WARNING] [Meta Pixel] - Invalid parameter format for currency. Please refer https://developers.facebook.com/docs/meta-pixel/reference/ for valid parameter specifications. @ https://connect.facebook.net/en_US/fbevents.js:187
+[   18473ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2 @ https://www.google.com/recaptcha/api2/anchor?ar=1&k=6Lfzvn0rAAAAAPjrf_tdpjGsQcutzwM-fjhWGt-e&co=aHR0cHM6Ly93ZXR3YWxsd29ya3MuY29tLmF1OjQ0Mw..&hl=en&v=TnA7HacJFoDyljdc3L82L3Rh&size=invisible&anchor-ms=20000&execute-ms=30000&cb=jucfvjug6e48:258
