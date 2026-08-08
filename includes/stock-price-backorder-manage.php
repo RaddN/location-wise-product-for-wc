@@ -1644,6 +1644,73 @@ if (!function_exists('mulopimfwc_get_order_item_location_slug')) {
     }
 }
 
+if (!function_exists('mulopimfwc_disable_core_stock_hold_for_location_order')) {
+    /**
+     * Skip WooCommerce's global-stock reservation for location-managed orders.
+     *
+     * WooCommerce's ReserveStock helper reads the raw `_stock` post meta through
+     * a direct SQL query. Product stock filters therefore cannot substitute the
+     * selected location quantity, and checkout fails whenever global stock is
+     * lower than otherwise-available location stock. Cart validation has already
+     * checked the location-aware quantity before this filter runs; the plugin's
+     * normal order-stock hooks remain responsible for reducing location stock.
+     *
+     * @param int      $minutes Number of minutes WooCommerce should hold stock.
+     * @param WC_Order $order   Order being reserved.
+     * @return int
+     */
+    function mulopimfwc_disable_core_stock_hold_for_location_order($minutes, $order)
+    {
+        global $mulopimfwc_options;
+
+        $options = is_array($mulopimfwc_options ?? null)
+            ? $mulopimfwc_options
+            : get_option('mulopimfwc_display_options', []);
+
+        if (
+            !is_object($order) ||
+            !is_callable([$order, 'get_items']) ||
+            !isset($options['enable_location_stock']) ||
+            $options['enable_location_stock'] !== 'on'
+        ) {
+            return $minutes;
+        }
+
+        foreach ($order->get_items('line_item') as $item) {
+            if (!is_object($item) || !is_callable([$item, 'get_quantity']) || (float) $item->get_quantity() <= 0) {
+                continue;
+            }
+
+            $location_slug = sanitize_title(rawurldecode(mulopimfwc_get_order_item_location_slug($item, $order)));
+            $location_id = mulopimfwc_get_location_term_id($location_slug);
+            if (!$location_id) {
+                continue;
+            }
+
+            $product_id = is_callable([$item, 'get_product_id']) ? absint($item->get_product_id()) : 0;
+            $variation_id = is_callable([$item, 'get_variation_id']) ? absint($item->get_variation_id()) : 0;
+            $target_id = $variation_id ?: $product_id;
+            if (!$target_id) {
+                continue;
+            }
+
+            $location_stock = get_post_meta($target_id, '_location_stock_' . absint($location_id), true);
+            if ($location_stock !== '' && is_numeric($location_stock)) {
+                return 0;
+            }
+        }
+
+        return $minutes;
+    }
+
+    add_filter(
+        'woocommerce_order_hold_stock_minutes',
+        'mulopimfwc_disable_core_stock_hold_for_location_order',
+        20,
+        2
+    );
+}
+
 if (mulopimfwc_should_load_frontend_runtime_product_filters()) {
     // Override regular price for simple products
     add_filter('woocommerce_product_get_regular_price', function ($price, $product) {

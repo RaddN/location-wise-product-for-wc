@@ -4,7 +4,7 @@
  * Plugin Name: Multi Location Product & Inventory Management for WooCommerce Pro
  * Plugin URI: https://plugincy.com/multi-location-product-and-inventory-management
  * Description: Filter WooCommerce products by store locations with a location selector for customers.
- * Version: 1.1.7.24
+ * Version: 1.1.7.25
  * Author: plugincy
  * Author URI: https://plugincy.com/
  * Text Domain: multi-location-product-and-inventory-management-pro
@@ -80,7 +80,7 @@ if (!defined('MULTI_LOCATION_PLUGIN_BASE_NAME')) {
 }
 
 if (!defined('MULOPIMFWC_VERSION')) {
-    define("MULOPIMFWC_VERSION", "1.1.7.24");
+    define("MULOPIMFWC_VERSION", "1.1.7.25");
 }
 
 require_once plugin_dir_path(__FILE__) . 'includes/release-channel.php';
@@ -7881,13 +7881,13 @@ if (!function_exists('mulopimfwc_get_values')) {
             //     return;
             // }
 
-            $admin_js_version = '1.1.7.24';
+            $admin_js_version = '1.1.7.25';
             $admin_js_path = plugin_dir_path(__FILE__) . 'assets/js/admin.js';
             if (file_exists($admin_js_path)) {
                 $admin_js_version = (string) filemtime($admin_js_path);
             }
 
-            $admin_css_version = '1.1.7.24';
+            $admin_css_version = '1.1.7.25';
             $admin_css_path = plugin_dir_path(__FILE__) . 'assets/css/admin.css';
             if (file_exists($admin_css_path)) {
                 $admin_css_version = (string) filemtime($admin_css_path);
@@ -8024,7 +8024,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 if (mulopimfwc_is_manual_optional_location_selection_enabled($options)) {
                     $selected_location = mulopimfwc_get_store_location_cookie();
                     if ($selected_location !== 'all-products' && mulopimfwc_validate_location_slug($selected_location)) {
-                        if (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options)) {
+                        if (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options, is_array($data) ? $data : null)) {
                             $selected_location = '';
                         }
                     } else {
@@ -8071,7 +8071,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $selected_location = mulopimfwc_get_store_location_cookie();
                     if ($selected_location === 'all-products' || !mulopimfwc_validate_location_slug($selected_location)) {
                         $selected_location = '';
-                    } elseif (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options)) {
+                    } elseif (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options, is_array($data) ? $data : null)) {
                         $selected_location = '';
                     }
                 }
@@ -8098,7 +8098,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $selected_location = mulopimfwc_get_store_location_cookie();
                     if ($selected_location === 'all-products' || !mulopimfwc_validate_location_slug($selected_location)) {
                         $selected_location = '';
-                    } elseif (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options)) {
+                    } elseif (!$this->is_location_slug_eligible_for_order($order, $selected_location, $options, is_array($data) ? $data : null)) {
                         $selected_location = '';
                     }
                 }
@@ -8308,6 +8308,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                 return '';
             }
 
+            $location_map = $this->filter_location_map_by_order_shipping_zones($location_map, $order);
+            if (empty($location_map)) {
+                return '';
+            }
+
             $all_location_slugs = array_keys($location_map);
             $enable_all_locations = mulopimfwc_is_all_locations_enabled($options) ? 'on' : 'off';
             $processed_items = false;
@@ -8345,6 +8350,11 @@ if (!function_exists('mulopimfwc_get_values')) {
 
                     $location_id = $location_map[$location_slug]['term_id'];
                     if ($this->is_location_disabled_for_item($product_id, $variation_id, $location_id)) {
+                        unset($location_map[$location_slug]);
+                        continue;
+                    }
+
+                    if ($this->is_location_stock_insufficient_for_order_item($item, $product_id, $variation_id, $location_id, $options)) {
                         unset($location_map[$location_slug]);
                         continue;
                     }
@@ -8401,7 +8411,7 @@ if (!function_exists('mulopimfwc_get_values')) {
          * @param array|null $options Optional plugin options.
          * @return array
          */
-        private function get_order_eligible_location_map(WC_Order $order, array $locations, ?array $options = null): array
+        private function get_order_eligible_location_map(WC_Order $order, array $locations, ?array $options = null, ?array $checkout_data = null): array
         {
             if (!is_array($options)) {
                 global $mulopimfwc_options;
@@ -8431,6 +8441,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ];
             }
 
+            if (empty($location_map)) {
+                return [];
+            }
+
+            $location_map = $this->filter_location_map_by_order_shipping_zones($location_map, $order, $checkout_data);
             if (empty($location_map)) {
                 return [];
             }
@@ -8474,6 +8489,11 @@ if (!function_exists('mulopimfwc_get_values')) {
                     $location_id = $location_map[$location_slug]['term_id'];
                     if ($this->is_location_disabled_for_item($product_id, $variation_id, $location_id)) {
                         unset($location_map[$location_slug]);
+                        continue;
+                    }
+
+                    if ($this->is_location_stock_insufficient_for_order_item($item, $product_id, $variation_id, $location_id, $options)) {
+                        unset($location_map[$location_slug]);
                     }
                 }
 
@@ -8495,9 +8515,10 @@ if (!function_exists('mulopimfwc_get_values')) {
          * @param WC_Order $order Order object.
          * @param string $location_slug Location slug.
          * @param array|null $options Optional plugin options.
+         * @param array|null $checkout_data Optional checkout data.
          * @return bool
          */
-        private function is_location_slug_eligible_for_order(WC_Order $order, string $location_slug, ?array $options = null): bool
+        private function is_location_slug_eligible_for_order(WC_Order $order, string $location_slug, ?array $options = null, ?array $checkout_data = null): bool
         {
             $location_slug = rawurldecode(trim($location_slug));
             if ($location_slug === '') {
@@ -8515,6 +8536,10 @@ if (!function_exists('mulopimfwc_get_values')) {
             $is_active = get_term_meta($location_id, 'is_active', true);
             $is_active_for_frontend = $is_active === '' || $is_active === 'on' || $is_active === '1' || $is_active === true || $is_active === 'yes';
             if (!$is_active_for_frontend) {
+                return false;
+            }
+
+            if (!$this->is_location_term_allowed_for_order_shipping_zone($location_id, $order, $checkout_data)) {
                 return false;
             }
 
@@ -8560,9 +8585,404 @@ if (!function_exists('mulopimfwc_get_values')) {
                 if ($this->is_location_disabled_for_item($product_id, $variation_id, $location_id)) {
                     return false;
                 }
+
+                if ($this->is_location_stock_insufficient_for_order_item($item, $product_id, $variation_id, $location_id, $options)) {
+                    return false;
+                }
             }
 
             return $processed_items;
+        }
+
+        /**
+         * Filter candidate locations to those allowed by the order destination's matching shipping zones.
+         *
+         * Locations without assigned shipping zones remain unrestricted for backwards compatibility.
+         *
+         * @param array $location_map Candidate location data keyed by slug.
+         * @param WC_Order $order Order object.
+         * @param array|null $checkout_data Optional checkout data.
+         * @return array
+         */
+        private function filter_location_map_by_order_shipping_zones(array $location_map, WC_Order $order, ?array $checkout_data = null): array
+        {
+            if (empty($location_map)) {
+                return $location_map;
+            }
+
+            $destination = $this->get_order_shipping_zone_destination($order, $checkout_data);
+            if (empty($destination['country'])) {
+                return $location_map;
+            }
+
+            $matching_zone_ids = $this->get_matching_shipping_zone_ids_for_destination($destination);
+            if (empty($matching_zone_ids)) {
+                return $location_map;
+            }
+
+            $matching_zone_lookup = array_fill_keys(array_map('intval', $matching_zone_ids), true);
+            $has_restricted_locations = false;
+            $filtered_location_map = [];
+
+            foreach ($location_map as $location_slug => $location_data) {
+                $location_id = isset($location_data['term_id']) ? absint($location_data['term_id']) : 0;
+                if (!$location_id) {
+                    continue;
+                }
+
+                $allowed_zone_ids = $this->get_location_shipping_zone_ids($location_id);
+                if (empty($allowed_zone_ids)) {
+                    $filtered_location_map[$location_slug] = $location_data;
+                    continue;
+                }
+
+                $has_restricted_locations = true;
+                foreach ($allowed_zone_ids as $zone_id) {
+                    if (isset($matching_zone_lookup[(int) $zone_id])) {
+                        $filtered_location_map[$location_slug] = $location_data;
+                        break;
+                    }
+                }
+            }
+
+            return $has_restricted_locations ? $filtered_location_map : $location_map;
+        }
+
+        /**
+         * Check whether a location's shipping zone restrictions allow an order destination.
+         *
+         * @param int $location_id Location term ID.
+         * @param WC_Order $order Order object.
+         * @param array|null $checkout_data Optional checkout data.
+         * @return bool
+         */
+        private function is_location_term_allowed_for_order_shipping_zone(int $location_id, WC_Order $order, ?array $checkout_data = null): bool
+        {
+            $allowed_zone_ids = $this->get_location_shipping_zone_ids($location_id);
+            if (empty($allowed_zone_ids)) {
+                return true;
+            }
+
+            $destination = $this->get_order_shipping_zone_destination($order, $checkout_data);
+            if (empty($destination['country'])) {
+                return true;
+            }
+
+            $matching_zone_ids = $this->get_matching_shipping_zone_ids_for_destination($destination);
+            if (empty($matching_zone_ids)) {
+                return true;
+            }
+
+            return !empty(array_intersect($allowed_zone_ids, $matching_zone_ids));
+        }
+
+        /**
+         * Get normalized shipping zone IDs assigned to a location term.
+         *
+         * @param int $location_id Location term ID.
+         * @return int[]
+         */
+        private function get_location_shipping_zone_ids(int $location_id): array
+        {
+            $zone_ids = get_term_meta($location_id, 'shipping_zones', true);
+            if (!is_array($zone_ids)) {
+                $zone_ids = $zone_ids === '' ? [] : [$zone_ids];
+            }
+
+            $zone_ids = array_map('absint', $zone_ids);
+            return array_values(array_unique(array_filter($zone_ids, static function ($zone_id) {
+                return $zone_id >= 0;
+            })));
+        }
+
+        /**
+         * Build the WooCommerce shipping-zone destination for an order.
+         *
+         * @param WC_Order $order Order object.
+         * @param array|null $checkout_data Optional checkout data.
+         * @return array
+         */
+        private function get_order_shipping_zone_destination(WC_Order $order, ?array $checkout_data = null): array
+        {
+            $address_sets = [
+                [
+                    'country' => $order->get_shipping_country(),
+                    'state' => $order->get_shipping_state(),
+                    'postcode' => $order->get_shipping_postcode(),
+                    'city' => $order->get_shipping_city(),
+                ],
+                [
+                    'country' => is_array($checkout_data) ? ($checkout_data['shipping_country'] ?? '') : '',
+                    'state' => is_array($checkout_data) ? ($checkout_data['shipping_state'] ?? '') : '',
+                    'postcode' => is_array($checkout_data) ? ($checkout_data['shipping_postcode'] ?? '') : '',
+                    'city' => is_array($checkout_data) ? ($checkout_data['shipping_city'] ?? '') : '',
+                ],
+                [
+                    'country' => $order->get_billing_country(),
+                    'state' => $order->get_billing_state(),
+                    'postcode' => $order->get_billing_postcode(),
+                    'city' => $order->get_billing_city(),
+                ],
+                [
+                    'country' => is_array($checkout_data) ? ($checkout_data['billing_country'] ?? '') : '',
+                    'state' => is_array($checkout_data) ? ($checkout_data['billing_state'] ?? '') : '',
+                    'postcode' => is_array($checkout_data) ? ($checkout_data['billing_postcode'] ?? '') : '',
+                    'city' => is_array($checkout_data) ? ($checkout_data['billing_city'] ?? '') : '',
+                ],
+            ];
+
+            foreach ($address_sets as $address) {
+                $country_code = $this->normalize_country_code_for_shipping_zone($address['country']);
+                if ($country_code === '') {
+                    continue;
+                }
+
+                $postcode = is_scalar($address['postcode']) ? trim(sanitize_text_field((string) $address['postcode'])) : '';
+                if ($postcode !== '' && function_exists('wc_normalize_postcode')) {
+                    $postcode = wc_normalize_postcode($postcode);
+                }
+
+                return [
+                    'country' => $country_code,
+                    'state' => $this->normalize_state_code_for_shipping_zone($country_code, $address['state']),
+                    'postcode' => $postcode,
+                    'city' => is_scalar($address['city']) ? trim(sanitize_text_field((string) $address['city'])) : '',
+                ];
+            }
+
+            return [
+                'country' => '',
+                'state' => '',
+                'postcode' => '',
+                'city' => '',
+            ];
+        }
+
+        /**
+         * Resolve all WooCommerce shipping zones matching a destination.
+         *
+         * WooCommerce normally uses the first matching zone by zone order. Assignment needs
+         * every matching zone so locations can be connected to overlapping zones safely.
+         *
+         * @param array $destination Destination data.
+         * @return int[]
+         */
+        private function get_matching_shipping_zone_ids_for_destination(array $destination): array
+        {
+            if (!function_exists('WC') || !WC() || empty(WC()->countries)) {
+                return [];
+            }
+
+            $country = strtoupper((string) ($destination['country'] ?? ''));
+            $state = strtoupper((string) ($destination['state'] ?? ''));
+            $postcode = (string) ($destination['postcode'] ?? '');
+            if ($country === '') {
+                return [];
+            }
+
+            $continent = strtoupper((string) WC()->countries->get_continent_code_for_country($country));
+            $cache_key = md5(wp_json_encode([
+                'country' => $country,
+                'state' => $state,
+                'postcode' => $postcode,
+                'continent' => $continent,
+            ]));
+
+            static $cache = [];
+            if (isset($cache[$cache_key])) {
+                return $cache[$cache_key];
+            }
+
+            global $wpdb;
+
+            $criteria = [];
+            $criteria[] = $wpdb->prepare("( ( location_type = 'country' AND location_code = %s )", $country);
+            $criteria[] = $wpdb->prepare("OR ( location_type = 'state' AND location_code = %s )", $country . ':' . $state);
+            $criteria[] = $wpdb->prepare("OR ( location_type = 'continent' AND location_code = %s )", $continent);
+            $criteria[] = 'OR ( location_type IS NULL ) )';
+
+            if ($postcode !== '' && function_exists('wc_postcode_location_matcher')) {
+                $postcode_locations = $wpdb->get_results(
+                    "SELECT zone_id, location_code FROM {$wpdb->prefix}woocommerce_shipping_zone_locations WHERE location_type = 'postcode';"
+                );
+
+                if (!empty($postcode_locations)) {
+                    $zone_ids_with_postcode_rules = array_map('absint', wp_list_pluck($postcode_locations, 'zone_id'));
+                    $matches = wc_postcode_location_matcher($postcode, $postcode_locations, 'zone_id', 'location_code', $country);
+                    $do_not_match = array_unique(array_diff($zone_ids_with_postcode_rules, array_keys($matches)));
+
+                    if (!empty($do_not_match)) {
+                        $criteria[] = 'AND zones.zone_id NOT IN (' . implode(',', array_map('absint', $do_not_match)) . ')';
+                    }
+                }
+            }
+
+            $query = "SELECT DISTINCT zones.zone_id
+                FROM {$wpdb->prefix}woocommerce_shipping_zones as zones
+                LEFT OUTER JOIN {$wpdb->prefix}woocommerce_shipping_zone_locations as locations
+                    ON zones.zone_id = locations.zone_id AND location_type != 'postcode'
+                WHERE " . implode(' ', $criteria) . '
+                ORDER BY zone_order ASC, zones.zone_id ASC';
+
+            $zone_ids = array_map('absint', (array) $wpdb->get_col($query));
+            $zone_ids = array_values(array_unique(array_filter($zone_ids)));
+
+            if (empty($zone_ids)) {
+                $zone_ids = [0];
+            }
+
+            $cache[$cache_key] = $zone_ids;
+            return $zone_ids;
+        }
+
+        /**
+         * Normalize a country value into a WooCommerce shipping-zone country code.
+         *
+         * @param mixed $country Country code or name.
+         * @return string
+         */
+        private function normalize_country_code_for_shipping_zone($country): string
+        {
+            $country_code = $this->get_country_code_for_geocoding($country);
+            if ($country_code !== '') {
+                return strtoupper($country_code);
+            }
+
+            if (!is_scalar($country)) {
+                return '';
+            }
+
+            $country = strtoupper(trim(sanitize_text_field((string) $country)));
+            return strlen($country) === 2 ? $country : '';
+        }
+
+        /**
+         * Normalize a state value into a WooCommerce shipping-zone state code.
+         *
+         * @param string $country_code Two-letter country code.
+         * @param mixed $state State code or name.
+         * @return string
+         */
+        private function normalize_state_code_for_shipping_zone(string $country_code, $state): string
+        {
+            if (!is_scalar($state)) {
+                return '';
+            }
+
+            $state = trim(sanitize_text_field((string) $state));
+            if ($state === '') {
+                return '';
+            }
+
+            $state_upper = strtoupper($state);
+            if (!function_exists('WC') || !WC() || !isset(WC()->countries)) {
+                return $state_upper;
+            }
+
+            $states = WC()->countries->get_states($country_code);
+            if (!is_array($states) || empty($states)) {
+                return $state_upper;
+            }
+
+            if (isset($states[$state])) {
+                return strtoupper((string) $state);
+            }
+
+            if (isset($states[$state_upper])) {
+                return $state_upper;
+            }
+
+            foreach ($states as $state_code => $state_name) {
+                if (!is_string($state_name)) {
+                    continue;
+                }
+
+                if (strcasecmp(trim($state_name), $state) === 0 || strcasecmp((string) $state_code, $state) === 0) {
+                    return strtoupper((string) $state_code);
+                }
+            }
+
+            return $state_upper;
+        }
+
+        /**
+         * Check whether a location lacks enough stock for an order item.
+         *
+         * @param WC_Order_Item_Product $item Order line item.
+         * @param int $product_id Product ID.
+         * @param int $variation_id Variation ID.
+         * @param int $location_id Location term ID.
+         * @param array|null $options Optional plugin options.
+         * @return bool
+         */
+        private function is_location_stock_insufficient_for_order_item($item, int $product_id, int $variation_id, int $location_id, ?array $options = null): bool
+        {
+            if (!is_array($options)) {
+                global $mulopimfwc_options;
+                $options = is_array($mulopimfwc_options ?? null)
+                    ? $mulopimfwc_options
+                    : get_option('mulopimfwc_display_options', []);
+            }
+
+            if (!isset($options['enable_location_stock']) || $options['enable_location_stock'] !== 'on') {
+                return false;
+            }
+
+            $quantity = is_object($item) && is_callable([$item, 'get_quantity'])
+                ? (float) $item->get_quantity()
+                : 0.0;
+            if ($quantity <= 0) {
+                return false;
+            }
+
+            $ids_to_check = array_values(array_filter([absint($variation_id), absint($product_id)]));
+            foreach ($ids_to_check as $id) {
+                $location_stock = get_post_meta($id, '_location_stock_' . $location_id, true);
+                if ($location_stock === '') {
+                    continue;
+                }
+
+                $location_backorders = function_exists('mulopimfwc_get_effective_location_backorders')
+                    ? mulopimfwc_get_effective_location_backorders($id, $location_id)
+                    : get_post_meta($id, '_location_backorders_' . $location_id, true);
+
+                if ($this->is_backorder_value_allowed($location_backorders)) {
+                    return false;
+                }
+
+                return (float) $location_stock < $quantity;
+            }
+
+            foreach ($ids_to_check as $id) {
+                $product = wc_get_product($id);
+                if (!$product || !is_callable([$product, 'managing_stock']) || !$product->managing_stock()) {
+                    continue;
+                }
+
+                if (is_callable([$product, 'get_backorders']) && $this->is_backorder_value_allowed($product->get_backorders())) {
+                    return false;
+                }
+
+                $stock_quantity = is_callable([$product, 'get_stock_quantity']) ? $product->get_stock_quantity() : null;
+                return $stock_quantity !== null && (float) $stock_quantity < $quantity;
+            }
+
+            return false;
+        }
+
+        /**
+         * Normalize WooCommerce and plugin backorder values.
+         *
+         * @param mixed $backorders Backorder value.
+         * @return bool
+         */
+        private function is_backorder_value_allowed($backorders): bool
+        {
+            if (function_exists('mulopimfwc_is_backorder_allowed')) {
+                return mulopimfwc_is_backorder_allowed($backorders);
+            }
+
+            return in_array(strtolower(trim((string) $backorders)), ['on', 'yes', 'notify'], true);
         }
 
         /**
@@ -8594,7 +9014,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 ? $mulopimfwc_options
                 : get_option('mulopimfwc_display_options', []);
 
-            $location_map = $this->get_order_eligible_location_map($order, $locations, $options);
+            $location_map = $this->get_order_eligible_location_map($order, $locations, $options, $checkout_data);
             if (empty($location_map)) {
                 return '';
             }
@@ -9057,7 +9477,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
             $request_url = add_query_arg($query_args, 'https://nominatim.openstreetmap.org/search');
 
-            $user_agent = sprintf('MulopimFWC/%s (%s)', defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.24', home_url('/'));
+            $user_agent = sprintf('MulopimFWC/%s (%s)', defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.25', home_url('/'));
 
             $response = wp_remote_get($request_url, [
                 'timeout' => 8,
@@ -9508,7 +9928,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 : (isset($options['order_assignment_method']) ? $options['order_assignment_method'] : 'customer_selection');
             $is_optional_assignment_mode = in_array($assignment_method, ['manual', 'inventory_based', 'proximity_based'], true);
 
-            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.7.24');
+            wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.7.25');
             wp_enqueue_style('mulopimfwc_select2', plugins_url('assets/css/select2.min.css', __FILE__), [], '4.1.0');
             
             // Add custom branding CSS
@@ -9516,7 +9936,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.7.24', true);
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.7.25', true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             wp_add_inline_script('mulopimfwc_select2', 'jQuery.fn.select2&&jQuery.fn.select2.defaults&&jQuery.fn.select2.defaults.set("language",{noResults:function(){return"' . esc_js(mulopimfwc_get_text_value('text_popup_msg_no_results')) . '";}});', 'after');
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
@@ -9525,7 +9945,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery', 'mulopimfwc_script'],
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
             } elseif ($template_selection === 'classic') {
@@ -9533,7 +9953,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery', 'mulopimfwc_script'],
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
             } elseif (in_array($template_selection, ['tabs', 'compact', 'grid'], true)) {
@@ -9541,7 +9961,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery', 'mulopimfwc_script'],
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
             }
@@ -9570,7 +9990,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-block-grouping',
                     plugins_url('assets/js/cart-block-grouping.js', __FILE__),
                     array('wp-hooks'), // important
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
 
@@ -9586,7 +10006,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-cart-location-change',
                     plugins_url('assets/js/cart-location-change.js', __FILE__),
                     ['jquery'],
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
 
@@ -10719,7 +11139,7 @@ if (!function_exists('mulopimfwc_get_values')) {
             
             // Enqueue main style if not already enqueued
             if (!wp_style_is('mulopimfwc_style', 'enqueued')) {
-                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.7.24');
+                wp_enqueue_style('mulopimfwc_style', plugins_url('assets/css/style.css', __FILE__), [], '1.1.7.25');
             }
             
             // Enqueue modern popup script
@@ -10728,7 +11148,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-modern-popup',
                     plugins_url('assets/js/modern-popup.js', __FILE__),
                     ['jquery', 'mulopimfwc_script'],
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
             }
@@ -10739,7 +11159,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-classic-popup',
                     plugins_url('assets/js/classic-popup.js', __FILE__),
                     ['jquery', 'mulopimfwc_script'],
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
             }
@@ -10750,7 +11170,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                     'mulopimfwc-popup-layouts',
                     plugins_url('assets/js/popup-layouts.js', __FILE__),
                     ['jquery', 'mulopimfwc_script'],
-                    '1.1.7.24',
+                    '1.1.7.25',
                     true
                 );
             }
@@ -12281,7 +12701,7 @@ if (!function_exists('mulopimfwc_get_values')) {
 
         function custom_admin_styles()
         {
-            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.7.24");
+            wp_enqueue_style('mulopimfwc-custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin-style.css', array(), "1.1.7.25");
         }
 
         /**
@@ -15041,7 +15461,7 @@ if (!function_exists('mulopimfwc_get_values')) {
                 $this->analytics = new mulopimfwc_anaylytics(
                     '04',
                     'https://plugincy.com/wp-json/product-analytics/v1',
-                    "1.1.7.24",
+                    "1.1.7.25",
                     'Multi Location Product & Inventory Management for WooCommerce',
                     __FILE__ // Pass the main plugin file
                 );
@@ -15733,7 +16153,7 @@ function mulopimfwc_check_for_plugin_updates($transient, $license_manager)
     }
 
     $plugin_file = plugin_basename(__FILE__); // This will automatically get the correct path
-    $current_version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.24';
+    $current_version = defined('MULOPIMFWC_VERSION') ? MULOPIMFWC_VERSION : '1.1.7.25';
 
     $update_info = $license_manager->check_for_updates();
 

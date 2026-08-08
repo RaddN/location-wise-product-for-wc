@@ -5,7 +5,7 @@ Tags: inventory management, woocommerce inventory, location based pricing, multi
 Requires at least: 5.0
 Requires PHP: 7.2
 Tested up to: 7.0
-Stable tag: 1.1.7.24
+Stable tag: 1.1.7.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -437,6 +437,12 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 
 == Changelog ==
 
+= 1.1.7.25 =
+* Fixed: location-managed checkout no longer fails WooCommerce's direct global-stock reservation when the selected location has sufficient stock.
+* Fixed: automatic order assignment now respects each location's WooCommerce shipping-zone restrictions and skips locations without sufficient item stock.
+* Fixed: WPML product translations now receive shared location taxonomy relationships so strict location filtering includes translated catalog products.
+* Added: a bounded background migration repairs location relationships for existing WPML product translations.
+
 = 1.1.7.24 =
 * Fixed: disabling mixed-location carts now rejects products from a second inventory location and blocks checkout for existing mixed-location sessions.
 * Fixed: WPML product translations now share location assignments, stock, prices, backorders, and availability with the original product during cart and checkout validation.
@@ -541,6 +547,9 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.1.7.25 =
+Fixes checkout stock reservation for location-managed orders, respects shipping-zone restrictions during automatic assignment, and restores translated products under strict WPML location filtering.
 
 = 1.1.7.24 =
 Mixed-location cart restrictions are now enforced during add-to-cart and checkout, and WPML product translations now use shared location inventory.

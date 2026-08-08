@@ -242,3 +242,236 @@ if (!function_exists('mulopimfwc_wpml_fallback_to_original_product_locations')) 
 
     add_filter('get_object_terms', 'mulopimfwc_wpml_fallback_to_original_product_locations', 20, 4);
 }
+
+if (!function_exists('mulopimfwc_wpml_get_product_translation_ids')) {
+    /**
+     * Get every WPML translation ID for a product.
+     *
+     * @param int $product_id Product ID in any language.
+     * @return int[]
+     */
+    function mulopimfwc_wpml_get_product_translation_ids($product_id)
+    {
+        $product_id = absint($product_id);
+        if (!$product_id || !defined('ICL_SITEPRESS_VERSION')) {
+            return $product_id ? [$product_id] : [];
+        }
+
+        $canonical_id = mulopimfwc_get_wpml_canonical_inventory_product_id($product_id);
+        if (get_post_type($canonical_id) !== 'product') {
+            return [];
+        }
+
+        $translation_ids = [$canonical_id];
+        $trid = apply_filters('wpml_element_trid', null, $canonical_id, 'post_product');
+        if (!$trid) {
+            return $translation_ids;
+        }
+
+        $translations = apply_filters('wpml_get_element_translations', null, $trid, 'post_product');
+        if (!is_array($translations)) {
+            return $translation_ids;
+        }
+
+        foreach ($translations as $translation) {
+            $translation_id = is_object($translation) && isset($translation->element_id)
+                ? absint($translation->element_id)
+                : 0;
+
+            if ($translation_id && get_post_type($translation_id) === 'product') {
+                $translation_ids[] = $translation_id;
+            }
+        }
+
+        return array_values(array_unique(array_filter($translation_ids)));
+    }
+}
+
+if (!function_exists('mulopimfwc_wpml_sync_product_location_relationships')) {
+    /**
+     * Copy canonical location relationships to every product translation.
+     *
+     * Strict catalog filtering is performed in SQL against term relationships,
+     * before the get_object_terms fallback above can run. Persisting the shared
+     * physical-location relationships keeps translated shop queries accurate.
+     *
+     * @param int $product_id Product ID in any language.
+     * @return void
+     */
+    function mulopimfwc_wpml_sync_product_location_relationships($product_id)
+    {
+        static $syncing = false;
+
+        if ($syncing || !defined('ICL_SITEPRESS_VERSION')) {
+            return;
+        }
+
+        $canonical_id = mulopimfwc_get_wpml_canonical_inventory_product_id($product_id);
+        if (!$canonical_id || get_post_type($canonical_id) !== 'product') {
+            return;
+        }
+
+        $translation_ids = mulopimfwc_wpml_get_product_translation_ids($canonical_id);
+        if (count($translation_ids) < 2) {
+            return;
+        }
+
+        $term_ids = wp_get_object_terms(
+            $canonical_id,
+            'mulopimfwc_store_location',
+            ['fields' => 'ids', 'lang' => 'all']
+        );
+        if (is_wp_error($term_ids)) {
+            return;
+        }
+
+        $term_ids = array_values(array_unique(array_map('absint', (array) $term_ids)));
+        $syncing = true;
+
+        foreach ($translation_ids as $translation_id) {
+            if ($translation_id === $canonical_id) {
+                continue;
+            }
+
+            wp_set_object_terms(
+                $translation_id,
+                $term_ids,
+                'mulopimfwc_store_location',
+                false
+            );
+        }
+
+        $syncing = false;
+    }
+}
+
+if (!function_exists('mulopimfwc_wpml_sync_locations_after_term_change')) {
+    /**
+     * Keep translations synchronized when product locations change.
+     *
+     * @param int    $object_id Product ID.
+     * @param mixed  $terms     Assigned terms.
+     * @param int[]  $tt_ids    Term-taxonomy IDs.
+     * @param string $taxonomy  Taxonomy name.
+     * @return void
+     */
+    function mulopimfwc_wpml_sync_locations_after_term_change($object_id, $terms, $tt_ids, $taxonomy)
+    {
+        if ($taxonomy === 'mulopimfwc_store_location') {
+            mulopimfwc_wpml_sync_product_location_relationships($object_id);
+        }
+    }
+
+    add_action('set_object_terms', 'mulopimfwc_wpml_sync_locations_after_term_change', 20, 4);
+}
+
+if (!function_exists('mulopimfwc_wpml_sync_locations_after_product_save')) {
+    /**
+     * Repair relationships when a translated product is created or updated.
+     *
+     * @param int $product_id Product ID.
+     * @return void
+     */
+    function mulopimfwc_wpml_sync_locations_after_product_save($product_id)
+    {
+        if (!wp_is_post_revision($product_id) && !wp_is_post_autosave($product_id)) {
+            mulopimfwc_wpml_sync_product_location_relationships($product_id);
+        }
+    }
+
+    add_action('save_post_product', 'mulopimfwc_wpml_sync_locations_after_product_save', 30, 1);
+}
+
+if (!function_exists('mulopimfwc_wpml_schedule_location_relationship_sync')) {
+    /**
+     * Schedule a bounded one-time migration for pre-existing translations.
+     *
+     * @return void
+     */
+    function mulopimfwc_wpml_schedule_location_relationship_sync()
+    {
+        if (
+            !defined('ICL_SITEPRESS_VERSION') ||
+            get_option('mulopimfwc_wpml_location_relationship_sync_version') === '1'
+        ) {
+            return;
+        }
+
+        $cursor = absint(get_option('mulopimfwc_wpml_location_relationship_sync_cursor', 0));
+        if (!wp_next_scheduled('mulopimfwc_wpml_sync_location_relationships_batch', [$cursor])) {
+            wp_schedule_single_event(
+                time() + 5,
+                'mulopimfwc_wpml_sync_location_relationships_batch',
+                [$cursor]
+            );
+        }
+    }
+
+    add_action('admin_init', 'mulopimfwc_wpml_schedule_location_relationship_sync');
+}
+
+if (!function_exists('mulopimfwc_wpml_sync_location_relationships_batch')) {
+    /**
+     * Synchronize one bounded batch of existing translated products.
+     *
+     * @param int $cursor Last processed product ID.
+     * @return void
+     */
+    function mulopimfwc_wpml_sync_location_relationships_batch($cursor = 0)
+    {
+        if (
+            !defined('ICL_SITEPRESS_VERSION') ||
+            get_option('mulopimfwc_wpml_location_relationship_sync_version') === '1' ||
+            get_transient('mulopimfwc_wpml_location_relationship_sync_lock')
+        ) {
+            return;
+        }
+
+        set_transient('mulopimfwc_wpml_location_relationship_sync_lock', '1', 5 * MINUTE_IN_SECONDS);
+
+        global $wpdb;
+        $batch_size = 50;
+        $product_ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT ID
+                FROM {$wpdb->posts}
+                WHERE post_type = %s
+                AND post_status NOT IN (%s, %s)
+                AND ID > %d
+                ORDER BY ID ASC
+                LIMIT %d",
+                'product',
+                'trash',
+                'auto-draft',
+                absint($cursor),
+                $batch_size
+            )
+        );
+
+        foreach ((array) $product_ids as $product_id) {
+            mulopimfwc_wpml_sync_product_location_relationships(absint($product_id));
+        }
+
+        if (count($product_ids) === $batch_size) {
+            $next_cursor = absint(end($product_ids));
+            update_option('mulopimfwc_wpml_location_relationship_sync_cursor', $next_cursor, false);
+            wp_schedule_single_event(
+                time() + 5,
+                'mulopimfwc_wpml_sync_location_relationships_batch',
+                [$next_cursor]
+            );
+        } else {
+            update_option('mulopimfwc_wpml_location_relationship_sync_version', '1', false);
+            delete_option('mulopimfwc_wpml_location_relationship_sync_cursor');
+        }
+
+        delete_transient('mulopimfwc_wpml_location_relationship_sync_lock');
+    }
+
+    add_action(
+        'mulopimfwc_wpml_sync_location_relationships_batch',
+        'mulopimfwc_wpml_sync_location_relationships_batch',
+        10,
+        1
+    );
+}
