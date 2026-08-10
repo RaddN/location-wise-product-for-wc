@@ -97,6 +97,24 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             return in_array($value, $allowed, true) ? $value : 'block_checkout';
         }
 
+        private function should_defer_unknown_location_validation(array $options): bool
+        {
+            $assignment_method = function_exists('mulopimfwc_get_effective_order_assignment_method')
+                ? mulopimfwc_get_effective_order_assignment_method($options)
+                : (isset($options['order_assignment_method']) ? sanitize_key((string) $options['order_assignment_method']) : 'customer_selection');
+
+            if ($assignment_method !== 'proximity_based') {
+                return false;
+            }
+
+            if (function_exists('mulopimfwc_is_manual_optional_location_selection_enabled')) {
+                return !mulopimfwc_is_manual_optional_location_selection_enabled($options);
+            }
+
+            return empty($options['manual_optional_location_selection'])
+                || $options['manual_optional_location_selection'] !== 'on';
+        }
+
         private function is_split_parent($order): bool
         {
             return $order instanceof WC_Order && $order->get_meta('_mulopimfwc_split_parent') === 'yes';
@@ -559,6 +577,10 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
                 return;
             }
 
+            if ($this->should_defer_unknown_location_validation($options)) {
+                return;
+            }
+
             if (!$this->cart_has_unknown_items()) {
                 return;
             }
@@ -579,6 +601,10 @@ if (!class_exists('MULOPIMFWC_Order_Split_By_Location')) {
             }
 
             if ($this->get_unknown_policy($options) !== 'block_checkout') {
+                return;
+            }
+
+            if ($this->should_defer_unknown_location_validation($options)) {
                 return;
             }
 

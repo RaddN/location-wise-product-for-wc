@@ -3937,15 +3937,20 @@ class mulopimfwc_settings
                     $location_wise_currency_enabled = function_exists('mulopimfwc_is_location_wise_currency_enabled')
                         ? mulopimfwc_is_location_wise_currency_enabled($options)
                         : (isset($options['location_wise_currency']) && $options['location_wise_currency'] === 'on');
-                    $disabled = $is_manual_mode || $location_wise_currency_enabled;
+                    $mixed_location_locked = function_exists('mulopimfwc_assignment_locks_mixed_location_features')
+                        ? mulopimfwc_assignment_locks_mixed_location_features($options)
+                        : $is_manual_mode;
+                    $disabled = $mixed_location_locked || $location_wise_currency_enabled;
 
-                    if ($is_manual_mode) {
+                    if ($mixed_location_locked) {
                         $this->render_manual_hidden_input('allow_mixed_location_cart', $options['allow_mixed_location_cart'] ?? 'off');
                     } elseif ($location_wise_currency_enabled) {
                         echo '<input type="hidden" name="mulopimfwc_display_options[allow_mixed_location_cart]" value="off">';
                     }
                     $message = __("Allow customers to add products from different locations to their cart. When Enable Location Wise Currency is enabled, this option will be disabled.", 'multi-location-product-and-inventory-management-pro');
-                    $message = $this->append_manual_disabled_note($message);
+                    if ($mixed_location_locked) {
+                        $message .= ' ' . __('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro');
+                    }
                     $this->render_advance_checkbox("allow_mixed_location_cart", $message, $disabled);
                 } else {
                     $this->render_advance_checkbox("_pro", __("Allow customers to add products from different locations to their cart.", 'multi-location-product-and-inventory-management-pro'), true, false);
@@ -4063,11 +4068,14 @@ class mulopimfwc_settings
             function () {
                 $options = $this->get_display_options();
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                $mixed_location_locked = function_exists('mulopimfwc_assignment_locks_mixed_location_features')
+                    ? mulopimfwc_assignment_locks_mixed_location_features($options)
+                    : $is_manual_mode;
                 $allow_mixed = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
                     ? mulopimfwc_is_mixed_location_cart_enabled($options)
                     : (isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on');
                 $is_premium = mulopimfwc_premium_feature();
-                $disabled = $is_manual_mode || !$allow_mixed || !$is_premium;
+                $disabled = $mixed_location_locked || !$allow_mixed || !$is_premium;
 
                 if ($disabled) {
                     echo '<input type="hidden" name="mulopimfwc_display_options[split_order_by_location]" value="' . esc_attr($options['split_order_by_location'] ?? 'off') . '">';
@@ -4077,7 +4085,9 @@ class mulopimfwc_settings
                 if (!$allow_mixed) {
                     $message .= ' ' . __('Requires Allow Mixed-Location Cart to be enabled.', 'multi-location-product-and-inventory-management-pro');
                 }
-                $message = $this->append_manual_disabled_note($message);
+                if ($mixed_location_locked) {
+                    $message .= ' ' . __('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro');
+                }
 
                 if ($is_premium) {
                     $this->render_advance_checkbox("split_order_by_location", $message, $disabled);
@@ -4095,12 +4105,15 @@ class mulopimfwc_settings
             function () {
                 $options = $this->get_display_options();
                 $is_manual_mode = $this->is_manual_assignment_strict_mode();
+                $mixed_location_locked = function_exists('mulopimfwc_assignment_locks_mixed_location_features')
+                    ? mulopimfwc_assignment_locks_mixed_location_features($options)
+                    : $is_manual_mode;
                 $allow_mixed = function_exists('mulopimfwc_is_mixed_location_cart_enabled')
                     ? mulopimfwc_is_mixed_location_cart_enabled($options)
                     : (isset($options['allow_mixed_location_cart']) && $options['allow_mixed_location_cart'] === 'on');
                 $split_enabled = isset($options['split_order_by_location']) && $options['split_order_by_location'] === 'on';
                 $is_premium = mulopimfwc_premium_feature();
-                $disabled = $is_manual_mode || !$allow_mixed || !$split_enabled || !$is_premium;
+                $disabled = $mixed_location_locked || !$allow_mixed || !$split_enabled || !$is_premium;
 
                 if ($disabled) {
                     echo '<input type="hidden" name="mulopimfwc_display_options[split_order_unknown_items]" value="' . esc_attr($options['split_order_unknown_items'] ?? 'block_checkout') . '">';
@@ -4116,7 +4129,9 @@ class mulopimfwc_settings
                 if (!$split_enabled) {
                     $message .= ' ' . __('Enable Split Order by Location to configure this option.', 'multi-location-product-and-inventory-management-pro');
                 }
-                $message = $this->append_manual_disabled_note($message);
+                if ($mixed_location_locked) {
+                    $message .= ' ' . __('Disabled while Manual or Inventory-Based assignment is enabled without optional selection.', 'multi-location-product-and-inventory-management-pro');
+                }
 
                 if ($is_premium) {
                     $this->render_advance_select('split_order_unknown_items', $message, $select_options, $disabled);

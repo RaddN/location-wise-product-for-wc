@@ -70,6 +70,8 @@ New-Item -ItemType Directory -Path $stagePlugin | Out-Null
 $excludeDirs = @(
     '.git',
     '.github',
+    '.agents',
+    '.codex',
     '.vscode',
     '.cursor',
     '.playwright-mcp',
@@ -82,6 +84,7 @@ $excludeDirs = @(
 $excludeFiles = @(
     '*.zip',
     '*.bak',
+    '*-cookies.txt',
     '*backup*.po~',
     '*backup*.pot~',
     '.gitignore'
