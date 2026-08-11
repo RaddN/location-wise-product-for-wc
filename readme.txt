@@ -5,7 +5,7 @@ Tags: inventory management, woocommerce inventory, location based pricing, multi
 Requires at least: 5.0
 Requires PHP: 7.2
 Tested up to: 7.0
-Stable tag: 1.1.7.26
+Stable tag: 1.1.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -437,7 +437,7 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 
 == Changelog ==
 
-= 1.1.7.26 =
+= 1.1.8 =
 * Fixed: location-managed checkout no longer fails WooCommerce's direct global-stock reservation when the selected location has sufficient stock.
 * Fixed: automatic order assignment now respects each location's WooCommerce shipping-zone restrictions and skips locations without sufficient item stock.
 * Fixed: proximity assignment now writes the selected warehouse to line items, supports split orders without Optional Location Selection, and prefers the most specific matching shipping-zone warehouse when geocoding falls back.
@@ -549,7 +549,7 @@ To learn more about Plugincy data policies, please see our [Privacy Policy](http
 
 == Upgrade Notice ==
 
-= 1.1.7.26 =
+= 1.1.8 =
 Fixes checkout stock reservation for location-managed orders, respects shipping-zone restrictions during automatic assignment, writes automatic warehouse selection to order line items, and restores translated products under strict WPML location filtering.
 
 = 1.1.7.24 =
