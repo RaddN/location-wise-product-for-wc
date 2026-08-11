@@ -920,10 +920,9 @@ add_action('init', function () {
     }
 
     if ($should_bootstrap) {
-        // optional: ensure PHP session exists if you plan to use session-based location selection
-        if (!session_id()) {
-            @session_start();
-        }
+        // Runtime filters resolve location from the plugin cookie, cart/package data,
+        // defaults, and WooCommerce session state. Avoid starting a native PHP
+        // session here so anonymous frontend HTML can remain cacheable.
         new MULOPIMFWC_Runtime_Filters();
     }
 });
