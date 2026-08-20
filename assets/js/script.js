@@ -6,6 +6,7 @@ jQuery(document).ready(function ($) {
     const COOKIE_MS_PER_DAY = 24 * 60 * 60 * 1000;
     const CART_CONTEXT_LOCATION_KEY = 'mulopimfwc_cart_context_location';
     const CART_CONTEXT_PENDING_KEY = 'mulopimfwc_cart_context_refresh_pending';
+    const POPUP_SESSION_DISMISSED_COOKIE = 'mulopimfwc_location_popup_dismissed';
     const locationSettings = window.mulopimfwc_locationWiseProducts || {};
     const i18n = locationSettings.i18n || {};
     const selectStoreAlert = i18n.selectStore || 'Please select a store.';
@@ -20,7 +21,9 @@ jQuery(document).ready(function ($) {
 
     // Ensure auto-opened modals (rendered with display:flex server-side) lock scroll.
     syncModalScrollLock();
+    suppressCachedLocationModalIfNeeded();
     setTimeout(syncModalScrollLock, 100);
+    setTimeout(suppressCachedLocationModalIfNeeded, 100);
 
     function getLocationCookieExpiryDays() {
         if (typeof mulopimfwc_locationWiseProducts === 'undefined') {
@@ -129,6 +132,51 @@ jQuery(document).ready(function ($) {
     function setPluginCookie(name, value) {
         const expiryDate = new Date(Date.now() + getLocationCookieExpiryDays() * COOKIE_MS_PER_DAY);
         document.cookie = buildCookieString(name, value, expiryDate);
+    }
+
+    function setPluginSessionCookie(name, value) {
+        const options = getCookieOptions();
+        const encodedValue = encodeURIComponent(String(value));
+        let cookie = `${name}=${encodedValue};path=${options.path};samesite=${options.sameSite}`;
+        if (options.domain) {
+            cookie += `;domain=${options.domain}`;
+        }
+        if (options.secure) {
+            cookie += ';secure';
+        }
+        document.cookie = cookie;
+    }
+
+    function hasSelectedStoreLocation() {
+        return !!normalizeLocationSlug(getCookie(getStoreCookieName()) || locationSettings.currentLocation || '');
+    }
+
+    function hasDismissedLocationPopupForSession() {
+        return getCookie(POPUP_SESSION_DISMISSED_COOKIE) === '1';
+    }
+
+    function suppressCachedLocationModalIfNeeded() {
+        if (!hasSelectedStoreLocation() && !hasDismissedLocationPopupForSession()) {
+            return;
+        }
+
+        const $globalModal = $('#lwp-store-selector-modal:visible');
+        if (!$globalModal.length) {
+            return;
+        }
+
+        $globalModal.hide();
+        syncModalScrollLock();
+    }
+
+    function dismissLocationPopupForSession($modal) {
+        if (!$modal || !$modal.length || $modal.attr('id') !== 'lwp-store-selector-modal') {
+            return;
+        }
+
+        if (!hasSelectedStoreLocation()) {
+            setPluginSessionCookie(POPUP_SESSION_DISMISSED_COOKIE, '1');
+        }
     }
 
     function safeStorageGet(storage, key) {
@@ -1007,6 +1055,7 @@ jQuery(document).ready(function ($) {
             return;
         }
 
+        dismissLocationPopupForSession($modal);
         $modal.css('display', 'none');
         syncModalScrollLock();
     });
@@ -1017,6 +1066,7 @@ jQuery(document).ready(function ($) {
         var $closeBtn = $(this);
         var $modal = $closeBtn.closest('[id^="lwp-store-selector-modal"]');
         if ($modal.length) {
+            dismissLocationPopupForSession($modal);
             $modal.css('display', 'none');
             syncModalScrollLock();
         }

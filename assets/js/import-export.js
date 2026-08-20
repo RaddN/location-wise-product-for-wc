@@ -1,6 +1,18 @@
 (function ($) {
     'use strict';
 
+    window.mulopimfwcTriggerNativeClick = window.mulopimfwcTriggerNativeClick || function (element) {
+        if (!element) {
+            return;
+        }
+
+        element.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        }));
+    };
+
     $(document).ready(function () {
         const adminAjaxUrl = (
             typeof mulopimfwcImportExport !== 'undefined' &&
@@ -8,18 +20,6 @@
             typeof mulopimfwcImportExport.ajax_url === 'string' &&
             mulopimfwcImportExport.ajax_url.trim() !== ''
         ) ? mulopimfwcImportExport.ajax_url : (window.ajaxurl || '');
-
-        function triggerNativeClick(element) {
-            if (!element) {
-                return;
-            }
-
-            element.dispatchEvent(new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                view: window
-            }));
-        }
 
         // Export Settings
         $('#mulopimfwc_export_settings').on('click', function (e) {
@@ -49,7 +49,7 @@
                         downloadAnchor.setAttribute('href', dataStr);
                         downloadAnchor.setAttribute('download', response.data.filename);
                         document.body.appendChild(downloadAnchor);
-                        triggerNativeClick(downloadAnchor);
+                        window.mulopimfwcTriggerNativeClick(downloadAnchor);
                         downloadAnchor.remove();
 
                         // Show success message
@@ -542,7 +542,7 @@ jQuery(document).ready(function ($) {
         link.setAttribute('download', filename);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
-        triggerNativeClick(link);
+        window.mulopimfwcTriggerNativeClick(link);
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
@@ -1093,7 +1093,7 @@ jQuery(document).ready(function ($) {
         link.href = url;
         link.style.display = 'none';
         document.body.appendChild(link);
-        triggerNativeClick(link);
+        window.mulopimfwcTriggerNativeClick(link);
         link.remove();
     }
 

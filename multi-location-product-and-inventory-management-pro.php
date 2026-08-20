@@ -10247,7 +10247,12 @@ if (!function_exists('mulopimfwc_get_values')) {
             if (!empty($branding_css)) {
                 wp_add_inline_style('mulopimfwc_style', $branding_css);
             }
-            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], '1.1.8', true);
+            $frontend_js_version = '1.1.8';
+            $frontend_js_path = plugin_dir_path(__FILE__) . 'assets/js/script.js';
+            if (file_exists($frontend_js_path)) {
+                $frontend_js_version = (string) filemtime($frontend_js_path);
+            }
+            wp_enqueue_script('mulopimfwc_script', plugins_url('assets/js/script.js', __FILE__), ['jquery'], $frontend_js_version, true);
             wp_enqueue_script('mulopimfwc_select2', plugins_url('assets/js/select2.min.js', __FILE__), ['jquery'], '4.1.0', true);
             wp_add_inline_script('mulopimfwc_select2', 'jQuery.fn.select2&&jQuery.fn.select2.defaults&&jQuery.fn.select2.defaults.set("language",{noResults:function(){return"' . esc_js(mulopimfwc_get_text_value('text_popup_msg_no_results')) . '";}});', 'after');
             $template_selection = isset($options['template_selection']) ? $options['template_selection'] : 'default';
@@ -11139,7 +11144,12 @@ if (!function_exists('mulopimfwc_get_values')) {
             $show_popup_admin = isset($options['show_popup_admin']) ? $options['show_popup_admin'] : 'off';
             $selected_location = $this->get_current_location();
             $locationSelected = mulopimfwc_get_store_location_cookie();
-            $show_modal = $show_popup_admin === 'on' && empty($selected_location) ? true : (empty($selected_location) && !$is_admin_or_manager);
+            $popup_dismissed_for_session = isset($_COOKIE['mulopimfwc_location_popup_dismissed'])
+                && sanitize_text_field(wp_unslash($_COOKIE['mulopimfwc_location_popup_dismissed'])) === '1';
+            $show_modal = !$popup_dismissed_for_session
+                && ($show_popup_admin === 'on' && empty($selected_location)
+                    ? true
+                    : (empty($selected_location) && !$is_admin_or_manager));
 
             $locations = $mulopimfwc_locations;
 

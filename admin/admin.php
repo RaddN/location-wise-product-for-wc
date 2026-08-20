@@ -2316,7 +2316,9 @@ JS;
         // Shipping Zones (array of IDs)
         if (isset($_POST['shipping_zones'])) {
             $zones = array_map('absint', (array) wp_unslash($_POST['shipping_zones']));
-            $zones = array_filter($zones); // Remove zeros
+            $zones = array_filter($zones, static function ($zone_id) {
+                return $zone_id >= 0;
+            });
             if (!empty($zones)) {
                 update_term_meta($term_id, 'shipping_zones', array_values(array_unique($zones)));
             } else {
@@ -3971,6 +3973,17 @@ var config = <?php
         );
         if ($stock_central_hook) {
             add_action('load-' . $stock_central_hook, [$this, 'register_stock_central_screen_options']);
+        }
+        $stock_central_alias_hook = add_submenu_page(
+            null,
+            __('Stock Central', 'multi-location-product-and-inventory-management-pro'),
+            __('Stock Central', 'multi-location-product-and-inventory-management-pro'),
+            'manage_options',
+            'mulopimfwc-stock-central',
+            [$this->stock_central, 'location_stock_page_content']
+        );
+        if ($stock_central_alias_hook) {
+            add_action('load-' . $stock_central_alias_hook, [$this, 'register_stock_central_screen_options']);
         }
 
         global $MULOPIMFWC_Location_Managers;
