@@ -75,6 +75,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
     private $export_object_terms_cache = array();
     private $export_term_slug_cache = array();
     private $export_sku_cache = array();
+    private $existing_sku_validation_bypass_depth = 0;
 
     public function handle_export_ajax()
     {
@@ -433,11 +434,15 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             return;
         }
         if ($pass === 'products') {
-            $this->pass_products($grouped, $runtime, $state);
+            $this->with_existing_sku_validation_bypass($runtime, function () use ($grouped, $runtime, &$state) {
+                $this->pass_products($grouped, $runtime, $state);
+            });
             return;
         }
         if ($pass === 'variations') {
-            $this->pass_variations($grouped, $runtime, $state);
+            $this->with_existing_sku_validation_bypass($runtime, function () use ($grouped, $runtime, &$state) {
+                $this->pass_variations($grouped, $runtime, $state);
+            });
             return;
         }
         if ($pass === 'relationships') {
@@ -1051,6 +1056,11 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $row['row_type'] = 'location_inventory';
             $row['row_key'] = 'location_inventory:' . $item_row_key . ':' . (string) $location_term->slug;
             $row['parent_key'] = $item_row_key;
+            if ($this->is_variation_id((int) $item_id)) {
+                $row['source_variation_id'] = (int) $item_id;
+            } else {
+                $row['source_product_id'] = (int) $item_id;
+            }
             $row['sku'] = (string) $item_sku;
             $row['location_slug'] = (string) $location_term->slug;
             $row['location_inventory_json'] = wp_json_encode($payload);
@@ -1353,7 +1363,9 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $before_errors = count($state['errors']);
             $before_warnings = count($state['warnings']);
             $this->push_import_log($state, __('Pass 3/6: parent/simple/grouped/external products', 'multi-location-product-and-inventory-management-pro'));
-            $this->pass_products($grouped, $runtime, $state);
+            $this->with_existing_sku_validation_bypass($runtime, function () use ($grouped, $runtime, &$state) {
+                $this->pass_products($grouped, $runtime, $state);
+            });
 
             $this->push_import_log(
                 $state,
@@ -1373,7 +1385,9 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $before_errors = count($state['errors']);
             $before_warnings = count($state['warnings']);
             $this->push_import_log($state, __('Pass 4/6: variations', 'multi-location-product-and-inventory-management-pro'));
-            $this->pass_variations($grouped, $runtime, $state);
+            $this->with_existing_sku_validation_bypass($runtime, function () use ($grouped, $runtime, &$state) {
+                $this->pass_variations($grouped, $runtime, $state);
+            });
 
             $this->push_import_log(
                 $state,
@@ -1801,7 +1815,10 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
                 $type = 'simple';
             }
 
-            $match = $this->match_product_by_identity($sku, $slug, 'product');
+            $source_id = $this->resolve_same_site_source_id_from_row($row, 'product');
+            $match = $source_id > 0
+                ? array('id' => $source_id, 'error' => '')
+                : $this->match_product_by_identity($sku, $slug, 'product');
             if (!empty($match['error'])) {
                 $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: error message */ __('Line %1$d: %2$s', 'multi-location-product-and-inventory-management-pro'), $line, $match['error']));
                 continue;
@@ -1903,7 +1920,10 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             }
 
             $attrs = $this->decode_json_field($row['attributes_json']);
-            $match = $this->match_variation_by_identity($sku, $parent_id, $attrs);
+            $source_id = $this->resolve_same_site_source_id_from_row($row, 'variation');
+            $match = $source_id > 0
+                ? array('id' => $source_id, 'error' => '')
+                : $this->match_variation_by_identity($sku, $parent_id, $attrs);
             if (!empty($match['error'])) {
                 $this->row_error($state, $row, sprintf(/* translators: 1: line number, 2: error message */ __('Line %1$d: %2$s', 'multi-location-product-and-inventory-management-pro'), $line, $match['error']));
                 continue;
@@ -2266,12 +2286,7 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             }
         }
 
-        if (isset($row['sku']) && $this->should_write_field((string) $row['sku'], $runtime)) {
-            $sku = sanitize_text_field((string) $row['sku']);
-            if ($sku !== '') {
-                $product->set_sku($sku);
-            }
-        }
+        $this->apply_sku_field($product, $row, $runtime);
 
         if ($product->is_type('external')) {
             $this->apply_string_field($product, 'set_product_url', $row, 'external_url', $runtime);
@@ -2306,6 +2321,107 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
             $this->apply_int_field($product, 'set_download_limit', $row, 'download_limit', $runtime, true);
             $this->apply_int_field($product, 'set_download_expiry', $row, 'download_expiry', $runtime, true);
         }
+    }
+
+    private function apply_sku_field($product, $row, $runtime)
+    {
+        if (!array_key_exists('sku', $row)) {
+            return;
+        }
+
+        $raw_sku = (string) $row['sku'];
+        if (!$this->should_write_field($raw_sku, $runtime)) {
+            return;
+        }
+
+        $sku = sanitize_text_field($raw_sku);
+        if ($sku === '') {
+            if ($runtime['field_mode'] === 'set_and_clear' && (string) $product->get_sku('edit') !== '') {
+                $product->set_sku('');
+            }
+            return;
+        }
+
+        $product_id = method_exists($product, 'get_id') ? absint($product->get_id()) : 0;
+        if ($product_id > 0 && $this->row_source_id_matches_product($row, $product_id)) {
+            return;
+        }
+
+        $stored_sku = $product_id > 0 ? (string) get_post_meta($product_id, '_sku', true) : '';
+        if ((string) $product->get_sku('edit') === $sku || $stored_sku === $sku) {
+            return;
+        }
+
+        $product->set_sku($sku);
+    }
+
+    private function with_existing_sku_validation_bypass($runtime, $callback)
+    {
+        if (!is_callable($callback)) {
+            return;
+        }
+
+        if (!is_array($runtime) || (isset($runtime['mode']) && $runtime['mode'] === 'dry_run')) {
+            $callback();
+            return;
+        }
+
+        $this->enable_existing_sku_validation_bypass();
+        try {
+            $callback();
+        } finally {
+            $this->disable_existing_sku_validation_bypass();
+        }
+    }
+
+    private function enable_existing_sku_validation_bypass()
+    {
+        if ($this->existing_sku_validation_bypass_depth <= 0) {
+            add_filter('wc_product_pre_has_unique_sku', array($this, 'allow_existing_import_sku'), 10, 3);
+        }
+        $this->existing_sku_validation_bypass_depth++;
+    }
+
+    private function disable_existing_sku_validation_bypass()
+    {
+        $this->existing_sku_validation_bypass_depth--;
+        if ($this->existing_sku_validation_bypass_depth <= 0) {
+            $this->existing_sku_validation_bypass_depth = 0;
+            remove_filter('wc_product_pre_has_unique_sku', array($this, 'allow_existing_import_sku'), 10);
+        }
+    }
+
+    public function allow_existing_import_sku($has_unique_sku, $product_id, $sku)
+    {
+        if ($this->existing_sku_validation_bypass_depth <= 0) {
+            return $has_unique_sku;
+        }
+
+        $product_id = absint($product_id);
+        $sku = (string) $sku;
+        if ($product_id <= 0 || $sku === '') {
+            return $has_unique_sku;
+        }
+
+        $stored_sku = (string) get_post_meta($product_id, '_sku', true);
+        if ($stored_sku !== '' && $stored_sku === $sku) {
+            return true;
+        }
+
+        return $has_unique_sku;
+    }
+
+    private function row_source_id_matches_product($row, $product_id)
+    {
+        $product_id = absint($product_id);
+        if ($product_id <= 0 || !is_array($row) || empty($row['source_site']) || !$this->is_current_site_source((string) $row['source_site'])) {
+            return false;
+        }
+
+        $source_product_id = isset($row['source_product_id']) ? absint($row['source_product_id']) : 0;
+        $source_variation_id = isset($row['source_variation_id']) ? absint($row['source_variation_id']) : 0;
+
+        return $source_product_id === $product_id || $source_variation_id === $product_id;
     }
 
     private function apply_product_taxonomies($product_id, $row, $runtime, &$state)
@@ -2513,6 +2629,52 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
         return array('id' => 0, 'error' => '');
     }
 
+    private function resolve_same_site_source_id_from_row($row, $target_type)
+    {
+        if (!is_array($row) || empty($row['source_site']) || !$this->is_current_site_source((string) $row['source_site'])) {
+            return 0;
+        }
+
+        $target_type = $target_type === 'variation' ? 'variation' : 'product';
+        $field = $target_type === 'variation' ? 'source_variation_id' : 'source_product_id';
+        $post_type = $target_type === 'variation' ? 'product_variation' : 'product';
+        $source_id = isset($row[$field]) ? absint($row[$field]) : 0;
+        if ($source_id <= 0) {
+            return 0;
+        }
+
+        $post = get_post($source_id);
+        if (!$post || $post->post_type !== $post_type || $post->post_status === 'trash') {
+            return 0;
+        }
+
+        return $source_id;
+    }
+
+    private function is_current_site_source($source_site)
+    {
+        $source_site = untrailingslashit(strtolower(trim((string) $source_site)));
+        if ($source_site === '') {
+            return false;
+        }
+
+        $candidates = array(
+            untrailingslashit(strtolower((string) home_url())),
+            untrailingslashit(strtolower((string) site_url())),
+        );
+
+        return in_array($source_site, array_unique($candidates), true);
+    }
+
+    private function is_variation_id($product_id)
+    {
+        $product_id = absint($product_id);
+        if ($product_id <= 0) {
+            return false;
+        }
+        return get_post_type($product_id) === 'product_variation';
+    }
+
     private function match_variation_by_identity($sku, $parent_id, $attributes)
     {
         if ($sku !== '') {
@@ -2573,6 +2735,18 @@ class MULOPIMFWC_Stock_Central_Import_Export_Service
 
     private function resolve_product_id_from_row($row, &$state, $allow_variation = false)
     {
+        if ($allow_variation) {
+            $source_variation_id = $this->resolve_same_site_source_id_from_row($row, 'variation');
+            if ($source_variation_id > 0) {
+                return $source_variation_id;
+            }
+        }
+
+        $source_product_id = $this->resolve_same_site_source_id_from_row($row, 'product');
+        if ($source_product_id > 0) {
+            return $source_product_id;
+        }
+
         $parent_key = isset($row['parent_key']) ? (string) $row['parent_key'] : '';
         if ($parent_key !== '' && isset($state['row_map'][$parent_key])) {
             $entity = $state['row_map'][$parent_key];
